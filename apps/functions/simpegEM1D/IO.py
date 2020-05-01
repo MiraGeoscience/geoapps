@@ -287,7 +287,7 @@ class ModelIO(properties.HasProperties):
         xmin, xmax = self.topography[:, 0].min(), self.topography[:, 0].max()
         ymin, ymax = self.topography[:, 1].min(), self.topography[:, 1].max()
         zmin, zmax = self.topography[:, 2].min(), self.topography[:, 2].max()
-        zmin -= self.mesh_1d.vectorCCx.max()
+        zmin -= self.mesh_1d.vectorNx.max()
 
         lx = xmax-xmin
         ly = ymax-ymin
@@ -314,6 +314,7 @@ class ModelIO(properties.HasProperties):
         hy = [(dy, npad_y, -1.2), (dy, ny), (dy, npad_y, -1.2)]
         hz = [(dz, npad_z, -1.2), (dz, nz)]
 
+        zmin = self.topography[:, 2].max() - Utils.meshTensor(hz).sum()
         self._mesh_3d = Mesh.TensorMesh([hx, hy, hz], x0=[xmin, ymin, zmin])
 
         return self.mesh_3d

@@ -6,7 +6,7 @@ from .RTEfun_vec import rTEfunfwd, rTEfunjac
 from scipy.interpolate import InterpolatedUnivariateSpline as iuSpline
 
 from empymod import filters
-from empymod.transform import dlf, get_spline_values
+from empymod.transform import dlf, get_dlf_points
 from empymod.utils import check_hankel
 
 try:
@@ -64,17 +64,23 @@ class EM1D(Problem.BaseProblem):
 
         # Check input arguments. If self.hankel_filter is not a valid filter,
         # it will set it to the default (key_201_2009).
-        ht, htarg = check_hankel('fht', [self.hankel_filter,
-                                         self.hankel_pts_per_dec], 1)
 
-        self.fhtfilt = htarg[0]                 # Store filter
-        self.hankel_filter = self.fhtfilt.name  # Store name
-        self.hankel_pts_per_dec = htarg[1]      # Store pts_per_dec
+        ht, htarg = check_hankel(
+            'dlf',
+            {
+                'dlf': self.hankel_filter,
+                'pts_per_dec': 0
+            },
+            1
+        )
+
+        self.fhtfilt = htarg['dlf']                 # Store filter
+        self.hankel_pts_per_dec = htarg['pts_per_dec']      # Store pts_per_dec
         if self.verbose:
             print(">> Use "+self.hankel_filter+" filter for Hankel Transform")
 
-        if self.hankel_pts_per_dec != 0:
-            raise NotImplementedError()
+        # if self.hankel_pts_per_dec != 0:
+        #     raise NotImplementedError()
 
     def hz_kernel_vertical_magnetic_dipole(
         self, lamda, f, n_layer, sig, chi, depth, h, z,
@@ -354,7 +360,7 @@ class EM1D(Problem.BaseProblem):
         # Use function from empymod
         # size of lambd is (n_frequency x n_filter)
         lambd = np.empty([self.survey.frequency.size, n_filter], order='F')
-        lambd[:, :], _ = get_spline_values(
+        lambd[:, :], _ = get_dlf_points(
             self.fhtfilt, r, self.hankel_pts_per_dec
         )
 
@@ -478,7 +484,7 @@ class EM1D(Problem.BaseProblem):
         # HzFHT size = (n_layer, n_frequency)
 
         HzFHT = dlf(PJ, lambd, r, self.fhtfilt, self.hankel_pts_per_dec,
-                    factAng=None, ab=33)
+                    ang_fact=None, ab=33)
 
         if output_type == "sensitivity_sigma":
             return HzFHT.T
