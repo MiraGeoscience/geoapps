@@ -235,14 +235,16 @@ def piecewise_ramp(
         if abs(const) > eps:
             for j, t in enumerate(time):
                 # on-time
+                # TODO: this is only working when we have a single ramp...
                 if t < 0.:
+                    print (t+t0)
                     response[j] += (
-                        fixed_quad(step_func, 0, t+t0, n=20)[0] * const
+                        fixed_quad(step_func, 0, t+t0, n=n)[0] * const
                     )
                 # off-time
                 else:
                     response[j] += (
-                        fixed_quad(step_func, t, t+t0, n=20)[0] * const
+                        fixed_quad(step_func, t, t+t0, n=n)[0] * const
                     )
     return response
 
@@ -287,7 +289,7 @@ def piecewise_ramp_fast(
     y = dt_on_off[:,:,np.newaxis] * (0.5 * (x + 1.0)) + t3D
 
     # Evaluate and weight G-L values with current waveform
-    f = w * step_func(y)
+    f = w * step_func(np.log10(y))
     s = f.sum(axis = 2) * 0.5 * dt_on_off
 
     response = np.sum(s * -dIdt, axis=1)
@@ -335,7 +337,7 @@ def piecewise_ramp_fast_diff(
 
     y = dt_on_off[:,:,np.newaxis] * (0.5 * (x + 1.0)) + t3D
     # Evaluate and weight G-L values with current waveform
-    f = w * step_func(y)
+    f = w * step_func(np.log10(y))
     s = f.sum(axis = 2) * 0.5*dt_on_off
 
     response = np.sum(s * -dIdt, axis=1)
@@ -353,7 +355,7 @@ def piecewise_ramp_fast_diff(
     # Expand time shifts and origin to 3D with G-L points
     y = dt_on_off[:,:,np.newaxis] * (0.5 * (x + 1.0)) + t3D
       # Evaluate and weight G-L values with current waveform
-    f = w * step_func(y)
+    f = w * step_func(np.log10(y))
     s = f.sum(axis = 2) * 0.5*dt_on_off
 
     response -= 0.5* np.sum(s * -dIdt, axis=1)

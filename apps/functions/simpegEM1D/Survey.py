@@ -8,10 +8,11 @@ from .DigFilter import (
 )
 from .Waveform import CausalConv
 from scipy.interpolate import interp1d
+from scipy.interpolate import InterpolatedUnivariateSpline as iuSpline
 import properties
 from empymod import filters
 from empymod.utils import check_time
-from empymod.transform import ffht
+from empymod.transform import fourier_dlf
 from .Waveforms import (
     piecewise_pulse_fast,
     butterworth_type_filter, butter_lowpass_filter
@@ -254,7 +255,7 @@ class EM1DSurveyTD(BaseEM1DSurvey):
     )
 
     high_cut_frequency = properties.Float(
-        "High cut frequency for low pass filter (Hz)", 
+        "High cut frequency for low pass filter (Hz)",
         default=210*1e3
     )
 
@@ -324,6 +325,7 @@ class EM1DSurveyTD(BaseEM1DSurvey):
             self._time_int = np.logspace(
                 np.log10(tmin), np.log10(tmax), n_time
             )
+            # print (tmin, tmax)
 
         return self._time_int
 
@@ -378,7 +380,7 @@ class EM1DSurveyTD(BaseEM1DSurvey):
         if getattr(self, '_lowpass_filter', None) is None:
             # self._lowpass_filter = butterworth_type_filter(
             #     self.frequency, self.high_cut_frequency
-            # )  
+            # )
 
             self._lowpass_filter = (1+1j*(self.frequency/self.high_cut_frequency))**-1
             self._lowpass_filter *= (1+1j*(self.frequency/3e5))**-0.99
@@ -394,19 +396,19 @@ class EM1DSurveyTD(BaseEM1DSurvey):
 
         return self._lowpass_filter
 
-    def set_frequency(self):
+    def set_frequency(self, pts_per_dec=-1):
         """
         Compute Frequency reqired for frequency to time transform
         """
         if self.wave_type == "general":
             _, frequency, ft, ftarg = check_time(
-                self.time_int, 0, 'sin',
-                {'pts_per_dec': 3, 'fftfilt': self.fftfilt}, 0
+                self.time_int, -1, 'dlf',
+                {'pts_per_dec': pts_per_dec, 'dlf': self.fftfilt}, 0
             )
         elif self.wave_type == "stepoff":
             _, frequency, ft, ftarg = check_time(
-                self.time, 0, 'sin',
-                {'pts_per_dec': 3, 'fftfilt': self.fftfilt}, 0
+                self.time, -1, 'dlf',
+                {'pts_per_dec': pts_per_dec, 'dlf': self.fftfilt}, 0,
             )
         else:
             raise Exception("wave_type must be either general or stepoff")
@@ -432,7 +434,7 @@ class EM1DSurveyTD(BaseEM1DSurvey):
         if self.wave_type == 'stepoff':
             # Compute EM responses
             if u.size == self.n_frequency:
-                resp, _ = ffht(
+                resp, _ = fourier_dlf(
                     u.flatten()*factor, self.time,
                     self.frequency, self.ftarg
                 )
@@ -443,7 +445,7 @@ class EM1DSurveyTD(BaseEM1DSurvey):
                 # )
                 # TODO: remove for loop
                 for i in range(self.n_layer):
-                    resp_i, _ = ffht(
+                    resp_i, _ = fourier_dlf(
                         u[:, i]*factor, self.time,
                         self.frequency, self.ftarg
                     )
@@ -454,12 +456,15 @@ class EM1DSurveyTD(BaseEM1DSurvey):
         elif self.wave_type == 'general':
             # Compute EM responses
             if u.size == self.n_frequency:
-                resp_int, _ = ffht(
+                resp_int, _ = fourier_dlf(
                     u.flatten()*factor, self.time_int,
                     self.frequency, self.ftarg
                 )
-                step_func = interp1d(
-                    self.time_int, resp_int
+                # step_func = interp1d(
+                #     self.time_int, resp_int
+                # )
+                step_func = iuSpline(
+                    np.log10(self.time_int), resp_int
                 )
 
                 resp = piecewise_pulse_fast(
@@ -497,13 +502,18 @@ class EM1DSurveyTD(BaseEM1DSurvey):
 
                 # TODO: remove for loop (?)
                 for i in range(self.n_layer):
-                    resp_int_i, _ = ffht(
+                    resp_int_i, _ = fourier_dlf(
                         u[:, i]*factor, self.time_int,
                         self.frequency, self.ftarg
                     )
-                    step_func = interp1d(
-                        self.time_int, resp_int_i
+                    # step_func = interp1d(
+                    #     self.time_int, resp_int_i
+                    # )
+
+                    step_func = iuSpline(
+                        np.log10(self.time_int), resp_int_i
                     )
+
                     resp_i = piecewise_pulse_fast(
                         step_func, self.time,
                         self.time_input_currents, self.input_currents,
