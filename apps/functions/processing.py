@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import re
 import matplotlib.pyplot as plt
@@ -13,10 +14,11 @@ from scipy.interpolate import LinearNDInterpolator
 
 from .geoh5py.workspace import Workspace
 from .geoh5py.objects import Grid2D, Curve, Points, Surface
+from .geoh5py.data import FloatData
 from .geoh5py.groups import ContainerGroup
 from .selection import object_data_selection_widget, plot_plan_data_selection
-from .plotting import format_labels
-from .utils import rotate_xy
+from .plotting import format_labels, plot_plan_data_selection
+from .utils import rotate_xy, export_grid_2_geotiff, geotiff_2_grid
 
 
 def contour_values_widget(h5file, contours=""):
@@ -214,6 +216,8 @@ def coordinate_transformation_widget(
 
     """
     try:
+        import os
+        import gdal
         import fiona
         from fiona.transform import transform
     except ModuleNotFoundError as err:
@@ -221,6 +225,7 @@ def coordinate_transformation_widget(
         import os
         os.system("conda install -c conda-forge geopandas=0.7.0")
         from fiona.transform import transform
+        import gdal
 
     workspace = Workspace(h5file)
 
@@ -255,51 +260,99 @@ def coordinate_transformation_widget(
             for name in obj_names:
                 obj = workspace.get_entity(name)[0]
 
-                if not hasattr(obj, 'vertices'):
-                    print(f"Skipping {name}. Entity dies not have vertices")
-                    continue
+                temp_work = Workspace(workspace.name + "temp")
 
-                x, y = obj.vertices[:, 0].tolist(), obj.vertices[:, 1].tolist()
+                count = 0
 
-                if epsg_in == "4326":
-                    x, y = y, x
+                if isinstance(obj, Grid2D):
+                    # Get children data
+                    for child in obj.children:
 
-                x2, y2 = transform(inProj, outProj, x, y)
+                        temp_file = child.name + ".tif"
+                        temp_file_in = child.name + "_" + str(int(epsg_out)) + ".tif"
 
-                if epsg_in == "4326":
-                    x2, y2 = y2, x2
+                        if isinstance(child, FloatData):
 
-                if export:
+                            export_grid_2_geotiff(
+                                child, temp_file, epsg_in, dataType='float'
+                            )
 
-                    if create_copy:
-                        # Save the result to geoh5
-                        new_obj = obj.copy(
-                            parent=group,
-                            copy_children=True
-                        )
+                            grid = gdal.Open(temp_file)
+                            gdal.Warp(temp_file_in, grid, dstSRS='EPSG:' + str(int(epsg_out)))
 
-                        new_obj.vertices = np.c_[x2, y2, obj.vertices[:, 2]]
-                        out_list.append(new_obj)
+                            if count == 0:
+                                grid2d = geotiff_2_grid(temp_work, temp_file_in)
 
-                    else:
-                        obj.vertices = np.c_[x2, y2, obj.vertices[:, 2]]
+                            else:
+                                _ = geotiff_2_grid(temp_work, temp_file_in, parent=grid2d)
 
 
-                if plot_it:
-                    ax1.scatter(x, y, 5)
-                    ax2.scatter(x2, y2, 5)
-                    X1.append(x), Y1.append(y), X2.append(x2), Y2.append(y2)
+                            if plot_it:
+                                plot_plan_data_selection(obj, child, ax=ax1)
+                                X1.append(obj.centroids[:, 0])
+                                Y1.append(obj.centroids[:, 1])
+                                plot_plan_data_selection(grid2d, grid2d.children[-1], ax=ax2)
+                                X2.append(grid2d.centroids[:, 0])
+                                Y2.append(grid2d.centroids[:, 1])
+
+                            del grid
+                            os.remove(temp_file)
+                            os.remove(temp_file_in)
+                            count += 1
+
+                    if export:
+                        grid2d.copy(parent=workspace)
+
+                    os.remove(temp_work.h5file)
+
+                else:
+                    if not hasattr(obj, 'vertices'):
+                        print(f"Skipping {name}. Entity dies not have vertices")
+                        continue
+
+                    x, y = obj.vertices[:, 0].tolist(), obj.vertices[:, 1].tolist()
+
+                    if epsg_in == "4326":
+                        x, y = y, x
+
+                    x2, y2 = transform(inProj, outProj, x, y)
+
+                    if epsg_in == "4326":
+                        x2, y2 = y2, x2
+
+                    if export:
+
+                        if create_copy:
+                            # Save the result to geoh5
+                            new_obj = obj.copy(
+                                parent=group,
+                                copy_children=True
+                            )
+
+                            new_obj.vertices = np.c_[x2, y2, obj.vertices[:, 2]]
+                            out_list.append(new_obj)
+
+                        else:
+                            obj.vertices = np.c_[x2, y2, obj.vertices[:, 2]]
+
+
+                    if plot_it:
+                        ax1.scatter(x, y, 5)
+                        ax2.scatter(x2, y2, 5)
+                        X1.append(x), Y1.append(y), X2.append(x2), Y2.append(y2)
 
             workspace.finalize()
-            if plot_it:
+            if plot_it and X1:
                 format_labels(np.hstack(X1), np.hstack(Y1), ax1, labels=labels_in)
+
+            if plot_it and X2:
                 format_labels(np.hstack(X2), np.hstack(Y2), ax2, labels=labels_out)
 
         return out_list
 
     names = []
     for obj in workspace._objects.values():
-        if isinstance(obj.__call__(), (Curve, Points, Surface)):
+        if isinstance(obj.__call__(), (Curve, Points, Surface, Grid2D)):
             names.append(obj.__call__().name)
 
     def saveIt(_):

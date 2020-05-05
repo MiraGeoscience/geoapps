@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import gdal
 import osr
@@ -29,7 +30,10 @@ def export_grid_2_geotiff(
 
     assert isinstance(grid2d, Grid2D), f"The parent object must be a Grid2D entity."
 
-    array = data_object.values.reshape(grid2d.shape, order='F').T
+    values = data_object.values
+    values[(values > 1e-38)*(values < 2e-38)] = -99999
+
+    array = values.reshape(grid2d.shape, order='F').T
 
     driver = gdal.GetDriverByName('GTiff')
 
@@ -63,6 +67,37 @@ def export_grid_2_geotiff(
             dataset.GetRasterBand(i+1).WriteArray(array[:, :, i])
 
     dataset.FlushCache()  # Write to disk.
+
+
+def geotiff_2_grid(workspace, file_name, parent=None):
+    """
+        Load a geotiff and return
+        a Grid2D with values
+    """
+    tiff_object = gdal.Open(file_name)
+    band = tiff_object.GetRasterBand(1)
+    temp = band.ReadAsArray()
+
+    obj_name = os.path.basename(file_name)
+
+    if parent is None:
+        parent = Grid2D.create(
+            workspace,
+            name=obj_name.split(".")[0],
+            origin=[tiff_object.GetGeoTransform()[0], tiff_object.GetGeoTransform()[3], 0],
+            u_count=temp.shape[1],
+            v_count=temp.shape[0],
+            u_cell_size=tiff_object.GetGeoTransform()[1],
+            v_cell_size=tiff_object.GetGeoTransform()[5],
+        )
+    else:
+        assert isinstance(parent, Grid2D), "Parent object must be a Grid2D"
+        parent = parent
+
+    parent.add_data({parent.name + "_band": {"values": temp.ravel()}})
+
+    del tiff_object
+    return parent
 
 
 def export_curve_2_shapefile(
@@ -157,6 +192,7 @@ def filter_xy(x, y, data, distance, return_indices=False, window=None):
     """
 
     filter_xy = np.zeros_like(x, dtype='bool')
+    dwn_x, dwn_y = 1, 1
     if x.ndim == 1:
         if distance > 0:
             # xx = np.arange(x.min() - distance, x.max() + distance, distance)
@@ -190,10 +226,12 @@ def filter_xy(x, y, data, distance, return_indices=False, window=None):
         else:
             filter_xy = np.ones_like(x, dtype='bool')
 
-    elif distance > 0:
+    else:
+        if distance > 0:
 
-        dwn_x = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
-        dwn_y = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
+            dwn_x = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
+            dwn_y = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
+
         filter_xy[::dwn_x, ::dwn_y] = True
 
 
