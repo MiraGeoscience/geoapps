@@ -65,7 +65,7 @@ def export_widget(h5file):
             elif file_type.value == 'geotiff' and entity.get_data(data.value):
                 export_grid_2_geotiff(
                     entity.get_data(data.value)[0],
-                    out_dir + export_as.value, epsg_code.value,
+                    out_dir + export_as.value + ".tif", epsg_code.value,
                 )
                 print(f"Object saved to {out_dir + export_as.value}.tif")
 

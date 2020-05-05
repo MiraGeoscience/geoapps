@@ -110,6 +110,7 @@ def plot_plan_data_selection(
         if not isinstance(data.values[0], str):
             values = data.values.copy()
             values[np.abs(values) < 1e-18] = np.nan
+            values[values == -99999] = np.nan
 
     color_norm = None
     if "color_norm" in kwargs.keys():
@@ -155,10 +156,12 @@ def plot_plan_data_selection(
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
             values = values.reshape(entity.shape, order="F")
+
             x, y, values, ind_filter = filter_xy(
                 x, y, values, downsampling,
                 window=window, return_indices=True
             )
+
             out = ax.pcolormesh(x, y, values, cmap=cmap, norm=color_norm)
 
             if "contours" in kwargs.keys():
