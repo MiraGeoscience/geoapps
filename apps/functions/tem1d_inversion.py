@@ -15,7 +15,7 @@ from SimPEG import (
     Optimization, DataMisfit, Utils
 )
 from geoh5py.workspace import Workspace
-from geoh5py.objects import Curve, Surface
+from geoh5py.objects import Curve, Surface, Grid2D
 from geoh5py.groups import ContainerGroup
 
 
@@ -92,9 +92,6 @@ def inversion(input_file):
     """
 
     """
-    dsep = os.path.sep
-    # input_file = sys.argv[1]
-
     with open(input_file, 'r') as f:
         input_param = json.load(f)
 
@@ -136,8 +133,53 @@ def inversion(input_file):
             # Spherical or sparse
             max_irls_iterations = 10
 
-    locations = entity.vertices
-    dem = entity.get_data(input_param['topo'])[0].values
+    def get_topography(locations=None):
+        if "GA_object" in list(input_param["topography"].keys()):
+            workspace = Workspace(input_param["workspace"])
+
+            topo_name = input_param["topography"]['GA_object']['name'].split(".")[1]
+            topo_entity = workspace.get_entity(topo_name)[0]
+
+
+            if isinstance(topo_entity, Grid2D):
+                dem = topo_entity.centroids
+            else:
+                dem = topo_entity.vertices
+
+            if input_param["topography"]['GA_object']['data'] != 'Vertices':
+                data = topo_entity.get_data(input_param["topography"]['GA_object']['data'])[0]
+                dem[:, 2] = data.values
+
+        elif "drapped" in input_param["topography"].keys():
+            dem = locations.copy()
+            dem[:, 2] -= input_param["topography"]['drapped']
+
+        return dem
+
+    if 'rx_absolute' in list(input_param.keys()):
+        bird_offset = input_param['rx_absolute']
+        locations = entity.vertices
+
+        for ii, offset in enumerate(bird_offset):
+            locations[:, ii] += offset
+
+        dem = get_topography(locations=locations)[:, 2]
+
+    else:
+        dem = get_topography()
+        xyz = entity.vertices
+        F = sp.interpolate.LinearNDInterpolator(dem[:, :2], dem[:, 2])
+        dem = F(xyz[:, :2])
+        locations = np.c_[xyz[:, :2], dem]
+
+        if 'rx_relative_drape' in list(input_param.keys()):
+            bird_offset = input_param['rx_relative_drape']
+            for ii, offset in enumerate(bird_offset):
+                locations[:, ii] += offset
+
+        elif 'rx_relative_radar':
+            bird_offset = entity.get_data(input_param['rx_relative_radar'])[0].values
+            locations[:, 2] += bird_offset
 
     if tem_specs['waveform'] is str:
         waveform = tem_specs['waveform']
@@ -274,7 +316,7 @@ def inversion(input_file):
 
         surface = Surface.create(
             workspace,
-            name=f"Model_Sections",
+            name=input_param['out_group'] + f"_Model",
             vertices=np.vstack(model_vertices),
             cells=np.vstack(model_cells),
             parent=out_group
@@ -282,7 +324,7 @@ def inversion(input_file):
         model_ordering = np.hstack(model_ordering).astype(int)
         curve = Curve.create(
             workspace,
-            name=f"Predicted",
+            name=input_param['out_group'] + f"_Predicted",
             vertices=np.vstack(pred_vertices),
             cells=np.vstack(pred_cells).astype("uint32"),
             parent=out_group
@@ -382,10 +424,13 @@ def inversion(input_file):
         vec = vec.reshape((n_sounding, n_time))
         return vec[:, time_index].flatten()
 
-    xyz = entity.vertices[stn_id, :]
-    ztopo = dem[stn_id]
-    topo = np.c_[xyz[:, :2], ztopo]
+    xyz = locations[stn_id, :]
+    topo = np.c_[xyz[:, :2], dem[stn_id]]
 
+    assert np.all(xyz[:, 2] > topo[:, 2]), (
+        "Receiver locations found below ground. "
+        "Please revise topography and receiver parameters."
+    )
     rx_offsets = np.r_[tem_specs['rx_offsets'][0]]
 
     offset_x = np.ones(xyz.shape[0]) * rx_offsets[0]
@@ -422,16 +467,16 @@ def inversion(input_file):
     survey.std = uncertainties
     if reference is "BFHS": # or input_param['uncert']['mode'] == 'Estimated (%|data| + background)':
         print("**** Best-fitting halfspace inversion ****")
-        mesh1D = Mesh.TensorMesh([1], [0.])
 
         hz_BFHS = np.r_[1.]
-        mapping = Maps.ExpMap(nP=n_sounding)
+
         expmap = Maps.ExpMap(nP=n_sounding)
-        # expmap_h = Maps.ExpMap(nP=1)
+
         sigmaMap = expmap
         time_index = np.arange(3)
         dobs_reduced = get_data_time_index(survey.dobs, n_sounding, time, time_index)
         unct_reduced = get_data_time_index(survey.std, n_sounding, time, time_index)
+
         surveyHS = GlobalEM1DSurveyTD(
             rx_locations=xyz+rxOffset,
             src_locations=xyz,
@@ -484,7 +529,7 @@ def inversion(input_file):
             maxIRLSiter=0, minGNiter=1, betaSearch=False
         )
         opt = Optimization.ProjectedGNCG(
-            maxIter=10, lower=np.log(lower_bound),
+            maxIter=max_iteration, lower=np.log(lower_bound),
             upper=np.log(upper_bound), maxIterLS=20,
             maxIterCG=30, tolCG=1e-3
         )
@@ -593,7 +638,7 @@ def inversion(input_file):
     reg.mref = mref
 
     opt = Optimization.ProjectedGNCG(
-        maxIter=15, lower=np.log(lower_bound),
+        maxIter=max_iteration, lower=np.log(lower_bound),
         upper=np.log(upper_bound), maxIterLS=20,
         maxIterCG=30, tolCG=1e-5
     )

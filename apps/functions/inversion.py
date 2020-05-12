@@ -89,6 +89,7 @@ def pf_inversion_widget(
     def update_topo_list(_):
         if workspace.get_entity(topo_objects.value):
             obj = workspace.get_entity(topo_objects.value)[0]
+            print(topo_objects.value)
             topo_value.options = [name for name in obj.get_data_list() if "visual" not in name.lower()] + ['Vertices']
 
             write.button_style = 'warning'
@@ -278,7 +279,7 @@ def pf_inversion_widget(
     ########## TOPO #########
     topo_objects = Dropdown(
         options=names,
-        value=find_value(names, ['topo', 'dem']),
+        value=find_value(names, ['topo', 'dem', 'dtm']),
         description='Object:',
     )
     topo_objects.observe(update_topo_list, names="value")
@@ -714,8 +715,11 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
             data_list = entity.get_data_list()
 
             # Update topo field
-            topo.options = data_list
-            topo.value = find_value(data_list, ['dem', "topo"])
+            # topo_value.options = data_list
+            # topo_value.value = find_value(data_list, ['dem', "topo", 'dtm'])
+
+            sensor_value.options = [name for name in obj.get_data_list() if "visual" not in name.lower()] + ["Vertices"]
+
             line_field.options = data_list
             line_field.value = find_value(data_list, ['line'])
 
@@ -749,11 +753,13 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
     def system_observer(_, start_channel=start_channel):
         entity = get_parental_child(objects.value)[0]
         rx_offsets = em_system_specs[system.value]["rx_offsets"]
+        bird_offset.value = ', '.join([
+                                str(offset) for offset in em_system_specs[system.value]["bird_offset"]
+                            ])
         uncertainties = em_system_specs[system.value]["uncertainty"]
 
         if start_channel is None:
             start_channel = em_system_specs[system.value]["channel_start_index"]
-        em_type = em_system_specs[system.value]["type"]
 
         if em_system_specs[system.value]["type"] == 'time':
             label = "Time (s)"
@@ -875,9 +881,93 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
 
     components.observe(auto_pick_channels, names='value')
 
-    topo = Dropdown(
-        description='DEM:',
+    ###################### Spatial parameters ######################
+    ########## TOPO #########
+
+    def update_topo_list(_):
+
+        if get_parental_child(topo_objects.value):
+            obj = get_parental_child(topo_objects.value)[0]
+            topo_value.options = [name for name in obj.get_data_list() if "visual" not in name.lower()] + ['Vertices']
+            topo_value.value = find_value(topo_value.options, ['dem', "topo", 'dtm'])
+
+            write.button_style = 'warning'
+            invert.button_style = 'danger'
+
+    topo_objects = Dropdown(
+        options=names,
+        value=find_value(names, ['topo', 'dem', 'dtm']),
+        description='Object:',
     )
+    topo_objects.observe(update_topo_list, names="value")
+
+    topo_value = Dropdown(
+        description='Channel: ',
+    )
+
+    topo_panel = VBox([topo_objects, topo_value])
+
+    topo_offset = widgets.FloatText(
+        value=-30,
+        description="Vertical offset (m)",
+        style={'description_width': 'initial'}
+    )
+    topo_options = {
+        "Object": topo_panel,
+        "Drape Height": topo_offset
+    }
+
+    topo_options_button = widgets.RadioButtons(
+        options=['Object', 'Drape Height'],
+        description='Define by:',
+    )
+
+    def update_topo_options(_):
+        topo_options_panel.children = [topo_options_button, topo_options[topo_options_button.value]]
+        write.button_style = 'warning'
+        invert.button_style = 'danger'
+
+    topo_options_button.observe(update_topo_options)
+
+    topo_options_panel = VBox([topo_options_button, topo_options[topo_options_button.value]])
+
+    ########## RECEIVER #########
+    sensor_value = Dropdown(
+        description='Channel: ',
+    )
+
+    bird_offset = Text(
+        description="[dx, dy, dz]"
+    )
+
+    sensor_options = {
+        "Locations + offset (m)": bird_offset,
+        "Topo + offset": bird_offset,
+        "Topo + radar": sensor_value
+    }
+
+    sensor_options_button = widgets.RadioButtons(
+        options=["Locations + offset (m)", "Topo + offset", "Topo + radar"],
+        description='Define by:',
+    )
+
+    def update_sensor_options(_):
+        if topo_value.value is None:
+            sensor_options_button.value = "Locations + offset (m)"
+
+        sensor_options_panel.children = [sensor_options_button, sensor_options[sensor_options_button.value]]
+        write.button_style = 'warning'
+        invert.button_style = 'danger'
+
+    sensor_options_button.observe(update_sensor_options)
+
+    sensor_options_panel = VBox([sensor_options_button, sensor_options[sensor_options_button.value]])
+
+    ###############################
+    spatial_options = {
+        "Topography": topo_options_panel,
+        "Sensor Height": sensor_options_panel
+    }
 
     line_field = Dropdown(
         description='Lines field',
@@ -914,7 +1004,8 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
 
     object_fields_options = {
         "Data Channels": data_channel_panel,
-        "Topo": topo,
+        "Topography": topo_options_panel,
+        "Sensor Height": sensor_options_panel,
         "Line ID": line_field,
     }
 
@@ -968,10 +1059,12 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
             locations = entity.vertices
             parser = np.ones(locations.shape[0], dtype='bool')
 
-            fig = plt.figure(figsize=(12, 8))
-            ax1 = plt.subplot(2, 1, 1)
-            ax2 = plt.subplot(2, 1, 2)
             if hasattr(system, "data_channel_options"):
+
+                fig = plt.figure(figsize=(12, 8))
+                ax1 = plt.subplot(2, 1, 1)
+                ax2 = plt.subplot(2, 1, 2)
+
                 plot_field = get_fields_list(system.data_channel_options)
 
                 if entity.get_data(plot_field[0]):
@@ -1046,7 +1139,28 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
             entity = get_parental_child(objects.value)[0]
             input_dict = {}
             input_dict["system"] = system.value
-            input_dict["topo"] = topo.value
+
+            if sensor_options_button.value == "Locations + offset (m)":
+                input_dict['rx_absolute'] = np.asarray(bird_offset.value.split(",")).astype(float).tolist()
+            elif sensor_options_button.value == "Topo + offset":
+                input_dict['rx_relative_drape'] = np.asarray(bird_offset.value.split(",")).astype(float).tolist()
+            else:
+                input_dict['rx_relative_radar'] = sensor_value.value
+
+            if topo_options_button.value == "Object":
+
+                if topo_objects.value is None:
+                    input_dict["topography"] = None
+                else:
+                    input_dict["topography"] = {
+                        "GA_object": {
+                            "name": topo_objects.value,
+                            "data": topo_value.value,
+                        }
+                    }
+            else:
+                input_dict["topography"] = {"drapped": topo_offset}
+
             input_dict['workspace'] = h5file
             input_dict['entity'] = entity.name
             input_dict['lines'] = {line_field.value: [str(line) for line in lines.value]}
@@ -1111,6 +1225,13 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
 
             invert.value = False
 
+    model_list = []
+    for obj in workspace.all_objects():
+        if isinstance(obj, (BlockModel, Octree, Surface)):
+            for data in obj.children:
+                if getattr(data, "values", None) is not None:
+                    model_list += [data.name]
+
     def update_ref(_):
 
         if ref_mod.children[1].children[0].value == 'Best-fitting halfspace':
@@ -1118,29 +1239,9 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
             ref_mod.children[1].children[1].children = []
 
         elif ref_mod.children[1].children[0].value == 'Model':
-
-            model_list = []
-
-            for obj in workspace.all_objects():
-                if isinstance(obj, (BlockModel, Octree, Surface)):
-
-                    for data in obj.children:
-
-                        if getattr(data, "values", None) is not None:
-
-                            model_list += [data.name]
-
-            ref_mod.children[1].children[1].children = [widgets.Dropdown(
-                description='3D Model',
-                options=model_list,
-            )]
-
+            ref_mod.children[1].children[1].children = [ref_mod_list]
         else:
-
-            ref_mod.children[1].children[1].children = [widgets.FloatText(
-                description='S/m',
-                value=1e-3,
-            )]
+            ref_mod.children[1].children[1].children = [ref_mod_value]
         write.button_style = 'warning'
         invert.button_style = 'danger'
 
@@ -1148,28 +1249,11 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
 
         if start_mod.children[1].children[0].value == 'Model':
 
-            model_list = []
-
-            for obj in workspace.all_objects():
-                if isinstance(obj, (BlockModel, Octree, Surface)):
-
-                    for data in obj.children:
-
-                        if getattr(data, "values", None) is not None:
-
-                            model_list += [data.name]
-
-            start_mod.children[1].children[1].children = [widgets.Dropdown(
-                description='3D Model',
-                options=model_list,
-            )]
+            start_mod.children[1].children[1].children = [start_mod_list]
 
         else:
 
-            start_mod.children[1].children[1].children = [widgets.FloatText(
-                description='S/m',
-                value=1e-3,
-            )]
+            start_mod.children[1].children[1].children = [start_mod_value]
         write.button_style = 'warning'
         invert.button_style = 'danger'
 
@@ -1216,7 +1300,21 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
     )
 
     ref_type.observe(update_ref)
-    ref_mod = widgets.VBox([Label('Reference conductivity'), widgets.VBox([ref_type, widgets.VBox([])])])
+
+    ref_mod_list = widgets.Dropdown(
+        description='3D Model',
+        options=model_list,
+    )
+
+    ref_mod_value = widgets.FloatText(
+                description='S/m',
+                value=1e-3,
+    )
+
+    ref_mod = widgets.VBox([
+        Label('Reference conductivity'),
+        widgets.VBox([ref_type, widgets.VBox([])])
+    ])
 
     start_type = widgets.RadioButtons(
         options=['Model', 'Value'],
@@ -1225,7 +1323,19 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
     )
 
     start_type.observe(update_start)
-    start_mod = widgets.VBox([Label('Starting conductivity'), widgets.VBox([start_type, widgets.VBox([])])])
+
+    start_mod_value = widgets.FloatText(
+                description='S/m',
+                value=1e-3,
+    )
+
+    start_mod_list = widgets.Dropdown(
+        description='3D Model',
+        options=model_list,
+    )
+
+    start_mod = widgets.VBox([Label('Starting conductivity'), widgets.VBox([start_type, widgets.VBox([start_mod_value])])])
+
 
 
     hz_min = widgets.FloatText(
@@ -1321,10 +1431,8 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
     # Trigger all observers
     if object_name is not None and object_name in names:
         objects.value = object_name
-    # else:
-    #     objects.value = names[0]
-
-    object_observer("")
+    else:
+        object_observer("")
 
     return widgets.VBox([
         HBox([
