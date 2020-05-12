@@ -1,9 +1,9 @@
-from ipywidgets import Dropdown, VBox, HBox, interactive_output
+from ipywidgets import Dropdown, VBox, HBox, interactive_output, SelectMultiple
 from .geoh5py.workspace import Workspace
 from .plotting import plot_plan_data_selection
 
 
-def object_data_selection_widget(h5file, plot=False, interactive=False):
+def object_data_selection_widget(h5file, plot=False, interactive=False, select_multiple=False):
     """
 
     """
@@ -32,11 +32,19 @@ def object_data_selection_widget(h5file, plot=False, interactive=False):
     )
 
     obj = workspace.get_entity(objects.value)[0]
-    data = Dropdown(
-        options=obj.get_data_list(),
-        value=obj.get_data_list()[0],
-        description='Data: ',
-    )
+
+    if select_multiple:
+        data = SelectMultiple(
+            options=obj.get_data_list(),
+            value=[obj.get_data_list()[0]],
+            description='Data: ',
+        )
+    else:
+        data = Dropdown(
+            options=obj.get_data_list(),
+            value=obj.get_data_list()[0],
+            description='Data: ',
+        )
 
     objects.observe(updateList, names='value')
 
