@@ -4,6 +4,7 @@ import gdal
 import osr
 from scipy.spatial import cKDTree
 from .geoh5py.objects import Octree, Grid2D
+import pandas as pd
 
 
 def find_value(labels, strings):
@@ -357,6 +358,30 @@ def octree_2_treemesh(mesh):
     treemesh.__setstate__((indArr, levels))
 
     return treemesh
+
+
+def object_2_dataframe(entity, fields=[]):
+    """
+    Convert an object to a pandas dataframe
+    """
+    if getattr(entity, 'vertices', None) is not None:
+        locs = entity.vertices
+    elif getattr(entity, 'centroids', None) is not None:
+        locs = entity.centroids
+
+    data_dict = {
+        'X': locs[:, 0],
+        'Y': locs[:, 1],
+        'Z': locs[:, 2],
+    }
+
+    for field in fields:
+        if entity.get_data(field):
+            obj = entity.get_data(field)[0]
+            if obj.values.shape[0] == locs.shape[0]:
+                data_dict[obj.name] = obj.values
+
+    return pd.DataFrame(data_dict, columns=list(data_dict.keys()))
 
 # def refine_cells(self, indices):
     #     """
