@@ -15,7 +15,7 @@ from SimPEG import (
     Optimization, DataMisfit, Utils
 )
 from geoh5py.workspace import Workspace
-from geoh5py.objects import Curve, Surface
+from geoh5py.objects import Curve, Surface, Grid2D
 from geoh5py.groups import ContainerGroup
 
 
@@ -95,9 +95,6 @@ def inversion(input_file):
     """
 
     """
-    dsep = os.path.sep
-    # input_file = sys.argv[1]
-
     with open(input_file, 'r') as f:
         input_param = json.load(f)
 
@@ -106,6 +103,7 @@ def inversion(input_file):
 
     nThread = int(multiprocessing.cpu_count()/2)
     lower_bound = input_param['bounds'][0]
+
     upper_bound = input_param['bounds'][1]
     chi_target = input_param['chi_factor'][0]
     workspace = Workspace(input_param['workspace'])
@@ -138,23 +136,62 @@ def inversion(input_file):
             # Spherical or sparse
             max_irls_iterations = 10
 
-    locations = entity.vertices
-    dem = entity.get_data(input_param['topo'])[0].values
+    def get_topography(locations=None):
+        if "GA_object" in list(input_param["topography"].keys()):
+            workspace = Workspace(input_param["workspace"])
+            topo_name = input_param["topography"]['GA_object']['name'].split(".")[1]
+            topo_entity = workspace.get_entity(topo_name)[0]
+
+            if isinstance(topo_entity, Grid2D):
+                dem = topo_entity.centroids
+            else:
+                dem = topo_entity.vertices
+
+            if input_param["topography"]['GA_object']['data'] != 'Vertices':
+                data = topo_entity.get_data(input_param["topography"]['GA_object']['data'])[0]
+                dem[:, 2] = data.values
+
+        elif "drapped" in input_param["topography"].keys():
+            dem = locations.copy()
+            dem[:, 2] -= input_param["topography"]['drapped']
+
+        return dem
+
+    if 'rx_absolute' in list(input_param.keys()):
+        bird_offset = input_param['rx_absolute']
+        locations = entity.vertices
+
+        for ii, offset in enumerate(bird_offset):
+            locations[:, ii] += offset
+
+        dem = get_topography(locations=locations)[:, 2]
+
+    else:
+        dem = get_topography()
+        xyz = entity.vertices
+        F = sp.interpolate.LinearNDInterpolator(dem[:, :2], dem[:, 2])
+        dem = F(xyz[:, :2])
+        locations = np.c_[xyz[:, :2], dem]
+
+        if 'rx_relative_drape' in list(input_param.keys()):
+            bird_offset = input_param['rx_relative_drape']
+            for ii, offset in enumerate(bird_offset):
+                locations[:, ii] += offset
+
+        elif 'rx_relative_radar':
+            bird_offset = entity.get_data(input_param['rx_relative_radar'])[0].values
+            locations[:, 2] += bird_offset
 
     frequencies = []
     for channel, freq in fem_specs['channels'].items():
         if channel in list(input_param['data'].keys()):
-
             frequencies.append(freq)
 
     frequencies = np.unique(np.hstack(frequencies))
     nF = len(frequencies)
-
     channels = [
         channel for channel, freq in fem_specs['channels'].items() if freq in frequencies
     ]
-
-    # hz = np.ones(20)*5*np.exp(np.arange(0, 20)*.115)
     hz = hz_min * expansion**np.arange(n_cells)
     CCz = -np.cumsum(hz) + hz/2.
     nZ = hz.shape[0]
@@ -179,16 +216,11 @@ def inversion(input_file):
             xyz = locations[line_ind, :]
             if downsampling > 0:
 
-                # locations = entity.vertices
                 tree = cKDTree(xyz[:, :2])
-
                 nstn = xyz.shape[0]
-                # Initialize the filter
                 filter_xy = np.ones(nstn, dtype='bool')
 
-                count = -1
                 for ii in range(nstn):
-
                     if filter_xy[ii]:
                         ind = tree.query_ball_point(xyz[ii, :2], downsampling)
 
@@ -198,7 +230,6 @@ def inversion(input_file):
                 line_ind = line_ind[filter_xy]
 
             stn_id.append(line_ind)
-
             n_sounding = len(line_ind)
             if n_sounding < 2:
                 continue
@@ -251,7 +282,12 @@ def inversion(input_file):
             data_ordering.append(order + pred_count)
 
             pred_vertices.append(xyz[order, :])
-            pred_cells.append(np.c_[np.arange(x_loc.shape[0]-1), np.arange(x_loc.shape[0]-1)+1] + pred_count)
+            pred_cells.append(
+                np.c_[
+                    np.arange(x_loc.shape[0]-1),
+                    np.arange(x_loc.shape[0]-1)+1
+                ] + pred_count
+            )
 
             model_count += tri2D.points.shape[0]
             pred_count += x_loc.shape[0]
@@ -299,12 +335,13 @@ def inversion(input_file):
 
         elif isinstance(input_param['reference'], float):
 
-            reference = np.ones(np.vstack(model_vertices).shape[0]) * np.log(input_param['reference'])
+            reference = (
+                    np.ones(np.vstack(model_vertices).shape[0]) *
+                    np.log(input_param['reference'])
+            )
 
     stn_id = np.hstack(stn_id)
-
     n_sounding = stn_id.shape[0]
-
     dobs = np.zeros(n_sounding * 2 * nF)
     uncert = np.zeros(n_sounding * 2 * nF)
     offset = {}
@@ -336,7 +373,6 @@ def inversion(input_file):
         else:
             uncert[dobs == np.float(ignore_values)] = np.inf
 
-    ind = 0
     for ind, channel in enumerate(channels):
         if channel in list(input_param['data'].keys()):
             d_i = curve.add_data({
@@ -347,11 +383,13 @@ def inversion(input_file):
 
             curve.add_data_to_group(d_i, f"Observed")
 
-    freq = np.kron(np.ones(2), np.kron(np.ones(n_sounding), frequencies))
+    xyz = locations[stn_id, :]
+    topo = np.c_[xyz[:, :2], dem[stn_id]]
 
-    xyz = entity.vertices[stn_id, :]
-    ztopo = dem[stn_id]
-    topo = np.c_[xyz[:, :2], ztopo]
+    assert np.all(xyz[:, 2] > topo[:, 2]), (
+        "Receiver locations found below ground. "
+        "Please revise topography and receiver parameters."
+    )
 
     survey = GlobalEM1DSurveyFD(
             rx_locations=xyz,
@@ -431,7 +469,7 @@ def inversion(input_file):
             maxIRLSiter=0, minGNiter=1, fix_Jmatrix=True, betaSearch=False,
             chifact_start=chi_target, chifact_target=chi_target
         )
-        # opt = Optimization.InexactGaussNewton(maxIter=10)
+
         opt = Optimization.ProjectedGNCG(
             maxIter=max_iteration, lower=np.log(lower_bound),
             upper=np.log(upper_bound), maxIterLS=20,
@@ -491,13 +529,11 @@ def inversion(input_file):
 
             temp = uncert[ind::(nF*2)][data_ordering]
             temp[temp == np.inf] = 0
-
             d_i = curve.add_data({
                 "Uncertainties_" + channel: {
                     "association": "VERTEX", "values": temp
                 }
             })
-
             curve.add_data_to_group(d_i, f"Uncertainties")
 
         if len(ignore_values) > 0:
@@ -512,8 +548,6 @@ def inversion(input_file):
     dmisfit = DataMisfit.l2_DataMisfit(survey)
     dmisfit.W = 1./uncert
 
-    regmap = Maps.IdentityMap(mesh_reg)
-
     reg = LateralConstraint(
         mesh_reg, mapping=Maps.IdentityMap(nP=mesh_reg.nC),
         alpha_s=1.,
@@ -522,7 +556,6 @@ def inversion(input_file):
         gradientType='total'
     )
     reg.norms = model_norms
-
     wr = prob.getJtJdiag(m0)**0.5
     wr /= wr.max()
 
@@ -575,7 +608,7 @@ def inversion(input_file):
     prob.counter = opt.counter = Utils.Counter()
     opt.LSshorten = 0.5
     opt.remember('xc')
-    mopt = inv.run(m0)
+    inv.run(m0)
 
 if __name__ == '__main__':
 
