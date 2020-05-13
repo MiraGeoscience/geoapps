@@ -110,7 +110,6 @@ def inversion(input_file):
     entity = workspace.get_entity(input_param['entity'])[0]
     selection = input_param['lines']
     downsampling = np.float(input_param['downsampling'])
-
     hz_min, expansion, n_cells = input_param["mesh 1D"]
     ignore_values = input_param["ignore values"]
     max_iteration = input_param["iterations"]
@@ -305,7 +304,7 @@ def inversion(input_file):
 
         surface = Surface.create(
             workspace,
-            name=f"Model_Sections",
+            name=f"{input_param['out_group']}_Model",
             vertices=np.vstack(model_vertices),
             cells=np.vstack(model_cells),
             parent=out_group
@@ -313,7 +312,7 @@ def inversion(input_file):
         model_ordering = np.hstack(model_ordering).astype(int)
         curve = Curve.create(
             workspace,
-            name=f"Predicted",
+            name=f"{input_param['out_group']}_Predicted",
             vertices=np.vstack(pred_vertices),
             cells=np.vstack(pred_cells).astype("uint32"),
             parent=out_group
@@ -324,7 +323,7 @@ def inversion(input_file):
     if input_param['reference']:
 
         if isinstance(input_param['reference'], str):
-
+            print("Interpolating reference model")
             con_object = workspace.get_entity(input_param['reference'])[0]
             con_model = con_object.values
 
@@ -346,10 +345,31 @@ def inversion(input_file):
                     np.log(input_param['reference'])
             )
 
+    starting = 1e-3
+    if input_param['starting']:
+        if isinstance(input_param['starting'], str):
+            print("Interpolating starting model")
+            con_object = workspace.get_entity(input_param['starting'])[0]
+            con_model = con_object.values
+
+            if hasattr(con_object.parent, 'centroids'):
+                grid = con_object.parent.centroids
+            else:
+                grid = con_object.parent.vertices
+
+            tree = cKDTree(grid)
+            _, ind = tree.query(np.vstack(model_vertices))
+
+            ref = con_model[ind]
+            starting = np.log(ref[np.argsort(model_ordering)])
+
+        elif isinstance(input_param['starting'], float):
+
+            starting = np.ones(np.vstack(model_vertices).shape[0]) * np.log(input_param['starting'])
+
     if 'susceptibility' in list(input_param.keys()):
-
         if isinstance(input_param['susceptibility'], str):
-
+            print("Interpolating susceptibility model")
             sus_object = workspace.get_entity(input_param['susceptibility'])[0]
             sus_model = sus_object.values
 
@@ -445,8 +465,6 @@ def inversion(input_file):
         print("**** Best-fitting halfspace inversion ****")
         print(f"Target: {nD}")
 
-        sig_half = 1e-3
-
         hz_BFHS = np.r_[1.]
         expmap = Maps.ExpMap(nP=n_sounding)
         sigmaMap = expmap
@@ -478,7 +496,11 @@ def inversion(input_file):
         dmisfit = DataMisfit.l2_DataMisfit(surveyHS)
 
         dmisfit.W = 1./uncert
-        m0 = np.log(np.ones(n_sounding)*sig_half)
+
+        if starting.shape[0] == 1:
+            m0 = np.log(np.ones(n_sounding)*starting)
+        else:
+            m0 = np.median(starting.reshape((-1, n_sounding), order='F'), axis=0)
 
         d0 = surveyHS.dpred(m0)
         mesh_reg = get_2d_mesh(n_sounding, np.r_[1])
@@ -524,8 +546,10 @@ def inversion(input_file):
 
     if reference is "BFHS":
         m0 = Utils.mkvc(np.kron(mopt, np.ones_like(hz)))
+        mref = Utils.mkvc(np.kron(mopt, np.ones_like(hz)))
     else:
-        m0 = reference
+        mref = reference
+        m0 = starting
 
     mapping = Maps.ExpMap(nP=int(n_sounding*hz.size))
     mesh_reg = get_2d_mesh(n_sounding, hz)
@@ -592,10 +616,12 @@ def inversion(input_file):
         gradientType='total'
     )
     reg.norms = model_norms
+    reg.mref = mref
+
     wr = prob.getJtJdiag(m0)**0.5
     wr /= wr.max()
-
     surface.add_data({"Cell_weights": {"values": wr[model_ordering]}})
+    surface.add_data({"Susceptibility": {"values": susceptibility[model_ordering]}})
 
     min_distance = None
     if downsampling > 0:
