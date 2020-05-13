@@ -10,7 +10,15 @@ dependencies:
   - simpeg
   - matplotlib
   - ipywidgets
+  - ipykernel
   - geopandas
   - scikit-image
+  - scikit-learn
+  - h5py
+  - zarr
+  - fsspec
+  - pip:
+    - empymod
+
 
 
