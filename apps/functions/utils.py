@@ -375,13 +375,14 @@ def object_2_dataframe(entity, fields=[]):
         'Z': locs[:, 2],
     }
 
+    d_f = pd.DataFrame(data_dict, columns=list(data_dict.keys()))
     for field in fields:
         if entity.get_data(field):
             obj = entity.get_data(field)[0]
             if obj.values.shape[0] == locs.shape[0]:
-                data_dict[obj.name] = obj.values
+                d_f[field] = obj.values
 
-    return pd.DataFrame(data_dict, columns=list(data_dict.keys()))
+    return d_f
 
 # def refine_cells(self, indices):
     #     """
