@@ -199,7 +199,7 @@ def plot_plan_data_selection(
         else:
             format_labels(x, y, ax)
 
-        if values[~np.isnan(values)].min() != values[~np.isnan(values)].max():
+        if "colorbar" in kwargs.keys() and values[~np.isnan(values)].min() != values[~np.isnan(values)].max():
             plt.colorbar(out, ax=ax)
 
         if "highlight_selection" in kwargs.keys():
