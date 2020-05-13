@@ -7,7 +7,7 @@ from ipywidgets.widgets import Label, Dropdown, Layout, VBox, HBox, Text
 
 
 from .geoh5py.workspace import Workspace
-from .geoh5py.objects import Curve, BlockModel, Octree, Surface
+from .geoh5py.objects import Curve, BlockModel, Octree, Surface, Grid2D, Points
 import json
 from .plotting import plot_profile_data_selection, plot_plan_data_selection
 from .utils import find_value, rotate_xy
@@ -665,6 +665,12 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
     curves = [entity.parent.name + "." + entity.name for entity in workspace.all_objects() if isinstance(entity, Curve)]
     names = [name for name in sorted(curves)]
 
+    all_obj = [entity.parent.name + "." + entity.name for entity in workspace.all_objects() if isinstance(
+        entity, (Curve, Grid2D, Surface, Points)
+    )]
+
+    all_names = [name for name in sorted(all_obj)]
+
     # Load all known em systems
     dir_path = os.path.dirname(os.path.realpath(__file__))
     with open(os.path.join(dir_path, "AEM_systems.json"), 'r') as aem_systems:
@@ -718,7 +724,7 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
             # topo_value.options = data_list
             # topo_value.value = find_value(data_list, ['dem', "topo", 'dtm'])
 
-            sensor_value.options = [name for name in obj.get_data_list() if "visual" not in name.lower()] + ["Vertices"]
+            sensor_value.options = [name for name in data_list if "visual" not in name.lower()] + ["Vertices"]
 
             line_field.options = data_list
             line_field.value = find_value(data_list, ['line'])
@@ -883,7 +889,6 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
 
     ###################### Spatial parameters ######################
     ########## TOPO #########
-
     def update_topo_list(_):
 
         if get_parental_child(topo_objects.value):
@@ -895,7 +900,7 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
             invert.button_style = 'danger'
 
     topo_objects = Dropdown(
-        options=names,
+        options=all_names,
         value=find_value(names, ['topo', 'dem', 'dtm']),
         description='Object:',
     )
@@ -1075,7 +1080,9 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
                                 "highlight_selection": {line_field.value: line_ids},
                                 "downsampling": downsampling,
                                 "ax": ax1,
-                                "color_norm": colors.SymLogNorm(linthresh=np.percentile(np.abs(data.values), 10))
+                                "color_norm": colors.SymLogNorm(
+                                    linthresh=np.percentile(np.abs(data.values), 10), base=10
+                                )
                             }
                     )
 
@@ -1087,7 +1094,12 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
                             uncertainties=uncerts,
                             ax=ax2
                         )
-                        plt.yscale(scale, linthreshy=threshold)
+
+                        if scale == 'linear':
+                            plt.yscale(scale)
+                        else:
+                            plt.yscale(scale, linthreshy=threshold)
+
             write.button_style = 'warning'
             invert.button_style = 'danger'
 
