@@ -136,10 +136,8 @@ def inversion(input_file):
     def get_topography(locations=None):
         if "GA_object" in list(input_param["topography"].keys()):
             workspace = Workspace(input_param["workspace"])
-
             topo_name = input_param["topography"]['GA_object']['name'].split(".")[1]
             topo_entity = workspace.get_entity(topo_name)[0]
-
 
             if isinstance(topo_entity, Grid2D):
                 dem = topo_entity.centroids
@@ -163,7 +161,12 @@ def inversion(input_file):
         for ii, offset in enumerate(bird_offset):
             locations[:, ii] += offset
 
-        dem = get_topography(locations=locations)[:, 2]
+        dem = get_topography()
+
+        # Get nearest topo point
+        topo_tree = cKDTree(dem[:, :2])
+        _, ind = topo_tree.query(locations[:, :2])
+        dem = dem[ind, 2]
 
     else:
         dem = get_topography()
@@ -250,12 +253,11 @@ def inversion(input_file):
 
                 line_ind = line_ind[filter_xy]
 
-            stn_id.append(line_ind)
-
             n_sounding = len(line_ind)
             if n_sounding < 2:
                 continue
 
+            stn_id.append(line_ind)
             xyz = locations[line_ind, :]
             # Create a 2D mesh to store the results
             if np.std(xyz[:, 1]) > np.std(xyz[:, 0]):

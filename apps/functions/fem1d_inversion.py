@@ -164,7 +164,12 @@ def inversion(input_file):
         for ii, offset in enumerate(bird_offset):
             locations[:, ii] += offset
 
-        dem = get_topography(locations=locations)[:, 2]
+        dem = get_topography()
+
+        # Get nearest topo point
+        topo_tree = cKDTree(dem[:, :2])
+        _, ind = topo_tree.query(locations[:, :2])
+        dem = dem[ind, 2]
 
     else:
         dem = get_topography()
@@ -229,11 +234,11 @@ def inversion(input_file):
 
                 line_ind = line_ind[filter_xy]
 
-            stn_id.append(line_ind)
             n_sounding = len(line_ind)
             if n_sounding < 2:
                 continue
 
+            stn_id.append(line_ind)
             xyz = locations[line_ind, :]
             # Create a 2D mesh to store the results
             if np.std(xyz[:, 1]) > np.std(xyz[:, 0]):
@@ -248,6 +253,7 @@ def inversion(input_file):
             # Create a grid for the surface
             X = np.kron(np.ones(nZ), x_loc.reshape((x_loc.shape[0], 1)))
             Y = np.kron(np.ones(nZ), y_loc.reshape((x_loc.shape[0], 1)))
+
             Z = np.kron(np.ones(nZ), z_loc.reshape((x_loc.shape[0], 1))) + np.kron(CCz, np.ones((x_loc.shape[0],1)))
 
             if np.std(y_loc) > np.std(x_loc):
@@ -340,6 +346,35 @@ def inversion(input_file):
                     np.log(input_param['reference'])
             )
 
+    if 'susceptibility' in list(input_param.keys()):
+
+        if isinstance(input_param['susceptibility'], str):
+
+            sus_object = workspace.get_entity(input_param['susceptibility'])[0]
+            sus_model = sus_object.values
+
+            if hasattr(sus_object.parent, 'centroids'):
+                grid = sus_object.parent.centroids
+            else:
+                grid = sus_object.parent.vertices
+
+            tree = cKDTree(grid)
+            _, ind = tree.query(np.vstack(model_vertices))
+
+            sus = sus_model[ind]
+            susceptibility = sus[np.argsort(model_ordering)]
+
+        elif isinstance(input_param['susceptibility'], float):
+
+            susceptibility = (
+                    np.ones(np.vstack(model_vertices).shape[0]) *
+                    input_param['susceptibility']
+            )
+    else:
+        susceptibility = (
+                np.zeros(np.vstack(model_vertices).shape[0])
+        )
+
     stn_id = np.hstack(stn_id)
     n_sounding = stn_id.shape[0]
     dobs = np.zeros(n_sounding * 2 * nF)
@@ -402,7 +437,7 @@ def inversion(input_file):
             I=fem_specs['tx_specs']['I'],
             field_type='secondary',
             topo=topo,
-        )
+    )
 
     survey.dobs = dobs
 
@@ -500,7 +535,8 @@ def inversion(input_file):
 
     prob = GlobalEM1DProblemFD(
         [], sigmaMap=mapping, hz=hz, parallel=True, n_cpu=nThread,
-        Solver=PardisoSolver
+        Solver=PardisoSolver,
+        chi=susceptibility
     )
     prob.pair(survey)
 

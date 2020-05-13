@@ -22,6 +22,29 @@
         },
         "normalization": "ppm"
     },
+    "Resolve":{
+        "type": "frequency",
+        "flag": "CP",
+        "channel_start_index": 0,
+        "channels": {"CPI400": 385, "CPI1800": 1790, "CPI8200": 8208, "CPI40K": 39840, "CPI140K": 132660, "CPQ400": 385, "CPQ1800": 1790, "CPQ8200": 8208, "CPQ40K": 39840, "CPQ140K": 132660
+        },
+        "components": {
+            "CPI400": "real", "CPQ400": "imag", "CPI1800": "real",  "CPQ1800": "imag", "CPI8200": "real",  "CPQ8200": "imag", "CPI40K": "real", "CPQ40K": "imag", "CPI140K": "real", "CPQ140K": "imag"
+        },
+        "rx_offsets": [
+            [7.86, 0, 0], [7.86, 0, 0], [7.86, 0, 0], [7.86, 0, 0], [7.86, 0, 0], [7.86, 0, 0], [7.86, 0, 0], [7.86, 0, 0], [7.86, 0, 0], [7.86, 0, 0]
+        ],
+        "bird_offset": [0, 0, 0],
+        "uncertainty": [
+            [0.0, 2], [0.0, 10], [0.0, 20], [0.0, 30], [0.0, 60], [0.0, 2], [0.0, 10], [0.0, 20], [0.0, 30], [0.0, 60]
+        ],
+        "tx_specs": {
+            "type": "VMD",
+            "a": 1.0,
+            "I": 1.0
+        },
+        "normalization": "ppm"
+    },
     "skytem2018":{
         "type": "time",
         "flag": "HM",
