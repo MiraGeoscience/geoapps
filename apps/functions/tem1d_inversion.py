@@ -639,6 +639,10 @@ def inversion(input_file):
     reg.norms = model_norms
     reg.mref = mref
 
+    wr = prob.getJtJdiag(m0)**0.5
+    wr /= wr.max()
+    surface.add_data({"Cell_weights": {"values": wr[model_ordering]}})
+
     opt = Optimization.ProjectedGNCG(
         maxIter=max_iteration, lower=np.log(lower_bound),
         upper=np.log(upper_bound), maxIterLS=20,
