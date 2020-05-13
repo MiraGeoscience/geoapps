@@ -786,15 +786,15 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
             else:
                 offsets = rx_offsets[0]
 
+            data_list = []
             if components.value is not None:
-                data_list = []
                 for component in components.value:
                     p_g = entity.get_property_group(component)
                     if p_g is not None:
                         data_list += (
                             [workspace.get_entity(data)[0].name for data in p_g.properties]
                         )
-            else:
+            if len(data_list) == 0:
                 data_list = entity.get_data_list()
 
             data_channel_options[key] = VBox([
@@ -1195,6 +1195,9 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
             else:
                 input_dict['starting'] = []
 
+            if susc_type.value != 'None':
+                input_dict['susceptibility'] = susc_mod.children[1].children[1].children[0].value
+
             input_dict["data"] = {}
 
             input_dict["uncert"] = {"mode": uncert_mode.value}
@@ -1266,6 +1269,18 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
         else:
 
             start_mod.children[1].children[1].children = [start_mod_value]
+        write.button_style = 'warning'
+        invert.button_style = 'danger'
+
+    def update_susc(_):
+
+        if susc_mod.children[1].children[0].value == 'Model':
+
+            susc_mod.children[1].children[1].children = [susc_mod_list]
+
+        else:
+
+            susc_mod.children[1].children[1].children = [start_mod_value]
         write.button_style = 'warning'
         invert.button_style = 'danger'
 
@@ -1348,6 +1363,26 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
 
     start_mod = widgets.VBox([Label('Starting conductivity'), widgets.VBox([start_type, widgets.VBox([start_mod_value])])])
 
+    susc_type = widgets.RadioButtons(
+        options=['None', 'Model', 'Value'],
+        value='None',
+        disabled=False
+    )
+
+    susc_type.observe(update_susc)
+
+    susc_mod_value = widgets.FloatText(
+                description='S/m',
+                value=1e-3,
+    )
+
+    susc_mod_list = widgets.Dropdown(
+        description='3D Model',
+        options=model_list,
+    )
+
+    susc_mod = widgets.VBox([Label('Susceptibility model'), widgets.VBox([susc_type, widgets.VBox([susc_mod_value])])])
+
 
 
     hz_min = widgets.FloatText(
@@ -1424,6 +1459,9 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
         "max iterations": max_iteration,
         "norms": norms
     }
+
+    if em_system_specs[system.value]['type'] == 'frequency':
+        inversion_options['susceptibity model'] = susc_mod
 
     option_choices = widgets.Dropdown(
             options=list(inversion_options.keys()),
