@@ -193,9 +193,9 @@ def plot_plan_data_selection(
 
         if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"]:
             ind = ~np.isnan(values)
+            format_labels(x[ind], y[ind], ax)
             ax.set_xlim([x[ind].min(), x[ind].max()])
             ax.set_ylim([y[ind].min(), y[ind].max()])
-            format_labels(x[ind], y[ind], ax)
         else:
             format_labels(x, y, ax)
 
@@ -362,17 +362,19 @@ def plot_em_data_widget(h5file):
     ])
     return layout
 
-def format_labels(x, y, axs, labels=None, aspect='equal'):
+def format_labels(x, y, axs, labels=None, aspect='equal', tick_format="%i"):
     if labels is None:
         axs.set_ylabel("Northing (m)")
         axs.set_xlabel("Easting (m)")
     else:
         axs.set_xlabel(labels[0])
         axs.set_ylabel(labels[1])
-    xticks = np.linspace(x.min(), x.max(), 5, dtype=int)
-    yticks = np.linspace(y.min(), y.max(), 5, dtype=int)
+    xticks = np.linspace(x.min(), x.max(), 5)
+    yticks = np.linspace(y.min(), y.max(), 5)
+
     axs.set_yticks(yticks)
-    axs.set_yticklabels(yticks, rotation=90, va='center')
+    axs.set_yticklabels([tick_format%y for y in yticks.tolist()], rotation=90, va='center')
     axs.set_xticks(xticks)
-    axs.set_xticklabels(xticks, va='center')
+    axs.set_xticklabels([tick_format%x for x in xticks.tolist()], va='center')
+    axs.autoscale(tight=True)
     axs.set_aspect(aspect)
