@@ -3,7 +3,7 @@ import numpy as np
 import gdal
 import osr
 from scipy.spatial import cKDTree
-from .geoh5py.objects import Octree, Grid2D
+from .geoh5py.objects import Octree, Grid2D, BlockModel
 import pandas as pd
 
 
@@ -31,10 +31,11 @@ def export_grid_2_geotiff(
 
     assert isinstance(grid2d, Grid2D), f"The parent object must be a Grid2D entity."
 
-    values = data_object.values
-    values[(values > 1e-38)*(values < 2e-38)] = -99999
+    values = data_object.values.copy()
+    values[(values > 1e-38)*(values < 2e-38)] = 0
 
-    array = values.reshape(grid2d.shape, order='F').T
+    # TODO Re-sample the grid if rotated
+    # if grid2d.rotation != 0.0:
 
     driver = gdal.GetDriverByName('GTiff')
 
@@ -42,9 +43,16 @@ def export_grid_2_geotiff(
     if dataType == 'image':
         encode_type = gdal.GDT_Byte
         num_bands = 3
+
+        values -= values.min()
+        values *= 255/values.max()
+
+        array = [values.reshape(grid2d.shape, order='F').T]*3
+
     else:
         encode_type = gdal.GDT_Float32
         num_bands = 1
+        array = values.reshape(grid2d.shape, order='F').T
 
     dataset = driver.Create(
         file_name, grid2d.shape[0], grid2d.shape[1], num_bands, encode_type,
@@ -65,12 +73,14 @@ def export_grid_2_geotiff(
         dataset.GetRasterBand(1).WriteArray(array)
     else:
         for i in range(0, num_bands):
-            dataset.GetRasterBand(i+1).WriteArray(array[:, :, i])
+            dataset.GetRasterBand(i+1).WriteArray(array[i])
 
     dataset.FlushCache()  # Write to disk.
 
 
-def geotiff_2_grid(workspace, file_name, parent=None):
+def geotiff_2_grid(
+        workspace, file_name, parent=None, grid_object=None, grid_name=None
+):
     """
         Load a geotiff and return
         a Grid2D with values
@@ -79,26 +89,27 @@ def geotiff_2_grid(workspace, file_name, parent=None):
     band = tiff_object.GetRasterBand(1)
     temp = band.ReadAsArray()
 
-    obj_name = os.path.basename(file_name)
+    if grid_name is None:
+        grid_name = os.path.basename(file_name).split(".")[0]
 
-    if parent is None:
-        parent = Grid2D.create(
+    if grid_object is None:
+        grid_object = Grid2D.create(
             workspace,
-            name=obj_name.split(".")[0],
+            name=grid_name,
             origin=[tiff_object.GetGeoTransform()[0], tiff_object.GetGeoTransform()[3], 0],
             u_count=temp.shape[1],
             v_count=temp.shape[0],
             u_cell_size=tiff_object.GetGeoTransform()[1],
             v_cell_size=tiff_object.GetGeoTransform()[5],
+            parent=parent
         )
-    else:
-        assert isinstance(parent, Grid2D), "Parent object must be a Grid2D"
-        parent = parent
 
-    parent.add_data({parent.name + "_band": {"values": temp.ravel()}})
+    assert isinstance(grid_object, Grid2D), "Parent object must be a Grid2D"
+
+    grid_object.add_data({grid_object.name + "_band": {"values": temp.ravel()}})
 
     del tiff_object
-    return parent
+    return grid_object
 
 
 def export_curve_2_shapefile(
@@ -292,6 +303,35 @@ def rotate_xy(xyz, center, angle):
     return np.c_[xy_rot[:, 0] + center[0], xy_rot[:, 1] + center[1], locs[:, 2:]]
 
 
+def tensor_2_block_model(workspace, mesh, name=None, parent=None, data={}):
+    """
+    Function to convert a tensor mesh from :obj:`~discretize.TensorMesh` to
+    :obj:`~geoh5py.objects.block_model.BlockModel`
+    """
+    block_model = BlockModel.create(
+        workspace,
+        origin=[mesh.x0[0], mesh.x0[1], mesh.x0[2]],
+        u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
+        v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
+        z_cell_delimiters=(mesh.vectorNz - mesh.x0[2]),
+        name=name,
+        parent=parent
+    )
+
+    for name, model in data.items():
+        modelMat = mesh.r(model, 'CC', 'CC', 'M')
+
+        # Transpose the axes
+        modelMatT = modelMat.transpose((2, 0, 1))
+        modelMatTR = modelMatT.reshape((-1, 1), order='F')
+
+        block_model.add_data({
+            name: {"values": modelMatTR}
+        })
+
+    return block_model
+
+
 def treemesh_2_octree(workspace, treemesh, parent=None):
 
     indArr, levels = treemesh._ubc_indArr
@@ -380,9 +420,166 @@ def object_2_dataframe(entity, fields=[]):
         if entity.get_data(field):
             obj = entity.get_data(field)[0]
             if obj.values.shape[0] == locs.shape[0]:
-                d_f[field] = obj.values
+                d_f[field] = obj.values.copy()
+                obj.values = None
 
     return d_f
+
+
+def rotate_vertices(xyz, center, phi, theta):
+    """
+      Rotate scatter points in column format around a center location
+
+      INPUT
+      :param: xyz nDx3 matrix
+      :param: center xyz location of rotation
+      :param: theta angle rotation around z-axis
+      :param: phi angle rotation around x-axis
+
+    """
+    xyz -= np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
+
+    phi = -np.deg2rad(np.asarray(phi))
+    theta = np.deg2rad((450. - np.asarray(theta)) % 360.)
+
+    Rx = np.asarray([[1, 0, 0],
+                     [0, np.cos(phi), -np.sin(phi)],
+                     [0, np.sin(phi), np.cos(phi)]])
+
+    Rz = np.asarray([[np.cos(theta), -np.sin(theta), 0],
+                     [np.sin(theta), np.cos(theta), 0],
+                     [0, 0, 1]])
+
+    R = Rz.dot(Rx)
+
+    xyzRot = R.dot(xyz.T).T
+
+    return xyzRot + np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
+
+
+class RectangularBlock(object):
+    """
+        Define a rotated rectangular block in 3D space
+
+        :param
+            - length, width, depth: width, length and height of prism
+            - center : center of prism in horizontal plane
+            - dip, azimuth : dip and azimuth of prism
+    """
+
+    def __init__(self, **kwargs):
+
+        self._center = [0., 0., 0.]
+        self._length = 1.
+        self._width = 1.
+        self._depth = 1.
+        self._dip = 0.
+        self._azimuth = 0.
+        self._vertices = None
+
+        self.triangles = np.vstack([
+            [0, 1, 2], [1, 2, 3],
+            [0, 1, 4], [1, 4, 5],
+            [1, 3, 5], [3, 5, 7],
+            [2, 3, 6], [3, 6, 7],
+            [0, 2, 4], [2, 4, 6],
+            [4, 5, 6], [5, 6, 7],
+        ])
+
+        for attr, item in kwargs.items():
+            try:
+                setattr(self, attr, item)
+            except AttributeError:
+                continue
+
+    @property
+    def center(self):
+        """Prism center"""
+        return self._center
+
+    @center.setter
+    def center(self, value):
+        self._center = value
+        self._vertices = None
+
+    @property
+    def length(self):
+        """"""
+        return self._length
+
+    @length.setter
+    def length(self, value):
+        self._length = value
+        self._vertices = None
+
+    @property
+    def width(self):
+        """"""
+        return self._width
+
+    @width.setter
+    def width(self, value):
+        self._width = value
+        self._vertices = None
+
+    @property
+    def depth(self):
+        """"""
+        return self._depth
+
+    @depth.setter
+    def depth(self, value):
+        self._depth = value
+        self._vertices = None
+
+    @property
+    def dip(self):
+        """"""
+        return self._dip
+
+    @dip.setter
+    def dip(self, value):
+        self._dip = value
+        self._vertices = None
+
+    @property
+    def azimuth(self):
+        """"""
+        return self._azimuth
+
+    @azimuth.setter
+    def azimuth(self, value):
+        self._azimuth = value
+        self._vertices = None
+
+    @property
+    def vertices(self):
+        """
+        Prism eight corners in 3D space
+        """
+
+        if getattr(self, "_vertices", None) is None:
+            x1, x2 = [-self.length / 2. + self.center[0], self.length / 2. + self.center[0]]
+            y1, y2 = [-self.width / 2. + self.center[1], self.width / 2. + self.center[1]]
+            z1, z2 = [-self.depth / 2. + self.center[2], self.depth / 2. + self.center[2]]
+
+            block_xyz = np.asarray([
+                [x1, x2, x1, x2, x1, x2, x1, x2],
+                [y1, y1, y2, y2, y1, y1, y2, y2],
+                [z1, z1, z1, z1, z2, z2, z2, z2]
+            ])
+
+            xyz = rotate_vertices(
+                block_xyz.T,
+                self.center,
+                self.dip,
+                self.azimuth
+            )
+
+            self._vertices = xyz
+
+        return self._vertices
+
 
 # def refine_cells(self, indices):
     #     """
