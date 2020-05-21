@@ -42,14 +42,14 @@ def export_widget(h5file):
 
                 for key in data.value:
                     if entity.get_data(key):
-                        data_values[key] = entity.get_data(key)[0].values
+                        data_values[key] = entity.get_data(key)[0].values.copy()
                         data_values[key][
                             (data_values[key] > 1e-38) * (data_values[key] < 2e-38)
                         ] = no_data_value.value
             else:
                 data_values = {}
 
-            if file_type.value == 'xyz':
+            if file_type.value == 'csv':
                 dataframe = object_2_dataframe(entity, fields=list(data_values.keys()))
                 dataframe.to_csv(f"{out_dir + export_as.value}" + ".csv", index=False)
 
@@ -65,14 +65,19 @@ def export_widget(h5file):
                     )
                     print(f"Object saved to {out_dir + export_as.value}.shp")
 
-            elif file_type.value == 'geotiff' and entity.get_data(data.value):
-                for key, item in data_values.items():
-                    export_grid_2_geotiff(
-                        item,
-                        out_dir + export_as.value + "_" + key + ".tif",
-                        epsg_code.value,
-                    )
-                    print(f"Object saved to {out_dir + export_as.value}.tif")
+            elif file_type.value == 'geotiff':
+
+                for key in data.value:
+                    name = out_dir + export_as.value + "_" + key + ".tif"
+                    if entity.get_data(key):
+
+                        export_grid_2_geotiff(
+                            entity.get_data(key)[0],
+                            name,
+                            epsg_code.value,
+                        )
+                        print(f"Object saved to {name}")
+
 
             elif file_type.value == 'UBC format':
 
@@ -133,8 +138,8 @@ def export_widget(h5file):
             type_widget.children = [file_type]
 
     file_type = widgets.Dropdown(
-        options=['ESRI shapefile', 'xyz', "geotiff", "UBC format"],
-        value='xyz',
+        options=['ESRI shapefile', 'csv', "geotiff", "UBC format"],
+        value='csv',
         description='Export type',
     )
 
@@ -265,7 +270,7 @@ def object_to_object_interpolation(h5file):
 
             values = {}
             for field in data.value:
-                model_in = workspace.get_entity(field)[0]
+                model_in = mesh_in.get_data(field)[0]
                 values[field] = model_in.values.copy()
                 if space.value == 'Log':
                     values[field] = np.log(values[field])
@@ -342,6 +347,20 @@ def object_to_object_interpolation(h5file):
 
                 for key in values_interp.keys():
                     values_interp[key][xyz_out[:, 2] > z_interp] = -99999
+
+            if xy_extent.value is not None:
+
+                xy_ref = workspace.get_entity(xy_extent.value)[0]
+
+                if hasattr(xy_ref, "centroids"):
+                    xy_ref = xy_ref.centroids
+                elif hasattr(xy_ref, "vertices"):
+                    xy_ref = xy_ref.vertices
+
+                tree = cKDTree(xy_ref[:, :2])
+                rad, _ = tree.query(xyz_out[:, :2])
+                for key in values_interp.keys():
+                    values_interp[key][rad > max_distance.value] = -99999
 
             for key in values_interp.keys():
                 mesh_out.add_data({key + "_interp": {"values": values_interp[key]}})
@@ -467,8 +486,15 @@ def object_to_object_interpolation(h5file):
         style={'description_width': 'initial'}
     )
 
+    xy_extent = widgets.Dropdown(
+        options=[None] + names,
+        description="Trim xy extent with:",
+        style={'description_width': 'initial'}
+    )
+
     new_grid_panel = VBox([
-            new_grid, ref_dropdown, core_cell_size, depth_core, padding_distance, expansion_fact
+            new_grid, ref_dropdown,
+            core_cell_size, depth_core, padding_distance, expansion_fact
         ])
 
     out_panel = HBox([
@@ -484,7 +510,8 @@ def object_to_object_interpolation(h5file):
             widgets.Label("Interpolation Parameters"),
             HBox([
             VBox([widgets.Label("Space"), space]),
-            VBox([widgets.Label("Method"), method_panel])]), max_distance, topography
+            VBox([widgets.Label("Method"), method_panel])]),
+            max_distance, topography, xy_extent
             ]),
         interpolate
     ])
