@@ -1263,23 +1263,22 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
     def update_start(_):
 
         if start_mod.children[1].children[0].value == 'Model':
-
             start_mod.children[1].children[1].children = [start_mod_list]
-
         else:
-
             start_mod.children[1].children[1].children = [start_mod_value]
+
         write.button_style = 'warning'
         invert.button_style = 'danger'
 
     def update_susc(_):
 
-        if susc_mod.children[1].children[0].value == 'Model':
+        if susc_mod.children[1].children[0].value == 'None':
+            susc_mod.children[1].children[1].children = []
 
+        elif susc_mod.children[1].children[0].value == 'Model':
             susc_mod.children[1].children[1].children = [susc_mod_list]
 
         else:
-
             susc_mod.children[1].children[1].children = [start_mod_value]
         write.button_style = 'warning'
         invert.button_style = 'danger'
@@ -1381,9 +1380,7 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
         options=model_list,
     )
 
-    susc_mod = widgets.VBox([Label('Susceptibility model'), widgets.VBox([susc_type, widgets.VBox([susc_mod_value])])])
-
-
+    susc_mod = widgets.VBox([Label('Susceptibility model'), widgets.VBox([susc_type])])
 
     hz_min = widgets.FloatText(
         value=10.,
