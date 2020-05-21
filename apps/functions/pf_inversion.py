@@ -328,6 +328,8 @@ def inversion(input_file):
     elif 'GA_object' in list(input_dict["data_type"].keys()):
 
         workspace = Workspace(input_dict["workspace"])
+
+        print([obj.name for obj in workspace.all_objects()], input_dict["data_type"]['GA_object']['name'])
         entity = workspace.get_entity(input_dict["data_type"]['GA_object']['name'])[0]
 
         data = []
@@ -842,11 +844,11 @@ def inversion(input_file):
         memory footprint false below max_ram
     """
     used_ram = np.inf
-    count = 1
+    count = -1
     while used_ram > max_ram:
 
         tiles, binCount, tileIDs, tile_numbers = Utils.modelutils.tileSurveyPoints(
-            rxLoc, count
+            rxLoc, count, method='ortho'
         )
 
         # Grab the largest bin and generate a temporary mesh
@@ -1027,14 +1029,14 @@ def inversion(input_file):
         if isinstance(input_value, str):
             print("In model interpolation for " + input_value)
             workspace = Workspace(input_dict["save_to_geoh5"])
+            input_mesh = workspace.get_entity(input_value)[0].parent
 
-            input_model = workspace.get_entity(input_value)[0].values
+            input_model = input_mesh.get_data(input_value)[0].values
 
             # Remove null values
-            active = np.abs(input_model) > 2e-38
+            active = ((input_model > 1e-38) * (input_model < 2e-38)) == 0
             input_model = input_model[active]
 
-            input_mesh = workspace.get_entity(input_value)[0].parent
             xyz_cc = input_mesh.centroids[active, :]
 
             if window is not None:
@@ -1054,7 +1056,7 @@ def inversion(input_file):
 
             if save_model:
                 val = model.copy()
-                val[activeCells == False] = -9999
+                val[activeCells == False] = -99999
                 mesh_object.add_data(
                     {"Reference_model": {"values": val[mesh._ubc_order]}}
                 )
