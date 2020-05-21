@@ -229,22 +229,26 @@ def coordinate_transformation_widget(
 
     workspace = Workspace(h5file)
 
-    def listObjects(obj_names, epsg_in, epsg_out, create_copy, export, plot_it):
+    def listObjects(obj_names, epsg_in, epsg_out, export, plot_it):
 
         out_list = []
-        if epsg_in != 0 and epsg_out != 0:
+        if epsg_in != 0 and epsg_out != 0 and (plot_it or export):
             inProj = f'EPSG:{int(epsg_in)}'
             outProj = f'EPSG:{int(epsg_out)}'
 
-            if epsg_in == "4326":
+            if inProj == "EPSG:4326":
                 labels_in = ['Lon', "Lat"]
+                tick_format_in = "%.3f"
             else:
                 labels_in = ["Easting", 'Northing']
-            if epsg_out == "4326":
+                tick_format_in = "%i"
+
+            if outProj == "EPSG:4326":
                 labels_out = ['Lon', "Lat"]
+                tick_format_out = "%.3f"
             else:
                 labels_out = ["Easting", 'Northing']
-
+                tick_format_out = "%i"
 
             if plot_it:
                 fig = plt.figure(figsize=(10, 10))
@@ -252,11 +256,12 @@ def coordinate_transformation_widget(
                 ax2 = plt.subplot(1, 2, 2)
                 X1, Y1, X2, Y2 = [], [], [], []
 
-            if export and create_copy:
+            if export:
                 group = ContainerGroup.create(
                     workspace,
                     name=f'Projection epsg:{int(epsg_out)}'
                 )
+
             for name in obj_names:
                 obj = workspace.get_entity(name)[0]
 
@@ -266,6 +271,10 @@ def coordinate_transformation_widget(
 
                 if isinstance(obj, Grid2D):
                     # Get children data
+                    if obj.rotation != 0:
+                        print(f"{name} object ignored. Re-projection only available for non-rotated Grid2D")
+                        continue
+
                     for child in obj.children:
 
                         temp_file = child.name + ".tif"
@@ -281,11 +290,10 @@ def coordinate_transformation_widget(
                             gdal.Warp(temp_file_in, grid, dstSRS='EPSG:' + str(int(epsg_out)))
 
                             if count == 0:
-                                grid2d = geotiff_2_grid(temp_work, temp_file_in)
+                                grid2d = geotiff_2_grid(temp_work, temp_file_in, grid_name=obj.name)
 
                             else:
-                                _ = geotiff_2_grid(temp_work, temp_file_in, parent=grid2d)
-
+                                _ = geotiff_2_grid(temp_work, temp_file_in, grid_object=grid2d)
 
                             if plot_it:
                                 plot_plan_data_selection(obj, child, ax=ax1)
@@ -301,13 +309,13 @@ def coordinate_transformation_widget(
                             count += 1
 
                     if export:
-                        grid2d.copy(parent=workspace)
+                        grid2d.copy(parent=group)
 
                     os.remove(temp_work.h5file)
 
                 else:
                     if not hasattr(obj, 'vertices'):
-                        print(f"Skipping {name}. Entity dies not have vertices")
+                        print(f"Skipping {name}. Entity does not have vertices")
                         continue
 
                     x, y = obj.vertices[:, 0].tolist(), obj.vertices[:, 1].tolist()
@@ -321,20 +329,13 @@ def coordinate_transformation_widget(
                         x2, y2 = y2, x2
 
                     if export:
+                        new_obj = obj.copy(
+                            parent=group,
+                            copy_children=True
+                        )
 
-                        if create_copy:
-                            # Save the result to geoh5
-                            new_obj = obj.copy(
-                                parent=group,
-                                copy_children=True
-                            )
-
-                            new_obj.vertices = np.c_[x2, y2, obj.vertices[:, 2]]
-                            out_list.append(new_obj)
-
-                        else:
-                            obj.vertices = np.c_[x2, y2, obj.vertices[:, 2]]
-
+                        new_obj.vertices = np.c_[x2, y2, obj.vertices[:, 2]]
+                        out_list.append(new_obj)
 
                     if plot_it:
                         ax1.scatter(x, y, 5)
@@ -343,10 +344,16 @@ def coordinate_transformation_widget(
 
             workspace.finalize()
             if plot_it and X1:
-                format_labels(np.hstack(X1), np.hstack(Y1), ax1, labels=labels_in)
+                format_labels(
+                    np.hstack(X1), np.hstack(Y1), ax1,
+                    labels=labels_in, tick_format=tick_format_in
+                )
 
             if plot_it and X2:
-                format_labels(np.hstack(X2), np.hstack(Y2), ax2, labels=labels_out)
+                format_labels(
+                    np.hstack(X2), np.hstack(Y2), ax2,
+                    labels=labels_out, tick_format=tick_format_out
+                )
 
         return out_list
 
@@ -377,12 +384,6 @@ def coordinate_transformation_widget(
 
     export.observe(saveIt)
 
-    create_copy = widgets.Checkbox(
-        value=False,
-        indent=True,
-        description="Create copy"
-    )
-
     plot_it = widgets.ToggleButton(
         value=False,
         description='Plot',
@@ -405,7 +406,8 @@ def coordinate_transformation_widget(
     )
 
     out = widgets.interactive(
-        listObjects, obj_names=objects, epsg_in=epsg_in, epsg_out=epsg_out, create_copy=create_copy, export=export, plot_it=plot_it
+        listObjects, obj_names=objects, epsg_in=epsg_in, epsg_out=epsg_out,
+        export=export, plot_it=plot_it
     )
 
     return out
