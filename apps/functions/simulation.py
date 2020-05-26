@@ -61,12 +61,33 @@ def block_model_widget(
         axs = plt.subplot(projection='3d')
         axs.view_init(dip, ((450 - azimuth) % 360) + 180)
         if getattr(obj, "vertices", None) is not None:
+
+            if isinstance(obs.values[0], np.float):
+                values = obs.values
+            else:
+                values = None
+
             axs.scatter(
                 obj.vertices[:, 0],
                 obj.vertices[:, 1],
                 obj.vertices[:, 2],
                 s=4,
-                c=obs.values,
+                c=values,
+                cmap='Spectral_r'
+            )
+        elif getattr(obj, "centroids", None) is not None:
+
+            if isinstance(obs.values[0], np.float):
+                values = obs.values
+            else:
+                values = None
+
+            axs.scatter(
+                obj.centroids[:, 0],
+                obj.centroids[:, 1],
+                obj.centroids[:, 2],
+                s=4,
+                c=values,
                 cmap='Spectral_r'
             )
 
@@ -233,7 +254,7 @@ def block_model_widget(
 
     core_cell_size = widgets.Text(
         value='100, 100, 100',
-        description='Grid resolution (m)',
+        description='Model discretization (m)',
         disabled=False,
         style={'description_width': 'initial'}
     )
@@ -303,6 +324,11 @@ def block_model_widget(
         if forward.value:
             obj = workspace.get_entity(object_selection.children[0].children[0].value)[0]
             obs = obj.get_data(object_selection.children[0].children[1].value)[0]
+
+            if getattr(obj, "vertices", None) is not None:
+                xyz = obj.vertices
+            else:
+                xyz = obj.centroids
 
             nodes = []
             out_blocks = []
@@ -473,13 +499,14 @@ def block_model_widget(
 
                 plt.figure(figsize=(8, 4 * int(np.ceil(nC / 2) + 1)))
                 axs = plt.subplot(int(np.ceil(nC / 2) + 1), 2, 1)
-                im = axs.tricontourf(trian, obs.values, cmap='Spectral_r', levels=100, vmin=obs.values.min(),
-                                     vmax=obs.values.max())
-                plt.colorbar(im)
-                axs.set_title(data)
-                axs.set_yticklabels([])
-                axs.set_xticklabels([])
-                axs.set_aspect('equal')
+                if isinstance(obs.values[0], np.float):
+                    im = axs.tricontourf(trian, obs.values, cmap='Spectral_r', levels=100, vmin=obs.values.min(),
+                                         vmax=obs.values.max())
+                    plt.colorbar(im)
+                    axs.set_title(data)
+                    axs.set_yticklabels([])
+                    axs.set_xticklabels([])
+                    axs.set_aspect('equal')
 
                 for ind, comp in enumerate(components.value):
                     axs = plt.subplot(int(np.ceil(nC / 2) + 1), 2, ind + 2)
