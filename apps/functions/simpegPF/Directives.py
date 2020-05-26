@@ -4,6 +4,7 @@ from . import DataMisfit
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
+import json
 from .PF import Magnetics
 from . import Regularization
 from . import Mesh
@@ -717,10 +718,10 @@ class SaveIterationsGeoH5(InversionDirective):
     association = "VERTEX"
     sorting = None
     mapping = None
+    save_objective_function = False
 
     def initialize(self):
-        if self.attribute == "predicted":
-            return
+
         prop = self.invProb.model
 
         if self.mapping is not None:
@@ -745,6 +746,25 @@ class SaveIterationsGeoH5(InversionDirective):
                     }
                 }
             )
+
+        if self.save_objective_function:
+            regCombo = ["phi_ms", "phi_msx"]
+
+            if self.prob[0].mesh.dim >= 2:
+                regCombo += ["phi_msy"]
+
+            if self.prob[0].mesh.dim == 3:
+                regCombo += ["phi_msz"]
+
+            # Save the data.
+            iterDict = {'beta': f"{self.invProb.beta:.3e}"}
+            iterDict['phi_d'] = f"{self.invProb.phi_d:.3e}"
+            iterDict['phi_m'] = f"{self.invProb.phi_m:.3e}"
+
+            for label, fcts in zip(regCombo, self.reg.objfcts[0].objfcts):
+                iterDict[label] = f"{fcts(self.invProb.model):.3e}"
+
+            self.h5_object.parent.add_comment(json.dumps(iterDict), author=f"Iteration_{0}")
 
         self.h5_object.workspace.finalize()
 
@@ -772,7 +792,6 @@ class SaveIterationsGeoH5(InversionDirective):
         elif self.attribute == "mvis_model":
             prop = prop.reshape((-1, 3), order='F')[:, 0]
 
-
         for ii, channel in enumerate(self.channels):
 
             attr = prop[ii::len(self.channels)]
@@ -786,6 +805,27 @@ class SaveIterationsGeoH5(InversionDirective):
                     }
                 }
             )
+
+        if self.save_objective_function:
+            regCombo = ["phi_ms", "phi_msx"]
+
+            if self.prob[0].mesh.dim >= 2:
+                regCombo += ["phi_msy"]
+
+            if self.prob[0].mesh.dim == 3:
+                regCombo += ["phi_msz"]
+
+            # Save the data.
+            # Save the data.
+            iterDict= {'beta': f"{self.invProb.beta:.3e}"}
+            iterDict['phi_d'] = f"{self.invProb.phi_d:.3e}"
+            iterDict['phi_m'] = f"{self.invProb.phi_m[0]:.3e}"
+
+            for label, fcts in zip(regCombo, self.reg.objfcts[0].objfcts):
+                iterDict[label] = f"{fcts(self.invProb.model):.3e}"
+
+            self.h5_object.parent.add_comment(json.dumps(iterDict), author=f"Iteration_{self.opt.iter}")
+
         self.h5_object.workspace.finalize()
 
 
@@ -918,6 +958,7 @@ class Update_IRLS(InversionDirective):
     beta_ratio_l2 = None
     prctile = 90
     chifact_target = 1.
+    chifact_start = 1.
 
     # Solving parameter for IRLS (mode:2)
     IRLSiter = 0
@@ -957,6 +998,23 @@ class Update_IRLS(InversionDirective):
     @target.setter
     def target(self, val):
         self._target = val
+
+    @property
+    def start(self):
+        if getattr(self, '_start', None) is None:
+            if isinstance(self.survey, list):
+                self._start = 0
+                for survey in self.survey:
+                    self._start += survey.nD*0.5*self.chifact_start
+
+            else:
+
+                self._start = self.survey.nD*0.5*self.chifact_start
+        return self._start
+
+    @start.setter
+    def start(self, val):
+        self._start = val
 
     def initialize(self):
 
@@ -1041,7 +1099,7 @@ class Update_IRLS(InversionDirective):
             phi_m_last += [reg(self.invProb.model)]
 
         # After reaching target misfit with l2-norm, switch to IRLS (mode:2)
-        if np.all([self.invProb.phi_d < self.target, self.mode == 1]):
+        if np.all([self.invProb.phi_d < self.start, self.mode == 1]):
             self.startIRLS()
             self.f_old = np.sum(phi_m_last)
 
