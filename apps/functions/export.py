@@ -329,8 +329,18 @@ def object_to_object_interpolation(h5file):
 
                 if method.value == 'Inverse Distance':
                     values_interp[key][rad[:, 0] > max_distance.value] = -99999
+                    if max_depth.value is not None:
+                        values_interp[key][
+                            np.abs(xyz_out[:, 2] - xyz[ind[:, 0], 2]) > max_depth.value
+                        ] = -99999
+
                 else:
                     values_interp[key][rad > max_distance.value] = -99999
+
+                    if max_depth.value is not None:
+                        values_interp[key][
+                            np.abs(xyz_out[:, 2] - xyz[ind, 2]) > max_depth.value
+                        ] = -99999
 
 
             if topography.value is not None:
@@ -450,7 +460,13 @@ def object_to_object_interpolation(h5file):
 
     max_distance = widgets.FloatText(
         value=0,
-        description='Maximum distance',
+        description='Maximum distance XY (m)',
+        style={'description_width': 'initial'}
+    )
+
+    max_depth = widgets.FloatText(
+        value=0,
+        description='Maximum distance Z (m)',
         style={'description_width': 'initial'}
     )
 
@@ -511,7 +527,7 @@ def object_to_object_interpolation(h5file):
             HBox([
             VBox([widgets.Label("Space"), space]),
             VBox([widgets.Label("Method"), method_panel])]),
-            max_distance, topography, xy_extent
+            max_distance, max_depth, topography, xy_extent,
             ]),
         interpolate
     ])
