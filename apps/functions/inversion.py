@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import json
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import ipywidgets as widgets
@@ -8,9 +9,88 @@ from ipywidgets.widgets import Label, Dropdown, Layout, VBox, HBox, Text
 
 from .geoh5py.workspace import Workspace
 from .geoh5py.objects import Curve, BlockModel, Octree, Surface, Grid2D, Points
+from .geoh5py.groups import ContainerGroup
 import json
 from .plotting import plot_profile_data_selection, plot_plan_data_selection
 from .utils import find_value, rotate_xy
+
+
+def get_inversion_output(h5file, group_name):
+    """
+    Recover an inversion iterations from a ContainerGroup comments.
+    """
+    workspace = Workspace(h5file)
+    out = {
+        "time": [],
+        "iteration": [],
+        "phi_d": [],
+        "phi_m": [],
+        "beta": []
+    }
+
+    if workspace.get_entity(group_name):
+        group = workspace.get_entity(group_name)[0]
+
+        for comment in group.comments.values:
+            if "Iteration" in comment["Author"]:
+                out["iteration"] += [np.int(comment["Author"].split('_')[1])]
+                out["time"] += [comment["Date"]]
+
+                values = json.loads(comment["Text"])
+
+                out["phi_d"] += [np.float(values["phi_d"])]
+                out["phi_m"] += [np.float(values["phi_m"])]
+                out["beta"] += [np.float(values["beta"])]
+
+        if len(out["iteration"]) > 0:
+            out["iteration"] = np.hstack(out["iteration"])
+            ind = np.argsort(out["iteration"])
+            out["interation"] = out["iteration"][ind]
+            out["phi_d"] = np.hstack(out["phi_d"])[ind]
+            out["phi_m"] = np.hstack(out["phi_m"])[ind]
+            out["time"] = np.hstack(out["time"])[ind]
+
+    return out
+
+
+def plot_convergence_curve(h5file):
+    """
+
+    """
+    workspace = Workspace(h5file)
+
+    names = [group.name for group in workspace.all_groups() if isinstance(group, ContainerGroup)]
+
+    objects = widgets.Dropdown(
+        options=names,
+        value=names[0],
+        description='Inversion Group:',
+        style={'description_width': 'initial'}
+    )
+
+    def plot_curve(objects):
+
+        inversion = workspace.get_entity(objects)[0]
+        result = None
+        if getattr(inversion, "comments", None) is not None:
+            if inversion.comments.values is not None:
+                result = get_inversion_output(workspace.h5file, objects)
+
+                ax1 = plt.subplot()
+                ax2 = ax1.twinx()
+                ax1.plot(result["iteration"], result["phi_d"], linewidth=3, c='k')
+                ax1.set_xlabel("Iterations")
+                ax1.set_ylabel("$\phi_d$", size=16)
+                ax2.plot(result["iteration"], result["phi_m"], linewidth=3, c='r')
+                ax2.set_ylabel("$\phi_m$", size=16)
+
+        return result
+
+    interactive_plot = widgets.interactive(
+        plot_curve, objects=objects
+    )
+
+    return interactive_plot
 
 
 def pf_inversion_widget(
@@ -453,7 +533,7 @@ def pf_inversion_widget(
                 input_dict['forward_only'] = []
 
             with open(inv_dir + f"{out_group.value}.json", 'w') as f:
-                json.dump(input_dict, f)
+                json.dump(input_dict, f, indent=4)
 
             write.value = False
             write.button_style = ''
@@ -517,7 +597,7 @@ def pf_inversion_widget(
     ref_type.observe(update_options)
     alpha_values = widgets.Text(
         value='1, 1, 1, 1',
-        description='Regularization (m, x, y, z)',
+        description='alpha (s, x, y, z)',
         disabled=False,
         style={'description_width': 'initial'}
     )
@@ -1225,7 +1305,7 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
             else:
                 write.button_style = ''
                 with open(inv_dir + f"{out_group.value}.json", 'w') as f:
-                    json.dump(input_dict, f)
+                    json.dump(input_dict, f, indent=4)
                 invert.button_style = 'success'
 
             write.value = False
@@ -1434,7 +1514,7 @@ def em1d_inversion_widget(h5file, plot_profile=True, start_channel=None, object_
 
     norms = widgets.Text(
         value='2, 2, 2, 2',
-        description='Norms (m, x, y, z)',
+        description='Norms (s, x, y, z)',
         disabled=False,
         style={'description_width': 'initial'}
     )

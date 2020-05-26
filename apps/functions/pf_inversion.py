@@ -34,6 +34,7 @@ from geoh5py.workspace import Workspace
 from geoh5py.objects import Grid2D, Points, Octree
 from geoh5py.groups import ContainerGroup
 
+
 def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     """
     Get active cells from xyz points
@@ -123,6 +124,7 @@ def active_from_xyz(mesh, xyz, grid_reference='CC', method='linear'):
     )
 
     return active.ravel()
+
 
 def filter_xy(x, y, data, distance, return_indices=False, window=None):
     """
@@ -329,7 +331,6 @@ def inversion(input_file):
 
         workspace = Workspace(input_dict["workspace"])
 
-        print([obj.name for obj in workspace.all_objects()], input_dict["data_type"]['GA_object']['name'])
         entity = workspace.get_entity(input_dict["data_type"]['GA_object']['name'])[0]
 
         data = []
@@ -980,6 +981,8 @@ def inversion(input_file):
             name=input_dict['out_group']
         )
 
+        out_group.add_comment(json.dumps(driver, indent=4).strip(), author="input")
+
         if window is not None:
             xy_rot = rotate_xy(
                 rxLoc[:, :2], window['center'], -window['azimuth']
@@ -1365,6 +1368,9 @@ def inversion(input_file):
     # Add a list of directives to the inversion
     directiveList = []
 
+    if initial_beta is None:
+        directiveList.append(Directives.BetaEstimate_ByEig(beta0_ratio=1e+2))
+
     # Save model
     if "save_to_geoh5" in list(input_dict.keys()):
 
@@ -1388,7 +1394,8 @@ def inversion(input_file):
                 h5_object=point_object,
                 channels=survey.components,
                 attribute="predicted",
-                sorting=sorting
+                sorting=sorting,
+                save_objective_function=True
             )
         )
     # elif "save_to_ubc" in list(input_dict.keys()):
@@ -1400,9 +1407,6 @@ def inversion(input_file):
             vector=input_dict["inversion_type"][0:3] == 'mvi'
         )
     )
-
-    if initial_beta is None:
-        directiveList.append(Directives.BetaEstimate_ByEig(beta0_ratio=1e+2))
 
     if vector_property:
         directiveList.append(Directives.VectorInversion())

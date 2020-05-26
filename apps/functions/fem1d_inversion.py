@@ -1,6 +1,5 @@
 import numpy as np
 import scipy as sp
-import os
 import sys
 import multiprocessing
 import json
@@ -11,9 +10,10 @@ from simpegEM1D import (
 )
 from pymatsolver import PardisoSolver
 from SimPEG import (
-    Mesh, Maps, Directives, Inversion, InvProblem,
+    Maps, Inversion, InvProblem, Directives,
     Optimization, DataMisfit, Utils
 )
+
 from geoh5py.workspace import Workspace
 from geoh5py.objects import Curve, Surface, Grid2D
 from geoh5py.groups import ContainerGroup
@@ -30,16 +30,31 @@ class SaveIterationsGeoH5(Directives.InversionDirective):
     association = "VERTEX"
     sorting = None
     mapping = None
+    save_objective_function = False
 
     def initialize(self):
-        if self.attribute == "model":
-            prop = self.invProb.model
 
-        elif self.attribute == "predicted":
-            return
+        if self.attribute == "predicted":
+            if getattr(self.dmisfit, 'objfcts', None) is not None:
+                dpred = []
+                for local_misfit in self.dmisfit.objfcts:
+                    dpred.append(np.asarray(
+                        local_misfit.survey.dpred(self.invProb.model)
+                    ))
+                prop = np.hstack(dpred)
+            else:
+                prop = self.dmisfit.survey.dpred(self.invProb.model)
+        else:
+            prop = self.invProb.model
 
         if self.mapping is not None:
             prop = self.mapping * prop
+
+        if self.attribute == "mvi_model":
+            prop = np.linalg.norm(prop.reshape((-1, 3), order='F'), axis=1)
+
+        elif self.attribute == "mvis_model":
+            prop = prop.reshape((-1, 3), order='F')[:, 0]
 
         for ii, channel in enumerate(self.channels):
 
@@ -48,28 +63,51 @@ class SaveIterationsGeoH5(Directives.InversionDirective):
             if self.sorting is not None:
                 attr = attr[self.sorting]
 
-            data = self.h5_object.add_data({
+            self.h5_object.add_data({
                     f"Initial": {
                         "association":self.association, "values": attr
                     }
                 }
             )
 
-            if self.attribute == "predicted":
-                self.h5_object.add_data_to_group(data, f"Initial")
+        if self.save_objective_function:
+            regCombo = ["phi_ms", "phi_msx", "phi_msy", "phi_msz"]
+
+            # Save the data.
+            iterDict = {'beta': f"{self.invProb.beta:.3e}"}
+            iterDict['phi_d'] = f"{self.invProb.phi_d:.3e}"
+            iterDict['phi_m'] = f"{self.invProb.phi_m:.3e}"
+
+            for label, fcts in zip(regCombo, self.reg.objfcts[0].objfcts):
+                iterDict[label] = f"{fcts(self.invProb.model):.3e}"
+
+            self.h5_object.parent.add_comment(json.dumps(iterDict), author=f"Iteration_{0}")
 
         self.h5_object.workspace.finalize()
 
     def endIter(self):
 
-        if self.attribute == "model":
+        if self.attribute == "predicted":
+            if getattr(self.dmisfit, 'objfcts', None) is not None:
+                dpred = []
+                for local_misfit in self.dmisfit.objfcts:
+                    dpred.append(np.asarray(
+                        local_misfit.survey.dpred(self.invProb.model)
+                    ))
+                prop = np.hstack(dpred)
+            else:
+                prop = self.dmisfit.survey.dpred(self.invProb.model)
+        else:
             prop = self.invProb.model
-
-        elif self.attribute == "predicted":
-            prop = self.invProb.dpred
 
         if self.mapping is not None:
             prop = self.mapping * prop
+
+        if self.attribute == "mvi_model":
+            prop = np.linalg.norm(prop.reshape((-1, 3), order='F'), axis=1)
+
+        elif self.attribute == "mvis_model":
+            prop = prop.reshape((-1, 3), order='F')[:, 0]
 
         for ii, channel in enumerate(self.channels):
 
@@ -78,15 +116,25 @@ class SaveIterationsGeoH5(Directives.InversionDirective):
             if self.sorting is not None:
                 attr = attr[self.sorting]
 
-            data = self.h5_object.add_data({
+            self.h5_object.add_data({
                     f"Iteration_{self.opt.iter}_" + channel: {
                         "association":self.association, "values": attr
                     }
                 }
             )
 
-            if self.attribute == "predicted":
-                self.h5_object.add_data_to_group(data, f"Iteration_{self.opt.iter}")
+        if self.save_objective_function:
+            regCombo = ["phi_ms", "phi_msx", "phi_msy", "phi_msz"]
+
+            # Save the data.
+            iterDict= {'beta': f"{self.invProb.beta:.3e}"}
+            iterDict['phi_d'] = f"{self.invProb.phi_d:.3e}"
+            iterDict['phi_m'] = f"{self.invProb.phi_m:.3e}"
+
+            for label, fcts in zip(regCombo, self.reg.objfcts[0].objfcts):
+                iterDict[label] = f"{fcts(self.invProb.model):.3e}"
+
+            self.h5_object.parent.add_comment(json.dumps(iterDict), author=f"Iteration_{self.opt.iter}")
 
         self.h5_object.workspace.finalize()
 
@@ -301,6 +349,10 @@ def inversion(input_file):
             workspace,
             name=input_param['out_group']
             )
+
+        out_group.add_comment(
+            json.dumps(input_param, indent=4).strip(), author="input"
+        )
 
         surface = Surface.create(
             workspace,
@@ -566,15 +618,15 @@ def inversion(input_file):
 
     pred = survey.dpred(m0)
 
-    for ind, channel in enumerate(channels):
-
-        d_i = curve.add_data({
-                "Iteration_0_" + channel: {
-                    "association": "VERTEX", "values": pred[ind::(nF*2)][data_ordering]
-                }
-        })
-
-        curve.add_data_to_group(d_i, f"Iteration_0")
+    # for ind, channel in enumerate(channels):
+    #
+    #     d_i = curve.add_data({
+    #             "Iteration_0_" + channel: {
+    #                 "association": "VERTEX", "values": pred[ind::(nF*2)][data_ordering]
+    #             }
+    #     })
+    #
+    #     curve.add_data_to_group(d_i, f"Iteration_0")
 
     # Write uncertities to objects
     for ind, channel in enumerate(channels):
@@ -651,7 +703,8 @@ def inversion(input_file):
     savePred = SaveIterationsGeoH5(
         h5_object=curve, sorting=data_ordering,
         mapping=1, attribute="predicted",
-        channels=channels
+        channels=channels,
+        save_objective_function=True
     )
 
     IRLS = Directives.Update_IRLS(
@@ -663,7 +716,7 @@ def inversion(input_file):
     betaest = Directives.BetaEstimate_ByEig(beta0_ratio=10.)
     inv = Inversion.BaseInversion(
         invProb, directiveList=[
-            saveModel, savePred, sensW, IRLS, update_Jacobi, betaest
+            betaest, saveModel, savePred, sensW, IRLS, update_Jacobi
         ]
     )
 
