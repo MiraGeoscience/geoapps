@@ -1,3 +1,20 @@
+#  Copyright (c) 2020 Mira Geoscience Ltd.
+#
+#  This file is part of geoh5py.
+#
+#  geoh5py is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  geoh5py is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public License
+#  along with geoh5py.  If not, see <https://www.gnu.org/licenses/>.
+
 # pylint: disable=R0904
 # pylint: disable=R0912
 
@@ -24,7 +41,7 @@ import h5py
 import numpy as np
 
 from .. import data, groups, objects
-from ..data import Data, DataType
+from ..data import CommentsData, Data, DataType
 from ..groups import CustomGroup, Group, PropertyGroup, RootGroup
 from ..io import H5Reader, H5Writer
 from ..objects import Cell, ObjectBase
@@ -293,7 +310,7 @@ class Workspace:
 
         for entity_type in self.all_types():
             if len(entity_type.modified_attributes) > 0:
-                H5Writer.add_entity_type(entity_type)
+                H5Writer.write_entity_type(entity_type)
 
         H5Writer.finalize(self)
 
@@ -389,6 +406,12 @@ class Workspace:
                 and inspect.ismethod(member.primitive_type)
                 and data_type.primitive_type is member.primitive_type()
             ):
+                if (
+                    member is CommentsData
+                    and "UserComments" not in entity_kwargs.values()
+                ):
+                    continue
+
                 created_entity = member(data_type, **entity_kwargs)
 
                 return created_entity
