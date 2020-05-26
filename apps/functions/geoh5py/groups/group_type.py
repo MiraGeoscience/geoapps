@@ -1,3 +1,20 @@
+#  Copyright (c) 2020 Mira Geoscience Ltd.
+#
+#  This file is part of geoh5py.
+#
+#  geoh5py is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  geoh5py is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public License
+#  along with geoh5py.  If not, see <https://www.gnu.org/licenses/>.
+
 from __future__ import annotations
 
 import uuid
@@ -34,6 +51,10 @@ class GroupType(EntityType):
 
     @property
     def allow_move_content(self) -> bool:
+        """
+        :obj:`bool`: [True] Allow to move the group
+        :obj:`geoh5py.shared.entity.Entity.children`.
+        """
         return self._allow_move_content
 
     @allow_move_content.setter
@@ -42,6 +63,10 @@ class GroupType(EntityType):
 
     @property
     def allow_delete_content(self) -> bool:
+        """
+        :obj:`bool`: [True] Allow to delete the group
+        :obj:`geoh5py.shared.entity.Entity.children`.
+        """
         return self._allow_delete_content
 
     @allow_delete_content.setter
@@ -54,9 +79,6 @@ class GroupType(EntityType):
     ) -> GroupType:
         """ Find or creates an EntityType with given UUID that matches the given
         Group implementation class.
-
-        It is expected to have a single instance of EntityType in the Workspace
-        for each concrete Entity class.
 
         :param workspace: An active Workspace class
         :param entity_class: An Group implementation class.

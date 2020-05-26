@@ -1,3 +1,20 @@
+#  Copyright (c) 2020 Mira Geoscience Ltd.
+#
+#  This file is part of geoh5py.
+#
+#  geoh5py is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  geoh5py is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public License
+#  along with geoh5py.  If not, see <https://www.gnu.org/licenses/>.
+
 import numpy as np
 
 
@@ -23,12 +40,17 @@ class ColorMap:
     @property
     def values(self) -> np.ndarray:
         """
-        Colormap defined by an array of RGBA and values such that
-        [val_1, R_1, G_1, B_1, A_1]
-        ...
-        [val_i, R_i, G_i, B_i, A_i]
-        where R:red, G:green, B:blue and A:alpha are integer values between [0, 255]
-        and val_i are sorted data values defining the position of each RGBA color.
+        :obj:`numpy.array`: Colormap defined by values and corresponding RGBA:
+
+        .. code-block:: python
+
+            values = [
+                [V_1, R_1, G_1, B_1, A_1],
+                ..., [V_i, R_i, G_i, B_i, A_i]
+            ]
+
+        where V (Values) are sorted floats defining the position of each RGBA.
+        R (Red), G (Green), B (Blue) and A (Alpha) are integer values between [0, 255].
         """
         return self._values
 
@@ -46,15 +68,15 @@ class ColorMap:
         else:
             assert (
                 values.shape[1] == 5
-            ), f"'values' must be a an array of shape (*, 5) for [value, r, g, b, a]"
+            ), "'values' must be a an array of shape (*, 5) for [value, r, g, b, a]"
             self._values = np.core.records.fromarrays(
                 values.T, names=names, formats=formats
             )
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
-        Name of the colormap
+        :obj:`str`: Name of the colormap
         """
         return self._name
 
