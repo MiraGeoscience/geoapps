@@ -36,20 +36,10 @@ repos:
     -   id: mypy
         args: ["--ignore-missing-imports", "--scripts-are-modules", "--show-error-context",
                "--show-column-numbers"]
--   repo: local
+-   repo: https://github.com/pre-commit/mirrors-pylint
+    rev: v2.5.0
     hooks:
     -   id: pylint
-        name: pylint
-        entry: poetry run pylint
-        language: system
-        types: [python]
-        exclude: (devtools|docs)/
-    -   id: check-copyright
-        name: Check copyright
-        entry: python devtools/check-copyright.py
-        language: python
-        types: [python]
-        exclude: (devtools|docs)/
 -   repo: https://github.com/codespell-project/codespell
     rev: v1.16.0
     hooks:
