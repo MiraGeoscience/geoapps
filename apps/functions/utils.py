@@ -1,24 +1,27 @@
 import os
-import numpy as np
+
 import gdal
+import numpy as np
 import osr
-from scipy.spatial import cKDTree
-from .geoh5py.objects import Octree, Grid2D, BlockModel
 import pandas as pd
+from geoh5py.objects import BlockModel, Grid2D, Octree
+from scipy.spatial import cKDTree
 
 
-def find_value(labels, strings):
+def find_value(labels, strings, default=None):
     value = None
     for name in labels:
         for string in strings:
-            if (string.lower() in name.lower()) or (name.lower() in string.lower()):
+            if isinstance(string, str) and (
+                (string.lower() in name.lower()) or (name.lower() in string.lower())
+            ):
                 value = name
+    if value is None:
+        value = default
     return value
 
 
-def export_grid_2_geotiff(
-    data_object, file_name, epsg_code, dataType='float'
-):
+def export_grid_2_geotiff(data_object, file_name, epsg_code, dataType="float"):
     """
         Source:
 
@@ -32,36 +35,42 @@ def export_grid_2_geotiff(
     assert isinstance(grid2d, Grid2D), f"The parent object must be a Grid2D entity."
 
     values = data_object.values.copy()
-    values[(values > 1e-38)*(values < 2e-38)] = 0
+    values[(values > 1e-38) * (values < 2e-38)] = 0
 
     # TODO Re-sample the grid if rotated
     # if grid2d.rotation != 0.0:
 
-    driver = gdal.GetDriverByName('GTiff')
+    driver = gdal.GetDriverByName("GTiff")
 
     # Chose type
-    if dataType == 'image':
+    if dataType == "image":
         encode_type = gdal.GDT_Byte
         num_bands = 3
 
         values -= values.min()
-        values *= 255/values.max()
+        values *= 255 / values.max()
 
-        array = [values.reshape(grid2d.shape, order='F').T]*3
+        array = [values.reshape(grid2d.shape, order="F").T] * 3
 
     else:
         encode_type = gdal.GDT_Float32
         num_bands = 1
-        array = values.reshape(grid2d.shape, order='F').T
+        array = values.reshape(grid2d.shape, order="F").T
 
     dataset = driver.Create(
         file_name, grid2d.shape[0], grid2d.shape[1], num_bands, encode_type,
     )
 
-    dataset.SetGeoTransform((
-        grid2d.origin['x'], grid2d.u_cell_size, 0,
-        grid2d.origin['y'], 0, grid2d.v_cell_size
-    ))
+    dataset.SetGeoTransform(
+        (
+            grid2d.origin["x"],
+            grid2d.u_cell_size,
+            0,
+            grid2d.origin["y"],
+            0,
+            grid2d.v_cell_size,
+        )
+    )
 
     datasetSRS = osr.SpatialReference()
 
@@ -73,14 +82,12 @@ def export_grid_2_geotiff(
         dataset.GetRasterBand(1).WriteArray(array)
     else:
         for i in range(0, num_bands):
-            dataset.GetRasterBand(i+1).WriteArray(array[i])
+            dataset.GetRasterBand(i + 1).WriteArray(array[i])
 
     dataset.FlushCache()  # Write to disk.
 
 
-def geotiff_2_grid(
-        workspace, file_name, parent=None, grid_object=None, grid_name=None
-):
+def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_name=None):
     """
         Load a geotiff and return
         a Grid2D with values
@@ -96,12 +103,16 @@ def geotiff_2_grid(
         grid_object = Grid2D.create(
             workspace,
             name=grid_name,
-            origin=[tiff_object.GetGeoTransform()[0], tiff_object.GetGeoTransform()[3], 0],
+            origin=[
+                tiff_object.GetGeoTransform()[0],
+                tiff_object.GetGeoTransform()[3],
+                0,
+            ],
             u_count=temp.shape[1],
             v_count=temp.shape[0],
             u_cell_size=tiff_object.GetGeoTransform()[1],
             v_cell_size=tiff_object.GetGeoTransform()[5],
-            parent=parent
+            parent=parent,
         )
 
     assert isinstance(grid_object, Grid2D), "Parent object must be a Grid2D"
@@ -112,9 +123,7 @@ def geotiff_2_grid(
     return grid_object
 
 
-def export_curve_2_shapefile(
-        curve, attribute=None, epsg=None, file_name=None
-):
+def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
     import urllib
 
     try:
@@ -125,6 +134,7 @@ def export_curve_2_shapefile(
     except ModuleNotFoundError as err:
         print(err, "Trying to install through geopandas, hang tight...")
         import os
+
         os.system("conda install -c conda-forge geopandas=0.7.0")
         from shapely.geometry import mapping, LineString
         import fiona
@@ -134,11 +144,9 @@ def export_curve_2_shapefile(
         crs = from_epsg(int(epsg))
 
         wkt = urllib.request.urlopen(
-            "http://spatialreference.org/ref/epsg/{0}/prettywkt/".format(
-                str(int(epsg))
-            )
+            "http://spatialreference.org/ref/epsg/{}/prettywkt/".format(str(int(epsg)))
         )
-        # remove spaces between charachters
+        # remove spaces between characters
         remove_spaces = wkt.read().replace(b" ", b"")
         # create the .prj file
         prj = open(file_name + ".prj", "w")
@@ -157,9 +165,7 @@ def export_curve_2_shapefile(
     for lid in curve.unique_lines:
 
         ind_line = np.where(curve.line_id == lid)[0]
-        ind_vert = np.r_[
-            curve.cells[ind_line, 0], curve.cells[ind_line[-1], 1]
-        ]
+        ind_vert = np.r_[curve.cells[ind_line, 0], curve.cells[ind_line[-1], 1]]
 
         polylines += [curve.vertices[ind_vert, :2]]
 
@@ -167,16 +173,16 @@ def export_curve_2_shapefile(
             values += [attribute.values[ind_vert]]
 
     # Define a polygon feature geometry with one attribute
-    schema = {'geometry': 'LineString'}
+    schema = {"geometry": "LineString"}
 
     if attribute:
         attr_name = attribute.name.replace(":", "_")
-        schema['properties'] = {attr_name: "float"}
+        schema["properties"] = {attr_name: "float"}
     else:
-        schema['properties'] = {"id": "int"}
+        schema["properties"] = {"id": "int"}
 
     with fiona.open(
-            file_name + '.shp', 'w', driver='ESRI Shapefile', schema=schema, crs=crs
+        file_name + ".shp", "w", driver="ESRI Shapefile", schema=schema, crs=crs
     ) as c:
 
         # If there are multiple geometries, put the "for" loop here
@@ -186,15 +192,15 @@ def export_curve_2_shapefile(
                 pline = LineString(list(tuple(map(tuple, poly))))
 
                 res = {}
-                res['properties'] = {}
+                res["properties"] = {}
 
                 if attribute and values:
-                    res['properties'][attr_name] = np.mean(values[ii])
+                    res["properties"][attr_name] = np.mean(values[ii])
                 else:
-                    res['properties']["id"] = ii
+                    res["properties"]["id"] = ii
 
                 # geometry of of the original polygon shapefile
-                res['geometry'] = mapping(pline)
+                res["geometry"] = mapping(pline)
                 c.write(res)
 
 
@@ -203,75 +209,59 @@ def filter_xy(x, y, data, distance, return_indices=False, window=None):
     Downsample xy data based on minimum distance
     """
 
-    filter_xy = np.zeros_like(x, dtype='bool')
-    dwn_x, dwn_y = 1, 1
+    filter_xy = np.zeros_like(x, dtype="bool")
     if x.ndim == 1:
         if distance > 0:
-            # xx = np.arange(x.min() - distance, x.max() + distance, distance)
-            # yy = np.arange(y.min() - distance, y.max() + distance, distance)
-
-            # X, Y = np.meshgrid(xx, yy)
-
-            # tree = cKDTree(np.c_[x, y])
-            # rad, ind = tree.query(np.c_[X.ravel(), Y.ravel()])
-            # takeout = np.unique(ind[rad < 2**0.5*distance])
-
-            # filter_xy[takeout] = True
-            locXYZ = np.c_[x, y]
-
-            tree = cKDTree(locXYZ)
-
+            xy = np.c_[x, y]
+            tree = cKDTree(xy)
             nstn = x.shape[0]
-            # Initialize the filter
-            filter_xy = np.ones(nstn, dtype='bool')
 
-            count = -1
+            # Initialize the filter
+            filter_xy = np.ones(nstn, dtype="bool")
+
             for ii in range(nstn):
 
                 if filter_xy[ii]:
 
-                    ind = tree.query_ball_point(locXYZ[ii, :2], distance)
+                    ind = tree.query_ball_point(xy[ii, :2], distance)
 
                     filter_xy[ind] = False
                     filter_xy[ii] = True
 
         else:
-            filter_xy = np.ones_like(x, dtype='bool')
+            filter_xy = np.ones_like(x, dtype="bool")
 
-    else:
-        if distance > 0:
+    elif distance > 0:
 
-            dwn_x = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
-            dwn_y = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
-
+        dwn_x = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
+        dwn_y = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
         filter_xy[::dwn_x, ::dwn_y] = True
 
-
-    mask = np.ones_like(x, dtype='bool')
+    mask = np.ones_like(x, dtype="bool")
     if window is not None:
         x_lim = [
-            window['center'][0] - window['size'][0] / 2,
-            window['center'][0] + window['size'][0] / 2
+            window["center"][0] - window["size"][0] / 2,
+            window["center"][0] + window["size"][0] / 2,
         ]
         y_lim = [
-            window['center'][1] - window['size'][1] / 2,
-            window['center'][1] + window['size'][1] / 2
+            window["center"][1] - window["size"][1] / 2,
+            window["center"][1] + window["size"][1] / 2,
         ]
 
         xy_rot = rotate_xy(
-            np.c_[x.ravel(), y.ravel()], window['center'], window['azimuth']
+            np.c_[x.ravel(), y.ravel()], window["center"], window["azimuth"]
         )
 
         mask = (
-                (xy_rot[:, 0] > x_lim[0]) *
-                (xy_rot[:, 0] < x_lim[1]) *
-                (xy_rot[:, 1] > y_lim[0]) *
-                (xy_rot[:, 1] < y_lim[1])
-            ).reshape(x.shape)
+            (xy_rot[:, 0] > x_lim[0])
+            * (xy_rot[:, 0] < x_lim[1])
+            * (xy_rot[:, 1] > y_lim[0])
+            * (xy_rot[:, 1] < y_lim[1])
+        ).reshape(x.shape)
 
     if data is not None:
         data = data.copy()
-        data[(filter_xy * mask)==False] = np.nan
+        data[(filter_xy * mask) == False] = np.nan
 
     if x.ndim == 1:
         x, y = x[filter_xy], y[filter_xy]
@@ -283,7 +273,7 @@ def filter_xy(x, y, data, distance, return_indices=False, window=None):
             data = data[::dwn_x, ::dwn_y]
 
     if return_indices:
-        return x, y, data, filter_xy*mask
+        return x, y, data, filter_xy * mask
     else:
         return x, y, data
 
@@ -291,7 +281,7 @@ def filter_xy(x, y, data, distance, return_indices=False, window=None):
 def rotate_xy(xyz, center, angle):
     R = np.r_[
         np.c_[np.cos(np.pi * angle / 180), -np.sin(np.pi * angle / 180)],
-        np.c_[np.sin(np.pi * angle / 180), np.cos(np.pi * angle / 180)]
+        np.c_[np.sin(np.pi * angle / 180), np.cos(np.pi * angle / 180)],
     ]
 
     locs = xyz.copy()
@@ -315,21 +305,50 @@ def tensor_2_block_model(workspace, mesh, name=None, parent=None, data={}):
         v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
         z_cell_delimiters=(mesh.vectorNz - mesh.x0[2]),
         name=name,
-        parent=parent
+        parent=parent,
     )
 
     for name, model in data.items():
-        modelMat = mesh.r(model, 'CC', 'CC', 'M')
+        modelMat = mesh.r(model, "CC", "CC", "M")
 
         # Transpose the axes
         modelMatT = modelMat.transpose((2, 0, 1))
-        modelMatTR = modelMatT.reshape((-1, 1), order='F')
+        modelMatTR = modelMatT.reshape((-1, 1), order="F")
 
-        block_model.add_data({
-            name: {"values": modelMatTR}
-        })
+        block_model.add_data({name: {"values": modelMatTR}})
 
     return block_model
+
+
+def block_model_2_tensor(block_model, models=[]):
+    """
+    Function to convert a :obj:`~geoh5py.objects.block_model.BlockModel`
+    to tensor mesh :obj:`~discretize.TensorMesh`
+    """
+
+    from discretize import TensorMesh
+
+    tensor = TensorMesh(
+        [block_model.u_cells, block_model.v_cells, block_model.z_cells], x0="CC0"
+    )
+
+    tensor.x0 = [
+        block_model.origin["x"] + block_model.u_cells[block_model.u_cells < 0].sum(),
+        block_model.origin["y"] + block_model.v_cells[block_model.v_cells < 0].sum(),
+        block_model.origin["z"] + block_model.z_cells[block_model.z_cells < 0].sum(),
+    ]
+    out = []
+    for model in models:
+        values = model.copy().reshape((tensor.nCz, tensor.nCx, tensor.nCy), order="F")
+
+        if tensor.x0[2] != block_model.origin["z"]:
+            values = values[::-1, :, :]
+        values = np.transpose(values, (1, 2, 0))
+
+        values = values.reshape((-1, 1), order="F")
+        out += [values]
+
+    return tensor, out
 
 
 def treemesh_2_octree(workspace, treemesh, parent=None):
@@ -351,7 +370,7 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
         v_cell_size=treemesh.h[1][0],
         w_cell_size=-treemesh.h[2][0],
         octree_cells=np.c_[indArr, levels],
-        parent=parent
+        parent=parent,
     )
 
     return mesh_object
@@ -404,15 +423,15 @@ def object_2_dataframe(entity, fields=[]):
     """
     Convert an object to a pandas dataframe
     """
-    if getattr(entity, 'vertices', None) is not None:
+    if getattr(entity, "vertices", None) is not None:
         locs = entity.vertices
-    elif getattr(entity, 'centroids', None) is not None:
+    elif getattr(entity, "centroids", None) is not None:
         locs = entity.centroids
 
     data_dict = {
-        'X': locs[:, 0],
-        'Y': locs[:, 1],
-        'Z': locs[:, 2],
+        "X": locs[:, 0],
+        "Y": locs[:, 1],
+        "Z": locs[:, 2],
     }
 
     d_f = pd.DataFrame(data_dict, columns=list(data_dict.keys()))
@@ -440,15 +459,19 @@ def rotate_vertices(xyz, center, phi, theta):
     xyz -= np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
 
     phi = -np.deg2rad(np.asarray(phi))
-    theta = np.deg2rad((450. - np.asarray(theta)) % 360.)
+    theta = np.deg2rad((450.0 - np.asarray(theta)) % 360.0)
 
-    Rx = np.asarray([[1, 0, 0],
-                     [0, np.cos(phi), -np.sin(phi)],
-                     [0, np.sin(phi), np.cos(phi)]])
+    Rx = np.asarray(
+        [[1, 0, 0], [0, np.cos(phi), -np.sin(phi)], [0, np.sin(phi), np.cos(phi)]]
+    )
 
-    Rz = np.asarray([[np.cos(theta), -np.sin(theta), 0],
-                     [np.sin(theta), np.cos(theta), 0],
-                     [0, 0, 1]])
+    Rz = np.asarray(
+        [
+            [np.cos(theta), -np.sin(theta), 0],
+            [np.sin(theta), np.cos(theta), 0],
+            [0, 0, 1],
+        ]
+    )
 
     R = Rz.dot(Rx)
 
@@ -457,7 +480,7 @@ def rotate_vertices(xyz, center, phi, theta):
     return xyzRot + np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
 
 
-class RectangularBlock(object):
+class RectangularBlock:
     """
         Define a rotated rectangular block in 3D space
 
@@ -469,22 +492,30 @@ class RectangularBlock(object):
 
     def __init__(self, **kwargs):
 
-        self._center = [0., 0., 0.]
-        self._length = 1.
-        self._width = 1.
-        self._depth = 1.
-        self._dip = 0.
-        self._azimuth = 0.
+        self._center = [0.0, 0.0, 0.0]
+        self._length = 1.0
+        self._width = 1.0
+        self._depth = 1.0
+        self._dip = 0.0
+        self._azimuth = 0.0
         self._vertices = None
 
-        self.triangles = np.vstack([
-            [0, 1, 2], [1, 2, 3],
-            [0, 1, 4], [1, 4, 5],
-            [1, 3, 5], [3, 5, 7],
-            [2, 3, 6], [3, 6, 7],
-            [0, 2, 4], [2, 4, 6],
-            [4, 5, 6], [5, 6, 7],
-        ])
+        self.triangles = np.vstack(
+            [
+                [0, 1, 2],
+                [1, 2, 3],
+                [0, 1, 4],
+                [1, 4, 5],
+                [1, 3, 5],
+                [3, 5, 7],
+                [2, 3, 6],
+                [3, 6, 7],
+                [0, 2, 4],
+                [2, 4, 6],
+                [4, 5, 6],
+                [5, 6, 7],
+            ]
+        )
 
         for attr, item in kwargs.items():
             try:
@@ -559,22 +590,28 @@ class RectangularBlock(object):
         """
 
         if getattr(self, "_vertices", None) is None:
-            x1, x2 = [-self.length / 2. + self.center[0], self.length / 2. + self.center[0]]
-            y1, y2 = [-self.width / 2. + self.center[1], self.width / 2. + self.center[1]]
-            z1, z2 = [-self.depth / 2. + self.center[2], self.depth / 2. + self.center[2]]
+            x1, x2 = [
+                -self.length / 2.0 + self.center[0],
+                self.length / 2.0 + self.center[0],
+            ]
+            y1, y2 = [
+                -self.width / 2.0 + self.center[1],
+                self.width / 2.0 + self.center[1],
+            ]
+            z1, z2 = [
+                -self.depth / 2.0 + self.center[2],
+                self.depth / 2.0 + self.center[2],
+            ]
 
-            block_xyz = np.asarray([
-                [x1, x2, x1, x2, x1, x2, x1, x2],
-                [y1, y1, y2, y2, y1, y1, y2, y2],
-                [z1, z1, z1, z1, z2, z2, z2, z2]
-            ])
-
-            xyz = rotate_vertices(
-                block_xyz.T,
-                self.center,
-                self.dip,
-                self.azimuth
+            block_xyz = np.asarray(
+                [
+                    [x1, x2, x1, x2, x1, x2, x1, x2],
+                    [y1, y1, y2, y2, y1, y1, y2, y2],
+                    [z1, z1, z1, z1, z2, z2, z2, z2],
+                ]
             )
+
+            xyz = rotate_vertices(block_xyz.T, self.center, self.dip, self.azimuth)
 
             self._vertices = xyz
 
@@ -582,68 +619,68 @@ class RectangularBlock(object):
 
 
 # def refine_cells(self, indices):
-    #     """
-    #
-    #     Parameters
-    #     ----------
-    #     indices: int
-    #         Index of cell to be divided in octree
-    #
-    #     """
-    #     octree_cells = self.octree_cells.copy()
-    #
-    #     mask = np.ones(self.n_cells, dtype=bool)
-    #     mask[indices] = 0
-    #
-    #     new_cells = np.array([], dtype=self.octree_cells.dtype)
-    #
-    #     copy_val = []
-    #     for ind in indices:
-    #
-    #         level = int(octree_cells[ind][3] / 2)
-    #
-    #         if level < 1:
-    #             continue
-    #
-    #         # Brake into 8 cells
-    #         for k in range(2):
-    #             for j in range(2):
-    #                 for i in range(2):
-    #
-    #                     new_cell = np.array(
-    #                         (
-    #                             octree_cells[ind][0] + i * level,
-    #                             octree_cells[ind][1] + j * level,
-    #                             octree_cells[ind][2] + k * level,
-    #                             level,
-    #                         ),
-    #                         dtype=octree_cells.dtype,
-    #                     )
-    #                     new_cells = np.hstack([new_cells, new_cell])
-    #
-    #         copy_val.append(np.ones(8) * ind)
-    #
-    #     ind_data = np.hstack(
-    #         [np.arange(self.n_cells)[mask], np.hstack(copy_val)]
-    #     ).astype(int)
-    #     self._octree_cells = np.hstack([octree_cells[mask], new_cells])
-    #     self.entity_type.workspace.sort_children_data(self, ind_data)
+#     """
+#
+#     Parameters
+#     ----------
+#     indices: int
+#         Index of cell to be divided in octree
+#
+#     """
+#     octree_cells = self.octree_cells.copy()
+#
+#     mask = np.ones(self.n_cells, dtype=bool)
+#     mask[indices] = 0
+#
+#     new_cells = np.array([], dtype=self.octree_cells.dtype)
+#
+#     copy_val = []
+#     for ind in indices:
+#
+#         level = int(octree_cells[ind][3] / 2)
+#
+#         if level < 1:
+#             continue
+#
+#         # Brake into 8 cells
+#         for k in range(2):
+#             for j in range(2):
+#                 for i in range(2):
+#
+#                     new_cell = np.array(
+#                         (
+#                             octree_cells[ind][0] + i * level,
+#                             octree_cells[ind][1] + j * level,
+#                             octree_cells[ind][2] + k * level,
+#                             level,
+#                         ),
+#                         dtype=octree_cells.dtype,
+#                     )
+#                     new_cells = np.hstack([new_cells, new_cell])
+#
+#         copy_val.append(np.ones(8) * ind)
+#
+#     ind_data = np.hstack(
+#         [np.arange(self.n_cells)[mask], np.hstack(copy_val)]
+#     ).astype(int)
+#     self._octree_cells = np.hstack([octree_cells[mask], new_cells])
+#     self.entity_type.workspace.sort_children_data(self, ind_data)
 
-    # def refine_xyz(self, locations, levels):
-    #     """
-    #     Parameters
-    #     ----------
-    #     locations: np.ndarray or list of floats
-    #         List of locations (x, y, z) to refine the octree
-    #     levels: array or list of int
-    #         List of octree level for each location
-    #     """
-    #
-    #     if isinstance(locations, np.ndarray):
-    #         locations = locations.tolist()
-    #     if isinstance(levels, np.ndarray):
-    #         levels = levels.tolist()
-    #
-    #     tree = np.spatial.cKDTree(self.centroids)
-    #     indices = tree.query()
-    #
+# def refine_xyz(self, locations, levels):
+#     """
+#     Parameters
+#     ----------
+#     locations: np.ndarray or list of floats
+#         List of locations (x, y, z) to refine the octree
+#     levels: array or list of int
+#         List of octree level for each location
+#     """
+#
+#     if isinstance(locations, np.ndarray):
+#         locations = locations.tolist()
+#     if isinstance(levels, np.ndarray):
+#         levels = levels.tolist()
+#
+#     tree = np.spatial.cKDTree(self.centroids)
+#     indices = tree.query()
+#
