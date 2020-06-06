@@ -7,7 +7,7 @@ dependencies:
   - python=3.7
   - git
   - pip
-  - simpeg
+  - simpeg=0.13.1
   - matplotlib
   - ipywidgets
   - ipykernel
@@ -19,6 +19,4 @@ dependencies:
   - fsspec
   - pip:
     - empymod
-
-
-
+    - geoh5py
