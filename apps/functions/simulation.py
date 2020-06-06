@@ -1,31 +1,25 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from .utils import RectangularBlock, octree_2_treemesh, tensor_2_block_model
-from .selection import object_data_selection_widget
-from .geoh5py.workspace import Workspace
-from .geoh5py.objects import Surface
-from .geoh5py.groups import ContainerGroup
-
-from .simpegPF import (
-    Utils, Maps, PF
-    )
-
-import matplotlib.tri as tri
-import ipywidgets as widgets
 import discretize
+import ipywidgets as widgets
+import matplotlib.pyplot as plt
+import matplotlib.tri as tri
+import numpy as np
+from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Surface
+from geoh5py.workspace import Workspace
+
+from .selection import object_data_selection_widget
+from .simpegPF import PF, Maps, Utils
+from .utils import RectangularBlock, tensor_2_block_model
 
 
-def block_model_widget(
-        h5file,
-        inducing_field="50000, 90, 0"
-):
+def block_model_widget(h5file, inducing_field="50000, 90, 0"):
     workspace = Workspace(h5file)
     names = list(workspace.list_objects_name.values())
 
     def set_axes_equal(ax):
-        '''
+        """
         Source:
-        https://stackoverflow.com/questions/13685386/matplotlib-equal-unit-length-with-equal-aspect-ratio-z-axis-is-not-equal-to
+        https://stackoverflow.com/questions/13685386/
 
         Make axes of 3D plot have equal scale so that spheres appear as spheres,
         cubes as cubes, etc..  This is one possible solution to Matplotlib's
@@ -33,7 +27,7 @@ def block_model_widget(
 
         Input
           ax: a matplotlib axis, e.g., as output from plt.gca().
-        '''
+        """
 
         x_limits = ax.get_xlim3d()
         y_limits = ax.get_ylim3d()
@@ -57,8 +51,8 @@ def block_model_widget(
     def plot_layout(objects, data, blocks, dip, azimuth, update):
         obj = workspace.get_entity(objects)[0]
         obs = obj.get_data(data)[0]
-        fig = plt.figure(figsize=(10, 12))
-        axs = plt.subplot(projection='3d')
+        plt.figure(figsize=(10, 12))
+        axs = plt.subplot(projection="3d")
         axs.view_init(dip, ((450 - azimuth) % 360) + 180)
         if getattr(obj, "vertices", None) is not None:
 
@@ -73,7 +67,7 @@ def block_model_widget(
                 obj.vertices[:, 2],
                 s=4,
                 c=values,
-                cmap='Spectral_r'
+                cmap="Spectral_r",
             )
         elif getattr(obj, "centroids", None) is not None:
 
@@ -88,7 +82,7 @@ def block_model_widget(
                 obj.centroids[:, 2],
                 s=4,
                 c=values,
-                cmap='Spectral_r'
+                cmap="Spectral_r",
             )
 
         for block in blocks:
@@ -99,13 +93,13 @@ def block_model_widget(
                 center=[param[2].value, param[3].value, param[4].value],
                 length=param[5].value,
                 width=param[6].value,
-                depth=param[7].value
+                depth=param[7].value,
             )
             axs.plot_trisurf(
                 block.vertices[:, 0],
                 block.vertices[:, 1],
                 block.vertices[:, 2],
-                triangles=block.triangles
+                triangles=block.triangles,
             )
 
         set_axes_equal(axs)
@@ -119,23 +113,27 @@ def block_model_widget(
         xyz = obj.centroids
 
     azimuth = widgets.FloatSlider(
-        min=-180, max=180, value=0, step=5,
+        min=-180,
+        max=180,
+        value=0,
+        step=5,
         description="Camera azimuth",
         continuous_update=False,
-        style={'description_width': 'initial'}
+        style={"description_width": "initial"},
     )
 
     dip = widgets.FloatSlider(
-        min=-90, max=90, value=15, step=5,
+        min=-90,
+        max=90,
+        value=15,
+        step=5,
         description="Camera dip",
         continuous_update=False,
-        style={'description_width': 'initial'}
+        style={"description_width": "initial"},
     )
 
     # Pre-build a list of blocks
-    update = widgets.ToggleButton(
-        value=False
-    )
+    update = widgets.ToggleButton(value=False)
 
     def update_view(_):
         if update.value:
@@ -145,75 +143,89 @@ def block_model_widget(
 
     blocks_widgets = {}
     for ii in range(10):
-        blocks_widgets[ii + 1] = widgets.VBox([
-            widgets.FloatSlider(
-                min=-90, max=90, value=0,
-                description="Dip",
-                continuous_update=False,
-                style={'description_width': 'initial'}
-            ),
-            widgets.FloatSlider(
-                min=-180, max=180, value=0,
-                description="Strike",
-                continuous_update=False,
-                style={'description_width': 'initial'}
-            ),
-            widgets.FloatSlider(
-                min=xyz[:, 0].min(),
-                max=xyz[:, 0].max(),
-                value=np.mean(xyz[:, 0]),
-                description="X center:",
-                continuous_update=False,
-                style={'description_width': 'initial'}
-            ),
-            widgets.FloatSlider(
-                min=xyz[:, 1].min(),
-                max=xyz[:, 1].max(),
-                value=np.mean(xyz[:, 1]),
-                description="Y center:",
-                continuous_update=False,
-                style={'description_width': 'initial'}
-            ),
-            widgets.FloatSlider(
-                min=-1000,
-                max=xyz[:, 2].max(),
-                value=np.mean(xyz[:, 2]) - 500,
-                description="Z center:",
-                continuous_update=False,
-                style={'description_width': 'initial'}
-            ),
-            widgets.FloatSlider(
-                min=10, max=10000, value=1000,
-                description="Length:",
-                continuous_update=False,
-                style={'description_width': 'initial'}
-            ),
-            widgets.FloatSlider(
-                min=10, max=10000, value=1000,
-                description="Width:",
-                continuous_update=False,
-                style={'description_width': 'initial'}
-            ),
-            widgets.FloatSlider(
-                min=10, max=10000, value=1000,
-                description="Depth:",
-                continuous_update=False,
-                style={'description_width': 'initial'}
-            ),
-            widgets.FloatSlider(
-                min=0, max=1., value=0.01, step=0.001,
-                description="Susceptibility:",
-                continuous_update=False,
-                style={'description_width': 'initial'}
-            )
-        ])
+        blocks_widgets[ii + 1] = widgets.VBox(
+            [
+                widgets.FloatSlider(
+                    min=-90,
+                    max=90,
+                    value=0,
+                    description="Dip",
+                    continuous_update=False,
+                    style={"description_width": "initial"},
+                ),
+                widgets.FloatSlider(
+                    min=-180,
+                    max=180,
+                    value=0,
+                    description="Strike",
+                    continuous_update=False,
+                    style={"description_width": "initial"},
+                ),
+                widgets.FloatSlider(
+                    min=xyz[:, 0].min(),
+                    max=xyz[:, 0].max(),
+                    value=np.mean(xyz[:, 0]),
+                    description="X center:",
+                    continuous_update=False,
+                    style={"description_width": "initial"},
+                ),
+                widgets.FloatSlider(
+                    min=xyz[:, 1].min(),
+                    max=xyz[:, 1].max(),
+                    value=np.mean(xyz[:, 1]),
+                    description="Y center:",
+                    continuous_update=False,
+                    style={"description_width": "initial"},
+                ),
+                widgets.FloatSlider(
+                    min=-1000,
+                    max=xyz[:, 2].max(),
+                    value=np.mean(xyz[:, 2]) - 500,
+                    description="Z center:",
+                    continuous_update=False,
+                    style={"description_width": "initial"},
+                ),
+                widgets.FloatSlider(
+                    min=10,
+                    max=10000,
+                    value=1000,
+                    description="Length:",
+                    continuous_update=False,
+                    style={"description_width": "initial"},
+                ),
+                widgets.FloatSlider(
+                    min=10,
+                    max=10000,
+                    value=1000,
+                    description="Width:",
+                    continuous_update=False,
+                    style={"description_width": "initial"},
+                ),
+                widgets.FloatSlider(
+                    min=10,
+                    max=10000,
+                    value=1000,
+                    description="Depth:",
+                    continuous_update=False,
+                    style={"description_width": "initial"},
+                ),
+                widgets.FloatSlider(
+                    min=0,
+                    max=1.0,
+                    value=0.01,
+                    step=0.001,
+                    description="Susceptibility:",
+                    continuous_update=False,
+                    style={"description_width": "initial"},
+                ),
+            ]
+        )
 
         for child in blocks_widgets[ii + 1].children:
             child.observe(update_view)
 
     block_add = widgets.SelectMultiple(
-        options=list(blocks_widgets.keys()),
-        description='Select blocks'
+        options=list(blocks_widgets.keys()), description="Select blocks"
     )
 
     def block_add_update(_):
@@ -221,84 +233,79 @@ def block_model_widget(
 
     block_add.observe(block_add_update)
 
-    block_list = widgets.Dropdown(
-        options=[],
-    )
+    block_list = widgets.Dropdown(options=[],)
 
-    block_panel = widgets.VBox([block_list, ])
+    block_panel = widgets.VBox([block_list,])
 
     def block_param_update(_):
         if block_list.value is not None:
             block_panel.children = [block_list, blocks_widgets[block_list.value]]
         else:
-            block_panel.children = [block_list, ]
+            block_panel.children = [
+                block_list,
+            ]
 
     block_list.observe(block_param_update)
 
     interactive_plot = widgets.interactive_output(
-        plot_layout, {
+        plot_layout,
+        {
             "objects": object_selection.children[0].children[0],
             "data": object_selection.children[0].children[1],
             "blocks": block_add,
             "azimuth": azimuth,
             "dip": dip,
-            "update": update
-        })
+            "update": update,
+        },
+    )
 
     sim_name = widgets.Text(
         value="Simulation_",
-        description='Name:',
+        description="Name:",
         disabled=False,
-        style={'description_width': 'initial'}
+        style={"description_width": "initial"},
     )
 
     core_cell_size = widgets.Text(
-        value='100, 100, 100',
-        description='Model discretization (m)',
+        value="100, 100, 100",
+        description="Model discretization (m)",
         disabled=False,
-        style={'description_width': 'initial'}
+        style={"description_width": "initial"},
     )
 
     topography = widgets.Dropdown(
         options=[None] + names,
         description="Topography",
-        style={'description_width': 'initial'}
+        style={"description_width": "initial"},
     )
 
     # Pre-build a list of blocks
     export_ga = widgets.ToggleButton(
-        value=False,
-        description='Export to GA',
-        icon='check'
+        value=False, description="Export to GA", icon="check"
     )
 
     def export_trigger(_):
-        if (
-            getattr(export_ga, 'data', None) is not None and
-            export_ga.value
-        ):
+        if getattr(export_ga, "data", None) is not None and export_ga.value:
 
             # Create a group
-            out_group = ContainerGroup.create(
-                workspace,
-                name=sim_name.value
-            )
+            out_group = ContainerGroup.create(workspace, name=sim_name.value)
 
             obj_out = obj.copy(parent=out_group)
 
             # Export data on Points
             nC = len(components.value)
             for ind, comp in enumerate(components.value):
-                obj_out.add_data({
-                    sim_name.value + "_" + comp: {"values": export_ga.data[ind::nC]}
-                })
+                obj_out.add_data(
+                    {sim_name.value + "_" + comp: {"values": export_ga.data[ind::nC]}}
+                )
 
             # Export mesh and model
             tensor_2_block_model(
-                workspace, export_ga.mesh,
+                workspace,
+                export_ga.mesh,
                 name=sim_name.value + "mesh",
                 parent=out_group,
-                data={sim_name.value + "_model": export_ga.model}
+                data={sim_name.value + "_model": export_ga.model},
             )
 
             # Export blocks as surfaces
@@ -307,23 +314,22 @@ def block_model_widget(
                     workspace,
                     vertices=block.vertices,
                     cells=block.triangles,
-                    parent=out_group
+                    parent=out_group,
                 )
         export_ga.value = False
 
     export_ga.observe(export_trigger)
 
     plot_now = widgets.ToggleButton(
-        value=True,
-        description='Plot simulation',
-        icon='check'
+        value=True, description="Plot simulation", icon="check"
     )
 
     def run_simulation(_):
 
         if forward.value:
-            obj = workspace.get_entity(object_selection.children[0].children[0].value)[0]
-            obs = obj.get_data(object_selection.children[0].children[1].value)[0]
+            obj = workspace.get_entity(object_selection.children[0].children[0].value)[
+                0
+            ]
 
             if getattr(obj, "vertices", None) is not None:
                 xyz = obj.vertices
@@ -341,15 +347,17 @@ def block_model_widget(
                     length=param[5].value,
                     width=param[6].value,
                     depth=param[7].value,
-                    susc=param[8].value
+                    susc=param[8].value,
                 )
                 out_blocks.append(block)
                 nodes.append(block.vertices)
 
+            h = np.asarray(core_cell_size.value.split(",")).astype(float).tolist()
+            paddings = [[h[0], h[0]], [h[1], h[1]], [h[2], h[2]]]
+
             # Create a mesh
             mesh = discretize.utils.meshutils.mesh_builder_xyz(
-                np.vstack(nodes),
-                np.asarray(core_cell_size.value.split(",")).astype(float).tolist()
+                np.vstack(nodes), h, padding_distance=paddings
             )
 
             # Create a model
@@ -369,37 +377,34 @@ def block_model_widget(
             nC = int(active.sum())
 
             if survey_type.value == "Magnetics":
-
                 rxLoc = PF.BaseMag.RxObs(xyz)
                 srcField = PF.BaseMag.SrcField(
                     [rxLoc],
-                    param=np.asarray(
-                        inducing_field.value.split(",")
-                    ).astype(float).tolist(),
+                    param=np.asarray(inducing_field.value.split(","))
+                    .astype(float)
+                    .tolist(),
                 )
-                survey = PF.BaseMag.LinearSurvey(
-                    srcField,
-                    components=components.value
-                )
+                survey = PF.BaseMag.LinearSurvey(srcField, components=components.value)
                 prob = PF.Magnetics.MagneticIntegral(
-                    mesh, chiMap=Maps.IdentityMap(nP=nC), actInd=active,
-                    forwardOnly=True, verbose=False
+                    mesh,
+                    chiMap=Maps.IdentityMap(nP=nC),
+                    actInd=active,
+                    forwardOnly=True,
+                    verbose=False,
                 )
                 prob.pair(survey)
                 d = prob.fields(model[active])
 
             else:
                 rxLoc = PF.BaseGrav.RxObs(xyz)
-                srcField = PF.BaseGrav.SrcField(
-                    [rxLoc]
-                )
-                survey = PF.BaseGrav.LinearSurvey(
-                    srcField,
-                    components=components.value
-                )
+                srcField = PF.BaseGrav.SrcField([rxLoc])
+                survey = PF.BaseGrav.LinearSurvey(srcField, components=components.value)
                 prob = PF.Gravity.GravityIntegral(
-                    mesh, rhoMap=Maps.IdentityMap(nP=nC), actInd=active,
-                    forwardOnly=True, verbose=False
+                    mesh,
+                    rhoMap=Maps.IdentityMap(nP=nC),
+                    actInd=active,
+                    forwardOnly=True,
+                    verbose=False,
                 )
                 prob.pair(survey)
                 d = prob.fields(model[active])
@@ -412,32 +417,32 @@ def block_model_widget(
         forward.value = False
 
     # Pre-build a list of blocks
-    forward = widgets.ToggleButton(
-        value=False,
-        description='Run forward',
-        icon='check'
-    )
+    forward = widgets.ToggleButton(value=False, description="Run forward", icon="check")
     forward.observe(run_simulation)
 
-    forward_panel = widgets.VBox([widgets.Label("FORWARD SIMULATION"),
-                                  topography,
-                                  core_cell_size,
-                                  sim_name,
-                                  forward,
-                                  plot_now,
-                                  export_ga])
+    forward_panel = widgets.VBox(
+        [
+            widgets.Label("FORWARD SIMULATION"),
+            topography,
+            core_cell_size,
+            sim_name,
+            forward,
+            plot_now,
+            export_ga,
+        ]
+    )
 
     def update_data_options(_):
         if survey_type.value == "Magnetics":
-            components.options = ["tmi", 'bxx', "bxy", "bxz", 'byy', "byz", "bzz"]
+            components.options = ["tmi", "bxx", "bxy", "bxz", "byy", "byz", "bzz"]
             components.value = ["tmi"]
             phys_prop = "Susceptibility SI"
-            ranges = [0., 1.]
+            ranges = [0.0, 1.0]
         else:
-            components.options = ["gz", 'gxx', "gxy", "gxz", 'gyy', "gyz", "gzz"]
+            components.options = ["gz", "gxx", "gxy", "gxz", "gyy", "gyz", "gzz"]
             components.value = ["gz"]
             phys_prop = "Residual Density (g/cc)"
-            ranges = [-1., 1.]
+            ranges = [-1.0, 1.0]
 
         for widget in blocks_widgets.values():
             widget.children[-1].description = phys_prop
@@ -445,33 +450,42 @@ def block_model_widget(
             widget.children[-1].max = ranges[1]
 
     components = widgets.SelectMultiple(
-        description='Components',
-        options=["tmi", 'bxx', "bxy", "bxz", 'byy', "byz", "bzz"],
-        value=['tmi'],
-        style={'description_width': 'initial'}
+        description="Components",
+        options=["tmi", "bxx", "bxy", "bxz", "byy", "byz", "bzz"],
+        value=["tmi"],
+        style={"description_width": "initial"},
     )
 
     components_panel = widgets.VBox([components])
 
     def update_survey_type(_):
         if survey_type.value == "Magnetics":
-            survey_type_panel.children = [survey_type, object_selection, components_panel, inducing_field]
+            survey_type_panel.children = [
+                survey_type,
+                object_selection,
+                components_panel,
+                inducing_field,
+            ]
         else:
-            survey_type_panel.children = [survey_type, object_selection, components_panel]
+            survey_type_panel.children = [
+                survey_type,
+                object_selection,
+                components_panel,
+            ]
 
         update_data_options("")
 
     survey_type = widgets.Dropdown(
-        options=["Magnetics", "Gravity"],
-        value="Magnetics",
-        description="Survey Type:",
+        options=["Magnetics", "Gravity"], value="Magnetics", description="Survey Type:",
     )
     inducing_field = widgets.Text(
         value=inducing_field,
-        description='Inducing Field [Amp, Inc, Dec]',
-        style={'description_width': 'initial'}
+        description="Inducing Field [Amp, Inc, Dec]",
+        style={"description_width": "initial"},
     )
-    survey_type_panel = widgets.VBox([survey_type, object_selection, components_panel, inducing_field])
+    survey_type_panel = widgets.VBox(
+        [survey_type, object_selection, components_panel, inducing_field]
+    )
     survey_type.observe(update_survey_type)
 
     def plot_simulation(plot, run):
@@ -492,44 +506,54 @@ def block_model_widget(
             nC = len(components.value)
 
             if (
-                getattr(export_ga, "data", None) is not None and
-                export_ga.data.shape[0] == nC*xyz.shape[0]
+                getattr(export_ga, "data", None) is not None
+                and export_ga.data.shape[0] == nC * xyz.shape[0]
             ):
                 trian = tri.Triangulation(xyz[:, 0], xyz[:, 1])
 
                 plt.figure(figsize=(8, 4 * int(np.ceil(nC / 2) + 1)))
                 axs = plt.subplot(int(np.ceil(nC / 2) + 1), 2, 1)
                 if isinstance(obs.values[0], np.float):
-                    im = axs.tricontourf(trian, obs.values, cmap='Spectral_r', levels=100, vmin=obs.values.min(),
-                                         vmax=obs.values.max())
+                    im = axs.tricontourf(
+                        trian,
+                        obs.values,
+                        cmap="Spectral_r",
+                        levels=100,
+                        vmin=obs.values.min(),
+                        vmax=obs.values.max(),
+                    )
                     plt.colorbar(im)
                     axs.set_title(data)
                     axs.set_yticklabels([])
                     axs.set_xticklabels([])
-                    axs.set_aspect('equal')
+                    axs.set_aspect("equal")
 
                 for ind, comp in enumerate(components.value):
                     axs = plt.subplot(int(np.ceil(nC / 2) + 1), 2, ind + 2)
-                    im = axs.tricontourf(trian, export_ga.data[ind::nC], cmap='Spectral_r', levels=100)
+                    im = axs.tricontourf(
+                        trian, export_ga.data[ind::nC], cmap="Spectral_r", levels=100
+                    )
                     plt.colorbar(im)
                     axs.set_yticklabels([])
                     axs.set_xticklabels([])
                     axs.set_title(comp)
-                    axs.set_aspect('equal')
+                    axs.set_aspect("equal")
 
-    return widgets.VBox([
-        widgets.HBox([
-            widgets.VBox([
-                survey_type_panel, forward_panel
-            ]),
-            widgets.VBox([block_add, block_panel])
-        ]),
-        widgets.HBox([
-            widgets.VBox([
-                azimuth, dip, interactive_plot,
-            ]),
-            widgets.interactive_output(
-                plot_simulation, {"plot": plot_now, "run": forward}
-            )
-        ])
-    ])
+    return widgets.VBox(
+        [
+            widgets.HBox(
+                [
+                    widgets.VBox([survey_type_panel, forward_panel]),
+                    widgets.VBox([block_add, block_panel]),
+                ]
+            ),
+            widgets.HBox(
+                [
+                    widgets.VBox([azimuth, dip, interactive_plot,]),
+                    widgets.interactive_output(
+                        plot_simulation, {"plot": plot_now, "run": forward}
+                    ),
+                ]
+            ),
+        ]
+    )
