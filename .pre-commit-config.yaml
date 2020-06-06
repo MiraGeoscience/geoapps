@@ -1,7 +1,7 @@
 
 default_language_version:
     python: python3
-exclude: docs/(conf.py|_ext/)
+exclude: apps/functions/
 fail_fast: false
 repos:
 -   repo: https://github.com/psf/black
