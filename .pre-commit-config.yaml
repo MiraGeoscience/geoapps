@@ -1,7 +1,7 @@
 
 default_language_version:
     python: python3
-exclude: apps/functions/
+exclude: apps/functions/simpegPF
 fail_fast: false
 repos:
 -   repo: https://github.com/psf/black
