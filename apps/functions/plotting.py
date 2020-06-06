@@ -1,18 +1,23 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 import ipywidgets as widgets
-from ipywidgets.widgets import Dropdown, VBox, HBox
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
+import numpy as np
+from geoh5py.objects import Curve, Grid2D, Points, Surface
+from geoh5py.workspace import Workspace
+from ipywidgets.widgets import Dropdown, HBox, VBox
 
-from .geoh5py.workspace import Workspace
-from .geoh5py.objects import Curve, Points, Grid2D, Surface
 from .utils import filter_xy
 
 
 def plot_profile_data_selection(
-    entity, field_list,
-    uncertainties=None, selection={}, downsampling=None,
-    plot_legend=False, ax=None, color=[0, 0, 0]
+    entity,
+    field_list,
+    uncertainties=None,
+    selection={},
+    resolution=None,
+    plot_legend=False,
+    ax=None,
+    color=[0, 0, 0],
 ):
 
     locations = entity.vertices
@@ -29,15 +34,19 @@ def plot_profile_data_selection(
         for line in values:
 
             if entity.get_data(key):
-                ind = np.where((entity.get_data(key)[0].values == line))[0]
+                ind = np.where(entity.get_data(key)[0].values == line)[0]
             else:
                 continue
             if len(ind) == 0:
                 continue
 
-            if downsampling is not None:
+            if resolution is not None:
                 _, _, _, dwn_ind = filter_xy(
-                    locations[ind, 0], locations[ind, 1], None, downsampling, return_indices=True
+                    locations[ind, 0],
+                    locations[ind, 1],
+                    None,
+                    resolution,
+                    return_indices=True,
                 )
 
                 ind = ind[dwn_ind]
@@ -53,10 +62,13 @@ def plot_profile_data_selection(
             order = np.argsort(dist)
             legend = []
 
-            c_increment = [(1-c)/(len(field_list)+1) for c in color]
+            c_increment = [(1 - c) / (len(field_list) + 1) for c in color]
 
             for ii, field in enumerate(field_list):
-                if entity.get_data(field) and entity.get_data(field)[0].values is not None:
+                if (
+                    entity.get_data(field)
+                    and entity.get_data(field)[0].values is not None
+                ):
                     values = entity.get_data(field)[0].values[ind][order]
 
                     xx.append(dist[order][~np.isnan(values)])
@@ -64,19 +76,21 @@ def plot_profile_data_selection(
 
                     if uncertainties is not None:
                         ax.errorbar(
-                            xx[-1], yy[-1],
-                            yerr=uncertainties[ii][0]*np.abs(yy[-1]) + uncertainties[ii][1],
-                            color=[c+ii*i for c, i in zip(color, c_increment)]
+                            xx[-1],
+                            yy[-1],
+                            yerr=uncertainties[ii][0] * np.abs(yy[-1])
+                            + uncertainties[ii][1],
+                            color=[c + ii * i for c, i in zip(color, c_increment)],
                         )
                     else:
-                        ax.plot(xx[-1], yy[-1], color=[c+ii*i for c, i in zip(color, c_increment)])
+                        ax.plot(
+                            xx[-1],
+                            yy[-1],
+                            color=[c + ii * i for c, i in zip(color, c_increment)],
+                        )
                     legend.append(field)
 
-                    threshold = np.max([
-                        threshold,
-                        np.percentile(
-                            np.abs(yy[-1]), 2)
-                    ])
+                    threshold = np.max([threshold, np.percentile(np.abs(yy[-1]), 2)])
 
             if plot_legend:
                 ax.legend(legend, loc=3, bbox_to_anchor=(0, -0.25), ncol=3)
@@ -87,7 +101,7 @@ def plot_profile_data_selection(
                     np.hstack(yy),
                     ax,
                     labels=["Distance (m)", "Fields"],
-                    aspect='auto'
+                    aspect="auto",
                 )
 
     # ax.set_position([pos.x0, pos.y0, pos.width*2., pos.height])
@@ -95,15 +109,13 @@ def plot_profile_data_selection(
     return ax, threshold
 
 
-def plot_plan_data_selection(
-    entity, data, **kwargs
-):
+def plot_plan_data_selection(entity, data, **kwargs):
 
     locations = entity.vertices
-    if "downsampling" not in kwargs.keys():
-        downsampling = 0
+    if "resolution" not in kwargs.keys():
+        resolution = 0
     else:
-        downsampling = kwargs["downsampling"]
+        resolution = kwargs["resolution"]
 
     values = None
     if isinstance(getattr(data, "values", None), np.ndarray):
@@ -118,25 +130,31 @@ def plot_plan_data_selection(
 
     window = None
     if "window" in kwargs.keys():
-        window = kwargs['window']
+        window = kwargs["window"]
 
     if values is not None:
 
         if data.entity_type.color_map is not None:
             new_cmap = data.entity_type.color_map.values
-            cmap_values = new_cmap['Value']
+            cmap_values = new_cmap["Value"]
             cmap_values = cmap_values[~np.isnan(cmap_values)]
             cmap_values -= cmap_values.min()
-            cmap_values /= (cmap_values.max() + 1e-16)
+            cmap_values /= cmap_values.max() + 1e-16
 
             if cmap_values.min() != cmap_values.max():
                 cdict = {
-                    'red': np.c_[cmap_values, new_cmap['Red'] / 255, new_cmap['Red'] / 255].tolist(),
-                    'green': np.c_[cmap_values, new_cmap['Green'] / 255, new_cmap['Green'] / 255].tolist(),
-                    'blue': np.c_[cmap_values, new_cmap['Blue'] / 255, new_cmap['Blue'] / 255].tolist(),
+                    "red": np.c_[
+                        cmap_values, new_cmap["Red"] / 255, new_cmap["Red"] / 255
+                    ].tolist(),
+                    "green": np.c_[
+                        cmap_values, new_cmap["Green"] / 255, new_cmap["Green"] / 255
+                    ].tolist(),
+                    "blue": np.c_[
+                        cmap_values, new_cmap["Blue"] / 255, new_cmap["Blue"] / 255
+                    ].tolist(),
                 }
                 cmap = colors.LinearSegmentedColormap(
-                    'custom_map', segmentdata=cdict, N=len(cmap_values)
+                    "custom_map", segmentdata=cdict, N=len(cmap_values)
                 )
             else:
                 cmap = "Spectral_r"
@@ -150,7 +168,7 @@ def plot_plan_data_selection(
             ax = kwargs["ax"]
 
         if np.all(np.isnan(values)):
-            return ax, np.zeros_like(values, dtype='bool')
+            return ax, np.zeros_like(values, dtype="bool")
 
         if isinstance(entity, Grid2D) and values is not None:
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
@@ -158,38 +176,53 @@ def plot_plan_data_selection(
             values = values.reshape(entity.shape, order="F")
 
             x, y, values, ind_filter = filter_xy(
-                x, y, values, downsampling,
-                window=window, return_indices=True
+                x, y, values, resolution, window=window, return_indices=True
             )
 
             out = ax.pcolormesh(x, y, values, cmap=cmap, norm=color_norm)
 
             if "contours" in kwargs.keys():
                 ax.contour(
-                    x, y, values,
-                    levels=kwargs['contours'], colors='k', linewidths=1.0
+                    x, y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
                 )
 
-        elif isinstance(entity, Points) or isinstance(entity, Curve) or isinstance(entity, Surface):
+        elif (
+            isinstance(entity, Points)
+            or isinstance(entity, Curve)
+            or isinstance(entity, Surface)
+        ):
 
             x, y, values, ind_filter = filter_xy(
-                entity.vertices[:, 0], entity.vertices[:, 1],
-                values, downsampling, window=window,
-                return_indices=True
+                entity.vertices[:, 0],
+                entity.vertices[:, 1],
+                values,
+                resolution,
+                window=window,
+                return_indices=True,
             )
 
-            out = ax.scatter(
-                x, y, 5, values, cmap=cmap, norm=color_norm)
+            if "marker_size" not in kwargs.keys():
+                marker_size = 5
+            else:
+                marker_size = kwargs["marker_size"]
+
+            out = ax.scatter(x, y, marker_size, values, cmap=cmap, norm=color_norm)
 
             if "contours" in kwargs.keys():
                 ind = ~np.isnan(values)
                 ax.tricontour(
-                    x[ind], y[ind], values[ind],
-                    levels=kwargs['contours'], colors='k', linewidths=1.0
+                    x[ind],
+                    y[ind],
+                    values[ind],
+                    levels=kwargs["contours"],
+                    colors="k",
+                    linewidths=1.0,
                 )
 
         else:
-            print("Sorry, 'plot=True' option only implemented for Grid2D, Points and Curve objects")
+            print(
+                "Sorry, 'plot=True' option only implemented for Grid2D, Points and Curve objects"
+            )
 
         if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"]:
             ind = ~np.isnan(values)
@@ -199,17 +232,29 @@ def plot_plan_data_selection(
         else:
             format_labels(x, y, ax)
 
-        if "colorbar" in kwargs.keys() and values[~np.isnan(values)].min() != values[~np.isnan(values)].max():
+        if (
+            "colorbar" in kwargs.keys()
+            and values[~np.isnan(values)].min() != values[~np.isnan(values)].max()
+        ):
             plt.colorbar(out, ax=ax)
 
         if "highlight_selection" in kwargs.keys():
             for key, values in kwargs["highlight_selection"].items():
 
+                if not np.any(entity.get_data(key)):
+                    continue
+
                 for line in values:
-                    ind = np.where((entity.get_data(key)[0].values == line))[0]
-                    x, y, values = locations[ind, 0], locations[ind, 1], entity.get_data(key)[0].values[ind]
-                    x, y, _ = filter_xy(x, y, values, downsampling)
-                    ax.scatter(x, y, 3, 'k')
+                    ind = np.where(entity.get_data(key)[0].values == line)[0]
+                    x, y, values = (
+                        locations[ind, 0],
+                        locations[ind, 1],
+                        entity.get_data(key)[0].values[ind],
+                    )
+                    _, _, _, ind_filter = filter_xy(
+                        x, y, values, resolution, window=window, return_indices=True
+                    )
+                    ax.scatter(x[ind_filter], y[ind_filter], 3, "k")
 
         return ax, ind_filter
 
@@ -217,7 +262,11 @@ def plot_plan_data_selection(
 def plot_em_data_widget(h5file):
     workspace = Workspace(h5file)
 
-    curves = [entity.parent.name + "." + entity.name for entity in workspace.all_objects() if isinstance(entity, Curve)]
+    curves = [
+        entity.parent.name + "." + entity.name
+        for entity in workspace.all_objects()
+        if isinstance(entity, Curve)
+    ]
     names = [name for name in sorted(curves)]
 
     def get_parental_child(parental_name):
@@ -226,7 +275,7 @@ def plot_em_data_widget(h5file):
 
         parent_entity = workspace.get_entity(parent)[0]
 
-        children = [entity for entity in parent_entity.children if entity.name==child]
+        children = [entity for entity in parent_entity.children if entity.name == child]
         return children
 
     def find_value(labels, strings):
@@ -237,38 +286,35 @@ def plot_em_data_widget(h5file):
                     value = name
         return value
 
-    def plot_profiles(
-        entity_name, groups, line_field, lines, scale, threshold
-    ):
+    def plot_profiles(entity_name, groups, line_field, lines, scale, threshold):
 
         fig = plt.figure(figsize=(12, 12))
         entity = get_parental_child(entity_name)[0]
 
         ax = plt.subplot()
-        colors = [
-            [0, 0, 0],
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1]
-        ]
+        colors = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]]
 
         for group, color in zip(groups, colors):
 
             prop_group = entity.get_property_group(group)
 
             if prop_group is not None:
-                fields = [entity.workspace.get_entity(uid)[0].name for uid in prop_group.properties]
+                fields = [
+                    entity.workspace.get_entity(uid)[0].name
+                    for uid in prop_group.properties
+                ]
 
                 ax, _ = plot_profile_data_selection(
-                    prop_group.parent, fields,
+                    prop_group.parent,
+                    fields,
                     selection={line_field: lines},
                     ax=ax,
-                    color=color
+                    color=color,
                 )
 
         ax.grid(True)
 
-        plt.yscale(scale, linthreshy=10.**threshold)
+        plt.yscale(scale, linthreshy=10.0 ** threshold)
 
     def updateList(_):
         entity = get_parental_child(objects.value)[0]
@@ -280,7 +326,7 @@ def plot_em_data_widget(h5file):
         groups.options = options
         groups.value = [groups.options[0]]
         line_field.options = data_list
-        line_field.value = find_value(data_list, ['line'])
+        line_field.value = find_value(data_list, ["line"])
 
         if line_field.value is None:
             line_ids = []
@@ -292,11 +338,7 @@ def plot_em_data_widget(h5file):
         lines.options = line_ids
         lines.value = value
 
-    objects = widgets.Dropdown(
-        options=names,
-        value=names[0],
-        description='Object:',
-    )
+    objects = widgets.Dropdown(options=names, value=names[0], description="Object:",)
 
     obj = get_parental_child(objects.value)[0]
 
@@ -308,15 +350,13 @@ def plot_em_data_widget(h5file):
     line_field = Dropdown(
         options=data_list,
         value=find_value(data_list, ["line"]),
-        description='Lines field',
+        description="Lines field",
     )
 
     options = [pg.name for pg in obj.property_groups]
     options = [option for option in sorted(options)]
     groups = widgets.SelectMultiple(
-        options=options,
-        value=[options[0]],
-        description='Data: ',
+        options=options, value=[options[0]], description="Data: ",
     )
 
     if line_field.value is None:
@@ -327,42 +367,45 @@ def plot_em_data_widget(h5file):
         line_list = np.unique(entity.get_data(line_field.value)[0].values)
         value = [line_list[0]]
 
-    lines = widgets.SelectMultiple(
-        options=line_list,
-        value=value,
-        description='Data: '
-    )
+    lines = widgets.SelectMultiple(options=line_list, value=value, description="Data: ")
 
-    objects.observe(updateList, names='value')
+    objects.observe(updateList, names="value")
 
     scale = Dropdown(
-        options=['linear', 'symlog'],
-        value='symlog',
-        description='Scaling',
+        options=["linear", "symlog"], value="symlog", description="Scaling",
     )
 
     threshold = widgets.FloatSlider(
-        min=-16, max=-1, value=-12,
-        steps=0.5, description="Log-linear threshold", continuous_update=False, style={'description_width': 'initial'}
+        min=-16,
+        max=-1,
+        value=-12,
+        steps=0.5,
+        description="Log-linear threshold",
+        continuous_update=False,
+        style={"description_width": "initial"},
     )
 
     apps = VBox([objects, line_field, lines, groups, scale, threshold])
-    layout = HBox([
-        apps,
-        widgets.interactive_output(
-                    plot_profiles, {
-                        "entity_name": objects,
-                        "groups": groups,
-                        "line_field": line_field,
-                        "lines": lines,
-                        "scale": scale,
-                        "threshold": threshold
-                        }
-                    )
-    ])
+    layout = HBox(
+        [
+            apps,
+            widgets.interactive_output(
+                plot_profiles,
+                {
+                    "entity_name": objects,
+                    "groups": groups,
+                    "line_field": line_field,
+                    "lines": lines,
+                    "scale": scale,
+                    "threshold": threshold,
+                },
+            ),
+        ]
+    )
     return layout
 
-def format_labels(x, y, axs, labels=None, aspect='equal', tick_format="%i"):
+
+def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
     if labels is None:
         axs.set_ylabel("Northing (m)")
         axs.set_xlabel("Easting (m)")
@@ -373,8 +416,10 @@ def format_labels(x, y, axs, labels=None, aspect='equal', tick_format="%i"):
     yticks = np.linspace(y.min(), y.max(), 5)
 
     axs.set_yticks(yticks)
-    axs.set_yticklabels([tick_format%y for y in yticks.tolist()], rotation=90, va='center')
+    axs.set_yticklabels(
+        [tick_format % y for y in yticks.tolist()], rotation=90, va="center"
+    )
     axs.set_xticks(xticks)
-    axs.set_xticklabels([tick_format%x for x in xticks.tolist()], va='center')
+    axs.set_xticklabels([tick_format % x for x in xticks.tolist()], va="center")
     axs.autoscale(tight=True)
     axs.set_aspect(aspect)
