@@ -117,6 +117,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
     else:
         resolution = kwargs["resolution"]
 
+    if "indices" in kwargs.keys():
+        indices = kwargs["indices"]
+    else:
+        indices = None
+
     values = None
     if isinstance(getattr(data, "values", None), np.ndarray):
         if not isinstance(data.values[0], str):
@@ -174,8 +179,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
             values = values.reshape(entity.shape, order="F")
-
-            x, y, values, ind_filter = filter_xy(
+            x, y, values, indices = filter_xy(
                 x, y, values, resolution, window=window, return_indices=True
             )
 
@@ -185,21 +189,24 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 ax.contour(
                     x, y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
                 )
-
         elif (
             isinstance(entity, Points)
             or isinstance(entity, Curve)
             or isinstance(entity, Surface)
         ):
 
-            x, y, values, ind_filter = filter_xy(
-                entity.vertices[:, 0],
-                entity.vertices[:, 1],
-                values,
-                resolution,
-                window=window,
-                return_indices=True,
-            )
+            if indices is None:
+                _, _, _, indices = filter_xy(
+                    entity.vertices[:, 0],
+                    entity.vertices[:, 1],
+                    values,
+                    resolution,
+                    window=window,
+                    return_indices=True,
+                )
+
+            x, y = entity.vertices[indices, 0], entity.vertices[indices, 1]
+            values = values[indices]
 
             if "marker_size" not in kwargs.keys():
                 marker_size = 5
@@ -238,6 +245,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
         ):
             plt.colorbar(out, ax=ax)
 
+        line_selection = np.zeros_like(indices, dtype=bool)
         if "highlight_selection" in kwargs.keys():
             for key, values in kwargs["highlight_selection"].items():
 
@@ -251,12 +259,14 @@ def plot_plan_data_selection(entity, data, **kwargs):
                         locations[ind, 1],
                         entity.get_data(key)[0].values[ind],
                     )
-                    _, _, _, ind_filter = filter_xy(
+                    _, _, _, ind_line = filter_xy(
                         x, y, values, resolution, window=window, return_indices=True
                     )
-                    ax.scatter(x[ind_filter], y[ind_filter], 3, "k")
+                    ax.scatter(x[ind_line], y[ind_line], 3, "k")
 
-        return ax, ind_filter
+                    line_selection[ind[ind_line]] = True
+
+        return ax, indices, line_selection
 
 
 def plot_em_data_widget(h5file):

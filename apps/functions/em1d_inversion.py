@@ -10,11 +10,23 @@ from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
-from SimPEG import (DataMisfit, Directives, Inversion, InvProblem, Maps,
-                    Optimization, Utils)
-from simpegEM1D import (GlobalEM1DProblemFD, GlobalEM1DProblemTD,
-                        GlobalEM1DSurveyFD, GlobalEM1DSurveyTD,
-                        LateralConstraint, get_2d_mesh)
+from SimPEG import (
+    DataMisfit,
+    Directives,
+    Inversion,
+    InvProblem,
+    Maps,
+    Optimization,
+    Utils,
+)
+from simpegEM1D import (
+    GlobalEM1DProblemFD,
+    GlobalEM1DProblemTD,
+    GlobalEM1DSurveyFD,
+    GlobalEM1DSurveyTD,
+    LateralConstraint,
+    get_2d_mesh,
+)
 from utils import filter_xy
 
 
@@ -164,8 +176,8 @@ def inversion(input_file):
         em_specs = json.load(f)[input_param["system"]]
 
     nThread = int(multiprocessing.cpu_count() / 2)
-    lower_bound = input_param["lower_bound"]
-    upper_bound = input_param["upper_bound"]
+    lower_bound = input_param["lower_bound"][0]
+    upper_bound = input_param["upper_bound"][0]
     chi_target = input_param["chi_factor"]
     workspace = Workspace(input_param["workspace"])
     selection = input_param["lines"]
@@ -323,7 +335,7 @@ def inversion(input_file):
                 bird_offset = entity.get_data(
                     input_param["receivers_offset"]["radar_drape"]
                 )[0].values
-                locations[:, 2] += bird_offset
+                locations[:, 2] += bird_offset[win_ind]
     else:
         dem = get_topography()
 
@@ -551,11 +563,11 @@ def inversion(input_file):
 
     dobs = np.zeros(n_sounding * block)
     uncert = np.zeros(n_sounding * block)
-    nD = 0
+    n_data = 0
     for ind, (d, u) in enumerate(zip(data, uncertainties)):
         dobs[ind::block] = d[win_ind][stn_id]
         uncert[ind::block] = u[win_ind][stn_id]
-        nD += dobs[ind::block].shape[0]
+        n_data += dobs[ind::block].shape[0]
 
     if len(ignore_values) > 0:
         if "<" in ignore_values:
@@ -651,7 +663,7 @@ def inversion(input_file):
 
     if reference == "BFHS":
         print("**** Best-fitting halfspace inversion ****")
-        print(f"Target: {nD}")
+        print(f"Target: {n_data}")
 
         hz_BFHS = np.r_[1.0]
         expmap = Maps.ExpMap(nP=n_sounding)

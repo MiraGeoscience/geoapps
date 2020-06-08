@@ -305,12 +305,26 @@ def inversion(input_file):
         data = np.vstack(data).T
         uncertainties = np.vstack(uncertainties).T
 
+        if "ignore_values" in input_dict.keys():
+            ignore_values = input_dict["ignore_values"]
+            if len(ignore_values) > 0:
+                if "<" in ignore_values:
+                    uncertainties[
+                        data <= np.float(ignore_values.split("<")[1])
+                    ] = np.inf
+                elif ">" in ignore_values:
+                    uncertainties[
+                        data >= np.float(ignore_values.split(">")[1])
+                    ] = np.inf
+                else:
+                    uncertainties[data == np.float(ignore_values)] = np.inf
+
         if isinstance(entity, Grid2D):
             vertices = entity.centroids
         else:
             vertices = entity.vertices
 
-        _, _, _, ind = filter_xy(
+        _, _, _, window_ind = filter_xy(
             vertices[:, 0],
             vertices[:, 1],
             None,
@@ -320,10 +334,12 @@ def inversion(input_file):
         )
 
         if window is not None:
-            xy_rot = rotate_xy(vertices[ind, :2], window["center"], window["azimuth"])
-            xyz_loc = np.c_[xy_rot, vertices[ind, 2]]
+            xy_rot = rotate_xy(
+                vertices[window_ind, :2], window["center"], window["azimuth"]
+            )
+            xyz_loc = np.c_[xy_rot, vertices[window_ind, 2]]
         else:
-            xyz_loc = vertices[ind, :]
+            xyz_loc = vertices[window_ind, :]
 
         if "gravity" in input_dict["inversion_type"]:
             receivers = PF.BaseGrav.RxObs(xyz_loc)
@@ -336,8 +352,8 @@ def inversion(input_file):
             source = PF.BaseMag.SrcField([receivers], param=inducing_field)
             survey = PF.BaseMag.LinearSurvey(source)
 
-        survey.dobs = data[ind, :].ravel()
-        survey.std = uncertainties[ind, :].ravel()
+        survey.dobs = data[window_ind, :].ravel()
+        survey.std = uncertainties[window_ind, :].ravel()
         survey.components = components
 
         for ind, comp in enumerate(survey.components):
@@ -517,7 +533,7 @@ def inversion(input_file):
                 bird_offset = entity.get_data(
                     input_dict["receivers_offset"]["radar_drape"]
                 )[0].values
-                locations[:, 2] += bird_offset
+                locations[:, 2] += bird_offset[window_ind]
     else:
         topo = get_topography()
 
@@ -536,17 +552,17 @@ def inversion(input_file):
 
     model_norms = np.c_[model_norms]
 
-    if "max_irls_iterations" in list(input_dict.keys()):
+    if "max_iterations" in list(input_dict.keys()):
 
-        max_irls_iterations = input_dict["max_irls_iterations"]
-        assert max_irls_iterations >= 0, "Max IRLS iterations must be >= 0"
+        max_iterations = input_dict["max_iterations"]
+        assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
     else:
         if np.all(model_norms == 2):
             # Cartesian or not sparse
-            max_irls_iterations = 10
+            max_iterations = 10
         else:
             # Spherical or sparse
-            max_irls_iterations = 20
+            max_iterations = 20
 
     if "max_global_iterations" in list(input_dict.keys()):
         max_global_iterations = input_dict["max_global_iterations"]
@@ -636,12 +652,12 @@ def inversion(input_file):
         starting_model = [1e-4]
 
     if "lower_bound" in list(input_dict.keys()):
-        lower_bound = input_dict["lower_bound"]
+        lower_bound = input_dict["lower_bound"][0]
     else:
         lower_bound = -np.inf
 
     if "upper_bound" in list(input_dict.keys()):
-        upper_bound = input_dict["upper_bound"]
+        upper_bound = input_dict["upper_bound"][0]
     else:
         upper_bound = np.inf
 
@@ -997,9 +1013,15 @@ def inversion(input_file):
             # Transfer models from mesh to mesh
             if mesh != input_mesh:
 
-                _, ind = input_tree.query(mesh.gridCC)
+                rad, ind = input_tree.query(mesh.gridCC, 8)
 
-                model = input_model[ind]
+                model = np.zeros(rad.shape[0])
+                wght = np.zeros(rad.shape[0])
+                for ii in range(rad.shape[1]):
+                    model += input_model[ind[:, ii]] / (rad[:, ii] + 1e-3) ** 0.5
+                    wght += 1.0 / (rad[:, ii] + 1e-3) ** 0.5
+
+                model /= wght
                 print("Reference model transferred to new mesh!")
 
             if save_model:
@@ -1376,7 +1398,7 @@ def inversion(input_file):
     directiveList.append(
         Directives.Update_IRLS(
             f_min_change=1e-4,
-            maxIRLSiter=max_irls_iterations,
+            maxIRLSiter=max_iterations,
             minGNiter=1,
             beta_tol=0.5,
             prctile=90,
