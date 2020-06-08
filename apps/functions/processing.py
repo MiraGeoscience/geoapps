@@ -503,7 +503,7 @@ def edge_detection_widget(
                 corners = rotate_xy(corners, [0, 0], -azimuth)
                 ax1.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
                 data_obj = obj.get_data(data_name)[0]
-                _, ind_filter = plot_plan_data_selection(
+                _, ind_filter, _ = plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{

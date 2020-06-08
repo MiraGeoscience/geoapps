@@ -141,7 +141,7 @@ def inversion_widgets():
             value="25, 25, 25", description="Smallest cells",
         ),
         "max_distance": widgets.FloatText(
-            value=100, description="Max triangulation length",
+            value=1000, description="Max triangulation length",
         ),
         "max_iterations": widgets.IntText(value=10,),
         "octree_levels_topo": widgets.Text(
@@ -150,7 +150,7 @@ def inversion_widgets():
         "octree_levels_obs": widgets.Text(
             value="8, 8, 8", description="Layers below data",
         ),
-        "depth_core": widgets.FloatText(value=500, description="Core depth (m)",),
+        "depth_core": widgets.FloatText(value=500, description="Minimum depth (m)",),
         "hz_min": widgets.FloatText(value=10.0, description="Smallest cell (m):",),
         "padding_distance": widgets.Text(
             value="0, 0, 0, 0, 0, 0", description="Padding [W,E,N,S,D,U] (m)",
@@ -170,13 +170,13 @@ def inversion_widgets():
         ),
         "alpha_values": widgets.Text(
             value="1, 1, 1, 1",
-            description="alpha (s, x, y, z)",
+            description="Scaling alpha_(s, x, y, z)",
             disabled=False,
             style={"description_width": "initial"},
         ),
         "norms": widgets.Text(
             value="2, 2, 2, 2",
-            description="Norms (m, x, y, z)",
+            description="Norms p_(s, x, y, z)",
             disabled=False,
             style={"description_width": "initial"},
         ),
@@ -313,25 +313,36 @@ def inversion_widget(h5file, **kwargs):
     bound_panel = VBox([w_l["lower_bound"], w_l["upper_bound"]])
 
     def update_ref(_):
-
+        alphas = string_2_list(w_l["alpha_values"].value)
         if ref_type.value == "Model":
             ref_mod_panel.children[1].children = [ref_type, ref_mod_list]
+            ref_mod_panel.children[1].children[1].layout.visibility = "visible"
+            alphas[0] = 1.0
+
         elif ref_type.value == "Value":
             ref_mod_panel.children[1].children = [ref_type, ref_mod_value]
+            ref_mod_panel.children[1].children[1].layout.visibility = "visible"
+            alphas[0] = 1.0
+        elif ref_type.value == "Best-fitting halfspace":
+            ref_mod_panel.children[1].children[1].layout.visibility = "hidden"
+            alphas[0] = 1.0
         else:
-            ref_mod_panel.children[1].children = [ref_type]
+            ref_mod_panel.children[1].children[1].layout.visibility = "hidden"
+            alphas[0] = 0.0
 
+        w_l["alpha_values"].value = ", ".join(list(map(str, alphas)))
         w_l["write"].button_style = "warning"
         w_l["run"].button_style = "danger"
 
     def update_start(_):
-
         if start_type.value == "Model":
             start_mod_panel.children[1].children = [start_type, start_mod_list]
+            start_mod_panel.children[1].children[1].layout.visibility = "visible"
         elif start_type.value == "Value":
             start_mod_panel.children[1].children = [start_type, start_mod_value]
+            start_mod_panel.children[1].children[1].layout.visibility = "visible"
         else:
-            start_mod_panel.children[1].children = [start_type]
+            start_mod_panel.children[1].children[1].layout.visibility = "hidden"
 
         w_l["write"].button_style = "warning"
         w_l["run"].button_style = "danger"
@@ -340,10 +351,12 @@ def inversion_widget(h5file, **kwargs):
 
         if susc_type.value == "Model":
             susc_mod_panel.children[1].children = [susc_type, susc_mod_list]
+            susc_mod_panel.children[1].children[1].layout.visibility = "visible"
         elif susc_type.value == "Value":
             susc_mod_panel.children[1].children = [susc_type, susc_mod_value]
+            susc_mod_panel.children[1].children[1].layout.visibility = "visible"
         else:
-            susc_mod_panel.children[1].children = [susc_type]
+            susc_mod_panel.children[1].children[1].layout.visibility = "hidden"
 
         w_l["write"].button_style = "warning"
         w_l["run"].button_style = "danger"
@@ -375,7 +388,7 @@ def inversion_widget(h5file, **kwargs):
     )
 
     susc_type.observe(update_susc)
-    susc_mod_value = widgets.FloatText(description="S/m", value=1e-3,)
+    susc_mod_value = widgets.FloatText(description="SI", value=0.0,)
     susc_mod_list = widgets.Dropdown(description="3D Model", options=model_list,)
     susc_mod_panel = widgets.VBox(
         [Label("Susceptibility model"), widgets.VBox([susc_type])]
@@ -406,10 +419,10 @@ def inversion_widget(h5file, **kwargs):
             * w_l["hz_expansion"].value ** np.arange(w_l["n_cells"].value)
         ).sum()
 
-    data_count = Label(f"Max depth: {count_cells():.2f} m")
+    cell_count = Label(f"Max depth: {count_cells():.2f} m")
 
     def update_hz_count(_):
-        data_count.value = f"Max depth: {count_cells():.2f} m"
+        cell_count.value = f"Max depth: {count_cells():.2f} m"
         w_l["write"].button_style = "warning"
         w_l["run"].button_style = "danger"
 
@@ -422,21 +435,19 @@ def inversion_widget(h5file, **kwargs):
             w_l["hz_min"],
             w_l["hz_expansion"],
             w_l["n_cells"],
-            data_count,
+            cell_count,
         ]
     )
-
+    regularization_panel = VBox([ref_mod_panel, w_l["alpha_values"], w_l["norms"]])
     inversion_options = {
         "output name": w_l["out_group"],
         "target misfit": w_l["chi_factor"],
         "uncertainties": w_l["uncert_mode"],
-        "reference model": ref_mod_panel,
         "starting model": start_mod_panel,
         "background susceptibility": susc_mod_panel,
-        "regularization": w_l["alpha_values"],
+        "regularization": regularization_panel,
         "upper-lower bounds": bound_panel,
         "mesh": mesh_panel,
-        "norms": w_l["norms"],
         "ignore values (<0 = no negatives)": w_l["ignore_values"],
         "max iterations": w_l["max_iterations"],
     }
@@ -485,14 +496,15 @@ def inversion_widget(h5file, **kwargs):
             if system.value in ["Magnetics", "Gravity"]:
                 entity = workspace.get_entity(w_l["objects"].value)[0]
                 values = entity.get_data(channel.value)[0].values
-                data_widget.children[
-                    3
-                ].value = f"0, {np.percentile(values[values > 2e-18], 5)}"
+                if isinstance(values[0], float):
+                    data_widget.children[
+                        3
+                    ].value = f"0, {np.percentile(values[values > 2e-18], 5):.2f}"
 
         # Trigger plot update
-        val = data_channel_choices.value
-        data_channel_choices.value = None
-        data_channel_choices.value = val
+        if data_channel_choices.value == channel.header:
+            data_channel_choices.value = None
+            data_channel_choices.value = channel.header
 
     def system_observer(_, start_channel=w_l["starting_channel"].value):
 
@@ -522,6 +534,8 @@ def inversion_widget(h5file, **kwargs):
             ref_type.value = "Value"
             flag = system.value
 
+            w_l["ignore_values"].value = "-99999"
+
         else:
             rx_offsets = em_system_specs[system.value]["rx_offsets"]
             bird_offset.value = ", ".join(
@@ -550,6 +564,7 @@ def inversion_widget(h5file, **kwargs):
 
             w_l["lower_bound"].value = "1e-5"
             w_l["upper_bound"].value = "10"
+            w_l["ignore_values"].value = "<0"
             # Switch mesh options
             inversion_options["mesh"] = hz_panel
             flag = "EM1D"
@@ -618,11 +633,9 @@ def inversion_widget(h5file, **kwargs):
 
         update_component_panel("")
 
-        if all(
-            [
-                system.value not in ["Magnetics", "Gravity"],
-                em_system_specs[system.value]["type"] == "frequency",
-            ]
+        if (
+            system.value not in ["Magnetics", "Gravity"]
+            and em_system_specs[system.value]["type"] == "frequency"
         ):
             option_choices.options = list(inversion_options.keys())
         else:
@@ -641,6 +654,9 @@ def inversion_widget(h5file, **kwargs):
             survey_type_panel.children = [w_l["objects"], system]
 
     def object_observer(_):
+
+        w_l["resolution"].indices = None
+
         if workspace.get_entity(w_l["objects"].value):
             obj = workspace.get_entity(w_l["objects"].value)[0]
             data_list = obj.get_data_list()
@@ -653,6 +669,7 @@ def inversion_widget(h5file, **kwargs):
             line_field.value = find_value(data_list, ["line"])
             line_field_observer("")
 
+            update_topo_list("")
             for aem_system, specs in em_system_specs.items():
                 if any([specs["flag"] in channel for channel in data_list]):
                     system.value = aem_system
@@ -668,7 +685,6 @@ def inversion_widget(h5file, **kwargs):
             if hasattr(system, "data_channel_options"):
                 for key, data_widget in system.data_channel_options.items():
                     data_widget.children[2].options = components.options
-
                     value = find_value(components.options, [key])
                     data_widget.children[2].value = value
 
@@ -682,25 +698,28 @@ def inversion_widget(h5file, **kwargs):
     system = Dropdown(options=systems, description="Survey Type: ",)
     system.observe(system_observer, names="value")
 
+    def get_data_list(entity):
+        groups = [p_g.name for p_g in entity.property_groups]
+        data_list = []
+        if components.value is not None:
+            for component in components.value:
+                if component in groups:
+                    data_list += [
+                        workspace.get_entity(data)[0].name
+                        for data in entity.get_property_group(component).properties
+                    ]
+                elif component in entity.get_data_list():
+                    data_list += [component]
+        return data_list
+
     def update_component_panel(_):
         if workspace.get_entity(w_l["objects"].value):
             entity = workspace.get_entity(w_l["objects"].value)[0]
-            groups = [p_g for p_g in entity.property_groups]
-            if components.value is not None:
-                data_list = []
-                for component in components.value:
-                    if component in groups:
-                        data_list += [
-                            workspace.get_entity(data)[0].name
-                            for data in entity.get_property_group(component).properties
-                        ]
-                    elif component in entity.get_data_list():
-                        data_list += [component]
+            data_list = get_data_list(entity)
 
             if hasattr(system, "data_channel_options"):
                 for key, data_widget in system.data_channel_options.items():
                     data_widget.children[2].options = data_list
-
                     value = find_value(data_list, [key])
                     data_widget.children[2].value = value
 
@@ -713,10 +732,18 @@ def inversion_widget(h5file, **kwargs):
         if hasattr(system, "data_channel_options") and data_channel_choices.value in (
             system.data_channel_options.keys()
         ):
-            data_channel_panel.children = [
-                data_channel_choices,
-                system.data_channel_options[data_channel_choices.value],
-            ]
+            data_widget = system.data_channel_options[data_channel_choices.value]
+            data_channel_panel.children = [data_channel_choices, data_widget]
+
+            if (
+                workspace.get_entity(w_l["objects"].value)
+                and data_widget.children[2].value is None
+            ):
+                entity = workspace.get_entity(w_l["objects"].value)[0]
+                data_list = get_data_list(entity)
+                value = find_value(data_list, [data_channel_choices.value])
+                data_widget.children[2].value = value
+
         w_l["write"].button_style = "warning"
         w_l["run"].button_style = "danger"
 
@@ -911,8 +938,8 @@ def inversion_widget(h5file, **kwargs):
 
     def update_octree_param(_):
         dl = w_l["resolution"].value
-        w_l["core_cell_size"].value = f"{dl}, {dl}, {dl}"
-        w_l["depth_core"].value = (
+        w_l["core_cell_size"].value = f"{dl:.0f}, {dl:.0f}, {dl:.0f}"
+        w_l["depth_core"].value = np.ceil(
             np.min([w_l["width_x"].value, w_l["width_y"].value]) / 2.0
         )
 
@@ -921,20 +948,22 @@ def inversion_widget(h5file, **kwargs):
                 map(
                     str,
                     [
-                        w_l["width_x"].value / 2,
-                        w_l["width_x"].value / 2,
-                        w_l["width_y"].value / 2,
-                        w_l["width_y"].value / 2,
+                        np.ceil(w_l["width_x"].value / 2),
+                        np.ceil(w_l["width_x"].value / 2),
+                        np.ceil(w_l["width_y"].value / 2),
+                        np.ceil(w_l["width_y"].value / 2),
                         0,
                         0,
                     ],
                 )
             )
         )
+        w_l["resolution"].indices = None
 
     w_l["width_x"].observe(update_octree_param)
     w_l["width_y"].observe(update_octree_param)
-    w_l["resolution"].observe(update_octree_param)
+    w_l["resolution"].observe(update_octree_param, names="value")
+    w_l["resolution"].indices = None
 
     def plot_selection(
         entity_name,
@@ -958,7 +987,12 @@ def inversion_widget(h5file, **kwargs):
             ):
                 name = system.data_channel_options[data_choice].children[2].value
 
-            if obj.get_data(name):
+            if (
+                obj.get_data(name)
+                and isinstance(obj.get_data(name)[0].values, np.ndarray)
+                and isinstance(obj.get_data(name)[0].values[0], float)
+            ):
+
                 data_obj = obj.get_data(name)[0]
 
                 plt.figure(figsize=(10, 10))
@@ -975,7 +1009,7 @@ def inversion_widget(h5file, **kwargs):
                 corners = rotate_xy(corners, [0, 0], -azimuth)
                 ax1.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
 
-                _, ind_filter = plot_plan_data_selection(
+                _, indices, line_selection = plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{
@@ -989,9 +1023,20 @@ def inversion_widget(h5file, **kwargs):
                         },
                         "zoom_extent": zoom_extent,
                         "marker_size": marker_size,
+                        "indices": w_l["resolution"].indices,
                     },
                 )
-                data_count.value = f"Data Count: {ind_filter.sum()}"
+
+                if w_l["resolution"].indices is None:
+                    w_l["resolution"].indices = indices
+                data_count = 0
+                for widget in system.data_channel_options.values():
+                    if system.value in ["Magnetics", "Gravity"]:
+                        data_count += widget.children[0].value * indices.sum()
+                    else:
+                        data_count += widget.children[0].value * line_selection.sum()
+
+                w_l["data_count"].value = f"Data Count: {data_count}"
                 w_l["write"].button_style = "warning"
                 w_l["run"].button_style = "danger"
 
@@ -1108,7 +1153,6 @@ def inversion_widget(h5file, **kwargs):
             .children[0]
             .value.lower(): ref_mod_panel.children[1]
             .children[1]
-            .children[0]
             .value
         }
 
@@ -1117,14 +1161,11 @@ def inversion_widget(h5file, **kwargs):
             .children[0]
             .value.lower(): start_mod_panel.children[1]
             .children[1]
-            .children[0]
             .value
         }
 
         if susc_type.value != "None":
-            input_dict["susceptibility"] = (
-                susc_mod_panel.children[1].children[1].children[0].value
-            )
+            input_dict["susceptibility"] = susc_mod_panel.children[1].children[1].value
 
         input_dict["model_norms"] = string_2_list(w_l["norms"].value)
 
@@ -1206,7 +1247,8 @@ def inversion_widget(h5file, **kwargs):
 
     w_l["write"].observe(write_unclick)
 
-    update_topo_list("")
+    object_observer("")
+    update_ref("")
 
     for attr, item in kwargs.items():
         try:
