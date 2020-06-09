@@ -962,6 +962,28 @@ def inversion(input_file):
     opt.remember("xc")
     inv.run(m0)
 
+    for ind, channel in enumerate(channels):
+        if channel in list(input_param["data"]["channels"].keys()):
+            res = (
+                dobs[ind::block][data_ordering]
+                - invProb.dpred[ind::block][data_ordering]
+            )
+
+            d = curve.add_data(
+                {
+                    f"Residual_norm{channel}": {
+                        "association": "VERTEX",
+                        "values": res / uncert[ind::block][data_ordering],
+                    }
+                }
+            )
+            curve.add_data_to_group(d, f"Residual_pct")
+
+            d = curve.add_data(
+                {f"Residual{channel}": {"association": "VERTEX", "values": res}}
+            )
+            curve.add_data_to_group(d, f"Residual")
+
 
 if __name__ == "__main__":
 
