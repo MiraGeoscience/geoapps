@@ -246,6 +246,14 @@ def inversion_widget(h5file, **kwargs):
     for widget in w_l.values():
         widget.style = {"description_width": "initial"}
 
+    for attr, item in kwargs.items():
+        try:
+            if hasattr(w_l[attr], "options") and item not in w_l[attr].options:
+                continue
+            w_l[attr].value = item
+        except KeyError:
+            continue
+
     workspace = Workspace(h5file)
 
     curves = [entity.name for entity in workspace.all_objects()]
