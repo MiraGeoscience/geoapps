@@ -119,10 +119,14 @@ def plot_plan_data_selection(entity, data, **kwargs):
 
     if "indices" in kwargs.keys():
         indices = kwargs["indices"]
+        if isinstance(indices, np.ndarray) and np.all(indices == False):
+            indices = None
     else:
         indices = None
 
+    line_selection = None
     values = None
+    ax = None
     if isinstance(getattr(data, "values", None), np.ndarray):
         if not isinstance(data.values[0], str):
             values = data.values.copy()
@@ -173,7 +177,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
             ax = kwargs["ax"]
 
         if np.all(np.isnan(values)):
-            return ax, np.zeros_like(values, dtype="bool")
+            return (
+                ax,
+                np.zeros_like(values, dtype="bool"),
+                np.zeros_like(values, dtype="bool"),
+            )
 
         if isinstance(entity, Grid2D) and values is not None:
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
@@ -266,7 +274,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
 
                     line_selection[ind[ind_line]] = True
 
-        return ax, indices, line_selection
+    return ax, indices, line_selection
 
 
 def plot_em_data_widget(h5file):
