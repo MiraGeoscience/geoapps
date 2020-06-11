@@ -1,0 +1,315 @@
+h1. GEOH5 file format specification v1.0
+
+h2. Overview
+
+The Geoscience ANALYST file format is based entirely on free and open "HDF5 technology":https://www.hdfgroup.org/about/hdf_technologies.html for its many advantages (fast I/O, compression, possible merging of files, cross-platform, existing libraries in a variety of programming languages, etc). It aims to provide Geoscience ANALYST with a robust means of handling large quantities of diverse data. It builds on the generic qualities of the Geoscience ANALYST data model, and attempts to maintain a certain level of simplicity and consistency throughout.
+
+Given that this specification is public, the file format could, with further investment and involvement, become a useful exchange format for the industry.
+
+HDF5 data models contain :
+* Groups (simple containers)
+* Datasets of various types (integer, floating point, text, binary data, etc)
+* Attributes of various types on groups or datasets
+* Links to groups, datasets or subsets of datasets ("hard" with reference counting and "soft" without)
+
+The contents of GEOH5 files can be fully examined (and modified) by using the free HDFView software. (see external links section)
+We recommend using this tool, along with Geoscience ANALYST, when learning the format.
+
+Note :
+* All text data and attributes are variable-length and use UTF-8 encoding
+* All numeric data uses intel pc native types
+* Boolean values are stored using char (0:false, 1:true)
+* Anything found in a geoh5 v1.0 file which is not mentioned in this document is optional information
+
+The file format is easily extensible with additional types of data as future development requires. Although it is not currently the case, it is intended for Geoscience ANALYST to preserve data it does not understand (and generally be very tolerant with regards to missing information) when loading and saving geoh5 files. This will allow third parties to write to this format fairly easily, as well as include additional information not included in this spec for their own purposes.
+
+h2. Hierarchy
+
+The bulk of the data is accessible both directly by UUID through the "flat" HDF5 groups or through the *hierarchy of hard links*. i.e. While all groups/objects/data are written into their respective base folder, each group/object also has links to its children, allowing traversal. (There is no data duplication, merely multiple references to the same data.)
+
+Types are shared (and thus generally written to file first), and all groups/objects/data must include a hard link to their type.
+Details follow.
+
+* workspace.geoh5
+** *GEOSCIENCE*
+*** Types
+*** Groups  (flat container for all workspace groups)
+*** Objects  (flat container for all workspace objects)
+*** Data  (flat container for all workspace data)
+*** Root  (mandatory hard link to "workspace" group, top of group hierarchy)
+
+h6. Attributes
+
+* Version : (double) Version of specification used by this file
+* Distance unit : (string) Distance unit of all data enclosed ("metres"/"feet")
+* Contributors : (optional, 1D array strings) List of users who contributed to this workspace
+
+h3. Groups
+
+* Groups
+** *{3b61160e-23ea-423a-b67c-1f8f1070fff9}*
+*** Type _(mandatory hard link to a group type)_
+*** Groups _(contains hard links to child groups)_
+**** {2d0eaf4c-bbc7-4c7f-8496-e36e4727fbda} _(optional hard link to other group)_
+**** ...
+*** Objects _(contains hard links to child objects)_
+**** {0b561ab2-87a4-4b82-a5fe-a7c1f6c3c8f8} _(optional hard link to object)_
+**** ...
+*** Data _(contains hard links to child data)_
+**** {0803f944-1392-4a8d-87f1-c7e4c4f3f499} _(optional hard link to data)_
+**** ...
+** *{2d0eaf4c-bbc7-4c7f-8496-e36e4727fbda}*
+** ...
+
+h6. Attributes
+
+* Name : (string)
+* ID : (string, UUID of this entity)
+* Visible : (optional, char, 0 or (default) 1) will be visible in the 3D camera (checked in the object tree)
+* Public : (optional, char, 0 or (default) 1) accessible in the object tree and other parts of the the user interface
+* Clipping IDs : (optional, 1D array UUID strings of clipping plane objects)
+* Allow delete : (optional, char, 0 or (default) 1) user interface will allow deletion
+* Allow move : (optional, char, 0 or (default) 1) user interface will allow moving to another parent group
+* Allow rename : (optional, char, 0 or (default) 1) user interface will allow renaming
+
+h6. Notes
+
+Though this file format technically allows objects/groups to appear within multiple groups simultaneously (overlapping lists), this is not currently supported by Geoscience ANALYST.
+
+h3. Objects
+
+Most (not all) object geometry is described in terms of vertices (3D locations) and cells (groupings of vertices such as triangles or segments). The exact requirements and interpretation depends on the type. Additional information may also be stored for some specific types. (see type descriptions section)
+
+* Objects
+** *{001d3cea-2c22-41b9-a9d6-bf0219e0a287}*
+*** Type _(mandatory hard link to an object type)_
+*** Vertices : (1D array compound dataset - double x, double y, double z) : 3D points
+*** Cells : (2D array unsigned int dataset) : sets of indices from "Vertices" dataset (number of indices per cell depends on type)
+*** Data _(contains hard links to child data)_
+**** {0782cc42-74f9-4ebf-b9b7-372939999204} _(optional hard link to data)_
+**** ...
+** *{00501ec2-94ea-4dd7-870e-f52b772fd27d}*
+** ...
+
+h6. Attributes
+
+* Name : (string)
+* ID : (string, UUID of this entity)
+* Visible : (optional, char, 0 or (default) 1) will be visible in the 3D camera (checked in the object tree)
+* Clipping IDs : (optional, 1D array UUID strings of clipping plane objects)
+* Allow delete : (optional, char, 0 or (default) 1) user interface will allow deletion
+* Allow move : (optional, char, 0 or (default) 1) user interface will allow moving to another parent group
+* Allow rename : (optional, char, 0 or (default) 1) user interface will allow renaming
+* Public : (optional, char, 0 or (default) 1) accessible in the object tree and other parts of the the user interface
+
+h3. Data
+
+* Data
+** *{001d3cea-2c22-41b9-a9d6-bf0219e0a287}*
+*** Type _(mandatory hard link to a data type)_
+*** Data (1D array dataset of varying types) see "Data Types" section for more details
+** *{00501ec2-94ea-4dd7-870e-f52b772fd27d}*
+** ...
+
+h6. Attributes
+
+* Association : (string) "Object", "Cell" or "Vertex" - describes whether the property is tied to cells, vertices, or the object/group itself.
+* Name : (string)
+* ID : (string, UUID of this entity)
+* Visible : (optional, char, 0 or (default) 1) will be visible in the 3D camera (checked in the object tree)
+* Allow delete : (optional, char, 0 or (default) 1) user interface will allow deletion
+* Allow rename : (optional, char, 0 or (default) 1) user interface will allow renaming
+* Public : (optional, char, 0 or (default) 1) accessible in the object tree and other parts of the the user interface
+
+h3. Types
+
+Each type can be shared by any number of groups/objects/data sets.
+
+* Types
+** Group types
+*** *{05e96011-3833-11e4-a7fb-fcddabfddab1}*
+*** ...
+** Object types
+*** *{04c88a3f-bb90-4f3b-b2db-f4c96e4aeb94}*
+*** ...
+** Data types
+*** *{00c9da0c-e960-46cd-82ad-a3138b33e1ff}*
+**** Color map : (1D compound array dataset - Value(double), Red(unsigned char), Green(unsigned char), Blue(unsigned char), Alpha(unsigned char) : Optional, records colors assigned to value ranges (where Value is the start of the range)
+**** Value map : (1D compound array dataset - Key(unsigned int), Value(string)) : Required only for reference data types (aka classifications)
+*** ...
+
+h6. Group type attributes
+
+* Name : (string)
+* ID : (string, UUID of this Group type, referring to the Group implementation)
+* Description : (string, optional)
+* Allow move contents : (char, optional, 0(false) or 1(true), default 1)
+* Allow delete contents : (char, optional, 0(false) or 1(true), default 1)
+
+h6. Object type attributes
+
+* Name : (string)
+* ID : (string, UUID of this Object type, referring to the Object implementation)
+* Description : (string, optional)
+
+h6. Data type attributes
+
+* Name : (string)
+* ID : (string, UUID of this Data type)
+* Primitive type : (string) : describing the kind of data contained in the associated "Data" tables - "Integer", "Float", "Referenced", "Text", "Filename", "DateTime" or "Blob" (see "Data types" section)
+* Description : (string, optional)
+* Units : (string, optional)
+
+h2. Existing types description
+
+While they are structured similarly, *each group, object or set of data has a type that defines how its HDF5 datasets should be interpreted*. This type is shared among any number of entities). Below is a description of existing types and expectations tied to each of them.
+
+h2. Group types
+
+While groups can simply be an arbitrary container of random objects, it is often useful to assign special meanings (and specialized software functionality).
+
+h5. Container
+
+Simple container with no special meaning. Default in Geoscience ANALYST.
+
+* UUID : {61FBB4E8-A480-11E3-8D5A-2776BDF4F982}
+
+h5. Drillholes group
+
+Container restricted to containing drillhole objects, and which may provide convenience functionality for the drillholes within.
+
+* UUID : {825424FB-C2C6-4FEA-9F2B-6CD00023D393}
+
+h2. Object types
+
+Some object types are straightforward enough that vertices and cells are enough to define their geometry. In other cases it is insufficient or impractical to do so, and these types have additional datasets or attributes defining their geometry.
+
+h5. Points type
+
+* UUID : {202C5DB1-A56D-4004-9CAD-BAAFD8899406}
+* No cell data.
+
+h5. Curve type
+
+* UUID : {6A057FDC-B355-11E3-95BE-FD84A7FFCB88}
+* Each cell contains two vertex indices, representing a segment.
+
+h5. Surface type
+
+* UUID : {F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}
+* Each cell contains three vertex indices, representing a triangle.
+
+h5. Block model type
+
+* UUID : {B020A277-90E2-4CD7-84D6-612EE3F25051}
+* Each cell represents a point of a 3D rectilinear grid. For a 3D cell index (i,j,k) along axes U,V and Z of length nU, nV and nZ respectively, <pre>cell index = k + i*nZ + j*nU*nZ</pre>
+* Without rotation angles, U points eastwards, V points northwards, and Z points upwards.
+* Since their geometry is defined entirely by the additional data described below, block models do not require a Vertices or Cells dataset.
+* Additional datasets :
+** U cell delimiters : (1D array doubles) distances of cell edges from origin along the U axis (first value should be 0)
+** V cell delimiters : (1D array doubles) distances of cell edges from origin along the V axis (first value should be 0)
+** Z cell delimiters : (1D array doubles) distances of cell edges from origin upwards along the vertical axis (first value should be 0)
+* Additional attributes :
+** Origin : (composite type - X(double), Y(double), Z(double) ) origin point of grid
+** Rotation : (double, default 0) counterclockwise angle of rotation around the vertical axis in degrees.
+
+h5. 2D grid type
+
+* UUID : {48f5054a-1c5c-4ca4-9048-80f36dc60a06}
+* Each cell represents a point in a regular 2D grid. For a 2D cell index (i,j) within axes U and V containing nU and nV cells respectively, <pre>cell index = i + j*nU</pre>
+* Without rotation angles, U points eastwards and V points northwards
+* Since their geometry is defined entirely by the additional data described below, 2D grids do not require a Vertices or Cells dataset.
+* Additional attributes :
+** Origin : (composite type - X(double), Y(double), Z(double) ) origin point of grid
+** U Size : (double) length of U axis
+** U Count : (double) number of cells along U axis
+** V Size : (double) length of V axis
+** V Count : (double) number of cells along V axis
+** Rotation : (optional double) counterclockwise angle of rotation around the vertical axis at the Origin in degrees
+** Vertical : (optional char, 0(false, default) or 1(true)) when true, V axis is vertical (and rotation defined around the V axis)
+
+h5. Drillhole type
+
+* UUID : {7CAEBF0E-D16E-11E3-BC69-E4632694AA37}
+* Vertices represent points along the drillhole path (support for data rather than the drillhole geometry itself) and must have a "Depth" property value.
+* Cells contain two vertices and represent intervals along the drillhole path (and are a support for interval data as well)
+* Cells may overlap with each other to accommodate the different sampling intervals of various data.
+* Additional attribute :
+** Collar : (composite - X, Y, Z) - collar location
+* Additional datasets :
+** Surveys : (1D composite array) - Depth(float), Dip(float), Azimuth(float) - survey locations
+** Trace : (1D composite array - X, Y, Z, containing at least two points) the actual drillhole geometry - points forming the drillhole path, from collar to end of hole (optional if surveys and collar are present)
+
+
+h5. Geoimage type
+
+* UUID : {77AC043C-FE8D-4D14-8167-75E300FB835A}
+* Vertices represent the four corners of the geolocated image. Note : Should be arranged as a rectangle currently, since Geoscience ANALYST does not currently support skewed images.
+* No cell data.
+* An object-associated file-type data containing the image to display is expected to exist under this object.
+
+h5. Label type
+
+* UUID : {E79F449D-74E3-4598-9C9C-351A28B8B69E}
+* Has no vertices nor cell data
+* Additional attributes :
+** Target position : (composite type, X(double), Y(double), Z(double) ) The target location of the label
+** Label position : (optional composite type, X(double), Y(double), Z(double), defaults to same as target position ) The location where the text of the label is displayed
+
+h2. Data types
+
+New data types can be created at will by software or users to describe object or group properties. Data of the same type can exist on any number of objects or groups of any type, and each instance can be associated with vertices, cells or the object/group itself. Some data type identifiers can also be reserved as a means of identifying a specific kind of data. Each of them must be of one of the following *primitive types*, which dictate the contents of the "Data" HDF5 dataset for each instance :
+
+"Data" is currently *always stored as a 1D array*, even in the case of single-value data with the "Object" association (in which case it is a 1D array of length 1).
+
+h5. Float
+* Stored as a 1D array of 32-bit float type
+* No data value: 1.175494351e-38 (FLT_MIN, considering use of NaN)
+
+h5. Integer
+* Stored as a 1D array of 32-bit integer type
+* No data value: –2147483648 (INT_MIN, considering use of NaN)
+
+h5. Text
+* Stored as a 1D array of UTF-8 encoded, variable-length string type
+* No data value : empty string
+
+h5. Referenced
+* Stored as a 1D array of 32-bit unsigned integer type (native)
+* Value map : (1D composite type array dataset - Key (unsigned int), Value (variable-length utf8 string) ) must exist under type
+* No data value : 0 (key is tied to value "Unknown")
+
+h5. DateTime
+* Stored as a 1D array of variable-length strings formatted according to the "ISO 8601":https://en.wikipedia.org/wiki/ISO_8601 extended specification for representations of UTC dates and times (Qt implementation), taking the form YYYY-MM-DDTHH:mm:ss[Z|[+|-]HH:mm]
+* No data value : empty string
+
+h5. Filename
+* Stored as a 1D array of UTF-8 encoded, variable-length string type designating a file name
+* For each file name within "Data", an opaque dataset named after the filename must be added under the Data instance, containing a complete binary dump of the file
+* Different files (under the same object/group) must be saved under different names
+* No data value : empty string
+
+h5. Blob
+* Stored as a 1D array of 8-bit char type (native) (value '0' or '1')
+* For each index set to 1, an opaque dataset named after the index (e.g. "1", "2", etc) must be added under the Data instance, containing the binary data tied to that index
+* No data value : 0
+
+h2. External Links
+
+* Geoscience ANALYST and some sample data can be found "here":http://www.mirageoscience.com/our-products/software-product/geoscience-analyst .
+* The contents of an HDF5 file can be viewed using "HDFView":https://support.hdfgroup.org/products/java/hdfview/ .
+* Precompiled binaries for multiple platforms can be found "here":https://www.hdfgroup.org/products/java/release/download.html .
+
+h3. Libraries for accessing HDF5 data
+
+* "C, C++, .NET":https://www.hdfgroup.org/downloads/
+* "Python":http://www.h5py.org/
+* "Matlab":http://www.mathworks.com/help/matlab/hdf5-files.html
+* etc
+
+h2. Future development
+
+* Evaluate the "blosc":http://www.blosc.org compression filter for HDF5 for smaller file sizes and sometimes even improved performance.
+* Evaluate holding large grid data in 2D or 3D chunked datasets for better I/O performance.
+* Investigate use of h5repack for delivering smaller files.
+* Investigate use of h5copy to merge data between files.
