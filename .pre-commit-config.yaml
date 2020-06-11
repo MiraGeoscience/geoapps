@@ -13,12 +13,13 @@ repos:
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
--   repo: https://github.com/codespell-project/codespell
-    rev: v1.16.0
-    hooks:
-    -   id: codespell
-        exclude: \.ipynb$
-        exclude: apps/functions/simpegPF/
+# -   repo: https://github.com/codespell-project/codespell
+#     rev: v1.16.0
+#     hooks:
+#     -   id: codespell
+#         exclude: \.ipynb$
+#         exclude: geoapps/functions/simpegPF/
+#         exclude: geoapps/functions/simpegEM1D/
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.5.0
     hooks:
