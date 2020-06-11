@@ -1,0 +1,167 @@
+{
+    "out_group": "Inversion_",
+    "workspace": "assets/FlinFlon_inv.geoh5",
+    "save_to_geoh5": "assets/FlinFlon_inv.geoh5",
+    "system": "DIGHEM",
+    "lines": {
+        "Line": [
+            "6072600.0",
+            "6072800.0",
+            "6073000.0"
+        ]
+    },
+    "mesh 1D": [
+        10.0,
+        1.05,
+        20.0
+    ],
+    "chi_factor": 1.0,
+    "max_iterations": 10,
+    "ignore_values": "<0",
+    "resolution": 100.0,
+    "window": {
+        "center": [
+            315558.6992,
+            6070761.7871
+        ],
+        "size": [
+            17920.0,
+            19200.0
+        ],
+        "azimuth": 0.0
+    },
+    "alphas": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+    ],
+    "reference_model": {
+        "best-fitting halfspace": 0.001
+    },
+    "starting_model": {
+        "value": 0.001
+    },
+    "model_norms": [
+        2.0,
+        2.0,
+        2.0,
+        2.0
+    ],
+    "lower_bound": [
+        1e-05
+    ],
+    "upper_bound": [
+        10.0
+    ],
+    "data": {
+        "type": "GA_object",
+        "name": "Data_FEM_pseudo3D",
+        "channels": {
+            "CPI900": {
+                "name": "CPI900",
+                "uncertainties": [
+                    0.0,
+                    2.0
+                ],
+                "offsets": [
+                    8.0,
+                    0.0,
+                    0.0
+                ],
+                "value": [
+                    900.0
+                ]
+            },
+            "CPI7200": {
+                "name": "CPI7200",
+                "uncertainties": [
+                    0.0,
+                    35.0
+                ],
+                "offsets": [
+                    8.0,
+                    0.0,
+                    0.0
+                ],
+                "value": [
+                    7200.0
+                ]
+            },
+            "CPI56K": {
+                "name": "CPI56k",
+                "uncertainties": [
+                    0.0,
+                    320.0
+                ],
+                "offsets": [
+                    6.3,
+                    0.0,
+                    0.0
+                ],
+                "value": [
+                    56000.0
+                ]
+            },
+            "CPQ900": {
+                "name": "CPQ900",
+                "uncertainties": [
+                    0.0,
+                    30.0
+                ],
+                "offsets": [
+                    8.0,
+                    0.0,
+                    0.0
+                ],
+                "value": [
+                    900.0
+                ]
+            },
+            "CPQ7200": {
+                "name": "CPQ7200",
+                "uncertainties": [
+                    0.0,
+                    215.0
+                ],
+                "offsets": [
+                    8.0,
+                    0.0,
+                    0.0
+                ],
+                "value": [
+                    7200.0
+                ]
+            },
+            "CPQ56K": {
+                "name": "CPQ56k",
+                "uncertainties": [
+                    0.0,
+                    430.0
+                ],
+                "offsets": [
+                    6.3,
+                    0.0,
+                    0.0
+                ],
+                "value": [
+                    56000.0
+                ]
+            }
+        }
+    },
+    "uncertainty_mode": "User input (\\%|data| + floor)",
+    "receivers_offset": {
+        "constant": [
+            0.0,
+            0.0,
+            0.0
+        ]
+    },
+    "topography": {
+        "GA_object": {
+            "name": "Topography",
+            "data": "Vertices"
+        }
+    }
+}
