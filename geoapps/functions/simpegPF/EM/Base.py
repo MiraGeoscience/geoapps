@@ -1,12 +1,12 @@
 import properties
 from scipy.constants import mu_0
 
-from SimPEG import Survey
-from SimPEG import Problem
-from SimPEG import Utils
-from SimPEG import Maps
-from SimPEG import Props
-from SimPEG import Solver as SimpegSolver
+from .. import Survey
+from .. import Problem
+from .. import Utils
+from .. import Maps
+from .. import Props
+from .. import Solver as SimpegSolver
 
 
 __all__ = ["BaseEMProblem", "BaseEMSurvey", "BaseEMSrc"]

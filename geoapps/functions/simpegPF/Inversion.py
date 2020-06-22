@@ -1,6 +1,6 @@
 import scipy.sparse as sp
 import numpy as np
-from SimPEG import Utils
+from . import Utils
 from .Optimization import Remember, IterationPrinters, StoppingCriteria
 from . import Directives
 

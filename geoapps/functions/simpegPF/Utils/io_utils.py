@@ -2,7 +2,7 @@ import numpy as np
 import time as tm
 import re
 import warnings
-from SimPEG import Utils
+from .. import Utils
 from discretize import TreeMesh
 
 
@@ -372,6 +372,9 @@ def writeUBCmagneticsObservations(filename, survey, d):
 
     wd = survey.std
 
+    if d.ndim == 2:
+        d = d[0]
+
     data = np.c_[rxLoc, d, wd]
     head = (
         "{:6.2f} {:6.2f} {:6.2f}\n".format(B[1], B[2], B[0])
@@ -381,8 +384,6 @@ def writeUBCmagneticsObservations(filename, survey, d):
     np.savetxt(
         filename, data, fmt="%e", delimiter=" ", newline="\n", header=head, comments=""
     )
-
-    print("Observation file saved to: " + filename)
 
 
 def readUBCgravityObservations(obs_file):
@@ -448,8 +449,6 @@ def writeUBCgravityObservations(filename, survey, d):
     np.savetxt(
         filename, data, fmt="%e", delimiter=" ", newline="\n", header=head, comments=""
     )
-
-    print("Observation file saved to: " + filename)
 
 
 def writeVectorUBC(mesh, fileName, model):

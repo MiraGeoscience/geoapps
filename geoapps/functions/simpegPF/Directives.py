@@ -3,11 +3,11 @@ from . import DataMisfit
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
-import json
 from .PF import Magnetics
 from . import Regularization
 from . import Mesh
 from . import ObjectiveFunction
+import json
 
 
 class InversionDirective:
@@ -211,6 +211,7 @@ class BetaEstimate_ByEig(InversionDirective):
         x0 = np.random.rand(m.shape[0])
         t = np.dot(x0, self.dmisfit.deriv2(m, x0, f=f))
         b = np.dot(x0, self.reg.deriv2(m, v=x0))
+
         self.beta0 = self.beta0_ratio * (t / b)
 
         self.invProb.beta = self.beta0
@@ -396,11 +397,11 @@ class SaveUBCModelEveryIteration(SaveEveryIteration):
                             models={
                                 fileName + ".dip": (np.rad2deg(theta)),
                                 fileName + ".azm": ((450 - np.rad2deg(phi)) % 360),
-                                fileName + "_TOT.amp": np.sum(vec ** 2, axis=1) ** 0.5,
+                                fileName + "_TOT.mod": np.sum(vec ** 2, axis=1) ** 0.5,
                                 fileName
-                                + "_IND.amp": np.sum(m_ind ** 2, axis=1) ** 0.5,
+                                + "_IND.mod": np.sum(m_ind ** 2, axis=1) ** 0.5,
                                 fileName
-                                + "_REM.amp": np.sum(m_rem ** 2, axis=1) ** 0.5,
+                                + "_REM.mod": np.sum(m_rem ** 2, axis=1) ** 0.5,
                             },
                         )
 
@@ -415,17 +416,17 @@ class SaveUBCModelEveryIteration(SaveEveryIteration):
                         )
                         Mesh.TensorMesh.writeModelUBC(
                             self.mesh,
-                            fileName + "_TOT.amp",
+                            fileName + "_TOT.mod",
                             np.sum(vec ** 2, axis=1) ** 0.5,
                         )
                         Mesh.TensorMesh.writeModelUBC(
                             self.mesh,
-                            fileName + "_IND.amp",
+                            fileName + "_IND.mod",
                             np.sum(m_ind ** 2, axis=1) ** 0.5,
                         )
                         Mesh.TensorMesh.writeModelUBC(
                             self.mesh,
-                            fileName + "_REM.amp",
+                            fileName + "_REM.mod",
                             np.sum(m_rem ** 2, axis=1) ** 0.5,
                         )
                         Utils.io_utils.writeVectorUBC(
@@ -727,7 +728,6 @@ class SaveOutputDictEveryIteration(SaveEveryIteration):
             regCombo += ["phi_msz"]
 
         # Initialize the output dict
-        iterDict = None
         iterDict = {}
 
         # Save the data.
@@ -743,9 +743,22 @@ class SaveOutputDictEveryIteration(SaveEveryIteration):
         iterDict["m"] = self.invProb.model
         iterDict["dpred"] = self.invProb.dpred
 
+        if hasattr(self.dmisfit.objfcts[0].prob, "coordinate_system") is True:
+            iterDict["coordinate_system"] = self.dmisfit.objfcts[
+                0
+            ].prob.coordinate_system
+        else:
+            iterDict["coordinate_system"] = False
+
         if hasattr(self.reg.objfcts[0], "eps_p") is True:
             iterDict["eps_p"] = self.reg.objfcts[0].eps_p
             iterDict["eps_q"] = self.reg.objfcts[0].eps_q
+
+        iterDict["IRLSiterStart"] = None
+        for direct in self.inversion.directiveList.dList:
+            if isinstance(direct, Update_IRLS) and hasattr(direct, "iterStart") is True:
+                if direct.IRLSiter > 0:
+                    iterDict["IRLSiterStart"] = direct.iterStart
 
         if hasattr(self.reg.objfcts[0], "norms") is True:
             for objfct in self.reg.objfcts[0].objfcts:
@@ -892,7 +905,6 @@ class SaveIterationsGeoH5(InversionDirective):
                 regCombo += ["phi_msz"]
 
             # Save the data.
-            # Save the data.
             iterDict = {"beta": f"{self.invProb.beta:.3e}"}
 
             if isinstance(self.invProb.phi_d, float):
@@ -958,10 +970,8 @@ class VectorInversion(InversionDirective):
 
     def endIter(self):
         if (
-            (self.invProb.phi_d < self.target)
-            and self.mode == "cartesian"
-            and self.inversion_type == "mvis"
-        ):
+            self.invProb.phi_d < self.target
+        ) and self.mode == "cartesian":  # and self.inversion_type == 'mvis':
 
             print("Switching MVI to spherical coordinates")
             self.mode = "spherical"
@@ -1002,11 +1012,14 @@ class VectorInversion(InversionDirective):
             update_Jacobi = []
             IRLS = []
             for directive in self.inversion.directiveList.dList:
-                # directive._inversion = None
                 if isinstance(directive, SaveIterationsGeoH5):
                     channels = []
                     for channel in directive.channels:
                         channels.append(channel + "_s")
+                        directive.data_type[channel + "_s"] = directive.data_type[
+                            channel
+                        ]
+
                     directive.channels = channels
 
                     if directive.attribute == "mvi_model":
@@ -1046,6 +1059,12 @@ class VectorInversion(InversionDirective):
             directiveList[2].endIter()
             directiveList[3].endIter()
 
+        # else:
+        # for directive in self.inversion.directiveList.dList:
+        #     if isinstance(directive, Update_IRLS) and directive.mode!=1:
+        #         print('Changing IRLS cooling rate')
+        #         directive.coolingRate = 1
+
 
 class Update_IRLS(InversionDirective):
 
@@ -1056,7 +1075,6 @@ class Update_IRLS(InversionDirective):
     beta_ratio_l2 = None
     prctile = 90
     chifact_target = 1.0
-    chifact_start = 1.0
 
     # Solving parameter for IRLS (mode:2)
     IRLSiter = 0
@@ -1097,23 +1115,6 @@ class Update_IRLS(InversionDirective):
     def target(self, val):
         self._target = val
 
-    @property
-    def start(self):
-        if getattr(self, "_start", None) is None:
-            if isinstance(self.survey, list):
-                self._start = 0
-                for survey in self.survey:
-                    self._start += survey.nD * 0.5 * self.chifact_start
-
-            else:
-
-                self._start = self.survey.nD * 0.5 * self.chifact_start
-        return self._start
-
-    @start.setter
-    def start(self, val):
-        self._start = val
-
     def initialize(self):
 
         if self.mode == 1:
@@ -1123,16 +1124,6 @@ class Update_IRLS(InversionDirective):
                 self.norms.append(reg.norms)
                 reg.norms = np.c_[2.0, 2.0, 2.0, 2.0]
                 reg.model = self.invProb.model
-
-                # # Check if using non-simple difference
-                # dx = sp.find(reg.regmesh.cellDiffxStencil)[2].max()
-                # if dx != 1:
-                #     print(dx)
-                #     reg.alpha_s = dx**2. #/np.min(reg.regmesh.mesh.hx)**2.
-
-        # Update the model used by the regularization
-        # for reg in self.reg.objfcts:
-        #     reg.model = self.invProb.model
 
         for reg in self.reg.objfcts:
             reg.model = self.invProb.model
@@ -1199,7 +1190,7 @@ class Update_IRLS(InversionDirective):
             phi_m_last += [reg(self.invProb.model)]
 
         # After reaching target misfit with l2-norm, switch to IRLS (mode:2)
-        if np.all([self.invProb.phi_d < self.start, self.mode == 1]):
+        if np.all([self.invProb.phi_d < self.target, self.mode == 1]):
             self.startIRLS()
             self.f_old = np.sum(phi_m_last)
 

@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.linalg import norm
 from SimPEG.Utils import mkvc, sdiag, diagEst
-from SimPEG import Utils
+from . import Utils
 from discretize import TensorMesh, CurvilinearMesh, CylMesh
 from discretize.TreeMesh import TreeMesh as Tree
 import scipy.sparse as sp
@@ -311,7 +311,7 @@ def checkDerivative(
             :include-source:
 
             import numpy as np
-            from SimPEG import Tests, Utils
+            from .. import Tests, Utils
             def simplePass(x):
                 return np.sin(x), Utils.sdiag(np.cos(x))
             Tests.checkDerivative(simplePass, np.random.randn(5))

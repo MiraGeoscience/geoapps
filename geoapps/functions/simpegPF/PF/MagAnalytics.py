@@ -3,7 +3,7 @@ from .. import *
 from .. import Utils
 from .. import Mesh
 import numpy as np
-from ..Utils import kron3, speye, sdiag
+from SimPEG.Utils import kron3, speye, sdiag
 import matplotlib.pyplot as plt
 
 

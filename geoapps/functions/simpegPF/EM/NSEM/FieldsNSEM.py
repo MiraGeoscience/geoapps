@@ -1,5 +1,5 @@
-from SimPEG import Utils
-from SimPEG import Problem
+from .. import Utils
+from .. import Problem
 
 from SimPEG.Utils import Zero
 from SimPEG.Utils import Identity

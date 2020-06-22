@@ -1,5 +1,5 @@
 import numpy as np, os
-from SimPEG import Utils
+from .. import Utils
 import six
 
 

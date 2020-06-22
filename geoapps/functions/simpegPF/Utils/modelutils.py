@@ -11,7 +11,7 @@ import discretize as Mesh
 from discretize.utils import closestPoints, kron3, speye
 
 
-def surface2ind_topo(mesh, topo, gridLoc="N", method="linear"):
+def surface2ind_topo(mesh, topo, gridLoc="N", method="linear", fill_value=np.nan):
     """
     Get active indices from topography
 
@@ -97,18 +97,19 @@ def surface2ind_topo(mesh, topo, gridLoc="N", method="linear"):
             return active
 
     # Interpolate z values on CC or N
-    z_xyz = z_interpolate(locations[:, :-1]).squeeze()
+    z_topo = z_interpolate(locations[:, :-1]).squeeze()
 
     # Apply nearest neighbour if in extrapolation
-    ind_nan = np.isnan(z_xyz)
-    if any(ind_nan):
+    ind_nan = np.isnan(z_topo)
+
+    if np.any(ind_nan):
         tree = cKDTree(topo)
         _, ind = tree.query(locations[ind_nan, :])
-        z_xyz[ind_nan] = topo[ind, dim]
+        z_topo[ind_nan] = topo[ind, dim]
 
     # Create an active bool of all True
     active = np.all(
-        (locations[:, dim] < z_xyz).reshape((mesh.nC, -1), order="F"), axis=1
+        (locations[:, dim] < z_topo).reshape((mesh.nC, -1), order="F"), axis=1
     )
 
     return active.ravel()

@@ -1,5 +1,5 @@
 import numpy as np
-from SimPEG import Mesh, Utils
+from .. import Mesh, Utils
 from scipy.special import ellipk, ellipe
 from scipy.constants import mu_0
 import properties
@@ -305,7 +305,7 @@ def MagneticLoopVectorPotential(
 
 
 if __name__ == "__main__":
-    from SimPEG import Mesh
+    from .. import Mesh
     import matplotlib.pyplot as plt
 
     cs = 20

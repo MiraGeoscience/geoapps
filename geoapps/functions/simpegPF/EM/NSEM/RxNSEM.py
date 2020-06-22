@@ -8,7 +8,7 @@ from scipy.constants import mu_0
 
 import SimPEG
 import numpy as np
-from SimPEG import mkvc
+from .. import mkvc
 
 
 class BaseRxNSEM_Point(SimPEG.Survey.BaseRx):

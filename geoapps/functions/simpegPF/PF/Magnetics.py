@@ -5,7 +5,6 @@ from scipy.constants import mu_0
 from .. import Utils
 from .. import Problem
 from .. import Props
-from .. import Mesh
 import multiprocessing
 import properties
 from ..Utils import mkvc, matutils, sdiag
@@ -1054,7 +1053,7 @@ def MagneticsDiffSecondaryInv(mesh, model, data, **kwargs):
         Inversion module for MagneticsDiffSecondary
 
     """
-    from SimPEG import Optimization, Regularization, Parameters, ObjFunction, Inversion
+    from .. import Optimization, Regularization, Parameters, ObjFunction, Inversion
 
     prob = MagneticsDiffSecondary(mesh, model)
 

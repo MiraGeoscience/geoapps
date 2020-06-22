@@ -1,5 +1,5 @@
 import numpy as np
-from SimPEG import Utils
+from .. import Utils
 
 
 def line(a, t, l):

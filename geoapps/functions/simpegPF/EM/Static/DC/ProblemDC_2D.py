@@ -1,4 +1,4 @@
-from SimPEG import Utils
+from .. import Utils
 from SimPEG.EM.Base import BaseEMProblem
 from .SurveyDC import Survey_ky
 from .FieldsDC_2D import Fields_ky, Fields_ky_CC, Fields_ky_N

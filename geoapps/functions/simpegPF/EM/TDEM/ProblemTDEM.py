@@ -1,6 +1,6 @@
 import scipy.sparse as sp
 import numpy as np
-from SimPEG import Problem, Utils, Solver as SimpegSolver
+from .. import Problem, Utils, Solver as SimpegSolver
 from SimPEG.EM.Base import BaseEMProblem
 from SimPEG.EM.TDEM.SurveyTDEM import Survey as SurveyTDEM
 from SimPEG.EM.TDEM.FieldsTDEM import (

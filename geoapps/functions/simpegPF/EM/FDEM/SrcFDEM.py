@@ -4,7 +4,7 @@ from scipy.constants import mu_0
 import warnings
 
 from SimPEG.Utils import Zero
-from SimPEG import Survey, Problem, Utils
+from .. import Survey, Problem, Utils
 
 from .. import Utils as emutils
 from ..Base import BaseEMSrc

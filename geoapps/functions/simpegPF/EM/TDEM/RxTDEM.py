@@ -1,5 +1,5 @@
 import SimPEG
-from SimPEG import Utils
+from .. import Utils
 import scipy.sparse as sp
 
 

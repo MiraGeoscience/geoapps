@@ -1,7 +1,7 @@
 import numpy as np
-from SimPEG import Utils
+from .. import Utils
 from scipy.constants import mu_0, epsilon_0
-from SimPEG.EM.Utils.EMUtils import k
+from EM.Utils.EMUtils import k
 
 
 def getKc(freq, sigma, a, b, mu=mu_0, eps=epsilon_0):

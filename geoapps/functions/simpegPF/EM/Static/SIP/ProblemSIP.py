@@ -1,7 +1,7 @@
 import numpy as np
 
-from SimPEG import Utils
-from SimPEG import Props
+from .. import Utils
+from .. import Props
 
 from SimPEG.EM.Base import BaseEMProblem
 from SimPEG.EM.Static.DC.FieldsDC import FieldsDC, Fields_CC, Fields_N

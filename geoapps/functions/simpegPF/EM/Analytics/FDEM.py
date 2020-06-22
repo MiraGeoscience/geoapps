@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.constants import mu_0, pi
 from scipy.special import erf
-from SimPEG import Utils
+from .. import Utils
 
 
 def hzAnalyticDipoleF(r, freq, sigma, secondary=True, mu=mu_0):
@@ -11,7 +11,7 @@ def hzAnalyticDipoleF(r, freq, sigma, secondary=True, mu=mu_0):
     .. plot::
 
         import matplotlib.pyplot as plt
-        from SimPEG import EM
+        from .. import EM
         freq = np.logspace(-1, 6, 61)
         test = EM.Analytics.FDEM.hzAnalyticDipoleF(100, freq, 0.001, secondary=False)
         plt.loglog(freq, abs(test.real))
@@ -58,7 +58,7 @@ def MagneticDipoleWholeSpace(XYZ, srcLoc, sig, f, moment=1.0, orientation="X", m
 
     .. plot::
 
-        from SimPEG import EM
+        from .. import EM
         import matplotlib.pyplot as plt
         from scipy.constants import mu_0
         freqs = np.logspace(-2,5,100)
