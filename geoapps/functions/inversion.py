@@ -145,10 +145,10 @@ def inversion_widgets():
         ),
         "max_iterations": widgets.IntText(value=10,),
         "octree_levels_topo": widgets.Text(
-            value="0, 0, 3", description="Layers below topo",
+            value="0, 0, 0, 2", description="Layers below topo",
         ),
         "octree_levels_obs": widgets.Text(
-            value="8, 8, 8", description="Layers below data",
+            value="5, 5, 5", description="Layers below data",
         ),
         "depth_core": widgets.FloatText(value=500, description="Minimum depth (m)",),
         "hz_min": widgets.FloatText(value=10.0, description="Smallest cell (m):",),
@@ -156,7 +156,7 @@ def inversion_widgets():
             value="0, 0, 0, 0, 0, 0", description="Padding [W,E,N,S,D,U] (m)",
         ),
         "hz_expansion": widgets.FloatText(value=1.05, description="Expansion factor:",),
-        "n_cells": widgets.FloatText(value=20.0, description="Number of cells:",),
+        "n_cells": widgets.FloatText(value=25.0, description="Number of cells:",),
         "uncert_mode": widgets.RadioButtons(
             options=[
                 "Estimated (%|data| + background)",
@@ -293,12 +293,16 @@ def inversion_widget(h5file, **kwargs):
             if system.value in ["Gravity", "Magnetics"]:
                 os.system(
                     "start cmd.exe @cmd /k "
-                    + f'"python functions/pf_inversion.py {inv_dir}{w_l["out_group"].value}.json"'
+                    + 'python functions/pf_inversion.py "'
+                    + inv_dir
+                    + f'\\{w_l["out_group"].value}.json"'
                 )
             else:
                 os.system(
                     "start cmd.exe @cmd /k "
-                    + f'"python functions/em1d_inversion.py {inv_dir}{w_l["out_group"].value}.json"'
+                    + 'python functions/em1d_inversion.py "'
+                    + inv_dir
+                    + f'\\{w_l["out_group"].value}.json"'
                 )
 
             w_l["run"].value = False
@@ -504,7 +508,7 @@ def inversion_widget(h5file, **kwargs):
             data_widget.children[0].value = True
             if system.value in ["Magnetics", "Gravity"]:
                 values = entity.get_data(channel.value)[0].values
-                if isinstance(values[0], float):
+                if values is not None and isinstance(values[0], float):
                     data_widget.children[
                         3
                     ].value = f"0, {np.percentile(values[values > 2e-18], 5):.2f}"
@@ -525,7 +529,7 @@ def inversion_widget(h5file, **kwargs):
                 data_type_list = ["gz", "gxx", "gxy", "gxz", "gyy", "gyz", "gzz"]
                 labels = ["gz", "gxx", "gxy", "gxz", "gyy", "gyz", "gzz"]
 
-            rx_offsets = [[0, 0, 0]]
+            tx_offsets = [[0, 0, 0]]
             uncertainties = [[0, 1]] * len(data_type_list)
 
             system_specs = {}
@@ -545,7 +549,7 @@ def inversion_widget(h5file, **kwargs):
             w_l["ignore_values"].value = "-99999"
 
         else:
-            rx_offsets = em_system_specs[system.value]["rx_offsets"]
+            tx_offsets = em_system_specs[system.value]["tx_offsets"]
             bird_offset.value = ", ".join(
                 [str(offset) for offset in em_system_specs[system.value]["bird_offset"]]
             )
@@ -591,10 +595,10 @@ def inversion_widget(h5file, **kwargs):
             if ind + 1 < start_channel:
                 continue
 
-            if len(rx_offsets) > 1:
-                offsets = rx_offsets[ind]
+            if len(tx_offsets) > 1:
+                offsets = tx_offsets[ind]
             else:
-                offsets = rx_offsets[0]
+                offsets = tx_offsets[0]
 
             channel_selection = Dropdown(
                 description="Channel", style={"description_width": "initial"}
@@ -699,7 +703,7 @@ def inversion_widget(h5file, **kwargs):
             w_l["write"].button_style = "warning"
             w_l["run"].button_style = "danger"
 
-    w_l["objects"].options = names
+    w_l["objects"].options = all_names
     w_l["objects"].observe(object_observer, names="value")
 
     systems = ["Magnetics", "Gravity"] + list(em_system_specs.keys())
@@ -814,9 +818,9 @@ def inversion_widget(h5file, **kwargs):
     bird_offset = Text(description="[dx, dy, dz]", value="0, 0, 0")
 
     sensor_options = {
-        "(x,y,z) + offset(x,y,z)": bird_offset,
-        "(x, y, z = topo + constant)": bird_offset,
-        "(x, y, z = topo + radar)": sensor_value,
+        "(x,y,z) + offset(x,y,z)": [bird_offset],
+        "(x, y, z = topo + constant)": [bird_offset],
+        "(x, y, z = topo + radar)": [bird_offset, sensor_value],
     }
 
     sensor_options_button = widgets.RadioButtons(
@@ -832,17 +836,17 @@ def inversion_widget(h5file, **kwargs):
         if topo_value.value is None:
             sensor_options_button.value = "(x,y,z) + offset(x,y,z)"
 
-        sensor_options_panel.children = [
-            sensor_options_button,
-            sensor_options[sensor_options_button.value],
+        sensor_options_panel.children = [sensor_options_button] + sensor_options[
+            sensor_options_button.value
         ]
+
         w_l["write"].button_style = "warning"
         w_l["run"].button_style = "danger"
 
     sensor_options_button.observe(update_sensor_options)
 
     sensor_options_panel = VBox(
-        [sensor_options_button, sensor_options[sensor_options_button.value]]
+        [sensor_options_button] + sensor_options[sensor_options_button.value]
     )
 
     # LINE ID
@@ -865,6 +869,7 @@ def inversion_widget(h5file, **kwargs):
             w_l["write"].button_style = "warning"
             w_l["run"].button_style = "danger"
 
+    line_field.observe(line_field_observer)
     lines = widgets.SelectMultiple(description="Select data:",)
 
     line_id_panel = VBox([line_field, lines])
@@ -872,7 +877,7 @@ def inversion_widget(h5file, **kwargs):
     # SPATIAL PARAMETERS DROPDOWN
     spatial_options = {
         "Topography": topo_options_panel,
-        "Sensor Height": sensor_options_panel,
+        "Receivers": sensor_options_panel,
         "Line ID": line_id_panel,
     }
 
@@ -1219,7 +1224,9 @@ def inversion_widget(h5file, **kwargs):
                 "constant_drape": string_2_list(bird_offset.value)
             }
         else:
-            input_dict["receivers_offset"] = {"radar_drape": sensor_value.value}
+            input_dict["receivers_offset"] = {
+                "radar_drape": string_2_list(bird_offset.value) + [sensor_value.value]
+            }
 
         if topo_options_button.value == "Object":
             if topo_objects.value is None:
