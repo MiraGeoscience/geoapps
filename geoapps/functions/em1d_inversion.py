@@ -27,7 +27,7 @@ from simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from utils import filter_xy
+from utils import filter_xy, rotate_xy
 
 
 class SaveIterationsGeoH5(Directives.InversionDirective):
@@ -312,34 +312,73 @@ def inversion(input_file):
             )
         return topo
 
+    def offset_receivers_xy(locations, offsets):
+
+        for key, values in selection.items():
+
+            for line in values:
+
+                line_ind = np.where(
+                    entity.get_data(key)[0].values[win_ind] == np.float(line)
+                )[0]
+
+                if len(line_ind) < 2:
+                    continue
+
+                xyz = locations[line_ind, :]
+
+                # Compute the orientation between each station
+                angles = np.arctan2(xyz[1:, 1] - xyz[:-1, 1], xyz[1:, 0] - xyz[:-1, 0])
+                angles = np.r_[angles[0], angles].tolist()
+                dxy = np.zeros_like(xyz)
+                for ind, angle in enumerate(angles):
+                    dxy[ind, :] = rotate_xy(offsets, [0, 0], np.rad2deg(angle))
+
+                # Move the stations
+                locations[line_ind, 0] += dxy[:, 0]
+                locations[line_ind, 1] += dxy[:, 1]
+
+        return locations
+
     # Get data locations
     if "receivers_offset" in list(input_param.keys()):
-        if "constant" in list(input_param["receivers_offset"].keys()):
-            bird_offset = input_param["receivers_offset"]["constant"]
 
-            for ii, offset in enumerate(bird_offset):
-                locations[:, ii] += offset
+        if "constant" in list(input_param["receivers_offset"].keys()):
+            bird_offset = np.asarray(
+                input_param["receivers_offset"]["constant"]
+            ).reshape((-1, 3))
+
+            locations = offset_receivers_xy(locations, bird_offset)
+            locations[:, 2] += bird_offset[0, 2]
             dem = get_topography()
 
         else:
             dem = get_topography()
             F = LinearNDInterpolator(dem[:, :2], dem[:, 2])
-            z_topo = F(locations[:, :2])
-            locations[:, 2] = z_topo
 
             if "constant_drape" in list(input_param["receivers_offset"].keys()):
-                bird_offset = input_param["receivers_offset"]["constant_drape"]
-                for ii, offset in enumerate(bird_offset):
-                    locations[:, ii] += offset
+                bird_offset = np.asarray(
+                    input_param["receivers_offset"]["constant_drape"]
+                ).reshape((-1, 3))
+                locations = offset_receivers_xy(locations, bird_offset)
+                z_topo = F(locations[:, :2])
+                locations[:, 2] = z_topo + bird_offset[0, 2]
+
             elif "radar_drape" in list(input_param["receivers_offset"].keys()):
-                bird_offset = entity.get_data(
-                    input_param["receivers_offset"]["radar_drape"]
+                bird_offset = np.asarray(
+                    input_param["receivers_offset"]["radar_drape"][:3]
+                ).reshape((-1, 3))
+                z_channel = entity.get_data(
+                    input_param["receivers_offset"]["radar_drape"][3]
                 )[0].values
-                locations[:, 2] += bird_offset[win_ind]
+
+                locations = offset_receivers_xy(locations, bird_offset)
+                z_topo = F(locations[:, :2])
+                locations[:, 2] = z_topo + z_channel[win_ind] + bird_offset[0, 2]
+
     else:
         dem = get_topography()
 
-    # Get nearest topo point
     F = LinearNDInterpolator(dem[:, :2], dem[:, 2])
     z_topo = F(locations[:, :2])
     dem = np.c_[locations[:, :2], z_topo]
@@ -347,7 +386,7 @@ def inversion(input_file):
     if em_specs["type"] == "frequency":
         frequencies = np.unique(np.hstack(channel_values))
         nF = len(frequencies)
-        offsets = offsets[:nF]
+
     else:
         times = np.r_[channel_values]
         nT = len(times)
@@ -364,24 +403,32 @@ def inversion(input_file):
             input_currents = waveform[: zero_ind + 1, 1]
 
         if type(em_specs["normalization"]) is str:
-            if em_specs["normalization"] == "pp2t":
-                rx_offset = np.asarray(em_specs["rx_offsets"][0])
-                theta = np.arctan(np.abs(rx_offset[:2]).sum() / np.abs(rx_offset[2]))
-                normalization = (
-                    4
-                    * np.pi
-                    * 1e-7
-                    * np.abs(
-                        em_specs["tx_specs"]["a"] ** 2.0
-                        * np.pi
-                        * em_specs["tx_specs"]["I"]
-                        / np.linalg.norm(rx_offset) ** 3.0
-                        * (3 * np.cos(theta) ** 2.0 - 1)
-                    )
-                    / 2e3
-                )
+            tx_offset = np.asarray(em_specs["tx_offsets"][0])
+            theta = np.arctan(np.linalg.norm(tx_offset[:2]) / np.abs(tx_offset[2]))
+
+            # Dipole moment
+            if em_specs["tx_specs"]["type"] == "VMD":
+                m = em_specs["tx_specs"]["I"]
             else:
-                print(f"normalization {em_specs['normalization']} not yet implemented")
+                m = em_specs["tx_specs"]["a"] ** 2.0 * np.pi * em_specs["tx_specs"]["I"]
+
+            # Offset vertical dipole primary to receiver position
+            u0 = 4 * np.pi * 1e-7
+            normalization = u0 * (
+                np.abs(
+                    m
+                    / np.linalg.norm(tx_offset) ** 3.0
+                    * (3 * np.cos(theta) ** 2.0 - 1)
+                    / (4 * np.pi)
+                )
+            )
+
+            if em_specs["normalization"] == "pp2t":
+                normalization /= 2e3
+            elif em_specs["normalization"] == "ppm":
+                normalization /= 1e6
+            else:
+                normalization = 1.0
         else:
             normalization = np.prod(em_specs["normalization"])
 
@@ -414,6 +461,7 @@ def inversion(input_file):
 
             stn_id.append(line_ind)
             xyz = locations[line_ind, :]
+
             # Create a 2D mesh to store the results
             if np.std(xyz[:, 1]) > np.std(xyz[:, 0]):
                 order = np.argsort(xyz[:, 1])
@@ -602,15 +650,15 @@ def inversion(input_file):
     if em_specs["type"] == "frequency":
         data_mapping = 1.0
     else:
-        # if em_specs["data_type"] == 'dBzdt':
-        data_mapping = -1.0
-        dobs[np.isnan(dobs)] = -1e-14
-        # else:
-        #     data_mapping = 1.0
-        #     dobs[np.isnan(dobs)] = -1e-14
+        if em_specs["data_type"] == "dBzdt":
+            data_mapping = -1.0
+        else:
+            data_mapping = 1.0
 
-        uncert = normalization * uncert
-        dobs = data_mapping * normalization * dobs
+        dobs[np.isnan(dobs)] = -1e-16
+
+    uncert = normalization * uncert
+    dobs = data_mapping * normalization * dobs
 
     for ind, channel in enumerate(channels):
         if channel in list(input_param["data"]["channels"].keys()):
@@ -633,10 +681,22 @@ def inversion(input_file):
         "Please revise topography and receiver parameters."
     )
 
+    tx_offsets = np.r_[em_specs["tx_offsets"][0]]
+    offset_x = np.ones(xyz.shape[0]) * tx_offsets[0]
+    offset_y = np.ones(xyz.shape[0]) * tx_offsets[1]
+    offset_z = np.ones(xyz.shape[0]) * tx_offsets[2]
+
+    if em_specs["tx_specs"]["type"] == "VMD":
+        tx_offsets = np.c_[np.zeros(xyz.shape[0]), np.zeros(xyz.shape[0]), offset_z]
+    else:
+        tx_offsets = np.c_[offset_x, offset_y, offset_z]
+
     if em_specs["type"] == "frequency":
+
+        offsets = offsets[:nF]
         survey = GlobalEM1DSurveyFD(
             rx_locations=xyz,
-            src_locations=xyz,
+            src_locations=xyz + tx_offsets,
             frequency=frequencies.astype(float),
             offset=np.r_[offsets],
             src_type=em_specs["tx_specs"]["type"],
@@ -653,12 +713,7 @@ def inversion(input_file):
             vec = vec.reshape((n_sounding, n_time))
             return vec[:, time_index].flatten()
 
-        rx_offsets = np.r_[em_specs["rx_offsets"][0]]
-
-        offset_x = np.ones(xyz.shape[0]) * rx_offsets[0]
-        offset_y = np.zeros(xyz.shape[0]) * rx_offsets[1]
-        offset_z = np.zeros(xyz.shape[0]) * rx_offsets[2]
-        rxOffset = np.c_[offset_x, offset_y, offset_z]
+        offsets = np.ones((xyz.shape[0], 1)) * np.linalg.norm(tx_offsets[:2])
 
         src_type = np.array([em_specs["tx_specs"]["type"]], dtype=str).repeat(
             n_sounding
@@ -668,10 +723,10 @@ def inversion(input_file):
         I = [em_specs["tx_specs"]["I"]] * n_sounding
 
         time, indt = np.unique(times, return_index=True)
-
         survey = GlobalEM1DSurveyTD(
-            rx_locations=xyz + rxOffset,
-            src_locations=xyz,
+            rx_locations=xyz,
+            src_locations=xyz + tx_offsets,
+            offset=offsets,
             topo=topo,
             time=[time for i in range(n_sounding)],
             src_type=src_type,
@@ -732,9 +787,10 @@ def inversion(input_file):
             )
 
             surveyHS = GlobalEM1DSurveyTD(
-                rx_locations=xyz + rxOffset,
-                src_locations=xyz,
+                rx_locations=xyz,
+                src_locations=xyz + tx_offsets,
                 topo=topo,
+                offset=offsets,
                 time=[time[time_index] for i in range(n_sounding)],
                 src_type=src_type,
                 rx_type=np.array([em_specs["data_type"]], dtype=str).repeat(n_sounding),
@@ -802,7 +858,7 @@ def inversion(input_file):
             lower=np.log(lower_bound),
             upper=np.log(upper_bound),
             maxIterLS=20,
-            maxIterCG=50,
+            maxIterCG=30,
             tolCG=1e-5,
         )
         invProb_HS = InvProblem.BaseInvProblem(dmisfit, reg_sigma, opt)
@@ -849,8 +905,8 @@ def inversion(input_file):
         )
 
     prob.pair(survey)
-
     pred = survey.dpred(m0)
+
     # Write uncertainties to objects
     for ind, channel in enumerate(channels):
 
@@ -861,24 +917,14 @@ def inversion(input_file):
             ).astype(float)
 
             if input_param["uncertainty_mode"] == "Estimated (%|data| + background)":
-                if em_specs["type"] == "frequency":
-                    uncert[ind::block] = (
-                        np.max(
-                            np.c_[np.abs(pred[ind::block]), np.abs(dobs[ind::block])],
-                            axis=1,
-                        )
-                        * pc_floor[0]
-                        + pc_floor[1]
+                uncert[ind::block] = (
+                    np.max(
+                        np.c_[np.abs(pred[ind::block]), np.abs(dobs[ind::block])],
+                        axis=1,
                     )
-                else:
-                    uncert[ind::block] = (
-                        np.max(
-                            np.c_[np.abs(pred[ind::block]), np.abs(dobs[ind::block])],
-                            axis=1,
-                        )
-                        * pc_floor[0]
-                        + pc_floor[1] * normalization
-                    )
+                    * pc_floor[0]
+                    + pc_floor[1] * normalization
+                )
 
             temp = uncert[ind::block][data_ordering]
             temp[temp == np.inf] = 0
@@ -888,28 +934,20 @@ def inversion(input_file):
             curve.add_data_to_group(d_i, f"Uncertainties")
 
         if len(ignore_values) > 0:
-            if em_specs["type"] == "frequency":
-                if "<" in ignore_values:
-                    uncert[dobs <= np.float(ignore_values.split("<")[1])] = np.inf
-                elif ">" in ignore_values:
-                    uncert[dobs >= np.float(ignore_values.split(">")[1])] = np.inf
-                else:
-                    uncert[dobs == np.float(ignore_values)] = np.inf
+            if "<" in ignore_values:
+                uncert[
+                    data_mapping * dobs / normalization
+                    <= np.float(ignore_values.split("<")[1])
+                ] = np.inf
+            elif ">" in ignore_values:
+                uncert[
+                    data_mapping * dobs / normalization
+                    >= np.float(ignore_values.split(">")[1])
+                ] = np.inf
             else:
-                if "<" in ignore_values:
-                    uncert[ind::block][
-                        -dobs[ind::block] / normalization
-                        <= np.float(ignore_values.split("<")[1])
-                    ] = np.inf
-                elif ">" in ignore_values:
-                    uncert[ind::block][
-                        -dobs[ind::block] / normalization
-                        >= np.float(ignore_values.split(">")[1])
-                    ] = np.inf
-                else:
-                    uncert[ind::block][
-                        -dobs[ind::block] / normalization == np.float(ignore_values)
-                    ] = np.inf
+                uncert[
+                    data_mapping * dobs / normalization == np.float(ignore_values)
+                ] = np.inf
 
     mesh_reg = get_2d_mesh(n_sounding, hz)
     dmisfit = DataMisfit.l2_DataMisfit(survey)
@@ -978,7 +1016,7 @@ def inversion(input_file):
         chifact_target=chi_target,
     )
 
-    betaest = Directives.BetaEstimate_ByEig(beta0_ratio=40.0)
+    betaest = Directives.BetaEstimate_ByEig(beta0_ratio=10.0)
     inv = Inversion.BaseInversion(
         invProb,
         directiveList=[saveModel, savePred, sensW, IRLS, update_Jacobi, betaest],
