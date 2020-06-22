@@ -367,11 +367,14 @@ def inversion(input_file):
             " 'ubc_grav', 'ubc_mag', 'GA_object'"
         )
 
+    if np.median(survey.dobs) > 100 and "detrend" not in list(input_dict.keys()):
+        print(
+            f"Large background trend detected. Median value removed:{np.median(survey.dobs)}"
+        )
+        survey.dobs -= np.median(survey.dobs)
+
     # 0-level the data if required, data_trend = 0 level
-    if "detrend" in list(input_dict.keys()) and input_dict["data_type"] in [
-        "ubc_mag",
-        "ubc_grav",
-    ]:
+    if "detrend" in list(input_dict.keys()):
 
         for key, value in input_dict["detrend"].items():
             assert key in ["all", "corners"], "detrend key must be 'all' or 'corners'"
@@ -390,7 +393,7 @@ def inversion(input_file):
             # In case uncertainty hasn't yet been set (e.g., geosoft grids)
             survey.std = np.ones(survey.dobs.shape)
 
-        if input_dict["data_type"] in ["ubc_mag"]:
+        if input_dict["data"]["type"] in ["ubc_mag"]:
             Utils.io_utils.writeUBCmagneticsObservations(
                 os.path.splitext(outDir + input_dict["data_file"])[0] + "_trend.mag",
                 survey,
@@ -401,7 +404,7 @@ def inversion(input_file):
                 survey,
                 survey.dobs,
             )
-        elif input_dict["data_type"] in ["ubc_grav"]:
+        elif input_dict["data"]["type"] in ["ubc_grav"]:
             Utils.io_utils.writeUBCgravityObservations(
                 os.path.splitext(outDir + input_dict["data_file"])[0] + "_trend.grv",
                 survey,
@@ -509,31 +512,37 @@ def inversion(input_file):
     # Get data locations
     locations = survey.srcField.rxList[0].locs
     if "receivers_offset" in list(input_dict.keys()):
-        if "constant" in list(input_dict["receivers_offset"].keys()):
-            bird_offset = input_dict["receivers_offset"]["constant"]
 
-            for ii, offset in enumerate(bird_offset):
-                locations[:, ii] += offset
+        if "constant" in list(input_dict["receivers_offset"].keys()):
+            bird_offset = np.asarray(input_dict["receivers_offset"]["constant"])
+
+            for ind, offset in enumerate(bird_offset):
+                locations[:, ind] += offset
             topo = get_topography()
 
         else:
             topo = get_topography()
+            F = LinearNDInterpolator(topo[:, :2], topo[:, 2])
+            z_topo = F(locations[:, :2])
 
             if "constant_drape" in list(input_dict["receivers_offset"].keys()):
-                F = LinearNDInterpolator(topo[:, :2], topo[:, 2])
-                z_topo = F(locations[:, :2])
-
+                bird_offset = np.asarray(
+                    input_dict["receivers_offset"]["constant_drape"]
+                )
                 locations[:, 2] = z_topo
 
-                bird_offset = input_dict["receivers_offset"]["constant_drape"]
-                for ii, offset in enumerate(bird_offset):
-                    locations[:, ii] += offset
-
             elif "radar_drape" in list(input_dict["receivers_offset"].keys()):
-                bird_offset = entity.get_data(
-                    input_dict["receivers_offset"]["radar_drape"]
+                bird_offset = np.asarray(
+                    input_dict["receivers_offset"]["radar_drape"][:3]
+                )
+                z_channel = entity.get_data(
+                    input_dict["receivers_offset"]["radar_drape"][3]
                 )[0].values
-                locations[:, 2] += bird_offset[window_ind]
+                locations[:, 2] = z_topo + z_channel[window_ind]
+
+            for ind, offset in enumerate(bird_offset):
+                locations[:, ind] += offset
+
     else:
         topo = get_topography()
 
@@ -1349,6 +1358,11 @@ def inversion(input_file):
     # Add a list of directives to the inversion
     directiveList = []
 
+    if vector_property:
+        directiveList.append(
+            Directives.VectorInversion(inversion_type=input_dict["inversion_type"])
+        )
+
     if initial_beta is None:
         directiveList.append(Directives.BetaEstimate_ByEig(beta0_ratio=1e1))
 
@@ -1389,11 +1403,6 @@ def inversion(input_file):
     #     )
     # )
 
-    if vector_property:
-        directiveList.append(
-            Directives.VectorInversion(inversion_type=input_dict["inversion_type"])
-        )
-
     # Pre-conditioner
     directiveList.append(
         Directives.Update_IRLS(
@@ -1411,7 +1420,6 @@ def inversion(input_file):
     )
 
     directiveList.append(Directives.UpdatePreconditioner())
-
     # Put all the parts together
     inv = Inversion.BaseInversion(invProb, directiveList=directiveList)
 
