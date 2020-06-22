@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 import SimPEG
-from SimPEG import Utils
+from .. import Utils
 from SimPEG.EM.Utils import omega
 from SimPEG.Utils import Zero, Identity, sdiag
 

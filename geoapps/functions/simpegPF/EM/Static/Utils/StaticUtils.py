@@ -1,6 +1,6 @@
 import numpy as np
 
-from SimPEG import Utils, Mesh
+from .. import Utils, Mesh
 from SimPEG.EM.Static import DC
 
 

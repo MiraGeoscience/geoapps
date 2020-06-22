@@ -1,8 +1,8 @@
 import numpy as np
 import scipy.sparse as sp
 
-from SimPEG import Survey
-from SimPEG import Utils
+from .. import Survey
+from .. import Utils
 
 
 class BaseRichardsRx(Survey.BaseTimeRx):

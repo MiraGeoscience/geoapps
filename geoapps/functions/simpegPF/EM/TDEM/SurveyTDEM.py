@@ -1,5 +1,5 @@
 import SimPEG
-from SimPEG import Utils
+from .. import Utils
 from SimPEG.Utils import Zero, Identity
 from scipy.constants import mu_0
 from SimPEG.EM.Utils import *

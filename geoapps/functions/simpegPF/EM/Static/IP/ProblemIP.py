@@ -1,11 +1,11 @@
-from SimPEG import Utils
+from .. import Utils
 from SimPEG.EM.Base import BaseEMProblem
 from SimPEG.EM.Static.DC.FieldsDC import FieldsDC, Fields_CC, Fields_N
 import numpy as np
 from SimPEG.Utils import Zero
 from SimPEG.EM.Static.DC import getxBCyBC_CC
 from .SurveyIP import Survey
-from SimPEG import Props
+from .. import Props
 
 
 class BaseIPProblem(BaseEMProblem):

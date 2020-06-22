@@ -1,5 +1,5 @@
 # Functions to import and export MT EDI files.
-from SimPEG import mkvc
+from .. import mkvc
 from scipy.constants import mu_0
 from numpy.lib import recfunctions as recFunc
 from .dataUtils import rec_to_ndarr

@@ -3,7 +3,7 @@ from scipy.constants import mu_0
 import properties
 import warnings
 
-from SimPEG import Utils
+from .. import Utils
 from SimPEG.Utils import Zero, Identity
 from SimPEG.EM.Utils import *
 from ..Base import BaseEMSrc

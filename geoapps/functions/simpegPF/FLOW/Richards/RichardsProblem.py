@@ -4,10 +4,10 @@ import time
 import properties
 import warnings
 
-from SimPEG import Utils
-from SimPEG import Problem
-from SimPEG import Optimization
-from SimPEG import Solver
+from .. import Utils
+from .. import Problem
+from .. import Optimization
+from .. import Solver
 
 from SimPEG.FLOW.Richards.RichardsSurvey import RichardsSurvey
 from SimPEG.FLOW.Richards.Empirical import BaseHydraulicConductivity

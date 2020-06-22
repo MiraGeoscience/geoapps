@@ -2,10 +2,10 @@ import numpy as np
 import scipy.sparse as sp
 import matplotlib.pyplot as plt
 
-from SimPEG import Problem
-from SimPEG import Utils
-from SimPEG import Mesh
-from SimPEG import Props
+from .. import Problem
+from .. import Utils
+from .. import Mesh
+from .. import Props
 
 
 def lengthInCell(O, D, x, y, plotIt=False):

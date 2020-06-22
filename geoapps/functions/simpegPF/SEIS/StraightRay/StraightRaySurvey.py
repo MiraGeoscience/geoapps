@@ -1,5 +1,5 @@
 import numpy as np
-from SimPEG import Survey
+from .. import Survey
 
 
 class StraightRaySurvey(Survey.LinearSurvey):

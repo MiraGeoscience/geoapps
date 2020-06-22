@@ -1,5 +1,5 @@
 from scipy.constants import G
-from ..Utils import mkvc
+from SimPEG.Utils import mkvc
 import numpy as np
 
 

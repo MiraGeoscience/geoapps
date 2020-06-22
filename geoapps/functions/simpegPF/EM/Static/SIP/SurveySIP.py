@@ -1,7 +1,7 @@
 import numpy as np
 import SimPEG
 from SimPEG.EM.Base import BaseEMSurvey
-from SimPEG import Utils
+from .. import Utils
 from SimPEG.EM.Static.SIP.SrcSIP import BaseSrc
 from SimPEG.EM.Static.SIP.RxSIP import BaseRx
 import uuid

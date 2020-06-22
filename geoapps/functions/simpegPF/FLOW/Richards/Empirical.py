@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 from scipy import constants
-from SimPEG import Utils, Props
+from .. import Utils, Props
 
 
 def _get_projections(u):

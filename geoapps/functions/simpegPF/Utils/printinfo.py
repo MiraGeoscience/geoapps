@@ -121,7 +121,7 @@ def versions(mode="print", add_pckg=None, ncol=4):
 
     >>> import pytest
     >>> import dateutil
-    >>> from SimPEG import versions
+    >>> from .. import versions
     >>> versions()                 # Default values
     >>> versions('plain', pytest)  # Provide additional package
     >>> versions('HTML', [pytest, dateutil], ncol=5)  # HTML
