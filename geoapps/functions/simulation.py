@@ -290,10 +290,14 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
             # Create a group
             out_group = ContainerGroup.create(workspace, name=sim_name.value)
 
+            obj = workspace.get_entity(object_selection.children[0].children[0].value)[
+                0
+            ]
             obj_out = obj.copy(parent=out_group)
 
             # Export data on Points
             nC = len(components.value)
+
             for ind, comp in enumerate(components.value):
                 obj_out.add_data(
                     {sim_name.value + "_" + comp: {"values": export_ga.data[ind::nC]}}
@@ -316,7 +320,7 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     cells=block.triangles,
                     parent=out_group,
                 )
-        export_ga.value = False
+            export_ga.value = False
 
     export_ga.observe(export_trigger)
 
