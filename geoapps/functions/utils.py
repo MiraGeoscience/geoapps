@@ -1,10 +1,16 @@
 import os
 
 import gdal
+import dask
+import dask.array as da
+from dask.diagnostics import ProgressBar
 import numpy as np
 import osr
 import pandas as pd
+import gc
 from geoh5py.objects import BlockModel, Grid2D, Octree
+from geoh5py.data import FloatData
+from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
 
@@ -159,24 +165,22 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
 
     if attribute is not None:
         if curve.get_data(attribute):
-            attribute = curve.get_data(attribute)[0]
+            attribute_vals = curve.get_data(attribute)[0].values
 
     polylines, values = [], []
-    for lid in curve.unique_lines:
+    for lid in curve.unique_parts:
 
-        ind_line = np.where(curve.line_id == lid)[0]
-        ind_vert = np.r_[curve.cells[ind_line, 0], curve.cells[ind_line[-1], 1]]
-
-        polylines += [curve.vertices[ind_vert, :2]]
+        ind_line = np.where(curve.parts == lid)[0]
+        polylines += [curve.vertices[ind_line, :2]]
 
         if attribute is not None:
-            values += [attribute.values[ind_vert]]
+            values += [attribute_vals[ind_line]]
 
     # Define a polygon feature geometry with one attribute
     schema = {"geometry": "LineString"}
 
-    if attribute:
-        attr_name = attribute.name.replace(":", "_")
+    if attribute is not None:
+        attr_name = attribute.replace(":", "_")
         schema["properties"] = {attr_name: "float"}
     else:
         schema["properties"] = {"id": "int"}
@@ -204,39 +208,28 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
                 c.write(res)
 
 
-def filter_xy(x, y, data, distance, return_indices=False, window=None):
+def filter_xy(x, y, distance, window=None):
     """
-    Downsample xy data based on minimum distance
+    Function to down-sample xy locations based on minimum distance.
+
+    :param x: numpy.array of float
+        Grid coordinate along the x-axis
+    :param y: numpy.array of float
+        Grid coordinate along the y-axis
+    :param distance: float
+        Minimum distance between neighbours
+    :param window: dict
+        Window parameters describing a domain of interest. Must contain the following
+        keys:
+        window = {
+            "center": [X, Y],
+            "size": [width, height],
+            "azimuth": degree_from North
+        }
+
+    :return: numpy.array of bool shape(x)
+        Logical array of indices
     """
-
-    filter_xy = np.zeros_like(x, dtype="bool")
-    if x.ndim == 1:
-        if distance > 0:
-            xy = np.c_[x, y]
-            tree = cKDTree(xy)
-            nstn = x.shape[0]
-
-            # Initialize the filter
-            filter_xy = np.ones(nstn, dtype="bool")
-
-            for ii in range(nstn):
-
-                if filter_xy[ii]:
-
-                    ind = tree.query_ball_point(xy[ii, :2], distance)
-
-                    filter_xy[ind] = False
-                    filter_xy[ii] = True
-
-        else:
-            filter_xy = np.ones_like(x, dtype="bool")
-
-    elif distance > 0:
-
-        dwn_x = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
-        dwn_y = int(np.ceil(distance / np.min(x[1:] - x[:-1])))
-        filter_xy[::dwn_x, ::dwn_y] = True
-
     mask = np.ones_like(x, dtype="bool")
     if window is not None:
         x_lim = [
@@ -247,11 +240,9 @@ def filter_xy(x, y, data, distance, return_indices=False, window=None):
             window["center"][1] - window["size"][1] / 2,
             window["center"][1] + window["size"][1] / 2,
         ]
-
         xy_rot = rotate_xy(
             np.c_[x.ravel(), y.ravel()], window["center"], window["azimuth"]
         )
-
         mask = (
             (xy_rot[:, 0] > x_lim[0])
             * (xy_rot[:, 0] < x_lim[1])
@@ -259,23 +250,33 @@ def filter_xy(x, y, data, distance, return_indices=False, window=None):
             * (xy_rot[:, 1] < y_lim[1])
         ).reshape(x.shape)
 
-    if data is not None:
-        data = data.copy()
-        data[(filter_xy * mask) == False] = np.nan
-
     if x.ndim == 1:
-        x, y = x[filter_xy], y[filter_xy]
-        if data is not None:
-            data = data[filter_xy]
-    else:
-        x, y = x[::dwn_x, ::dwn_y], y[::dwn_x, ::dwn_y]
-        if data is not None:
-            data = data[::dwn_x, ::dwn_y]
+        filter_xy = np.ones_like(x, dtype="bool")
+        if distance > 0:
+            mask_ind = np.where(mask)[0]
+            xy = np.c_[x[mask], y[mask]]
+            tree = cKDTree(xy)
 
-    if return_indices:
-        return x, y, data, filter_xy * mask
-    else:
-        return x, y, data
+            nstn = xy.shape[0]
+            # Initialize the filter
+            for ii in range(nstn):
+                if filter_xy[mask_ind[ii]]:
+                    ind = tree.query_ball_point(xy[ii, :2], distance)
+                    filter_xy[mask_ind[ind]] = False
+                    filter_xy[mask_ind[ii]] = True
+
+    elif distance > 0:
+        filter_xy = np.zeros_like(x, dtype="bool")
+        d_l = np.max(
+            [
+                np.linalg.norm(np.c_[x[0, 0] - x[0, 1], y[0, 0] - y[0, 1]]),
+                np.linalg.norm(np.c_[x[0, 0] - x[1, 0], y[0, 0] - y[1, 0]]),
+            ]
+        )
+        dwn = int(np.ceil(distance / d_l))
+        filter_xy[::dwn, ::dwn] = True
+
+    return filter_xy * mask
 
 
 def rotate_xy(xyz, center, angle):
@@ -443,6 +444,79 @@ def object_2_dataframe(entity, fields=[]):
                 obj.values = None
 
     return d_f
+
+
+def data_2_zarr(h5file, entity_name, downsampling=1, fields=[], zarr_file="data.zarr"):
+    """
+    Convert an data entity and values to a dictionary of zarr's
+    """
+
+    workspace = Workspace(h5file)
+    entity = workspace.get_entity(entity_name)[0]
+
+    if getattr(entity, "vertices", None) is not None:
+        n_data = entity.n_vertices
+    elif getattr(entity, "centroids", None) is not None:
+        n_data = entity.n_cells
+    del workspace, entity
+
+    vec_len = int(np.ceil(n_data / downsampling))
+
+    def load(field):
+        """
+        Load one column from geoh5
+        """
+        workspace = Workspace(h5file)
+        entity = workspace.get_entity(entity_name)[0]
+        obj = entity.get_data(field)[0]
+        values = obj.values[::downsampling]
+        if isinstance(obj, FloatData) and values.shape[0] == vec_len:
+            values[(values > 1e-38) * (values < 2e-38)] = -99999
+        else:
+            values = np.ones(vec_len) * -99999
+        del workspace, obj, entity
+        gc.collect()
+        return values
+
+    row = dask.delayed(load, pure=True)
+
+    make_rows = [row(field) for field in fields]
+
+    delayed_array = [
+        da.from_delayed(
+            make_row, dtype=np.float32, shape=(np.ceil(n_data / downsampling),)
+        )
+        for make_row in make_rows
+    ]
+
+    stack = da.vstack(delayed_array)
+
+    if os.path.exists(zarr_file):
+
+        data_mat = da.from_zarr(zarr_file)
+
+        if np.all(
+            np.r_[
+                np.any(np.r_[data_mat.chunks[0]] == stack.chunks[0]),
+                np.any(np.r_[data_mat.chunks[1]] == stack.chunks[1]),
+                np.r_[data_mat.shape] == np.r_[stack.shape],
+            ]
+        ):
+            # Check that loaded G matches supplied data and mesh
+            print("Zarr file detected with same shape and chunksize ... re-loading")
+
+            return data_mat
+        else:
+
+            print("Zarr file detected with wrong shape and chunksize ... over-writing")
+
+    with ProgressBar():
+        print("Saving G to zarr: " + zarr_file)
+        data_mat = da.to_zarr(
+            stack, zarr_file, compute=True, return_stored=True, overwrite=True,
+        )
+
+    return data_mat
 
 
 def rotate_vertices(xyz, center, phi, theta):

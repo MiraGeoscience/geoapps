@@ -41,13 +41,7 @@ def plot_profile_data_selection(
                 continue
 
             if resolution is not None:
-                _, _, _, dwn_ind = filter_xy(
-                    locations[ind, 0],
-                    locations[ind, 1],
-                    None,
-                    resolution,
-                    return_indices=True,
-                )
+                dwn_ind = filter_xy(locations[ind, 0], locations[ind, 1], resolution,)
 
                 ind = ind[dwn_ind]
 
@@ -187,10 +181,8 @@ def plot_plan_data_selection(entity, data, **kwargs):
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
             values = values.reshape(entity.shape, order="F")
-            x, y, values, indices = filter_xy(
-                x, y, values, resolution, window=window, return_indices=True
-            )
-
+            indices = filter_xy(x, y, resolution, window=window)
+            values[indices == False] = np.nan
             out = ax.pcolormesh(x, y, values, cmap=cmap, norm=color_norm)
 
             if "contours" in kwargs.keys():
@@ -204,13 +196,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
         ):
 
             if indices is None:
-                _, _, _, indices = filter_xy(
+                indices = filter_xy(
                     entity.vertices[:, 0],
                     entity.vertices[:, 1],
-                    values,
                     resolution,
                     window=window,
-                    return_indices=True,
                 )
 
             x, y = entity.vertices[indices, 0], entity.vertices[indices, 1]
@@ -267,10 +257,10 @@ def plot_plan_data_selection(entity, data, **kwargs):
                         locations[ind, 1],
                         entity.get_data(key)[0].values[ind],
                     )
-                    _, _, _, ind_line = filter_xy(
-                        x, y, values, resolution, window=window, return_indices=True
+                    ind_line = filter_xy(x, y, resolution, window=window)
+                    ax.scatter(
+                        x[ind_line], y[ind_line], marker_size * 2, "k", marker="+"
                     )
-                    ax.scatter(x[ind_line], y[ind_line], 3, "k")
 
                     line_selection[ind[ind_line]] = True
 
