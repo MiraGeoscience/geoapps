@@ -3,28 +3,386 @@ import re
 import ipywidgets as widgets
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-import numpy as np
+import numpy
 from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import HBox, Label, Layout, VBox
-from scipy.interpolate import LinearNDInterpolator
+from scipy.interpolate import LinearNDInterpolator, interp1d
+from scipy.spatial import cKDTree, Delaunay
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
 from .plotting import format_labels, plot_plan_data_selection
+from .inversion import TopographyOptions
 from .selection import object_data_selection_widget, plot_plan_data_selection
 from .utils import export_grid_2_geotiff, geotiff_2_grid, rotate_xy
 
 
-def contour_values_widget(h5file, contours=""):
+def calculator(h5file):
+    w_s = Workspace(h5file)
+
+    objects, data = object_data_selection_widget(h5file, select_multiple=False)
+    _, store = object_data_selection_widget(
+        h5file, objects=objects, select_multiple=False
+    )
+    store.description = "Assign result to: "
+    store.style = {"description_width": "initial"}
+
+    # selection = Select(description="Math")
+    use = widgets.ToggleButton(description=">> Add >>")
+    add = widgets.ToggleButton(
+        description=">> Create >>", style={"description_width": "initial"}
+    )
+    compute = widgets.ToggleButton(description="Compute: ", button_style="success")
+    channel = widgets.Text("NewChannel", description="Name: ")
+    equation = widgets.Textarea(layout=Layout(width="75%"))
+
+    var = {}
+
+    def evaluate(var):
+        # try:
+        vals = eval(equation.value)
+        obj = w_s.get_entity(objects.value)[0]
+        obj.get_data(store.value)[0].values = vals
+
+        print(vals)
+        w_s.finalize()
+        #
+        # except:
+        #     print("Error. Check inputs")
+
+    def click_add(_):
+        if add.value:
+            obj = w_s.get_entity(objects.value)[0]
+
+            if getattr(obj, "vertices", None) is not None:
+                new_data = obj.add_data(
+                    {channel.value: {"values": numpy.zeros(obj.n_vertices)}}
+                )
+            else:
+                new_data = obj.add_data(
+                    {channel.value: {"values": numpy.zeros(obj.n_cells)}}
+                )
+
+            data.options = obj.get_data_list()
+            store.options = new_data.name
+            store.value = new_data.name
+
+            add.value = False
+
+    def click_use(_):
+        if use.value:
+            name = objects.value + "." + data.value
+            if name not in var.keys():
+                obj = w_s.get_entity(objects.value)[0]
+                var[name] = obj.get_data(data.value)[0].values
+
+            equation.value = equation.value + "var['" + name + "']"
+            use.value = False
+
+    def click_compute(_):
+        if compute.value:
+            evaluate(var)
+            compute.value = False
+
+    use.observe(click_use)
+    add.observe(click_add)
+    compute.observe(click_compute)
+
+    return VBox(
+        [
+            objects,
+            HBox([use, data]),
+            VBox(
+                [equation, HBox([add, channel]), store, compute],
+                layout=Layout(width="100%"),
+            ),
+        ]
+    )
+
+
+def cdi_curve_2_surface(h5file):
+    """
+    Application for the conversion of conductivity/depth curves to
+    a pseudo 3D conductivity model on surface.
+    """
+
+    workspace = Workspace(h5file)
+
+    objects, models = object_data_selection_widget(h5file, add_groups=True)
+    models.description = "Model fields: "
+
+    _, line_channel = object_data_selection_widget(
+        h5file, add_groups=True, objects=objects, find_value=["line"]
+    )
+    line_channel.description = "Line field:"
+
+    topo_options = TopographyOptions(h5file)
+
+    _, elevations = object_data_selection_widget(
+        h5file, add_groups=True, objects=objects
+    )
+    elevations.description = "Elevations:"
+
+    def z_option_change(_):
+        if z_option.value == "depth":
+            elevations.description = "Depth:"
+            depth_panel.children = [
+                z_option,
+                widgets.VBox(
+                    [elevations, widgets.Label("Topography"), topo_options.widget,]
+                ),
+            ]
+        else:
+            elevations.description = "Elevation:"
+            depth_panel.children = [z_option, elevations]
+
+    z_option = widgets.RadioButtons(
+        options=["elevation", "depth"],
+        description="Layers reference:",
+        style={"description_width": "initial"},
+    )
+
+    z_option.observe(z_option_change)
+
+    max_depth = widgets.FloatText(
+        value=400, description="Max depth (m):", style={"description_width": "initial"}
+    )
+    max_distance = widgets.FloatText(
+        value=50,
+        description="Max distance (m):",
+        style={"description_width": "initial"},
+    )
+
+    tolerance = widgets.FloatText(
+        value=1, description="Tolerance (m):", style={"description_width": "initial"}
+    )
+    depth_panel = widgets.HBox([z_option, elevations])
+
+    out_name = widgets.Text("CDI_", description="Name: ")
+
+    def convert_trigger(_):
+
+        if convert.value:
+            if workspace.get_entity(objects.value):
+                curve = workspace.get_entity(objects.value)[0]
+                convert.value = False
+            else:
+                convert.button_style = "warning"
+                convert.value = False
+                return
+
+            lines_id = curve.get_data(line_channel.value)[0].values
+            lines = numpy.unique(lines_id).tolist()
+
+            if z_option.value == "depth":
+                if topo_options.options_button.value == "Object":
+
+                    topo_obj = workspace.get_entity(topo_options.objects.value)[0]
+
+                    if hasattr(topo_obj, "centroids"):
+                        vertices = topo_obj.centroids.copy()
+                    else:
+                        vertices = topo_obj.vertices.copy()
+
+                    topo_xy = vertices[:, :2]
+
+                    if topo_options.value.value == "Vertices":
+                        topo_z = vertices[:, 2]
+                    else:
+                        topo_z = topo_obj.get_data(topo_options.value.value)[0].values
+
+                else:
+                    topo_xy = curve.vertices[:, :2].copy()
+
+                    if topo_options.options_button.value == "Constant":
+                        topo_z = (
+                            numpy.ones_like(curve.vertices[:, 2])
+                            * topo_options.constant.value
+                        )
+                    else:
+                        topo_z = (
+                            numpy.ones_like(curve.vertices[:, 2])
+                            + topo_options.offset.value
+                        )
+
+                surf = Delaunay(topo_xy)
+                topo = LinearNDInterpolator(surf, topo_z)
+                tree_topo = cKDTree(topo_xy)
+
+            model_vertices = []
+            model_cells = []
+            model_count = 0
+            locations = curve.vertices
+            model = []
+            line_ids = []
+            for line in lines:
+
+                line_ind = numpy.where(lines_id == line)[0]
+
+                n_sounding = len(line_ind)
+                if n_sounding < 2:
+                    continue
+
+                xyz = locations[line_ind, :]
+
+                # Create a 2D mesh to store the results
+                if numpy.std(xyz[:, 1]) > numpy.std(xyz[:, 0]):
+                    order = numpy.argsort(xyz[:, 1])
+                else:
+                    order = numpy.argsort(xyz[:, 0])
+
+                X, Y, Z, M = [], [], [], []
+                # Stack the z-coordinates and model
+                nZ = 0
+                for ind, (z_prop, m_prop) in enumerate(
+                    zip(
+                        curve.get_property_group(elevations.value).properties,
+                        curve.get_property_group(models.value).properties,
+                    )
+                ):
+                    nZ += 1
+                    z_vals = workspace.get_entity(z_prop)[0].values[line_ind]
+                    m_vals = workspace.get_entity(m_prop)[0].values[line_ind]
+
+                    keep = (
+                        (z_vals > 1e-38)
+                        * (z_vals < 2e-38)
+                        * (m_vals > 1e-38)
+                        * (m_vals < 2e-38)
+                    ) == False
+
+                    X.append(xyz[:, 0][order][keep])
+                    Y.append(xyz[:, 1][order][keep])
+
+                    if z_option.value == "depth":
+                        z_topo = topo(xyz[:, 0][order][keep], xyz[:, 1][order][keep])
+
+                        nan_z = numpy.isnan(z_topo)
+                        if numpy.any(nan_z):
+                            _, ii = tree_topo.query(xyz[:, :2][order][keep][nan_z])
+                            z_topo[nan_z] = topo_z[ii]
+
+                        Z.append(z_topo + z_vals[order][keep])
+
+                    else:
+                        Z.append(z_vals[order][keep])
+
+                    M.append(m_vals[order][keep])
+
+                    if ind == 0:
+                        x_loc = xyz[:, 0][order][keep]
+                        y_loc = xyz[:, 1][order][keep]
+                        z_loc = Z[0]
+
+                X = numpy.hstack(X)
+                Y = numpy.hstack(Y)
+                Z = numpy.hstack(Z)
+                model.append(numpy.ravel(numpy.hstack(M)))
+                line_ids.append(numpy.ones_like(Z.ravel()) * line)
+                if numpy.std(y_loc) > numpy.std(x_loc):
+                    tri2D = Delaunay(numpy.c_[numpy.ravel(Y), numpy.ravel(Z)])
+                    dist = numpy.ravel(Y)
+                    topo_top = interp1d(y_loc, z_loc)
+                else:
+                    tri2D = Delaunay(numpy.c_[numpy.ravel(X), numpy.ravel(Z)])
+                    dist = numpy.ravel(X)
+                    topo_top = interp1d(x_loc, z_loc)
+
+                    # Remove triangles beyond surface edges
+                indx = numpy.ones(tri2D.simplices.shape[0], dtype=bool)
+                for ii in range(3):
+                    x = numpy.mean(
+                        numpy.c_[
+                            dist[tri2D.simplices[:, ii]],
+                            dist[tri2D.simplices[:, ii - 1]],
+                        ],
+                        axis=1,
+                    )
+                    z = numpy.mean(
+                        numpy.c_[
+                            Z[tri2D.simplices[:, ii]], Z[tri2D.simplices[:, ii - 1]]
+                        ],
+                        axis=1,
+                    )
+
+                    length = numpy.linalg.norm(
+                        tri2D.points[tri2D.simplices[:, ii], :]
+                        - tri2D.points[tri2D.simplices[:, ii - 1], :],
+                        axis=1,
+                    )
+
+                    indx *= (
+                        (z <= (topo_top(x) + tolerance.value))
+                        * (z >= (topo_top(x) - max_depth.value - tolerance.value))
+                        * (length < max_distance.value)
+                    )
+
+                # Remove the simplices too long
+                tri2D.simplices = tri2D.simplices[indx, :]
+                tri2D.vertices = tri2D.vertices[indx, :]
+
+                temp = numpy.arange(int(nZ * n_sounding)).reshape(
+                    (nZ, n_sounding), order="F"
+                )
+                model_vertices.append(
+                    numpy.c_[numpy.ravel(X), numpy.ravel(Y), numpy.ravel(Z)]
+                )
+                model_cells.append(tri2D.simplices + model_count)
+
+                model_count += tri2D.points.shape[0]
+
+            surface = Surface.create(
+                workspace,
+                name=out_name.value,
+                vertices=numpy.vstack(model_vertices),
+                cells=numpy.vstack(model_cells),
+            )
+
+            surface.add_data(
+                {
+                    models.value: {"values": numpy.hstack(model)},
+                    "Line": {"values": numpy.hstack(line_ids)},
+                }
+            )
+
+    convert = widgets.ToggleButton(description="Convert >>", button_style="success")
+    convert.observe(convert_trigger)
+    widget = widgets.VBox(
+        [
+            widgets.VBox(
+                [
+                    widgets.VBox(
+                        [
+                            objects,
+                            line_channel,
+                            models,
+                            depth_panel,
+                            widgets.Label("Triangulation"),
+                            max_depth,
+                            max_distance,
+                            tolerance,
+                        ]
+                    ),
+                ]
+            ),
+            widgets.Label("Output"),
+            widgets.HBox([convert, out_name,]),
+        ]
+    )
+
+    return widget
+
+
+def contour_values_widget(h5file, **kwargs):
     """
     """
 
     workspace = Workspace(h5file)
 
-    def compute_plot(entity_name, data_name, contours):
+    def compute_plot(entity_name, data_name, contour_vals):
 
         entity = workspace.get_entity(entity_name)[0]
 
@@ -40,13 +398,13 @@ def contour_values_widget(h5file, contours=""):
             values /= values.max()
 
             cdict = {
-                "red": np.c_[
+                "red": numpy.c_[
                     values, new_cmap["Red"] / 255, new_cmap["Red"] / 255
                 ].tolist(),
-                "green": np.c_[
+                "green": numpy.c_[
                     values, new_cmap["Green"] / 255, new_cmap["Green"] / 255
                 ].tolist(),
-                "blue": np.c_[
+                "blue": numpy.c_[
                     values, new_cmap["Blue"] / 255, new_cmap["Blue"] / 255
                 ].tolist(),
             }
@@ -58,24 +416,24 @@ def contour_values_widget(h5file, contours=""):
             cmap = None
 
         # Parse contour values
-        if contours != "":
-            vals = re.split(",", contours)
+        if contour_vals != "":
+            vals = re.split(",", contour_vals)
             cntrs = []
             for val in vals:
                 if ":" in val:
-                    param = np.asarray(re.split(":", val), dtype="int")
+                    param = numpy.asarray(re.split(":", val), dtype="int")
 
                     if len(param) == 2:
-                        cntrs += [np.arange(param[0], param[1])]
+                        cntrs += [numpy.arange(param[0], param[1])]
                     else:
 
-                        cntrs += [np.arange(param[0], param[2], param[1])]
+                        cntrs += [numpy.arange(param[0], param[2], param[1])]
 
                 else:
-                    cntrs += [np.float(val)]
-            contours = np.unique(np.sort(np.hstack(cntrs)))
+                    cntrs += [numpy.float(val)]
+            contour_vals = numpy.unique(numpy.sort(numpy.hstack(cntrs)))
         else:
-            contours = None
+            contour_vals = None
 
         plt.figure(figsize=(10, 10))
         axs = plt.subplot()
@@ -88,13 +446,13 @@ def contour_values_widget(h5file, contours=""):
 
                 axs.pcolormesh(xx, yy, grid_data, cmap=cmap)
                 format_labels(xx, yy, axs)
-                if contours is not None:
+                if contour_vals is not None:
                     contour_sets = axs.contour(
                         xx,
                         yy,
                         grid_data,
-                        len(contours),
-                        levels=contours,
+                        len(contour_vals),
+                        levels=contour_vals,
                         colors="k",
                         linewidths=0.5,
                     )
@@ -105,16 +463,21 @@ def contour_values_widget(h5file, contours=""):
                 xx = entity.vertices[:, 0]
                 yy = entity.vertices[:, 1]
                 axs.scatter(xx, yy, 5, data.values, cmap=cmap)
-                if contours is not None:
+                if contour_vals is not None:
                     contour_sets = axs.tricontour(
-                        xx, yy, data.values, levels=contours, linewidths=0.5, colors="k"
+                        xx,
+                        yy,
+                        data.values,
+                        levels=contour_vals,
+                        linewidths=0.5,
+                        colors="k",
                     )
                 format_labels(xx, yy, axs)
 
         else:
-            return None
+            contours.contours = None
 
-        return contour_sets
+        contours.contours = contour_sets
 
     def save_selection(_):
         if export.value:
@@ -128,65 +491,80 @@ def contour_values_widget(h5file, contours=""):
             #     os.path.abspath(workspace.h5file)), "Temp", "temp.geoh5")
             # ws_out = Workspace(temp_geoh5)
 
-            if out.result is not None:
+            if contours.contours is not None:
 
                 vertices, cells, values = [], [], []
                 count = 0
-                for segs, level in zip(out.result.allsegs, out.result.levels):
+                for segs, level in zip(
+                    contours.contours.allsegs, contours.contours.levels
+                ):
                     for poly in segs:
                         n_v = len(poly)
                         vertices.append(poly)
                         cells.append(
-                            np.c_[
-                                np.arange(count, count + n_v - 1),
-                                np.arange(count + 1, count + n_v),
+                            numpy.c_[
+                                numpy.arange(count, count + n_v - 1),
+                                numpy.arange(count + 1, count + n_v),
                             ]
                         )
-                        values.append(np.ones(n_v) * level)
+                        values.append(numpy.ones(n_v) * level)
 
                         count += n_v
                 if vertices:
-                    vertices = np.vstack(vertices)
+                    vertices = numpy.vstack(vertices)
 
                     if z_value.value:
-                        vertices = np.c_[vertices, np.hstack(values)]
+                        vertices = numpy.c_[vertices, numpy.hstack(values)]
                     else:
 
                         if isinstance(entity, (Points, Curve, Surface)):
                             z_interp = LinearNDInterpolator(
                                 entity.vertices[:, :2], entity.vertices[:, 2]
                             )
-                            vertices = np.c_[vertices, z_interp(vertices)]
+                            vertices = numpy.c_[vertices, z_interp(vertices)]
                         else:
-                            vertices = np.c_[
+                            vertices = numpy.c_[
                                 vertices,
-                                np.ones(vertices.shape[0]) * entity.origin["z"],
+                                numpy.ones(vertices.shape[0]) * entity.origin["z"],
                             ]
 
                     curve = Curve.create(
                         entity.workspace,
                         name=export_as.value,
                         vertices=vertices,
-                        cells=np.vstack(cells).astype("uint32"),
+                        cells=numpy.vstack(cells).astype("uint32"),
                     )
-                    curve.add_data({contours.value: {"values": np.hstack(values)}})
+                    curve.add_data({contours.value: {"values": numpy.hstack(values)}})
 
-                    objects.options = list(entity.workspace.list_objects_name.values())
-                    objects.value = entity.name
-                    data.options = entity.get_data_list()
-                    data.value = data_name
+                    # objects.options = list(entity.workspace.list_objects_name.values())
+                    # objects.value = entity.name
+                    # data.options = entity.get_data_list()
+                    # data.value = data_name
 
                 export.value = False
+
+    if "contours" in kwargs.keys():
+        contours = kwargs["contours"]
+    else:
+        contours = ""
+
+    contours = widgets.Text(
+        value=contours, description="Contours", disabled=False, continuous_update=False
+    )
 
     def updateContours(_):
         export_as.value = data.value + "_" + contours.value
 
-    def updateName(_):
-        export_as.value = data.value + "_" + contours.value
+    contours.observe(updateContours, names="value")
+    contours.contours = None
 
     objects, data = object_data_selection_widget(h5file)
 
-    data.observe(updateName, names="value")
+    if "objects" in kwargs.keys() and kwargs["objects"] in objects.options:
+        objects.value = kwargs["objects"]
+
+    if "data" in kwargs.keys() and kwargs["data"] in data.options:
+        data.value = kwargs["data"]
 
     export = widgets.ToggleButton(
         value=False,
@@ -198,32 +576,37 @@ def contour_values_widget(h5file, contours=""):
 
     export.observe(save_selection, names="value")
 
-    contours = widgets.Text(
-        value=contours, description="Contours", disabled=False, continuous_update=False
-    )
-
-    contours.observe(updateContours, names="value")
-
     export_as = widgets.Text(
         value=data.value + "_" + contours.value, indent=False, disabled=False
     )
+
+    def updateName(_):
+        export_as.value = data.value + "_" + contours.value
+
+    data.observe(updateName, names="value")
 
     z_value = widgets.Checkbox(
         value=False, indent=False, description="Assign Z from values"
     )
 
-    out = widgets.interactive(
-        compute_plot, entity_name=objects, data_name=data, contours=contours,
+    out = widgets.interactive_output(
+        compute_plot,
+        {"entity_name": objects, "data_name": data, "contour_vals": contours},
     )
 
     contours.value = contours.value
-    return widgets.HBox(
+    return widgets.VBox(
         [
-            out,
-            VBox(
-                [Label("Save as"), export_as, z_value, export],
-                layout=Layout(width="50%"),
+            widgets.HBox(
+                [
+                    VBox([Label("Input options:"), objects, data, contours]),
+                    VBox(
+                        [Label("Output options:"), export_as, z_value, export],
+                        layout=Layout(width="50%"),
+                    ),
+                ]
             ),
+            out,
         ]
     )
 
@@ -360,7 +743,7 @@ def coordinate_transformation_widget(
                     if export:
                         new_obj = obj.copy(parent=group, copy_children=True)
 
-                        new_obj.vertices = np.c_[x2, y2, obj.vertices[:, 2]]
+                        new_obj.vertices = numpy.c_[x2, y2, obj.vertices[:, 2]]
                         out_list.append(new_obj)
 
                     if plot_it:
@@ -371,8 +754,8 @@ def coordinate_transformation_widget(
             workspace.finalize()
             if plot_it and X1:
                 format_labels(
-                    np.hstack(X1),
-                    np.hstack(Y1),
+                    numpy.hstack(X1),
+                    numpy.hstack(Y1),
                     ax1,
                     labels=labels_in,
                     tick_format=tick_format_in,
@@ -380,8 +763,8 @@ def coordinate_transformation_widget(
 
             if plot_it and X2:
                 format_labels(
-                    np.hstack(X2),
-                    np.hstack(Y2),
+                    numpy.hstack(X2),
+                    numpy.hstack(Y2),
                     ax2,
                     labels=labels_out,
                     tick_format=tick_format_out,
@@ -491,12 +874,12 @@ def edge_detection_widget(
                 fig = plt.figure(figsize=(10, 10))
                 ax1 = plt.subplot()
 
-                corners = np.r_[
-                    np.c_[-1.0, -1.0],
-                    np.c_[-1.0, 1.0],
-                    np.c_[1.0, 1.0],
-                    np.c_[1.0, -1.0],
-                    np.c_[-1.0, -1.0],
+                corners = numpy.r_[
+                    numpy.c_[-1.0, -1.0],
+                    numpy.c_[-1.0, 1.0],
+                    numpy.c_[1.0, 1.0],
+                    numpy.c_[1.0, -1.0],
+                    numpy.c_[-1.0, -1.0],
                 ]
                 corners[:, 0] *= width_x / 2
                 corners[:, 1] *= width_y / 2
@@ -519,7 +902,10 @@ def edge_detection_widget(
                 )
                 data_count.value = f"Data Count: {ind_filter.sum()}"
 
-                ind_x, ind_y = np.any(ind_filter, axis=1), np.any(ind_filter, axis=0)
+                ind_x, ind_y = (
+                    numpy.any(ind_filter, axis=1),
+                    numpy.any(ind_filter, axis=0),
+                )
 
                 grid_data = data_obj.values.reshape(ind_filter.shape, order="F")[
                     ind_x, :
@@ -551,13 +937,13 @@ def edge_detection_widget(
                     values /= values.max()
 
                     cdict = {
-                        "red": np.c_[
+                        "red": numpy.c_[
                             values, new_cmap["Red"] / 255, new_cmap["Red"] / 255
                         ].tolist(),
-                        "green": np.c_[
+                        "green": numpy.c_[
                             values, new_cmap["Green"] / 255, new_cmap["Green"] / 255
                         ].tolist(),
-                        "blue": np.c_[
+                        "blue": numpy.c_[
                             values, new_cmap["Blue"] / 255, new_cmap["Blue"] / 255
                         ].tolist(),
                     }
@@ -574,13 +960,13 @@ def edge_detection_widget(
                 for line in lines:
                     p0, p1 = line
 
-                    points = np.r_[
-                        np.c_[X[p0[0], 0], Y[0, p0[1]], 0],
-                        np.c_[X[p1[0], 0], Y[0, p1[1]], 0],
+                    points = numpy.r_[
+                        numpy.c_[X[p0[0], 0], Y[0, p0[1]], 0],
+                        numpy.c_[X[p1[0], 0], Y[0, p1[1]], 0],
                     ]
                     xy.append(points)
 
-                    cells.append(np.c_[count, count + 1].astype("uint32"))
+                    cells.append(numpy.c_[count, count + 1].astype("uint32"))
 
                     count += 2
 
@@ -591,8 +977,8 @@ def edge_detection_widget(
                     curve = Curve.create(
                         obj.workspace,
                         name=export_as,
-                        vertices=np.vstack(xy),
-                        cells=np.vstack(cells),
+                        vertices=numpy.vstack(xy),
+                        cells=numpy.vstack(cells),
                     )
 
                 return lines
@@ -606,27 +992,27 @@ def edge_detection_widget(
     obj = workspace.get_entity(objects.value)[0]
     if obj.vertices is not None:
         lim_x[0], lim_x[1] = (
-            np.min([lim_x[0], obj.vertices[:, 0].min()]),
-            np.max([lim_x[1], obj.vertices[:, 0].max()]),
+            numpy.min([lim_x[0], obj.vertices[:, 0].min()]),
+            numpy.max([lim_x[1], obj.vertices[:, 0].max()]),
         )
         lim_y[0], lim_y[1] = (
-            np.min([lim_y[0], obj.vertices[:, 1].min()]),
-            np.max([lim_y[1], obj.vertices[:, 1].max()]),
+            numpy.min([lim_y[0], obj.vertices[:, 1].min()]),
+            numpy.max([lim_y[1], obj.vertices[:, 1].max()]),
         )
     elif hasattr(obj, "centroids"):
         lim_x[0], lim_x[1] = (
-            np.min([lim_x[0], obj.centroids[:, 0].min()]),
-            np.max([lim_x[1], obj.centroids[:, 0].max()]),
+            numpy.min([lim_x[0], obj.centroids[:, 0].min()]),
+            numpy.max([lim_x[1], obj.centroids[:, 0].max()]),
         )
         lim_y[0], lim_y[1] = (
-            np.min([lim_y[0], obj.centroids[:, 1].min()]),
-            np.max([lim_y[1], obj.centroids[:, 1].max()]),
+            numpy.min([lim_y[0], obj.centroids[:, 1].min()]),
+            numpy.max([lim_y[1], obj.centroids[:, 1].max()]),
         )
 
     center_x = widgets.FloatSlider(
         min=lim_x[0],
         max=lim_x[1],
-        value=np.mean(lim_x),
+        value=numpy.mean(lim_x),
         steps=10,
         description="Easting",
         continuous_update=False,
@@ -634,7 +1020,7 @@ def edge_detection_widget(
     center_y = widgets.FloatSlider(
         min=lim_y[0],
         max=lim_y[1],
-        value=np.mean(lim_y),
+        value=numpy.mean(lim_y),
         steps=10,
         description="Northing",
         continuous_update=False,

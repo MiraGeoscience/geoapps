@@ -249,14 +249,7 @@ def inversion(input_file):
     else:
         vertices = entity.vertices
 
-    _, _, _, win_ind = filter_xy(
-        vertices[:, 0],
-        vertices[:, 1],
-        None,
-        resolution,
-        window=window,
-        return_indices=True,
-    )
+    win_ind = filter_xy(vertices[:, 0], vertices[:, 1], resolution, window=window,)
 
     locations = vertices[win_ind, :]
 
@@ -294,13 +287,8 @@ def inversion(input_file):
                 if window is not None:
                     topo_window = window.copy()
                     topo_window["size"] = [ll * 2 for ll in window["size"]]
-                    _, _, _, ind = filter_xy(
-                        topo[:, 0],
-                        topo[:, 1],
-                        None,
-                        resolution,
-                        window=topo_window,
-                        return_indices=True,
+                    ind = filter_xy(
+                        topo[:, 0], topo[:, 1], resolution, window=topo_window,
                     )
 
                     topo = topo[ind, :]
@@ -360,33 +348,47 @@ def inversion(input_file):
                 bird_offset = np.asarray(
                     input_param["receivers_offset"]["constant_drape"]
                 ).reshape((-1, 3))
-                locations = offset_receivers_xy(locations, bird_offset)
-                z_topo = F(locations[:, :2])
-                locations[:, 2] = z_topo + bird_offset[0, 2]
 
             elif "radar_drape" in list(input_param["receivers_offset"].keys()):
                 bird_offset = np.asarray(
                     input_param["receivers_offset"]["radar_drape"][:3]
                 ).reshape((-1, 3))
+
+            locations = offset_receivers_xy(locations, bird_offset)
+            z_topo = F(locations[:, :2])
+            if np.any(np.isnan(z_topo)):
+                tree = cKDTree(dem[:, :2])
+                _, ind = tree.query(locations[np.isnan(z_topo), :2])
+                z_topo[np.isnan(z_topo)] = dem[ind, 2]
+
+            locations[:, 2] = z_topo + bird_offset[0, 2]
+
+            if "radar_drape" in list(
+                input_param["receivers_offset"].keys()
+            ) and entity.get_data(input_param["receivers_offset"]["radar_drape"][3]):
                 z_channel = entity.get_data(
                     input_param["receivers_offset"]["radar_drape"][3]
                 )[0].values
-
-                locations = offset_receivers_xy(locations, bird_offset)
-                z_topo = F(locations[:, :2])
-                locations[:, 2] = z_topo + z_channel[win_ind] + bird_offset[0, 2]
+                locations[:, 2] += z_channel[win_ind]
 
     else:
         dem = get_topography()
 
     F = LinearNDInterpolator(dem[:, :2], dem[:, 2])
     z_topo = F(locations[:, :2])
+    if np.any(np.isnan(z_topo)):
+
+        tree = cKDTree(dem[:, :2])
+        _, ind = tree.query(locations[np.isnan(z_topo), :2])
+        z_topo[np.isnan(z_topo)] = dem[ind, 2]
+
     dem = np.c_[locations[:, :2], z_topo]
 
+    tx_offsets = np.r_[em_specs["tx_offsets"][0]]
     if em_specs["type"] == "frequency":
         frequencies = np.unique(np.hstack(channel_values))
         nF = len(frequencies)
-
+        normalization = 1.0
     else:
         times = np.r_[channel_values]
         nT = len(times)
@@ -403,8 +405,7 @@ def inversion(input_file):
             input_currents = waveform[: zero_ind + 1, 1]
 
         if type(em_specs["normalization"]) is str:
-            tx_offset = np.asarray(em_specs["tx_offsets"][0])
-            theta = np.arctan(np.linalg.norm(tx_offset[:2]) / np.abs(tx_offset[2]))
+            R = np.linalg.norm(tx_offsets)
 
             # Dipole moment
             if em_specs["tx_specs"]["type"] == "VMD":
@@ -416,10 +417,7 @@ def inversion(input_file):
             u0 = 4 * np.pi * 1e-7
             normalization = u0 * (
                 np.abs(
-                    m
-                    / np.linalg.norm(tx_offset) ** 3.0
-                    * (3 * np.cos(theta) ** 2.0 - 1)
-                    / (4 * np.pi)
+                    m / R ** 3.0 * (3 * (tx_offsets[2] / R) ** 2.0 - 1) / (4.0 * np.pi)
                 )
             )
 
@@ -647,6 +645,8 @@ def inversion(input_file):
         else:
             uncert[dobs == np.float(ignore_values)] = np.inf
 
+    uncert[(dobs > 1e-38) * (dobs < 2e-38)] = np.inf
+
     if em_specs["type"] == "frequency":
         data_mapping = 1.0
     else:
@@ -681,13 +681,12 @@ def inversion(input_file):
         "Please revise topography and receiver parameters."
     )
 
-    tx_offsets = np.r_[em_specs["tx_offsets"][0]]
     offset_x = np.ones(xyz.shape[0]) * tx_offsets[0]
     offset_y = np.ones(xyz.shape[0]) * tx_offsets[1]
     offset_z = np.ones(xyz.shape[0]) * tx_offsets[2]
 
     if em_specs["tx_specs"]["type"] == "VMD":
-        tx_offsets = np.c_[np.zeros(xyz.shape[0]), np.zeros(xyz.shape[0]), offset_z]
+        tx_offsets = np.c_[np.zeros(xyz.shape[0]), np.zeros(xyz.shape[0]), -offset_z]
     else:
         tx_offsets = np.c_[offset_x, offset_y, offset_z]
 
@@ -713,14 +712,17 @@ def inversion(input_file):
             vec = vec.reshape((n_sounding, n_time))
             return vec[:, time_index].flatten()
 
-        offsets = np.ones((xyz.shape[0], 1)) * np.linalg.norm(tx_offsets[:2])
-
         src_type = np.array([em_specs["tx_specs"]["type"]], dtype=str).repeat(
             n_sounding
         )
 
         a = [em_specs["tx_specs"]["a"]] * n_sounding
         I = [em_specs["tx_specs"]["I"]] * n_sounding
+
+        if em_specs["tx_specs"]["type"] == "VMD":
+            offsets = np.linalg.norm(np.c_[offset_x, offset_y], axis=1).reshape((-1, 1))
+        else:
+            offsets = np.zeros((xyz.shape[0], 1))
 
         time, indt = np.unique(times, return_index=True)
         survey = GlobalEM1DSurveyTD(
@@ -743,7 +745,7 @@ def inversion(input_file):
     survey.dobs = dobs
     survey.std = uncert
 
-    if reference == "BFHS":
+    if isinstance(reference, str):
         print("**** Best-fitting halfspace inversion ****")
         print(f"Target: {n_data}")
 
@@ -873,7 +875,7 @@ def inversion(input_file):
         mopt = inv.run(m0)
         # Return predicted of Best-fitting halfspaces
 
-    if reference == "BFHS":
+    if isinstance(reference, str):
         m0 = Utils.mkvc(np.kron(mopt, np.ones_like(hz)))
         mref = Utils.mkvc(np.kron(mopt, np.ones_like(hz)))
     else:
@@ -907,6 +909,7 @@ def inversion(input_file):
     prob.pair(survey)
     pred = survey.dpred(m0)
 
+    uncert_orig = uncert.copy()
     # Write uncertainties to objects
     for ind, channel in enumerate(channels):
 
@@ -933,21 +936,22 @@ def inversion(input_file):
             )
             curve.add_data_to_group(d_i, f"Uncertainties")
 
-        if len(ignore_values) > 0:
-            if "<" in ignore_values:
-                uncert[
-                    data_mapping * dobs / normalization
-                    <= np.float(ignore_values.split("<")[1])
-                ] = np.inf
-            elif ">" in ignore_values:
-                uncert[
-                    data_mapping * dobs / normalization
-                    >= np.float(ignore_values.split(">")[1])
-                ] = np.inf
-            else:
-                uncert[
-                    data_mapping * dobs / normalization == np.float(ignore_values)
-                ] = np.inf
+        uncert[ind::block][uncert_orig[ind::block] == np.inf] = np.inf
+        # if len(ignore_values) > 0:
+        #     if "<" in ignore_values:
+        #         uncert[
+        #             data_mapping * dobs / normalization
+        #             <= np.float(ignore_values.split("<")[1])
+        #         ] = np.inf
+        #     elif ">" in ignore_values:
+        #         uncert[
+        #             data_mapping * dobs / normalization
+        #             >= np.float(ignore_values.split(">")[1])
+        #         ] = np.inf
+        #     else:
+        #         uncert[
+        #             data_mapping * dobs / normalization == np.float(ignore_values)
+        #         ] = np.inf
 
     mesh_reg = get_2d_mesh(n_sounding, hz)
     dmisfit = DataMisfit.l2_DataMisfit(survey)
@@ -1014,6 +1018,7 @@ def inversion(input_file):
         beta_tol=0.25,
         chifact_start=chi_target,
         chifact_target=chi_target,
+        prctile=50,
     )
 
     betaest = Directives.BetaEstimate_ByEig(beta0_ratio=10.0)

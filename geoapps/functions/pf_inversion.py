@@ -324,19 +324,15 @@ def inversion(input_file):
         else:
             vertices = entity.vertices
 
-        _, _, _, window_ind = filter_xy(
-            vertices[:, 0],
-            vertices[:, 1],
-            None,
-            resolution,
-            window=window,
-            return_indices=True,
+        window_ind = filter_xy(
+            vertices[:, 0], vertices[:, 1], resolution, window=window,
         )
 
         if window is not None:
             xy_rot = rotate_xy(
                 vertices[window_ind, :2], window["center"], window["azimuth"]
             )
+
             xyz_loc = np.c_[xy_rot, vertices[window_ind, 2]]
         else:
             xyz_loc = vertices[window_ind, :]
@@ -356,10 +352,14 @@ def inversion(input_file):
         survey.std = uncertainties[window_ind, :].ravel()
         survey.components = components
 
+        normalization = []
         for ind, comp in enumerate(survey.components):
             if "gz" == comp:
                 print(f"Sign flip for {comp} component")
+                normalization.append(-1.0)
                 survey.dobs[ind :: len(survey.components)] *= -1
+            else:
+                normalization.append(1.0)
 
     else:
         assert False, (
@@ -456,6 +456,7 @@ def inversion(input_file):
 
     def get_topography():
         topo = None
+
         if "topography" in list(input_dict.keys()):
             topo = survey.rxLoc.copy()
             if "drapped" in input_dict["topography"].keys():
@@ -485,21 +486,15 @@ def inversion(input_file):
                         topo[:, 2] = data.values
 
                 if window is not None:
+
                     topo_window = window.copy()
                     topo_window["size"] = [ll * 2 for ll in window["size"]]
-                    _, _, _, ind = filter_xy(
-                        topo[:, 0],
-                        topo[:, 1],
-                        None,
-                        resolution,
-                        window=topo_window,
-                        return_indices=True,
+                    ind = filter_xy(
+                        topo[:, 0], topo[:, 1], resolution / 2, window=topo_window,
                     )
-
                     xy_rot = rotate_xy(
                         topo[ind, :2], window["center"], window["azimuth"]
                     )
-
                     topo = np.c_[xy_rot, topo[ind, 2]]
 
         if topo is None:
@@ -519,30 +514,34 @@ def inversion(input_file):
             for ind, offset in enumerate(bird_offset):
                 locations[:, ind] += offset
             topo = get_topography()
-
         else:
             topo = get_topography()
             F = LinearNDInterpolator(topo[:, :2], topo[:, 2])
             z_topo = F(locations[:, :2])
 
+            if np.any(np.isnan(z_topo)):
+                tree = cKDTree(topo[:, :2])
+                _, ind = tree.query(locations[np.isnan(z_topo), :2])
+                z_topo[np.isnan(z_topo)] = topo[ind, 2]
             if "constant_drape" in list(input_dict["receivers_offset"].keys()):
                 bird_offset = np.asarray(
                     input_dict["receivers_offset"]["constant_drape"]
                 )
                 locations[:, 2] = z_topo
-
             elif "radar_drape" in list(input_dict["receivers_offset"].keys()):
                 bird_offset = np.asarray(
                     input_dict["receivers_offset"]["radar_drape"][:3]
                 )
-                z_channel = entity.get_data(
-                    input_dict["receivers_offset"]["radar_drape"][3]
-                )[0].values
-                locations[:, 2] = z_topo + z_channel[window_ind]
+                locations[:, 2] = z_topo
+
+                if entity.get_data(input_dict["receivers_offset"]["radar_drape"][3]):
+                    z_channel = entity.get_data(
+                        input_dict["receivers_offset"]["radar_drape"][3]
+                    )[0].values
+                    locations[:, 2] += z_channel[window_ind]
 
             for ind, offset in enumerate(bird_offset):
                 locations[:, ind] += offset
-
     else:
         topo = get_topography()
 
@@ -573,6 +572,16 @@ def inversion(input_file):
             # Spherical or sparse
             max_iterations = 20
 
+    if "max_cg_iterations" in list(input_dict.keys()):
+        max_cg_iterations = input_dict["max_cg_iterations"]
+    else:
+        max_cg_iterations = 30
+
+    if "tol_cg" in list(input_dict.keys()):
+        tol_cg = input_dict["tol_cg"]
+    else:
+        tol_cg = 1e-4
+
     if "max_global_iterations" in list(input_dict.keys()):
         max_global_iterations = input_dict["max_global_iterations"]
         assert max_global_iterations >= 0, "Max IRLS iterations must be >= 0"
@@ -589,6 +598,11 @@ def inversion(input_file):
         initial_beta = input_dict["initial_beta"]
     else:
         initial_beta = None
+
+    if "initial_beta_ratio" in list(input_dict.keys()):
+        initial_beta_ratio = input_dict["initial_beta_ratio"]
+    else:
+        initial_beta_ratio = 1e2
 
     if "n_cpu" in list(input_dict.keys()):
         n_cpu = input_dict["n_cpu"]
@@ -731,7 +745,7 @@ def inversion(input_file):
         if vector_property:
             no_data_value = 0
         else:
-            no_data_value = -100
+            no_data_value = 0
 
     if "parallelized" in list(input_dict.keys()):
         parallelized = input_dict["parallelized"]
@@ -983,10 +997,8 @@ def inversion(input_file):
             workspace, name=f"Predicted", vertices=xy_rot, parent=out_group
         )
 
-        for ii, component in enumerate(survey.components):
-            val = survey.dobs[ii :: len(survey.components)]
-            if "gz" == component:
-                val *= -1
+        for ii, (component, norm) in enumerate(zip(survey.components, normalization)):
+            val = norm * survey.dobs[ii :: len(survey.components)]
             point_object.add_data({"Observed_" + component: {"values": val}})
 
         mesh_object = treemesh_2_octree(workspace, mesh, parent=out_group)
@@ -1228,10 +1240,9 @@ def inversion(input_file):
 
     if forward_only:
         dpred = np.hstack(dpred)
-        for ind, comp in enumerate(survey.components):
-            val = dpred[ind :: len(survey.components)]
-            if "gz" == comp:
-                val *= -1
+        for ind, (comp, norm) in enumerate(zip(survey.components, normalization)):
+            val = norm * dpred[ind :: len(survey.components)]
+
             point_object.add_data({"Forward_" + comp: {"values": val[sorting]}})
 
         if "mvi" in input_dict["inversion_type"]:
@@ -1342,14 +1353,14 @@ def inversion(input_file):
 
     # Specify how the optimization will proceed, set susceptibility bounds to inf
     opt = Optimization.ProjectedGNCG(
-        maxIter=max_global_iterations,
+        maxIter=max_iterations,
         lower=lower_bound,
         upper=upper_bound,
         maxIterLS=20,
-        maxIterCG=30,
-        tolCG=1e-3,
+        maxIterCG=max_cg_iterations,
+        tolCG=tol_cg,
         stepOffBoundsFact=1e-8,
-        LSshorten=0.25,
+        LSshorten=0.1,
     )
 
     # Create the default L2 inverse problem from the above objects
@@ -1360,11 +1371,42 @@ def inversion(input_file):
 
     if vector_property:
         directiveList.append(
-            Directives.VectorInversion(inversion_type=input_dict["inversion_type"])
+            Directives.VectorInversion(
+                inversion_type=input_dict["inversion_type"], chifact_target=2
+            )
         )
 
     if initial_beta is None:
-        directiveList.append(Directives.BetaEstimate_ByEig(beta0_ratio=1e1))
+        directiveList.append(
+            Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
+        )
+
+    # elif "save_to_ubc" in list(input_dict.keys()):
+    # directiveList.append(
+    #     Directives.SaveUBCModelEveryIteration(
+    #         mapping=activeCellsMap * model_map,
+    #         mesh=mesh,
+    #         fileName=outDir + input_dict["inversion_type"],
+    #         vector=input_dict["inversion_type"][0:3] == "mvi",
+    #     )
+    # )
+
+    # Pre-conditioner
+    directiveList.append(
+        Directives.Update_IRLS(
+            f_min_change=1e-4,
+            minGNiter=1,
+            beta_tol=0.25,
+            prctile=80,
+            floorEpsEnforced=True,
+            coolingRate=1,
+            coolEps_q=True,
+            coolEpsFact=1.2,
+            betaSearch=False,
+        )
+    )
+
+    directiveList.append(Directives.UpdatePreconditioner())
 
     # Save model
     if "save_to_geoh5" in list(input_dict.keys()):
@@ -1384,46 +1426,43 @@ def inversion(input_file):
             )
         )
 
+        if vector_property:
+            directiveList.append(
+                Directives.SaveIterationsGeoH5(
+                    h5_object=mesh_object,
+                    channels=["theta", "phi"],
+                    mapping=activeCellsMap * model_map,
+                    attribute="mvi_angles",
+                    association="CELL",
+                    sorting=mesh._ubc_order,
+                    replace_values=True,
+                )
+            )
+
         directiveList.append(
             Directives.SaveIterationsGeoH5(
                 h5_object=point_object,
                 channels=survey.components,
+                mapping=np.hstack(normalization * rxLoc.shape[0]),
                 attribute="predicted",
                 sorting=sorting,
                 save_objective_function=True,
             )
         )
-    # elif "save_to_ubc" in list(input_dict.keys()):
+
     # directiveList.append(
     #     Directives.SaveUBCModelEveryIteration(
     #         mapping=activeCellsMap * model_map,
     #         mesh=mesh,
     #         fileName=outDir + input_dict["inversion_type"],
-    #         vector=input_dict["inversion_type"][0:3] == "mvi",
+    #         vector=input_dict["inversion_type"][0:3] == 'mvi'
     #     )
     # )
 
-    # Pre-conditioner
-    directiveList.append(
-        Directives.Update_IRLS(
-            f_min_change=1e-4,
-            maxIRLSiter=max_iterations,
-            minGNiter=1,
-            beta_tol=0.5,
-            prctile=90,
-            floorEpsEnforced=True,
-            coolingRate=1,
-            coolEps_q=True,
-            coolEpsFact=1.2,
-            betaSearch=False,
-        )
-    )
-
-    directiveList.append(Directives.UpdatePreconditioner())
     # Put all the parts together
     inv = Inversion.BaseInversion(invProb, directiveList=directiveList)
 
-    # SimPEG reports half phi_d, so we scale to matrch
+    # SimPEG reports half phi_d, so we scale to match
     print(
         "Start Inversion: "
         + inversion_style

@@ -1,5 +1,5 @@
 import os
-
+import re
 import discretize
 import ipywidgets as widgets
 import numpy as np
@@ -61,14 +61,24 @@ def export_widget(h5file):
                     entity, Curve
                 ), f"Only Curve objects are support for type {file_type.value}"
 
-                for key, item in data_values.items():
+                if data.value:
+                    for key in data.value:
+                        out_name = re.sub(
+                            "[^0-9a-zA-Z]+", "_", export_as.value + "_" + key
+                        )
+                        export_curve_2_shapefile(
+                            entity,
+                            attribute=key,
+                            file_name=out_dir + out_name,
+                            epsg=epsg_code.value,
+                        )
+                        print(f"Object saved to {out_dir + out_name + '.shp'}")
+                else:
+                    out_name = re.sub("[^0-9a-zA-Z]+", "_", export_as.value)
                     export_curve_2_shapefile(
-                        entity,
-                        attribute=item,
-                        file_name=out_dir + export_as.value + "_" + key,
-                        epsg=epsg_code.value,
+                        entity, file_name=out_dir + out_name, epsg=epsg_code.value,
                     )
-                    print(f"Object saved to {out_dir + export_as.value}.shp")
+                    print(f"Object saved to {out_dir + out_name + '.shp'}")
 
             elif file_type.value == "geotiff":
 
@@ -99,7 +109,11 @@ def export_widget(h5file):
 
                 else:
                     mesh = discretize.TensorMesh(
-                        [entity.u_cells, entity.v_cells, entity.z_cells]
+                        [
+                            np.abs(entity.u_cells),
+                            np.abs(entity.v_cells),
+                            np.abs(entity.z_cells),
+                        ]
                     )
 
                     # Move the origin to the bottom SW corner
@@ -186,24 +200,24 @@ def object_to_object_interpolation(h5file):
 
         if interpolate.value:
 
-            mesh_in = workspace.get_entity(objects.value)[0]
+            object_from = workspace.get_entity(objects.value)[0]
 
-            if hasattr(mesh_in, "centroids"):
-                xyz = mesh_in.centroids.copy()
-            elif hasattr(mesh_in, "vertices"):
-                xyz = mesh_in.vertices.copy()
+            if hasattr(object_from, "centroids"):
+                xyz = object_from.centroids.copy()
+            elif hasattr(object_from, "vertices"):
+                xyz = object_from.vertices.copy()
 
             # Create a tree for the input mesh
             tree = cKDTree(xyz)
 
             if out_mode.value == "To Object:":
 
-                mesh_out = workspace.get_entity(mesh_dropdown.value)[0]
+                object_to = workspace.get_entity(mesh_dropdown.value)[0]
 
-                if hasattr(mesh_out, "centroids"):
-                    xyz_out = mesh_out.centroids.copy()
-                elif hasattr(mesh_out, "vertices"):
-                    xyz_out = mesh_out.vertices.copy()
+                if hasattr(object_to, "centroids"):
+                    xyz_out = object_to.centroids.copy()
+                elif hasattr(object_to, "vertices"):
+                    xyz_out = object_to.vertices.copy()
 
             else:
 
@@ -234,30 +248,32 @@ def object_to_object_interpolation(h5file):
                     expansion_factor=expansion_fact.value,
                 )
 
-                mesh_out = BlockModel.create(
+                object_to = BlockModel.create(
                     workspace,
-                    origin=[mesh.x0[0], mesh.x0[1], mesh.x0[2]],
+                    origin=[mesh.x0[0], mesh.x0[1], mesh.x0[2] + mesh.hz.sum()],
                     u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
                     v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-                    z_cell_delimiters=(mesh.vectorNz - mesh.x0[2]),
+                    z_cell_delimiters=-(mesh.vectorNz - mesh.x0[2]),
                     name=new_grid.value,
                 )
 
                 # Try to recenter on nearest
                 # Find nearest cells
-                rad, ind = tree.query(mesh_out.centroids)
+                rad, ind = tree.query(object_to.centroids)
                 ind_nn = np.argmin(rad)
 
-                d_xyz = mesh_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
+                d_xyz = object_to.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
 
-                mesh_out.origin = np.r_[mesh_out.origin.tolist()] - d_xyz
+                object_to.origin = np.r_[object_to.origin.tolist()] - d_xyz
 
-                xyz_out = mesh_out.centroids.copy()
+                xyz_out = object_to.centroids.copy()
 
             values = {}
             for field in data.value:
-                model_in = mesh_in.get_data(field)[0]
+                model_in = object_from.get_data(field)[0]
                 values[field] = model_in.values.copy()
+
+                values[field][values[field] == no_data_value.value] = np.nan
                 if space.value == "Log":
                     values[field] = np.log(values[field])
 
@@ -311,26 +327,37 @@ def object_to_object_interpolation(h5file):
                 if space.value == "Log":
                     values_interp[key] = np.exp(values_interp[key])
 
-                values_interp[key][np.isnan(values_interp[key])] = -99999
+                values_interp[key][np.isnan(values_interp[key])] = no_data_value.value
 
                 if method.value == "Inverse Distance":
-                    values_interp[key][rad[:, 0] > max_distance.value] = -99999
+                    values_interp[key][
+                        rad[:, 0] > max_distance.value
+                    ] = no_data_value.value
                     if max_depth.value is not None:
                         values_interp[key][
                             np.abs(xyz_out[:, 2] - xyz[ind[:, 0], 2]) > max_depth.value
-                        ] = -99999
+                        ] = no_data_value.value
 
                 else:
-                    values_interp[key][rad > max_distance.value] = -99999
+                    values_interp[key][rad > max_distance.value] = no_data_value.value
 
                     if max_depth.value is not None:
                         values_interp[key][
                             np.abs(xyz_out[:, 2] - xyz[ind, 2]) > max_depth.value
-                        ] = -99999
+                        ] = no_data_value.value
 
             if topography.value is not None:
-                topo = workspace.get_entity(topography.value)[0].vertices
-                xyz_out = mesh_out.centroids.copy()
+
+                topo_obj = workspace.get_entity(topography.value)[0]
+                if getattr(topo_obj, "vertices", None) is not None:
+                    topo = topo_obj.vertices
+                else:
+                    topo = topo_obj.centroids
+
+                if z_value.value != "Vertices":
+                    topo[:, 2] = topo_obj.get_data(z_value.value)[0].values
+
+                xyz_out = object_to.centroids.copy()
                 F = LinearNDInterpolator(topo[:, :2], topo[:, 2])
                 z_interp = F(xyz_out[:, :2])
 
@@ -341,7 +368,7 @@ def object_to_object_interpolation(h5file):
                     z_interp[ind_nan] = topo[ind, 2]
 
                 for key in values_interp.keys():
-                    values_interp[key][xyz_out[:, 2] > z_interp] = -99999
+                    values_interp[key][xyz_out[:, 2] > z_interp] = no_data_value.value
 
             if xy_extent.value is not None:
 
@@ -355,10 +382,10 @@ def object_to_object_interpolation(h5file):
                 tree = cKDTree(xy_ref[:, :2])
                 rad, _ = tree.query(xyz_out[:, :2])
                 for key in values_interp.keys():
-                    values_interp[key][rad > max_distance.value] = -99999
+                    values_interp[key][rad > max_distance.value] = no_data_value.value
 
             for key in values_interp.keys():
-                mesh_out.add_data({key + "_interp": {"values": values_interp[key]}})
+                object_to.add_data({key + "_interp": {"values": values_interp[key]}})
 
             interpolate.value = False
 
@@ -447,6 +474,12 @@ def object_to_object_interpolation(h5file):
         style={"description_width": "initial"},
     )
 
+    no_data_value = widgets.FloatText(
+        value=-99999,
+        description="No-Data-Value",
+        style={"description_width": "initial"},
+    )
+
     skew_angle = widgets.FloatText(
         value=0,
         description="Azimuth (d.dd)",
@@ -471,11 +504,8 @@ def object_to_object_interpolation(h5file):
 
     interpolate.observe(interpolate_call)
 
-    topography = widgets.Dropdown(
-        options=[None] + names,
-        description="Cut with topo",
-        style={"description_width": "initial"},
-    )
+    topography, z_value = object_data_selection_widget(h5file)
+    z_value.options = list(z_value.options) + ["Vertices"]
 
     xy_extent = widgets.Dropdown(
         options=[None] + names,
@@ -513,9 +543,10 @@ def object_to_object_interpolation(h5file):
                             VBox([widgets.Label("Method"), method_panel]),
                         ]
                     ),
+                    no_data_value,
                     max_distance,
                     max_depth,
-                    topography,
+                    VBox([widgets.Label("Cut with topo"), topography, z_value]),
                     xy_extent,
                 ]
             ),
