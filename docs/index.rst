@@ -25,5 +25,6 @@ Contents:
    :maxdepth: 2
 
    content/installation.rst
-   content/apps/index.rst
+   content/howto.rst
+   content/applications.rst
    content/feedback.rst
