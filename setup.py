@@ -24,7 +24,7 @@ setup(
     packages=find_packages(),
     install_requires=["numpy", "h5py", "scipy", "geoh5py"],
     author="Mira Geoscience",
-    author_email="domfournier@mirageoscience.com",
+    author_email="dominiquef@mirageoscience.com",
     description="Geoscience Analyst API",
     keywords="earth sciences",
     url="https://mirageoscience-apps.readthedocs.io/en/latest/",
