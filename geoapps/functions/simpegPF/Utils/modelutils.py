@@ -11,7 +11,7 @@ import discretize as Mesh
 from discretize.utils import closestPoints, kron3, speye
 
 
-def surface2ind_topo(mesh, topo, gridLoc="N", method="linear", fill_value=np.nan):
+def surface2ind_topo(mesh, topo, gridLoc="CC", method="linear", fill_value=np.nan):
     """
     Get active indices from topography
 

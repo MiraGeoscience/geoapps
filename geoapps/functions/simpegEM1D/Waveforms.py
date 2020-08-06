@@ -10,9 +10,7 @@ XXX
 
 import numpy as np
 from scipy.integrate import fixed_quad
-from scipy.integrate.quadrature import _cached_roots_legendre
-
-# from scipy.signal import butter, freqz
+from scipy.special import roots_legendre
 
 
 class CurrentWaveforms:
@@ -401,7 +399,7 @@ def piecewise_pulse_fast(step_func, t_off, t_currents, currents, T, n=20, n_puls
     )
 
     # Get gauss-legendre points and weights early since n never changes inside here
-    x, w = _cached_roots_legendre(n)
+    x, w = roots_legendre(n)
 
     if n_pulse == 1:
         response = piecewise_ramp_fast(step_func, t_off, t_currents, currents, x, w)

@@ -302,23 +302,32 @@ class Minimize:
             self.printInit()
             print("x0 has any nan: {:b}".format(np.any(np.isnan(x0))))
         while True:
+
             self.doStartIteration()
+            tc = time()
             self.f, self.g, self.H = evalFunction(self.xc, return_g=True, return_H=True)
+            # print(f"Eval function {time() - tc}")
             if not self.silent:
                 self.printIter()
             if self.stoppingCriteria():
                 break
+            tc = time()
             self.searchDirection = self.findSearchDirection()
+            # print(f"Search direction {time() - tc}")
             del (
                 self.H
             )  #: Doing this saves memory, as it is not needed in the rest of the computations.
+
             p = self.scaleSearchDirection(self.searchDirection)
+
             xt, passLS = self.modifySearchDirection(p)
             if not passLS:
                 xt, caught = self.modifySearchDirectionBreak(p)
                 if not caught:
                     return self.xc
+            tc = time()
             self.doEndIteration(xt)
+            # print(f"Do end {time() - tc}")
             if self.stopNextIteration:
                 break
         if not self.silent:
@@ -1181,7 +1190,6 @@ class ProjectedGNCG(BFGS, Minimize, Remember):
         s0 = sold
 
         count = 0
-        print("Start CG solve")
         tc = time()
         while np.all([np.linalg.norm(r) > self.tolCG, count < self.maxIterCG]):
 
@@ -1205,7 +1213,8 @@ class ProjectedGNCG(BFGS, Minimize, Remember):
 
             # End CG Iterations
         self.cgCount += count
-        print("CG solve time: " + str(time() - tc))
+        # print(f"CG {time() - tc}")
+
         # Take a gradient step on the active cells if exist
         if temp != self.xc.size:
 
