@@ -792,6 +792,7 @@ class SaveIterationsGeoH5(InversionDirective):
     mapping = None
     save_objective_function = False
     data_type = {}
+    replace_values = False
 
     def initialize(self):
 
@@ -813,9 +814,13 @@ class SaveIterationsGeoH5(InversionDirective):
 
         if self.attribute == "mvi_model":
             prop = np.linalg.norm(prop.reshape((-1, 3), order="F"), axis=1)
-
-        elif self.attribute == "mvis_model":
+        elif self.attribute == "mvi_model_s":
             prop = prop.reshape((-1, 3), order="F")[:, 0]
+        elif self.attribute == "mvi_angles_s":
+            prop = prop.reshape((-1, 3), order="F")[:, 1:].ravel()
+        elif self.attribute == "mvi_angles":
+            atp = Utils.matutils.xyz2atp(prop.reshape((-1, 3), order="F"))
+            prop = atp.reshape((-1, 3), order="F")[:, 1:].ravel()
 
         for ii, channel in enumerate(self.channels):
 
@@ -825,7 +830,10 @@ class SaveIterationsGeoH5(InversionDirective):
                 attr = attr[self.sorting]
 
             data = self.h5_object.add_data(
-                {f"Initial": {"association": self.association, "values": attr}}
+                {
+                    f"Iteration_0_"
+                    + channel: {"association": self.association, "values": attr}
+                }
             )
 
             data.entity_type.name = channel
@@ -873,27 +881,39 @@ class SaveIterationsGeoH5(InversionDirective):
 
         if self.attribute == "mvi_model":
             prop = np.linalg.norm(prop.reshape((-1, 3), order="F"), axis=1)
-
-        elif self.attribute == "mvis_model":
+        elif self.attribute == "mvi_model_s":
             prop = prop.reshape((-1, 3), order="F")[:, 0]
+        elif self.attribute == "mvi_angles_s":
+            prop = prop.reshape((-1, 3), order="F")[:, 1:].ravel()
+        elif self.attribute == "mvi_angles":
+            atp = Utils.matutils.xyz2atp(prop.reshape((-1, 3), order="F"))
+            prop = atp.reshape((-1, 3), order="F")[:, 1:].ravel()
 
         for ii, channel in enumerate(self.channels):
-
             attr = prop[ii :: len(self.channels)]
 
             if self.sorting is not None:
                 attr = attr[self.sorting]
 
-            self.h5_object.add_data(
-                {
-                    f"Iteration_{self.opt.iter}_"
-                    + channel: {
-                        "association": self.association,
-                        "values": attr,
-                        "entity_type": self.data_type[channel],
+            if self.replace_values and self.h5_object.get_data(
+                f"Iteration_{self.opt.iter-1}_" + channel
+            ):
+                data = self.h5_object.get_data(
+                    f"Iteration_{self.opt.iter-1}_" + channel
+                )[0]
+                data.name = f"Iteration_{self.opt.iter}_" + channel
+                data.values = attr
+            else:
+                self.h5_object.add_data(
+                    {
+                        f"Iteration_{self.opt.iter}_"
+                        + channel: {
+                            "values": attr,
+                            "association": self.association,
+                            "entity_type": self.data_type[channel],
+                        }
                     }
-                }
-            )
+                )
 
         if self.save_objective_function:
             regCombo = ["phi_ms", "phi_msx"]
@@ -904,8 +924,13 @@ class SaveIterationsGeoH5(InversionDirective):
             if self.prob[0].mesh.dim == 3:
                 regCombo += ["phi_msz"]
 
-            # Save the data.
-            iterDict = {"beta": f"{self.invProb.beta:.3e}"}
+            # Save objective function.
+            if isinstance(self.invProb.beta, float):
+                beta = self.invProb.beta
+            else:
+                beta = self.invProb.beta[0]
+
+            iterDict = {"beta": f"{beta:.3e}"}
 
             if isinstance(self.invProb.phi_d, float):
                 phi_d = self.invProb.phi_d
@@ -972,7 +997,6 @@ class VectorInversion(InversionDirective):
         if (
             self.invProb.phi_d < self.target
         ) and self.mode == "cartesian":  # and self.inversion_type == 'mvis':
-
             print("Switching MVI to spherical coordinates")
             self.mode = "spherical"
 
@@ -982,6 +1006,7 @@ class VectorInversion(InversionDirective):
             mref = Utils.matutils.xyz2atp(self.mref.reshape((-1, 3), order="F"))
 
             self.invProb.model = mstart
+            self.invProb.beta *= 2
             self.opt.xc = mstart
 
             nC = mstart.reshape((-1, 3)).shape[0]
@@ -1023,7 +1048,9 @@ class VectorInversion(InversionDirective):
                     directive.channels = channels
 
                     if directive.attribute == "mvi_model":
-                        directive.attribute = "mvis_model"
+                        directive.attribute = "mvi_model_s"
+                    elif directive.attribute == "mvi_angles":
+                        directive.attribute = "mvi_angles_s"
 
                     directiveList.append(directive)
 
@@ -1038,12 +1065,11 @@ class VectorInversion(InversionDirective):
                 elif isinstance(directive, Update_IRLS):
                     directive.sphericalDomain = True
                     directive.model = mstart
-                    directive.coolingRate = 1
+                    directive.coolingFactor = 1.5
                     IRLS = directive
 
                 elif isinstance(directive, UpdatePreconditioner):
                     update_Jacobi = directive
-
                 else:
                     directiveList.append(directive)
 
@@ -1058,12 +1084,11 @@ class VectorInversion(InversionDirective):
             directiveList[1].endIter()
             directiveList[2].endIter()
             directiveList[3].endIter()
+        elif (self.invProb.phi_d < self.target) and self.mode == "spherical":
 
-        # else:
-        # for directive in self.inversion.directiveList.dList:
-        #     if isinstance(directive, Update_IRLS) and directive.mode!=1:
-        #         print('Changing IRLS cooling rate')
-        #         directive.coolingRate = 1
+            for directive in self.inversion.directiveList.dList:
+                if isinstance(directive, Update_IRLS) and directive.mode != 1:
+                    directive.coolingFactor = 2
 
 
 class Update_IRLS(InversionDirective):
@@ -1206,7 +1231,7 @@ class Update_IRLS(InversionDirective):
                 if not self.silent:
                     print(
                         "Reach maximum number of IRLS cycles:"
-                        + f" {self.maxIRLSiter:d}"
+                        + f" {int(self.maxIRLSiter)}"
                     )
 
                 self.opt.stopNextIteration = True
@@ -1246,9 +1271,6 @@ class Update_IRLS(InversionDirective):
                 phi_m_new += [reg(self.invProb.model)]
 
             self.f_change = np.abs(self.f_old - phim_new) / self.f_old
-
-            if not self.silent:
-                print(f"delta phim: {self.f_change:6.3e}")
 
             # Check if the function has changed enough
             if np.all(
@@ -1318,7 +1340,7 @@ class Update_IRLS(InversionDirective):
 
         max_p = np.asarray(max_p).max()
 
-        scales = [2 * max_p / np.pi, 2 * max_p / np.pi]
+        scales = [max_p / np.pi, max_p / np.pi]
         for obj, scale in zip(self.reg.objfcts[1:3], scales):
             obj.scales = np.ones(obj.scales.shape) * scale
         # self.reg.objfcts[0].scales = np.ones(self.reg.objfcts[0].scales.shape)

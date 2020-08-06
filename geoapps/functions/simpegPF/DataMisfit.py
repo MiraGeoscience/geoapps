@@ -70,17 +70,13 @@ class l2_DataMisfit(BaseDataMisfit):
         BaseDataMisfit.__init__(self, survey, **kwargs)
 
         if self.std is None:
-            if getattr(self.survey, "std", None) is not None:
+            if getattr(self.survey, "std", None) is None:
                 print("SimPEG.DataMisfit.l2_DataMisfit assigning default std " "of 5%")
             else:
                 self.std = self.survey.std
 
         if self.eps is None:
             if getattr(self.survey, "eps", None) is None:
-                print(
-                    "SimPEG.DataMisfit.l2_DataMisfit assigning default eps "
-                    "of 1e-5 * ||dobs||"
-                )
                 self.eps = (
                     np.linalg.norm(Utils.mkvc(survey.dobs), 2) * self.eps_factor
                 )  # default

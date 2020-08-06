@@ -1515,6 +1515,7 @@ class SparseDeriv(BaseSparse):
     def __init__(self, mesh, orientation="x", **kwargs):
 
         self.length_scales = None
+        self.ratio = 1.0
         self.orientation = orientation
         super().__init__(mesh=mesh, **kwargs)
 
@@ -1778,8 +1779,8 @@ class SparseDeriv(BaseSparse):
             length_scales = Ave * (
                 self.regmesh.Pac.T * self.regmesh.mesh.h_gridded[:, index]
             )
-
-            self._length_scales = length_scales.min() / length_scales
+            # print(self.orientation, self.ratio)
+            self._length_scales = self.ratio * length_scales.min() / length_scales
 
         return self._length_scales
 
@@ -1822,12 +1823,15 @@ class Sparse(BaseComboRegularization):
             SparseSmall(mesh=mesh, **kwargs),
             SparseDeriv(mesh=mesh, orientation="x", **kwargs),
         ]
-
+        max_h = np.max(np.hstack(mesh.h))
         if mesh.dim > 1:
             objfcts.append(SparseDeriv(mesh=mesh, orientation="y", **kwargs))
+            objfcts[1].ratio = max_h / mesh.hx.min()
+            objfcts[2].ratio = max_h / mesh.hy.min()
 
         if mesh.dim > 2:
             objfcts.append(SparseDeriv(mesh=mesh, orientation="z", **kwargs))
+            objfcts[3].ratio = max_h / mesh.hz.min()
 
         super().__init__(
             mesh=mesh,
