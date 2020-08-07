@@ -22,3 +22,4 @@ dependencies:
     - empymod
     - geoh5py
     - geoapps
+    - numpydoc
