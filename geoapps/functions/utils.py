@@ -12,6 +12,7 @@ from geoh5py.objects import BlockModel, Grid2D, Octree
 from geoh5py.data import FloatData
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
+from scipy.interpolate import interp1d
 
 
 def find_value(labels, strings, default=None):
@@ -27,7 +28,7 @@ def find_value(labels, strings, default=None):
     return value
 
 
-def export_grid_2_geotiff(data_object, file_name, epsg_code, dataType="float"):
+def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
     """
         Source:
 
@@ -41,7 +42,7 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, dataType="float"):
     assert isinstance(grid2d, Grid2D), f"The parent object must be a Grid2D entity."
 
     values = data_object.values.copy()
-    values[(values > 1e-38) * (values < 2e-38)] = 0
+    values[(values > 1e-38) * (values < 2e-38)] = -99999
 
     # TODO Re-sample the grid if rotated
     # if grid2d.rotation != 0.0:
@@ -49,15 +50,40 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, dataType="float"):
     driver = gdal.GetDriverByName("GTiff")
 
     # Chose type
-    if dataType == "image":
+    if data_type == "RGB":
         encode_type = gdal.GDT_Byte
         num_bands = 3
+        if data_object.entity_type.color_map is not None:
+            cmap = data_object.entity_type.color_map.values
+            red = interp1d(
+                cmap["Value"], cmap["Red"], bounds_error=False, fill_value="extrapolate"
+            )(values)
+            blue = interp1d(
+                cmap["Value"],
+                cmap["Blue"],
+                bounds_error=False,
+                fill_value="extrapolate",
+            )(values)
+            green = interp1d(
+                cmap["Value"],
+                cmap["Green"],
+                bounds_error=False,
+                fill_value="extrapolate",
+            )(values)
+            array = [
+                red.reshape(grid2d.shape, order="F").T,
+                green.reshape(grid2d.shape, order="F").T,
+                blue.reshape(grid2d.shape, order="F").T,
+            ]
 
-        values -= values.min()
-        values *= 255 / values.max()
-
-        array = [values.reshape(grid2d.shape, order="F").T] * 3
-
+            np.savetxt(
+                file_name[:-4] + "_RGB.txt",
+                np.c_[cmap["Value"], cmap["Red"], cmap["Green"], cmap["Blue"]],
+                fmt="%.5e %i %i %i",
+            )
+        else:
+            print("A color_map is required for RGB export.")
+            return
     else:
         encode_type = gdal.GDT_Float32
         num_bands = 1
@@ -80,8 +106,10 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, dataType="float"):
 
     datasetSRS = osr.SpatialReference()
 
-    datasetSRS.ImportFromEPSG(int(epsg_code))
-
+    try:
+        datasetSRS.ImportFromEPSG(int(epsg_code))
+    except ValueError:
+        print(f"A valid EPSG# is required. Provided {epsg_code}")
     dataset.SetProjection(datasetSRS.ExportToWkt())
 
     if num_bands == 1:
@@ -275,7 +303,8 @@ def filter_xy(x, y, distance, window=None):
         )
         dwn = int(np.ceil(distance / d_l))
         filter_xy[::dwn, ::dwn] = True
-
+    else:
+        filter_xy = np.ones_like(x, dtype="bool")
     return filter_xy * mask
 
 
@@ -292,6 +321,294 @@ def rotate_xy(xyz, center, angle):
     xy_rot = np.dot(R, locs[:, :2].T).T
 
     return np.c_[xy_rot[:, 0] + center[0], xy_rot[:, 1] + center[1], locs[:, 2:]]
+
+
+def running_mean(values, width=1, method="centered"):
+    """
+    Compute a running mean of an array over a defined width.
+
+    :param values: array of floats
+        Input values to compute the running mean over
+    :param width: int
+        Number of neighboring values to be used
+    :param method: str
+        Choice between 'forward', 'backward' and ['centered'] averaging.
+
+    :return mean_values: array of floats
+        Array of shape(values, )
+    """
+    # Averaging vector (1/N)
+    weights = np.r_[np.zeros(width + 1), np.ones_like(values)]
+    sum_weights = np.cumsum(weights)
+
+    mean = np.zeros_like(values)
+
+    # Forward averaging
+    if method in ["centered", "forward"]:
+        padd = np.r_[np.zeros(width + 1), values]
+        cumsum = np.cumsum(padd)
+        mean += (cumsum[(width + 1) :] - cumsum[: (-width - 1)]) / (
+            sum_weights[(width + 1) :] - sum_weights[: (-width - 1)]
+        )
+
+    # Backward averaging
+    if method in ["centered", "backward"]:
+        padd = np.r_[np.zeros(width + 1), values[::-1]]
+        cumsum = np.cumsum(padd)
+        mean += (
+            (cumsum[(width + 1) :] - cumsum[: (-width - 1)])
+            / (sum_weights[(width + 1) :] - sum_weights[: (-width - 1)])
+        )[::-1]
+
+    if method == "centered":
+        mean /= 2.0
+
+    return mean
+
+
+class signal_processing_1d:
+    """
+    Compute the derivatives of values in Fourier Domain
+    """
+
+    def __init__(self, locs, values, **kwargs):
+
+        if np.std(locs[:, 1]) > np.std(locs[:, 0]):
+            start = np.argmin(locs[:, 1])
+            self.sorting = np.argsort(locs[:, 1])
+        else:
+            start = np.argmin(locs[:, 0])
+            self.sorting = np.argsort(locs[:, 0])
+
+        self.x_locs = locs[self.sorting, 0]
+        self.y_locs = locs[self.sorting, 1]
+
+        if locs.shape[1] == 3:
+            self.z_locs = locs[self.sorting, 2]
+
+        dist_line = np.linalg.norm(
+            np.c_[
+                locs[start, 0] - locs[self.sorting, 0],
+                locs[start, 1] - locs[self.sorting, 1],
+            ],
+            axis=1,
+        )
+
+        self._locations = dist_line
+
+        if values is not None:
+            self._values = values[self.sorting]
+        self._interpolation = "linear"
+        self._smoothing = 0
+        self._residual = False
+
+        for key, value in kwargs.items():
+            if getattr(self, key, None) is not None:
+                setattr(self, key, value)
+
+    def interp_x(self, x):
+
+        if getattr(self, "Fx", None) is None:
+            self.Fx = interp1d(
+                self.locations,
+                self.x_locs,
+                bounds_error=False,
+                fill_value="extrapolate",
+            )
+        return self.Fx(x)
+
+    def interp_y(self, y):
+
+        if getattr(self, "Fy", None) is None:
+            self.Fy = interp1d(
+                self.locations,
+                self.y_locs,
+                bounds_error=False,
+                fill_value="extrapolate",
+            )
+        return self.Fy(y)
+
+    def interp_z(self, z):
+
+        if getattr(self, "Fz", None) is None:
+            self.Fz = interp1d(
+                self.locations,
+                self.z_locs,
+                bounds_error=False,
+                fill_value="extrapolate",
+            )
+        return self.Fz(z)
+
+    @property
+    def n_padding(self):
+        """
+            Number of padding cells added for the FFT
+        """
+        if getattr(self, "_n_padding", None) is None:
+            self._n_padding = int(np.floor(len(self.values_resampled)))
+
+        return self._n_padding
+
+    @property
+    def locations(self):
+        """
+        Position of values
+        """
+        return self._locations
+
+    @property
+    def locations_resampled(self):
+        """
+        Position of values resampled on a fix interval
+        """
+        if getattr(self, "_locations_resampled", None) is None:
+            sort = np.argsort(self.locations)
+            self._locations_resampled = np.arange(
+                self.locations[sort[0]], self.locations[sort[-1]], self.hx
+            )
+        return self._locations_resampled
+
+    @property
+    def values(self):
+        """
+        Real values of the vector
+        """
+        return self._values
+
+    @values.setter
+    def values(self, values):
+        self.values_resampled = None
+        self._values = values[self.sorting]
+
+    @property
+    def hx(self):
+        """
+        Discrete interval length
+        """
+        if getattr(self, "_hx", None) is None:
+            self._hx = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
+        return self._hx
+
+    @property
+    def values_resampled(self):
+        """
+        Values re-sampled on a regular interval
+        """
+        if getattr(self, "_values_resampled", None) is None:
+            F = interp1d(self.locations, self.values, kind=self.interpolation)
+            self._values_resampled = F(self.locations_resampled)
+            self._values_resampled_raw = self._values_resampled.copy()
+            if self._smoothing > 0:
+                mean_values = running_mean(
+                    self._values_resampled, width=self._smoothing, method="centered"
+                )
+
+                if self.residual:
+                    self._values_resampled = self._values_resampled - mean_values
+                else:
+                    self._values_resampled = mean_values
+
+        return self._values_resampled
+
+    @values_resampled.setter
+    def values_resampled(self, values):
+        self._values_resampled = values
+        self._values_resampled_raw = None
+        self._values_padded = None
+        self._fft = None
+
+    @property
+    def values_padded(self):
+        """
+        Values padded with cosin tapper
+        """
+        if getattr(self, "_values_padded", None) is None:
+            values_padded = np.r_[
+                self.values_resampled[: self.n_padding][::-1],
+                self.values_resampled,
+                self.values_resampled[-self.n_padding :][::-1],
+            ]
+
+            tapper = -np.cos(np.pi * (np.arange(self.n_padding)) / self.n_padding)
+            tapper = (
+                np.r_[tapper, np.ones_like(self.locations_resampled), tapper[::-1]]
+                / 2.0
+                + 0.5
+            )
+
+            self._values_padded = tapper * values_padded
+
+        return self._values_padded
+
+    @property
+    def interpolation(self):
+        """
+        Method of interpolation
+        """
+        return self._interpolation
+
+    @interpolation.setter
+    def interpolation(self, method):
+        methods = ["linear", "nearest", "slinear", "quadratic", "cubic"]
+        assert method in methods, f"Method on interpolation must be one of {methods}"
+
+    @property
+    def fft(self):
+        """
+        Fourier domain of values_padded
+        """
+        if getattr(self, "_fft", None) is None:
+            self._fft = np.fft.fft(self.values_padded)
+        return self._fft
+
+    @property
+    def fftfreq(self):
+        """
+        Wavenumber of the values FFT
+        """
+        if getattr(self, "_fftfreq", None) is None:
+            nx = len(self.values_padded)
+            self._fftfreq = 2.0 * np.pi * np.fft.fftfreq(nx, self.hx)
+        return self._fftfreq
+
+    @property
+    def residual(self):
+        """
+        Use the residual of the smoothing data
+        """
+        return self._residual
+
+    @residual.setter
+    def residual(self, value):
+        assert isinstance(value, bool), "Residual must be a bool"
+        if value != self._residual:
+            self._residual = value
+            self.values_resampled = None
+
+    @property
+    def smoothing(self):
+        """
+        Smoothing factor in terms of number of nearest neighbours used
+        in a running mean averaging of the signal
+        """
+        return self._smoothing
+
+    @smoothing.setter
+    def smoothing(self, value):
+        assert (
+            isinstance(value, int) and value >= 0
+        ), "Smoothing parameter must be an integer >0"
+        if value != self._smoothing:
+            self._smoothing = value
+            self.values_resampled = None
+
+    def derivative(self, order=1):
+        """
+        Compute the derivative
+        """
+        fft_deriv = (self.fftfreq * 1j) ** order * self.fft.copy()
+        deriv_padded = np.fft.ifft(fft_deriv)
+        return np.real(deriv_padded[self.n_padding : -self.n_padding])
 
 
 def tensor_2_block_model(workspace, mesh, name=None, parent=None, data={}):
@@ -690,6 +1007,108 @@ class RectangularBlock:
             self._vertices = xyz
 
         return self._vertices
+
+
+def raw_moment(data, i_order, j_order):
+    nrows, ncols = data.shape
+    y_indices, x_indicies = np.mgrid[:nrows, :ncols]
+
+    return (data * x_indicies ** i_order * y_indices ** j_order).sum()
+
+
+def moments_cov(data):
+    data_sum = data.sum()
+    m10 = raw_moment(data, 1, 0)
+    m01 = raw_moment(data, 0, 1)
+    x_centroid = m10 / data_sum
+    y_centroid = m01 / data_sum
+    u11 = (raw_moment(data, 1, 1) - x_centroid * m01) / data_sum
+    u20 = (raw_moment(data, 2, 0) - x_centroid * m10) / data_sum
+    u02 = (raw_moment(data, 0, 2) - y_centroid * m01) / data_sum
+    cov = np.array([[u20, u11], [u11, u02]])
+    return [x_centroid, y_centroid], cov
+
+
+def principal_moment(m, winSize):
+    """
+    Function to compute the center and principal axes of an anomaly
+    """
+    center, cov = moments_cov(m)
+
+    if not np.any(np.isnan(cov)):
+
+        evals, evecs = np.linalg.eig(cov)
+
+        center_x = int(x) - winSize + center[0]
+
+        center_y = int(z) - winSize + center[1]
+
+        ind = np.argmax(np.abs(evals))
+
+        # Flip the vector if opposite to previous
+        vec_new = evecs[ind]
+        vec_new[1] *= -1
+        sign = np.sign(np.dot(vec, vec_new))
+        if sign == 0:
+            sign = -1
+        vec = sign * vec_new.copy()
+        val = evals[ind]
+
+
+def ij_2_ind(coordinates, shape):
+    """
+    Return the index of ij coordinates
+    """
+    return [ij[0] * shape[1] + ij[1] for ij in coordinates]
+
+
+def ind_2_ij(indices, shape):
+    """
+    Return the index of ij coordinates
+    """
+    return [[int(np.floor(ind / shape[1])), ind % shape[1]] for ind in indices]
+
+
+def get_neighbours(index, shape):
+    """
+    Get all neighbours of cell in a 2D grid
+    """
+    j, i = int(np.floor(index / shape[1])), index % shape[1]
+    vec_i = np.r_[i - 1, i, i + 1]
+    vec_j = np.r_[j - 1, j, j + 1]
+
+    vec_i = vec_i[(vec_i >= 0) * (vec_i < shape[1])]
+    vec_j = vec_j[(vec_j >= 0) * (vec_j < shape[0])]
+
+    ii, jj = np.meshgrid(vec_i, vec_j)
+
+    return ij_2_ind(np.c_[jj.ravel(), ii.ravel()].tolist(), shape)
+
+
+def get_active_neighbors(index, shape, model, threshold, blob_indices):
+    """
+    Given an index, append to a list if active
+    """
+    out = []
+    for ind in get_neighbours(index, shape):
+        if (model[ind] > threshold) and (ind not in blob_indices):
+            out.append(ind)
+    return out
+
+
+def get_blob_indices(index, shape, model, threshold, blob_indices=[]):
+    """
+    Function to return indices of cells inside a model value blob
+    """
+    out = get_active_neighbors(index, shape, model, threshold, blob_indices)
+
+    for neigh in out:
+        blob_indices += [neigh]
+        blob_indices = get_blob_indices(
+            neigh, shape, model, threshold, blob_indices=blob_indices
+        )
+
+    return blob_indices
 
 
 # def refine_cells(self, indices):

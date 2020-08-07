@@ -2,6 +2,7 @@ import ipywidgets as widgets
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.spatial import cKDTree
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import Dropdown, HBox, VBox
@@ -139,28 +140,15 @@ def plot_plan_data_selection(entity, data, **kwargs):
 
         if data.entity_type.color_map is not None:
             new_cmap = data.entity_type.color_map.values
-            cmap_values = new_cmap["Value"]
-            cmap_values = cmap_values[~np.isnan(cmap_values)]
-            cmap_values -= cmap_values.min()
-            cmap_values /= cmap_values.max() + 1e-16
-
-            if cmap_values.min() != cmap_values.max():
-                cdict = {
-                    "red": np.c_[
-                        cmap_values, new_cmap["Red"] / 255, new_cmap["Red"] / 255
-                    ].tolist(),
-                    "green": np.c_[
-                        cmap_values, new_cmap["Green"] / 255, new_cmap["Green"] / 255
-                    ].tolist(),
-                    "blue": np.c_[
-                        cmap_values, new_cmap["Blue"] / 255, new_cmap["Blue"] / 255
-                    ].tolist(),
-                }
-                cmap = colors.LinearSegmentedColormap(
-                    "custom_map", segmentdata=cdict, N=len(cmap_values)
-                )
-            else:
-                cmap = "Spectral_r"
+            map_vals = new_cmap["Value"].copy()
+            cmap = colors.ListedColormap(
+                np.c_[
+                    new_cmap["Red"] / 255,
+                    new_cmap["Green"] / 255,
+                    new_cmap["Blue"] / 255,
+                ]
+            )
+            color_norm = colors.BoundaryNorm(map_vals, cmap.N)
         else:
             cmap = "Spectral_r"
 
@@ -176,14 +164,27 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 np.zeros_like(values, dtype="bool"),
                 np.zeros_like(values, dtype="bool"),
             )
-
+        out = None
         if isinstance(entity, Grid2D) and values is not None:
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
             values = values.reshape(entity.shape, order="F")
             indices = filter_xy(x, y, resolution, window=window)
             values[indices == False] = np.nan
-            out = ax.pcolormesh(x, y, values, cmap=cmap, norm=color_norm)
+
+            ind_x, ind_y = (
+                np.any(indices, axis=1),
+                np.any(indices, axis=0),
+            )
+
+            X = x[ind_x, :][:, ind_y]
+            Y = y[ind_x, :][:, ind_y]
+            vals = values[ind_x, :][:, ind_y]
+
+            if np.any(vals):
+                out = ax.pcolormesh(
+                    X, Y, vals, cmap=cmap, norm=color_norm, shading="auto"
+                )
 
             if "contours" in kwargs.keys():
                 ax.contour(
@@ -228,12 +229,14 @@ def plot_plan_data_selection(entity, data, **kwargs):
             print(
                 "Sorry, 'plot=True' option only implemented for Grid2D, Points and Curve objects"
             )
+            out = None
 
         if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"]:
             ind = ~np.isnan(values)
-            format_labels(x[ind], y[ind], ax)
-            ax.set_xlim([x[ind].min(), x[ind].max()])
-            ax.set_ylim([y[ind].min(), y[ind].max()])
+            if ind.sum() > 0:
+                format_labels(x[ind], y[ind], ax)
+                ax.set_xlim([x[ind].min(), x[ind].max()])
+                ax.set_ylim([y[ind].min(), y[ind].max()])
         else:
             format_labels(x, y, ax)
 
@@ -264,7 +267,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
 
                     line_selection[ind[ind_line]] = True
 
-    return ax, indices, line_selection
+    return ax, out, indices, line_selection
 
 
 def plot_em_data_widget(h5file):
