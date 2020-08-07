@@ -1,4 +1,4 @@
-name: mira-apps
+name: geoapps
 
 channels:
   - conda-forge
@@ -21,3 +21,4 @@ dependencies:
   - pip:
     - empymod
     - geoh5py
+    - geoapps

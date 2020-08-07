@@ -3,8 +3,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 CLASSIFIERS = [
-    "Development Status :: 1 - Beta",
-    "Intended Audience :: Industry",
+    "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
@@ -25,7 +24,7 @@ setup(
     install_requires=["numpy", "h5py", "scipy", "geoh5py"],
     author="Mira Geoscience",
     author_email="dominiquef@mirageoscience.com",
-    description="Geoscience Analyst API",
+    description="Open-sourced Applications in Geoscience",
     keywords="earth sciences",
     url="https://mirageoscience-apps.readthedocs.io/en/latest/",
     download_url="https://github.com/MiraGeoscience/mirageoscience-apps.git",

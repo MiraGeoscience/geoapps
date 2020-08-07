@@ -1,8 +1,8 @@
-mirageoscience-apps: Python applications for geoscientific problems
-===================================================================
+geoapps: Python applications for geoscientific problems
+=======================================================
 
 
-Welcome to **mirageoscience-apps**! Where geoscientists meet to share open-source applications.
+Welcome to **geoapps**! Where geoscientists meet to share open-source applications.
 
 In short
 ^^^^^^^^
