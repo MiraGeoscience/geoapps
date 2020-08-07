@@ -7,10 +7,17 @@ dependencies:
   - python=3.7
   - git
   - pip
-  - simpeg
+  - simpeg=0.13.1
   - matplotlib
   - ipywidgets
+  - ipykernel
   - geopandas
   - scikit-image
-
-
+  - scikit-learn
+  - h5py
+  - zarr
+  - fsspec
+  - xarray
+  - pip:
+    - empymod
+    - geoh5py
