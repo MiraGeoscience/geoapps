@@ -24,3 +24,4 @@ dependencies:
     - geoapps
     - numpydoc
     - sphinx_issues
+    - nbsphinx
