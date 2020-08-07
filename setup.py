@@ -3,7 +3,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 CLASSIFIERS = [
-    "Development Status :: 1 - Beta",
+    "Development Status :: Pre-Alpha",
     "Intended Audience :: Industry",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
