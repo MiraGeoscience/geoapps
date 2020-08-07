@@ -2,6 +2,7 @@ import os
 import re
 import discretize
 import ipywidgets as widgets
+import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree
 from geoh5py.workspace import Workspace
@@ -9,7 +10,9 @@ from ipywidgets.widgets import HBox, VBox
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
+from .plotting import plot_plan_data_selection
 from .selection import object_data_selection_widget
+from .inversion import TopographyOptions
 from .utils import (
     export_curve_2_shapefile,
     export_grid_2_geotiff,
@@ -87,8 +90,25 @@ def export_widget(h5file):
                     if entity.get_data(key):
 
                         export_grid_2_geotiff(
-                            entity.get_data(key)[0], name, epsg_code.value,
+                            entity.get_data(key)[0],
+                            name,
+                            epsg_code.value,
+                            data_type=data_type.value,
                         )
+
+                        if data_type.value == "RGB":
+                            fig, ax = plt.figure(), plt.subplot()
+                            plt.gca().set_visible(False)
+                            (ax, im), _, _ = plot_plan_data_selection(
+                                entity, entity.get_data(key)[0], ax=ax
+                            )
+                            plt.colorbar(im, fraction=0.02)
+                            plt.savefig(
+                                out_dir + export_as.value + "_" + key + "_Colorbar.png",
+                                dpi=300,
+                                bbox_inches="tight",
+                            )
+
                         print(f"Object saved to {name}")
 
             elif file_type.value == "UBC format":
@@ -108,11 +128,12 @@ def export_widget(h5file):
                     mesh.writeUBC(out_dir + export_as.value + ".msh", models=models)
 
                 else:
+
                     mesh = discretize.TensorMesh(
                         [
                             np.abs(entity.u_cells),
                             np.abs(entity.v_cells),
-                            np.abs(entity.z_cells),
+                            np.abs(entity.z_cells[::-1]),
                         ]
                     )
 
@@ -141,8 +162,10 @@ def export_widget(h5file):
 
     def update_options(_):
 
-        if file_type.value in ["ESRI shapefile", "geotiff"]:
+        if file_type.value in ["ESRI shapefile"]:
             type_widget.children = [file_type, epsg_code]
+        elif file_type.value in ["geotiff"]:
+            type_widget.children = [file_type, VBox([epsg_code, data_type])]
         else:
             type_widget.children = [file_type]
 
@@ -152,6 +175,7 @@ def export_widget(h5file):
         description="Export type",
     )
 
+    data_type = widgets.RadioButtons(options=["float", "RGB",], description="Type:")
     no_data_value = widgets.FloatText(
         description="no-data-value",
         value=-99999,
@@ -250,10 +274,10 @@ def object_to_object_interpolation(h5file):
 
                 object_to = BlockModel.create(
                     workspace,
-                    origin=[mesh.x0[0], mesh.x0[1], mesh.x0[2] + mesh.hz.sum()],
+                    origin=[mesh.x0[0], mesh.x0[1], xyz_ref[:, 2].max()],
                     u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
                     v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-                    z_cell_delimiters=-(mesh.vectorNz - mesh.x0[2]),
+                    z_cell_delimiters=-(xyz_ref[:, 2].max() - mesh.vectorNz[::-1]),
                     name=new_grid.value,
                 )
 
@@ -346,16 +370,15 @@ def object_to_object_interpolation(h5file):
                             np.abs(xyz_out[:, 2] - xyz[ind, 2]) > max_depth.value
                         ] = no_data_value.value
 
-            if topography.value is not None:
-
-                topo_obj = workspace.get_entity(topography.value)[0]
+            if topo_options.options_button.value == "Object":
+                topo_obj = workspace.get_entity(topo_options.objects.value)[0]
                 if getattr(topo_obj, "vertices", None) is not None:
                     topo = topo_obj.vertices
                 else:
                     topo = topo_obj.centroids
 
-                if z_value.value != "Vertices":
-                    topo[:, 2] = topo_obj.get_data(z_value.value)[0].values
+                if topo_options.value.value != "Vertices":
+                    topo[:, 2] = topo_obj.get_data(topo_options.value.value)[0].values
 
                 xyz_out = object_to.centroids.copy()
                 F = LinearNDInterpolator(topo[:, :2], topo[:, 2])
@@ -369,11 +392,18 @@ def object_to_object_interpolation(h5file):
 
                 for key in values_interp.keys():
                     values_interp[key][xyz_out[:, 2] > z_interp] = no_data_value.value
+            elif (
+                topo_options.options_button.value == "Constant"
+                and topo_options.constant.value is not None
+            ):
+                xyz_out = object_to.centroids.copy()
+                for key in values_interp.keys():
+                    values_interp[key][
+                        xyz_out[:, 2] > topo_options.constant.value
+                    ] = no_data_value.value
 
             if xy_extent.value is not None:
-
                 xy_ref = workspace.get_entity(xy_extent.value)[0]
-
                 if hasattr(xy_ref, "centroids"):
                     xy_ref = xy_ref.centroids
                 elif hasattr(xy_ref, "vertices"):
@@ -388,7 +418,6 @@ def object_to_object_interpolation(h5file):
                 object_to.add_data({key + "_interp": {"values": values_interp[key]}})
 
             interpolate.value = False
-
             workspace.finalize()
 
     workspace = Workspace(h5file)
@@ -409,6 +438,11 @@ def object_to_object_interpolation(h5file):
         description="XY Extent from:",
         style={"description_width": "initial"},
     )
+
+    def object_pick(_):
+        ref_dropdown.value = objects.value
+
+    objects.observe(object_pick)
 
     new_grid = widgets.Text(
         value="InterpGrid",
@@ -463,13 +497,13 @@ def object_to_object_interpolation(h5file):
     )
 
     max_distance = widgets.FloatText(
-        value=0,
+        value=1e3,
         description="Maximum distance XY (m)",
         style={"description_width": "initial"},
     )
 
     max_depth = widgets.FloatText(
-        value=0,
+        value=1e3,
         description="Maximum distance Z (m)",
         style={"description_width": "initial"},
     )
@@ -504,8 +538,12 @@ def object_to_object_interpolation(h5file):
 
     interpolate.observe(interpolate_call)
 
-    topography, z_value = object_data_selection_widget(h5file)
-    z_value.options = list(z_value.options) + ["Vertices"]
+    topo_options = TopographyOptions(h5file)
+    topo_options.offset.disabled = True
+    topo_options.options_button.options = ["Object", "Constant", "None"]
+    topo_options.options_button.value = "Object"
+    # topography, z_value = object_data_selection_widget(h5file)
+    # z_value.options = list(z_value.options) + ["Vertices"]
 
     xy_extent = widgets.Dropdown(
         options=[None] + names,
@@ -546,7 +584,7 @@ def object_to_object_interpolation(h5file):
                     no_data_value,
                     max_distance,
                     max_depth,
-                    VBox([widgets.Label("Cut with topo"), topography, z_value]),
+                    VBox([widgets.Label("Cut with topo"), topo_options.widget]),
                     xy_extent,
                 ]
             ),

@@ -284,6 +284,7 @@ class TopographyOptions(Widget):
             "Object": self._panel,
             "Drape Height": self._offset,
             "Constant": self._constant,
+            "None": widgets.Label("No topography"),
         }
         self._options_button = widgets.RadioButtons(
             options=["Object", "Drape Height", "Constant"], description="Define by:",
@@ -308,6 +309,10 @@ class TopographyOptions(Widget):
     @property
     def panel(self):
         return self._panel
+
+    @property
+    def constant(self):
+        return self._constant
 
     @property
     def objects(self):
@@ -799,6 +804,9 @@ def plot_convergence_curve(h5file):
 
 
 def inversion_widgets(h5file, **kwargs):
+    dir_path = os.path.dirname(os.path.realpath(os.path.realpath(__file__)))
+    with open(os.path.join(dir_path, "AEM_systems.json")) as aem_systems:
+        em_system_specs = json.load(aem_systems)
 
     # Load all known em systems
     widget_list = {
@@ -843,6 +851,10 @@ def inversion_widgets(h5file, **kwargs):
             value=False, description="Run SimPEG", button_style="danger", icon="check"
         ),
         "starting_channel": widgets.IntText(value=None, description="Starting Channel"),
+        "system": Dropdown(
+            options=["Magnetics", "Gravity"] + list(em_system_specs.keys()),
+            description="Survey Type: ",
+        ),
         "width_x": widgets.FloatSlider(
             min=np.inf,
             max=np.inf,
@@ -923,15 +935,9 @@ def inversion_app(h5file, **kwargs):
         em_system_specs = json.load(aem_systems)
 
     w_l = inversion_widgets(h5file, **kwargs)
-
-    system = Dropdown(
-        options=["Magnetics", "Gravity"] + list(em_system_specs.keys()),
-        description="Survey Type: ",
-    )
+    system = w_l["system"]
     defaults = inversion_defaults()
-
     workspace = Workspace(h5file)
-
     o_d = ObjectDataOptions(h5file)
 
     all_obj = [
@@ -1464,7 +1470,7 @@ def inversion_app(h5file, **kwargs):
                 corners = rotate_xy(corners, [0, 0], -azimuth)
                 ax1.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
 
-                _, indices, line_selection = plot_plan_data_selection(
+                _, _, indices, line_selection = plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{
@@ -1506,7 +1512,6 @@ def inversion_app(h5file, **kwargs):
     marker_size = widgets.IntSlider(
         min=1, max=100, value=3, description="Markers", continuous_update=False,
     )
-
     plot_window = widgets.interactive_output(
         plot_selection,
         {
@@ -1523,7 +1528,6 @@ def inversion_app(h5file, **kwargs):
             "marker_size": marker_size,
         },
     )
-
     selection_panel = VBox(
         [
             Label("Window & Downsample"),
@@ -1552,7 +1556,6 @@ def inversion_app(h5file, **kwargs):
         layout=Layout(width="50%"),
     )
 
-    # Inversion options
     def write_unclick(_):
         if w_l["write"].value is False:
             return
@@ -1713,8 +1716,10 @@ def inversion_app(h5file, **kwargs):
                         "data": topography.value.value,
                     }
                 }
-        else:
+        elif topography.options_button.value == "Drape Height":
             input_dict["topography"] = {"drapped": topography.offset.value}
+        else:
+            input_dict["topography"] = {"constant": topography.constant.value}
 
         if w_l["forward_only"].value:
             input_dict["forward_only"] = []
