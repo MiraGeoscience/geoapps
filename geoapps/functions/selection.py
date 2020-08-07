@@ -19,9 +19,9 @@ class LineOptions(Widget):
         _, self._value = object_data_selection_widget(h5file, objects=objects.value)
 
         if select_multiple:
-            self._lines = widgets.SelectMultiple(description="Select data:",)
+            self._lines = widgets.SelectMultiple(description="Select lines:",)
         else:
-            self._lines = widgets.Dropdown(description="Select data:",)
+            self._lines = widgets.Dropdown(description="Select line:",)
 
         self._value.description = "Lines field"
         self._value.style = {"description_width": "initial"}
@@ -124,7 +124,9 @@ def object_data_selection_widget(
 
         if workspace.get_entity(objects.value):
             obj = workspace.get_entity(objects.value)[0]
-            data.options = obj.get_data_list()
+            data.options = [
+                name for name in obj.get_data_list() if name != "Visual Parameters"
+            ]
 
             if add_groups and obj.property_groups:
                 data.options = (

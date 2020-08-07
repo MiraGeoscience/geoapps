@@ -3,8 +3,12 @@ Geophysical inversion (SimPEG)
 
 This application lets users invert geophysical data with the open-source
 `SimPEG <https://simpeg.xyz/>`_ inversion framework. The application currently
-supports gravity/magnetics (field and tensor) and electromagnetic (stitched
-1D). More details for the different menu options are provided below.
+supports:
+
+- Gravity and magnetic (field and/or tensor) data on Octree mesh
+- Electromagnetic (time or frequency) line data. Inverted with Laterally Constrained 1D algorithm.
+
+More details for the different menu options are provided below.
 
 .. figure:: ./images/Geophysical_inversion_app.png
         :align: center
@@ -280,7 +284,7 @@ supports gravity/magnetics (field and tensor) and electromagnetic (stitched
             widgets = InversionOptions(h5file)
             widgets.starting_model.options.value = "Model"
             widgets.starting_model.options.disabled = True
-            widgets.starting_model.list.value = "OctreeModel_con"
+            widgets.starting_model.list.value = "VTEM_model"
             widgets.starting_model.widget
      - Model values selected from any Surface, BlockModel or Octree object
 
@@ -307,7 +311,7 @@ supports gravity/magnetics (field and tensor) and electromagnetic (stitched
             widgets = InversionOptions(h5file)
             widgets.susceptibility_model.options.value = "Model"
             widgets.susceptibility_model.options.disabled = True
-            widgets.susceptibility_model.list.value = "OctreeModel_sus"
+            widgets.susceptibility_model.list.value = "VTEM_model"
             widgets.susceptibility_model.widget
      - Model values selected from any Surface, BlockModel or Octree object
 
@@ -359,7 +363,7 @@ supports gravity/magnetics (field and tensor) and electromagnetic (stitched
             widgets = InversionOptions(h5file)
             widgets.reference_model.options.value = "Model"
             widgets.reference_model.options.disabled = True
-            widgets.reference_model.list.value = "OctreeModel_sus"
+            widgets.reference_model.list.value = "VTEM_model"
             widgets.reference_model.widget
      - Model values selected from any Surface, BlockModel or Octree object
 

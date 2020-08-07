@@ -27,7 +27,7 @@ from geoh5py.objects import Grid2D, Octree, Points
 from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
 from scipy.spatial import Delaunay, cKDTree
-from utils import filter_xy
+from geoapps.functions.utils import filter_xy
 from simpegPF import (
     PF,
     DataMisfit,
