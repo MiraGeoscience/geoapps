@@ -23,3 +23,4 @@ dependencies:
     - geoh5py
     - geoapps
     - numpydoc
+    - sphinx_issues
