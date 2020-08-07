@@ -9,10 +9,10 @@ from geoh5py.objects import BlockModel, Curve, Grid2D, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import Dropdown, HBox, Label, Layout, Text, VBox
 
-from .base import Widget
-from .plotting import plot_plan_data_selection
-from .utils import find_value, rotate_xy
-from .selection import object_data_selection_widget, LineOptions
+from geoapps.functions.base import Widget
+from geoapps.functions.plotting import plot_plan_data_selection
+from geoapps.functions.utils import find_value, rotate_xy
+from geoapps.functions.selection import object_data_selection_widget, LineOptions
 
 
 class ChannelOptions(Widget):

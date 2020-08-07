@@ -19,7 +19,7 @@ from SimPEG import (
     Optimization,
     Utils,
 )
-from simpegEM1D import (
+from geoapps.functions.simpegEM1D import (
     GlobalEM1DProblemFD,
     GlobalEM1DProblemTD,
     GlobalEM1DSurveyFD,
@@ -27,7 +27,7 @@ from simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from utils import filter_xy, rotate_xy
+from geoapps.functions.utils import filter_xy, rotate_xy
 
 
 class SaveIterationsGeoH5(Directives.InversionDirective):

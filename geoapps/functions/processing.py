@@ -15,18 +15,17 @@ from geoh5py.workspace import Workspace
 from ipywidgets.widgets import HBox, Label, Layout, VBox
 from scipy.interpolate import LinearNDInterpolator, interp1d
 from scipy.spatial import cKDTree, Delaunay
-from scipy.ndimage import uniform_filter
 from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line, resize
+from skimage.transform import probabilistic_hough_line
 
-from .plotting import format_labels
-from .inversion import TopographyOptions
-from .selection import (
+from geoapps.functions.plotting import format_labels
+from geoapps.functions.inversion import TopographyOptions
+from geoapps.functions.selection import (
     object_data_selection_widget,
     plot_plan_data_selection,
     LineOptions,
 )
-from .utils import (
+from geoapps.functions.utils import (
     filter_xy,
     export_grid_2_geotiff,
     geotiff_2_grid,
