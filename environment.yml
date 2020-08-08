@@ -25,3 +25,4 @@ dependencies:
     - numpydoc
     - sphinx_issues
     - nbsphinx
+    - jupyter_sphinx
