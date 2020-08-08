@@ -9,4 +9,6 @@ the creation of application to the usage of existing ones.
    :maxdepth: 2
 
    apps/create_contours.rst
-   apps/geophysical_inversion.rst
+
+
+.. apps/geophysical_inversion.rst
