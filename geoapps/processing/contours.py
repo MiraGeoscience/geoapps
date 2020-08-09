@@ -9,8 +9,8 @@ from geoh5py.workspace import Workspace
 from ipywidgets.widgets import HBox, Label, Layout, VBox
 from scipy.interpolate import LinearNDInterpolator
 
-from geoapps.functions.plotting import format_labels
-from geoapps.functions.selection import object_data_selection_widget
+from geoapps.plotting import format_labels
+from geoapps.selection import object_data_selection_widget
 
 
 def contour_values_widget(h5file, **kwargs):

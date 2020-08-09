@@ -5,7 +5,7 @@ import numpy as np
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import Dropdown, HBox, VBox
-from geoapps.functions.utils import filter_xy
+from geoapps.utils import filter_xy
 
 
 def plot_profile_data_selection(

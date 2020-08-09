@@ -1,7 +1,6 @@
 import re
 import os
 import time
-import json
 
 import ipywidgets as widgets
 import matplotlib.colors as colors
@@ -17,15 +16,15 @@ from scipy.interpolate import LinearNDInterpolator, interp1d
 from scipy.spatial import cKDTree, Delaunay
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
-
-from geoapps.functions.plotting import format_labels
-from geoapps.functions.inversion import TopographyOptions
-from geoapps.functions.selection import (
+from geoapps import utils
+from geoapps.plotting import format_labels
+from geoapps.inversion import TopographyOptions
+from geoapps.selection import (
     object_data_selection_widget,
     plot_plan_data_selection,
     LineOptions,
 )
-from geoapps.functions.utils import (
+from geoapps.utils import (
     filter_xy,
     export_grid_2_geotiff,
     geotiff_2_grid,
@@ -1378,11 +1377,7 @@ class EMLineProfiling:
     def __init__(self, h5file):
 
         self.workspace = Workspace(h5file)
-
-        dir_path = os.path.dirname(os.path.realpath(os.path.realpath(__file__)))
-        with open(os.path.join(dir_path, "AEM_systems.json")) as aem_systems:
-            self.em_system_specs = json.load(aem_systems)
-
+        self.em_system_specs = utils.geophysical_systems.parameters()
         self.system = widgets.Dropdown(
             options=[
                 key

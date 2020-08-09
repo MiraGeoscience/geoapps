@@ -9,10 +9,10 @@ from geoh5py.objects import BlockModel, Curve, Grid2D, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import Dropdown, HBox, Label, Layout, Text, VBox
 
-from geoapps.functions.base import Widget
-from geoapps.functions.plotting import plot_plan_data_selection
-from geoapps.functions.utils import find_value, rotate_xy
-from geoapps.functions.selection import object_data_selection_widget, LineOptions
+from geoapps.base import Widget
+from geoapps.plotting import plot_plan_data_selection
+from geoapps.utils import find_value, rotate_xy, geophysical_systems
+from geoapps.selection import object_data_selection_widget, LineOptions
 
 
 class ChannelOptions(Widget):
@@ -804,9 +804,8 @@ def plot_convergence_curve(h5file):
 
 
 def inversion_widgets(h5file, **kwargs):
-    dir_path = os.path.dirname(os.path.realpath(os.path.realpath(__file__)))
-    with open(os.path.join(dir_path, "AEM_systems.json")) as aem_systems:
-        em_system_specs = json.load(aem_systems)
+
+    em_system_specs = geophysical_systems.parameters()
 
     # Load all known em systems
     widget_list = {
@@ -930,9 +929,7 @@ def string_2_list(string):
 def inversion_app(h5file, **kwargs):
 
     # Load all known em systems
-    dir_path = os.path.dirname(os.path.realpath(os.path.realpath(__file__)))
-    with open(os.path.join(dir_path, "AEM_systems.json")) as aem_systems:
-        em_system_specs = json.load(aem_systems)
+    em_system_specs = geophysical_systems.parameters()
 
     w_l = inversion_widgets(h5file, **kwargs)
     system = w_l["system"]
@@ -962,14 +959,14 @@ def inversion_app(h5file, **kwargs):
             if system.value in ["Gravity", "Magnetics"]:
                 os.system(
                     "start cmd.exe @cmd /k "
-                    + 'python functions/pf_inversion.py "'
+                    + 'python -m geoapps.pf_inversion "'
                     + inv_dir
                     + f'\\{inversion_parameters.output_name.value}.json"'
                 )
             else:
                 os.system(
                     "start cmd.exe @cmd /k "
-                    + 'python functions/em1d_inversion.py "'
+                    + 'python -m geoapps.em1d_inversion "'
                     + inv_dir
                     + f'\\{inversion_parameters.output_name.value}.json"'
                 )

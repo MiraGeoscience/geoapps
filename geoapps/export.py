@@ -10,10 +10,10 @@ from ipywidgets.widgets import HBox, VBox
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
-from geoapps.functions.plotting import plot_plan_data_selection
-from geoapps.functions.selection import object_data_selection_widget
-from geoapps.functions.inversion import TopographyOptions
-from geoapps.functions.utils import (
+from geoapps.plotting import plot_plan_data_selection
+from geoapps.selection import object_data_selection_widget
+from geoapps.inversion import TopographyOptions
+from geoapps.utils import (
     export_curve_2_shapefile,
     export_grid_2_geotiff,
     object_2_dataframe,
