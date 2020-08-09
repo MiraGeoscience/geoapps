@@ -7,9 +7,9 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Surface
 from geoh5py.workspace import Workspace
 
-from geoapps.functions.selection import object_data_selection_widget
-from geoapps.functions.simpegPF import PF, Maps, Utils
-from geoapps.functions.utils import RectangularBlock, tensor_2_block_model
+from geoapps.selection import object_data_selection_widget
+from geoapps.simpegPF import PF, Maps, Utils
+from geoapps.utils import RectangularBlock, tensor_2_block_model
 
 
 def block_model_widget(h5file, inducing_field="50000, 90, 0"):

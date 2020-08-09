@@ -19,7 +19,7 @@ from SimPEG import (
     Optimization,
     Utils,
 )
-from geoapps.functions.simpegEM1D import (
+from .simpegEM1D import (
     GlobalEM1DProblemFD,
     GlobalEM1DProblemTD,
     GlobalEM1DSurveyFD,
@@ -27,7 +27,7 @@ from geoapps.functions.simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from geoapps.functions.utils import filter_xy, rotate_xy
+from .utils import filter_xy, rotate_xy, geophysical_systems
 
 
 class SaveIterationsGeoH5(Directives.InversionDirective):
@@ -175,8 +175,7 @@ def inversion(input_file):
     with open(input_file) as f:
         input_param = json.load(f)
 
-    with open("functions/AEM_systems.json") as f:
-        em_specs = json.load(f)[input_param["system"]]
+    em_specs = geophysical_systems.parameters()[input_param["system"]]
 
     nThread = int(multiprocessing.cpu_count() / 2)
     lower_bound = input_param["lower_bound"][0]

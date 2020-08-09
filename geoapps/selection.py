@@ -3,9 +3,9 @@ from geoh5py.workspace import Workspace
 import ipywidgets as widgets
 from ipywidgets import Dropdown, HBox, SelectMultiple, VBox, interactive_output
 
-from geoapps.functions.plotting import plot_plan_data_selection
-from geoapps.functions.base import Widget
-from geoapps.functions.utils import find_value
+from geoapps.plotting import plot_plan_data_selection
+from geoapps.base import Widget
+from geoapps.utils import find_value
 
 
 class LineOptions(Widget):

@@ -27,8 +27,8 @@ from geoh5py.objects import Grid2D, Octree, Points
 from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
 from scipy.spatial import Delaunay, cKDTree
-from geoapps.functions.utils import filter_xy
-from geoapps.functions.simpegPF import (
+from geoapps.utils import filter_xy
+from geoapps.simpegPF import (
     PF,
     DataMisfit,
     Directives,
@@ -40,7 +40,7 @@ from geoapps.functions.simpegPF import (
     Regularization,
     Utils,
 )
-from geoapps.functions.simpegPF.Utils import matutils, mkvc
+from geoapps.simpegPF.Utils import matutils, mkvc
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
