@@ -18,9 +18,9 @@ With this application, users can create contours from data using the `matplotlib
     :hide-code:
 
     from shutil import copyfile
-    from geoapps.functions.processing import contour_values_widget
+    from geoapps.processing import contour_values_widget
 
-    my_h5file = r"../geoapps/assets/FlinFlon.geoh5"
+    my_h5file = r"../assets/FlinFlon.geoh5"
 
     # Lets create a working copy
     new_file = my_h5file[:-6] + "_work.geoh5"

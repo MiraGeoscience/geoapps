@@ -64,11 +64,6 @@ class LineOptions(Widget):
                     entity.get_data(self._value.value)[0].values
                 ).tolist()
 
-                # if self._lines.options[1]:
-                #     self._lines.value = [self._lines.options[1]]
-                # if self._lines.options[0]:
-                #     self._lines.value = [self._lines.options[0]]
-
     def update_lines(self):
         if self._objects.value is not None:
 
@@ -78,11 +73,6 @@ class LineOptions(Widget):
                 self._lines.options = [""] + np.unique(
                     entity.get_data(self._value.value)[0].values
                 ).tolist()
-
-                # if self._lines.options[1]:
-                #     self._lines.value = [self._lines.options[1]]
-                # if self._lines.options[0]:
-                #     self._lines.value = [self._lines.options[0]]
 
     @property
     def value(self):

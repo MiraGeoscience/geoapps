@@ -25,18 +25,18 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ObjectDataOptions
+            from geoapps.inversion import ObjectDataOptions
             ObjectDataOptions(
-                 r"../geoapps/assets/FlinFlon.geoh5",
+                 r"../assets/FlinFlon.geoh5",
                  objects="Data_FEM_pseudo3D"
             ).objects
      - List of objects present in the target geoh5 file.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ObjectDataOptions
+            from geoapps.inversion import ObjectDataOptions
             widget = ObjectDataOptions(
-                 r"../geoapps/assets/FlinFlon.geoh5",
+                 r"../assets/FlinFlon.geoh5",
                  objects="Data_FEM_pseudo3D"
             ).data_channels
             widget.value = ["CPI900"]
@@ -47,8 +47,8 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import inversion_widgets
-            inversion_widgets(r"../geoapps/assets/FlinFlon.geoh5", system="DIGHEM")['system']
+            from geoapps.inversion import inversion_widgets
+            inversion_widgets(r"../assets/FlinFlon.geoh5", system="DIGHEM")['system']
      - List of available survey types.
 
        The application will attempt to assign the *Survey Type* based on
@@ -57,9 +57,9 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import inversion_widgets
+            from geoapps.inversion import inversion_widgets
             inversion_widgets(
-                r"../geoapps/assets/FlinFlon.geoh5",
+                r"../assets/FlinFlon.geoh5",
                 inducing_field="58500, 78, 18.5"
             )["inducing_field"]
 
@@ -74,7 +74,7 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ChannelOptions
+            from geoapps.inversion import ChannelOptions
             app = ChannelOptions("DIGHEM", "Frequency (Hz)")
             app.active.value=True
             app.active
@@ -82,7 +82,7 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ChannelOptions
+            from geoapps.inversion import ChannelOptions
             app = ChannelOptions("DIGHEM", "Frequency (Hz)")
             app.label.value = "900"
             app.label
@@ -92,7 +92,7 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ChannelOptions
+            from geoapps.inversion import ChannelOptions
             app = ChannelOptions("DIGHEM", "Frequency (Hz)")
             app.channel_selection.options = ["CPI56k", "CPI7000", "CPI900", "CPQ56k", "CPQ7000", "CPQ900"]
             app.channel_selection.value  = "CPI900"
@@ -101,7 +101,7 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ChannelOptions
+            from geoapps.inversion import ChannelOptions
             app = ChannelOptions("DIGHEM", "Frequency (Hz)")
             app.uncertainties.value="0, 4"
             app.uncertainties
@@ -109,7 +109,7 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ChannelOptions, ObjectDataOptions
+            from geoapps.inversion import ChannelOptions, ObjectDataOptions
             app = ChannelOptions("DIGHEM", "Frequency (Hz)")
             app.offsets.value="8, 0, 0"
             app.offsets
@@ -127,9 +127,9 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import TopographyOptions
+            from geoapps.inversion import TopographyOptions
             app = TopographyOptions(
-                r"../geoapps/assets/FlinFlon.geoh5",
+                r"../assets/FlinFlon.geoh5",
                 objects="Topography", value="Vertices"
             )
             app.options_button.value="Object"
@@ -142,9 +142,9 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import TopographyOptions
+            from geoapps.inversion import TopographyOptions
             app = TopographyOptions(
-                r"../geoapps/assets/FlinFlon.geoh5",
+                r"../assets/FlinFlon.geoh5",
                 objects="Topography", value="Vertices"
             )
             app.options_button.value="Drape Height"
@@ -156,9 +156,9 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import TopographyOptions
+            from geoapps.inversion import TopographyOptions
             app = TopographyOptions(
-                r"../geoapps/assets/FlinFlon.geoh5",
+                r"../assets/FlinFlon.geoh5",
                 objects="Topography", value="Vertices"
             )
             app.options_button.value="Constant"
@@ -171,8 +171,8 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ObjectDataOptions, SensorOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import ObjectDataOptions, SensorOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             obj = ObjectDataOptions(
                  h5file,
                  objects="Data_FEM_pseudo3D"
@@ -188,8 +188,8 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ObjectDataOptions, SensorOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import ObjectDataOptions, SensorOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             obj = ObjectDataOptions(
                  h5file,
                  objects="Data_FEM_pseudo3D"
@@ -213,8 +213,8 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import ObjectDataOptions, LineOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import ObjectDataOptions, LineOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             obj = ObjectDataOptions(
                  h5file,
                  objects="Data_FEM_pseudo3D"
@@ -232,8 +232,8 @@ More details for the different menu options are provided below.
         .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.option_choices
 
@@ -243,8 +243,8 @@ More details for the different menu options are provided below.
         .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.output_name
      - Name given to the inversion group added to the ANALYST project.
@@ -253,8 +253,8 @@ More details for the different menu options are provided below.
         .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.chi_factor
      - Target data misfit where 1 = number of data
@@ -263,8 +263,8 @@ More details for the different menu options are provided below.
         .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.uncert_mode
      - *Estimated*: Calculate uncertainty floor values based on the fields of the
@@ -279,8 +279,8 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.starting_model.options.value = "Model"
             widgets.starting_model.options.disabled = True
@@ -292,8 +292,8 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.starting_model.options.value = "Value"
             widgets.starting_model.value.value = 1e-4
@@ -306,8 +306,8 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.susceptibility_model.options.value = "Model"
             widgets.susceptibility_model.options.disabled = True
@@ -319,8 +319,8 @@ More details for the different menu options are provided below.
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.susceptibility_model.options.value = "Value"
             widgets.susceptibility_model.value.value = 1e-4
@@ -334,8 +334,8 @@ More details for the different menu options are provided below.
        .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.reference_model.options.value = "None"
             widgets.reference_model.options.disabled = True
@@ -346,8 +346,8 @@ More details for the different menu options are provided below.
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.reference_model.options.value = "Best-fitting halfspace"
             widgets.reference_model.options.disabled = True
@@ -358,8 +358,8 @@ More details for the different menu options are provided below.
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.reference_model.options.value = "Model"
             widgets.reference_model.options.disabled = True
@@ -371,8 +371,8 @@ More details for the different menu options are provided below.
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.reference_model.options.value = "Value"
             widgets.reference_model.options.disabled = True
@@ -384,8 +384,8 @@ More details for the different menu options are provided below.
        .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.alphas
 
@@ -395,8 +395,8 @@ More details for the different menu options are provided below.
        .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.norms
 
@@ -410,42 +410,42 @@ More details for the different menu options are provided below.
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import OctreeMeshOptions
+            from geoapps.inversion import OctreeMeshOptions
             widgets = OctreeMeshOptions()
             widgets.core_cell_size
      - Dimensions (x,y,z) of the smallest octree cells.
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import OctreeMeshOptions
+            from geoapps.inversion import OctreeMeshOptions
             widgets = OctreeMeshOptions()
             widgets.octree_levels_topo
      - Number of layers of cells at each octree level below the topography surface.
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import OctreeMeshOptions
+            from geoapps.inversion import OctreeMeshOptions
             widgets = OctreeMeshOptions()
             widgets.octree_levels_obs
      - Number of layers of cells at each octree level below the observation points.
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import OctreeMeshOptions
+            from geoapps.inversion import OctreeMeshOptions
             widgets = OctreeMeshOptions()
             widgets.depth_core
      - Minimum depth (m) of the mesh, rounded up to the next power of 2.
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import OctreeMeshOptions
+            from geoapps.inversion import OctreeMeshOptions
             widgets = OctreeMeshOptions()
             widgets.padding_distance
      - Additional padding distance (m) along West, East, North, South, Down and Up.
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import OctreeMeshOptions
+            from geoapps.inversion import OctreeMeshOptions
             widgets = OctreeMeshOptions()
             widgets.max_distance
      - Maximum interpolation distance between the observation points.
@@ -456,8 +456,8 @@ More details for the different menu options are provided below.
         .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.lower_bound.value = "1e-5"
             widgets.upper_bound.value = "1e-1"
@@ -470,8 +470,8 @@ More details for the different menu options are provided below.
         .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.ignore_values
      - Ignore data points with dummy values OR outside a threshold value.
@@ -482,8 +482,8 @@ More details for the different menu options are provided below.
         .. jupyter-execute::
             :hide-code:
 
-            from geoapps.functions.inversion import InversionOptions
-            h5file = r"../geoapps/assets/FlinFlon.geoh5"
+            from geoapps.inversion import InversionOptions
+            h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file)
             widgets.max_iterations
      - Maximum number of :math:`\beta`-iterations allowed.
