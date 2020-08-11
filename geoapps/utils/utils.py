@@ -1111,6 +1111,26 @@ def get_blob_indices(index, shape, model, threshold, blob_indices=[]):
     return blob_indices
 
 
+def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
+    if labels is None:
+        axs.set_ylabel("Northing (m)")
+        axs.set_xlabel("Easting (m)")
+    else:
+        axs.set_xlabel(labels[0])
+        axs.set_ylabel(labels[1])
+    xticks = np.linspace(x.min(), x.max(), 5)
+    yticks = np.linspace(y.min(), y.max(), 5)
+
+    axs.set_yticks(yticks)
+    axs.set_yticklabels(
+        [tick_format % y for y in yticks.tolist()], rotation=90, va="center"
+    )
+    axs.set_xticks(xticks)
+    axs.set_xticklabels([tick_format % x for x in xticks.tolist()], va="center")
+    axs.autoscale(tight=True)
+    axs.set_aspect(aspect)
+
+
 # def refine_cells(self, indices):
 #     """
 #

@@ -11,7 +11,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.plotting import plot_plan_data_selection
-from geoapps.selection import object_data_selection_widget
+from geoapps.selection import ObjectDataSelection
 from geoapps.inversion import TopographyOptions
 from geoapps.utils import (
     export_curve_2_shapefile,
@@ -39,13 +39,13 @@ def export_widget(h5file):
 
             export.value = False  # Reset button
 
-            entity = workspace.get_entity(objects.value)[0]
+            entity = workspace.get_entity(selection.objects.value)[0]
 
-            if data.value:
+            if selection.data.value:
 
                 data_values = {}
 
-                for key in data.value:
+                for key in selection.data.value:
                     if entity.get_data(key):
                         data_values[key] = entity.get_data(key)[0].values.copy()
                         data_values[key][
@@ -64,8 +64,8 @@ def export_widget(h5file):
                     entity, Curve
                 ), f"Only Curve objects are support for type {file_type.value}"
 
-                if data.value:
-                    for key in data.value:
+                if selection.data.value:
+                    for key in selection.data.value:
                         out_name = re.sub(
                             "[^0-9a-zA-Z]+", "_", export_as.value + "_" + key
                         )
@@ -85,7 +85,7 @@ def export_widget(h5file):
 
             elif file_type.value == "geotiff":
 
-                for key in data.value:
+                for key in selection.data.value:
                     name = out_dir + export_as.value + "_" + key + ".tif"
                     if entity.get_data(key):
 
@@ -99,7 +99,7 @@ def export_widget(h5file):
                         if data_type.value == "RGB":
                             fig, ax = plt.figure(), plt.subplot()
                             plt.gca().set_visible(False)
-                            (ax, im), _, _ = plot_plan_data_selection(
+                            (ax, im), _, _, _ = plot_plan_data_selection(
                                 entity, entity.get_data(key)[0], ax=ax
                             )
                             plt.colorbar(im, fraction=0.02)
@@ -188,12 +188,12 @@ def export_widget(h5file):
 
     file_type.observe(update_options)
 
-    objects, data = object_data_selection_widget(h5file, select_multiple=True)
+    selection = ObjectDataSelection(h5file, select_multiple=True)
 
     def update_name(_):
-        export_as.value = objects.value.replace(":", "_")
+        export_as.value = selection.objects.value.replace(":", "_")
 
-    objects.observe(update_name, names="value")
+    selection.objects.observe(update_name, names="value")
     export = widgets.ToggleButton(
         value=False,
         description="Export",
@@ -205,9 +205,14 @@ def export_widget(h5file):
     export.observe(save_selection, names="value")
 
     export_as = widgets.Text(
-        value=objects.value, description="Save as:", indent=False, disabled=False
+        value=selection.objects.value,
+        description="Save as:",
+        indent=False,
+        disabled=False,
     )
-    return VBox([objects, HBox([data, no_data_value]), type_widget, export_as, export])
+    return VBox(
+        [HBox([selection.widget, no_data_value]), type_widget, export_as, export]
+    )
 
 
 def object_to_object_interpolation(h5file):
@@ -224,7 +229,7 @@ def object_to_object_interpolation(h5file):
 
         if interpolate.value:
 
-            object_from = workspace.get_entity(objects.value)[0]
+            object_from = workspace.get_entity(selection.objects.value)[0]
 
             if hasattr(object_from, "centroids"):
                 xyz = object_from.centroids.copy()
@@ -293,7 +298,7 @@ def object_to_object_interpolation(h5file):
                 xyz_out = object_to.centroids.copy()
 
             values = {}
-            for field in data.value:
+            for field in selection.data.value:
                 model_in = object_from.get_data(field)[0]
                 values[field] = model_in.values.copy()
 
@@ -424,7 +429,7 @@ def object_to_object_interpolation(h5file):
 
     names = list(workspace.list_objects_name.values())
 
-    objects, data = object_data_selection_widget(h5file, select_multiple=True)
+    selection = ObjectDataSelection(h5file, select_multiple=True)
 
     out_mode = widgets.RadioButtons(
         options=["To Object:", "Create 3D Grid"], value="To Object:", disabled=False
@@ -440,9 +445,9 @@ def object_to_object_interpolation(h5file):
     )
 
     def object_pick(_):
-        ref_dropdown.value = objects.value
+        ref_dropdown.value = selection.objects.value
 
-    objects.observe(object_pick)
+    selection.objects.observe(object_pick)
 
     new_grid = widgets.Text(
         value="InterpGrid",
@@ -542,7 +547,7 @@ def object_to_object_interpolation(h5file):
     topo_options.offset.disabled = True
     topo_options.options_button.options = ["Object", "Constant", "None"]
     topo_options.options_button.value = "Object"
-    # topography, z_value = object_data_selection_widget(h5file)
+    # topography, z_value = ObjectDataSelection(h5file)
     # z_value.options = list(z_value.options) + ["Vertices"]
 
     xy_extent = widgets.Dropdown(
@@ -568,7 +573,7 @@ def object_to_object_interpolation(h5file):
         [
             HBox(
                 [
-                    VBox([widgets.Label("Input"), objects, data]),
+                    VBox([widgets.Label("Input"), selection.widget]),
                     VBox([widgets.Label("Output"), out_panel]),
                 ]
             ),
