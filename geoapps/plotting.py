@@ -35,24 +35,8 @@ class PlotSelection2D(Widget):
     """
 
     def __init__(self, h5file, **kwargs):
-
-        self.workspace = Workspace(h5file)
-
-        self.selection = ObjectDataSelection(h5file)
-        self.objects = self.selection.objects
-
-        self.center_x = FloatSlider(
-            min=-100, max=100, steps=10, description="Easting", continuous_update=False,
-        )
-        self.center_y = FloatSlider(
-            min=-100,
-            max=100,
-            steps=10,
-            description="Northing",
-            continuous_update=False,
-            orientation="vertical",
-        )
-        self.azimuth = FloatSlider(
+        self.selection = ObjectDataSelection(h5file, **kwargs)
+        self._azimuth = FloatSlider(
             min=-90,
             max=90,
             value=0,
@@ -60,7 +44,25 @@ class PlotSelection2D(Widget):
             description="Orientation",
             continuous_update=False,
         )
-        self.width_x = FloatSlider(
+        self._center_x = FloatSlider(
+            min=-100, max=100, steps=10, description="Easting", continuous_update=False,
+        )
+        self._center_y = FloatSlider(
+            min=-100,
+            max=100,
+            steps=10,
+            description="Northing",
+            continuous_update=False,
+            orientation="vertical",
+        )
+        self._contours = widgets.Text(
+            value="", description="Contours", disabled=False, continuous_update=False,
+        )
+        self._data_count = Label("Data Count: 0", tooltip="Keep <1500 for speed")
+        self._resolution = FloatText(
+            description="Grid Resolution (m)", style={"description_width": "initial"},
+        )
+        self._width = FloatSlider(
             min=0,
             max=100,
             steps=10,
@@ -68,7 +70,7 @@ class PlotSelection2D(Widget):
             description="Width",
             continuous_update=False,
         )
-        self.width_y = FloatSlider(
+        self._height = FloatSlider(
             min=0,
             max=100,
             steps=10,
@@ -77,27 +79,11 @@ class PlotSelection2D(Widget):
             continuous_update=False,
             orientation="vertical",
         )
-        self.resolution = FloatText(
-            description="Grid Resolution (m)", style={"description_width": "initial"},
-        )
-        self.data_count = Label("Data Count: 0", tooltip="Keep <1500 for speed")
-        self.zoom_extent = ToggleButton(
+        self._zoom_extent = ToggleButton(
             value=True,
             description="Zoom on selection",
             tooltip="Keep plot extent on selection",
             icon="check",
-        )
-
-        if "contours" in kwargs.keys():
-            contours = kwargs["contours"]
-        else:
-            contours = ""
-
-        self.contours = widgets.Text(
-            value=contours,
-            description="Contours",
-            disabled=False,
-            continuous_update=False,
         )
 
         def set_bounding_box(_):
@@ -111,8 +97,8 @@ class PlotSelection2D(Widget):
             resolution,
             center_x,
             center_y,
-            width_x,
-            width_y,
+            width,
+            height,
             azimuth,
             zoom_extent,
             contours,
@@ -123,8 +109,8 @@ class PlotSelection2D(Widget):
                 resolution,
                 center_x,
                 center_y,
-                width_x,
-                width_y,
+                width,
+                height,
                 azimuth,
                 zoom_extent,
                 contours,
@@ -137,23 +123,23 @@ class PlotSelection2D(Widget):
                 "resolution": self.resolution,
                 "center_x": self.center_x,
                 "center_y": self.center_y,
-                "width_x": self.width_x,
-                "width_y": self.width_y,
+                "width": self.width,
+                "height": self.height,
                 "azimuth": self.azimuth,
                 "zoom_extent": self.zoom_extent,
                 "contours": self.contours,
             },
         )
-        self.widget = VBox(
+        self._widget = VBox(
             [
                 VBox([self.selection.widget, self.resolution, self.data_count,]),
                 HBox(
                     [
                         self.center_y,
-                        self.width_y,
+                        self.height,
                         VBox(
                             [
-                                self.width_x,
+                                self.width,
                                 self.center_x,
                                 self.window_plot,
                                 self.azimuth,
@@ -169,7 +155,82 @@ class PlotSelection2D(Widget):
         self.axis = None
         self.indices = None
 
-        super().__init__(**kwargs)
+        super().__init__(h5file, **kwargs)
+
+        set_bounding_box("")
+
+    @property
+    def azimuth(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Rotation angle of the selection box.
+        """
+        return self._azimuth
+
+    @property
+    def center_x(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Easting position of the selection box.
+        """
+        return self._center_x
+
+    @property
+    def center_y(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Northing position of the selection box.
+        """
+        return self._center_y
+
+    @property
+    def contours(self):
+        """
+        :obj:`ipywidgets.widgets.Text` String defining sets of contours.
+        Contours can be defined over an interval `50:200:10` and/or at a fix value `215`.
+        Any combination of the above can be used:
+        50:200:10, 215 => Contours between values 50 and 200 every 10, with a contour at 215.
+        """
+        return self._contours
+
+    @property
+    def data_count(self):
+        """
+        :obj:`ipywidgets.Label`: Data counter included in the selection box.
+        """
+        return self._data_count
+
+    @property
+    def resolution(self):
+        """
+        :obj:`ipywidgets.FloatText`: Minimum data separation (m)
+        """
+        return self._resolution
+
+    @property
+    def width(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Width (m) of the selection box
+        """
+        return self._width
+
+    @property
+    def height(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Height (m) of the selection box
+        """
+        return self._height
+
+    @property
+    def zoom_extent(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Set plotting limits to the selection box
+        """
+        return self._zoom_extent
+
+    @property
+    def widget(self):
+        """
+        :obj:`ipywidgets.VBox`: Application layout
+        """
+        return self._widget
 
     def plot_selection(
         self,
@@ -177,8 +238,8 @@ class PlotSelection2D(Widget):
         resolution,
         center_x,
         center_y,
-        width_x,
-        width_y,
+        width,
+        height,
         azimuth,
         zoom_extent,
         contours,
@@ -218,8 +279,8 @@ class PlotSelection2D(Widget):
                 np.c_[1.0, -1.0],
                 np.c_[-1.0, -1.0],
             ]
-            corners[:, 0] *= width_x / 2
-            corners[:, 1] *= width_y / 2
+            corners[:, 0] *= width / 2
+            corners[:, 1] *= height / 2
             corners = rotate_xy(corners, [0, 0], -azimuth)
             self.axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
 
@@ -231,7 +292,7 @@ class PlotSelection2D(Widget):
                     "resolution": resolution,
                     "window": {
                         "center": [center_x, center_y],
-                        "size": [width_x, width_y],
+                        "size": [width, height],
                         "azimuth": azimuth,
                     },
                     "zoom_extent": zoom_extent,
@@ -269,15 +330,15 @@ class PlotSelection2D(Widget):
         self.center_y.value = np.mean(lim_y)
         self.center_y.min = lim_y[0]
 
-        self.width_x.max = lim_x[1] - lim_x[0]
-        self.width_x.value = self.width_x.max / 2.0
-        self.width_x.min = 0
+        self.width.max = lim_x[1] - lim_x[0]
+        self.width.value = self.width.max / 2.0
+        self.width.min = 0
 
-        self.width_y.max = lim_y[1] - lim_y[0]
-        self.width_y.min = 0
+        self.height.max = lim_y[1] - lim_y[0]
+        self.height.min = 0
 
         self.pause = False
-        self.width_y.value = self.width_y.max / 2.0
+        self.height.value = self.height.max / 2.0
 
 
 def plot_profile_data_selection(
@@ -373,7 +434,20 @@ def plot_profile_data_selection(
 
 
 def plot_plan_data_selection(entity, data, **kwargs):
+    """
+    Plot data values in 2D with contours
 
+    :param entity: `geoh5py.objects`
+        Input object with either `vertices` or `centroids` property.
+    :param data: `geoh5py.data`
+        Input data with `values` property.
+
+    :return ax:
+    :return out:
+    :return indices:
+    :return line_selection:
+    :return contour_set:
+    """
     locations = entity.vertices
     if "resolution" not in kwargs.keys():
         resolution = 0

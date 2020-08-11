@@ -455,22 +455,6 @@ class EMLineProfiler(Widget):
 
         self.show_model.observe(show_model_trigger)
 
-        self.live_link = Checkbox(
-            description="GA Pro - Live link", value=False, indent=False
-        )
-
-        def live_link_trigger(_):
-            self.live_link_trigger()
-
-        self.live_link.observe(live_link_trigger)
-
-        self.live_link_path = Text(
-            description="",
-            value=os.path.join(os.path.dirname(h5file), "Temp"),
-            disabled=True,
-            style={"description_width": "initial"},
-        )
-
         self.data_panel = VBox(
             [
                 HBox(
@@ -527,18 +511,7 @@ class EMLineProfiler(Widget):
                                                 ),
                                             ]
                                         ),
-                                        HBox(
-                                            [
-                                                self.export,
-                                                VBox(
-                                                    [
-                                                        self.live_link,
-                                                        Label("Monitoring folder"),
-                                                        self.live_link_path,
-                                                    ]
-                                                ),
-                                            ]
-                                        ),
+                                        HBox([self.export, self.live_link_widget,]),
                                     ]
                                 ),
                             ]
@@ -728,15 +701,6 @@ class EMLineProfiler(Widget):
             highlights += self.groups[group]["channels"]
             self.group_color.value = self.groups[group]["color"]
         self.channels.value = highlights
-
-    def live_link_trigger(self):
-        """
-        Enable the monitoring folder
-        """
-        if self.live_link.value:
-            self.live_link_path.disabled = False
-        else:
-            self.live_link_path.disabled = True
 
     def plot_data_selection(
         self,
