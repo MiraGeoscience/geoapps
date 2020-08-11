@@ -1,41 +1,163 @@
-import re
-import matplotlib.pyplot as plt
-import ipywidgets as widgets
 import numpy as np
+from geoh5py.workspace import Workspace
+from geoh5py.io import H5Writer
 from geoh5py.objects import Curve, Grid2D, Points, Surface
-from ipywidgets.widgets import Label, Layout, VBox
 from scipy.interpolate import LinearNDInterpolator
+from geoapps.base import Widget
 from geoapps.plotting import PlotSelection2D
+import ipywidgets as widgets
+from ipywidgets import (
+    Text,
+    Checkbox,
+    VBox,
+    HBox,
+    ToggleButton,
+    interactive_output,
+    Label,
+    Layout,
+)
 
 
-def contour_values_widget(h5file, **kwargs):
+class ContourValues(Widget):
     """
     Application for 2D contouring of spatial data.
     """
 
-    plot_selection = PlotSelection2D(h5file, **kwargs)
+    def __init__(self, h5file, **kwargs):
+        self._plot_selection = PlotSelection2D(h5file, **kwargs)
 
-    def compute_plot(contour_values):
+        self._contours = Text(
+            value="", description="Contours", disabled=False, continuous_update=False
+        )
+        self._export_as = Text(value="Contours", indent=False)
 
-        entity, data = plot_selection.selection.get_selected_entities()
+        def update_name(_):
+            self.update_name()
 
+        self.plot_selection.selection.data.observe(update_name, names="value")
+        self._z_value = Checkbox(
+            value=False, indent=False, description="Assign Z from values"
+        )
+
+        super().__init__(h5file, **kwargs)
+
+        out = interactive_output(self.compute_plot, {"contour_values": self.contours},)
+
+        def save_selection(_):
+            self.save_selection()
+
+        self.trigger.observe(save_selection, names="value")
+        self.trigger.description = "Export to GA"
+        self.trigger.button_style = "danger"
+
+        for key in self.plot_selection.__dict__:
+            if isinstance(getattr(self.plot_selection, key, None), widgets.Widget):
+                getattr(self.plot_selection, key, None).observe(
+                    save_selection, names="value"
+                )
+        self.export_as.observe(save_selection, names="value")
+
+        self._widget = VBox(
+            [
+                HBox(
+                    [
+                        VBox([Label("Input options:"), self.plot_selection.widget]),
+                        VBox(
+                            [
+                                Label("Output options:"),
+                                self.contours,
+                                self.export_as,
+                                self.z_value,
+                                self.trigger_widget,
+                            ],
+                            layout=Layout(width="50%"),
+                        ),
+                    ]
+                ),
+                out,
+            ]
+        )
+
+    @property
+    def contours(self):
+        """
+        :obj:`ipywidgets.Text`: String defining sets of contours.
+        Contours can be defined over an interval `50:200:10` and/or at a fix value `215`.
+        Any combination of the above can be used:
+        50:200:10, 215 => Contours between values 50 and 200 every 10, with a contour at 215.
+        """
+        return self._contours
+
+    @property
+    def export(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Write contours to the target geoh5
+        """
+        return self._export
+
+    @property
+    def export_as(self):
+        """
+        :obj:`ipywidgets.Text`: Name given to the Curve object
+        """
+        return self._export_as
+
+    @property
+    def plot_selection(self):
+        """
+        :obj:`geoapps.selection.PlotSelection2D`: Selection and 2D plot of an object with data to be contoured
+        """
+        return self._plot_selection
+
+    @property
+    def widget(self):
+        """
+        :obj:`ipywidgets.VBox`: Pre-defined application layout
+        """
+        return self._widget
+
+    @property
+    def z_value(self):
+        """
+        :obj:`ipywidgets.Checkbox`: Assign z-coordinate based on contour values
+        """
+        return self._z_value
+
+    def compute_plot(self, contour_values):
+        """
+        Get current selection and trigger update
+        """
+        entity, data = self.plot_selection.selection.get_selected_entities()
         if data is None:
             return
         if contour_values is not None:
-            plot_selection.contours.value = contour_values
+            self.plot_selection.contours.value = contour_values
+        self.save_selection()
 
-    def save_selection(_):
-        entity, _ = plot_selection.selection.get_selected_entities()
-        if export.value:
+    def update_contours(self):
+        """
+        Assign
+        """
+        if self.plot_selection.selection.data.value is not None:
+            self.export_as.value = (
+                self.plot_selection.selection.data.value + "_" + self.contours.value
+            )
 
-            # TODO
-            #  Create temporary workspace and write to trigger LIVE LINK
-            # temp_geoh5 = os.path.join(os.path.dirname(
-            #     os.path.abspath(workspace.h5file)), "Temp", "temp.geoh5")
-            # ws_out = Workspace(temp_geoh5)
+    def update_name(self):
+        if self.plot_selection.selection.data.value is not None:
+            self.export_as.value = self.plot_selection.selection.data.value
+        else:
+            self.export_as.value = "Contours"
 
-            if getattr(plot_selection.contours, "contour_set", None) is not None:
-                contour_set = plot_selection.contours.contour_set
+    def save_selection(self):
+        entity, _ = self.plot_selection.selection.get_selected_entities()
+
+        workspace = Workspace(self.h5file)
+
+        if self.trigger.value:
+
+            if getattr(self.plot_selection.contours, "contour_set", None) is not None:
+                contour_set = self.plot_selection.contours.contour_set
 
                 vertices, cells, values = [], [], []
                 count = 0
@@ -50,12 +172,10 @@ def contour_values_widget(h5file, **kwargs):
                             ]
                         )
                         values.append(np.ones(n_v) * level)
-
                         count += n_v
                 if vertices:
                     vertices = np.vstack(vertices)
-
-                    if z_value.value:
+                    if self.z_value.value:
                         vertices = np.c_[vertices, np.hstack(values)]
                     else:
                         if isinstance(entity, (Points, Curve, Surface)):
@@ -69,83 +189,39 @@ def contour_values_widget(h5file, **kwargs):
                                 np.ones(vertices.shape[0]) * entity.origin["z"],
                             ]
 
-                    curve = Curve.create(
-                        entity.workspace,
-                        name=export_as.value,
-                        vertices=vertices,
-                        cells=np.vstack(cells).astype("uint32"),
-                    )
-                    curve.add_data({contours.value: {"values": np.hstack(values)}})
+                    if workspace.get_entity(self.export_as.value):
 
-                    # objects.options = list(entity.workspace.list_objects_name.values())
-                    # objects.value = entity.name
-                    # data.options = entity.get_data_list()
-                    # data.value = data_name
+                        curve = workspace.get_entity(self.export_as.value)[0]
+                        curve._children = []
+                        curve.vertices = vertices
+                        curve.cells = np.vstack(cells).astype("uint32")
 
-                export.value = False
+                        # Remove directly on geoh5
+                        project_handle = H5Writer.fetch_h5_handle(self.h5file, entity)
+                        base = list(project_handle.keys())[0]
+                        obj_handle = project_handle[base]["Objects"]
+                        for key in obj_handle[H5Writer.uuid_str(curve.uid)][
+                            "Data"
+                        ].keys():
+                            del project_handle[base]["Data"][key]
+                        del obj_handle[H5Writer.uuid_str(curve.uid)]
 
-    if "contours" in kwargs.keys():
-        contours = kwargs["contours"]
-    else:
-        contours = ""
+                    else:
+                        curve = Curve.create(
+                            workspace,
+                            name=self.export_as.value,
+                            vertices=vertices,
+                            cells=np.vstack(cells).astype("uint32"),
+                        )
 
-    contours = widgets.Text(
-        value=contours, description="Contours", disabled=False, continuous_update=False
-    )
-
-    def updateContours(_):
-        if selection.data.value is not None:
-            export_as.value = selection.data.value + "_" + contours.value
-
-    contours.observe(updateContours, names="value")
-
-    selection = plot_selection.selection
-
-    export = widgets.ToggleButton(
-        value=False,
-        description="Export to GA",
-        button_style="danger",
-        tooltip="Description",
-        icon="check",
-    )
-
-    export.observe(save_selection, names="value")
-
-    export_as = widgets.Text(indent=False,)
-    updateContours("")
-
-    def updateName(_):
-        if selection.data.value is not None:
-            export_as.value = selection.data.value + "_" + contours.value
-        else:
-            export_as.value = contours.value
-
-    selection.data.observe(updateName, names="value")
-
-    z_value = widgets.Checkbox(
-        value=False, indent=False, description="Assign Z from values"
-    )
-
-    out = widgets.interactive_output(compute_plot, {"contour_values": contours},)
-
-    contours.value = contours.value
-    return widgets.VBox(
-        [
-            widgets.HBox(
-                [
-                    VBox([Label("Input options:"), plot_selection.widget]),
-                    VBox(
-                        [
-                            Label("Output options:"),
-                            contours,
-                            export_as,
-                            z_value,
-                            export,
-                        ],
-                        layout=Layout(width="50%"),
-                    ),
-                ]
-            ),
-            out,
-        ]
-    )
+                    if self.live_link.value:
+                        self.live_link_output(
+                            curve, data={self.contours.value: np.hstack(values)}
+                        )
+                    else:
+                        curve.add_data(
+                            {self.contours.value: {"values": np.hstack(values)}}
+                        )
+                        workspace = Workspace(self.h5file)
+                        print(workspace.get_entity(self.contours.value), curve.children)
+                        self.trigger.value = False

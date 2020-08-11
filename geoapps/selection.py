@@ -40,7 +40,7 @@ class LineOptions(Widget):
 
         self._widget = VBox([self._value, self._lines])
 
-        super().__init__(**kwargs)
+        super().__init__(h5file, **kwargs)
 
     @property
     def lines(self):
@@ -102,6 +102,8 @@ class ObjectDataSelection(Widget):
         self.objects.observe(update_data_list, names="value")
 
         self.widget = VBox([self.objects, self.data,])
+
+        super().__init__(h5file, **kwargs)
 
     @property
     def data(self):

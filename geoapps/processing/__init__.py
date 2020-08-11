@@ -4,5 +4,5 @@ from .processing import (
     coordinate_transformation_widget,
     edge_detection_widget,
 )
-from .contours import contour_values_widget
+from .contours import ContourValues
 from .em_profiling import EMLineProfiler
