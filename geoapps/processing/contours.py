@@ -1,16 +1,11 @@
 import re
-
-import ipywidgets as widgets
-import matplotlib.colors as colors
 import matplotlib.pyplot as plt
+import ipywidgets as widgets
 import numpy as np
 from geoh5py.objects import Curve, Grid2D, Points, Surface
-from geoh5py.workspace import Workspace
-from ipywidgets.widgets import HBox, Label, Layout, VBox
+from ipywidgets.widgets import Label, Layout, VBox
 from scipy.interpolate import LinearNDInterpolator
-
-from geoapps.plotting import format_labels
-from geoapps.selection import object_data_selection_widget
+from geoapps.plotting import PlotSelection2D
 
 
 def contour_values_widget(h5file, **kwargs):
@@ -18,103 +13,20 @@ def contour_values_widget(h5file, **kwargs):
     Application for 2D contouring of spatial data.
     """
 
-    workspace = Workspace(h5file)
+    plot_selection = PlotSelection2D(h5file, **kwargs)
 
-    def compute_plot(entity_name, data_name, contour_vals):
+    def compute_plot(contour_values):
 
-        entity = workspace.get_entity(entity_name)[0]
+        entity, data = plot_selection.selection.get_selected_entities()
 
-        if entity.get_data(data_name):
-            data = entity.get_data(data_name)[0]
-        else:
+        if data is None:
             return
-
-        if data.entity_type.color_map is not None:
-            new_cmap = data.entity_type.color_map.values
-            map_vals = new_cmap["Value"].copy()
-            cmap = colors.ListedColormap(
-                np.c_[
-                    new_cmap["Red"] / 255,
-                    new_cmap["Green"] / 255,
-                    new_cmap["Blue"] / 255,
-                ]
-            )
-            color_norm = colors.BoundaryNorm(map_vals, cmap.N)
-
-        else:
-            cmap = None
-            color_norm = None
-
-        if contour_vals != "":
-            vals = re.split(",", contour_vals)
-            cntrs = []
-            for val in vals:
-                if ":" in val:
-                    param = np.asarray(re.split(":", val), dtype="int")
-
-                    if len(param) == 2:
-                        cntrs += [np.arange(param[0], param[1])]
-                    else:
-
-                        cntrs += [np.arange(param[0], param[2], param[1])]
-
-                else:
-                    cntrs += [np.float(val)]
-            contour_vals = np.unique(np.sort(np.hstack(cntrs)))
-        else:
-            contour_vals = None
-
-        plt.figure(figsize=(10, 10))
-        axs = plt.subplot()
-        contour_sets = None
-        if isinstance(entity, Grid2D):
-            xx = entity.centroids[:, 0].reshape(entity.shape, order="F")
-            yy = entity.centroids[:, 1].reshape(entity.shape, order="F")
-            if len(data.values) == entity.n_cells:
-                grid_data = data.values.reshape(xx.shape, order="F")
-
-                axs.pcolormesh(
-                    xx, yy, grid_data, cmap=cmap, norm=color_norm, shading="auto"
-                )
-                format_labels(xx, yy, axs)
-                if contour_vals is not None:
-                    contour_sets = axs.contour(
-                        xx,
-                        yy,
-                        grid_data,
-                        len(contour_vals),
-                        levels=contour_vals,
-                        colors="k",
-                        linewidths=0.5,
-                    )
-
-        elif isinstance(entity, (Points, Curve, Surface)):
-
-            if len(data.values) == entity.n_vertices:
-                xx = entity.vertices[:, 0]
-                yy = entity.vertices[:, 1]
-                axs.scatter(xx, yy, 5, data.values, cmap=cmap)
-                if contour_vals is not None:
-                    contour_sets = axs.tricontour(
-                        xx,
-                        yy,
-                        data.values,
-                        levels=contour_vals,
-                        linewidths=0.5,
-                        colors="k",
-                    )
-                format_labels(xx, yy, axs)
-
-        else:
-            contours.contours = None
-
-        contours.contours = contour_sets
+        if contour_values is not None:
+            plot_selection.contours.value = contour_values
 
     def save_selection(_):
+        entity, _ = plot_selection.selection.get_selected_entities()
         if export.value:
-
-            entity = workspace.get_entity(objects.value)[0]
-            data_name = data.value
 
             # TODO
             #  Create temporary workspace and write to trigger LIVE LINK
@@ -122,13 +34,12 @@ def contour_values_widget(h5file, **kwargs):
             #     os.path.abspath(workspace.h5file)), "Temp", "temp.geoh5")
             # ws_out = Workspace(temp_geoh5)
 
-            if contours.contours is not None:
+            if getattr(plot_selection.contours, "contour_set", None) is not None:
+                contour_set = plot_selection.contours.contour_set
 
                 vertices, cells, values = [], [], []
                 count = 0
-                for segs, level in zip(
-                    contours.contours.allsegs, contours.contours.levels
-                ):
+                for segs, level in zip(contour_set.allsegs, contour_set.levels):
                     for poly in segs:
                         n_v = len(poly)
                         vertices.append(poly)
@@ -147,7 +58,6 @@ def contour_values_widget(h5file, **kwargs):
                     if z_value.value:
                         vertices = np.c_[vertices, np.hstack(values)]
                     else:
-
                         if isinstance(entity, (Points, Curve, Surface)):
                             z_interp = LinearNDInterpolator(
                                 entity.vertices[:, :2], entity.vertices[:, 2]
@@ -184,19 +94,12 @@ def contour_values_widget(h5file, **kwargs):
     )
 
     def updateContours(_):
-        if data.value is not None:
-            export_as.value = data.value + "_" + contours.value
+        if selection.data.value is not None:
+            export_as.value = selection.data.value + "_" + contours.value
 
     contours.observe(updateContours, names="value")
-    contours.contours = None
 
-    objects, data = object_data_selection_widget(h5file)
-
-    if "objects" in kwargs.keys() and kwargs["objects"] in objects.options:
-        objects.value = kwargs["objects"]
-
-    if "data" in kwargs.keys() and kwargs["data"] in data.options:
-        data.value = kwargs["data"]
+    selection = plot_selection.selection
 
     export = widgets.ToggleButton(
         value=False,
@@ -212,27 +115,33 @@ def contour_values_widget(h5file, **kwargs):
     updateContours("")
 
     def updateName(_):
-        export_as.value = data.value + "_" + contours.value
+        if selection.data.value is not None:
+            export_as.value = selection.data.value + "_" + contours.value
+        else:
+            export_as.value = contours.value
 
-    data.observe(updateName, names="value")
+    selection.data.observe(updateName, names="value")
 
     z_value = widgets.Checkbox(
         value=False, indent=False, description="Assign Z from values"
     )
 
-    out = widgets.interactive_output(
-        compute_plot,
-        {"entity_name": objects, "data_name": data, "contour_vals": contours},
-    )
+    out = widgets.interactive_output(compute_plot, {"contour_values": contours},)
 
     contours.value = contours.value
     return widgets.VBox(
         [
             widgets.HBox(
                 [
-                    VBox([Label("Input options:"), objects, data, contours]),
+                    VBox([Label("Input options:"), plot_selection.widget]),
                     VBox(
-                        [Label("Output options:"), export_as, z_value, export],
+                        [
+                            Label("Output options:"),
+                            contours,
+                            export_as,
+                            z_value,
+                            export,
+                        ],
                         layout=Layout(width="50%"),
                     ),
                 ]

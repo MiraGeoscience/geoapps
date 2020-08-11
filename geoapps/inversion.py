@@ -12,7 +12,7 @@ from ipywidgets.widgets import Dropdown, HBox, Label, Layout, Text, VBox
 from geoapps.base import Widget
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.utils import find_value, rotate_xy, geophysical_systems
-from geoapps.selection import object_data_selection_widget, LineOptions
+from geoapps.selection import ObjectDataSelection, LineOptions
 
 
 class ChannelOptions(Widget):
@@ -165,7 +165,7 @@ class SensorOptions(Widget):
         self.workspace = Workspace(h5file)
 
         self._objects = objects
-        _, self._value = object_data_selection_widget(h5file, objects=objects.value)
+        self._value = ObjectDataSelection(h5file, objects=objects.value).data
 
         self._value.description = "Height Channel"
         self._value.style = {"description_width": "initial"}
@@ -261,7 +261,10 @@ class TopographyOptions(Widget):
     def __init__(self, h5file, **kwargs):
         self.h5file = h5file
 
-        self._objects, self._value = object_data_selection_widget(self.h5file)
+        self.selection = ObjectDataSelection(self.h5file)
+
+        self._objects = self.selection.objects
+        self._value = self.selection.data
 
         def update_list(_):
             self.update_list()
@@ -269,7 +272,7 @@ class TopographyOptions(Widget):
         self._objects.observe(update_list, names="value")
         self._objects.value = find_value(self._objects.options, ["topo", "dem", "dtm"])
 
-        self._panel = VBox([self._objects, self._value])
+        self._panel = self.selection.widget
         self._offset = widgets.FloatText(
             description="Vertical offset (m)", style={"description_width": "initial"},
         )
@@ -1467,7 +1470,7 @@ def inversion_app(h5file, **kwargs):
                 corners = rotate_xy(corners, [0, 0], -azimuth)
                 ax1.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
 
-                _, _, indices, line_selection = plot_plan_data_selection(
+                _, _, indices, line_selection, _ = plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{
