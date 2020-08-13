@@ -25,7 +25,7 @@ from ipywidgets import (
     RadioButtons,
 )
 from geoapps.base import Widget
-from geoapps.utils import filter_xy, rotate_xy, format_labels
+from geoapps.utils import filter_xy, rotate_xy, format_labels, find_value
 from geoapps.selection import ObjectDataSelection
 
 
@@ -34,8 +34,8 @@ class PlotSelection2D(Widget):
     Application for selecting data in 2D plan map view
     """
 
-    def __init__(self, h5file, **kwargs):
-        self.selection = ObjectDataSelection(h5file, **kwargs)
+    def __init__(self, **kwargs):
+        self.selection = ObjectDataSelection(**kwargs)
         self._azimuth = FloatSlider(
             min=-90,
             max=90,
@@ -80,17 +80,18 @@ class PlotSelection2D(Widget):
             orientation="vertical",
         )
         self._zoom_extent = ToggleButton(
-            value=True,
+            value=False,
             description="Zoom on selection",
             tooltip="Keep plot extent on selection",
             icon="check",
         )
+        self._refresh = ToggleButton(value=False)
 
         def set_bounding_box(_):
             self.set_bounding_box()
 
         self.selection.objects.observe(set_bounding_box)
-        self.pause = False
+        self.highlight_selection = None
 
         def plot_selection(
             data_name,
@@ -102,6 +103,7 @@ class PlotSelection2D(Widget):
             azimuth,
             zoom_extent,
             contours,
+            refresh,
         ):
 
             self.plot_selection(
@@ -114,12 +116,14 @@ class PlotSelection2D(Widget):
                 azimuth,
                 zoom_extent,
                 contours,
+                refresh,
             )
 
+        self.plotting_data = self.selection.data
         self.window_plot = widgets.interactive_output(
             plot_selection,
             {
-                "data_name": self.selection.data,
+                "data_name": self.plotting_data,
                 "resolution": self.resolution,
                 "center_x": self.center_x,
                 "center_y": self.center_y,
@@ -128,11 +132,13 @@ class PlotSelection2D(Widget):
                 "azimuth": self.azimuth,
                 "zoom_extent": self.zoom_extent,
                 "contours": self.contours,
+                "refresh": self.refresh,
             },
         )
-        self._widget = VBox(
+
+        self.plot_widget = VBox(
             [
-                VBox([self.selection.widget, self.resolution, self.data_count,]),
+                VBox([self.resolution, self.data_count,]),
                 HBox(
                     [
                         self.center_y,
@@ -151,11 +157,12 @@ class PlotSelection2D(Widget):
                 ),
             ]
         )
+        self._widget = VBox([self.selection.widget, self.plot_widget])
         self.figure = None
         self.axis = None
         self.indices = None
 
-        super().__init__(h5file, **kwargs)
+        super().__init__(**kwargs)
 
         set_bounding_box("")
 
@@ -198,18 +205,11 @@ class PlotSelection2D(Widget):
         return self._data_count
 
     @property
-    def resolution(self):
+    def refresh(self):
         """
-        :obj:`ipywidgets.FloatText`: Minimum data separation (m)
+        :obj:`ipywidgets.ToggleButton`: Switch to refresh the plot
         """
-        return self._resolution
-
-    @property
-    def width(self):
-        """
-        :obj:`ipywidgets.FloatSlider`: Width (m) of the selection box
-        """
-        return self._width
+        return self._refresh
 
     @property
     def height(self):
@@ -219,11 +219,11 @@ class PlotSelection2D(Widget):
         return self._height
 
     @property
-    def zoom_extent(self):
+    def resolution(self):
         """
-        :obj:`ipywidgets.ToggleButton`: Set plotting limits to the selection box
+        :obj:`ipywidgets.FloatText`: Minimum data separation (m)
         """
-        return self._zoom_extent
+        return self._resolution
 
     @property
     def widget(self):
@@ -231,6 +231,20 @@ class PlotSelection2D(Widget):
         :obj:`ipywidgets.VBox`: Application layout
         """
         return self._widget
+
+    @property
+    def width(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Width (m) of the selection box
+        """
+        return self._width
+
+    @property
+    def zoom_extent(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Set plotting limits to the selection box
+        """
+        return self._zoom_extent
 
     def plot_selection(
         self,
@@ -243,9 +257,10 @@ class PlotSelection2D(Widget):
         azimuth,
         zoom_extent,
         contours,
+        refresh,
     ):
 
-        if self.pause:
+        if not refresh:
             return
 
         # Parse the contours string
@@ -265,12 +280,14 @@ class PlotSelection2D(Widget):
         else:
             contours = None
 
-        entity, data_obj = self.selection.get_selected_entities()
+        entity, _ = self.selection.get_selected_entities()
+        data_obj = None
+        if entity.get_data(self.plotting_data.value):
+            data_obj = entity.get_data(self.plotting_data.value)[0]
 
         if isinstance(entity, (Grid2D, Surface, Points, Curve)):
 
             self.figure = plt.figure(figsize=(10, 10))
-
             self.axis = plt.subplot()
             corners = np.r_[
                 np.c_[-1.0, -1.0],
@@ -298,6 +315,7 @@ class PlotSelection2D(Widget):
                     "zoom_extent": zoom_extent,
                     "resize": True,
                     "contours": contours,
+                    "highlight_selection": self.highlight_selection,
                 },
             )
             self.indices = ind_filter
@@ -319,7 +337,7 @@ class PlotSelection2D(Widget):
         else:
             return
 
-        self.pause = True
+        self.refresh.value = False
         self.center_x.min = -np.inf
         self.center_x.max = lim_x[1]
         self.center_x.value = np.mean(lim_x)
@@ -337,7 +355,7 @@ class PlotSelection2D(Widget):
         self.height.max = lim_y[1] - lim_y[0]
         self.height.min = 0
 
-        self.pause = False
+        self.refresh.value = True
         self.height.value = self.height.max / 2.0
 
 
@@ -448,6 +466,22 @@ def plot_plan_data_selection(entity, data, **kwargs):
     :return line_selection:
     :return contour_set:
     """
+    indices = None
+    line_selection = None
+    contour_set = None
+    values = None
+    ax = None
+    out = None
+
+    if isinstance(entity, (Grid2D, Points, Curve, Surface)):
+        if "ax" not in kwargs.keys():
+            plt.figure(figsize=(8, 8))
+            ax = plt.subplot()
+        else:
+            ax = kwargs["ax"]
+    else:
+        return ax, out, indices, line_selection, contour_set
+
     locations = entity.vertices
     if "resolution" not in kwargs.keys():
         resolution = 0
@@ -458,14 +492,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
         indices = kwargs["indices"]
         if isinstance(indices, np.ndarray) and np.all(indices == False):
             indices = None
-    else:
-        indices = None
-
-    line_selection = None
-    contour_set = None
-    values = None
-    ax = None
-    out = None
 
     if isinstance(getattr(data, "values", None), np.ndarray):
         if not isinstance(data.values[0], str):
@@ -493,13 +519,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
     else:
         cmap = "Spectral_r"
 
-    if "ax" not in kwargs.keys():
-        plt.figure(figsize=(8, 8))
-        ax = plt.subplot()
-    else:
-        ax = kwargs["ax"]
-
-    if isinstance(entity, Grid2D) and values is not None:
+    if isinstance(entity, Grid2D):
         x = entity.centroids[:, 0].reshape(entity.shape, order="F")
         y = entity.centroids[:, 1].reshape(entity.shape, order="F")
         indices = filter_xy(x, y, resolution, window=window)
@@ -527,13 +547,10 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 X, Y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
             )
 
-    elif isinstance(entity, (Points, Curve, Surface)):
-        if indices is None:
-            indices = filter_xy(
-                entity.vertices[:, 0], entity.vertices[:, 1], resolution, window=window,
-            )
-
+    else:
         x, y = entity.vertices[:, 0], entity.vertices[:, 1]
+        if indices is None:
+            indices = filter_xy(x, y, resolution, window=window,)
         X, Y = x[indices], y[indices]
         if values is not None:
             values = values[indices]
@@ -556,12 +573,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 linewidths=1.0,
             )
 
-    else:
-        print(
-            "Sorry, 'plot=True' option only implemented for Grid2D, Points, Surface and Curve objects"
-        )
-        out = None
-
     if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"] and np.any(values):
         ind = ~np.isnan(values.ravel())
         x = X.ravel()[ind]
@@ -582,13 +593,16 @@ def plot_plan_data_selection(entity, data, **kwargs):
         plt.colorbar(out, ax=ax)
 
     line_selection = np.zeros_like(indices, dtype=bool)
-    if "highlight_selection" in kwargs.keys():
+    if "highlight_selection" in kwargs.keys() and isinstance(
+        kwargs["highlight_selection"], dict
+    ):
         for key, values in kwargs["highlight_selection"].items():
 
             if not np.any(entity.get_data(key)):
                 continue
 
             for line in values:
+
                 ind = np.where(entity.get_data(key)[0].values == line)[0]
                 x, y, values = (
                     locations[ind, 0],
@@ -621,14 +635,6 @@ def plot_em_data_widget(h5file):
 
         children = [entity for entity in parent_entity.children if entity.name == child]
         return children
-
-    def find_value(labels, strings):
-        value = None
-        for name in labels:
-            for string in strings:
-                if string.lower() in name.lower():
-                    value = name
-        return value
 
     def plot_profiles(entity_name, groups, line_field, lines, scale, threshold):
 

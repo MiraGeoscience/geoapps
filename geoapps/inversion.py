@@ -10,7 +10,7 @@ from geoh5py.workspace import Workspace
 from ipywidgets.widgets import Dropdown, HBox, Label, Layout, Text, VBox
 
 from geoapps.base import Widget
-from geoapps.plotting import plot_plan_data_selection
+from geoapps.plotting import plot_plan_data_selection, PlotSelection2D
 from geoapps.utils import find_value, rotate_xy, geophysical_systems
 from geoapps.selection import ObjectDataSelection, LineOptions
 
@@ -27,7 +27,7 @@ class ChannelOptions(Widget):
             description=description, style={"description_width": "initial"},
         )
         self._channel_selection = Dropdown(
-            description="Channel", style={"description_width": "initial"}
+            description="Associated Data:", style={"description_width": "initial"}
         )
         self._channel_selection.header = key
 
@@ -83,8 +83,7 @@ class ObjectDataOptions(Widget):
 
     def __init__(self, h5file, **kwargs):
 
-        self.h5file = h5file
-        self.workspace = Workspace(h5file)
+        self._workspace = Workspace(h5file)
 
         all_obj = [
             entity.name
@@ -106,7 +105,7 @@ class ObjectDataOptions(Widget):
 
         self._widget = VBox([self._objects, self._data_channels])
 
-        super().__init__(**kwargs)
+        super().__init__(h5file=h5file, **kwargs)
 
         if "objects" in kwargs.keys() and kwargs["objects"] in self._objects.options:
             self._objects.value = kwargs["objects"]
@@ -162,10 +161,10 @@ class SensorOptions(Widget):
     """
 
     def __init__(self, h5file, objects, **kwargs):
-        self.workspace = Workspace(h5file)
+        self._workspace = Workspace(h5file)
 
         self._objects = objects
-        self._value = ObjectDataSelection(h5file, objects=objects.value).data
+        self._value = ObjectDataSelection(h5file=h5file, objects=objects.value).data
 
         self._value.description = "Height Channel"
         self._value.style = {"description_width": "initial"}
@@ -199,7 +198,7 @@ class SensorOptions(Widget):
             [self._options_button, self._options[self._options_button.value]]
         )
 
-        super().__init__(**kwargs)
+        super().__init__(h5file=h5file, **kwargs)
 
         def update_list(_):
             self.update_list()
@@ -259,20 +258,11 @@ class TopographyOptions(Widget):
     """
 
     def __init__(self, h5file, **kwargs):
-        self.h5file = h5file
 
-        self.selection = ObjectDataSelection(self.h5file)
-
+        self.selection = ObjectDataSelection(h5file=h5file)
         self._objects = self.selection.objects
         self._value = self.selection.data
 
-        def update_list(_):
-            self.update_list()
-
-        self._objects.observe(update_list, names="value")
-        self._objects.value = find_value(self._objects.options, ["topo", "dem", "dtm"])
-
-        self._panel = self.selection.widget
         self._offset = widgets.FloatText(
             description="Vertical offset (m)", style={"description_width": "initial"},
         )
@@ -280,13 +270,23 @@ class TopographyOptions(Widget):
             description="Constant elevation (m)",
             style={"description_width": "initial"},
         )
-        if "offset" in kwargs.keys():
-            self._offset.value = kwargs["value"]
+
+        def update_list(_):
+            self.update_list()
+
+        self._objects.observe(update_list, names="value")
+
+        super().__init__(h5file=h5file, **kwargs)
+
+        if "objects" not in kwargs.keys():
+            self._objects.value = find_value(
+                self._objects.options, ["topo", "dem", "dtm"]
+            )
 
         self._options = {
-            "Object": self._panel,
-            "Drape Height": self._offset,
-            "Constant": self._constant,
+            "Object": self.selection.widget,
+            "Drape Height": self.offset,
+            "Constant": self.constant,
             "None": widgets.Label("No topography"),
         }
         self._options_button = widgets.RadioButtons(
@@ -300,14 +300,6 @@ class TopographyOptions(Widget):
         self._widget = VBox(
             [self._options_button, self._options[self._options_button.value]]
         )
-
-        super().__init__(**kwargs)
-
-        if "objects" in kwargs.keys() and kwargs["objects"] in self._objects.options:
-            self._objects.value = kwargs["objects"]
-
-        if "value" in kwargs.keys() and kwargs["value"] in self._value.options:
-            self._objects.value = kwargs["objects"]
 
     @property
     def panel(self):
@@ -509,7 +501,7 @@ class InversionOptions(Widget):
 
     def __init__(self, h5file, **kwargs):
 
-        self.workspace = Workspace(h5file)
+        self._workspace = Workspace(h5file)
 
         model_list = []
         for obj in self.workspace.all_objects():
@@ -812,29 +804,6 @@ def inversion_widgets(h5file, **kwargs):
 
     # Load all known em systems
     widget_list = {
-        "azimuth": widgets.FloatSlider(
-            min=-90,
-            max=90,
-            value=0,
-            steps=5,
-            description="Orientation",
-            continuous_update=False,
-        ),
-        "center_x": widgets.FloatSlider(
-            min=np.inf,
-            max=np.inf,
-            steps=10,
-            description="Easting",
-            continuous_update=False,
-        ),
-        "center_y": widgets.FloatSlider(
-            min=np.inf,
-            max=np.inf,
-            steps=10,
-            description="Northing",
-            continuous_update=False,
-            orientation="vertical",
-        ),
         "data_count": Label("Data Count: 0", tooltip="Keep <1500 for speed"),
         "forward_only": widgets.Checkbox(
             value=False,
@@ -848,7 +817,6 @@ def inversion_widgets(h5file, **kwargs):
             style={"description_width": "initial"},
         ),
         "n_cells": widgets.FloatText(value=25.0, description="Number of cells:",),
-        "resolution": widgets.FloatText(description="Resolution (m)"),
         "run": widgets.ToggleButton(
             value=False, description="Run SimPEG", button_style="danger", icon="check"
         ),
@@ -857,32 +825,11 @@ def inversion_widgets(h5file, **kwargs):
             options=["Magnetics", "Gravity"] + list(em_system_specs.keys()),
             description="Survey Type: ",
         ),
-        "width_x": widgets.FloatSlider(
-            min=np.inf,
-            max=np.inf,
-            steps=10,
-            description="Width",
-            continuous_update=False,
-        ),
-        "width_y": widgets.FloatSlider(
-            min=np.inf,
-            max=np.inf,
-            steps=10,
-            description="Height",
-            continuous_update=False,
-            orientation="vertical",
-        ),
         "write": widgets.ToggleButton(
             value=False,
             description="Write input",
             button_style="warning",
             tooltip="Write json input file",
-            icon="check",
-        ),
-        "zoom_extent": widgets.ToggleButton(
-            value=False,
-            description="Zoom on selection",
-            tooltip="Keep plot extent on selection",
             icon="check",
         ),
     }
@@ -938,7 +885,12 @@ def inversion_app(h5file, **kwargs):
     system = w_l["system"]
     defaults = inversion_defaults()
     workspace = Workspace(h5file)
-    o_d = ObjectDataOptions(h5file)
+
+    plot_selection = PlotSelection2D(
+        h5file=h5file, select_multiple=True, add_groups=True, **kwargs
+    )
+
+    o_d = plot_selection.selection
 
     all_obj = [
         entity.name
@@ -1057,8 +1009,9 @@ def inversion_app(h5file, **kwargs):
 
         # Trigger plot update
         if data_channel_choices.value == channel.header:
-            data_channel_choices.value = None
-            data_channel_choices.value = channel.header
+            plot_selection.plotting_data = channel
+            plot_selection.refresh.value = False
+            plot_selection.refresh.value = True
 
     def system_observer(_, start_channel=w_l["starting_channel"].value):
 
@@ -1162,11 +1115,11 @@ def inversion_app(h5file, **kwargs):
             else:
                 offsets = tx_offsets[0]
 
-            channel_selection = Dropdown(
-                description="Channel", style={"description_width": "initial"}
-            )
-            channel_selection.header = key
-            channel_selection.observe(channel_setter, names="value")
+            # channel_selection = Dropdown(
+            #     description="Channel", style={"description_width": "initial"}
+            # )
+            # channel_selection.header = key
+            # channel_selection.observe(channel_setter, names="value")
 
             channel_options = ChannelOptions(
                 key,
@@ -1222,13 +1175,13 @@ def inversion_app(h5file, **kwargs):
 
     def object_observer(_):
 
-        w_l["resolution"].indices = None
+        plot_selection.resolution.indices = None
 
         if workspace.get_entity(o_d.objects.value):
             obj = workspace.get_entity(o_d.objects.value)[0]
             data_list = obj.get_data_list()
-            lines.update_list()
-            topography.update_list()
+            # lines.update_list()
+            # topography.update_list()
 
             for aem_system, specs in em_system_specs.items():
                 if any([specs["flag"] in channel for channel in data_list]):
@@ -1241,8 +1194,8 @@ def inversion_app(h5file, **kwargs):
                     key,
                     data_widget,
                 ) in data_channel_choices.data_channel_options.items():
-                    data_widget.children[2].options = o_d.data_channels.options
-                    value = find_value(o_d.data_channels.options, [key])
+                    data_widget.children[2].options = o_d.data.options
+                    value = find_value(o_d.data.options, [key])
                     data_widget.children[2].value = value
 
             w_l["write"].button_style = "warning"
@@ -1254,8 +1207,8 @@ def inversion_app(h5file, **kwargs):
     def get_data_list(entity):
         groups = [p_g.name for p_g in entity.property_groups]
         data_list = []
-        if o_d.data_channels.value is not None:
-            for component in o_d.data_channels.value:
+        if o_d.data.value is not None:
+            for component in o_d.data.value:
                 if component in groups:
                     data_list += [
                         workspace.get_entity(data)[0].name
@@ -1279,7 +1232,7 @@ def inversion_app(h5file, **kwargs):
                     value = find_value(data_list, [key])
                     data_widget.children[2].value = value
 
-    o_d.data_channels.observe(update_component_panel, names="value")
+    o_d.data.observe(update_component_panel, names="value")
 
     def data_channel_choices_observer(_):
         if hasattr(
@@ -1304,9 +1257,7 @@ def inversion_app(h5file, **kwargs):
         w_l["write"].button_style = "warning"
         w_l["run"].button_style = "danger"
 
-    data_channel_choices = widgets.Dropdown(
-        description="Component:", style={"description_width": "initial"}
-    )
+    data_channel_choices = widgets.Dropdown(style={"description_width": "initial"})
 
     data_channel_choices.observe(data_channel_choices_observer, names="value")
     data_channel_panel = widgets.VBox([data_channel_choices])
@@ -1315,13 +1266,18 @@ def inversion_app(h5file, **kwargs):
 
     # Spatial parameters
     # Topography definition
-    topography = TopographyOptions(h5file)
+    if "topography" in kwargs.keys():
+        topo_kwargs = kwargs["topography"]
+    else:
+        topo_kwargs = {}
+
+    topography = TopographyOptions(h5file=h5file, **topo_kwargs)
 
     # Define bird parameters
     sensor = SensorOptions(h5file, o_d.objects)
 
     # LINE ID
-    lines = LineOptions(h5file, o_d.objects)
+    lines = LineOptions(h5file=h5file, objects=o_d.objects)
 
     # SPATIAL PARAMETERS DROPDOWN
     spatial_options = {
@@ -1348,213 +1304,88 @@ def inversion_app(h5file, **kwargs):
 
     spatial_choices.observe(spatial_option_change)
 
-    # Data selection and plotting from object extent
-    lim_x = [1e8, 0]
-    lim_y = [1e8, 0]
-    for name in all_names:
-        obj = workspace.get_entity(name)[0]
-        if obj.vertices is not None:
-            lim_x[0], lim_x[1] = (
-                np.min([lim_x[0], obj.vertices[:, 0].min()]),
-                np.max([lim_x[1], obj.vertices[:, 0].max()]),
-            )
-            lim_y[0], lim_y[1] = (
-                np.min([lim_y[0], obj.vertices[:, 1].min()]),
-                np.max([lim_y[1], obj.vertices[:, 1].max()]),
-            )
-        elif hasattr(obj, "centroids"):
-            lim_x[0], lim_x[1] = (
-                np.min([lim_x[0], obj.centroids[:, 0].min()]),
-                np.max([lim_x[1], obj.centroids[:, 0].max()]),
-            )
-            lim_y[0], lim_y[1] = (
-                np.min([lim_y[0], obj.centroids[:, 1].min()]),
-                np.max([lim_y[1], obj.centroids[:, 1].max()]),
-            )
-
-    w_l["center_x"].min, w_l["center_x"].max, w_l["center_x"].value = (
-        lim_x[0],
-        lim_x[1],
-        np.mean(lim_x),
-    )
-    w_l["center_y"].min, w_l["center_y"].max, w_l["center_y"].value = (
-        lim_y[0],
-        lim_y[1],
-        np.mean(lim_y),
-    )
-    w_l["width_x"].min, w_l["width_x"].max, w_l["width_x"].value = (
-        100,
-        lim_x[1] - lim_x[0],
-        lim_x[1] - lim_x[0],
-    )
-    w_l["width_y"].min, w_l["width_y"].max, w_l["width_y"].value = (
-        100,
-        lim_y[1] - lim_y[0],
-        lim_y[1] - lim_y[0],
-    )
-
     def update_octree_param(_):
-        dl = w_l["resolution"].value
+        dl = plot_selection.resolution.value
         mesh.core_cell_size.value = f"{dl/2:.0f}, {dl/2:.0f}, {dl/2:.0f}"
         mesh.depth_core.value = np.ceil(
-            np.min([w_l["width_x"].value, w_l["width_y"].value]) / 2.0
+            np.min([plot_selection.width.value, plot_selection.height.value]) / 2.0
         )
-
         mesh.padding_distance.value = ", ".join(
             list(
                 map(
                     str,
                     [
-                        np.ceil(w_l["width_x"].value / 2),
-                        np.ceil(w_l["width_x"].value / 2),
-                        np.ceil(w_l["width_y"].value / 2),
-                        np.ceil(w_l["width_y"].value / 2),
+                        np.ceil(plot_selection.width.value / 2),
+                        np.ceil(plot_selection.width.value / 2),
+                        np.ceil(plot_selection.height.value / 2),
+                        np.ceil(plot_selection.height.value / 2),
                         0,
                         0,
                     ],
                 )
             )
         )
-        w_l["resolution"].indices = None
+        plot_selection.resolution.indices = None
+        w_l["write"].button_style = "warning"
+        w_l["run"].button_style = "danger"
 
-    w_l["width_x"].observe(update_octree_param)
-    w_l["width_y"].observe(update_octree_param)
-    w_l["resolution"].observe(update_octree_param, names="value")
-    w_l["resolution"].indices = None
+    plot_selection.width.observe(update_octree_param)
+    plot_selection.height.observe(update_octree_param)
+    plot_selection.resolution.observe(update_octree_param, names="value")
+    plot_selection.resolution.indices = None
 
-    def plot_selection(
-        entity_name,
-        data_choice,
-        resolution,
-        line_ids,
-        center_x,
-        center_y,
-        width_x,
-        width_y,
-        azimuth,
-        zoom_extent,
-        marker_size,
-    ):
-        if workspace.get_entity(entity_name):
-            obj = workspace.get_entity(entity_name)[0]
+    def update_selection(_):
+        plot_selection.highlight_selection = {lines.data.value: lines.lines.value}
+        plot_selection.refresh.value = False
+        plot_selection.refresh.value = True
 
-            name = None
-            if hasattr(
-                data_channel_choices, "data_channel_options"
-            ) and data_choice in (data_channel_choices.data_channel_options.keys()):
-                name = (
-                    data_channel_choices.data_channel_options[data_choice]
-                    .children[2]
-                    .value
-                )
-
-            if (
-                obj.get_data(name)
-                and isinstance(obj.get_data(name)[0].values, np.ndarray)
-                and isinstance(obj.get_data(name)[0].values[0], float)
-            ):
-
-                data_obj = obj.get_data(name)[0]
-
-                plt.figure(figsize=(10, 10))
-                ax1 = plt.subplot()
-                corners = np.r_[
-                    np.c_[-1.0, -1.0],
-                    np.c_[-1.0, 1.0],
-                    np.c_[1.0, 1.0],
-                    np.c_[1.0, -1.0],
-                    np.c_[-1.0, -1.0],
-                ]
-                corners[:, 0] *= width_x / 2
-                corners[:, 1] *= width_y / 2
-                corners = rotate_xy(corners, [0, 0], -azimuth)
-                ax1.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
-
-                _, _, indices, line_selection, _ = plot_plan_data_selection(
-                    obj,
-                    data_obj,
-                    **{
-                        "ax": ax1,
-                        "highlight_selection": {lines.value.value: line_ids},
-                        "resolution": resolution,
-                        "window": {
-                            "center": [center_x, center_y],
-                            "size": [width_x, width_y],
-                            "azimuth": azimuth,
-                        },
-                        "zoom_extent": zoom_extent,
-                        "marker_size": marker_size,
-                        "indices": w_l["resolution"].indices,
-                    },
-                )
-
-                if w_l["resolution"].indices is None:
-                    w_l["resolution"].indices = indices
-                data_count = 0
-                for widget in data_channel_choices.data_channel_options.values():
-                    if system.value in ["Magnetics", "Gravity"]:
-                        data_count += widget.children[0].value * indices.sum()
-                    else:
-                        data_count += widget.children[0].value * line_selection.sum()
-
-                if system.value in ["Magnetics", "Gravity"]:
-                    values = np.abs(data_obj.values).reshape(indices.shape, order="F")[
-                        indices
-                    ]
-                    w_l[
-                        "data_count"
-                    ].value = f"Data Count: {data_count}, 10th PCT |d|: {np.percentile(values[values > 2e-18], 5):.2f}"
-                else:
-                    w_l["data_count"].value = f"Data Count: {data_count}"
-                w_l["write"].button_style = "warning"
-                w_l["run"].button_style = "danger"
-
-    marker_size = widgets.IntSlider(
-        min=1, max=100, value=3, description="Markers", continuous_update=False,
-    )
-    plot_window = widgets.interactive_output(
-        plot_selection,
-        {
-            "entity_name": o_d.objects,
-            "data_choice": data_channel_choices,
-            "line_ids": lines.lines,
-            "resolution": w_l["resolution"],
-            "center_x": w_l["center_x"],
-            "center_y": w_l["center_y"],
-            "width_x": w_l["width_x"],
-            "width_y": w_l["width_y"],
-            "azimuth": w_l["azimuth"],
-            "zoom_extent": w_l["zoom_extent"],
-            "marker_size": marker_size,
-        },
-    )
-    selection_panel = VBox(
-        [
-            Label("Window & Downsample"),
-            VBox(
-                [
-                    w_l["resolution"],
-                    w_l["data_count"],
-                    marker_size,
-                    HBox(
-                        [w_l["center_y"], w_l["width_y"], plot_window],
-                        layout=Layout(align_items="center"),
-                    ),
-                    VBox(
-                        [
-                            w_l["width_x"],
-                            w_l["center_x"],
-                            w_l["azimuth"],
-                            w_l["zoom_extent"],
-                        ],
-                        layout=Layout(align_items="center"),
-                    ),
-                ],
-                layout=Layout(align_items="center"),
-            ),
-        ],
-        layout=Layout(width="50%"),
-    )
+    lines.lines.observe(update_selection)
+    # marker_size = widgets.IntSlider(
+    #     min=1, max=100, value=3, description="Markers", continuous_update=False,
+    # )
+    # plot_window = widgets.interactive_output(
+    #     plot_selection,
+    #     {
+    #         "entity_name": o_d.objects,
+    #         "data_choice": data_channel_choices,
+    #         "line_ids": lines.lines,
+    #         "resolution": plot_selection.resolution,
+    #         "center_x": plot_selection.center_x,
+    #         "center_y": plot_selection.center_y,
+    #         "width_x": plot_selection.width,
+    #         "width_y": plot_selection.height,
+    #         "azimuth": plot_selection.azimuth,
+    #         "zoom_extent": w_l["zoom_extent"],
+    #         "marker_size": marker_size,
+    #     },
+    # )
+    # selection_panel = VBox(
+    #     [
+    #         Label("Window & Downsample"),
+    #         VBox(
+    #             [
+    #                 plot_selection.resolution,
+    #                 w_l["data_count"],
+    #                 marker_size,
+    #                 HBox(
+    #                     [plot_selection.center_y, plot_selection.height, plot_window],
+    #                     layout=Layout(align_items="center"),
+    #                 ),
+    #                 VBox(
+    #                     [
+    #                         plot_selection.width,
+    #                         plot_selection.center_x,
+    #                         plot_selection.azimuth,
+    #                         w_l["zoom_extent"],
+    #                     ],
+    #                     layout=Layout(align_items="center"),
+    #                 ),
+    #             ],
+    #             layout=Layout(align_items="center"),
+    #         ),
+    #     ],
+    #     layout=Layout(width="50%"),
+    # )
 
     def write_unclick(_):
         if w_l["write"].value is False:
@@ -1592,7 +1423,7 @@ def inversion_app(h5file, **kwargs):
         else:
             input_dict["system"] = system.value
             input_dict["lines"] = {
-                lines.value.value: [str(line) for line in lines.lines.value]
+                lines.data.value: [str(line) for line in lines.lines.value]
             }
 
             input_dict["mesh 1D"] = [
@@ -1611,14 +1442,13 @@ def inversion_app(h5file, **kwargs):
 
         input_dict["tol_cg"] = inversion_parameters.tol_cg.value
         input_dict["ignore_values"] = inversion_parameters.ignore_values.value
-        input_dict["resolution"] = w_l["resolution"].value
+        input_dict["resolution"] = plot_selection.resolution.value
         input_dict["window"] = {
-            "center": [w_l["center_x"].value, w_l["center_y"].value],
-            "size": [w_l["width_x"].value, w_l["width_y"].value],
-            "azimuth": w_l["azimuth"].value,
+            "center": [plot_selection.center_x.value, plot_selection.center_y.value],
+            "size": [plot_selection.width.value, plot_selection.height.value],
+            "azimuth": plot_selection.azimuth.value,
         }
         input_dict["alphas"] = string_2_list(inversion_parameters.alphas.value)
-
         input_dict["reference_model"] = {
             inversion_parameters.reference_model.widget.children[1]
             .children[0]
@@ -1626,7 +1456,6 @@ def inversion_app(h5file, **kwargs):
             .children[1]
             .value
         }
-
         input_dict["starting_model"] = {
             inversion_parameters.starting_model.widget.children[1]
             .children[0]
@@ -1684,7 +1513,7 @@ def inversion_app(h5file, **kwargs):
                     )
                 if (
                     system.value in ["Gravity", "Magnetics"]
-                    and w_l["azimuth"].value != 0
+                    and plot_selection.azimuth.value != 0
                     and key not in ["tmi", "gz"]
                 ):
                     print(
@@ -1748,38 +1577,38 @@ def inversion_app(h5file, **kwargs):
     object_observer("")
     update_ref("")
 
-    for attr, item in kwargs.items():
-        try:
-            if hasattr(w_l[attr], "options") and item not in w_l[attr].options:
-                continue
-            w_l[attr].value = item
-        except KeyError:
-            continue
-    for attr, item in kwargs.items():
-        try:
-            if getattr(o_d, attr, None) is not None:
-                widget = getattr(o_d, attr)
-                if hasattr(widget, "options") and item not in widget.options:
-                    continue
-                widget.value = item
-        except AttributeError:
-            continue
-
+    # for attr, item in kwargs.items():
+    #     try:
+    #         if hasattr(w_l[attr], "options") and item not in w_l[attr].options:
+    #             continue
+    #         w_l[attr].value = item
+    #     except KeyError:
+    #         continue
+    # for attr, item in kwargs.items():
+    #     try:
+    #         if getattr(o_d, attr, None) is not None:
+    #             widget = getattr(o_d, attr)
+    #             if hasattr(widget, "options") and item not in widget.options:
+    #                 continue
+    #             widget.value = item
+    #     except AttributeError:
+    #         continue
+    plot_selection.widget.layout = Layout(width="60%")
     return VBox(
         [
             HBox(
                 [
+                    plot_selection.widget,
                     VBox(
                         [
-                            VBox([Label("Input Data"), o_d.widget]),
                             VBox([Label(""), survey_type_panel]),
-                            VBox([Label("Data Components"), data_channel_panel]),
-                            VBox([Label("Spatial Information"), spatial_panel]),
-                        ]
+                            VBox([Label("Components"), data_channel_panel]),
+                        ],
+                        layout=Layout(width="40%"),
                     ),
-                    selection_panel,
                 ]
             ),
+            VBox([Label("Spatial Information"), spatial_panel]),
             inversion_parameters.widget,
             w_l["forward_only"],
             w_l["write"],

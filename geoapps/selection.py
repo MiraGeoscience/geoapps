@@ -4,7 +4,7 @@ import ipywidgets as widgets
 from ipywidgets import Dropdown, HBox, SelectMultiple, VBox, interactive_output
 
 from geoapps.base import Widget
-from geoapps.utils import find_value
+from geoapps import utils
 
 
 class LineOptions(Widget):
@@ -12,35 +12,33 @@ class LineOptions(Widget):
     Unique lines selection from selected data channel
     """
 
-    def __init__(self, h5file, objects, select_multiple=True, **kwargs):
-        self.workspace = Workspace(h5file)
-        self._objects = objects
-        self._selection = ObjectDataSelection(
-            h5file, objects=objects.value, find_value="line"
-        )
-        self._value = self.selection.data
+    def __init__(self, select_multiple=True, **kwargs):
 
         if select_multiple:
             self._lines = widgets.SelectMultiple(description="Select lines:",)
         else:
             self._lines = widgets.Dropdown(description="Select line:",)
 
-        self._value.description = "Lines field"
-        self._value.style = {"description_width": "initial"}
+        super().__init__(**kwargs)
+
+        self._selection = ObjectDataSelection(find_value=["line"], **kwargs)
+        self._data = self.selection.data
+        self._objects = self.selection.objects
+
+        self._data.description = "Lines field"
+        self._data.style = {"description_width": "initial"}
 
         def update_list(_):
             self.update_list()
 
         self._objects.observe(update_list, names="value")
-        self._value.observe(update_list, names="value")
+        self._data.observe(update_list, names="value")
         update_list("")
 
-        if "value" in kwargs.keys() and kwargs["value"] in self._value.options:
-            self._value.value = kwargs["value"]
+        if "value" in kwargs.keys() and kwargs["value"] in self._data.options:
+            self._data.value = kwargs["value"]
 
-        self._widget = VBox([self._value, self._lines])
-
-        super().__init__(h5file, **kwargs)
+        self._widget = VBox([self._data, self._lines])
 
     @property
     def lines(self):
@@ -61,8 +59,8 @@ class LineOptions(Widget):
             self._lines.options = [""] + np.unique(data.values).tolist()
 
     @property
-    def value(self):
-        return self._value
+    def data(self):
+        return self._data
 
     @property
     def widget(self):
@@ -74,36 +72,39 @@ class ObjectDataSelection(Widget):
     Application to select an object and corresponding data
     """
 
-    def __init__(self, h5file, select_multiple=False, add_groups=False, **kwargs):
+    def __init__(
+        self, select_multiple=False, add_groups=False, find_value=[], **kwargs
+    ):
+        super().__init__(**kwargs)
 
-        self._workspace = Workspace(h5file)
         self.add_groups = add_groups
         self.select_multiple = select_multiple
-
-        def update_data_list(_):
-            self.update_data_list(**kwargs)
-
-        if "objects" in kwargs.keys() and isinstance(kwargs["objects"], Dropdown):
-            self._objects = kwargs["objects"]
-        else:
-            names = list(self.workspace.list_objects_name.values())
-            self._objects = Dropdown(options=names, description="Object:",)
 
         if select_multiple:
             self._data = SelectMultiple(description="Data: ",)
         else:
             self._data = Dropdown(description="Data: ",)
 
-        if "objects" in kwargs.keys() and kwargs["objects"] in names:
-            self.objects.value = kwargs["objects"]
+        if "objects" in kwargs.keys() and isinstance(kwargs["objects"], Dropdown):
+            self._objects = kwargs["objects"]
+        else:
+            self._objects = Dropdown(description="Object:",)
 
-        update_data_list("")
+        if self.h5file is not None:
+            self.objects.options = list(self.workspace.list_objects_name.values())
+
+        def update_data_list(_):
+            self.update_data_list(find_value=find_value)
 
         self.objects.observe(update_data_list, names="value")
-
         self.widget = VBox([self.objects, self.data,])
 
-        super().__init__(h5file, **kwargs)
+        for key, value in kwargs.items():
+            if getattr(self, "_" + key, None) is not None:
+                try:
+                    getattr(self, "_" + key).value = value
+                except:
+                    pass
 
     @property
     def data(self):
@@ -119,13 +120,6 @@ class ObjectDataSelection(Widget):
         """
         return self._objects
 
-    @property
-    def workspace(self):
-        """
-        Target geoh5py workspace
-        """
-        return self._workspace
-
     def get_selected_entities(self):
         """
         Get entities from an active geoh5py Workspace
@@ -140,7 +134,7 @@ class ObjectDataSelection(Widget):
         else:
             return None, None
 
-    def update_data_list(self, **kwargs):
+    def update_data_list(self, find_value=[]):
         if self.workspace.get_entity(self.objects.value):
             obj = self.workspace.get_entity(self.objects.value)[0]
             options = [
@@ -154,5 +148,5 @@ class ObjectDataSelection(Widget):
                     + list(options)
                 )
             self.data.options = options
-            if "find_value" in kwargs and isinstance(kwargs["find_value"], list):
-                self.data.value = find_value(self.data.options, kwargs["find_value"])
+            if find_value:
+                self.data.value = utils.find_value(self.data.options, find_value)
