@@ -7,7 +7,18 @@ import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Octree, Points, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets.widgets import Dropdown, HBox, Label, Layout, Text, VBox
+from ipywidgets.widgets import (
+    Dropdown,
+    HBox,
+    Label,
+    Layout,
+    Text,
+    VBox,
+    Checkbox,
+    FloatText,
+    ToggleButton,
+    IntText,
+)
 
 from geoapps.base import Widget
 from geoapps.plotting import plot_plan_data_selection, PlotSelection2D
@@ -22,7 +33,7 @@ class ChannelOptions(Widget):
 
     def __init__(self, key, description, **kwargs):
 
-        self._active = widgets.Checkbox(value=False, indent=True, description="Active",)
+        self._active = Checkbox(value=False, indent=True, description="Active",)
         self._label = widgets.Text(
             description=description, style={"description_width": "initial"},
         )
@@ -160,18 +171,20 @@ class SensorOptions(Widget):
     Define the receiver spatial parameters
     """
 
-    def __init__(self, h5file, objects, **kwargs):
-        self._workspace = Workspace(h5file)
+    def __init__(self, objects=[], **kwargs):
 
-        self._objects = objects
-        self._value = ObjectDataSelection(h5file=h5file, objects=objects.value).data
+        super().__init__(**kwargs)
+
+        self.selection = ObjectDataSelection(objects=objects, **kwargs)
+        self._objects = self.selection.objects
+        self._value = self.selection.data
 
         self._value.description = "Height Channel"
         self._value.style = {"description_width": "initial"}
 
         self._offset = Text(description="[dx, dy, dz]", value="0, 0, 0")
 
-        self._constant = widgets.FloatText(
+        self._constant = FloatText(
             description="Constant elevation (m)",
             style={"description_width": "initial"},
         )
@@ -198,7 +211,7 @@ class SensorOptions(Widget):
             [self._options_button, self._options[self._options_button.value]]
         )
 
-        super().__init__(h5file=h5file, **kwargs)
+        super().__init__(**kwargs)
 
         def update_list(_):
             self.update_list()
@@ -227,8 +240,8 @@ class SensorOptions(Widget):
         return self._options_button
 
     def update_list(self):
-        if self.workspace.get_entity(self._objects.value):
-            obj = self.workspace.get_entity(self._objects.value)[0]
+        if self.workspace.get_entity(self.objects.value):
+            obj = self.workspace.get_entity(self.objects.value)[0]
             data_list = obj.get_data_list() + [""]
 
             self._value.options = [
@@ -263,10 +276,10 @@ class TopographyOptions(Widget):
         self._objects = self.selection.objects
         self._value = self.selection.data
 
-        self._offset = widgets.FloatText(
+        self._offset = FloatText(
             description="Vertical offset (m)", style={"description_width": "initial"},
         )
-        self._constant = widgets.FloatText(
+        self._constant = FloatText(
             description="Constant elevation (m)",
             style={"description_width": "initial"},
         )
@@ -351,7 +364,7 @@ class TopographyOptions(Widget):
         return self._widget
 
 
-class OctreeMeshOptions(Widget):
+class MeshOctreeOptions(Widget):
     """
     Widget used for the creation of an octree meshes
     """
@@ -372,7 +385,7 @@ class OctreeMeshOptions(Widget):
             description="Layers below data",
             style={"description_width": "initial"},
         )
-        self._depth_core = widgets.FloatText(
+        self._depth_core = FloatText(
             value=500,
             description="Minimum depth (m)",
             style={"description_width": "initial"},
@@ -383,7 +396,7 @@ class OctreeMeshOptions(Widget):
             style={"description_width": "initial"},
         )
 
-        self._max_distance = widgets.FloatText(
+        self._max_distance = FloatText(
             value=1000,
             description="Max triangulation length",
             style={"description_width": "initial"},
@@ -432,6 +445,67 @@ class OctreeMeshOptions(Widget):
         return self._widget
 
 
+class Mesh1DOptions(Widget):
+    """
+    Widget used for the creation of a 1D mesh
+    """
+
+    def __init__(self, **kwargs):
+        self._hz_expansion = FloatText(value=1.05, description="Expansion factor:",)
+        self._hz_min = FloatText(value=10.0, description="Smallest cell (m):",)
+        self._n_cells = FloatText(value=25.0, description="Number of cells:",)
+
+        super().__init__(**kwargs)
+
+        self.cell_count = Label(f"Max depth: {self.count_cells():.2f} m")
+
+        def update_hz_count(_):
+            self.update_hz_count()
+
+        self.n_cells.observe(update_hz_count)
+        self.hz_expansion.observe(update_hz_count)
+        self.hz_min.observe(update_hz_count)
+
+        self._widget = VBox(
+            [
+                Label("1D Mesh"),
+                self.hz_min,
+                self.hz_expansion,
+                self.n_cells,
+                self.cell_count,
+            ]
+        )
+
+    def count_cells(self):
+        return (
+            self.hz_min.value * self.hz_expansion.value ** np.arange(self.n_cells.value)
+        ).sum()
+
+    def update_hz_count(self):
+        self.cell_count.value = f"Max depth: {self.count_cells():.2f} m"
+
+    @property
+    def hz_expansion(self):
+        """
+
+        """
+        return self._hz_expansion
+
+    @property
+    def hz_min(self):
+        """
+
+        """
+        return self._hz_min
+
+    @property
+    def n_cells(self):
+        """
+
+        """
+        return self._n_cells
+
+
 class ModelOptions(Widget):
     """
     Widgets for the selection of model options
@@ -448,7 +522,7 @@ class ModelOptions(Widget):
 
         self._options.observe(update_panel, names="value")
         self._list = widgets.Dropdown(description="3D Model", options=name_list)
-        self._value = widgets.FloatText(description="Units")
+        self._value = FloatText(description="Units")
         self._description = Label()
         self._widget = widgets.VBox(
             [self._description, widgets.VBox([self._options, self._value])]
@@ -499,9 +573,8 @@ class InversionOptions(Widget):
     Collection of widgets controlling the inversion parameters
     """
 
-    def __init__(self, h5file, **kwargs):
-
-        self._workspace = Workspace(h5file)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
         model_list = []
         for obj in self.workspace.all_objects():
@@ -517,7 +590,7 @@ class InversionOptions(Widget):
             value="Inversion_", description="Save to:", disabled=False
         )
 
-        self._chi_factor = widgets.FloatText(
+        self._chi_factor = FloatText(
             value=1, description="Target misfit", disabled=False
         )
         self._uncert_mode = widgets.RadioButtons(
@@ -532,20 +605,16 @@ class InversionOptions(Widget):
         self._upper_bound = widgets.Text(value=None, description="Upper bound value",)
 
         self._ignore_values = widgets.Text(value="<0", tooltip="Dummy value",)
-        self._max_iterations = widgets.IntText(
-            value=10, description="Max beta Iterations"
-        )
-        self._max_cg_iterations = widgets.IntText(
-            value=10, description="Max CG Iterations"
-        )
-        self._tol_cg = widgets.FloatText(value=1e-4, description="CG Tolerance")
+        self._max_iterations = IntText(value=10, description="Max beta Iterations")
+        self._max_cg_iterations = IntText(value=10, description="Max CG Iterations")
+        self._tol_cg = FloatText(value=1e-4, description="CG Tolerance")
 
         self._beta_start_options = widgets.RadioButtons(
             options=["value", "ratio"],
             value="ratio",
             description="Starting tradeoff (beta):",
         )
-        self._beta_start = widgets.FloatText(value=1e2, description="phi_d/phi_m")
+        self._beta_start = FloatText(value=1e2, description="phi_d/phi_m")
 
         def initial_beta_change(_):
             self.initial_beta_change()
@@ -574,6 +643,12 @@ class InversionOptions(Widget):
             "Model",
             "Value",
         ]
+
+        def update_ref(_):
+            self.update_ref()
+
+        self.reference_model.options.observe(update_ref)
+
         self._alphas = widgets.Text(
             value="1, 1, 1, 1", description="Scaling alpha_(s, x, y, z)",
         )
@@ -586,7 +661,7 @@ class InversionOptions(Widget):
 
         self._norms.observe(check_max_iterations)
 
-        self._mesh = OctreeMeshOptions()
+        self._mesh = MeshOctreeOptions()
         self.inversion_options = {
             "output name": self._output_name,
             "uncertainties": self._uncert_mode,
@@ -718,7 +793,18 @@ class InversionOptions(Widget):
 
     @property
     def widget(self):
+        """
+        :obj:`ipywidgets.VBox`: Pre-defined application layout
+        """
         return self._widget
+
+    def update_ref(self):
+        alphas = string_2_list(self.alphas.value)
+        if self.reference_model.options.value == "None":
+            alphas[0] = 0.0
+        else:
+            alphas[0] = 1.0
+        self.alphas.value = ", ".join(list(map(str, alphas)))
 
 
 def get_inversion_output(h5file, group_name):
@@ -798,57 +884,57 @@ def plot_convergence_curve(h5file):
     return interactive_plot
 
 
-def inversion_widgets(h5file, **kwargs):
-
-    em_system_specs = geophysical_systems.parameters()
-
-    # Load all known em systems
-    widget_list = {
-        "data_count": Label("Data Count: 0", tooltip="Keep <1500 for speed"),
-        "forward_only": widgets.Checkbox(
-            value=False,
-            description="Forward only",
-            tooltip="Forward response of reference model",
-        ),
-        "hz_expansion": widgets.FloatText(value=1.05, description="Expansion factor:",),
-        "hz_min": widgets.FloatText(value=10.0, description="Smallest cell (m):",),
-        "inducing_field": widgets.Text(
-            description="Inducing Field [Amp, Inc, Dec]",
-            style={"description_width": "initial"},
-        ),
-        "n_cells": widgets.FloatText(value=25.0, description="Number of cells:",),
-        "run": widgets.ToggleButton(
-            value=False, description="Run SimPEG", button_style="danger", icon="check"
-        ),
-        "starting_channel": widgets.IntText(value=None, description="Starting Channel"),
-        "system": Dropdown(
-            options=["Magnetics", "Gravity"] + list(em_system_specs.keys()),
-            description="Survey Type: ",
-        ),
-        "write": widgets.ToggleButton(
-            value=False,
-            description="Write input",
-            button_style="warning",
-            tooltip="Write json input file",
-            icon="check",
-        ),
-    }
-
-    for widget in widget_list.values():
-        widget.style = {"description_width": "initial"}
-
-    for attr, item in kwargs.items():
-        try:
-            if (
-                hasattr(widget_list[attr], "options")
-                and item not in widget_list[attr].options
-            ):
-                continue
-            widget_list[attr].value = item
-        except KeyError:
-            continue
-
-    return widget_list
+# def inversion_widgets(h5file, **kwargs):
+#
+#     self.em_system_specs = geophysical_systems.parameters()
+#
+#     # Load all known em systems
+#     widget_list = {
+#         "data_count": Label("Data Count: 0", tooltip="Keep <1500 for speed"),
+#         "forward_only": Checkbox(
+#             value=False,
+#             description="Forward only",
+#             tooltip="Forward response of reference model",
+#         ),
+#         "hz_expansion": FloatText(value=1.05, description="Expansion factor:",),
+#         "hz_min": FloatText(value=10.0, description="Smallest cell (m):",),
+#         "inducing_field": widgets.Text(
+#             description="Inducing Field [Amp, Inc, Dec]",
+#             style={"description_width": "initial"},
+#         ),
+#         "n_cells": FloatText(value=25.0, description="Number of cells:",),
+#         "run": ToggleButton(
+#             value=False, description="Run SimPEG", button_style="danger", icon="check"
+#         ),
+#         "starting_channel": IntText(value=None, description="Starting Channel"),
+#         "system": Dropdown(
+#             options=["Magnetics", "Gravity"] + list(em_system_specs.keys()),
+#             description="Survey Type: ",
+#         ),
+#         "write": ToggleButton(
+#             value=False,
+#             description="Write input",
+#             button_style="warning",
+#             tooltip="Write json input file",
+#             icon="check",
+#         ),
+#     }
+#
+#     for widget in widget_list.values():
+#         widget.style = {"description_width": "initial"}
+#
+#     for attr, item in kwargs.items():
+#         try:
+#             if (
+#                 hasattr(widget_list[attr], "options")
+#                 and item not in widget_list[attr].options
+#             ):
+#                 continue
+#             widget_list[attr].value = item
+#         except KeyError:
+#             continue
+#
+#     return widget_list
 
 
 def inversion_defaults():
@@ -876,147 +962,271 @@ def string_2_list(string):
     return [np.float(val) for val in string.split(",") if len(val) > 0]
 
 
-def inversion_app(h5file, **kwargs):
+class InversionApp(Widget):
+    def __init__(self, **kwargs):
 
-    # Load all known em systems
-    em_system_specs = geophysical_systems.parameters()
+        super().__init__(**kwargs)
 
-    w_l = inversion_widgets(h5file, **kwargs)
-    system = w_l["system"]
-    defaults = inversion_defaults()
-    workspace = Workspace(h5file)
+        # Load all known em systems
+        self.em_system_specs = geophysical_systems.parameters()
+        self._data_count = (Label("Data Count: 0", tooltip="Keep <1500 for speed"),)
+        self._forward_only = Checkbox(
+            value=False,
+            description="Forward only",
+            tooltip="Forward response of reference model",
+        )
+        self._inducing_field = widgets.Text(
+            description="Inducing Field [Amp, Inc, Dec]",
+        )
+        self._inversion_parameters = InversionOptions(**kwargs)
+        self.mesh_octree = MeshOctreeOptions(**kwargs)
+        self.mesh_1D = Mesh1DOptions(**kwargs)
+        self._run = ToggleButton(
+            value=False, description="Run SimPEG", button_style="danger", icon="check"
+        )
+        self._starting_channel = (IntText(value=None, description="Starting Channel"),)
+        self._system = Dropdown(
+            options=["Magnetics", "Gravity"] + list(self.em_system_specs.keys()),
+            description="Survey Type: ",
+        )
+        self._write = ToggleButton(
+            value=False,
+            description="Write input",
+            button_style="warning",
+            tooltip="Write json input file",
+            icon="check",
+        )
+        self.plot_selection = PlotSelection2D(
+            select_multiple=True, add_groups=True, **kwargs
+        )
+        self.selection = self.plot_selection.selection
 
-    plot_selection = PlotSelection2D(
-        h5file=h5file, select_multiple=True, add_groups=True, **kwargs
-    )
+        # Link the data extent with the octree mesh param
+        def update_octree_param(_):
+            self.update_octree_param()
 
-    o_d = plot_selection.selection
+        for item in self.plot_selection.__dict__.values():
+            if isinstance(item, widgets.Widget):
+                item.observe(update_octree_param)
 
-    all_obj = [
-        entity.name
-        for entity in workspace.all_objects()
-        if isinstance(entity, (Curve, Grid2D, Surface, Points))
-    ]
+        dsep = os.path.sep
+        if self.h5file is not None:
+            self._inv_dir = (
+                dsep.join(os.path.dirname(os.path.abspath(self.h5file)).split(dsep))
+                + dsep
+            )
+        else:
+            self._inv_dir = os.getcwd() + dsep
 
-    all_names = [name for name in sorted(all_obj)]
+        def run_trigger(_):
+            self.run_trigger()
 
-    dsep = os.path.sep
-    inv_dir = dsep.join(os.path.dirname(os.path.abspath(h5file)).split(dsep))
+        self.run.observe(run_trigger)
 
-    if len(inv_dir) > 0:
-        inv_dir += dsep
-    else:
-        inv_dir = os.getcwd() + dsep
+        def write_trigger(_):
+            self.write_trigger()
 
-    def run_unclick(_):
-        if w_l["run"].value:
+        self.write.observe(write_trigger)
 
-            if system.value in ["Gravity", "Magnetics"]:
+        def system_observer(_):
+            self.system_observer()
+
+        self.system.observe(system_observer, names="value")
+
+        def update_options(_):
+            self.update_options()
+
+        for item in self.inversion_parameters.__dict__.values():
+            if isinstance(item, widgets.Widget):
+                item.observe(update_options)
+            elif isinstance(item, Widget):
+                for val in item.__dict__.values():
+                    if isinstance(val, widgets.Widget):
+                        val.observe(update_options)
+
+        super().__init__(**kwargs)
+
+        self.plot_selection.widget.layout = Layout(width="60%")
+
+        def object_observer(_):
+            self.object_observer()
+
+        self.selection.objects.observe(object_observer, names="value")
+
+        def update_component_panel(_):
+            self.update_component_panel()
+
+        self.selection.data.observe(update_component_panel, names="value")
+
+        self.data_channel_choices = widgets.Dropdown(
+            style={"description_width": "initial"}
+        )
+
+        def data_channel_choices_observer(_):
+            self.data_channel_choices_observer()
+
+        self.data_channel_choices.observe(data_channel_choices_observer, names="value")
+        self.data_channel_panel = widgets.VBox([self.data_channel_choices])
+        self.survey_type_panel = VBox([self.system])
+
+        self.topography = TopographyOptions(**kwargs)
+
+        # Define bird parameters
+        if "objects" in kwargs.keys():
+            self.sensor = SensorOptions(**kwargs)
+            self.lines = LineOptions(**kwargs)
+        else:
+            self.sensor = SensorOptions(objects=self.selection.objects, **kwargs)
+            self.lines = LineOptions(objects=self.selection.objects, **kwargs)
+
+        def update_selection(_):
+            self.update_selection()
+
+        self.lines.lines.observe(update_selection)
+
+        # SPATIAL PARAMETERS DROPDOWN
+        self.spatial_options = {
+            "Topography": self.topography.widget,
+            "Receivers": self.sensor.widget,
+            "Line ID": self.lines.widget,
+        }
+        self.spatial_choices = widgets.Dropdown(
+            options=list(self.spatial_options.keys()),
+            value=list(self.spatial_options.keys())[0],
+            disabled=False,
+        )
+
+        def spatial_option_change(_):
+            self.spatial_option_change()
+
+        self.spatial_choices.observe(spatial_option_change)
+
+        self.spatial_panel = VBox(
+            [self.spatial_choices, self.spatial_options[self.spatial_choices.value]]
+        )
+
+        self._widget = VBox(
+            [
+                HBox(
+                    [
+                        self.plot_selection.widget,
+                        VBox(
+                            [
+                                VBox([Label(""), self.survey_type_panel]),
+                                VBox([Label("Components"), self.data_channel_panel]),
+                            ],
+                            layout=Layout(width="40%"),
+                        ),
+                    ]
+                ),
+                VBox([Label("Spatial Information"), self.spatial_panel]),
+                self.inversion_parameters.widget,
+                self.forward_only,
+                self.write,
+                self.run,
+            ]
+        )
+
+        self.object_observer()
+        self.inversion_parameters.update_ref()
+
+    @property
+    def data_count(self):
+        """
+
+        """
+        return self._data_count
+
+    @property
+    def forward_only(self):
+        """
+
+        """
+        return self._forward_only
+
+    @property
+    def inducing_field(self):
+        """
+
+        """
+        return self._inducing_field
+
+    @property
+    def inversion_parameters(self):
+        """
+
+        """
+        return self._inversion_parameters
+
+    @property
+    def run(self):
+        """
+
+        """
+        return self._run
+
+    @property
+    def starting_channel(self):
+        """
+
+        """
+        return self._starting_channel
+
+    @property
+    def system(self):
+        """
+
+        """
+        return self._system
+
+    @property
+    def widget(self):
+        """
+        :obj:`ipywidgets.VBox`: Pre-defined application layout
+        """
+        return self._widget
+
+    @property
+    def write(self):
+        """
+
+        """
+        return self._write
+
+    def run_trigger(self):
+        """
+
+        """
+        if self.run.value:
+            if self.self.system.value in ["Gravity", "Magnetics"]:
                 os.system(
                     "start cmd.exe @cmd /k "
                     + 'python -m geoapps.pf_inversion "'
-                    + inv_dir
-                    + f'\\{inversion_parameters.output_name.value}.json"'
+                    + self._inv_dir
+                    + f'\\{self.inversion_parameters.output_name.value}.json"'
                 )
             else:
                 os.system(
                     "start cmd.exe @cmd /k "
                     + 'python -m geoapps.em1d_inversion "'
-                    + inv_dir
-                    + f'\\{inversion_parameters.output_name.value}.json"'
+                    + self._inv_dir
+                    + f'\\{self.inversion_parameters.output_name.value}.json"'
                 )
-
-            w_l["run"].value = False
-            w_l["run"].button_style = ""
-
-    w_l["run"].observe(run_unclick)
-
-    # # OCTREE MESH
-    inversion_parameters = InversionOptions(h5file)
-    mesh = inversion_parameters.mesh
-
-    # 1D MESH
-    def count_cells():
-        return (
-            w_l["hz_min"].value
-            * w_l["hz_expansion"].value ** np.arange(w_l["n_cells"].value)
-        ).sum()
-
-    cell_count = Label(f"Max depth: {count_cells():.2f} m")
-
-    def update_hz_count(_):
-        cell_count.value = f"Max depth: {count_cells():.2f} m"
-        w_l["write"].button_style = "warning"
-        w_l["run"].button_style = "danger"
-
-    w_l["n_cells"].observe(update_hz_count)
-    w_l["hz_expansion"].observe(update_hz_count)
-    w_l["hz_min"].observe(update_hz_count)
-    hz_panel = VBox(
-        [
-            Label("1D Mesh"),
-            w_l["hz_min"],
-            w_l["hz_expansion"],
-            w_l["n_cells"],
-            cell_count,
-        ]
-    )
+            self.run.value = False
+            self.run.button_style = ""
 
     # Check parameters change
-    def update_options(_):
-        w_l["write"].button_style = "warning"
-        w_l["run"].button_style = "danger"
+    def update_options(self):
+        self.write.button_style = "warning"
+        self.run.button_style = "danger"
 
-    for item in inversion_parameters.__dict__.values():
-        if isinstance(item, widgets.Widget):
-            item.observe(update_options)
-        elif isinstance(item, Widget):
-            for val in item.__dict__.values():
-                if isinstance(val, widgets.Widget):
-                    val.observe(update_options)
-
-    def update_ref(_):
-        alphas = string_2_list(inversion_parameters.alphas.value)
-        if inversion_parameters.reference_model.options.value == "None":
-            alphas[0] = 0.0
-        else:
-            alphas[0] = 1.0
-
-        inversion_parameters.alphas.value = ", ".join(list(map(str, alphas)))
-        w_l["write"].button_style = "warning"
-        w_l["run"].button_style = "danger"
-
-    inversion_parameters.reference_model.options.observe(update_ref)
-
-    def channel_setter(caller):
-
-        channel = caller["owner"]
-        data_widget = data_channel_choices.data_channel_options[channel.header]
-
-        entity = workspace.get_entity(o_d.objects.value)[0]
-        if channel.value is None or not entity.get_data(channel.value):
-            data_widget.children[0].value = False
-            if system.value in ["Magnetics", "Gravity"]:
-                data_widget.children[3].value = "0, 1"
-        else:
-            data_widget.children[0].value = True
-            if system.value in ["Magnetics", "Gravity"]:
-                values = entity.get_data(channel.value)[0].values
-                if values is not None and isinstance(values[0], float):
-                    data_widget.children[
-                        3
-                    ].value = f"0, {np.percentile(values[values > 2e-18], 5):.2f}"
-
-        # Trigger plot update
-        if data_channel_choices.value == channel.header:
-            plot_selection.plotting_data = channel
-            plot_selection.refresh.value = False
-            plot_selection.refresh.value = True
-
-    def system_observer(_, start_channel=w_l["starting_channel"].value):
-
-        if system.value in ["Magnetics", "Gravity"]:
-            if system.value == "Magnetics":
+    def system_observer(self):
+        """
+        Change the application on change of system
+        """
+        if self.system.value in ["Magnetics", "Gravity"]:
+            start_channel = 0
+            if self.system.value == "Magnetics":
                 data_type_list = ["tmi", "bxx", "bxy", "bxz", "byy", "byz", "bzz"]
                 labels = ["tmi", "bxx", "bxy", "bxz", "byy", "byz", "bzz"]
 
@@ -1032,78 +1242,118 @@ def inversion_app(h5file, **kwargs):
                 system_specs[key] = key
 
             # Remove line_id from choices
-            spatial_choices.options = list(spatial_options.keys())[:2]
+            self.spatial_choices.options = list(self.spatial_options.keys())[:2]
 
             # Switch mesh options
-            inversion_parameters.inversion_options[
-                "mesh"
-            ] = inversion_parameters.mesh.widget
+            self.inversion_parameters._mesh = self.mesh_octree
 
-            inversion_parameters.reference_model.options.options = [
+            self.inversion_parameters.reference_model.options.options = [
                 "None",
                 "Model",
                 "Value",
             ]
-            inversion_parameters.reference_model.options.value = "Value"
-            flag = system.value
+            self.inversion_parameters.reference_model.options.value = "Value"
+            flag = self.system.value
 
-            inversion_parameters.lower_bound.value = ""
-            inversion_parameters.upper_bound.value = ""
-            inversion_parameters.ignore_values.value = "-99999"
+            self.inversion_parameters.lower_bound.value = ""
+            self.inversion_parameters.upper_bound.value = ""
+            self.inversion_parameters.ignore_values.value = "-99999"
 
         else:
-            tx_offsets = em_system_specs[system.value]["tx_offsets"]
-            sensor.offset.value = ", ".join(
-                [str(offset) for offset in em_system_specs[system.value]["bird_offset"]]
+            tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
+            self.sensor.offset.value = ", ".join(
+                [
+                    str(offset)
+                    for offset in self.em_system_specs[self.system.value]["bird_offset"]
+                ]
             )
-            uncertainties = em_system_specs[system.value]["uncertainty"]
+            uncertainties = self.em_system_specs[self.system.value]["uncertainty"]
 
             # if start_channel is None:
-            start_channel = em_system_specs[system.value]["channel_start_index"]
-            if em_system_specs[system.value]["type"] == "time":
-                labels = ["Time (s)"] * len(em_system_specs[system.value]["channels"])
+            start_channel = self.em_system_specs[self.system.value][
+                "channel_start_index"
+            ]
+            if self.em_system_specs[self.system.value]["type"] == "time":
+                labels = ["Time (s)"] * len(
+                    self.em_system_specs[self.system.value]["channels"]
+                )
             else:
                 labels = ["Frequency (Hz)"] * len(
-                    em_system_specs[system.value]["channels"]
+                    self.em_system_specs[self.system.value]["channels"]
                 )
 
             system_specs = {}
-            for key, time in em_system_specs[system.value]["channels"].items():
+            for key, time in self.em_system_specs[self.system.value][
+                "channels"
+            ].items():
                 system_specs[key] = f"{time:.5e}"
 
-            spatial_choices.options = list(spatial_options.keys())
+            self.spatial_choices.options = list(self.spatial_options.keys())
 
-            inversion_parameters.reference_model.options.options = [
+            self.inversion_parameters.reference_model.options.options = [
                 "Best-fitting halfspace",
                 "Model",
                 "Value",
             ]
-            inversion_parameters.reference_model.options.value = (
+            self.inversion_parameters.reference_model.options.value = (
                 "Best-fitting halfspace"
             )
-            inversion_parameters.lower_bound.value = "1e-5"
-            inversion_parameters.upper_bound.value = "10"
-            inversion_parameters.ignore_values.value = "<0"
+            self.inversion_parameters.lower_bound.value = "1e-5"
+            self.inversion_parameters.upper_bound.value = "10"
+            self.inversion_parameters.ignore_values.value = "<0"
             # Switch mesh options
-            inversion_parameters.inversion_options["mesh"] = hz_panel
+            self.inversion_parameters._mesh = self.mesh_1D
             flag = "EM1D"
 
-        inversion_parameters.reference_model.value.description = defaults["units"][flag]
-        inversion_parameters.reference_model.value.value = defaults["reference_value"][
+        self.inversion_parameters.reference_model.value.description = inversion_defaults()[
+            "units"
+        ][
             flag
         ]
-        inversion_parameters.reference_model.description.value = (
-            "Reference " + defaults["property"][flag]
+        self.inversion_parameters.reference_model.value.value = inversion_defaults()[
+            "reference_value"
+        ][flag]
+        self.inversion_parameters.reference_model.description.value = (
+            "Reference " + inversion_defaults()["property"][flag]
         )
-        inversion_parameters.starting_model.value.description = defaults["units"][flag]
-        inversion_parameters.starting_model.value.value = defaults["starting_value"][
+        self.inversion_parameters.starting_model.value.description = inversion_defaults()[
+            "units"
+        ][
             flag
         ]
-        inversion_parameters.starting_model.description.value = (
-            "Starting " + defaults["property"][flag]
+        self.inversion_parameters.starting_model.value.value = inversion_defaults()[
+            "starting_value"
+        ][flag]
+        self.inversion_parameters.starting_model.description.value = (
+            "Starting " + inversion_defaults()["property"][flag]
         )
 
-        spatial_choices.value = spatial_choices.options[0]
+        self.spatial_choices.value = self.spatial_choices.options[0]
+
+        def channel_setter(caller):
+
+            channel = caller["owner"]
+            data_widget = self.data_channel_choices.data_channel_options[channel.header]
+
+            entity = self.workspace.get_entity(self.selection.objects.value)[0]
+            if channel.value is None or not entity.get_data(channel.value):
+                data_widget.children[0].value = False
+                if self.system.value in ["Magnetics", "Gravity"]:
+                    data_widget.children[3].value = "0, 1"
+            else:
+                data_widget.children[0].value = True
+                if self.system.value in ["Magnetics", "Gravity"]:
+                    values = entity.get_data(channel.value)[0].values
+                    if values is not None and isinstance(values[0], float):
+                        data_widget.children[
+                            3
+                        ].value = f"0, {np.percentile(values[values > 2e-18], 5):.2f}"
+
+            # Trigger plot update
+            if self.data_channel_choices.value == channel.header:
+                self.plot_selection.plotting_data = channel
+                self.plot_selection.refresh.value = False
+                self.plot_selection.refresh.value = True
 
         data_channel_options = {}
         for ind, (key, channel) in enumerate(system_specs.items()):
@@ -1114,12 +1364,6 @@ def inversion_app(h5file, **kwargs):
                 offsets = tx_offsets[ind]
             else:
                 offsets = tx_offsets[0]
-
-            # channel_selection = Dropdown(
-            #     description="Channel", style={"description_width": "initial"}
-            # )
-            # channel_selection.header = key
-            # channel_selection.observe(channel_setter, names="value")
 
             channel_options = ChannelOptions(
                 key,
@@ -1134,286 +1378,194 @@ def inversion_app(h5file, **kwargs):
 
             data_channel_options[key] = channel_options.widget
 
-            if system.value not in ["Magnetics", "Gravity"]:
+            if self.system.value not in ["Magnetics", "Gravity"]:
                 data_channel_options[key].children[1].value = channel
             else:
                 data_channel_options[key].children[1].layout.visibility = "hidden"
                 data_channel_options[key].children[4].layout.visibility = "hidden"
 
         if len(data_channel_options) > 0:
-            data_channel_choices.options = list(data_channel_options.keys())
-            data_channel_choices.value = list(data_channel_options.keys())[0]
-            data_channel_choices.data_channel_options = data_channel_options
-            data_channel_panel.children = [
-                data_channel_choices,
-                data_channel_options[data_channel_choices.value],
+            self.data_channel_choices.options = list(data_channel_options.keys())
+            self.data_channel_choices.value = list(data_channel_options.keys())[0]
+            self.data_channel_choices.data_channel_options = data_channel_options
+            self.data_channel_panel.children = [
+                self.data_channel_choices,
+                data_channel_options[self.data_channel_choices.value],
             ]
 
-        update_component_panel("")
+        self.update_component_panel()
 
         if (
-            system.value not in ["Magnetics", "Gravity"]
-            and em_system_specs[system.value]["type"] == "frequency"
+            self.system.value not in ["Magnetics", "Gravity"]
+            and self.em_system_specs[self.system.value]["type"] == "frequency"
         ):
-            inversion_parameters.option_choices.options = list(
-                inversion_parameters.inversion_options.keys()
+            self.inversion_parameters.option_choices.options = list(
+                self.inversion_parameters.inversion_options.keys()
             )
         else:
-            inversion_parameters.option_choices.options = [
+            self.inversion_parameters.option_choices.options = [
                 key
-                for key in inversion_parameters.inversion_options.keys()
+                for key in self.inversion_parameters.inversion_options.keys()
                 if key != "background susceptibility"
             ]
 
-        w_l["write"].button_style = "warning"
-        w_l["run"].button_style = "danger"
+        self.write.button_style = "warning"
+        self.run.button_style = "danger"
 
-        if system.value == "Magnetics":
-            survey_type_panel.children = [system, w_l["inducing_field"]]
+        if self.system.value == "Magnetics":
+            self.survey_type_panel.children = [self.system, self.inducing_field]
         else:
-            survey_type_panel.children = [system]
+            self.survey_type_panel.children = [self.system]
 
-    def object_observer(_):
+    def object_observer(self):
 
-        plot_selection.resolution.indices = None
+        self.plot_selection.resolution.indices = None
 
-        if workspace.get_entity(o_d.objects.value):
-            obj = workspace.get_entity(o_d.objects.value)[0]
+        if self.workspace.get_entity(self.selection.objects.value):
+            obj = self.workspace.get_entity(self.selection.objects.value)[0]
             data_list = obj.get_data_list()
             # lines.update_list()
             # topography.update_list()
 
-            for aem_system, specs in em_system_specs.items():
+            for aem_system, specs in self.em_system_specs.items():
                 if any([specs["flag"] in channel for channel in data_list]):
-                    system.value = aem_system
+                    self.system.value = aem_system
 
-            system_observer("")
+            self.system_observer()
 
-            if hasattr(data_channel_choices, "data_channel_options"):
+            if hasattr(self.data_channel_choices, "data_channel_options"):
                 for (
                     key,
                     data_widget,
-                ) in data_channel_choices.data_channel_options.items():
-                    data_widget.children[2].options = o_d.data.options
-                    value = find_value(o_d.data.options, [key])
+                ) in self.data_channel_choices.data_channel_options.items():
+                    data_widget.children[2].options = self.selection.data.options
+                    value = find_value(self.selection.data.options, [key])
                     data_widget.children[2].value = value
 
-            w_l["write"].button_style = "warning"
-            w_l["run"].button_style = "danger"
+            self.write.button_style = "warning"
+            self.run.button_style = "danger"
 
-    o_d.objects.observe(object_observer, names="value")
-    system.observe(system_observer, names="value")
-
-    def get_data_list(entity):
+    def get_data_list(self, entity):
         groups = [p_g.name for p_g in entity.property_groups]
         data_list = []
-        if o_d.data.value is not None:
-            for component in o_d.data.value:
+        if self.selection.data.value is not None:
+            for component in self.selection.data.value:
                 if component in groups:
                     data_list += [
-                        workspace.get_entity(data)[0].name
+                        self.workspace.get_entity(data)[0].name
                         for data in entity.get_property_group(component).properties
                     ]
                 elif component in entity.get_data_list():
                     data_list += [component]
         return data_list
 
-    def update_component_panel(_):
-        if workspace.get_entity(o_d.objects.value):
-            entity = workspace.get_entity(o_d.objects.value)[0]
-            data_list = get_data_list(entity)
+    def update_component_panel(self):
+        if self.workspace.get_entity(self.selection.objects.value):
+            entity = self.workspace.get_entity(self.selection.objects.value)[0]
+            data_list = self.get_data_list(entity)
 
-            if hasattr(data_channel_choices, "data_channel_options"):
+            if hasattr(self.data_channel_choices, "data_channel_options"):
                 for (
                     key,
                     data_widget,
-                ) in data_channel_choices.data_channel_options.items():
+                ) in self.data_channel_choices.data_channel_options.items():
                     data_widget.children[2].options = data_list
                     value = find_value(data_list, [key])
                     data_widget.children[2].value = value
 
-    o_d.data.observe(update_component_panel, names="value")
-
-    def data_channel_choices_observer(_):
+    def data_channel_choices_observer(self):
         if hasattr(
-            data_channel_choices, "data_channel_options"
-        ) and data_channel_choices.value in (
-            data_channel_choices.data_channel_options.keys()
+            self.data_channel_choices, "data_channel_options"
+        ) and self.data_channel_choices.value in (
+            self.data_channel_choices.data_channel_options.keys()
         ):
-            data_widget = data_channel_choices.data_channel_options[
-                data_channel_choices.value
+            data_widget = self.data_channel_choices.data_channel_options[
+                self.data_channel_choices.value
             ]
-            data_channel_panel.children = [data_channel_choices, data_widget]
+            self.data_channel_panel.children = [self.data_channel_choices, data_widget]
 
             if (
-                workspace.get_entity(o_d.objects.value)
+                self.workspace.get_entity(self.selection.objects.value)
                 and data_widget.children[2].value is None
             ):
-                entity = workspace.get_entity(o_d.objects.value)[0]
-                data_list = get_data_list(entity)
-                value = find_value(data_list, [data_channel_choices.value])
+                entity = self.workspace.get_entity(self.selection.objects.value)[0]
+                data_list = self.get_data_list(entity)
+                value = find_value(data_list, [self.data_channel_choices.value])
                 data_widget.children[2].value = value
 
-        w_l["write"].button_style = "warning"
-        w_l["run"].button_style = "danger"
+        self.write.button_style = "warning"
+        self.run.button_style = "danger"
 
-    data_channel_choices = widgets.Dropdown(style={"description_width": "initial"})
-
-    data_channel_choices.observe(data_channel_choices_observer, names="value")
-    data_channel_panel = widgets.VBox([data_channel_choices])
-
-    survey_type_panel = VBox([system])
-
-    # Spatial parameters
-    # Topography definition
-    if "topography" in kwargs.keys():
-        topo_kwargs = kwargs["topography"]
-    else:
-        topo_kwargs = {}
-
-    topography = TopographyOptions(h5file=h5file, **topo_kwargs)
-
-    # Define bird parameters
-    sensor = SensorOptions(h5file, o_d.objects)
-
-    # LINE ID
-    lines = LineOptions(h5file=h5file, objects=o_d.objects)
-
-    # SPATIAL PARAMETERS DROPDOWN
-    spatial_options = {
-        "Topography": topography.widget,
-        "Receivers": sensor.widget,
-        "Line ID": lines.widget,
-    }
-
-    spatial_choices = widgets.Dropdown(
-        options=list(spatial_options.keys()),
-        value=list(spatial_options.keys())[0],
-        disabled=False,
-    )
-
-    spatial_panel = VBox([spatial_choices, spatial_options[spatial_choices.value]])
-
-    def spatial_option_change(_):
-        spatial_panel.children = [
-            spatial_choices,
-            spatial_options[spatial_choices.value],
+    def spatial_option_change(self):
+        self.spatial_panel.children = [
+            self.spatial_choices,
+            self.spatial_options[self.spatial_choices.value],
         ]
-        w_l["write"].button_style = "warning"
-        w_l["run"].button_style = "danger"
+        self.write.button_style = "warning"
+        self.run.button_style = "danger"
 
-    spatial_choices.observe(spatial_option_change)
-
-    def update_octree_param(_):
-        dl = plot_selection.resolution.value
-        mesh.core_cell_size.value = f"{dl/2:.0f}, {dl/2:.0f}, {dl/2:.0f}"
-        mesh.depth_core.value = np.ceil(
-            np.min([plot_selection.width.value, plot_selection.height.value]) / 2.0
+    def update_octree_param(self):
+        dl = self.plot_selection.resolution.value
+        self.mesh_octree.core_cell_size.value = f"{dl/2:.0f}, {dl/2:.0f}, {dl/2:.0f}"
+        self.mesh_octree.depth_core.value = np.ceil(
+            np.min([self.plot_selection.width.value, self.plot_selection.height.value])
+            / 2.0
         )
-        mesh.padding_distance.value = ", ".join(
+        self.mesh_octree.padding_distance.value = ", ".join(
             list(
                 map(
                     str,
                     [
-                        np.ceil(plot_selection.width.value / 2),
-                        np.ceil(plot_selection.width.value / 2),
-                        np.ceil(plot_selection.height.value / 2),
-                        np.ceil(plot_selection.height.value / 2),
+                        np.ceil(self.plot_selection.width.value / 2),
+                        np.ceil(self.plot_selection.width.value / 2),
+                        np.ceil(self.plot_selection.height.value / 2),
+                        np.ceil(self.plot_selection.height.value / 2),
                         0,
                         0,
                     ],
                 )
             )
         )
-        plot_selection.resolution.indices = None
-        w_l["write"].button_style = "warning"
-        w_l["run"].button_style = "danger"
+        self.plot_selection.resolution.indices = None
+        self.write.button_style = "warning"
+        self.run.button_style = "danger"
 
-    plot_selection.width.observe(update_octree_param)
-    plot_selection.height.observe(update_octree_param)
-    plot_selection.resolution.observe(update_octree_param, names="value")
-    plot_selection.resolution.indices = None
+    def update_selection(self):
+        self.plot_selection.highlight_selection = {
+            self.lines.data.value: self.lines.lines.value
+        }
+        self.plot_selection.refresh.value = False
+        self.plot_selection.refresh.value = True
 
-    def update_selection(_):
-        plot_selection.highlight_selection = {lines.data.value: lines.lines.value}
-        plot_selection.refresh.value = False
-        plot_selection.refresh.value = True
-
-    lines.lines.observe(update_selection)
-    # marker_size = widgets.IntSlider(
-    #     min=1, max=100, value=3, description="Markers", continuous_update=False,
-    # )
-    # plot_window = widgets.interactive_output(
-    #     plot_selection,
-    #     {
-    #         "entity_name": o_d.objects,
-    #         "data_choice": data_channel_choices,
-    #         "line_ids": lines.lines,
-    #         "resolution": plot_selection.resolution,
-    #         "center_x": plot_selection.center_x,
-    #         "center_y": plot_selection.center_y,
-    #         "width_x": plot_selection.width,
-    #         "width_y": plot_selection.height,
-    #         "azimuth": plot_selection.azimuth,
-    #         "zoom_extent": w_l["zoom_extent"],
-    #         "marker_size": marker_size,
-    #     },
-    # )
-    # selection_panel = VBox(
-    #     [
-    #         Label("Window & Downsample"),
-    #         VBox(
-    #             [
-    #                 plot_selection.resolution,
-    #                 w_l["data_count"],
-    #                 marker_size,
-    #                 HBox(
-    #                     [plot_selection.center_y, plot_selection.height, plot_window],
-    #                     layout=Layout(align_items="center"),
-    #                 ),
-    #                 VBox(
-    #                     [
-    #                         plot_selection.width,
-    #                         plot_selection.center_x,
-    #                         plot_selection.azimuth,
-    #                         w_l["zoom_extent"],
-    #                     ],
-    #                     layout=Layout(align_items="center"),
-    #                 ),
-    #             ],
-    #             layout=Layout(align_items="center"),
-    #         ),
-    #     ],
-    #     layout=Layout(width="50%"),
-    # )
-
-    def write_unclick(_):
-        if w_l["write"].value is False:
+    def write_trigger(self):
+        if self.write.value is False:
             return
 
         input_dict = {
-            "out_group": inversion_parameters.output_name.value,
-            "workspace": h5file,
-            "save_to_geoh5": h5file,
+            "out_group": self.inversion_parameters.output_name.value,
+            "workspace": self.h5file,
+            "save_to_geoh5": self.h5file,
         }
-        if system.value in ["Gravity", "Magnetics"]:
-            input_dict["inversion_type"] = system.value.lower()
+        if self.system.value in ["Gravity", "Magnetics"]:
+            input_dict["inversion_type"] = self.system.value.lower()
 
             if input_dict["inversion_type"] == "magnetics":
                 input_dict["inducing_field_aid"] = string_2_list(
-                    w_l["inducing_field"].value
+                    self.inducing_field.value
                 )
             # Octree mesh parameters
-            input_dict["core_cell_size"] = string_2_list(mesh.core_cell_size.value)
+            input_dict["core_cell_size"] = string_2_list(
+                self.mesh_octree.core_cell_size.value
+            )
             input_dict["octree_levels_topo"] = string_2_list(
-                mesh.octree_levels_topo.value
+                self.mesh_octree.octree_levels_topo.value
             )
             input_dict["octree_levels_obs"] = string_2_list(
-                mesh.octree_levels_obs.value
+                self.mesh_octree.octree_levels_obs.value
             )
-            input_dict["depth_core"] = {"value": mesh.depth_core.value}
-            input_dict["max_distance"] = mesh.max_distance.value
-            p_d = string_2_list(mesh.padding_distance.value)
+            input_dict["depth_core"] = {"value": self.mesh_octree.depth_core.value}
+            input_dict["max_distance"] = self.mesh_octree.max_distance.value
+            p_d = string_2_list(self.mesh_octree.padding_distance.value)
             input_dict["padding_distance"] = [
                 [p_d[0], p_d[1]],
                 [p_d[2], p_d[3]],
@@ -1421,80 +1573,90 @@ def inversion_app(h5file, **kwargs):
             ]
 
         else:
-            input_dict["system"] = system.value
+            input_dict["system"] = self.system.value
             input_dict["lines"] = {
-                lines.data.value: [str(line) for line in lines.lines.value]
+                self.lines.data.value: [str(line) for line in self.lines.lines.value]
             }
 
             input_dict["mesh 1D"] = [
-                w_l["hz_min"].value,
-                w_l["hz_expansion"].value,
-                w_l["n_cells"].value,
+                self.mesh_1D.hz_min.value,
+                self.mesh_1D.hz_expansion.value,
+                self.mesh_1D.n_cells.value,
             ]
-        input_dict["chi_factor"] = inversion_parameters.chi_factor.value
-        input_dict["max_iterations"] = inversion_parameters.max_iterations.value
-        input_dict["max_cg_iterations"] = inversion_parameters.max_cg_iterations.value
+        input_dict["chi_factor"] = self.inversion_parameters.chi_factor.value
+        input_dict["max_iterations"] = self.inversion_parameters.max_iterations.value
+        input_dict[
+            "max_cg_iterations"
+        ] = self.inversion_parameters.max_cg_iterations.value
 
-        if inversion_parameters.beta_start_options.value == "value":
-            input_dict["initial_beta"] = inversion_parameters.beta_start.value
+        if self.inversion_parameters.beta_start_options.value == "value":
+            input_dict["initial_beta"] = self.inversion_parameters.beta_start.value
         else:
-            input_dict["initial_beta_ratio"] = inversion_parameters.beta_start.value
+            input_dict[
+                "initial_beta_ratio"
+            ] = self.inversion_parameters.beta_start.value
 
-        input_dict["tol_cg"] = inversion_parameters.tol_cg.value
-        input_dict["ignore_values"] = inversion_parameters.ignore_values.value
-        input_dict["resolution"] = plot_selection.resolution.value
+        input_dict["tol_cg"] = self.inversion_parameters.tol_cg.value
+        input_dict["ignore_values"] = self.inversion_parameters.ignore_values.value
+        input_dict["resolution"] = self.plot_selection.resolution.value
         input_dict["window"] = {
-            "center": [plot_selection.center_x.value, plot_selection.center_y.value],
-            "size": [plot_selection.width.value, plot_selection.height.value],
-            "azimuth": plot_selection.azimuth.value,
+            "center": [
+                self.plot_selection.center_x.value,
+                self.plot_selection.center_y.value,
+            ],
+            "size": [self.plot_selection.width.value, self.plot_selection.height.value],
+            "azimuth": self.plot_selection.azimuth.value,
         }
-        input_dict["alphas"] = string_2_list(inversion_parameters.alphas.value)
+        input_dict["alphas"] = string_2_list(self.inversion_parameters.alphas.value)
         input_dict["reference_model"] = {
-            inversion_parameters.reference_model.widget.children[1]
+            self.inversion_parameters.reference_model.widget.children[1]
             .children[0]
-            .value.lower(): inversion_parameters.reference_model.widget.children[1]
+            .value.lower(): self.inversion_parameters.reference_model.widget.children[1]
             .children[1]
             .value
         }
         input_dict["starting_model"] = {
-            inversion_parameters.starting_model.widget.children[1]
+            self.inversion_parameters.starting_model.widget.children[1]
             .children[0]
-            .value.lower(): inversion_parameters.starting_model.widget.children[1]
+            .value.lower(): self.inversion_parameters.starting_model.widget.children[1]
             .children[1]
             .value
         }
 
-        if inversion_parameters.susceptibility_model.options.value != "None":
+        if self.inversion_parameters.susceptibility_model.options.value != "None":
             input_dict["susceptibility"] = {
-                inversion_parameters.susceptibility_model.widget.children[1]
+                self.inversion_parameters.susceptibility_model.widget.children[1]
                 .children[0]
-                .value.lower(): inversion_parameters.susceptibility_model.widget.children[
+                .value.lower(): self.inversion_parameters.susceptibility_model.widget.children[
                     1
                 ]
                 .children[1]
                 .value
             }
 
-        input_dict["model_norms"] = string_2_list(inversion_parameters.norms.value)
+        input_dict["model_norms"] = string_2_list(self.inversion_parameters.norms.value)
 
-        if len(inversion_parameters.lower_bound.value) > 1:
+        if len(self.inversion_parameters.lower_bound.value) > 1:
             input_dict["lower_bound"] = string_2_list(
-                inversion_parameters.lower_bound.value
+                self.inversion_parameters.lower_bound.value
             )
 
-        if len(inversion_parameters.upper_bound.value) > 1:
+        if len(self.inversion_parameters.upper_bound.value) > 1:
             input_dict["upper_bound"] = string_2_list(
-                inversion_parameters.upper_bound.value
+                self.inversion_parameters.upper_bound.value
             )
 
         input_dict["data"] = {}
         input_dict["data"]["type"] = "GA_object"
-        input_dict["data"]["name"] = o_d.objects.value
+        input_dict["data"]["name"] = self.selection.objects.value
 
-        if hasattr(data_channel_choices, "data_channel_options"):
+        if hasattr(self.data_channel_choices, "data_channel_options"):
             channel_param = {}
 
-            for key, data_widget in data_channel_choices.data_channel_options.items():
+            for (
+                key,
+                data_widget,
+            ) in self.data_channel_choices.data_channel_options.items():
                 if data_widget.children[0].value is False:
                     continue
 
@@ -1507,50 +1669,51 @@ def inversion_app(h5file, **kwargs):
                     data_widget.children[4].value
                 )
 
-                if system.value not in ["Gravity", "Magnetics"]:
+                if self.system.value not in ["Gravity", "Magnetics"]:
                     channel_param[key]["value"] = string_2_list(
                         data_widget.children[1].value
                     )
                 if (
-                    system.value in ["Gravity", "Magnetics"]
-                    and plot_selection.azimuth.value != 0
+                    self.system.value in ["Gravity", "Magnetics"]
+                    and self.plot_selection.azimuth.value != 0
                     and key not in ["tmi", "gz"]
                 ):
                     print(
                         f"Gradient data with rotated window is currently not supported"
                     )
-                    w_l["run"].button_style = "danger"
+                    self.run.button_style = "danger"
                     return
 
             input_dict["data"]["channels"] = channel_param
 
-        input_dict["uncertainty_mode"] = inversion_parameters.uncert_mode.value
+        input_dict["uncertainty_mode"] = self.inversion_parameters.uncert_mode.value
 
-        if sensor.options_button.value == "(x, y, z) + offset(x,y,z)":
+        if self.sensor.options_button.value == "(x, y, z) + offset(x,y,z)":
             input_dict["receivers_offset"] = {
-                "constant": string_2_list(sensor.offset.value)
+                "constant": string_2_list(self.sensor.offset.value)
             }
         else:
             input_dict["receivers_offset"] = {
-                "radar_drape": string_2_list(sensor.offset.value) + [sensor.value.value]
+                "radar_drape": string_2_list(self.sensor.offset.value)
+                + [self.sensor.value.value]
             }
 
-        if topography.options_button.value == "Object":
-            if topography.objects.value is None:
+        if self.topography.options_button.value == "Object":
+            if self.topography.objects.value is None:
                 input_dict["topography"] = None
             else:
                 input_dict["topography"] = {
                     "GA_object": {
-                        "name": topography.objects.value,
-                        "data": topography.value.value,
+                        "name": self.topography.objects.value,
+                        "data": self.topography.value.value,
                     }
                 }
-        elif topography.options_button.value == "Drape Height":
-            input_dict["topography"] = {"drapped": topography.offset.value}
+        elif self.topography.options_button.value == "Drape Height":
+            input_dict["topography"] = {"drapped": self.topography.offset.value}
         else:
-            input_dict["topography"] = {"constant": topography.constant.value}
+            input_dict["topography"] = {"constant": self.topography.constant.value}
 
-        if w_l["forward_only"].value:
+        if self.forward_only.value:
             input_dict["forward_only"] = []
 
         checks = [key for key, val in input_dict.items() if val is None]
@@ -1560,22 +1723,17 @@ def inversion_app(h5file, **kwargs):
 
         if len(checks) > 0:
             print(f"Required value for {checks}")
-            w_l["run"].button_style = "danger"
+            self.run.button_style = "danger"
         else:
-            w_l["write"].button_style = ""
-            file = inv_dir + f"{inversion_parameters.output_name.value}.json"
+            self.write.button_style = ""
+            file = self.inv_dir + f"{self.inversion_parameters.output_name.value}.json"
             with open(file, "w") as f:
                 json.dump(input_dict, f, indent=4)
-            w_l["run"].button_style = "success"
+            self.run.button_style = "success"
 
-        w_l["write"].value = False
-        w_l["write"].button_style = ""
-        w_l["run"].button_style = "success"
-
-    w_l["write"].observe(write_unclick)
-
-    object_observer("")
-    update_ref("")
+        self.write.value = False
+        self.write.button_style = ""
+        self.run.button_style = "success"
 
     # for attr, item in kwargs.items():
     #     try:
@@ -1586,32 +1744,10 @@ def inversion_app(h5file, **kwargs):
     #         continue
     # for attr, item in kwargs.items():
     #     try:
-    #         if getattr(o_d, attr, None) is not None:
-    #             widget = getattr(o_d, attr)
+    #         if getattr(self.selection, attr, None) is not None:
+    #             widget = getattr(self.selection, attr)
     #             if hasattr(widget, "options") and item not in widget.options:
     #                 continue
     #             widget.value = item
     #     except AttributeError:
     #         continue
-    plot_selection.widget.layout = Layout(width="60%")
-    return VBox(
-        [
-            HBox(
-                [
-                    plot_selection.widget,
-                    VBox(
-                        [
-                            VBox([Label(""), survey_type_panel]),
-                            VBox([Label("Components"), data_channel_panel]),
-                        ],
-                        layout=Layout(width="40%"),
-                    ),
-                ]
-            ),
-            VBox([Label("Spatial Information"), spatial_panel]),
-            inversion_parameters.widget,
-            w_l["forward_only"],
-            w_l["write"],
-            w_l["run"],
-        ]
-    )
