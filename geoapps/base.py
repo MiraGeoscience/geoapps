@@ -1,4 +1,5 @@
 import os
+from shutil import copyfile
 import time
 from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton
 from geoh5py.workspace import Workspace
@@ -9,16 +10,19 @@ class Widget:
     Base class for geoapps.Widget
     """
 
-    def __init__(self, h5file, **kwargs):
+    def __init__(self, **kwargs):
+        self._h5file = None
+        self._workspace = None
 
-        self._h5file = h5file
+        if "h5file" in kwargs.keys():
+            if "make_working_copy" in kwargs.keys() and kwargs["make_working_copy"]:
+                self._h5file = copyfile(
+                    kwargs["h5file"], kwargs["h5file"][:-6] + "_work.geoh5"
+                )
+            else:
+                self._h5file = kwargs["h5file"]
 
-        for key, value in kwargs.items():
-            if getattr(self, "_" + key, None) is not None:
-                try:
-                    getattr(self, "_" + key).value = value
-                except:
-                    pass
+            self._workspace = Workspace(self.h5file)
 
         self._live_link = Checkbox(
             description="GA Pro - Live link", value=False, indent=False
@@ -31,10 +35,15 @@ class Widget:
 
         self._live_link_path = Text(
             description="",
-            value=os.path.join(os.path.abspath(os.path.dirname(self.h5file)), "Temp"),
+            value="",
             disabled=True,
             style={"description_width": "initial"},
         )
+
+        if self.h5file is not None:
+            self.live_link_path.value = os.path.join(
+                os.path.abspath(os.path.dirname(self.h5file)), "Temp"
+            )
 
         self._trigger = ToggleButton(
             value=False,
@@ -51,6 +60,13 @@ class Widget:
                 self.live_link_path,
             ]
         )
+
+        for key, value in kwargs.items():
+            if getattr(self, "_" + key, None) is not None:
+                try:
+                    getattr(self, "_" + key).value = value
+                except:
+                    pass
 
     def live_link_output(self, entity, data={}):
         """
@@ -111,3 +127,10 @@ class Widget:
         :obj:`ipywidgets.ToggleButton`: Trigger some computation and output.
         """
         return self._trigger
+
+    @property
+    def workspace(self):
+        """
+        Target geoh5py workspace
+        """
+        return self._workspace

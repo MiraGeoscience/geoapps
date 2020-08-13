@@ -23,8 +23,8 @@ class ContourValues(Widget):
     Application for 2D contouring of spatial data.
     """
 
-    def __init__(self, h5file, **kwargs):
-        self._plot_selection = PlotSelection2D(h5file, **kwargs)
+    def __init__(self, **kwargs):
+        self._plot_selection = PlotSelection2D(**kwargs)
 
         self._contours = Text(
             value="", description="Contours", disabled=False, continuous_update=False
@@ -39,7 +39,7 @@ class ContourValues(Widget):
             value=False, indent=False, description="Assign Z from values"
         )
 
-        super().__init__(h5file, **kwargs)
+        super().__init__(**kwargs)
 
         out = interactive_output(self.compute_plot, {"contour_values": self.contours},)
 
@@ -61,11 +61,17 @@ class ContourValues(Widget):
             [
                 HBox(
                     [
-                        VBox([Label("Input options:"), self.plot_selection.widget]),
+                        VBox(
+                            [
+                                Label("Input options:"),
+                                self.plot_selection.selection.widget,
+                                self.contours,
+                                self.plot_selection.plot_widget,
+                            ]
+                        ),
                         VBox(
                             [
                                 Label("Output options:"),
-                                self.contours,
                                 self.export_as,
                                 self.z_value,
                                 self.trigger_widget,
@@ -223,5 +229,4 @@ class ContourValues(Widget):
                             {self.contours.value: {"values": np.hstack(values)}}
                         )
                         workspace = Workspace(self.h5file)
-                        print(workspace.get_entity(self.contours.value), curve.children)
                         self.trigger.value = False

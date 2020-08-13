@@ -104,7 +104,7 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
 
         set_axes_equal(axs)
 
-    object_selection = ObjectDataSelection(h5file, interactive=True).widget
+    object_selection = ObjectDataSelection(h5file=h5file, interactive=True).widget
 
     obj = workspace.get_entity(object_selection.children[0].children[0].value)[0]
     if getattr(obj, "vertices", None) is not None:

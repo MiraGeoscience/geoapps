@@ -127,15 +127,15 @@ class EMLineProfiler(Widget):
         self.middle = np.arange(17, 28).tolist()
         self.late = np.arange(28, 40).tolist()
 
-        self.data_selection = ObjectDataSelection(h5file, select_multiple=True)
+        self.data_selection = ObjectDataSelection(h5file=h5file, select_multiple=True)
         self.data_selection.objects.description = "Survey"
 
-        self.model_selection = ObjectDataSelection(h5file)
+        self.model_selection = ObjectDataSelection(h5file=h5file)
         self.model_selection.objects.description = "1D Object:"
         self.model_selection.data.description = "Model"
 
         _, self.model_line_field = ObjectDataSelection(
-            h5file, objects=self.model_selection.objects, find_value=["line"]
+            h5file=h5file, objects=self.model_selection.objects, find_value=["line"]
         )
         self.model_line_field.description = "Line field: "
 

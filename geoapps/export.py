@@ -188,7 +188,7 @@ def export_widget(h5file):
 
     file_type.observe(update_options)
 
-    selection = ObjectDataSelection(h5file, select_multiple=True)
+    selection = ObjectDataSelection(h5file=h5file, select_multiple=True)
 
     def update_name(_):
         export_as.value = selection.objects.value.replace(":", "_")
@@ -429,7 +429,7 @@ def object_to_object_interpolation(h5file):
 
     names = list(workspace.list_objects_name.values())
 
-    selection = ObjectDataSelection(h5file, select_multiple=True)
+    selection = ObjectDataSelection(h5file=h5file, select_multiple=True)
 
     out_mode = widgets.RadioButtons(
         options=["To Object:", "Create 3D Grid"], value="To Object:", disabled=False

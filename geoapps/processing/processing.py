@@ -35,9 +35,9 @@ from geoapps.utils import (
 
 def calculator(h5file):
     w_s = Workspace(h5file)
-    selection = ObjectDataSelection(h5file, select_multiple=False)
+    selection = ObjectDataSelection(h5file=h5file, select_multiple=False)
     _, store = ObjectDataSelection(
-        h5file, objects=selection.objects, select_multiple=False
+        h5file=h5file, objects=selection.objects, select_multiple=False
     ).data
     store.description = "Assign result to: "
     store.style = {"description_width": "initial"}
@@ -116,18 +116,18 @@ def cdi_curve_2_surface(h5file):
 
     workspace = Workspace(h5file)
 
-    selection = ObjectDataSelection(h5file, add_groups=True)
+    selection = ObjectDataSelection(h5file=h5file, add_groups=True)
     selection.data.description = "Model fields: "
 
     _, line_channel = ObjectDataSelection(
-        h5file, add_groups=True, objects=selection.objects, find_value=["line"]
+        h5file=h5file, add_groups=True, objects=selection.objects, find_value=["line"]
     )
     line_channel.description = "Line field:"
 
     topo_options = TopographyOptions(h5file)
 
     _, elevations = ObjectDataSelection(
-        h5file, add_groups=True, objects=selection.objects
+        h5file=h5file, add_groups=True, objects=selection.objects
     )
     elevations.description = "Elevations:"
 
@@ -616,7 +616,7 @@ def edge_detection_widget(
 
     workspace = Workspace(h5file)
 
-    selection = ObjectDataSelection(h5file)
+    selection = ObjectDataSelection(h5file=h5file)
 
     center_x = widgets.FloatSlider(
         min=-100, max=100, steps=10, description="Easting", continuous_update=False,
