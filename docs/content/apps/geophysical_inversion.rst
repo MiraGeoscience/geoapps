@@ -219,7 +219,7 @@ More details for the different menu options are provided below.
                  h5file,
                  objects="Data_FEM_pseudo3D"
             ).objects
-            app = LineOptions(h5file, obj)
+            app = LineOptions(h5file=h5file, objects=obj)
             app.widget
      - Select a data channel containing the line IDs and chose lines to be inverted.
 
