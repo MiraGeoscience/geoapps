@@ -1,7 +1,8 @@
 Create contours
 ===============
 
-With this application, users can create contours from data using the `matplotlib <https://scikit-image.org/>`_ open-source package.
+With this application, users can create contours from data using the
+`matplotlib <https://scikit-image.org/>`_ open-source package.
 
 - The contouring can be done on points, curves, surfaces and grids.
 - Contours can be exported to `Geoscience ANALYST <https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_, either as 2D or 3D curves.
