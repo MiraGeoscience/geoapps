@@ -1,6 +1,7 @@
 import os
 from shutil import copyfile
 import time
+import ipywidgets as widgets
 from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton
 from geoh5py.workspace import Workspace
 
@@ -33,12 +34,7 @@ class Widget:
 
         self._live_link.observe(live_link_choice)
 
-        self._live_link_path = Text(
-            description="",
-            value="",
-            disabled=True,
-            style={"description_width": "initial"},
-        )
+        self._live_link_path = Text(description="", value="", disabled=True,)
 
         if self.h5file is not None:
             self.live_link_path.value = os.path.join(
@@ -61,10 +57,17 @@ class Widget:
             ]
         )
 
+        for obj in self.__dict__:
+            if hasattr(getattr(self, obj), "style"):
+                getattr(self, obj).style = {"description_width": "initial"}
+
         for key, value in kwargs.items():
             if getattr(self, "_" + key, None) is not None:
                 try:
-                    getattr(self, "_" + key).value = value
+                    if isinstance(getattr(self, "_" + key), widgets.Widget):
+                        getattr(self, "_" + key).value = value
+                    else:
+                        setattr(self, "_" + key, value)
                 except:
                     pass
 

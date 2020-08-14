@@ -40,11 +40,8 @@ def calculator(h5file):
         h5file=h5file, objects=selection.objects, select_multiple=False
     ).data
     store.description = "Assign result to: "
-    store.style = {"description_width": "initial"}
     use = widgets.ToggleButton(description=">> Add >>")
-    add = widgets.ToggleButton(
-        description=">> Create >>", style={"description_width": "initial"}
-    )
+    add = widgets.ToggleButton(description=">> Create >>")
     compute = widgets.ToggleButton(description="Compute: ", button_style="success")
     channel = widgets.Text("NewChannel", description="Name: ")
     equation = widgets.Textarea(layout=Layout(width="75%"))
@@ -145,25 +142,15 @@ def cdi_curve_2_surface(h5file):
             depth_panel.children = [z_option, elevations]
 
     z_option = widgets.RadioButtons(
-        options=["elevation", "depth"],
-        description="Layers reference:",
-        style={"description_width": "initial"},
+        options=["elevation", "depth"], description="Layers reference:",
     )
 
     z_option.observe(z_option_change)
 
-    max_depth = widgets.FloatText(
-        value=400, description="Max depth (m):", style={"description_width": "initial"}
-    )
-    max_distance = widgets.FloatText(
-        value=50,
-        description="Max distance (m):",
-        style={"description_width": "initial"},
-    )
+    max_depth = widgets.FloatText(value=400, description="Max depth (m):",)
+    max_distance = widgets.FloatText(value=50, description="Max distance (m):",)
 
-    tolerance = widgets.FloatText(
-        value=1, description="Tolerance (m):", style={"description_width": "initial"}
-    )
+    tolerance = widgets.FloatText(value=1, description="Tolerance (m):")
     depth_panel = widgets.HBox([z_option, elevations])
 
     out_name = widgets.Text("CDI_", description="Name: ")
@@ -657,11 +644,7 @@ def edge_detection_widget(
         orientation="vertical",
     )
 
-    resolution = widgets.FloatText(
-        value=resolution,
-        description="Grid Resolution (m)",
-        style={"description_width": "initial"},
-    )
+    resolution = widgets.FloatText(value=resolution, description="Grid Resolution (m)",)
     data_count = Label("Data Count: 0", tooltip="Keep <1500 for speed")
     zoom_extent = widgets.ToggleButton(
         value=True,
@@ -670,11 +653,7 @@ def edge_detection_widget(
         icon="check",
     )
 
-    window_size = widgets.IntText(
-        value=64,
-        description="Window size (pixels)",
-        style={"description_width": "initial"},
-    )
+    window_size = widgets.IntText(value=64, description="Window size (pixels)",)
     export = widgets.ToggleButton(
         value=False,
         description="Export to GA",
@@ -696,7 +675,6 @@ def edge_detection_widget(
         value=sigma,
         continuous_update=False,
         description="Sigma",
-        style={"description_width": "initial"},
     )
     line_length = widgets.IntSlider(
         min=1.0,
@@ -705,7 +683,6 @@ def edge_detection_widget(
         value=line_length,
         continuous_update=False,
         description="Line Length",
-        style={"description_width": "initial"},
     )
     line_gap = widgets.IntSlider(
         min=1.0,
@@ -714,7 +691,6 @@ def edge_detection_widget(
         value=line_gap,
         continuous_update=False,
         description="Line Gap",
-        style={"description_width": "initial"},
     )
     threshold = widgets.IntSlider(
         min=1.0,
@@ -723,7 +699,6 @@ def edge_detection_widget(
         value=threshold,
         continuous_update=False,
         description="Threshold",
-        style={"description_width": "initial"},
     )
 
     export_as = widgets.Text(

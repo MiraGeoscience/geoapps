@@ -1,7 +1,6 @@
 import numpy as np
-from geoh5py.workspace import Workspace
 import ipywidgets as widgets
-from ipywidgets import Dropdown, HBox, SelectMultiple, VBox, interactive_output
+from ipywidgets import Dropdown, SelectMultiple, VBox
 
 from geoapps.base import Widget
 from geoapps import utils
@@ -12,32 +11,29 @@ class LineOptions(Widget):
     Unique lines selection from selected data channel
     """
 
-    def __init__(self, select_multiple=True, **kwargs):
+    def __init__(self, **kwargs):
 
-        if select_multiple:
+        if "select_multiple_lines" in kwargs.keys():
             self._lines = widgets.SelectMultiple(description="Select lines:",)
         else:
             self._lines = widgets.Dropdown(description="Select line:",)
 
-        super().__init__(**kwargs)
-
-        self._selection = ObjectDataSelection(find_value=["line"], **kwargs)
-        self._data = self.selection.data
+        self._selection = ObjectDataSelection(**kwargs)
         self._objects = self.selection.objects
-
+        self._data = self.selection.data
         self._data.description = "Lines field"
-        self._data.style = {"description_width": "initial"}
 
         def update_list(_):
             self.update_list()
 
-        self._objects.observe(update_list, names="value")
         self._data.observe(update_list, names="value")
-        update_list("")
+
+        super().__init__(**kwargs)
 
         if "value" in kwargs.keys() and kwargs["value"] in self._data.options:
             self._data.value = kwargs["value"]
 
+        update_list("")
         self._widget = VBox([self._data, self._lines])
 
     @property
@@ -52,9 +48,15 @@ class LineOptions(Widget):
     def selection(self):
         return self._selection
 
+    @property
+    def select_multiple(self):
+        """
+        :obj:`bool` ALlow to select multiple data fields
+        """
+        return self._select_multiple
+
     def update_list(self):
         _, data = self.selection.get_selected_entities()
-
         if getattr(data, "values", None) is not None:
             self._lines.options = [""] + np.unique(data.values).tolist()
 
@@ -72,15 +74,17 @@ class ObjectDataSelection(Widget):
     Application to select an object and corresponding data
     """
 
-    def __init__(
-        self, select_multiple=False, add_groups=False, find_value=[], **kwargs
-    ):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.add_groups = add_groups
-        self.select_multiple = select_multiple
+        self._add_groups = False
 
-        if select_multiple:
+        if "select_multiple" in kwargs.keys():
+            self._select_multiple = kwargs["select_multiple"]
+        else:
+            self._select_multiple = False
+
+        if self.select_multiple:
             self._data = SelectMultiple(description="Data: ",)
         else:
             self._data = Dropdown(description="Data: ",)
@@ -89,6 +93,11 @@ class ObjectDataSelection(Widget):
             self._objects = kwargs["objects"]
         else:
             self._objects = Dropdown(description="Object:",)
+
+        if "find_value" in kwargs.keys():
+            find_value = kwargs["find_value"]
+        else:
+            find_value = []
 
         if self.h5file is not None:
             self.objects.options = list(self.workspace.list_objects_name.values())
@@ -102,9 +111,21 @@ class ObjectDataSelection(Widget):
         for key, value in kwargs.items():
             if getattr(self, "_" + key, None) is not None:
                 try:
-                    getattr(self, "_" + key).value = value
+                    if isinstance(getattr(self, "_" + key), widgets.Widget):
+                        getattr(self, "_" + key).value = value
+                    else:
+                        setattr(self, "_" + key, value)
                 except:
                     pass
+
+        update_data_list("")
+
+    @property
+    def add_groups(self):
+        """
+        bool: Add data groups to the list of data choices
+        """
+        return self._add_groups
 
     @property
     def data(self):
@@ -119,6 +140,13 @@ class ObjectDataSelection(Widget):
         Object selector
         """
         return self._objects
+
+    @property
+    def select_multiple(self):
+        """
+        bool: ALlow to select multiple data
+        """
+        return self._select_multiple
 
     def get_selected_entities(self):
         """
