@@ -176,11 +176,7 @@ def export_widget(h5file):
     )
 
     data_type = widgets.RadioButtons(options=["float", "RGB",], description="Type:")
-    no_data_value = widgets.FloatText(
-        description="no-data-value",
-        value=-99999,
-        style={"description_width": "initial"},
-    )
+    no_data_value = widgets.FloatText(description="no-data-value", value=-99999,)
 
     epsg_code = widgets.Text(description="EPSG code:", indent=False, disabled=False)
 
@@ -438,11 +434,7 @@ def object_to_object_interpolation(h5file):
     out_mode.observe(out_update)
     mesh_dropdown = widgets.Dropdown(options=names)
 
-    ref_dropdown = widgets.Dropdown(
-        options=names,
-        description="XY Extent from:",
-        style={"description_width": "initial"},
-    )
+    ref_dropdown = widgets.Dropdown(options=names, description="XY Extent from:",)
 
     def object_pick(_):
         ref_dropdown.value = selection.objects.value
@@ -450,38 +442,25 @@ def object_to_object_interpolation(h5file):
     selection.objects.observe(object_pick)
 
     new_grid = widgets.Text(
-        value="InterpGrid",
-        description="New grid name:",
-        disabled=False,
-        style={"description_width": "initial"},
+        value="InterpGrid", description="New grid name:", disabled=False,
     )
 
     core_cell_size = widgets.Text(
-        value="25, 25, 25",
-        description="Smallest cells",
-        disabled=False,
-        style={"description_width": "initial"},
+        value="25, 25, 25", description="Smallest cells", disabled=False,
     )
 
     depth_core = widgets.FloatText(
-        value=500,
-        description="Core depth (m)",
-        disabled=False,
-        style={"description_width": "initial"},
+        value=500, description="Core depth (m)", disabled=False,
     )
 
     padding_distance = widgets.Text(
         value="0, 0, 0, 0, 0, 0",
         description="Pad Distance (W, E, N, S, D, U)",
         disabled=False,
-        style={"description_width": "initial"},
     )
 
     expansion_fact = widgets.FloatText(
-        value=1.05,
-        description="Expansion factor",
-        disabled=False,
-        style={"description_width": "initial"},
+        value=1.05, description="Expansion factor", disabled=False,
     )
 
     space = widgets.RadioButtons(
@@ -501,37 +480,17 @@ def object_to_object_interpolation(h5file):
         disabled=False,
     )
 
-    max_distance = widgets.FloatText(
-        value=1e3,
-        description="Maximum distance XY (m)",
-        style={"description_width": "initial"},
-    )
+    max_distance = widgets.FloatText(value=1e3, description="Maximum distance XY (m)",)
 
-    max_depth = widgets.FloatText(
-        value=1e3,
-        description="Maximum distance Z (m)",
-        style={"description_width": "initial"},
-    )
+    max_depth = widgets.FloatText(value=1e3, description="Maximum distance Z (m)",)
 
-    no_data_value = widgets.FloatText(
-        value=-99999,
-        description="No-Data-Value",
-        style={"description_width": "initial"},
-    )
+    no_data_value = widgets.FloatText(value=-99999, description="No-Data-Value",)
 
     skew_angle = widgets.FloatText(
-        value=0,
-        description="Azimuth (d.dd)",
-        disabled=False,
-        style={"description_width": "initial"},
+        value=0, description="Azimuth (d.dd)", disabled=False,
     )
 
-    skew_factor = widgets.FloatText(
-        value=1,
-        description="Factor",
-        disabled=False,
-        style={"description_width": "initial"},
-    )
+    skew_factor = widgets.FloatText(value=1, description="Factor", disabled=False,)
 
     method_skew = VBox([widgets.Label("Skew interpolation"), skew_angle, skew_factor])
     method_panel = HBox([method])
@@ -551,9 +510,7 @@ def object_to_object_interpolation(h5file):
     # z_value.options = list(z_value.options) + ["Vertices"]
 
     xy_extent = widgets.Dropdown(
-        options=[None] + names,
-        description="Trim xy extent with:",
-        style={"description_width": "initial"},
+        options=[None] + names, description="Trim xy extent with:",
     )
 
     new_grid_panel = VBox(

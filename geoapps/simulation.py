@@ -119,7 +119,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         step=5,
         description="Camera azimuth",
         continuous_update=False,
-        style={"description_width": "initial"},
     )
 
     dip = widgets.FloatSlider(
@@ -129,7 +128,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         step=5,
         description="Camera dip",
         continuous_update=False,
-        style={"description_width": "initial"},
     )
 
     # Pre-build a list of blocks
@@ -151,7 +149,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     value=0,
                     description="Dip",
                     continuous_update=False,
-                    style={"description_width": "initial"},
                 ),
                 widgets.FloatSlider(
                     min=-180,
@@ -159,7 +156,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     value=0,
                     description="Strike",
                     continuous_update=False,
-                    style={"description_width": "initial"},
                 ),
                 widgets.FloatSlider(
                     min=xyz[:, 0].min(),
@@ -167,7 +163,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     value=np.mean(xyz[:, 0]),
                     description="X center:",
                     continuous_update=False,
-                    style={"description_width": "initial"},
                 ),
                 widgets.FloatSlider(
                     min=xyz[:, 1].min(),
@@ -175,7 +170,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     value=np.mean(xyz[:, 1]),
                     description="Y center:",
                     continuous_update=False,
-                    style={"description_width": "initial"},
                 ),
                 widgets.FloatSlider(
                     min=-1000,
@@ -183,7 +177,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     value=np.mean(xyz[:, 2]) - 500,
                     description="Z center:",
                     continuous_update=False,
-                    style={"description_width": "initial"},
                 ),
                 widgets.FloatSlider(
                     min=10,
@@ -191,7 +184,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     value=1000,
                     description="Length:",
                     continuous_update=False,
-                    style={"description_width": "initial"},
                 ),
                 widgets.FloatSlider(
                     min=10,
@@ -199,7 +191,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     value=1000,
                     description="Width:",
                     continuous_update=False,
-                    style={"description_width": "initial"},
                 ),
                 widgets.FloatSlider(
                     min=10,
@@ -207,7 +198,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     value=1000,
                     description="Depth:",
                     continuous_update=False,
-                    style={"description_width": "initial"},
                 ),
                 widgets.FloatSlider(
                     min=0,
@@ -216,7 +206,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                     step=0.001,
                     description="Susceptibility:",
                     continuous_update=False,
-                    style={"description_width": "initial"},
                 ),
             ]
         )
@@ -259,25 +248,13 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         },
     )
 
-    sim_name = widgets.Text(
-        value="Simulation_",
-        description="Name:",
-        disabled=False,
-        style={"description_width": "initial"},
-    )
+    sim_name = widgets.Text(value="Simulation_", description="Name:", disabled=False,)
 
     core_cell_size = widgets.Text(
-        value="100, 100, 100",
-        description="Model discretization (m)",
-        disabled=False,
-        style={"description_width": "initial"},
+        value="100, 100, 100", description="Model discretization (m)", disabled=False,
     )
 
-    topography = widgets.Dropdown(
-        options=[None] + names,
-        description="Topography",
-        style={"description_width": "initial"},
-    )
+    topography = widgets.Dropdown(options=[None] + names, description="Topography",)
 
     # Pre-build a list of blocks
     export_ga = widgets.ToggleButton(
@@ -457,7 +434,6 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         description="Components",
         options=["tmi", "bxx", "bxy", "bxz", "byy", "byz", "bzz"],
         value=["tmi"],
-        style={"description_width": "initial"},
     )
 
     components_panel = widgets.VBox([components])
@@ -483,9 +459,7 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         options=["Magnetics", "Gravity"], value="Magnetics", description="Survey Type:",
     )
     inducing_field = widgets.Text(
-        value=inducing_field,
-        description="Inducing Field [Amp, Inc, Dec]",
-        style={"description_width": "initial"},
+        value=inducing_field, description="Inducing Field [Amp, Inc, Dec]",
     )
     survey_type_panel = widgets.VBox(
         [survey_type, object_selection, components_panel, inducing_field]

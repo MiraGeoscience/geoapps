@@ -117,7 +117,6 @@ class EMLineProfiler(Widget):
                 if specs["type"] == "time"
             ],
             description="Time-Domain System:",
-            style={"description_width": "initial"},
         )
 
         self._groups = self.groups
@@ -217,12 +216,7 @@ class EMLineProfiler(Widget):
         self.model_objects.observe(get_model, names="value")
 
         self.smoothing = IntSlider(
-            min=0,
-            max=64,
-            value=0,
-            description="Running mean",
-            continuous_update=False,
-            style={"description_width": "initial"},
+            min=0, max=64, value=0, description="Running mean", continuous_update=False,
         )
 
         self.residual = Checkbox(description="Use residual", value=False)
@@ -245,7 +239,6 @@ class EMLineProfiler(Widget):
             disabled=False,
             continuous_update=False,
             orientation="horizontal",
-            style={"description_width": "initial"},
         )
 
         self.auto_picker = ToggleButton(description="Pick target", value=True)
@@ -264,9 +257,7 @@ class EMLineProfiler(Widget):
         self.zoom = VBox([self.center, self.focus])
 
         self.scale_button = RadioButtons(
-            options=["linear", "symlog",],
-            description="Vertical scaling",
-            style={"description_width": "initial"},
+            options=["linear", "symlog",], description="Vertical scaling",
         )
 
         def scale_update(_):
@@ -287,7 +278,6 @@ class EMLineProfiler(Widget):
             value=1e-2,
             description="",
             continuous_update=False,
-            style={"description_width": "initial"},
         )
         scale_panel = HBox([self.scale_button])
 
@@ -304,7 +294,6 @@ class EMLineProfiler(Widget):
 
         self.channel_selection = Dropdown(
             description="Time Gate",
-            style={"description_width": "initial"},
             options=self.em_system_specs[self.system.value]["channels"].keys(),
         )
 

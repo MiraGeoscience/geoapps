@@ -1,17 +1,40 @@
+Getting Started
+===============
+
+Whether you are developer or an end-user, this page will help you get started with the **geoapps**.
+
 Installation
-============
+------------
 
-**geoapps** is currently written for Python 3.6 or higher, and depends on `NumPy <https://numpy.org/>`_ and
-`h5py <https://www.h5py.org/>`_.
+Recommended
+^^^^^^^^^^^
 
-.. note:: Users will likely want to take advantage of other packages available in the Python ecosystem. We therefore recommend using `Anaconda <https://www.anaconda.com/download/>`_ to manage the installation.
+- Make sure that you have `Anaconda 3.6 <https://www.anaconda.com/download/>`_ or higher installed.
 
 	.. figure:: ../images/Anaconda_Install.png
 	    :align: center
 	    :width: 200
 
+- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_ **geoapps** directory.
 
-Install **geoapps** from PyPI::
+- Extract the package to your drive (SSD if available).
+
+	.. figure:: ../images/extract.png
+	    :align: center
+	    :width: 50%
+
+- Run ``Install_Update.bat``. The same batch file can be used to update the package dependencies.
+  A conda environment named ``geoapps`` will be create to prevent conflicts with other software that may rely on Python.
+
+	.. figure:: ../images/run_install.png
+	    :align: center
+	    :width: 50%
+
+
+From PyPI
+^^^^^^^^^
+
+The **geoapps** can be installed directly from PyPI without its dependencies::
 
     $ pip install geoapps
 
@@ -25,3 +48,27 @@ To work with **geoapps** source code in development, install from GitHub::
     $ git clone --recursive https://github.com/MiraGeoscience/geoapps.git
     $ cd geoapps
     $ python setup.py install
+
+.. note:: The Jupyter-Notebook applications can be `download from source <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_ :
+
+	.. figure:: ../images/download.png
+	    :align: center
+	    :width: 200
+
+Running the applications
+------------------------
+At this point, you will have all required packages to run the applications:
+
+- Run ``Start_Applications.bat``
+
+	.. figure:: ../images/run_applications.png
+	    :align: center
+	    :width: 50%
+
+You should see the index page displayed in your default browser.
+
+	.. figure:: ../images/index_page.png
+	    :align: center
+	    :width: 100%
+
+.. note:: Applications run best with either Chrome or Firefox.

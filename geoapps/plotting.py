@@ -59,9 +59,7 @@ class PlotSelection2D(Widget):
             value="", description="Contours", disabled=False, continuous_update=False,
         )
         self._data_count = Label("Data Count: 0", tooltip="Keep <1500 for speed")
-        self._resolution = FloatText(
-            description="Grid Resolution (m)", style={"description_width": "initial"},
-        )
+        self._resolution = FloatText(description="Grid Resolution (m)",)
         self._width = FloatSlider(
             min=0,
             max=100,
@@ -259,7 +257,6 @@ class PlotSelection2D(Widget):
         contours,
         refresh,
     ):
-
         if not refresh:
             return
 
@@ -354,9 +351,8 @@ class PlotSelection2D(Widget):
 
         self.height.max = lim_y[1] - lim_y[0]
         self.height.min = 0
-
-        self.refresh.value = True
         self.height.value = self.height.max / 2.0
+        self.refresh.value = True
 
 
 def plot_profile_data_selection(
@@ -602,7 +598,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 continue
 
             for line in values:
-
                 ind = np.where(entity.get_data(key)[0].values == line)[0]
                 x, y, values = (
                     locations[ind, 0],
@@ -611,7 +606,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 )
                 ind_line = filter_xy(x, y, resolution, window=window)
                 ax.scatter(x[ind_line], y[ind_line], marker_size * 2, "k", marker="+")
-
                 line_selection[ind[ind_line]] = True
 
     return ax, out, indices, line_selection, contour_set
@@ -730,7 +724,6 @@ def plot_em_data_widget(h5file):
         steps=0.5,
         description="Log-linear threshold",
         continuous_update=False,
-        style={"description_width": "initial"},
     )
 
     apps = VBox([objects, line_field, lines, groups, scale, threshold])
