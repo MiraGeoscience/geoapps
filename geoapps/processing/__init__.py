@@ -3,6 +3,6 @@ from .processing import (
     calculator,
     coordinate_transformation_widget,
     edge_detection_widget,
-    EMLineProfiling,
 )
-from .contours import contour_values_widget
+from .contours import ContourValues
+from .em_profiling import EMLineProfiler
