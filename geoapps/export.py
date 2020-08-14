@@ -11,7 +11,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.plotting import plot_plan_data_selection
-from geoapps.selection import object_data_selection_widget
+from geoapps.selection import ObjectDataSelection
 from geoapps.inversion import TopographyOptions
 from geoapps.utils import (
     export_curve_2_shapefile,
@@ -39,13 +39,13 @@ def export_widget(h5file):
 
             export.value = False  # Reset button
 
-            entity = workspace.get_entity(objects.value)[0]
+            entity = workspace.get_entity(selection.objects.value)[0]
 
-            if data.value:
+            if selection.data.value:
 
                 data_values = {}
 
-                for key in data.value:
+                for key in selection.data.value:
                     if entity.get_data(key):
                         data_values[key] = entity.get_data(key)[0].values.copy()
                         data_values[key][
@@ -64,8 +64,8 @@ def export_widget(h5file):
                     entity, Curve
                 ), f"Only Curve objects are support for type {file_type.value}"
 
-                if data.value:
-                    for key in data.value:
+                if selection.data.value:
+                    for key in selection.data.value:
                         out_name = re.sub(
                             "[^0-9a-zA-Z]+", "_", export_as.value + "_" + key
                         )
@@ -85,7 +85,7 @@ def export_widget(h5file):
 
             elif file_type.value == "geotiff":
 
-                for key in data.value:
+                for key in selection.data.value:
                     name = out_dir + export_as.value + "_" + key + ".tif"
                     if entity.get_data(key):
 
@@ -99,7 +99,7 @@ def export_widget(h5file):
                         if data_type.value == "RGB":
                             fig, ax = plt.figure(), plt.subplot()
                             plt.gca().set_visible(False)
-                            (ax, im), _, _ = plot_plan_data_selection(
+                            (ax, im), _, _, _ = plot_plan_data_selection(
                                 entity, entity.get_data(key)[0], ax=ax
                             )
                             plt.colorbar(im, fraction=0.02)
@@ -176,11 +176,7 @@ def export_widget(h5file):
     )
 
     data_type = widgets.RadioButtons(options=["float", "RGB",], description="Type:")
-    no_data_value = widgets.FloatText(
-        description="no-data-value",
-        value=-99999,
-        style={"description_width": "initial"},
-    )
+    no_data_value = widgets.FloatText(description="no-data-value", value=-99999,)
 
     epsg_code = widgets.Text(description="EPSG code:", indent=False, disabled=False)
 
@@ -188,12 +184,12 @@ def export_widget(h5file):
 
     file_type.observe(update_options)
 
-    objects, data = object_data_selection_widget(h5file, select_multiple=True)
+    selection = ObjectDataSelection(h5file=h5file, select_multiple=True)
 
     def update_name(_):
-        export_as.value = objects.value.replace(":", "_")
+        export_as.value = selection.objects.value.replace(":", "_")
 
-    objects.observe(update_name, names="value")
+    selection.objects.observe(update_name, names="value")
     export = widgets.ToggleButton(
         value=False,
         description="Export",
@@ -205,9 +201,14 @@ def export_widget(h5file):
     export.observe(save_selection, names="value")
 
     export_as = widgets.Text(
-        value=objects.value, description="Save as:", indent=False, disabled=False
+        value=selection.objects.value,
+        description="Save as:",
+        indent=False,
+        disabled=False,
     )
-    return VBox([objects, HBox([data, no_data_value]), type_widget, export_as, export])
+    return VBox(
+        [HBox([selection.widget, no_data_value]), type_widget, export_as, export]
+    )
 
 
 def object_to_object_interpolation(h5file):
@@ -224,7 +225,7 @@ def object_to_object_interpolation(h5file):
 
         if interpolate.value:
 
-            object_from = workspace.get_entity(objects.value)[0]
+            object_from = workspace.get_entity(selection.objects.value)[0]
 
             if hasattr(object_from, "centroids"):
                 xyz = object_from.centroids.copy()
@@ -293,7 +294,7 @@ def object_to_object_interpolation(h5file):
                 xyz_out = object_to.centroids.copy()
 
             values = {}
-            for field in data.value:
+            for field in selection.data.value:
                 model_in = object_from.get_data(field)[0]
                 values[field] = model_in.values.copy()
 
@@ -424,7 +425,7 @@ def object_to_object_interpolation(h5file):
 
     names = list(workspace.list_objects_name.values())
 
-    objects, data = object_data_selection_widget(h5file, select_multiple=True)
+    selection = ObjectDataSelection(h5file=h5file, select_multiple=True)
 
     out_mode = widgets.RadioButtons(
         options=["To Object:", "Create 3D Grid"], value="To Object:", disabled=False
@@ -433,50 +434,33 @@ def object_to_object_interpolation(h5file):
     out_mode.observe(out_update)
     mesh_dropdown = widgets.Dropdown(options=names)
 
-    ref_dropdown = widgets.Dropdown(
-        options=names,
-        description="XY Extent from:",
-        style={"description_width": "initial"},
-    )
+    ref_dropdown = widgets.Dropdown(options=names, description="XY Extent from:",)
 
     def object_pick(_):
-        ref_dropdown.value = objects.value
+        ref_dropdown.value = selection.objects.value
 
-    objects.observe(object_pick)
+    selection.objects.observe(object_pick)
 
     new_grid = widgets.Text(
-        value="InterpGrid",
-        description="New grid name:",
-        disabled=False,
-        style={"description_width": "initial"},
+        value="InterpGrid", description="New grid name:", disabled=False,
     )
 
     core_cell_size = widgets.Text(
-        value="25, 25, 25",
-        description="Smallest cells",
-        disabled=False,
-        style={"description_width": "initial"},
+        value="25, 25, 25", description="Smallest cells", disabled=False,
     )
 
     depth_core = widgets.FloatText(
-        value=500,
-        description="Core depth (m)",
-        disabled=False,
-        style={"description_width": "initial"},
+        value=500, description="Core depth (m)", disabled=False,
     )
 
     padding_distance = widgets.Text(
         value="0, 0, 0, 0, 0, 0",
         description="Pad Distance (W, E, N, S, D, U)",
         disabled=False,
-        style={"description_width": "initial"},
     )
 
     expansion_fact = widgets.FloatText(
-        value=1.05,
-        description="Expansion factor",
-        disabled=False,
-        style={"description_width": "initial"},
+        value=1.05, description="Expansion factor", disabled=False,
     )
 
     space = widgets.RadioButtons(
@@ -496,37 +480,17 @@ def object_to_object_interpolation(h5file):
         disabled=False,
     )
 
-    max_distance = widgets.FloatText(
-        value=1e3,
-        description="Maximum distance XY (m)",
-        style={"description_width": "initial"},
-    )
+    max_distance = widgets.FloatText(value=1e3, description="Maximum distance XY (m)",)
 
-    max_depth = widgets.FloatText(
-        value=1e3,
-        description="Maximum distance Z (m)",
-        style={"description_width": "initial"},
-    )
+    max_depth = widgets.FloatText(value=1e3, description="Maximum distance Z (m)",)
 
-    no_data_value = widgets.FloatText(
-        value=-99999,
-        description="No-Data-Value",
-        style={"description_width": "initial"},
-    )
+    no_data_value = widgets.FloatText(value=-99999, description="No-Data-Value",)
 
     skew_angle = widgets.FloatText(
-        value=0,
-        description="Azimuth (d.dd)",
-        disabled=False,
-        style={"description_width": "initial"},
+        value=0, description="Azimuth (d.dd)", disabled=False,
     )
 
-    skew_factor = widgets.FloatText(
-        value=1,
-        description="Factor",
-        disabled=False,
-        style={"description_width": "initial"},
-    )
+    skew_factor = widgets.FloatText(value=1, description="Factor", disabled=False,)
 
     method_skew = VBox([widgets.Label("Skew interpolation"), skew_angle, skew_factor])
     method_panel = HBox([method])
@@ -542,13 +506,11 @@ def object_to_object_interpolation(h5file):
     topo_options.offset.disabled = True
     topo_options.options_button.options = ["Object", "Constant", "None"]
     topo_options.options_button.value = "Object"
-    # topography, z_value = object_data_selection_widget(h5file)
+    # topography, z_value = ObjectDataSelection(h5file)
     # z_value.options = list(z_value.options) + ["Vertices"]
 
     xy_extent = widgets.Dropdown(
-        options=[None] + names,
-        description="Trim xy extent with:",
-        style={"description_width": "initial"},
+        options=[None] + names, description="Trim xy extent with:",
     )
 
     new_grid_panel = VBox(
@@ -568,7 +530,7 @@ def object_to_object_interpolation(h5file):
         [
             HBox(
                 [
-                    VBox([widgets.Label("Input"), objects, data]),
+                    VBox([widgets.Label("Input"), selection.widget]),
                     VBox([widgets.Label("Output"), out_panel]),
                 ]
             ),
