@@ -1,11 +1,12 @@
 Create contours
 ===============
 
-With this application, users can create contours from data using the
-`matplotlib <https://scikit-image.org/>`_ open-source package.
-
-- The contouring can be done on points, curves, surfaces and grids.
-- Contours can be exported to `Geoscience ANALYST <https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_, either as 2D or 3D curves.
+With this application, users can create contours from data stored on points,
+curves, surfaces or grid objects.  The application uses the `matplotlib
+<https://matplotlib.org/>`_ open-source package. The generated contours can be
+exported to `Geoscience ANALYST
+<https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_,
+either as 2D or 3D curves.
 
 `Video tutorial available on Youtube <https://youtu.be/sjaQzZlm8qQ>`_
 
@@ -15,8 +16,8 @@ With this application, users can create contours from data using the
         :alt: inv_app
 
 
-**1- Input parameters**
-
+Input data
+----------
 
 .. list-table::
    :header-rows: 0
@@ -68,8 +69,8 @@ With this application, users can create contours from data using the
             app.plot_selection.plot_widget
    * - See :ref:`Plot and select data <plotselectiondata>`
 
-**2- Output Parameters**
-
+Output Parameters
+-----------------
 
 .. list-table::
    :header-rows: 0
@@ -98,6 +99,8 @@ With this application, users can create contours from data using the
    * - Contours will be exported with Z (elevation) based on value of contours.
 
        Otherwise, contours are linearly draped on the object vertices.
+
+
 
 .. list-table::
    :header-rows: 0

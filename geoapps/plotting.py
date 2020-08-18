@@ -3,45 +3,42 @@ import ipywidgets as widgets
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
+from copy import copy
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import (
     Dropdown,
-    ColorPicker,
     SelectMultiple,
-    Text,
-    IntSlider,
-    Checkbox,
     FloatSlider,
     FloatText,
     VBox,
     HBox,
     ToggleButton,
-    ToggleButtons,
     interactive_output,
-    FloatLogSlider,
     Label,
     Layout,
-    RadioButtons,
+    Widget,
 )
-from geoapps.base import Widget
+from geoapps.base import BaseApplication
 from geoapps.utils import filter_xy, rotate_xy, format_labels, find_value
 from geoapps.selection import ObjectDataSelection
 
 
-class PlotSelection2D(Widget):
+class PlotSelection2D(BaseApplication):
     """
     Application for selecting data in 2D plan map view
     """
 
     def __init__(self, **kwargs):
         self.selection = ObjectDataSelection(**kwargs)
+        self.collections = []
+
         self._azimuth = FloatSlider(
             min=-90,
             max=90,
             value=0,
             steps=5,
-            description="Orientation",
+            description="Azimuth",
             continuous_update=False,
         )
         self._center_x = FloatSlider(
@@ -78,7 +75,7 @@ class PlotSelection2D(Widget):
             orientation="vertical",
         )
         self._zoom_extent = ToggleButton(
-            value=False,
+            value=True,
             description="Zoom on selection",
             tooltip="Keep plot extent on selection",
             icon="check",
@@ -297,12 +294,11 @@ class PlotSelection2D(Widget):
             corners[:, 1] *= height / 2
             corners = rotate_xy(corners, [0, 0], -azimuth)
             self.axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
-
-            _, _, ind_filter, _, contour_set = plot_plan_data_selection(
+            self.axis, _, ind_filter, _, contour_set = plot_plan_data_selection(
                 entity,
                 data_obj,
                 **{
-                    "ax": self.axis,
+                    "axis": self.axis,
                     "resolution": resolution,
                     "window": {
                         "center": [center_x, center_y],
@@ -313,8 +309,10 @@ class PlotSelection2D(Widget):
                     "resize": True,
                     "contours": contours,
                     "highlight_selection": self.highlight_selection,
+                    "collections": self.collections,
                 },
             )
+
             self.indices = ind_filter
             self.contours.contour_set = contour_set
             self.data_count.value = f"Data Count: {ind_filter.sum()}"
@@ -353,6 +351,185 @@ class PlotSelection2D(Widget):
         self.height.min = 0
         self.height.value = self.height.max / 2.0
         self.refresh.value = True
+
+
+def plot_plan_data_selection(entity, data, **kwargs):
+    """
+    Plot data values in 2D with contours
+
+    :param entity: `geoh5py.objects`
+        Input object with either `vertices` or `centroids` property.
+    :param data: `geoh5py.data`
+        Input data with `values` property.
+
+    :return ax:
+    :return out:
+    :return indices:
+    :return line_selection:
+    :return contour_set:
+    """
+    indices = None
+    line_selection = None
+    contour_set = None
+    values = None
+    axis = None
+    out = None
+
+    if isinstance(entity, (Grid2D, Points, Curve, Surface)):
+        if "axis" not in kwargs.keys():
+            plt.figure(figsize=(8, 8))
+            axis = plt.subplot()
+        else:
+            axis = kwargs["axis"]
+    else:
+        return axis, out, indices, line_selection, contour_set
+
+    for collection in axis.collections:
+        collection.remove()
+
+    locations = entity.vertices
+    if "resolution" not in kwargs.keys():
+        resolution = 0
+    else:
+        resolution = kwargs["resolution"]
+
+    if "indices" in kwargs.keys():
+        indices = kwargs["indices"]
+        if isinstance(indices, np.ndarray) and np.all(indices == False):
+            indices = None
+
+    if isinstance(getattr(data, "values", None), np.ndarray):
+        if not isinstance(data.values[0], str):
+            values = data.values.copy()
+            values[(values > 1e-18) * (values < 2e-18)] = np.nan
+            values[values == -99999] = np.nan
+
+    color_norm = None
+    if "color_norm" in kwargs.keys():
+        color_norm = kwargs["color_norm"]
+
+    window = None
+    if "window" in kwargs.keys():
+        window = kwargs["window"]
+
+    if data is not None and data.entity_type.color_map is not None:
+        new_cmap = data.entity_type.color_map.values
+        map_vals = new_cmap["Value"].copy()
+        cmap = colors.ListedColormap(
+            np.c_[
+                new_cmap["Red"] / 255, new_cmap["Green"] / 255, new_cmap["Blue"] / 255,
+            ]
+        )
+        color_norm = colors.BoundaryNorm(map_vals, cmap.N)
+    else:
+        cmap = "Spectral_r"
+
+    if isinstance(entity, Grid2D):
+        x = entity.centroids[:, 0].reshape(entity.shape, order="F")
+        y = entity.centroids[:, 1].reshape(entity.shape, order="F")
+        indices = filter_xy(x, y, resolution, window=window)
+
+        ind_x, ind_y = (
+            np.any(indices, axis=1),
+            np.any(indices, axis=0),
+        )
+
+        X = x[ind_x, :][:, ind_y]
+        Y = y[ind_x, :][:, ind_y]
+
+        if values is not None:
+            values = values.reshape(entity.shape, order="F")
+            values[indices == False] = np.nan
+            values = values[ind_x, :][:, ind_y]
+
+        if np.any(values):
+            out = axis.pcolormesh(
+                X, Y, values, cmap=cmap, norm=color_norm, shading="auto"
+            )
+
+        if (
+            "contours" in kwargs.keys()
+            and kwargs["contours"] is not None
+            and np.any(values)
+        ):
+            contour_set = axis.contour(
+                X, Y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
+            )
+
+    else:
+        x, y = entity.vertices[:, 0], entity.vertices[:, 1]
+        if indices is None:
+            indices = filter_xy(x, y, resolution, window=window,)
+        X, Y = x[indices], y[indices]
+        if values is not None:
+            values = values[indices]
+
+        if "marker_size" not in kwargs.keys():
+            marker_size = 5
+        else:
+            marker_size = kwargs["marker_size"]
+
+        out = axis.scatter(X, Y, marker_size, values, cmap=cmap, norm=color_norm)
+
+        if (
+            "contours" in kwargs.keys()
+            and kwargs["contours"] is not None
+            and np.any(values)
+        ):
+            ind = ~np.isnan(values)
+            contour_set = axis.tricontour(
+                X[ind],
+                Y[ind],
+                values[ind],
+                levels=kwargs["contours"],
+                colors="k",
+                linewidths=1.0,
+            )
+
+    if "collections" in kwargs.keys():
+        for collection in kwargs["collections"]:
+            axis.add_collection(copy(collection))
+
+    if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"] and np.any(values):
+        ind = ~np.isnan(values.ravel())
+        x = X.ravel()[ind]
+        y = Y.ravel()[ind]
+        if ind.sum() > 0:
+            format_labels(x, y, axis)
+            axis.set_xlim([x.min(), x.max()])
+            axis.set_ylim([y.min(), y.max()])
+    elif np.any(x) and np.any(y):
+        format_labels(x, y, axis)
+        axis.set_xlim([x.min(), x.max()])
+        axis.set_ylim([y.min(), y.max()])
+
+    if (
+        "colorbar" in kwargs.keys()
+        and values[~np.isnan(values)].min() != values[~np.isnan(values)].max()
+    ):
+        plt.colorbar(out, ax=axis)
+
+    line_selection = np.zeros_like(indices, dtype=bool)
+    if "highlight_selection" in kwargs.keys() and isinstance(
+        kwargs["highlight_selection"], dict
+    ):
+        for key, values in kwargs["highlight_selection"].items():
+
+            if not np.any(entity.get_data(key)):
+                continue
+
+            for line in values:
+                ind = np.where(entity.get_data(key)[0].values == line)[0]
+                x, y, values = (
+                    locations[ind, 0],
+                    locations[ind, 1],
+                    entity.get_data(key)[0].values[ind],
+                )
+                ind_line = filter_xy(x, y, resolution, window=window)
+                axis.scatter(x[ind_line], y[ind_line], marker_size * 2, "k", marker="+")
+                line_selection[ind[ind_line]] = True
+
+    return axis, out, indices, line_selection, contour_set
 
 
 def plot_profile_data_selection(
@@ -445,170 +622,6 @@ def plot_profile_data_selection(
                 )
 
     return ax, threshold
-
-
-def plot_plan_data_selection(entity, data, **kwargs):
-    """
-    Plot data values in 2D with contours
-
-    :param entity: `geoh5py.objects`
-        Input object with either `vertices` or `centroids` property.
-    :param data: `geoh5py.data`
-        Input data with `values` property.
-
-    :return ax:
-    :return out:
-    :return indices:
-    :return line_selection:
-    :return contour_set:
-    """
-    indices = None
-    line_selection = None
-    contour_set = None
-    values = None
-    ax = None
-    out = None
-
-    if isinstance(entity, (Grid2D, Points, Curve, Surface)):
-        if "ax" not in kwargs.keys():
-            plt.figure(figsize=(8, 8))
-            ax = plt.subplot()
-        else:
-            ax = kwargs["ax"]
-    else:
-        return ax, out, indices, line_selection, contour_set
-
-    locations = entity.vertices
-    if "resolution" not in kwargs.keys():
-        resolution = 0
-    else:
-        resolution = kwargs["resolution"]
-
-    if "indices" in kwargs.keys():
-        indices = kwargs["indices"]
-        if isinstance(indices, np.ndarray) and np.all(indices == False):
-            indices = None
-
-    if isinstance(getattr(data, "values", None), np.ndarray):
-        if not isinstance(data.values[0], str):
-            values = data.values.copy()
-            values[(values > 1e-18) * (values < 2e-18)] = np.nan
-            values[values == -99999] = np.nan
-
-    color_norm = None
-    if "color_norm" in kwargs.keys():
-        color_norm = kwargs["color_norm"]
-
-    window = None
-    if "window" in kwargs.keys():
-        window = kwargs["window"]
-
-    if data is not None and data.entity_type.color_map is not None:
-        new_cmap = data.entity_type.color_map.values
-        map_vals = new_cmap["Value"].copy()
-        cmap = colors.ListedColormap(
-            np.c_[
-                new_cmap["Red"] / 255, new_cmap["Green"] / 255, new_cmap["Blue"] / 255,
-            ]
-        )
-        color_norm = colors.BoundaryNorm(map_vals, cmap.N)
-    else:
-        cmap = "Spectral_r"
-
-    if isinstance(entity, Grid2D):
-        x = entity.centroids[:, 0].reshape(entity.shape, order="F")
-        y = entity.centroids[:, 1].reshape(entity.shape, order="F")
-        indices = filter_xy(x, y, resolution, window=window)
-
-        ind_x, ind_y = (
-            np.any(indices, axis=1),
-            np.any(indices, axis=0),
-        )
-
-        X = x[ind_x, :][:, ind_y]
-        Y = y[ind_x, :][:, ind_y]
-
-        if values is not None:
-            values = values.reshape(entity.shape, order="F")
-            values[indices == False] = np.nan
-            values = values[ind_x, :][:, ind_y]
-
-        if np.any(values):
-            out = ax.pcolormesh(
-                X, Y, values, cmap=cmap, norm=color_norm, shading="auto"
-            )
-
-        if "contours" in kwargs.keys() and np.any(values):
-            contour_set = ax.contour(
-                X, Y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
-            )
-
-    else:
-        x, y = entity.vertices[:, 0], entity.vertices[:, 1]
-        if indices is None:
-            indices = filter_xy(x, y, resolution, window=window,)
-        X, Y = x[indices], y[indices]
-        if values is not None:
-            values = values[indices]
-
-        if "marker_size" not in kwargs.keys():
-            marker_size = 5
-        else:
-            marker_size = kwargs["marker_size"]
-
-        out = ax.scatter(X, Y, marker_size, values, cmap=cmap, norm=color_norm)
-
-        if "contours" in kwargs.keys() and np.any(values):
-            ind = ~np.isnan(values)
-            contour_set = ax.tricontour(
-                X[ind],
-                Y[ind],
-                values[ind],
-                levels=kwargs["contours"],
-                colors="k",
-                linewidths=1.0,
-            )
-
-    if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"] and np.any(values):
-        ind = ~np.isnan(values.ravel())
-        x = X.ravel()[ind]
-        y = Y.ravel()[ind]
-        if ind.sum() > 0:
-            format_labels(x, y, ax)
-            ax.set_xlim([x.min(), x.max()])
-            ax.set_ylim([y.min(), y.max()])
-    elif np.any(x) and np.any(y):
-        format_labels(x, y, ax)
-        ax.set_xlim([x.min(), x.max()])
-        ax.set_ylim([y.min(), y.max()])
-
-    if (
-        "colorbar" in kwargs.keys()
-        and values[~np.isnan(values)].min() != values[~np.isnan(values)].max()
-    ):
-        plt.colorbar(out, ax=ax)
-
-    line_selection = np.zeros_like(indices, dtype=bool)
-    if "highlight_selection" in kwargs.keys() and isinstance(
-        kwargs["highlight_selection"], dict
-    ):
-        for key, values in kwargs["highlight_selection"].items():
-
-            if not np.any(entity.get_data(key)):
-                continue
-
-            for line in values:
-                ind = np.where(entity.get_data(key)[0].values == line)[0]
-                x, y, values = (
-                    locations[ind, 0],
-                    locations[ind, 1],
-                    entity.get_data(key)[0].values[ind],
-                )
-                ind_line = filter_xy(x, y, resolution, window=window)
-                ax.scatter(x[ind_line], y[ind_line], marker_size * 2, "k", marker="+")
-                line_selection[ind[ind_line]] = True
-
-    return ax, out, indices, line_selection, contour_set
 
 
 def plot_em_data_widget(h5file):

@@ -1,30 +1,18 @@
 import os
 from shutil import copyfile
 import time
-import ipywidgets as widgets
-from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton
+from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton, Widget
 from geoh5py.workspace import Workspace
 
 
-class Widget:
+class BaseApplication:
     """
-    Base class for geoapps.Widget
+    Base class for geoapps applications
     """
 
     def __init__(self, **kwargs):
-        self._h5file = None
-        self._workspace = None
 
-        if "h5file" in kwargs.keys():
-            if "make_working_copy" in kwargs.keys() and kwargs["make_working_copy"]:
-                self._h5file = copyfile(
-                    kwargs["h5file"], kwargs["h5file"][:-6] + "_work.geoh5"
-                )
-            else:
-                self._h5file = kwargs["h5file"]
-
-            self._workspace = Workspace(self.h5file)
-
+        self._h5file = "Analyst.geoh5"
         self._live_link = Checkbox(
             description="GA Pro - Live link", value=False, indent=False
         )
@@ -35,11 +23,6 @@ class Widget:
         self._live_link.observe(live_link_choice)
 
         self._live_link_path = Text(description="", value="", disabled=True,)
-
-        if self.h5file is not None:
-            self.live_link_path.value = os.path.join(
-                os.path.abspath(os.path.dirname(self.h5file)), "Temp"
-            )
 
         self._trigger = ToggleButton(
             value=False,
@@ -64,12 +47,17 @@ class Widget:
         for key, value in kwargs.items():
             if getattr(self, "_" + key, None) is not None:
                 try:
-                    if isinstance(getattr(self, "_" + key), widgets.Widget):
+                    if isinstance(getattr(self, "_" + key), Widget):
                         getattr(self, "_" + key).value = value
                     else:
                         setattr(self, "_" + key, value)
                 except:
                     pass
+
+        if self.h5file is not None:
+            self.live_link_path.value = os.path.join(
+                os.path.abspath(os.path.dirname(self.h5file)), "Temp"
+            )
 
     def live_link_output(self, entity, data={}):
         """
@@ -136,4 +124,28 @@ class Widget:
         """
         Target geoh5py workspace
         """
+        if (
+            getattr(self, "_workspace", None) is None
+            and getattr(self, "_h5file", None) is not None
+        ):
+            self._workspace = Workspace(self.h5file)
         return self._workspace
+
+
+def working_copy(**kwargs):
+    """
+    Create a copy of the geoh5 project and remove "working_copy" from list
+    of arguments for future use
+    """
+    if (
+        "h5file" in kwargs.keys()
+        and "working_copy" in kwargs.keys()
+        and kwargs["working_copy"]
+    ):
+        kwargs["h5file"] = copyfile(
+            kwargs["h5file"], kwargs["h5file"][:-6] + "_work.geoh5"
+        )
+
+        del kwargs["working_copy"]
+
+    return kwargs

@@ -23,12 +23,12 @@ from ipywidgets import (
     Layout,
     RadioButtons,
 )
-from geoapps.base import Widget
+from geoapps.base import BaseApplication
 from geoapps.utils import find_value, geophysical_systems, signal_processing_1d
 from geoapps.selection import ObjectDataSelection, LineOptions
 
 
-class EMLineProfiler(Widget):
+class EMLineProfiler(BaseApplication):
     groups = {
         "early": {
             "color": "blue",

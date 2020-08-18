@@ -7,8 +7,9 @@ the creation of application to the usage of existing ones.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    apps/lower_level.rst
    apps/create_contours.rst
+   apps/edge_detection.rst
    apps/geophysical_inversion.rst

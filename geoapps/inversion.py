@@ -18,15 +18,16 @@ from ipywidgets.widgets import (
     FloatText,
     ToggleButton,
     IntText,
+    Widget,
 )
 
-from geoapps.base import Widget
+from geoapps.base import BaseApplication, working_copy
 from geoapps.plotting import plot_plan_data_selection, PlotSelection2D
 from geoapps.utils import find_value, rotate_xy, geophysical_systems
 from geoapps.selection import ObjectDataSelection, LineOptions
 
 
-class ChannelOptions(Widget):
+class ChannelOptions(BaseApplication):
     """
     Options for data channels
     """
@@ -78,7 +79,7 @@ class ChannelOptions(Widget):
         return self._widget
 
 
-class SensorOptions(Widget):
+class SensorOptions(BaseApplication):
     """
     Define the receiver spatial parameters
     """
@@ -173,7 +174,7 @@ class SensorOptions(Widget):
         return self._widget
 
 
-class TopographyOptions(Widget):
+class TopographyOptions(BaseApplication):
     """
     Define the topography used by the inversion
     """
@@ -263,7 +264,7 @@ class TopographyOptions(Widget):
         return self._widget
 
 
-class MeshOctreeOptions(Widget):
+class MeshOctreeOptions(BaseApplication):
     """
     Widget used for the creation of an octree meshes
     """
@@ -330,7 +331,7 @@ class MeshOctreeOptions(Widget):
         return self._widget
 
 
-class Mesh1DOptions(Widget):
+class Mesh1DOptions(BaseApplication):
     """
     Widget used for the creation of a 1D mesh
     """
@@ -395,7 +396,7 @@ class Mesh1DOptions(Widget):
         return self._widget
 
 
-class ModelOptions(Widget):
+class ModelOptions(BaseApplication):
     """
     Widgets for the selection of model options
     """
@@ -457,7 +458,7 @@ class ModelOptions(Widget):
         return self._widget
 
 
-class InversionOptions(Widget):
+class InversionOptions(BaseApplication):
     """
     Collection of widgets controlling the inversion parameters
     """
@@ -791,8 +792,10 @@ def string_2_list(string):
     return [np.float(val) for val in string.split(",") if len(val) > 0]
 
 
-class InversionApp(Widget):
+class InversionApp(BaseApplication):
     def __init__(self, **kwargs):
+
+        kwargs = working_copy(**kwargs)
 
         super().__init__(**kwargs)
 
@@ -835,7 +838,7 @@ class InversionApp(Widget):
             self.update_octree_param()
 
         for item in self.plot_selection.__dict__.values():
-            if isinstance(item, widgets.Widget):
+            if isinstance(item, Widget):
                 item.observe(update_octree_param)
 
         dsep = os.path.sep
@@ -866,11 +869,11 @@ class InversionApp(Widget):
             self.update_options()
 
         for item in self.inversion_parameters.__dict__.values():
-            if isinstance(item, widgets.Widget):
+            if isinstance(item, Widget):
                 item.observe(update_options)
-            elif isinstance(item, Widget):
+            elif isinstance(item, BaseApplication):
                 for val in item.__dict__.values():
-                    if isinstance(val, widgets.Widget):
+                    if isinstance(val, Widget):
                         val.observe(update_options)
 
         super().__init__(**kwargs)

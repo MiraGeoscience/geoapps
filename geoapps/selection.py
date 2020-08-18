@@ -1,12 +1,12 @@
 import numpy as np
 import ipywidgets as widgets
-from ipywidgets import Dropdown, SelectMultiple, VBox
+from ipywidgets import Dropdown, SelectMultiple, VBox, Widget
 
-from geoapps.base import Widget
+from geoapps.base import BaseApplication
 from geoapps import utils
 
 
-class LineOptions(Widget):
+class LineOptions(BaseApplication):
     """
     Unique lines selection from selected data channel
     """
@@ -69,7 +69,7 @@ class LineOptions(Widget):
         return self._widget
 
 
-class ObjectDataSelection(Widget):
+class ObjectDataSelection(BaseApplication):
     """
     Application to select an object and corresponding data
     """
@@ -78,6 +78,12 @@ class ObjectDataSelection(Widget):
         super().__init__(**kwargs)
 
         self._add_groups = False
+        if "object_types" in kwargs.keys() and isinstance(
+            kwargs["object_types"], tuple
+        ):
+            self.object_types = kwargs["object_types"]
+        else:
+            self.object_types = ()
 
         if "select_multiple" in kwargs.keys():
             self._select_multiple = kwargs["select_multiple"]
@@ -99,26 +105,23 @@ class ObjectDataSelection(Widget):
         else:
             find_value = []
 
-        if self.h5file is not None:
-            self.objects.options = list(self.workspace.list_objects_name.values())
-
         def update_data_list(_):
             self.update_data_list(find_value=find_value)
 
         self.objects.observe(update_data_list, names="value")
         self.widget = VBox([self.objects, self.data,])
 
-        for key, value in kwargs.items():
-            if getattr(self, "_" + key, None) is not None:
-                try:
-                    if isinstance(getattr(self, "_" + key), widgets.Widget):
-                        getattr(self, "_" + key).value = value
-                    else:
-                        setattr(self, "_" + key, value)
-                except:
-                    pass
+        if self.h5file is not None:
+            if len(self.object_types) > 0:
+                self.objects.options = [
+                    obj.name
+                    for obj in self.workspace.all_objects()
+                    if isinstance(obj, self.object_types)
+                ]
+            else:
+                self.objects.options = list(self.workspace.list_objects_name.values())
 
-        update_data_list("")
+        super().__init__(**kwargs)
 
     @property
     def add_groups(self):

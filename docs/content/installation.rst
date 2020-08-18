@@ -31,6 +31,13 @@ Recommended
 	    :width: 50%
 
 
+.. note:: The assumption is made here that Anaconda has been installed in the default directory
+
+          %USERPROFILE%/AppData/Local/Continuum/anaconda3
+
+          If this is not the case, users will need to manually edit ``Install_Update.bat``
+          in order to point to the Anaconda directory.
+
 From PyPI
 ^^^^^^^^^
 

@@ -1,21 +1,23 @@
 Geophysical inversion (SimPEG)
 ==============================
 
-This application lets users invert geophysical data with the open-source
-`SimPEG <https://simpeg.xyz/>`_ inversion framework. The application currently
-supports:
+This application provides an interface to geophysical inversion using the `SimPEG <https://simpeg.xyz/>`_ open-source algorithms. The application currently supports
 
-- Gravity and magnetic (field and/or tensor) data on Octree mesh
-- Electromagnetic (time or frequency) line data. Inverted with Laterally Constrained 1D algorithm.
+ - Electromagnetic (time or frequency) data using a Laterally Constrained 1D approach
+ - Gravity and magnetics (field and/or tensor) data using an octree mesh tiling approach.
 
-More details for the different menu options are provided below.
+.. note:: For gravity and magnetics data, it is recommended to run the
+          inversion from a solid-state drive, as
+          sensitivities are stored in chunks and accessed in parallel using
+          the `Dask <https://dask.org/>`_ library.
 
 .. figure:: ./images/Geophysical_inversion_app.png
         :align: center
         :alt: inv_app
 
 
-**Input parameters**
+Input data
+----------
 
 .. list-table::
    :header-rows: 1
@@ -46,10 +48,13 @@ More details for the different menu options are provided below.
             app.plot_selection.plot_widget
    * - See :ref:`Plot and select data <plotselectiondata>`
 
+
+Data channels options
+---------------------
+
 .. list-table::
    :header-rows: 1
 
-   * - **2- Set individual data channel parameters**
    * -  .. jupyter-execute::
             :hide-code:
 
@@ -123,18 +128,23 @@ More details for the different menu options are provided below.
 
    * - Offsets (m) between the receiver with respect to the transmitter center location.
 
+
+Spatial information
+-------------------
+
+Topography
+^^^^^^^^^^
+
 .. list-table::
    :header-rows: 1
 
-   * - **4- Spatial Information**
+   * - Defines the discrete air/ground interface.
    * -  .. jupyter-execute::
             :hide-code:
 
             Dropdown(
               options=["Topography", "Receivers", "Line ID (EM)"],
             )
-   * - **Topography**
-   * - Defines the discrete air/ground interface.
    * -  .. jupyter-execute::
             :hide-code:
 
@@ -177,7 +187,13 @@ More details for the different menu options are provided below.
             app.widget
 
    * - Topography defined by the ``Receiver`` [x, y] locations at constant elevation (m).
-   * - **Receiver**
+
+Receivers
+^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
    * - Defines the sensor position in 3D space.
    * -  .. jupyter-execute::
             :hide-code:
@@ -210,8 +226,13 @@ More details for the different menu options are provided below.
        Typically used for gridded data with constant draped height
 
        or for airborne survey with inaccurate GPS elevation (radar height).
-   * - **Line ID**
-       *(EM only)*
+
+Line ID *(EM only)*
+^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
    * - Select data by survey lines.
    * -  .. jupyter-execute::
             :hide-code:
@@ -223,20 +244,21 @@ More details for the different menu options are provided below.
    * - Select a data channel containing the line IDs and chose lines to be inverted.
 
 
+Inversion Options
+-----------------
+
+List of parameters controlling the inversion.
+
 .. list-table::
    :header-rows: 1
 
-   * - **5- Inversion Options**
-
-        .. jupyter-execute::
+   * - .. jupyter-execute::
             :hide-code:
 
             from geoapps.inversion import InversionOptions
             h5file = r"../assets/FlinFlon.geoh5"
             widgets = InversionOptions(h5file=h5file)
             widgets.option_choices
-
-   * - List of parameters controlling the inversion
    * - Output name
 
         .. jupyter-execute::
@@ -273,7 +295,15 @@ More details for the different menu options are provided below.
        or
 
        *User Input*: Apply uncertainties as set in **2- Data Components**
-   * - **Starting model**
+
+Starting model
+^^^^^^^^^^^^^^
+
+Initial model used to begin the inversion.
+
+.. list-table::
+   :header-rows: 1
+
    * -
    * -  .. jupyter-execute::
             :hide-code:
@@ -299,9 +329,15 @@ More details for the different menu options are provided below.
             widgets.starting_model.options.disabled = True
             widgets.starting_model.widget
    * - Constant half-space value
-   * - **Susceptibility model**
-       *(FEM-1D Only)*
-   * - Use susceptibility values in the forward calculations
+
+Susceptibility model *(FEM Only)*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Susceptibility values used in the forward calculations only.
+
+.. list-table::
+   :header-rows: 1
+
    * -  .. jupyter-execute::
             :hide-code:
 
@@ -326,8 +362,15 @@ More details for the different menu options are provided below.
             widgets.susceptibility_model.options.disabled = True
             widgets.susceptibility_model.widget
    * - Constant half-space value
-   * - **Regularization**
-   * - Parameters controlling the regularization function.
+
+Regularization
+^^^^^^^^^^^^^^
+
+Parameters controlling the regularization function.
+
+.. list-table::
+   :header-rows: 1
+
    * - Reference model
 
        .. jupyter-execute::
@@ -401,8 +444,12 @@ More details for the different menu options are provided below.
             widgets.norms
 
    * - Norms applied to the components of the regularization :math:`p_s, p_x, p_y, p_z`
-   * - **Mesh parameters**
-   * -
+
+Mesh parameters
+^^^^^^^^^^^^^^^
+.. list-table::
+   :header-rows: 1
+
    * - Octree mesh (Gravity/Magnetics)
    * - .. figure:: ./images/Octree_refinement.png
         :scale: 50%
@@ -451,9 +498,13 @@ More details for the different menu options are provided below.
    * - Maximum interpolation distance between the observation points.
 
        Cell sizes are allowed to increase to the next levels beyond this distance.
-   * - **Upper-Lower Bounds**
 
-        .. jupyter-execute::
+Bounds
+^^^^^^
+.. list-table::
+   :header-rows: 1
+
+   * - .. jupyter-execute::
             :hide-code:
 
             from geoapps.inversion import InversionOptions
@@ -465,9 +516,14 @@ More details for the different menu options are provided below.
    * - Upper and lower bound constraints applied on model values.
 
        Leave boxes empty to remove bounds
-   * - **Ignore values**
 
-        .. jupyter-execute::
+
+Ignore values
+^^^^^^^^^^^^^
+.. list-table::
+   :header-rows: 1
+
+   * - .. jupyter-execute::
             :hide-code:
 
             from geoapps.inversion import InversionOptions
@@ -477,15 +533,27 @@ More details for the different menu options are provided below.
    * - Ignore data points with dummy values OR outside a threshold value.
 
        e.g. "<0" will ignore all negative data values.
-   * - **Maximum iterations**
 
-        .. jupyter-execute::
-            :hide-code:
+Optimization
+^^^^^^^^^^^^
+.. list-table::
+   :header-rows: 1
 
-            from geoapps.inversion import InversionOptions
-            h5file = r"../assets/FlinFlon.geoh5"
-            widgets = InversionOptions(h5file=h5file)
-            widgets.max_iterations
+   * - .. jupyter-execute::
+          :hide-code:
+
+          from geoapps.inversion import InversionOptions
+          h5file = r"../assets/FlinFlon.geoh5"
+          widgets = InversionOptions(h5file=h5file)
+          widgets.max_iterations
    * - Maximum number of :math:`\beta`-iterations allowed.
 
        Note that when applying sparse norms, the inversion may require >20 iterations to converge.
+   * - .. jupyter-execute::
+          :hide-code:
+
+          from geoapps.inversion import InversionOptions
+          h5file = r"../assets/FlinFlon.geoh5"
+          widgets = InversionOptions(h5file=h5file)
+          widgets.chi_factor
+   * - Target data misfit where :math:`\chi=1` corresponds to :math:`\phi_d=N` (number of data).
