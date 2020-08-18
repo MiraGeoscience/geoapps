@@ -3,29 +3,30 @@ from geoh5py.workspace import Workspace
 from geoh5py.io import H5Writer
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from scipy.interpolate import LinearNDInterpolator
-from geoapps.base import Widget
+from geoapps.base import BaseApplication, working_copy
 from geoapps.plotting import PlotSelection2D
-import ipywidgets as widgets
 from ipywidgets import (
     Text,
     Checkbox,
     VBox,
     HBox,
-    ToggleButton,
     interactive_output,
     Label,
     Layout,
+    Widget,
 )
 
 
-class ContourValues(Widget):
+class ContourValues(BaseApplication):
     """
     Application for 2D contouring of spatial data.
     """
 
     def __init__(self, **kwargs):
-        self._plot_selection = PlotSelection2D(**kwargs)
 
+        kwargs = working_copy(**kwargs)
+
+        self._plot_selection = PlotSelection2D(**kwargs)
         self._contours = Text(
             value="", description="Contours", disabled=False, continuous_update=False
         )
@@ -51,12 +52,11 @@ class ContourValues(Widget):
         self.trigger.button_style = "danger"
 
         for key in self.plot_selection.__dict__:
-            if isinstance(getattr(self.plot_selection, key, None), widgets.Widget):
+            if isinstance(getattr(self.plot_selection, key, None), Widget):
                 getattr(self.plot_selection, key, None).observe(
                     save_selection, names="value"
                 )
         self.export_as.observe(save_selection, names="value")
-
         self._widget = VBox(
             [
                 HBox(
@@ -224,6 +224,7 @@ class ContourValues(Widget):
                         self.live_link_output(
                             curve, data={self.contours.value: np.hstack(values)}
                         )
+                        self.trigger.value = False
                     else:
                         curve.add_data(
                             {self.contours.value: {"values": np.hstack(values)}}

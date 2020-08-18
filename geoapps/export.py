@@ -502,7 +502,7 @@ def object_to_object_interpolation(h5file):
 
     interpolate.observe(interpolate_call)
 
-    topo_options = TopographyOptions(h5file)
+    topo_options = TopographyOptions(h5file=h5file)
     topo_options.offset.disabled = True
     topo_options.options_button.options = ["Object", "Constant", "None"]
     topo_options.options_button.value = "Object"
