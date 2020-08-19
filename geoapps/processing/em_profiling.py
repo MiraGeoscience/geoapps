@@ -29,86 +29,16 @@ from geoapps.selection import ObjectDataSelection, LineOptions
 
 
 class EMLineProfiler(BaseApplication):
-    groups = {
-        "early": {
-            "color": "blue",
-            "channels": [],
-            "gates": [],
-            "defaults": ["early"],
-            "inflx_up": [],
-            "inflx_dwn": [],
-            "peaks": [],
-            "times": [],
-            "values": [],
-            "locations": [],
-        },
-        "early + middle": {
-            "color": "cyan",
-            "channels": [],
-            "gates": [],
-            "defaults": ["early", "middle"],
-            "inflx_up": [],
-            "inflx_dwn": [],
-            "peaks": [],
-            "times": [],
-            "values": [],
-            "locations": [],
-        },
-        "middle": {
-            "color": "green",
-            "channels": [],
-            "gates": [],
-            "defaults": ["middle"],
-            "inflx_up": [],
-            "inflx_dwn": [],
-            "peaks": [],
-            "times": [],
-            "values": [],
-            "locations": [],
-        },
-        "early + middle + late": {
-            "color": "orange",
-            "channels": [],
-            "gates": [],
-            "defaults": ["early", "middle", "late"],
-            "inflx_up": [],
-            "inflx_dwn": [],
-            "peaks": [],
-            "times": [],
-            "values": [],
-            "locations": [],
-        },
-        "middle + late": {
-            "color": "yellow",
-            "channels": [],
-            "gates": [],
-            "defaults": ["middle", "late"],
-            "inflx_up": [],
-            "inflx_dwn": [],
-            "peaks": [],
-            "times": [],
-            "values": [],
-            "locations": [],
-        },
-        "late": {
-            "color": "red",
-            "channels": [],
-            "gates": [],
-            "defaults": ["late"],
-            "inflx_up": [],
-            "inflx_dwn": [],
-            "peaks": [],
-            "times": [],
-            "values": [],
-            "locations": [],
-        },
-    }
+    """
+    Application for the picking of targets along Time-domain EM profiles
+    """
 
     viz_param = '<IParameterList Version="1.0">\n <Colour>4278190335</Colour>\n <Transparency>0</Transparency>\n <Nodesize>9</Nodesize>\n <Nodesymbol>Sphere</Nodesymbol>\n <Scalenodesbydata>false</Scalenodesbydata>\n <Data></Data>\n <Scale>1</Scale>\n <Scalebyabsolutevalue>[NO STRING REPRESENTATION]</Scalebyabsolutevalue>\n <Orientation toggled="true">{\n    "DataGroup": "AzmDip",\n    "ManualWidth": true,\n    "Scale": false,\n    "ScaleLog": false,\n    "Size": 30,\n    "Symbol": "Tablet",\n    "Width": 30\n}\n</Orientation>\n</IParameterList>\n'
 
-    def __init__(self, h5file):
+    def __init__(self, **kwargs):
 
-        self.workspace = Workspace(h5file)
+        super().__init__(**kwargs)
+        self.trigger.description = "Export to GA"
         self.em_system_specs = geophysical_systems.parameters()
         self.system = Dropdown(
             options=[
@@ -119,29 +49,33 @@ class EMLineProfiler(BaseApplication):
             description="Time-Domain System:",
         )
 
-        self._groups = self.groups
+        self._groups = base_em_groups()
         self.group_list = SelectMultiple(description="")
 
         self.early = np.arange(8, 17).tolist()
         self.middle = np.arange(17, 28).tolist()
         self.late = np.arange(28, 40).tolist()
 
-        self.data_selection = ObjectDataSelection(h5file=h5file, select_multiple=True)
+        self.data_selection = ObjectDataSelection(select_multiple=True, **kwargs)
+        # self._objects = self.data_selection.objects
+        # self._data = self.data_selection.data
         self.data_selection.objects.description = "Survey"
 
-        self.model_selection = ObjectDataSelection(h5file=h5file)
+        self.model_selection = ObjectDataSelection(h5file=self.h5file)
         self.model_selection.objects.description = "1D Object:"
         self.model_selection.data.description = "Model"
 
-        _, self.model_line_field = ObjectDataSelection(
-            h5file=h5file, objects=self.model_selection.objects, find_value=["line"]
-        )
+        self.model_line_field = ObjectDataSelection(
+            h5file=self.h5file,
+            objects=self.model_selection.objects,
+            find_value=["line"],
+        ).data
         self.model_line_field.description = "Line field: "
 
         self.marker = {"left": "<", "right": ">"}
 
         def update_model_line_fields(_):
-            self.model_line_field.options = self.model_field.options
+            self.model_line_field.options = self.model_selection.data.options
             self.model_line_field.value = find_value(
                 self.model_line_field.options, ["line"]
             )
@@ -149,20 +83,26 @@ class EMLineProfiler(BaseApplication):
         self.model_selection.data.observe(update_model_line_fields, names="options")
 
         def get_survey(_):
-            if self.workspace.get_entity(self.data_objects.value):
-                self.survey = self.workspace.get_entity(self.data_objects.value)[0]
-                self.data_field.options = (
+            if self.workspace.get_entity(self.data_selection.objects.value):
+                self.survey = self.workspace.get_entity(
+                    self.data_selection.objects.value
+                )[0]
+                self.data_selection.data.options = (
                     [p_g.name for p_g in self.survey.property_groups]
                     + ["^-- Groups --^"]
-                    + list(self.data_field.options)
+                    + list(self.data_selection.data.options)
                 )
 
-        self.data_objects.observe(get_survey, names="value")
-        self.data_objects.value = self.data_objects.options[0]
+        self.data_selection.objects.observe(get_survey, names="value")
+        # self.data_selection.objects.value = self.data_selection.objects.options[0]
         get_survey("")
 
-        self.lines = LineOptions(h5file, self.data_objects, select_multiple=False)
-        self.lines.value.description = "Line"
+        self.lines = LineOptions(
+            h5file=self.h5file,
+            objects=self.data_selection.objects,
+            select_multiple=False,
+        )
+        self.lines.data.description = "Line"
 
         self.channels = SelectMultiple(description="Channels")
         self.group_default_early = Text(description="Early", value="9-16")
@@ -179,9 +119,9 @@ class EMLineProfiler(BaseApplication):
             data = []
 
             groups = [p_g.name for p_g in self.survey.property_groups]
-            channels = list(self.data_field.value)
+            channels = list(self.data_selection.data.value)
 
-            for channel in self.data_field.value:
+            for channel in self.data_selection.data.value:
                 if channel in groups:
                     for prop in self.survey.get_property_group(channel).properties:
                         name = self.workspace.get_entity(prop)[0].name
@@ -200,20 +140,24 @@ class EMLineProfiler(BaseApplication):
                 widget.children[0].options = channels
                 widget.children[0].value = find_value(channels, [key])
 
-        self.data_field.observe(get_data, names="value")
+        self.data_selection.data.observe(get_data, names="value")
         get_data("")
 
         def get_surf_model(_):
-            if self.workspace.get_entity(self.model_objects.value):
-                self.surf_model = self.workspace.get_entity(self.model_objects.value)[0]
+            if self.workspace.get_entity(self.model_selection.objects.value):
+                self.surf_model = self.workspace.get_entity(
+                    self.model_selection.objects.value
+                )[0]
 
-        self.model_objects.observe(get_surf_model, names="value")
+        self.model_selection.objects.observe(get_surf_model, names="value")
 
         def get_model(_):
-            if self.surf_model.get_data(self.model_field.value):
-                self.surf_model = self.surf_model.get_data(self.model_field.value)[0]
+            if self.surf_model.get_data(self.model_selection.data.value):
+                self.surf_model = self.surf_model.get_data(
+                    self.model_selection.data.value
+                )[0]
 
-        self.model_objects.observe(get_model, names="value")
+        self.model_selection.objects.observe(get_model, names="value")
 
         self.smoothing = IntSlider(
             min=0, max=64, value=0, description="Running mean", continuous_update=False,
@@ -241,7 +185,7 @@ class EMLineProfiler(BaseApplication):
             orientation="horizontal",
         )
 
-        self.auto_picker = ToggleButton(description="Pick target", value=True)
+        self.auto_picker = ToggleButton(description="Pick nearest target", value=True)
 
         self.focus = FloatSlider(
             value=1.0,
@@ -256,15 +200,15 @@ class EMLineProfiler(BaseApplication):
 
         self.zoom = VBox([self.center, self.focus])
 
-        self.scale_button = RadioButtons(
-            options=["linear", "symlog",], description="Vertical scaling",
+        self.scale_button = ToggleButtons(
+            options=["linear", "symlog",], description="Y-axis scaling",
         )
 
         def scale_update(_):
             if self.scale_button.value == "symlog":
                 scale_panel.children = [
                     self.scale_button,
-                    VBox([Label("Linear threshold"), self.scale_value]),
+                    self.scale_value,
                 ]
             else:
                 scale_panel.children = [self.scale_button]
@@ -276,10 +220,10 @@ class EMLineProfiler(BaseApplication):
             step=0.5,
             base=10,
             value=1e-2,
-            description="",
+            description="Linear threshold",
             continuous_update=False,
         )
-        scale_panel = HBox([self.scale_button])
+        scale_panel = VBox([self.scale_button])
 
         def add_group(_):
             self.add_group()
@@ -341,11 +285,20 @@ class EMLineProfiler(BaseApplication):
             ]
         )
 
+        def system_box_trigger(_):
+            self.system_box_trigger()
+
+        self.system_box_option = ToggleButton(
+            description="Set System Specs", value=False
+        )
+        self.system_box_option.observe(system_box_trigger)
+        self.system_box = VBox([self.system_box_option])
+
         self.group_default_early.observe(reset_default_bounds)
         self.group_default_middle.observe(reset_default_bounds)
         self.group_default_late.observe(reset_default_bounds)
 
-        self.group_add = ToggleButton(description="<< Add New Group <<")
+        self.group_add = ToggleButton(description="^ Add New Group ^")
         self.group_name = Text(description="Name")
         self.group_color = ColorPicker(
             concise=False, description="Color", value="blue", disabled=False
@@ -353,17 +306,23 @@ class EMLineProfiler(BaseApplication):
         self.group_add.observe(add_group)
 
         def highlight_selection(_):
-
             self.highlight_selection()
 
         self.group_list.observe(highlight_selection, names="value")
-        self.markers = ToggleButton(description="Show all markers")
+        self.markers = ToggleButton(description="Show markers")
 
-        def export_click(_):
-            self.export_click()
+        self.groups_setter = ToggleButton(description="Set channel groups", value=False)
 
-        self.export = ToggleButton(description="Export", button_style="success")
-        self.export.observe(export_click)
+        def groups_trigger(_):
+            self.groups_trigger()
+
+        self.groups_setter.observe(groups_trigger)
+        self.groups_widget = VBox([self.groups_setter])
+
+        def trigger_click(_):
+            self.trigger_click()
+
+        self.trigger.observe(trigger_click)
 
         def plot_data_selection(
             ind,
@@ -429,8 +388,8 @@ class EMLineProfiler(BaseApplication):
             [
                 HBox(
                     [
-                        self.model_objects,
-                        VBox([self.model_field, self.model_line_field]),
+                        self.model_selection.objects,
+                        VBox([self.model_selection.data, self.model_line_field]),
                     ]
                 ),
                 section,
@@ -448,61 +407,35 @@ class EMLineProfiler(BaseApplication):
             [
                 HBox(
                     [
-                        VBox([self.data_objects, self.data_field]),
-                        VBox([self.system, self.channel_panel]),
+                        VBox(
+                            [
+                                self.data_selection.objects,
+                                self.data_selection.data,
+                                self.system_box,
+                                self.groups_widget,
+                            ],
+                            layout=Layout(width="50%"),
+                        ),
+                        VBox(
+                            [
+                                self.lines.widget,
+                                self.zoom,
+                                self.smoothing,
+                                HBox([self.residual, self.markers]),
+                            ],
+                            layout=Layout(width="50%"),
+                        ),
                     ]
                 ),
-                self.lines.widget,
                 plotting,
                 self.x_label,
                 HBox(
                     [
                         VBox(
                             [
-                                HBox(
-                                    [
-                                        VBox(
-                                            [self.zoom, scale_panel],
-                                            layout=Layout(width="50%"),
-                                        ),
-                                        VBox(
-                                            [
-                                                self.smoothing,
-                                                self.residual,
-                                                self.threshold,
-                                            ],
-                                            layout=Layout(width="50%"),
-                                        ),
-                                    ]
-                                ),
-                                HBox([self.markers, self.auto_picker]),
-                                VBox(
-                                    [
-                                        Label("Groups"),
-                                        HBox(
-                                            [
-                                                Label("Defaults"),
-                                                self.group_default_early,
-                                                self.group_default_middle,
-                                                self.group_default_late,
-                                            ]
-                                        ),
-                                        HBox(
-                                            [
-                                                self.group_list,
-                                                VBox(
-                                                    [
-                                                        self.channels,
-                                                        self.group_name,
-                                                        self.group_color,
-                                                        self.group_add,
-                                                    ]
-                                                ),
-                                            ]
-                                        ),
-                                        HBox([self.export, self.live_link_widget,]),
-                                    ]
-                                ),
+                                HBox([VBox([scale_panel, self.threshold,]),]),
+                                self.auto_picker,
+                                self.trigger_widget,
                             ]
                         )
                     ]
@@ -511,6 +444,34 @@ class EMLineProfiler(BaseApplication):
         )
 
         self._widget = VBox([self.data_panel, self.show_model])
+
+        super().__init__(**kwargs)
+
+    def system_box_trigger(self):
+        if self.system_box_option.value:
+            self.system_box.children = [
+                self.system_box_option,
+                self.system,
+                self.channel_panel,
+            ]
+        else:
+            self.system_box.children = [self.system_box_option]
+
+    def groups_trigger(self):
+        if self.groups_setter.value:
+            self.groups_widget.children = [
+                self.groups_setter,
+                self.group_default_early,
+                self.group_default_middle,
+                self.group_default_late,
+                self.group_list,
+                self.channels,
+                self.group_name,
+                self.group_color,
+                self.group_add,
+            ]
+        else:
+            self.groups_widget.children = [self.groups_setter]
 
     def set_default_groups(self, channels):
         """
@@ -560,8 +521,8 @@ class EMLineProfiler(BaseApplication):
             }
             self.group_add.value = False
 
-    def export_click(self):
-        if self.export.value:
+    def trigger_click(self):
+        if self.trigger.value:
             for group in self.group_list.value:
 
                 for (
@@ -678,7 +639,7 @@ class EMLineProfiler(BaseApplication):
                     ws_out = Workspace(temp_geoh5)
                     points.copy(parent=ws_out)
 
-            self.export.value = False
+            self.trigger.value = False
             self.workspace.finalize()
 
     def highlight_selection(self):
@@ -1118,13 +1079,13 @@ class EMLineProfiler(BaseApplication):
             return
 
         if (
-            len(self.survey.get_data(self.lines.value.value)) == 0
+            len(self.survey.get_data(self.lines.data.value)) == 0
             or self.lines.lines.value == ""
         ):
             return
 
         line_ind = np.where(
-            np.asarray(self.survey.get_data(self.lines.value.value)[0].values)
+            np.asarray(self.survey.get_data(self.lines.data.value)[0].values)
             == self.lines.lines.value
         )[0]
 
@@ -1146,8 +1107,10 @@ class EMLineProfiler(BaseApplication):
         # Get the corresponding along line model
         origin = xyz[0, :2]
 
-        if self.workspace.get_entity(self.model_objects.value):
-            surf_model = self.workspace.get_entity(self.model_objects.value)[0]
+        if self.workspace.get_entity(self.model_selection.objects.value):
+            surf_model = self.workspace.get_entity(self.model_selection.objects.value)[
+                0
+            ]
 
         if surf_model.get_data("Line") and np.any(
             np.where(surf_model.get_data("Line")[0].values == self.lines.lines.value)[0]
@@ -1174,9 +1137,9 @@ class EMLineProfiler(BaseApplication):
             )
             self.lines.model_z = surf_model.vertices[vert_ind, 2]
             self.lines.model_cells = cell_ind
-            self.lines.model_values = surf_model.get_data(self.model_field.value)[
-                0
-            ].values[vert_ind]
+            self.lines.model_values = surf_model.get_data(
+                self.model_selection.data.value
+            )[0].values[vert_ind]
         else:
             self.lines.model_x = None
 
@@ -1224,6 +1187,96 @@ class EMLineProfiler(BaseApplication):
         else:
             self._widget.children = [self.data_panel, self.show_model]
 
+    # @property
+    # def data(self):
+    #     return self._data
+
+    @property
+    def groups(self):
+        return self._groups
+
+    #
+    # @property
+    # def objects(self):
+    #     return self._objects
+
     @property
     def widget(self):
         return self._widget
+
+
+def base_em_groups():
+    return {
+        "early": {
+            "color": "blue",
+            "channels": [],
+            "gates": [],
+            "defaults": ["early"],
+            "inflx_up": [],
+            "inflx_dwn": [],
+            "peaks": [],
+            "times": [],
+            "values": [],
+            "locations": [],
+        },
+        "early + middle": {
+            "color": "cyan",
+            "channels": [],
+            "gates": [],
+            "defaults": ["early", "middle"],
+            "inflx_up": [],
+            "inflx_dwn": [],
+            "peaks": [],
+            "times": [],
+            "values": [],
+            "locations": [],
+        },
+        "middle": {
+            "color": "green",
+            "channels": [],
+            "gates": [],
+            "defaults": ["middle"],
+            "inflx_up": [],
+            "inflx_dwn": [],
+            "peaks": [],
+            "times": [],
+            "values": [],
+            "locations": [],
+        },
+        "early + middle + late": {
+            "color": "orange",
+            "channels": [],
+            "gates": [],
+            "defaults": ["early", "middle", "late"],
+            "inflx_up": [],
+            "inflx_dwn": [],
+            "peaks": [],
+            "times": [],
+            "values": [],
+            "locations": [],
+        },
+        "middle + late": {
+            "color": "yellow",
+            "channels": [],
+            "gates": [],
+            "defaults": ["middle", "late"],
+            "inflx_up": [],
+            "inflx_dwn": [],
+            "peaks": [],
+            "times": [],
+            "values": [],
+            "locations": [],
+        },
+        "late": {
+            "color": "red",
+            "channels": [],
+            "gates": [],
+            "defaults": ["late"],
+            "inflx_up": [],
+            "inflx_dwn": [],
+            "peaks": [],
+            "times": [],
+            "values": [],
+            "locations": [],
+        },
+    }
