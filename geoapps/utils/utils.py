@@ -737,7 +737,7 @@ def octree_2_treemesh(mesh):
     return treemesh
 
 
-def object_2_dataframe(entity, fields=[]):
+def object_2_dataframe(entity, fields=[], inplace=False):
     """
     Convert an object to a pandas dataframe
     """
@@ -758,7 +758,8 @@ def object_2_dataframe(entity, fields=[]):
             obj = entity.get_data(field)[0]
             if obj.values.shape[0] == locs.shape[0]:
                 d_f[field] = obj.values.copy()
-                obj.values = None
+                if inplace:
+                    obj.values = None
 
     return d_f
 
