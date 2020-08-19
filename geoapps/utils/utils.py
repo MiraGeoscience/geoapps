@@ -763,6 +763,32 @@ def object_2_dataframe(entity, fields=[]):
     return d_f
 
 
+def csv_2_zarr(input_csv, out_dir="zarr", rowchunks=100000, dask_chunks="64MB"):
+    """
+    Zarr conversion for large CSV files
+
+    NOTE: Need testing
+    """
+    # Need to run this part only once
+    if ~os.path.exists(out_dir):
+        for ii, chunk in enumerate(pd.read_csv(input_csv, chunksize=rowchunks)):
+            array = chunk.to_numpy()[1:, :]
+            da_array = da.from_array(array, chunks=dask_chunks)
+            da.to_zarr(da_array, url=out_dir + fr"\Tile{ii}")
+
+    # Just read the header
+    header = pd.read_csv(input_csv, nrows=1)
+
+    # Stack all the blocks in one big zarr
+    count = len([name for name in os.listdir(out_dir)])
+    dask_arrays = []
+    for ii in range(count):
+        block = da.from_zarr(out_dir + f"/Tile{ii}")
+        dask_arrays.append(block)
+
+    return header, da.vstack(dask_arrays)
+
+
 def data_2_zarr(h5file, entity_name, downsampling=1, fields=[], zarr_file="data.zarr"):
     """
     Convert an data entity and values to a dictionary of zarr's
