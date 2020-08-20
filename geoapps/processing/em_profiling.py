@@ -56,9 +56,9 @@ class EMLineProfiler(BaseApplication):
         self.middle = np.arange(17, 28).tolist()
         self.late = np.arange(28, 40).tolist()
 
-        self.data_selection = ObjectDataSelection(select_multiple=True, **kwargs)
-        # self._objects = self.data_selection.objects
-        # self._data = self.data_selection.data
+        self.data_selection = ObjectDataSelection(add_groups=True, select_multiple=True)
+        self._objects = self.data_selection.objects
+        self._data = self.data_selection.data
         self.data_selection.objects.description = "Survey"
 
         self.model_selection = ObjectDataSelection(h5file=self.h5file)
@@ -82,20 +82,10 @@ class EMLineProfiler(BaseApplication):
 
         self.model_selection.data.observe(update_model_line_fields, names="options")
 
-        def get_survey(_):
-            if self.workspace.get_entity(self.data_selection.objects.value):
-                self.survey = self.workspace.get_entity(
-                    self.data_selection.objects.value
-                )[0]
-                self.data_selection.data.options = (
-                    [p_g.name for p_g in self.survey.property_groups]
-                    + ["^-- Groups --^"]
-                    + list(self.data_selection.data.options)
-                )
+        def survey_selection(_):
+            self.survey_selection()
 
-        self.data_selection.objects.observe(get_survey, names="value")
-        # self.data_selection.objects.value = self.data_selection.objects.options[0]
-        get_survey("")
+        self.data_selection.objects.observe(survey_selection, names="value")
 
         self.lines = LineOptions(
             h5file=self.h5file,
@@ -112,36 +102,13 @@ class EMLineProfiler(BaseApplication):
         def reset_default_bounds(_):
             self.reset_default_bounds()
 
-        self.data = {}
+        self.data_channels = {}
         self.data_channel_options = {}
 
         def get_data(_):
-            data = []
-
-            groups = [p_g.name for p_g in self.survey.property_groups]
-            channels = list(self.data_selection.data.value)
-
-            for channel in self.data_selection.data.value:
-                if channel in groups:
-                    for prop in self.survey.get_property_group(channel).properties:
-                        name = self.workspace.get_entity(prop)[0].name
-                        if prop not in channels:
-                            channels.append(name)
-
-            self.channels.options = channels
-            for channel in channels:
-                if self.survey.get_data(channel):
-                    self.data[channel] = self.survey.get_data(channel)[0]
-
-            # Generate default groups
-            self.reset_default_bounds()
-
-            for key, widget in self.data_channel_options.items():
-                widget.children[0].options = channels
-                widget.children[0].value = find_value(channels, [key])
+            self.get_data()
 
         self.data_selection.data.observe(get_data, names="value")
-        get_data("")
 
         def get_surf_model(_):
             if self.workspace.get_entity(self.model_selection.objects.value):
@@ -294,9 +261,9 @@ class EMLineProfiler(BaseApplication):
         self.system_box_option.observe(system_box_trigger)
         self.system_box = VBox([self.system_box_option])
 
-        self.group_default_early.observe(reset_default_bounds)
-        self.group_default_middle.observe(reset_default_bounds)
-        self.group_default_late.observe(reset_default_bounds)
+        self.group_default_early.observe(reset_default_bounds, names="value")
+        self.group_default_middle.observe(reset_default_bounds, names="value")
+        self.group_default_late.observe(reset_default_bounds, names="value")
 
         self.group_add = ToggleButton(description="^ Add New Group ^")
         self.group_name = Text(description="Name")
@@ -467,6 +434,41 @@ class EMLineProfiler(BaseApplication):
 
         super().__init__(**kwargs)
 
+    def get_data(self):
+        if getattr(self, "survey", None) is not None:
+            groups = [p_g.name for p_g in self.survey.property_groups]
+            channels = list(self.data_selection.data.value)
+
+            for channel in self.data_selection.data.value:
+                if channel in groups:
+                    for prop in self.survey.get_property_group(channel).properties:
+                        name = self.workspace.get_entity(prop)[0].name
+                        if prop not in channels:
+                            channels.append(name)
+
+            self.channels.options = channels
+            for channel in channels:
+                if self.survey.get_data(channel):
+                    self.data_channels[channel] = self.survey.get_data(channel)[0]
+
+            # Generate default groups
+            self.reset_default_bounds()
+
+            for key, widget in self.data_channel_options.items():
+                widget.children[0].options = channels
+                widget.children[0].value = find_value(channels, [key])
+
+    def survey_selection(self):
+        if self.workspace.get_entity(self.data_selection.objects.value):
+            self.survey = self.workspace.get_entity(self.data_selection.objects.value)[
+                0
+            ]
+            self.data_selection.data.options = (
+                [p_g.name for p_g in self.survey.property_groups]
+                + ["^-- Groups --^"]
+                + list(self.data_selection.data.options)
+            )
+
     def system_box_trigger(self):
         if self.system_box_option.value:
             self.system_box.children = [
@@ -513,7 +515,7 @@ class EMLineProfiler(BaseApplication):
             for group in self.groups.values():
                 if ind in group["gates"]:
                     group["channels"].append(channel)
-
+        print("in set_default_group")
         self.group_list.options = self.groups.keys()
         self.group_list.value = []
 
@@ -697,7 +699,7 @@ class EMLineProfiler(BaseApplication):
             group["inflx_up"] = []
             group["inflx_dwn"] = []
             group["peaks"] = []
-            group["mad_tau"]
+            group["mad_tau"] = []
             group["times"] = []
             group["values"] = []
             group["locations"] = []
@@ -740,7 +742,7 @@ class EMLineProfiler(BaseApplication):
             times[channel.children[0].value] = channel.children[1].value
 
         y_min, y_max = np.inf, -np.inf
-        for channel, d in self.data.items():
+        for channel, d in self.data_channels.items():
 
             if channel not in times.keys():
                 continue
@@ -996,7 +998,7 @@ class EMLineProfiler(BaseApplication):
                     np.vstack(self.groups[group]["peaks"])
                     * self.em_system_specs[self.system.value]["normalization"]
                 )
-
+                print(self.groups[group]["times"])
                 tc = np.hstack(self.groups[group]["times"][: ind + 1])
                 vals = np.log(peaks[: ind + 1, 1])
 
@@ -1136,17 +1138,12 @@ class EMLineProfiler(BaseApplication):
         ):
 
             surf_id = surf_model.get_data("Line")[0].values
-            #             surf_ind = np.where(
-            #                 surf_id == self.lines.lines.value
-            #             )[0]
-
             cell_ind = np.where(
                 surf_id[surf_model.cells[:, 0]] == self.lines.lines.value
             )[0]
 
             cells = surf_model.cells[cell_ind, :]
             vert_ind, cell_ind = np.unique(cells, return_inverse=True)
-
             surf_verts = surf_model.vertices[vert_ind, :]
             self.lines.model_x = np.linalg.norm(
                 np.c_[
@@ -1206,18 +1203,17 @@ class EMLineProfiler(BaseApplication):
         else:
             self._widget.children = [self.data_panel, self.show_model]
 
-    # @property
-    # def data(self):
-    #     return self._data
+    @property
+    def data(self):
+        return self._data
 
     @property
     def groups(self):
         return self._groups
 
-    #
-    # @property
-    # def objects(self):
-    #     return self._objects
+    @property
+    def objects(self):
+        return self._objects
 
     @property
     def widget(self):
