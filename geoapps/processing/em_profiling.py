@@ -379,6 +379,26 @@ class EMLineProfiler(BaseApplication):
             },
         )
 
+        def plot_decay_curve(
+            ind, smoothing, residual, center, groups, pick_trigger, threshold,
+        ):
+            self.plot_decay_curve(
+                ind, smoothing, residual, center, groups, pick_trigger, threshold,
+            )
+
+        decay = interactive_output(
+            plot_decay_curve,
+            {
+                "ind": self.lines.lines,
+                "smoothing": self.smoothing,
+                "residual": self.residual,
+                "center": self.center,
+                "groups": self.group_list,
+                "pick_trigger": self.auto_picker,
+                "threshold": self.threshold,
+            },
+        )
+
         section = interactive_output(
             plot_model_selection,
             {"ind": self.lines.lines, "center": self.center, "focus": self.focus,},
@@ -427,7 +447,7 @@ class EMLineProfiler(BaseApplication):
                         ),
                     ]
                 ),
-                plotting,
+                HBox([plotting, decay]),
                 self.x_label,
                 HBox(
                     [
@@ -961,14 +981,13 @@ class EMLineProfiler(BaseApplication):
 
         pos2 = ax2.get_position()
 
-        ax = [pos2.x0, pos2.y0, pos2.width, pos2.height].copy()
-
+    def plot_decay_curve(
+        self, ind, smoothing, residual, center, groups, pick_trigger, threshold
+    ):
         if self.auto_picker.value:
-            ax[0] += 0.25
-            ax[1] -= 0.5
-            ax[2] /= 3
-            ax[3] /= 2
-            ax4 = plt.axes(ax)
+            fig = plt.figure(figsize=(8, 8))
+            ax4 = plt.subplot()
+
             for group in self.group_list.value:
                 if len(self.groups[group]["peaks"]) == 0:
                     continue
