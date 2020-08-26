@@ -1074,10 +1074,12 @@ def inversion(input_file):
                     )
                 else:
                     # Assumes amplitude reference value in inducing field direction
-                    model = np.kron(
-                        np.c_[input_value[0], input_value[0], input_value[0]],
-                        np.ones(mesh.nC),
-                    )[0, :]
+                    model = Utils.sdiag(np.ones(mesh.nC) * input_value[0]) * np.kron(
+                        Utils.matutils.dipazm_2_xyz(
+                            dip=survey.srcField.param[1], azm_N=survey.srcField.param[2]
+                        ),
+                        np.ones((mesh.nC, 1)),
+                    )
 
         return mkvc(model)
 
@@ -1249,7 +1251,16 @@ def inversion(input_file):
             Utils.io_utils.writeUBCmagneticsObservations(
                 outDir + "/Obs.mag", survey, dpred
             )
-
+        mesh_object.add_data(
+            {
+                "Starting_model": {
+                    "values": np.linalg.norm(
+                        (activeCellsMap * model_map * mstart).reshape((-1, 3)), axis=1
+                    )[mesh._ubc_order],
+                    "association": "CELL",
+                }
+            }
+        )
         return None
 
     # Global sensitivity weights (linear)

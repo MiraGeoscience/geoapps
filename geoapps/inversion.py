@@ -1264,7 +1264,7 @@ class InversionApp(BaseApplication):
             obj = self.workspace.get_entity(self.selection.objects.value)[0]
             data_list = obj.get_data_list()
             # lines.update_list()
-            # topography.update_list()
+            self.topography.update_list()
 
             for aem_system, specs in self.em_system_specs.items():
                 if any([specs["flag"] in channel for channel in data_list]):

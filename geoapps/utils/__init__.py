@@ -17,4 +17,6 @@ from .utils import (
     rotate_vertices,
     RectangularBlock,
     format_labels,
+    symlog,
+    inv_symlog,
 )
