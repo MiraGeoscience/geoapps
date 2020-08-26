@@ -1009,6 +1009,20 @@ class RectangularBlock:
         return self._vertices
 
 
+def symlog(values, threshold):
+    """
+    Convert values to log with linear threshold near zero
+    """
+    return np.sign(values) * np.log10(1 + np.abs(values) / threshold)
+
+
+def inv_symlog(values, threshold):
+    """
+    Compute the inverse symlog mapping
+    """
+    return np.sign(values) * threshold * (-1.0 + 10.0 ** np.abs(values))
+
+
 def raw_moment(data, i_order, j_order):
     nrows, ncols = data.shape
     y_indices, x_indicies = np.mgrid[:nrows, :ncols]

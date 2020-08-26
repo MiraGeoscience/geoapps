@@ -27,3 +27,4 @@ dependencies:
     - nbsphinx
     - jupyter_sphinx
     - sphinx-rtd-theme
+    - plotly
