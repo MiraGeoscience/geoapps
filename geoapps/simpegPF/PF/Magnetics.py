@@ -114,7 +114,7 @@ class MagneticIntegral(Problem.LinearProblem):
     def fields(self, m):
 
         if self.coordinate_system == "cartesian":
-            m = self.chiMap * (m)
+            m = self.chiMap * m
         else:
             m = self.chiMap * (
                 matutils.atp2xyz(m.reshape((int(len(m) / 3), 3), order="F"))
@@ -422,8 +422,8 @@ class MagneticIntegral(Problem.LinearProblem):
         _G = Linear forward operator | (forwardOnly)=data
 
          """
-        if m is not None:
-            self.model = self.chiMap * m
+        # if m is not None:
+        #     self.model = self.chiMap * m
 
         # survey = self.survey
         self.rxLoc = self.survey.srcField.rxList[0].locs
@@ -462,7 +462,7 @@ class MagneticIntegral(Problem.LinearProblem):
             Zn=self.Zn,
             n_cpu=self.n_cpu,
             forwardOnly=self.forwardOnly,
-            model=self.model,
+            model=m,
             components=self.survey.components,
             Mxyz=self.Mxyz,
             P=self.ProjTMI,
