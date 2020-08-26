@@ -6,22 +6,627 @@ import numpy as np
 from copy import copy
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
+import plotly.graph_objects as go
+import plotly.express as px
 from ipywidgets import (
     Dropdown,
+    Checkbox,
     SelectMultiple,
     FloatSlider,
+    IntSlider,
     FloatText,
     VBox,
     HBox,
     ToggleButton,
+    ToggleButtons,
     interactive_output,
     Label,
     Layout,
-    Widget,
 )
 from geoapps.base import BaseApplication
-from geoapps.utils import filter_xy, rotate_xy, format_labels, find_value
+from geoapps.utils import (
+    filter_xy,
+    rotate_xy,
+    format_labels,
+    find_value,
+    symlog,
+    inv_symlog,
+)
 from geoapps.selection import ObjectDataSelection
+
+
+class ScatterPlots(BaseApplication):
+    """
+    Application for 2D and 3D crossplots of data using symlog scaling
+    """
+
+    def __init__(self, **kwargs):
+        self.selection = ObjectDataSelection(select_multiple=True, **kwargs)
+
+        self._data = self.selection.data
+        self._objects = self.selection.objects
+
+        self.selection.widget
+
+        self.selection.data.value
+
+        self._x_channel = Dropdown(description="X-axis", layout=Layout(width="300px"))
+        self._x_active = Checkbox(value=True, indent=False, layout=Layout(width="50px"))
+        self._x_log = Checkbox(value=False, indent=False, layout=Layout(width="50px"))
+        self._x_thresh = FloatText(
+            value=1e-1, indent=False, layout=Layout(width="100px")
+        )
+        self._y_channel = Dropdown(description="Y-axis")
+        self._y_active = Checkbox(value=True, indent=False, layout=Layout(width="50px"))
+        self._y_log = Checkbox(value=False, indent=False, layout=Layout(width="50px"))
+        self._y_thresh = FloatText(
+            value=1e-1, indent=False, layout=Layout(width="100px")
+        )
+        self._z_channel = Dropdown(description="Z-axis",)
+        self._z_active = Checkbox(
+            value=False, indent=False, layout=Layout(width="50px")
+        )
+        self._z_log = Checkbox(value=False, indent=False, layout=Layout(width="50px"))
+        self._z_thresh = FloatText(
+            value=1e-1, indent=False, layout=Layout(width="100px")
+        )
+        self._color_channel = Dropdown(description="Color")
+        self._color_log = Checkbox(
+            value=False, indent=False, layout=Layout(width="50px")
+        )
+        self._color_thresh = FloatText(
+            value=1e-1, indent=False, layout=Layout(width="100px")
+        )
+        self._color_active = Checkbox(
+            value=False, indent=False, layout=Layout(width="50px")
+        )
+        self._color_maps = Dropdown(
+            description="Colormaps",
+            options=px.colors.named_colorscales(),
+            value="viridis",
+        )
+        self._size_channel = Dropdown(description="Size")
+        self._size_active = Checkbox(
+            value=False, indent=False, layout=Layout(width="50px")
+        )
+        self._size_log = Checkbox(
+            value=False, indent=False, layout=Layout(width="50px")
+        )
+        self._size_thresh = FloatText(
+            value=1e-1, indent=False, layout=Layout(width="100px")
+        )
+        self._size_max = IntSlider(
+            min=1, max=100, value=20, description="Marker size", continuous_update=False
+        )
+        self.refresh = ToggleButton(description="Refresh Plot", value=True)
+
+        self.data_channels = {}
+
+        self.crossplot_fig = go.FigureWidget()
+
+        def plot_selection(
+            x,
+            x_log,
+            x_active,
+            x_thresh,
+            y,
+            y_log,
+            y_active,
+            y_thresh,
+            z,
+            z_log,
+            z_active,
+            z_thresh,
+            color,
+            color_log,
+            color_active,
+            color_thresh,
+            color_maps,
+            size,
+            size_log,
+            size_active,
+            size_thresh,
+            size_max,
+            refresh,
+        ):
+            self.plot_selection(
+                x,
+                x_log,
+                x_active,
+                x_thresh,
+                y,
+                y_log,
+                y_active,
+                y_thresh,
+                z,
+                z_log,
+                z_active,
+                z_thresh,
+                color,
+                color_log,
+                color_active,
+                color_thresh,
+                color_maps,
+                size,
+                size_log,
+                size_active,
+                size_thresh,
+                size_max,
+                refresh,
+            )
+
+        self.crossplot = interactive_output(
+            plot_selection,
+            {
+                "x": self.x_channel,
+                "x_log": self.x_log,
+                "x_active": self.x_active,
+                "x_thresh": self.x_thresh,
+                "y": self.y_channel,
+                "y_log": self.y_log,
+                "y_thresh": self.y_thresh,
+                "y_active": self.y_active,
+                "z": self.z_channel,
+                "z_log": self.z_log,
+                "z_thresh": self.z_thresh,
+                "z_active": self.z_active,
+                "color": self.color_channel,
+                "color_log": self.color_log,
+                "color_thresh": self.color_thresh,
+                "color_active": self.color_active,
+                "color_maps": self.color_maps,
+                "size": self.size_channel,
+                "size_log": self.size_log,
+                "size_thresh": self.size_thresh,
+                "size_active": self.size_active,
+                "size_max": self.size_max,
+                "refresh": self.refresh,
+            },
+        )
+
+        self.widget = VBox(
+            [
+                VBox(
+                    [
+                        HBox([self.selection.widget]),
+                        HBox(
+                            [
+                                VBox(
+                                    [
+                                        Label("Axes"),
+                                        self.x_channel,
+                                        self.y_channel,
+                                        self.z_channel,
+                                        self.color_channel,
+                                        self.size_channel,
+                                    ]
+                                ),
+                                VBox(
+                                    [
+                                        Label("Use"),
+                                        self.x_active,
+                                        self.y_active,
+                                        self.z_active,
+                                        self.color_active,
+                                        self.size_active,
+                                    ]
+                                ),
+                                VBox(
+                                    [
+                                        Label("SymLog"),
+                                        self.x_log,
+                                        self.y_log,
+                                        self.z_log,
+                                        self.color_log,
+                                        self.size_log,
+                                    ]
+                                ),
+                                VBox(
+                                    [
+                                        Label(""),
+                                        self.x_thresh,
+                                        self.y_thresh,
+                                        self.z_thresh,
+                                        self.color_thresh,
+                                        self.size_thresh,
+                                    ]
+                                ),
+                                VBox(
+                                    [
+                                        Label(""),
+                                        Label(""),
+                                        Label(""),
+                                        Label(""),
+                                        self.color_maps,
+                                        self.size_max,
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                self.crossplot,
+                self.crossplot_fig,
+            ]
+        )
+
+        super().__init__(**kwargs)
+
+        def update_channels(_):
+            self.update_channels()
+
+        self.data.observe(update_channels, names="value")
+
+        def update_data_list(_):
+            self.update_data_list()
+
+        self.objects.observe(update_data_list)
+
+    @property
+    def objects(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._objects
+
+    @property
+    def data(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._data
+
+    @property
+    def x_channel(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._x_channel
+
+    @property
+    def x_active(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._x_active
+
+    @property
+    def x_log(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._x_log
+
+    @property
+    def x_thresh(self):
+        """
+        :obj:`ipywidgets.FloatText`
+        """
+        return self._x_thresh
+
+    @property
+    def y_channel(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._y_channel
+
+    @property
+    def y_active(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._y_active
+
+    @property
+    def y_log(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._y_log
+
+    @property
+    def y_thresh(self):
+        """
+        :obj:`ipywidgets.FloatText`
+        """
+        return self._y_thresh
+
+    @property
+    def z_channel(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._z_channel
+
+    @property
+    def z_active(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._z_active
+
+    @property
+    def z_log(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._z_log
+
+    @property
+    def z_thresh(self):
+        """
+        :obj:`ipywidgets.FloatText`
+        """
+        return self._z_thresh
+
+    @property
+    def color_channel(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._color_channel
+
+    @property
+    def color_log(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._color_log
+
+    @property
+    def color_thresh(self):
+        """
+        :obj:`ipywidgets.FloatText`
+        """
+        return self._color_thresh
+
+    @property
+    def color_active(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._color_active
+
+    @property
+    def color_maps(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._color_maps
+
+    @property
+    def size_channel(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._size_channel
+
+    @property
+    def size_active(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._size_active
+
+    @property
+    def size_log(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._size_log
+
+    @property
+    def size_thresh(self):
+        """
+        :obj:`ipywidgets.FloatText`
+        """
+        return self._size_thresh
+
+    @property
+    def size_max(self):
+        """
+        :obj:`ipywidgets.IntSlider`
+        """
+        return self._size_max
+
+    def get_channel(self, channel):
+        obj, _ = self.selection.get_selected_entities()
+
+        if channel is None:
+            return None
+
+        if channel not in self.data_channels.keys() and obj.get_data(channel):
+            values = obj.get_data(channel)[0].values.copy()
+            values[(values > 1e-38) * (values < 2e-38)] = np.nan
+            self.data_channels[channel] = values
+        return self.data_channels[channel].copy()
+
+    def normalize(self, values):
+        ind = ~np.isnan(values)
+        values[ind] = np.abs(values[ind])
+        values[ind] /= values[ind].max()
+        values[ind == False] = 0
+        return values
+
+    def format_axis(self, channel, axis, log, threshold):
+        label = channel
+
+        if log:
+            axis = symlog(axis, threshold)
+
+        values = axis[~np.isnan(axis)]
+        ticks = np.linspace(values.min(), values.max(), 5)
+
+        if log:
+            label = f"Log({channel})"
+            ticklabels = inv_symlog(ticks, threshold)
+        else:
+            ticklabels = ticks
+
+        return axis, label, ticks, ticklabels.tolist()
+
+    def plot_selection(
+        self,
+        x,
+        x_log,
+        x_active,
+        x_thresh,
+        y,
+        y_log,
+        y_active,
+        y_thresh,
+        z,
+        z_log,
+        z_active,
+        z_thresh,
+        color,
+        color_log,
+        color_active,
+        color_thresh,
+        color_maps,
+        size,
+        size_log,
+        size_active,
+        size_thresh,
+        size_max,
+        refresh,
+    ):
+
+        if not refresh:
+            return None
+
+        if self.get_channel(size) is not None and size_active:
+            size = self.normalize(self.get_channel(size).copy())
+
+            if size_log:
+                size = symlog(size, size_thresh)
+            size *= size_max
+        else:
+            size = None
+
+        if self.get_channel(color) is not None and color_active:
+            color = self.normalize(self.get_channel(color).copy())
+            if color_log:
+                color = symlog(color, color_thresh)
+        else:
+            color = "black"
+
+        self.crossplot_fig.data = []
+        x_axis, y_axis, z_axis = None, None, None
+
+        if np.sum([x_active, y_active, z_active]) > 1:
+
+            if x_active:
+                x_axis = self.get_channel(x)
+            else:
+                x_axis = self.get_channel(y)
+
+            if y_active:
+                y_axis = self.get_channel(y)
+            else:
+                y_axis = self.get_channel(z)
+
+            if z_active:
+                z_axis = self.get_channel(z)
+
+            if x_axis is None or y_axis is None:
+                return
+
+            if x_axis is not None:
+                x_axis, x_label, x_ticks, x_ticklabels = self.format_axis(
+                    x, x_axis, x_log, x_thresh
+                )
+
+            if y_axis is not None:
+                y_axis, y_label, y_ticks, y_ticklabels = self.format_axis(
+                    y, y_axis, y_log, y_thresh
+                )
+
+            if z_axis is not None:
+                z_axis, z_label, z_ticks, z_ticklabels = self.format_axis(
+                    z, z_axis, z_log, z_thresh
+                )
+
+            # 3D Scatter
+            if np.sum([x_active, y_active, z_active]) == 3:
+                self.crossplot_fig.add_trace(
+                    go.Scatter3d(
+                        x=x_axis,
+                        y=y_axis,
+                        z=z_axis,
+                        mode="markers",
+                        marker={"color": color, "size": size, "colorscale": color_maps},
+                    )
+                )
+
+                self.crossplot_fig.update_layout(
+                    scene={
+                        "xaxis_title": x_label,
+                        "yaxis_title": y_label,
+                        "zaxis_title": z_label,
+                        "xaxis": {
+                            "tickvals": x_ticks,
+                            "ticktext": [f"{label:.2e}" for label in x_ticklabels],
+                        },
+                        "yaxis": {
+                            "tickvals": y_ticks,
+                            "ticktext": [f"{label:.2e}" for label in y_ticklabels],
+                        },
+                        "zaxis": {
+                            "tickvals": z_ticks,
+                            "ticktext": [f"{label:.2e}" for label in z_ticklabels],
+                        },
+                    }
+                )
+            # 2D Scatter
+            else:
+
+                self.crossplot_fig.add_trace(
+                    go.Scatter(
+                        x=x_axis,
+                        y=y_axis,
+                        mode="markers",
+                        marker={"color": color, "size": size, "colorscale": color_maps},
+                    )
+                )
+                self.crossplot_fig.update_layout(
+                    margin=dict(l=0, r=0, b=0, t=0),
+                    xaxis={
+                        "tickvals": x_ticks,
+                        "ticktext": [f"{label:.2e}" for label in x_ticklabels],
+                        "exponentformat": "e",
+                        "title": x_label,
+                    },
+                    yaxis={
+                        "tickvals": y_ticks,
+                        "ticktext": [f"{label:.2e}" for label in y_ticklabels],
+                        "exponentformat": "e",
+                        "title": y_label,
+                    },
+                )
+        else:
+            self.crossplot_fig.data = []
+
+    def update_channels(self):
+        self.refresh.value = False
+
+        for widget in [
+            self.x_channel,
+            self.y_channel,
+            self.z_channel,
+            self.color_channel,
+            self.size_channel,
+        ]:
+            val = widget.value
+            widget.options = self.data.value
+            if val in widget.options:
+                widget.value = val
+
+        self.refresh.value = True
+
+    def update_data_list(self):
+        self.data_channels = {}
 
 
 class PlotSelection2D(BaseApplication):
