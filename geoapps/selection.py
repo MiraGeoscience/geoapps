@@ -58,7 +58,7 @@ class LineOptions(BaseApplication):
     def update_list(self):
         _, data = self.selection.get_selected_entities()
         if getattr(data, "values", None) is not None:
-            self._lines.options = [""] + np.unique(data.values).tolist()
+            self._lines.options = np.unique(data.values).tolist()
 
     @property
     def data(self):

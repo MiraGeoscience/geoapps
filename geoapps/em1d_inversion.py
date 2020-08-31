@@ -440,6 +440,7 @@ def inversion(input_file):
     model_vertices = []
     model_cells = []
     pred_count = 0
+    model_line_ids = []
     line_ids = []
     data_ordering = []
     pred_vertices = []
@@ -508,6 +509,7 @@ def inversion(input_file):
             model_ordering.append(temp[:, order].T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_cells.append(tri2D.simplices + model_count)
+            model_line_ids.append(np.ones_like(np.ravel(X)) * np.float(line))
 
             line_ids.append(np.ones_like(order) * np.float(line))
             data_ordering.append(order + pred_count)
@@ -532,6 +534,9 @@ def inversion(input_file):
             cells=np.vstack(model_cells),
             parent=out_group,
         )
+
+        surface.add_data({"Line": {"values": np.hstack(model_line_ids)}})
+
         model_ordering = np.hstack(model_ordering).astype(int)
         curve = Curve.create(
             workspace,

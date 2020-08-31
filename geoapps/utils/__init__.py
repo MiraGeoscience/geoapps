@@ -17,4 +17,5 @@ from .utils import (
     rotate_vertices,
     RectangularBlock,
     format_labels,
+    get_surface_parts,
 )

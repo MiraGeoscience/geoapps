@@ -1186,7 +1186,7 @@ class InversionApp(BaseApplication):
                     if values is not None and isinstance(values[0], float):
                         data_widget.children[
                             3
-                        ].value = f"0, {np.percentile(values[values > 2e-18], 5):.2f}"
+                        ].value = f"0, {np.percentile(np.abs(values[np.abs(values) > 2e-18]), 5):.2f}"
 
             # Trigger plot update
             if self.data_channel_choices.value == channel.header:
