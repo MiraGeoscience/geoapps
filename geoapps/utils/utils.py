@@ -28,6 +28,37 @@ def find_value(labels, strings, default=None):
     return value
 
 
+def get_surface_parts(surface):
+    """
+    Find the connected cells from a surface
+
+    :param :obj:`geoh5yp.objects.surface`: Input surface with cells
+
+    :return: parts, numpy.array of int
+        Array of parts id for each of the surface vertices
+    """
+    cell_sorted = np.sort(surface.cells, axis=1)
+    cell_sorted = cell_sorted[np.argsort(cell_sorted[:, 0]), :]
+
+    parts = np.zeros(surface.vertices.shape[0], dtype="int")
+    count = 1
+    for ii in range(cell_sorted.shape[0] - 1):
+
+        if (
+            (cell_sorted[ii, 0] in cell_sorted[ii + 1 :, :])
+            or (cell_sorted[ii, 1] in cell_sorted[ii + 1 :, :])
+            or (cell_sorted[ii, 2] in cell_sorted[ii + 1 :, :])
+        ):
+            parts[cell_sorted[ii, :]] = count
+        else:
+            parts[cell_sorted[ii, :]] = count
+            count += 1
+
+    parts[cell_sorted[-1, :]] = count
+
+    return parts
+
+
 def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
     """
         Source:

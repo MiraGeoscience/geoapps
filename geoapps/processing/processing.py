@@ -443,14 +443,14 @@ def coordinate_transformation_widget(
                         if isinstance(child, FloatData):
 
                             export_grid_2_geotiff(
-                                child, temp_file, epsg_in, dataType="float"
+                                child, temp_file, epsg_in, data_type="float"
                             )
 
                             grid = gdal.Open(temp_file)
                             gdal.Warp(
                                 temp_file_in, grid, dstSRS="EPSG:" + str(int(epsg_out))
                             )
-
+                            print("EPSG:" + str(int(epsg_out)))
                             if count == 0:
                                 grid2d = geotiff_2_grid(
                                     temp_work, temp_file_in, grid_name=obj.name

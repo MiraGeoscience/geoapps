@@ -367,7 +367,7 @@ def inversion(input_file):
             " 'ubc_grav', 'ubc_mag', 'GA_object'"
         )
 
-    if np.median(survey.dobs) > 100 and "detrend" not in list(input_dict.keys()):
+    if np.median(survey.dobs) > 500 and "detrend" not in list(input_dict.keys()):
         print(
             f"Large background trend detected. Median value removed:{np.median(survey.dobs)}"
         )
@@ -570,7 +570,7 @@ def inversion(input_file):
             max_iterations = 10
         else:
             # Spherical or sparse
-            max_iterations = 20
+            max_iterations = 40
 
     if "max_cg_iterations" in list(input_dict.keys()):
         max_cg_iterations = input_dict["max_cg_iterations"]
@@ -1396,6 +1396,7 @@ def inversion(input_file):
         Directives.Update_IRLS(
             f_min_change=1e-4,
             minGNiter=1,
+            maxIRLSiter=max_iterations,
             beta_tol=0.25,
             prctile=80,
             floorEpsEnforced=True,
