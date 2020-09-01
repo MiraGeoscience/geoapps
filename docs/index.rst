@@ -7,7 +7,7 @@ Welcome to **geoapps**! Where geoscientists meet to share open-source applicatio
 In short
 ^^^^^^^^
 
-The **mirageoscience-apps** has been created for the development of
+The **geoapps** has been created for the development of open-source
 geoscientific applications in Python. Users will be able to directly leverage
 the powerful visualization capabilities of `Geoscience ANALYST
 <https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_
@@ -28,3 +28,8 @@ Contents:
    content/applications.rst
    content/howto.rst
    content/feedback.rst
+
+Sponsored by:
+^^^^^^^^^^^^^
+
+`Mira Geoscience <https://github.com/MiraGeoscience/geoapps>`_
