@@ -14,6 +14,7 @@ along with open-source code from the Python ecosystem.
 Links
 -----
 
+- [Installation](https://geoapps.readthedocs.io/en/latest/content/installation.html#installation)
 - [Documentation](https://geoapps.readthedocs.io/en/latest/index.html)
 - Available on PyPI
 
