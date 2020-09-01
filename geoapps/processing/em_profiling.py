@@ -118,12 +118,12 @@ class EMLineProfiler(BaseApplication):
 
         self.data_selection.data.observe(get_data, names="value")
 
-        def update_line_model(_):
-            self.update_line_model()
-            self.show_model_trigger()
-
-        self.model_selection.objects.observe(update_line_model, names="value")
-        self.model_selection.data.observe(update_line_model, names="value")
+        # def update_line_model(_):
+        #     self.update_line_model()
+        #     # self.show_model_trigger()
+        #
+        # self.model_selection.objects.observe(update_line_model, names="value")
+        # self.model_selection.data.observe(update_line_model, names="value")
 
         self.smoothing = IntSlider(
             min=0,
@@ -324,7 +324,7 @@ class EMLineProfiler(BaseApplication):
 
         def plot_model_selection(ind, center, focus, objects, model):
             self.update_line_model()
-            self.show_model_trigger()
+            # self.show_model_trigger()
             self.plot_model_selection(ind, center, focus)
 
         self.x_label = ToggleButtons(
@@ -358,7 +358,8 @@ class EMLineProfiler(BaseApplication):
                 ind, smoothing, residual, center, groups, pick_trigger, threshold,
             )
 
-        decay = interactive_output(
+        self.show_decay = ToggleButton(description="Show decay", value=False)
+        self.decay = interactive_output(
             plot_decay_curve,
             {
                 "ind": self.lines.lines,
@@ -370,6 +371,12 @@ class EMLineProfiler(BaseApplication):
                 "threshold": self.threshold,
             },
         )
+        self.decay_panel = VBox([self.show_decay])
+
+        def show_decay_trigger(_):
+            self.show_decay_trigger()
+
+        self.show_decay.observe(show_decay_trigger, names="value")
 
         self.model_section = interactive_output(
             plot_model_selection,
@@ -408,7 +415,7 @@ class EMLineProfiler(BaseApplication):
                                 self.data_selection.data,
                                 self.system_box,
                                 self.groups_widget,
-                                self.auto_picker,
+                                HBox([self.auto_picker, self.markers]),
                             ],
                             layout=Layout(width="50%"),
                         ),
@@ -417,13 +424,13 @@ class EMLineProfiler(BaseApplication):
                                 self.lines.widget,
                                 self.zoom,
                                 self.smoothing,
-                                HBox([self.residual, self.markers]),
+                                self.residual,
                             ],
                             layout=Layout(width="50%"),
                         ),
                     ]
                 ),
-                HBox([plotting, decay]),
+                HBox([plotting, self.decay_panel]),
                 HBox([self.x_label, self.threshold]),
                 VBox(
                     [
@@ -1095,14 +1102,16 @@ class EMLineProfiler(BaseApplication):
         center_x = center * self.lines.profile.locations_resampled[-1]
 
         if self.plot_model_axis is None:
-            self.plot_model_axis = plt.figure(figsize=(12, 8))
+            self.plot_model_axis = plt.figure(figsize=(16, 8))
         else:
             plt.figure(self.plot_model_axis.number)
 
         axs = plt.subplot()
+        dz = self.lines.model_z.max() - self.lines.model_z.min()
+        dx = np.min([dz, focus / 2.0 * self.lines.profile.locations_resampled[-1]])
         x_lims = [
-            center_x - focus / 2.0 * self.lines.profile.locations_resampled[-1],
-            center_x + focus / 2.0 * self.lines.profile.locations_resampled[-1],
+            center_x - dx,
+            center_x + dx,
         ]
 
         if (
@@ -1132,7 +1141,9 @@ class EMLineProfiler(BaseApplication):
                 linewidths=0.5,
             )
             #         axs.scatter(center_x, center_z, 100, c='r', marker='x')
+
             axs.set_xlim(x_lims)
+            axs.set_ylim(self.lines.model_z.min(), self.lines.model_z.max())
             axs.set_aspect("equal")
             axs.grid(True)
 
@@ -1219,6 +1230,7 @@ class EMLineProfiler(BaseApplication):
             self.lines.model_values = self.surface_model.get_data(
                 self.model_selection.data.value
             )[0].values[vert_ind]
+
         # else:
         #     self.lines.model_x = None
 
@@ -1271,6 +1283,18 @@ class EMLineProfiler(BaseApplication):
             ]
         else:
             self.model_panel.children = [self.show_model]
+
+    def show_decay_trigger(self):
+        """
+        Add the decay curve plot
+        """
+        if self.show_decay.value:
+            self.decay_panel.children = [
+                self.show_decay,
+                self.decay,
+            ]
+        else:
+            self.decay_panel.children = [self.show_decay]
 
     @property
     def data(self):
