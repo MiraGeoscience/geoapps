@@ -88,6 +88,7 @@ class EMLineProfiler(BaseApplication):
 
         # self.model_selection.data.observe(update_model_line_fields, names="options")
         self.plot_model_axis = None
+        self.plot_data_axis = None
 
         def survey_selection(_):
             self.survey_selection()
@@ -390,15 +391,7 @@ class EMLineProfiler(BaseApplication):
         )
 
         self.show_model = ToggleButton(description="Show model", value=False)
-        self.model_panel = VBox(
-            [
-                self.show_model,
-                HBox(
-                    [self.model_selection.objects, VBox([self.model_selection.data]),]
-                ),
-                self.model_section,
-            ]
-        )
+        self.model_panel = VBox([self.show_model,])
 
         def show_model_trigger(_):
             self.show_model_trigger()
@@ -430,15 +423,10 @@ class EMLineProfiler(BaseApplication):
                         ),
                     ]
                 ),
+                self.model_panel,
                 HBox([plotting, self.decay_panel]),
                 HBox([self.x_label, self.threshold]),
-                VBox(
-                    [
-                        HBox([VBox([scale_panel,]),]),
-                        self.model_panel,
-                        self.trigger_widget,
-                    ]
-                ),
+                VBox([scale_panel, self.trigger_widget,]),
             ]
         )
 
@@ -742,7 +730,6 @@ class EMLineProfiler(BaseApplication):
             return
 
         axs = None
-
         center_x = center * self.lines.profile.locations_resampled[-1]
 
         if (
@@ -1021,6 +1008,13 @@ class EMLineProfiler(BaseApplication):
                 axs.set_xlabel("Distance (m)")
 
             axs.grid(True)
+            pos = axs.get_position()
+            self.plot_data_axis = [
+                pos.x0.copy(),
+                pos.y0.copy(),
+                pos.width.copy(),
+                pos.height.copy(),
+            ]
 
     def plot_decay_curve(
         self, ind, smoothing, residual, center, groups, pick_trigger, threshold
@@ -1096,6 +1090,7 @@ class EMLineProfiler(BaseApplication):
         if (
             getattr(self, "survey", None) is None
             or getattr(self.lines, "profile", None) is None
+            or self.show_decay.value
         ):
             return
 
@@ -1142,10 +1137,15 @@ class EMLineProfiler(BaseApplication):
             )
             #         axs.scatter(center_x, center_z, 100, c='r', marker='x')
 
-            axs.set_xlim(x_lims)
-            axs.set_ylim(self.lines.model_z.min(), self.lines.model_z.max())
-            axs.set_aspect("equal")
+            # axs.set_xlim(x_lims)
+            # axs.set_ylim(self.lines.model_z.min(), self.lines.model_z.max())
+            # axs.set_aspect("equal")
             axs.grid(True)
+
+        if self.plot_data_axis is not None:
+            print(self.plot_data_axis)
+            pos = self.plot_data_axis
+            axs.set_position([pos[0], pos[1], pos[2] * 2, pos[3]])
 
     def line_update(self):
         """
