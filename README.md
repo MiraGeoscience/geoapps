@@ -6,7 +6,7 @@ Welcome to **geoapps** - Open-source applications in geosciences
 In short
 --------
 
-The **geoapps** has been created for the development of open-source
+The **geoapps** project has been created for the development and sharing of open-source
 applications in geoscience. Users will be able to directly leverage
 the powerful visualization capabilities of [Geoscience ANALYST](https://mirageoscience.com/mining-industry-software/geoscience-analyst/)
 along with open-source code from the Python ecosystem.
