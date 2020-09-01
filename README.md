@@ -1,6 +1,5 @@
-geoapps: Python applications for geoscientific problems
-=======================================================
-Welcome to **geoapps**! Where geoscientists meet to share open-source applications.
+Welcome to **geoapps** - Open-source applications in geosciences
+================================================================
 
 <img align="right" width="50%" src="./docs/images/apps_index.png">
 
