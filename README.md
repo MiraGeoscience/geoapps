@@ -7,4 +7,6 @@ mostly in Python, leveraging the free [Geoscience ANALYST]
 (https://mirageoscience.com/mining-industry-software/geoscience-analyst/) 3D viewer.
 
 - [Documentation](https://geoapps.readthedocs.io/en/latest/index.html)
-- https://pypi.org/project/geoapps/
+- Available on PyPI
+  ```pip install geoapps```
+  https://pypi.org/project/geoapps/
