@@ -1,3 +1,7 @@
+:orphan:
+
+.. _inversionApp:
+
 Geophysical inversion (SimPEG)
 ==============================
 
