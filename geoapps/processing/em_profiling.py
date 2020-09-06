@@ -1,10 +1,11 @@
 import os
 import numpy as np
 from scipy.spatial import cKDTree
+from scipy.interpolate import interp1d
 import time
 import matplotlib.pyplot as plt
 from geoh5py.workspace import Workspace
-from geoh5py.objects import Points
+from geoh5py.objects import Points, Curve, Surface
 from ipywidgets import (
     Dropdown,
     ColorPicker,
@@ -54,47 +55,25 @@ class EMLineProfiler(BaseApplication):
             ],
             description="Time-Domain System:",
         )
-
         self._groups = base_em_groups()
         self.group_list = SelectMultiple(description="")
-
         self.early = np.arange(8, 17).tolist()
         self.middle = np.arange(17, 28).tolist()
         self.late = np.arange(28, 40).tolist()
-
-        self.data_selection = ObjectDataSelection(add_groups=True, select_multiple=True)
+        self.data_selection = ObjectDataSelection(
+            add_groups=True, select_multiple=True, object_types=(Curve,)
+        )
         self._objects = self.data_selection.objects
         self._data = self.data_selection.data
         self.data_selection.objects.description = "Survey"
-
-        self.model_selection = ObjectDataSelection(h5file=self.h5file)
-        self.model_selection.objects.description = "1D Object:"
+        self.model_selection = ObjectDataSelection(
+            h5file=self.h5file, object_types=(Surface,)
+        )
+        self.model_selection.objects.description = "Surface:"
         self.model_selection.data.description = "Model"
         self.surface_model = None
-        # self.model_line_field = ObjectDataSelection(
-        #     h5file=self.h5file,
-        #     objects=self.model_selection.objects,
-        #     find_value=["line", "Line"],
-        # ).data
-        # self.model_line_field.description = "Line field: "
-
         self.marker = {"left": "<", "right": ">"}
-
-        # def update_model_line_fields(_):
-        #     self.model_line_field.options = self.model_selection.data.options
-        #     self.model_line_field.value = find_value(
-        #         self.model_line_field.options, ["line"]
-        #     )
-
-        # self.model_selection.data.observe(update_model_line_fields, names="options")
         self.plot_model_axis = None
-        self.plot_data_axis = None
-
-        def survey_selection(_):
-            self.survey_selection()
-
-        self.data_selection.objects.observe(survey_selection, names="value")
-
         self.lines = LineOptions(
             h5file=self.h5file,
             objects=self.data_selection.objects,
@@ -103,6 +82,10 @@ class EMLineProfiler(BaseApplication):
         )
         self.lines.data.description = "Line"
 
+        def survey_selection(_):
+            self.survey_selection()
+
+        self.data_selection.objects.observe(survey_selection, names="value")
         self.channels = SelectMultiple(description="Channels")
         self.group_default_early = Text(description="Early", value="9-16")
         self.group_default_middle = Text(description="Middle", value="17-27")
@@ -118,14 +101,6 @@ class EMLineProfiler(BaseApplication):
             self.get_data()
 
         self.data_selection.data.observe(get_data, names="value")
-
-        # def update_line_model(_):
-        #     self.update_line_model()
-        #     # self.show_model_trigger()
-        #
-        # self.model_selection.objects.observe(update_line_model, names="value")
-        # self.model_selection.data.observe(update_line_model, names="value")
-
         self.smoothing = IntSlider(
             min=0,
             max=64,
@@ -136,7 +111,6 @@ class EMLineProfiler(BaseApplication):
         )
 
         self.residual = Checkbox(description="Use residual", value=False)
-
         self.threshold = FloatSlider(
             value=50,
             min=10,
@@ -145,7 +119,6 @@ class EMLineProfiler(BaseApplication):
             continuous_update=False,
             description="Decay threshold (%)",
         )
-
         self.center = FloatSlider(
             value=0.5,
             min=0,
@@ -155,6 +128,16 @@ class EMLineProfiler(BaseApplication):
             disabled=False,
             continuous_update=False,
             orientation="horizontal",
+        )
+        self.z_lim = FloatSlider(
+            value=1.0,
+            min=0,
+            max=1.0,
+            step=0.001,
+            description="Depth (%)",
+            disabled=False,
+            continuous_update=False,
+            orientation="vertical",
         )
         self.auto_picker = ToggleButton(description="Pick nearest target", value=False)
         self.focus = FloatSlider(
@@ -167,9 +150,7 @@ class EMLineProfiler(BaseApplication):
             continuous_update=False,
             orientation="horizontal",
         )
-
         self.zoom = VBox([self.center, self.focus])
-
         self.scale_button = ToggleButtons(
             options=["linear", "symlog",], description="Y-axis scaling",
         )
@@ -291,6 +272,13 @@ class EMLineProfiler(BaseApplication):
             self.trigger_click()
 
         self.trigger.observe(trigger_click)
+        self.x_label = ToggleButtons(
+            options=["Distance", "Easting", "Northing"],
+            value="Distance",
+            description="X-axis label:",
+        )
+
+        self.show_model = ToggleButton(description="Show model", value=False)
 
         def plot_data_selection(
             data,
@@ -323,16 +311,6 @@ class EMLineProfiler(BaseApplication):
                 threshold,
             )
 
-        def plot_model_selection(ind, center, focus, objects, model):
-            self.update_line_model()
-            # self.show_model_trigger()
-            self.plot_model_selection(ind, center, focus)
-
-        self.x_label = ToggleButtons(
-            options=["Distance", "Easting", "Northing"],
-            value="Distance",
-            description="X-axis label:",
-        )
         plotting = interactive_output(
             plot_data_selection,
             {
@@ -379,6 +357,13 @@ class EMLineProfiler(BaseApplication):
 
         self.show_decay.observe(show_decay_trigger, names="value")
 
+        def plot_model_selection(
+            ind, center, focus, objects, model, smoothing, z_lim, x_label
+        ):
+            self.update_line_model()
+
+            self.plot_model_selection(ind, center, focus, z_lim, x_label)
+
         self.model_section = interactive_output(
             plot_model_selection,
             {
@@ -387,10 +372,12 @@ class EMLineProfiler(BaseApplication):
                 "focus": self.focus,
                 "objects": self.model_selection.objects,
                 "model": self.model_selection.data,
+                "smoothing": self.smoothing,
+                "z_lim": self.z_lim,
+                "x_label": self.x_label,
             },
         )
 
-        self.show_model = ToggleButton(description="Show model", value=False)
         self.model_panel = VBox([self.show_model,])
 
         def show_model_trigger(_):
@@ -423,7 +410,7 @@ class EMLineProfiler(BaseApplication):
                         ),
                     ]
                 ),
-                self.model_panel,
+                HBox([self.model_panel], layout=Layout(width="100%")),
                 HBox([plotting, self.decay_panel]),
                 HBox([self.x_label, self.threshold]),
                 VBox([scale_panel, self.trigger_widget,]),
@@ -472,6 +459,7 @@ class EMLineProfiler(BaseApplication):
             self.auto_picker.value = True
 
     def survey_selection(self):
+
         if self.workspace.get_entity(self.data_selection.objects.value):
             self.survey = self.workspace.get_entity(self.data_selection.objects.value)[
                 0
@@ -491,6 +479,8 @@ class EMLineProfiler(BaseApplication):
                     ]
                 ):
                     self.system.value = aem_system
+
+            self.line_update()
 
     def system_box_trigger(self):
         if self.system_box_option.value:
@@ -569,73 +559,75 @@ class EMLineProfiler(BaseApplication):
         if self.trigger.value:
             for group in self.group_list.value:
 
-                for (
-                    ind,
-                    (channel, locations, peaks, inflx_dwn, inflx_up, vals, times),
-                ) in enumerate(
-                    zip(
-                        self.groups[group]["channels"],
-                        self.groups[group]["locations"],
-                        self.groups[group]["peaks"],
-                        self.groups[group]["inflx_dwn"],
-                        self.groups[group]["inflx_up"],
-                        self.groups[group]["values"],
-                        self.groups[group]["times"],
-                    )
-                ):
-
-                    if ind == 0:
-                        cox_x = self.lines.profile.interp_x(peaks[0])
-                        cox_y = self.lines.profile.interp_y(peaks[0])
-                        cox_z = self.lines.profile.interp_z(peaks[0])
-                        cox = np.r_[cox_x, cox_y, cox_z]
-
-                        # Compute average dip
-                        left_ratio = np.abs(
-                            (peaks[1] - inflx_up[1]) / (peaks[0] - inflx_up[0])
-                        )
-                        right_ratio = np.abs(
-                            (peaks[1] - inflx_dwn[1]) / (peaks[0] - inflx_dwn[0])
-                        )
-
-                        if left_ratio > right_ratio:
-                            ratio = right_ratio / left_ratio
-                            azm = (
-                                450.0
-                                - np.rad2deg(
-                                    np.arctan2(
-                                        (
-                                            self.lines.profile.interp_y(inflx_up[0])
-                                            - cox_y
-                                        ),
-                                        (
-                                            self.lines.profile.interp_x(inflx_up[0])
-                                            - cox_x
-                                        ),
-                                    )
-                                )
-                            ) % 360.0
-                        else:
-                            ratio = left_ratio / right_ratio
-                            azm = (
-                                450.0
-                                - np.rad2deg(
-                                    np.arctan2(
-                                        (
-                                            self.lines.profile.interp_y(inflx_dwn[0])
-                                            - cox_y
-                                        ),
-                                        (
-                                            self.lines.profile.interp_x(inflx_dwn[0])
-                                            - cox_x
-                                        ),
-                                    )
-                                )
-                            ) % 360.0
-
-                        dip = np.rad2deg(np.arcsin(ratio))
-                    tau = self.groups[group]["mad_tau"]
-
+                # for (
+                #     ind,
+                #     (channel, locations, peaks, inflx_dwn, inflx_up, vals, times),
+                # ) in enumerate(
+                #     zip(
+                #         self.groups[group]["channels"],
+                #         self.groups[group]["locations"],
+                #         self.groups[group]["peaks"],
+                #         self.groups[group]["inflx_dwn"],
+                #         self.groups[group]["inflx_up"],
+                #         self.groups[group]["values"],
+                #         self.groups[group]["times"],
+                #     )
+                # ):
+                #
+                #     if ind == 0:
+                #         cox_x = self.lines.profile.interp_x(peaks[0])
+                #         cox_y = self.lines.profile.interp_y(peaks[0])
+                #         cox_z = self.lines.profile.interp_z(peaks[0])
+                #         cox = np.r_[cox_x, cox_y, cox_z]
+                #
+                #         # Compute average dip
+                #         left_ratio = np.abs(
+                #             (peaks[1] - inflx_up[1]) / (peaks[0] - inflx_up[0])
+                #         )
+                #         right_ratio = np.abs(
+                #             (peaks[1] - inflx_dwn[1]) / (peaks[0] - inflx_dwn[0])
+                #         )
+                #
+                #         if left_ratio > right_ratio:
+                #             ratio = right_ratio / left_ratio
+                #             azm = (
+                #                 450.0
+                #                 - np.rad2deg(
+                #                     np.arctan2(
+                #                         (
+                #                             self.lines.profile.interp_y(inflx_up[0])
+                #                             - cox_y
+                #                         ),
+                #                         (
+                #                             self.lines.profile.interp_x(inflx_up[0])
+                #                             - cox_x
+                #                         ),
+                #                     )
+                #                 )
+                #             ) % 360.0
+                #         else:
+                #             ratio = left_ratio / right_ratio
+                #             azm = (
+                #                 450.0
+                #                 - np.rad2deg(
+                #                     np.arctan2(
+                #                         (
+                #                             self.lines.profile.interp_y(inflx_dwn[0])
+                #                             - cox_y
+                #                         ),
+                #                         (
+                #                             self.lines.profile.interp_x(inflx_dwn[0])
+                #                             - cox_x
+                #                         ),
+                #                     )
+                #                 )
+                #             ) % 360.0
+                #
+                #         dip = np.rad2deg(np.arcsin(ratio))
+                tau = self.groups[group]["mad_tau"]
+                dip = self.groups[group]["dip"]
+                azimuth = self.groups[group]["azimuth"]
+                cox = self.groups[group]["cox"]
                 if self.workspace.get_entity(group):
                     points = self.workspace.get_entity(group)[0]
                     azm_data = points.get_data("azimuth")[0]
@@ -647,7 +639,7 @@ class EMLineProfiler(BaseApplication):
                     tau_vals = tau_data.values.copy()
 
                     points.vertices = np.vstack([points.vertices, cox.reshape((1, 3))])
-                    azm_data.values = np.hstack([azm_vals, azm])
+                    azm_data.values = np.hstack([azm_vals, azimuth])
                     dip_data.values = np.hstack([dip_vals, dip])
                     tau_data.values = np.hstack([tau_vals, tau])
 
@@ -659,7 +651,7 @@ class EMLineProfiler(BaseApplication):
                     )
                     points.add_data(
                         {
-                            "azimuth": {"values": np.asarray(azm)},
+                            "azimuth": {"values": np.asarray(azimuth)},
                             "dip": {"values": np.asarray(dip)},
                             "tau": {"values": np.asarray(tau)},
                         }
@@ -924,6 +916,51 @@ class EMLineProfiler(BaseApplication):
                             marker="2",
                         )
 
+        for group in self.group_list.value:
+
+            if not np.any(self.groups[group]["peaks"]):
+                continue
+            peaks = self.groups[group]["peaks"][0]
+            inflx_dwn = self.groups[group]["inflx_dwn"][0]
+            inflx_up = self.groups[group]["inflx_up"][0]
+
+            cox_x = self.lines.profile.interp_x(peaks[0])
+            cox_y = self.lines.profile.interp_y(peaks[0])
+            cox_z = self.lines.profile.interp_z(peaks[0])
+            self.groups[group]["cox"] = np.r_[cox_x, cox_y, cox_z]
+
+            # Compute average dip
+            left_ratio = np.abs((peaks[1] - inflx_up[1]) / (peaks[0] - inflx_up[0]))
+            right_ratio = np.abs((peaks[1] - inflx_dwn[1]) / (peaks[0] - inflx_dwn[0]))
+
+            if left_ratio > right_ratio:
+                ratio = right_ratio / left_ratio
+                azm = (
+                    450.0
+                    - np.rad2deg(
+                        np.arctan2(
+                            (self.lines.profile.interp_y(inflx_up[0]) - cox_y),
+                            (self.lines.profile.interp_x(inflx_up[0]) - cox_x),
+                        )
+                    )
+                ) % 360.0
+            else:
+                ratio = left_ratio / right_ratio
+                azm = (
+                    450.0
+                    - np.rad2deg(
+                        np.arctan2(
+                            (self.lines.profile.interp_y(inflx_dwn[0]) - cox_y),
+                            (self.lines.profile.interp_x(inflx_dwn[0]) - cox_x),
+                        )
+                    )
+                ) % 360.0
+
+            dip = np.rad2deg(np.arcsin(ratio))
+
+            self.groups[group]["azimuth"] = azm
+            self.groups[group]["dip"] = dip
+
         if axs is not None:
             axs.plot(
                 [
@@ -933,8 +970,7 @@ class EMLineProfiler(BaseApplication):
                 [0, 0],
                 "r",
             )
-            axs.plot([center_x, center_x], [0, y_min], "r--")
-            axs.scatter(center_x, y_min, s=20, c="r", marker="^")
+            axs.plot([center_x, center_x], [0, y_max], "g--")
 
             for group in self.groups.values():
                 if group["peaks"]:
@@ -1009,12 +1045,6 @@ class EMLineProfiler(BaseApplication):
 
             axs.grid(True)
             pos = axs.get_position()
-            self.plot_data_axis = [
-                pos.x0.copy(),
-                pos.y0.copy(),
-                pos.width.copy(),
-                pos.height.copy(),
-            ]
 
     def plot_decay_curve(
         self, ind, smoothing, residual, center, groups, pick_trigger, threshold
@@ -1085,30 +1115,31 @@ class EMLineProfiler(BaseApplication):
                 axs.set_xlabel("Time (sec)")
                 axs.set_title("Decay - MADTau")
 
-    def plot_model_selection(self, ind, center, focus):
+    def plot_model_selection(self, ind, center, focus, z_lim, x_label):
 
         if (
             getattr(self, "survey", None) is None
             or getattr(self.lines, "profile", None) is None
-            or self.show_decay.value
+            or self.show_model.value is False
+            or getattr(self.lines, "model_x", None) is None
         ):
             return
 
         center_x = center * self.lines.profile.locations_resampled[-1]
 
         if self.plot_model_axis is None:
-            self.plot_model_axis = plt.figure(figsize=(16, 8))
+            self.plot_model_axis = plt.figure(figsize=(8, 16))
         else:
             plt.figure(self.plot_model_axis.number)
 
         axs = plt.subplot()
         dz = self.lines.model_z.max() - self.lines.model_z.min()
-        dx = np.min([dz, focus / 2.0 * self.lines.profile.locations_resampled[-1]])
+        dx = focus / 2.0 * self.lines.profile.locations_resampled[-1]
         x_lims = [
             center_x - dx,
             center_x + dx,
         ]
-
+        z_lims = [self.lines.model_z.max() - dz * z_lim, self.lines.model_z.max()]
         if (
             getattr(self.lines, "model_x", None) is not None
             and getattr(self.lines, "model_values", None) is not None
@@ -1135,17 +1166,65 @@ class EMLineProfiler(BaseApplication):
                 linestyles="solid",
                 linewidths=0.5,
             )
+            axs.plot([center_x, center_x], [z_lims[0], z_lims[1]], "g--")
             #         axs.scatter(center_x, center_z, 100, c='r', marker='x')
-
-            # axs.set_xlim(x_lims)
-            # axs.set_ylim(self.lines.model_z.min(), self.lines.model_z.max())
-            # axs.set_aspect("equal")
+            # pos = axs.get_position()
+            # axs.set_position([pos.x0, pos.y0, pos.width*2, pos.height])
+            axs.set_xlim(x_lims)
+            axs.set_ylim(z_lims)
+            axs.set_aspect("equal")
             axs.grid(True)
 
-        if self.plot_data_axis is not None:
-            print(self.plot_data_axis)
-            pos = self.plot_data_axis
-            axs.set_position([pos[0], pos[1], pos[2] * 2, pos[3]])
+            for group in self.group_list.value:
+
+                if np.any(self.groups[group]["cox"]):
+                    cox = self.groups[group]["cox"]
+                    dip = self.groups[group]["dip"]
+                    pos = [
+                        np.linalg.norm(
+                            np.r_[
+                                self.lines.profile.x_locs[0] - cox[0],
+                                self.lines.profile.y_locs[0] - cox[1],
+                            ]
+                        ),
+                        np.mean(z_lims),
+                    ]
+
+                    axs.scatter(pos[0], pos[1], 25, "k")
+
+                    length = (x_lims[1] - x_lims[0]) * 0.1
+
+                    if self.groups[group]["azimuth"] < 180:
+                        ori = 1
+                    else:
+                        ori = -1
+
+                    if ~np.isnan(dip):
+                        axs.quiver(
+                            pos[0],
+                            pos[1],
+                            ori * length * np.cos(np.deg2rad(dip)),
+                            -length * np.sin(np.deg2rad(dip)),
+                        )
+
+                        axs.text(pos[0], pos[1], f"COX\nEst. Dip:{dip:.1f}")
+
+            if x_label == "Easting":
+                xlbl = [
+                    f"{self.lines.profile.interp_x(label):.0f}"
+                    for label in axs.get_xticks()
+                ]
+                axs.set_xticklabels(xlbl)
+                axs.set_xlabel("Easting (m)")
+            elif x_label == "Northing":
+                xlbl = [
+                    f"{self.lines.profile.interp_y(label):.0f}"
+                    for label in axs.get_xticks()
+                ]
+                axs.set_xticklabels(xlbl)
+                axs.set_xlabel("Northing (m)")
+            else:
+                axs.set_xlabel("Distance (m)")
 
     def line_update(self):
         """
@@ -1180,59 +1259,70 @@ class EMLineProfiler(BaseApplication):
             self.update_line_model()
 
     def update_line_model(self):
+        if getattr(self.lines, "profile", None) is None:
+            return
+
         entity_name = self.model_selection.objects.value
-        if (
-            self.surface_model is None or self.surface_model.name != entity_name
-        ) and self.workspace.get_entity(entity_name):
-            self.show_model.description = "Extracting model ..."
+        if self.workspace.get_entity(entity_name) and (
+            getattr(self, "surface_model", None) is None
+            or self.surface_model.name != entity_name
+        ):
+
+            self.show_model.description = "Processing line ..."
             self.surface_model = self.workspace.get_entity(entity_name)[0]
-            self.surface_model.parts = get_surface_parts(self.surface_model)
-            self.show_model.description = "Show model"
+            self.surface_model.tree = cKDTree(self.surface_model.vertices[:, :2])
 
-        xyz = np.c_[self.lines.profile.x_locs, self.lines.profile.y_locs]
-        tree = cKDTree(xyz)
+        if (
+            getattr(self.lines.profile, "line_id", None) is None
+            or self.lines.profile.line_id != self.lines.lines.value
+        ):
 
-        # Find the nearest part
-        distance = np.inf
-        for part in np.unique(self.surface_model.parts):
-            rad, _ = tree.query(
-                self.surface_model.vertices[self.surface_model.parts == part, :2]
+            x_locs = self.lines.profile.x_locs
+            y_locs = self.lines.profile.y_locs
+            z_locs = self.lines.profile.z_locs
+            xyz = np.c_[x_locs, y_locs, z_locs]
+
+            tree = cKDTree(xyz[:, :2])
+            ind = tree.query_ball_tree(self.surface_model.tree, 10)
+
+            indices = np.zeros(self.surface_model.n_vertices, dtype="bool")
+
+            indices[np.r_[np.hstack(ind)].astype("int")] = True
+
+            cells_in = indices[self.surface_model.cells].reshape((-1, 3))
+            cells = self.surface_model.cells[np.any(cells_in, axis=1), :]
+            vert_ind, cell_ind = np.unique(np.asarray(cells), return_inverse=True)
+
+            if np.std(xyz[:, 1]) > np.std(xyz[:, 0]):
+                start = np.argmin(x_locs)
+            else:
+                start = np.argmin(y_locs)
+
+            # Give new indices to subset
+            # vert_ind, cell_ind = np.unique(np.asarray(cell_ind), return_inverse=True)
+            surf_verts = self.surface_model.vertices[vert_ind, :]
+
+            self.lines.model_x = np.linalg.norm(
+                np.c_[
+                    x_locs[start] - surf_verts[:, 0], y_locs[start] - surf_verts[:, 1]
+                ],
+                axis=1,
             )
-            if rad.min() < distance:
-                part_id = part
-                distance = rad.min()
-
-        vert_ind = np.where(self.surface_model.parts == part_id)[0]
-        surf_verts = self.surface_model.vertices[vert_ind, :]
-        cell_ind = [
-            cell for cell in self.surface_model.cells.tolist() if (cell[0] in vert_ind)
-        ]
-
-        if np.std(xyz[:, 1]) > np.std(xyz[:, 0]):
-            start = np.argmin(xyz[:, 1])
-        else:
-            start = np.argmin(xyz[:, 0])
-        #
-        # cells = self.surface_model.cells[cell_ind, :]
-        # vert_ind, cell_ind = np.unique(cells, return_inverse=True)
-        #
-        vert_ind, cell_ind = np.unique(np.asarray(cell_ind), return_inverse=True)
-        surf_verts = self.surface_model.vertices[vert_ind, :]
-
-        self.lines.model_x = np.linalg.norm(
-            np.c_[xyz[start, 0] - surf_verts[:, 0], xyz[start, 1] - surf_verts[:, 1]],
-            axis=1,
-        )
-        self.lines.model_z = self.surface_model.vertices[vert_ind, 2]
-        self.lines.model_cells = cell_ind
+            self.lines.model_z = self.surface_model.vertices[vert_ind, 2]
+            self.lines.model_cells = cell_ind
+            self.lines.vertices_map = vert_ind
+            # Save the current line id to skip next time
+            self.lines.profile.line_id = self.lines.lines.value
 
         if self.surface_model.get_data(self.model_selection.data.value):
             self.lines.model_values = self.surface_model.get_data(
                 self.model_selection.data.value
-            )[0].values[vert_ind]
+            )[0].values[self.lines.vertices_map]
 
-        # else:
-        #     self.lines.model_x = None
+        if self.show_model.value:
+            self.show_model.description = "Hide model"
+        else:
+            self.show_model.description = "Show model"
 
     def reset_default_bounds(self):
 
@@ -1279,10 +1369,12 @@ class EMLineProfiler(BaseApplication):
                 HBox(
                     [self.model_selection.objects, VBox([self.model_selection.data]),]
                 ),
-                self.model_section,
+                HBox([self.model_section, self.z_lim]),
             ]
+            self.show_model.description = "Hide model"
         else:
             self.model_panel.children = [self.show_model]
+            self.show_model.description = "Show model"
 
     def show_decay_trigger(self):
         """
@@ -1293,8 +1385,10 @@ class EMLineProfiler(BaseApplication):
                 self.show_decay,
                 self.decay,
             ]
+            self.show_decay.description = "Hide decay curve"
         else:
             self.decay_panel.children = [self.show_decay]
+            self.show_decay.description = "Show decay curve"
 
     @property
     def data(self):

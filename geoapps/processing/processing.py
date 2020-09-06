@@ -34,7 +34,7 @@ from geoapps.utils import (
 def calculator(h5file):
     w_s = Workspace(h5file)
     selection = ObjectDataSelection(h5file=h5file, select_multiple=False)
-    _, store = ObjectDataSelection(
+    store = ObjectDataSelection(
         h5file=h5file, objects=selection.objects, select_multiple=False
     ).data
     store.description = "Assign result to: "
