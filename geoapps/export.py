@@ -423,7 +423,7 @@ def object_to_object_interpolation(h5file):
 
     workspace = Workspace(h5file)
 
-    names = list(workspace.list_objects_name.values())
+    names = [""] + list(workspace.list_objects_name.values())
 
     selection = ObjectDataSelection(h5file=h5file, select_multiple=True)
 

@@ -27,14 +27,13 @@ class LineOptions(BaseApplication):
             self.update_list()
 
         self._data.observe(update_list, names="value")
-
+        self._widget = VBox([self._data, self._lines])
         super().__init__(**kwargs)
 
-        if "value" in kwargs.keys() and kwargs["value"] in self._data.options:
-            self._data.value = kwargs["value"]
+        # if "value" in kwargs.keys() and kwargs["value"] in self._data.options:
+        #     self._data.value = kwargs["value"]
 
-        update_list("")
-        self._widget = VBox([self._data, self._lines])
+        # update_list("")
 
     @property
     def lines(self):
@@ -113,13 +112,15 @@ class ObjectDataSelection(BaseApplication):
 
         if self.h5file is not None:
             if len(self.object_types) > 0:
-                self.objects.options = [
+                self.objects.options = [""] + [
                     obj.name
                     for obj in self.workspace.all_objects()
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                self.objects.options = list(self.workspace.list_objects_name.values())
+                self.objects.options = [""] + list(
+                    self.workspace.list_objects_name.values()
+                )
 
         super().__init__(**kwargs)
 
@@ -168,9 +169,10 @@ class ObjectDataSelection(BaseApplication):
     def update_data_list(self, find_value=[]):
         if self.workspace.get_entity(self.objects.value):
             obj = self.workspace.get_entity(self.objects.value)[0]
-            options = [
+            options = [""] + [
                 name for name in obj.get_data_list() if name != "Visual Parameters"
             ]
+
             if self.add_groups and obj.property_groups:
                 options = (
                     ["-- Groups --"]

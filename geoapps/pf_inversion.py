@@ -367,11 +367,11 @@ def inversion(input_file):
             " 'ubc_grav', 'ubc_mag', 'GA_object'"
         )
 
-    if np.median(survey.dobs) > 500 and "detrend" not in list(input_dict.keys()):
-        print(
-            f"Large background trend detected. Median value removed:{np.median(survey.dobs)}"
-        )
-        survey.dobs -= np.median(survey.dobs)
+    # if np.median(survey.dobs) > 500 and "detrend" not in list(input_dict.keys()):
+    #     print(
+    #         f"Large background trend detected. Median value removed:{np.median(survey.dobs)}"
+    #     )
+    #     survey.dobs -= np.median(survey.dobs)
 
     # 0-level the data if required, data_trend = 0 level
     if "detrend" in list(input_dict.keys()):
@@ -1398,7 +1398,7 @@ def inversion(input_file):
             minGNiter=1,
             maxIRLSiter=max_iterations,
             beta_tol=0.25,
-            prctile=80,
+            prctile=98,
             floorEpsEnforced=True,
             coolingRate=1,
             coolEps_q=True,
@@ -1514,5 +1514,5 @@ def inversion(input_file):
 
 if __name__ == "__main__":
 
-    input_file = sys.argv[1]
+    input_file = r"C:\Users\dominiquef\Desktop\Input.json"  # sys.argv[1]
     inversion(input_file)

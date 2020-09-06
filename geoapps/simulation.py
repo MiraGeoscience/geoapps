@@ -49,7 +49,11 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
 
     def plot_layout(objects, data, blocks, dip, azimuth, update):
-        obj = workspace.get_entity(objects)[0]
+
+        if workspace.get_entity(objects):
+            obj = workspace.get_entity(objects)[0]
+        else:
+            return
 
         if obj.get_data(data):
             obs = obj.get_data(data)[0]
@@ -111,11 +115,16 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
 
     object_selection = ObjectDataSelection(h5file=h5file, interactive=True)
 
-    obj = workspace.get_entity(object_selection.objects.value)[0]
-    if getattr(obj, "vertices", None) is not None:
-        xyz = obj.vertices
-    else:
-        xyz = obj.centroids
+    xyz = []
+    for obj_name in object_selection.objects.options:
+        if workspace.get_entity(obj_name):
+            obj = workspace.get_entity(obj_name)[0]
+            if getattr(obj, "vertices", None) is not None:
+                xyz += [obj.vertices]
+            else:
+                xyz += [obj.centroids]
+
+    xyz = np.vstack(xyz)
 
     azimuth = widgets.FloatSlider(
         min=-180,
@@ -480,8 +489,13 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                 else:
                     xyz = obj.centroids
 
-            if obj.get_data(data):
-                obs = obj.get_data(data)[0]
+                if obj.get_data(data):
+                    obs = obj.get_data(data)[0]
+                else:
+                    return
+            else:
+                return
+
             nC = len(components.value)
 
             if (
@@ -510,7 +524,12 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                 for ind, comp in enumerate(components.value):
                     axs = plt.subplot(int(np.ceil(nC / 2) + 1), 2, ind + 2)
                     im = axs.tricontourf(
-                        trian, export_ga.data[ind::nC], cmap="Spectral_r", levels=100
+                        trian,
+                        export_ga.data[ind::nC],
+                        cmap="Spectral_r",
+                        levels=100,
+                        vmin=obs.values.min(),
+                        vmax=obs.values.max(),
                     )
                     plt.colorbar(im)
                     axs.set_yticklabels([])

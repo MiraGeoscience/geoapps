@@ -403,6 +403,12 @@ class signal_processing_1d:
     """
 
     def __init__(self, locs, values, **kwargs):
+        self._interpolation = "linear"
+        self._smoothing = 0
+        self._residual = False
+        self._locations_resampled = None
+        self._values_padded = None
+        self._fft = None
 
         if np.std(locs[:, 1]) > np.std(locs[:, 0]):
             start = np.argmin(locs[:, 1])
@@ -425,13 +431,10 @@ class signal_processing_1d:
             axis=1,
         )
 
-        self._locations = dist_line
+        self.locations = dist_line
 
         if values is not None:
             self._values = values[self.sorting]
-        self._interpolation = "linear"
-        self._smoothing = 0
-        self._residual = False
 
         for key, value in kwargs.items():
             if getattr(self, key, None) is not None:
@@ -487,16 +490,23 @@ class signal_processing_1d:
         """
         return self._locations
 
+    @locations.setter
+    def locations(self, locations):
+
+        self._locations = locations
+        self.values_resampled = None
+
+        sort = np.argsort(locations)
+        start = locations[sort[0]] * 1.0
+        end = locations[sort[-1]] * 1.0
+        self._locations_resampled = np.arange(start, end, self.hx)
+        self.locations_resampled
+
     @property
     def locations_resampled(self):
         """
         Position of values resampled on a fix interval
         """
-        if getattr(self, "_locations_resampled", None) is None:
-            sort = np.argsort(self.locations)
-            self._locations_resampled = np.arange(
-                self.locations[sort[0]], self.locations[sort[-1]], self.hx
-            )
         return self._locations_resampled
 
     @property
@@ -566,7 +576,6 @@ class signal_processing_1d:
                 / 2.0
                 + 0.5
             )
-
             self._values_padded = tapper * values_padded
 
         return self._values_padded
