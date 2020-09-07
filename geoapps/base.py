@@ -3,6 +3,7 @@ from shutil import copyfile
 import time
 from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton, Widget
 from geoh5py.workspace import Workspace
+from ipyfilechooser import FileChooser
 
 
 class BaseApplication:
@@ -12,7 +13,19 @@ class BaseApplication:
 
     def __init__(self, **kwargs):
 
-        self._h5file = "Analyst.geoh5"
+        self._h5file = None
+        self._workspace = None
+        self._file_browser = FileChooser()
+        self._file_browser.reset(
+            path=os.path.abspath("../../assets"), filename="FlinFlon.geoh5"
+        )
+        self._file_browser._apply_selection()
+
+        def file_browser_change(_):
+            self.file_browser_change()
+
+        self._file_browser._filename.observe(file_browser_change)
+
         self._live_link = Checkbox(
             description="GA Pro - Live link", value=False, indent=False
         )
@@ -59,6 +72,12 @@ class BaseApplication:
                 os.path.abspath(os.path.dirname(self.h5file)), "Temp"
             )
 
+    def file_browser_change(self):
+        """
+        Change the target h5file
+        """
+        self.h5file = self.file_browser.selected
+
     def live_link_output(self, entity, data={}):
         """
         Create a temporary geoh5 file in the monitoring folder and export entity for update.
@@ -92,11 +111,31 @@ class BaseApplication:
         ...
 
     @property
+    def file_browser(self):
+        """
+        :obj:`ipyfilechooser.FileChooser` widget
+        """
+        return self._file_browser
+
+    @property
     def h5file(self):
         """
         :obj:`str`: Target geoh5 project file.
         """
+        if getattr(self, "_h5file", None) is None:
+
+            if self.file_browser.selected is None:
+                self.h5file = self.file_browser.default
+            else:
+                self.h5file = self.file_browser.selected
+
         return self._h5file
+
+    @h5file.setter
+    def h5file(self, value):
+        self._h5file = value
+        if value is not None:
+            self._workspace = Workspace(value)
 
     @property
     def live_link(self):
@@ -126,7 +165,7 @@ class BaseApplication:
         """
         if (
             getattr(self, "_workspace", None) is None
-            and getattr(self, "_h5file", None) is not None
+            and getattr(self, "h5file", None) is not None
         ):
             self._workspace = Workspace(self.h5file)
         return self._workspace

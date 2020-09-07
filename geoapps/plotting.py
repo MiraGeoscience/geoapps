@@ -41,6 +41,9 @@ class ScatterPlots(BaseApplication):
     """
 
     def __init__(self, **kwargs):
+
+        super().__init__(**kwargs)
+
         self.selection = ObjectDataSelection(select_multiple=True, **kwargs)
 
         self._data = self.selection.data
@@ -186,6 +189,7 @@ class ScatterPlots(BaseApplication):
 
         self.widget = VBox(
             [
+                self.file_browser,
                 VBox(
                     [
                         HBox([self.selection.widget]),
