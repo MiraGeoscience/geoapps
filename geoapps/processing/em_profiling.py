@@ -1,7 +1,8 @@
 import os
 import numpy as np
 from scipy.spatial import cKDTree
-from scipy.interpolate import interp1d
+import plotly.figure_factory as ff
+from plotly.colors import sequential, cyclical
 import time
 import matplotlib.pyplot as plt
 from geoh5py.workspace import Workspace
@@ -129,16 +130,16 @@ class EMLineProfiler(BaseApplication):
             continuous_update=False,
             orientation="horizontal",
         )
-        self.z_lim = FloatSlider(
-            value=1.0,
-            min=0,
-            max=1.0,
-            step=0.001,
-            description="Depth (%)",
-            disabled=False,
-            continuous_update=False,
-            orientation="vertical",
-        )
+        # self.z_lim = FloatSlider(
+        #     value=1.0,
+        #     min=0,
+        #     max=1.0,
+        #     step=0.001,
+        #     description="Depth (%)",
+        #     disabled=False,
+        #     continuous_update=False,
+        #     orientation="vertical",
+        # )
         self.auto_picker = ToggleButton(description="Pick nearest target", value=False)
         self.focus = FloatSlider(
             value=1.0,
@@ -358,11 +359,11 @@ class EMLineProfiler(BaseApplication):
         self.show_decay.observe(show_decay_trigger, names="value")
 
         def plot_model_selection(
-            ind, center, focus, objects, model, smoothing, z_lim, x_label
+            ind, center, focus, objects, model, smoothing, x_label
         ):
             self.update_line_model()
 
-            self.plot_model_selection(ind, center, focus, z_lim, x_label)
+            self.plot_model_selection(ind, center, focus, x_label)
 
         self.model_section = interactive_output(
             plot_model_selection,
@@ -373,7 +374,6 @@ class EMLineProfiler(BaseApplication):
                 "objects": self.model_selection.objects,
                 "model": self.model_selection.data,
                 "smoothing": self.smoothing,
-                "z_lim": self.z_lim,
                 "x_label": self.x_label,
             },
         )
@@ -1115,7 +1115,7 @@ class EMLineProfiler(BaseApplication):
                 axs.set_xlabel("Time (sec)")
                 axs.set_title("Decay - MADTau")
 
-    def plot_model_selection(self, ind, center, focus, z_lim, x_label):
+    def plot_model_selection(self, ind, center, focus, x_label):
 
         if (
             getattr(self, "survey", None) is None
@@ -1132,99 +1132,121 @@ class EMLineProfiler(BaseApplication):
         else:
             plt.figure(self.plot_model_axis.number)
 
-        axs = plt.subplot()
+        # axs = plt.subplot()
         dz = self.lines.model_z.max() - self.lines.model_z.min()
         dx = focus / 2.0 * self.lines.profile.locations_resampled[-1]
-        x_lims = [
-            center_x - dx,
-            center_x + dx,
-        ]
-        z_lims = [self.lines.model_z.max() - dz * z_lim, self.lines.model_z.max()]
+        # x_lims = [
+        #     center_x - dx,
+        #     center_x + dx,
+        # ]
+        # z_lims = [self.lines.model_z.max() - dz * z_lim, self.lines.model_z.max()]
         if (
             getattr(self.lines, "model_x", None) is not None
             and getattr(self.lines, "model_values", None) is not None
         ):
-            values = np.log10(self.lines.model_values)
+            fig = ff.create_trisurf(
+                x=self.lines.model_z,
+                y=self.lines.model_x,
+                z=np.log10(self.lines.model_values),
+                simplices=self.lines.model_cells.reshape((-1, 3)),
+                title="Conductivity model",
+                aspectratio=dict(x=1, y=1, z=0.1),
+                colormap=cyclical.mrybm_r,
+            )
 
-            cs = axs.tricontourf(
-                self.lines.model_x,
-                self.lines.model_z,
-                self.lines.model_cells.reshape((-1, 3)),
-                values,
-                levels=np.linspace(values.min(), values.max(), 25),
-                vmin=values.min(),
-                vmax=values.max(),
-                cmap="rainbow",
+            fig.update_layout(
+                scene={
+                    "yaxis_title": "Distance (m)",
+                    "xaxis_title": "Elevation (m)",
+                    "yaxis": {"autorange": "reversed"},
+                    "camera": {
+                        "eye": dict(x=0, y=0, z=1.5),
+                        "up": dict(x=0, y=0, z=1),
+                        #             "center": dict(x=300, y=1000, z=0.7)
+                    },
+                },
             )
-            axs.tricontour(
-                self.lines.model_x,
-                self.lines.model_z,
-                self.lines.model_cells.reshape((-1, 3)),
-                values,
-                levels=np.linspace(values.min(), values.max(), 25),
-                colors="k",
-                linestyles="solid",
-                linewidths=0.5,
-            )
-            axs.plot([center_x, center_x], [z_lims[0], z_lims[1]], "g--")
+            fig.show()
+
+            # cs = axs.tricontourf(
+            #     self.lines.model_x,
+            #     self.lines.model_z,
+            #     self.lines.model_cells.reshape((-1, 3)),
+            #     values,
+            #     levels=np.linspace(values.min(), values.max(), 25),
+            #     vmin=values.min(),
+            #     vmax=values.max(),
+            #     cmap="rainbow",
+            # )
+            # axs.tricontour(
+            #     self.lines.model_x,
+            #     self.lines.model_z,
+            #     self.lines.model_cells.reshape((-1, 3)),
+            #     values,
+            #     levels=np.linspace(values.min(), values.max(), 25),
+            #     colors="k",
+            #     linestyles="solid",
+            #     linewidths=0.5,
+            # )
+            # axs.plot([center_x, center_x], [z_lims[0], z_lims[1]], "g--")
             #         axs.scatter(center_x, center_z, 100, c='r', marker='x')
             # pos = axs.get_position()
             # axs.set_position([pos.x0, pos.y0, pos.width*2, pos.height])
-            axs.set_xlim(x_lims)
-            axs.set_ylim(z_lims)
-            axs.set_aspect("equal")
-            axs.grid(True)
+            # axs.set_xlim(x_lims)
+            # axs.set_ylim(z_lims)
+            # axs.set_aspect("equal")
+            # axs.grid(True)
 
-            for group in self.group_list.value:
-
-                if np.any(self.groups[group]["cox"]):
-                    cox = self.groups[group]["cox"]
-                    dip = self.groups[group]["dip"]
-                    pos = [
-                        np.linalg.norm(
-                            np.r_[
-                                self.lines.profile.x_locs[0] - cox[0],
-                                self.lines.profile.y_locs[0] - cox[1],
-                            ]
-                        ),
-                        np.mean(z_lims),
-                    ]
-
-                    axs.scatter(pos[0], pos[1], 25, "k")
-
-                    length = (x_lims[1] - x_lims[0]) * 0.1
-
-                    if self.groups[group]["azimuth"] < 180:
-                        ori = 1
-                    else:
-                        ori = -1
-
-                    if ~np.isnan(dip):
-                        axs.quiver(
-                            pos[0],
-                            pos[1],
-                            ori * length * np.cos(np.deg2rad(dip)),
-                            -length * np.sin(np.deg2rad(dip)),
-                        )
-
-                        axs.text(pos[0], pos[1], f"COX\nEst. Dip:{dip:.1f}")
-
-            if x_label == "Easting":
-                xlbl = [
-                    f"{self.lines.profile.interp_x(label):.0f}"
-                    for label in axs.get_xticks()
-                ]
-                axs.set_xticklabels(xlbl)
-                axs.set_xlabel("Easting (m)")
-            elif x_label == "Northing":
-                xlbl = [
-                    f"{self.lines.profile.interp_y(label):.0f}"
-                    for label in axs.get_xticks()
-                ]
-                axs.set_xticklabels(xlbl)
-                axs.set_xlabel("Northing (m)")
-            else:
-                axs.set_xlabel("Distance (m)")
+            # for group in self.group_list.value:
+            #
+            #     if np.any(self.groups[group]["cox"]):
+            #         cox = self.groups[group]["cox"]
+            #         dip = self.groups[group]["dip"]
+            #         pos = [
+            #             np.linalg.norm(
+            #                 np.r_[
+            #                     self.lines.profile.x_locs[0] - cox[0],
+            #                     self.lines.profile.y_locs[0] - cox[1],
+            #                 ]
+            #             ),
+            #             np.mean(z_lims),
+            #         ]
+            #
+            #         axs.scatter(pos[0], pos[1], 25, "k")
+            #
+            #         length = (x_lims[1] - x_lims[0]) * 0.1
+            #
+            #         if self.groups[group]["azimuth"] < 180:
+            #             ori = 1
+            #         else:
+            #             ori = -1
+            #
+            #         if ~np.isnan(dip):
+            #             axs.quiver(
+            #                 pos[0],
+            #                 pos[1],
+            #                 ori * length * np.cos(np.deg2rad(dip)),
+            #                 -length * np.sin(np.deg2rad(dip)),
+            #             )
+            #
+            #             axs.text(pos[0], pos[1], f"COX\nEst. Dip:{dip:.1f}")
+            #
+            # if x_label == "Easting":
+            #     xlbl = [
+            #         f"{self.lines.profile.interp_x(label):.0f}"
+            #         for label in axs.get_xticks()
+            #     ]
+            #     axs.set_xticklabels(xlbl)
+            #     axs.set_xlabel("Easting (m)")
+            # elif x_label == "Northing":
+            #     xlbl = [
+            #         f"{self.lines.profile.interp_y(label):.0f}"
+            #         for label in axs.get_xticks()
+            #     ]
+            #     axs.set_xticklabels(xlbl)
+            #     axs.set_xlabel("Northing (m)")
+            # else:
+            #     axs.set_xlabel("Distance (m)")
 
     def line_update(self):
         """
@@ -1369,7 +1391,7 @@ class EMLineProfiler(BaseApplication):
                 HBox(
                     [self.model_selection.objects, VBox([self.model_selection.data]),]
                 ),
-                HBox([self.model_section, self.z_lim]),
+                self.model_section,
             ]
             self.show_model.description = "Hide model"
         else:
