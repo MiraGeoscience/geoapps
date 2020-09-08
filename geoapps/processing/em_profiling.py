@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from scipy.spatial import cKDTree
-import plotly.figure_factory as ff
+import plotly.graph_objects as go
 from plotly.colors import sequential, cyclical
 import time
 import matplotlib.pyplot as plt
@@ -130,16 +130,16 @@ class EMLineProfiler(BaseApplication):
             continuous_update=False,
             orientation="horizontal",
         )
-        # self.z_lim = FloatSlider(
-        #     value=1.0,
-        #     min=0,
-        #     max=1.0,
-        #     step=0.001,
-        #     description="Depth (%)",
-        #     disabled=False,
-        #     continuous_update=False,
-        #     orientation="vertical",
-        # )
+        self.slice_width = FloatSlider(
+            value=10.0,
+            min=1.0,
+            max=500.0,
+            step=1.0,
+            description="Slice width (m)",
+            disabled=False,
+            continuous_update=False,
+            orientation="vertical",
+        )
         self.auto_picker = ToggleButton(description="Pick nearest target", value=False)
         self.focus = FloatSlider(
             value=1.0,
@@ -359,7 +359,7 @@ class EMLineProfiler(BaseApplication):
         self.show_decay.observe(show_decay_trigger, names="value")
 
         def plot_model_selection(
-            ind, center, focus, objects, model, smoothing, x_label
+            ind, center, focus, objects, model, smoothing, slice_width, x_label
         ):
             self.update_line_model()
 
@@ -374,6 +374,7 @@ class EMLineProfiler(BaseApplication):
                 "objects": self.model_selection.objects,
                 "model": self.model_selection.data,
                 "smoothing": self.smoothing,
+                "slice_width": self.slice_width,
                 "x_label": self.x_label,
             },
         )
@@ -1121,50 +1122,51 @@ class EMLineProfiler(BaseApplication):
             getattr(self, "survey", None) is None
             or getattr(self.lines, "profile", None) is None
             or self.show_model.value is False
-            or getattr(self.lines, "model_x", None) is None
+            or getattr(self.lines, "model_vertices", None) is None
         ):
             return
 
-        center_x = center * self.lines.profile.locations_resampled[-1]
+        center_l = center * self.lines.profile.locations_resampled[-1]
+        center_x = float(self.lines.profile.interp_x(center_l))
+        center_y = float(self.lines.profile.interp_y(center_l))
+        center_z = float(self.lines.profile.interp_z(center_l))
 
-        if self.plot_model_axis is None:
-            self.plot_model_axis = plt.figure(figsize=(8, 16))
-        else:
-            plt.figure(self.plot_model_axis.number)
+        # if self.plot_model_axis is None:
+        #     self.plot_model_axis = plt.figure(figsize=(8, 16))
+        # else:
+        #     plt.figure(self.plot_model_axis.number)
 
-        # axs = plt.subplot()
-        dz = self.lines.model_z.max() - self.lines.model_z.min()
-        dx = focus / 2.0 * self.lines.profile.locations_resampled[-1]
-        # x_lims = [
-        #     center_x - dx,
-        #     center_x + dx,
-        # ]
-        # z_lims = [self.lines.model_z.max() - dz * z_lim, self.lines.model_z.max()]
         if (
-            getattr(self.lines, "model_x", None) is not None
+            getattr(self.lines, "model_vertices", None) is not None
             and getattr(self.lines, "model_values", None) is not None
         ):
-            fig = ff.create_trisurf(
-                x=self.lines.model_z,
-                y=self.lines.model_x,
-                z=np.log10(self.lines.model_values),
-                simplices=self.lines.model_cells.reshape((-1, 3)),
-                title="Conductivity model",
-                aspectratio=dict(x=1, y=1, z=0.1),
-                colormap=cyclical.mrybm_r,
+            fig = go.Figure()
+            simplices = self.lines.model_cells.reshape((-1, 3))
+            fig.add_trace(
+                go.Mesh3d(
+                    x=self.lines.model_vertices[:, 0],
+                    y=self.lines.model_vertices[:, 1],
+                    z=self.lines.model_vertices[:, 2],
+                    intensity=self.lines.model_values,
+                    i=simplices[:, 0],
+                    j=simplices[:, 1],
+                    k=simplices[:, 2],
+                    # colorscale=colormap
+                )
             )
 
             fig.update_layout(
                 scene={
-                    "yaxis_title": "Distance (m)",
-                    "xaxis_title": "Elevation (m)",
+                    "xaxis_title": "Easting (m)",
+                    "yaxis_title": "Northing (m)",
+                    "zaxis_title": "Elevation (m)",
                     "yaxis": {"autorange": "reversed"},
-                    "camera": {
-                        "eye": dict(x=0, y=0, z=1.5),
-                        "up": dict(x=0, y=0, z=1),
-                        #             "center": dict(x=300, y=1000, z=0.7)
-                    },
+                    "xaxis": {"autorange": "reversed"},
+                    "camera": {"eye": dict(x=-1, y=1, z=1.0),},
                 },
+                width=600,
+                height=600,
+                scene_dragmode="orbit",
             )
             fig.show()
 
@@ -1305,7 +1307,7 @@ class EMLineProfiler(BaseApplication):
             xyz = np.c_[x_locs, y_locs, z_locs]
 
             tree = cKDTree(xyz[:, :2])
-            ind = tree.query_ball_tree(self.surface_model.tree, 10)
+            ind = tree.query_ball_tree(self.surface_model.tree, self.slice_width.value)
 
             indices = np.zeros(self.surface_model.n_vertices, dtype="bool")
 
@@ -1322,15 +1324,15 @@ class EMLineProfiler(BaseApplication):
 
             # Give new indices to subset
             # vert_ind, cell_ind = np.unique(np.asarray(cell_ind), return_inverse=True)
-            surf_verts = self.surface_model.vertices[vert_ind, :]
+            self.lines.model_vertices = self.surface_model.vertices[vert_ind, :]
 
-            self.lines.model_x = np.linalg.norm(
-                np.c_[
-                    x_locs[start] - surf_verts[:, 0], y_locs[start] - surf_verts[:, 1]
-                ],
-                axis=1,
-            )
-            self.lines.model_z = self.surface_model.vertices[vert_ind, 2]
+            # self.lines.model_x = np.linalg.norm(
+            #     np.c_[
+            #         x_locs[start] - surf_verts[:, 0], y_locs[start] - surf_verts[:, 1]
+            #     ],
+            #     axis=1,
+            # )
+            # self.lines.model_z = self.surface_model.vertices[vert_ind, 2]
             self.lines.model_cells = cell_ind
             self.lines.vertices_map = vert_ind
             # Save the current line id to skip next time
@@ -1391,7 +1393,7 @@ class EMLineProfiler(BaseApplication):
                 HBox(
                     [self.model_selection.objects, VBox([self.model_selection.data]),]
                 ),
-                self.model_section,
+                HBox([self.model_section, self.slice_width]),
             ]
             self.show_model.description = "Hide model"
         else:
