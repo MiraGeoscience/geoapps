@@ -547,8 +547,8 @@ def inversion(input_file):
 
     topo_interp_function = NearestNDInterpolator(topo[:, :2], topo[:, 2])
 
-    if "target_chi" in list(input_dict.keys()):
-        target_chi = input_dict["target_chi"]
+    if "chi_factor" in list(input_dict.keys()):
+        target_chi = input_dict["chi_factor"]
     else:
         target_chi = 1
 
@@ -558,14 +558,12 @@ def inversion(input_file):
     else:
         model_norms = [2, 2, 2, 2]
 
-    model_norms = np.c_[model_norms]
-
     if "max_iterations" in list(input_dict.keys()):
 
         max_iterations = input_dict["max_iterations"]
         assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
     else:
-        if np.all(model_norms == 2):
+        if np.all(np.r_[model_norms] == 2):
             # Cartesian or not sparse
             max_iterations = 10
         else:
@@ -1372,7 +1370,8 @@ def inversion(input_file):
     if vector_property:
         directiveList.append(
             Directives.VectorInversion(
-                inversion_type=input_dict["inversion_type"], chifact_target=2
+                inversion_type=input_dict["inversion_type"],
+                chifact_target=target_chi * 2,
             )
         )
 
@@ -1403,6 +1402,7 @@ def inversion(input_file):
             coolEps_q=True,
             coolEpsFact=1.2,
             betaSearch=False,
+            chifact_target=target_chi,
         )
     )
 
@@ -1466,7 +1466,7 @@ def inversion(input_file):
     print(
         "Start Inversion: "
         + inversion_style
-        + "\nTarget Misfit: %.2e (%.0f data with chifact = %g)"
+        + "\nTarget Misfit: %.2e (%.0f data with chifact = %g) / 2"
         % (0.5 * target_chi * len(survey.std), len(survey.std), target_chi)
     )
 
