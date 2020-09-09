@@ -74,6 +74,9 @@ class EMLineProfiler(BaseApplication):
         self.model_selection.data.description = "Model"
         self.surface_model = None
         self.model_figure = go.Figure()
+        self.model_figure.add_trace(go.Scatter3d())
+        self.model_figure.add_trace(go.Cone())
+        self.model_figure.add_trace(go.Mesh3d())
         self.model_figure.update_layout(
             scene={
                 "xaxis_title": "Easting (m)",
@@ -84,10 +87,11 @@ class EMLineProfiler(BaseApplication):
                 "camera": {"eye": dict(x=-1, y=1, z=1.0),},
                 "aspectmode": "data",
             },
-            width=600,
-            height=600,
+            width=800,
+            height=400,
             autosize=False,
             scene_dragmode="orbit",
+            uirevision=False,
         )
 
         self.marker = {"left": "<", "right": ">"}
@@ -153,16 +157,16 @@ class EMLineProfiler(BaseApplication):
         self.shift_cox_z = FloatSlider(
             value=0,
             min=0,
-            max=1000,
+            max=200,
             step=1.0,
             description="Z shift (m)",
             disabled=False,
             continuous_update=False,
             orientation="horizontal",
         )
-        self.dip_shift = FloatSlider(
+        self.dip_rotation = FloatSlider(
             value=0,
-            min=-90,
+            min=0,
             max=90,
             step=1.0,
             description="Rotate dip (dd)",
@@ -414,11 +418,11 @@ class EMLineProfiler(BaseApplication):
             colormap,
             reverse,
             z_shift,
-            dip_shift,
+            dip_rotation,
         ):
             self.update_line_model()
             self.plot_model_selection(
-                ind, center, focus, x_label, colormap, reverse, z_shift, dip_shift
+                ind, center, focus, x_label, colormap, reverse, z_shift, dip_rotation
             )
 
         self.model_section = interactive_output(
@@ -434,7 +438,7 @@ class EMLineProfiler(BaseApplication):
                 "x_label": self.x_label,
                 "colormap": self.color_maps,
                 "z_shift": self.shift_cox_z,
-                "dip_shift": self.dip_shift,
+                "dip_rotation": self.dip_rotation,
                 "reverse": self.reverse_cmap,
             },
         )
@@ -454,27 +458,27 @@ class EMLineProfiler(BaseApplication):
                             [
                                 self.data_selection.objects,
                                 self.data_selection.data,
-                                self.system_box,
-                                self.groups_widget,
-                                HBox([self.auto_picker, self.markers]),
+                                self.lines.widget,
                             ],
                             layout=Layout(width="50%"),
                         ),
                         VBox(
-                            [
-                                self.lines.widget,
-                                self.zoom,
-                                self.smoothing,
-                                self.residual,
-                            ],
+                            [self.system_box, self.groups_widget],
                             layout=Layout(width="50%"),
                         ),
+                    ],
+                ),
+                HBox(
+                    [
+                        VBox([self.zoom, self.smoothing, self.residual,],),
+                        plotting,
+                        self.decay_panel,
                     ]
                 ),
-                HBox([plotting, self.decay_panel]),
                 HBox([self.x_label, self.threshold]),
                 scale_panel,
-                HBox([self.model_panel], layout=Layout(width="100%")),
+                self.markers,
+                self.model_panel,
                 self.trigger_widget,
             ]
         )
@@ -609,57 +613,57 @@ class EMLineProfiler(BaseApplication):
 
     def trigger_click(self):
         if self.trigger.value:
-            for group in self.group_list.value:
+            # for group in self.group_list.value:
+            group = self.group_list.value
+            tau = self.groups[group]["mad_tau"]
+            dip = self.groups[group]["dip"]
+            azimuth = self.groups[group]["azimuth"]
+            cox = self.groups[group]["cox"]
+            if self.workspace.get_entity(group):
+                points = self.workspace.get_entity(group)[0]
+                azm_data = points.get_data("azimuth")[0]
+                azm_vals = azm_data.values.copy()
+                dip_data = points.get_data("dip")[0]
+                dip_vals = dip_data.values.copy()
 
-                tau = self.groups[group]["mad_tau"]
-                dip = self.groups[group]["dip"]
-                azimuth = self.groups[group]["azimuth"]
-                cox = self.groups[group]["cox"]
-                if self.workspace.get_entity(group):
-                    points = self.workspace.get_entity(group)[0]
-                    azm_data = points.get_data("azimuth")[0]
-                    azm_vals = azm_data.values.copy()
-                    dip_data = points.get_data("dip")[0]
-                    dip_vals = dip_data.values.copy()
+                tau_data = points.get_data("tau")[0]
+                tau_vals = tau_data.values.copy()
 
-                    tau_data = points.get_data("tau")[0]
-                    tau_vals = tau_data.values.copy()
+                points.vertices = np.vstack([points.vertices, cox.reshape((1, 3))])
+                azm_data.values = np.hstack([azm_vals, azimuth])
+                dip_data.values = np.hstack([dip_vals, dip])
+                tau_data.values = np.hstack([tau_vals, tau])
 
-                    points.vertices = np.vstack([points.vertices, cox.reshape((1, 3))])
-                    azm_data.values = np.hstack([azm_vals, azimuth])
-                    dip_data.values = np.hstack([dip_vals, dip])
-                    tau_data.values = np.hstack([tau_vals, tau])
+            else:
+                # if self.workspace.get_entity(group)
+                # parent =
+                points = Points.create(
+                    self.workspace, name=group, vertices=cox.reshape((1, 3))
+                )
+                points.add_data(
+                    {
+                        "azimuth": {"values": np.asarray(azimuth)},
+                        "dip": {"values": np.asarray(dip)},
+                        "tau": {"values": np.asarray(tau)},
+                    }
+                )
+                group = points.find_or_create_property_group(
+                    name="AzmDip", property_group_type="Dip direction & dip"
+                )
+                group.properties = [
+                    points.get_data("azimuth")[0].uid,
+                    points.get_data("dip")[0].uid,
+                ]
 
-                else:
-                    # if self.workspace.get_entity(group)
-                    # parent =
-                    points = Points.create(
-                        self.workspace, name=group, vertices=cox.reshape((1, 3))
-                    )
-                    points.add_data(
-                        {
-                            "azimuth": {"values": np.asarray(azimuth)},
-                            "dip": {"values": np.asarray(dip)},
-                            "tau": {"values": np.asarray(tau)},
-                        }
-                    )
-                    group = points.find_or_create_property_group(
-                        name="AzmDip", property_group_type="Dip direction & dip"
-                    )
-                    group.properties = [
-                        points.get_data("azimuth")[0].uid,
-                        points.get_data("dip")[0].uid,
-                    ]
+            if self.live_link.value:
+                if not os.path.exists(self.live_link_path.value):
+                    os.mkdir(self.live_link_path.value)
 
-                if self.live_link.value:
-                    if not os.path.exists(self.live_link_path.value):
-                        os.mkdir(self.live_link_path.value)
-
-                    temp_geoh5 = os.path.join(
-                        self.live_link_path.value, f"temp{time.time():.3f}.geoh5"
-                    )
-                    ws_out = Workspace(temp_geoh5)
-                    points.copy(parent=ws_out)
+                temp_geoh5 = os.path.join(
+                    self.live_link_path.value, f"temp{time.time():.3f}.geoh5"
+                )
+                ws_out = Workspace(temp_geoh5)
+                points.copy(parent=ws_out)
 
             self.trigger.value = False
             self.workspace.finalize()
@@ -952,6 +956,9 @@ class EMLineProfiler(BaseApplication):
 
             self.groups[group]["azimuth"] = azm
             self.groups[group]["dip"] = dip
+            self.pause_plot_refresh = True
+            self.dip_rotation.value = dip
+            self.pause_plot_refresh = False
 
         if axs is not None:
             axs.plot(
@@ -1104,7 +1111,7 @@ class EMLineProfiler(BaseApplication):
             axs.set_title("Decay - MADTau")
 
     def plot_model_selection(
-        self, ind, center, focus, x_label, colormap, reverse, z_shift, dip_shift
+        self, ind, center, focus, x_label, colormap, reverse, z_shift, dip_rotation
     ):
         if (
             getattr(self, "survey", None) is None
@@ -1124,7 +1131,6 @@ class EMLineProfiler(BaseApplication):
         ):
             tree = cKDTree(self.lines.model_vertices)
 
-            self.model_figure.data = []
             # Create dip marker
             center_l = center * self.lines.profile.locations_resampled[-1]
             center_x = float(self.lines.profile.interp_x(center_l))
@@ -1132,14 +1138,11 @@ class EMLineProfiler(BaseApplication):
             center_z = float(self.lines.profile.interp_z(center_l))
 
             _, ind = tree.query(np.c_[center_x, center_y, center_z])
-            self.model_figure.add_trace(
-                go.Scatter3d(
-                    x=self.lines.model_vertices[ind, 0],
-                    y=self.lines.model_vertices[ind, 1],
-                    z=self.lines.model_vertices[ind, 2],
-                    mode="markers",
-                )
-            )
+
+            self.model_figure.data[0].x = self.lines.model_vertices[ind, 0]
+            self.model_figure.data[0].y = self.lines.model_vertices[ind, 1]
+            self.model_figure.data[0].z = self.lines.model_vertices[ind, 2]
+            self.model_figure.data[0].mode = "markers"
 
             # for group in self.group_list.value:
             group = self.group_list.value
@@ -1147,41 +1150,39 @@ class EMLineProfiler(BaseApplication):
                 return
 
             _, ind = tree.query(self.groups[group]["cox"].reshape((-1, 3)))
-            dip = self.groups[group]["dip"] + dip_shift
-            azimuth = self.groups[group]["azimuth"].copy()
+            dip = dip_rotation
+            azimuth = self.groups[group]["azimuth"]
 
             if dip > 90:
                 dip = 180 - dip
                 azimuth += 180
+                self.groups[group]["dip"] = dip
+                self.groups[group]["azimuth"] = azimuth
 
             vec = rotate_azimuth_dip(azimuth, dip,)
             scaler = 100
-            self.model_figure.add_trace(
-                go.Cone(
-                    x=self.lines.model_vertices[ind, 0],
-                    y=self.lines.model_vertices[ind, 1],
-                    z=self.lines.model_vertices[ind, 2] - z_shift,
-                    u=vec[:, 0] * scaler,
-                    v=vec[:, 1] * scaler,
-                    w=vec[:, 2] * scaler,
-                    showscale=False,
-                )
-            )
+
+            self.model_figure.data[1].x = self.lines.model_vertices[ind, 0]
+            self.model_figure.data[1].y = self.lines.model_vertices[ind, 1]
+            self.model_figure.data[1].z = self.lines.model_vertices[ind, 2] - z_shift
+            self.model_figure.data[1].u = vec[:, 0] * scaler
+            self.model_figure.data[1].v = vec[:, 1] * scaler
+            self.model_figure.data[1].w = vec[:, 2] * scaler
+            self.model_figure.data[1].showscale = False
+
             self.groups[group]["cox"][2] = self.lines.model_vertices[ind, 2]
 
             simplices = self.lines.model_cells.reshape((-1, 3))
-            self.model_figure.add_trace(
-                go.Mesh3d(
-                    x=self.lines.model_vertices[:, 0],
-                    y=self.lines.model_vertices[:, 1],
-                    z=self.lines.model_vertices[:, 2],
-                    intensity=np.log10(self.lines.model_values),
-                    i=simplices[:, 0],
-                    j=simplices[:, 1],
-                    k=simplices[:, 2],
-                    colorscale=colormap,
-                )
-            )
+
+            self.model_figure.data[2].x = self.lines.model_vertices[:, 0]
+            self.model_figure.data[2].y = self.lines.model_vertices[:, 1]
+            self.model_figure.data[2].z = self.lines.model_vertices[:, 2]
+            self.model_figure.data[2].intensity = np.log10(self.lines.model_values)
+            self.model_figure.data[2].opacity = 0.9
+            self.model_figure.data[2].i = simplices[:, 0]
+            self.model_figure.data[2].j = simplices[:, 1]
+            self.model_figure.data[2].k = simplices[:, 2]
+            self.model_figure.data[2].colorscale = colormap
 
             if azimuth > 180:
                 azm = azimuth + 90
@@ -1191,10 +1192,10 @@ class EMLineProfiler(BaseApplication):
             self.model_figure.update_layout(
                 scene={
                     "camera": {
-                        "center": dict(x=0, y=0, z=0,),
-                        "eye": dict(x=vec[0, 0] * 1.75, y=vec[0, 1] * 1.75, z=0.0,),
+                        "center": dict(x=0, y=0, z=0.2,),
+                        "eye": dict(x=vec[0, 0] * 0.75, y=vec[0, 1] * 0.75, z=0.2,),
                     }
-                }
+                },
             )
 
             self.model_figure.show()
@@ -1244,6 +1245,9 @@ class EMLineProfiler(BaseApplication):
             self.show_model.description = "Processing line ..."
             self.surface_model = self.workspace.get_entity(entity_name)[0]
             self.surface_model.tree = cKDTree(self.surface_model.vertices[:, :2])
+
+        if getattr(self, "surface_model", None) is None:
+            return
 
         if (
             getattr(self.lines.profile, "line_id", None) is None
@@ -1339,19 +1343,18 @@ class EMLineProfiler(BaseApplication):
             self.model_panel.children = [
                 self.show_model,
                 HBox(
-                    [self.model_selection.objects, VBox([self.model_selection.data]),]
-                ),
-                HBox(
                     [
-                        self.model_section,
                         VBox(
                             [
+                                self.model_selection.objects,
+                                self.model_selection.data,
                                 self.color_maps,
                                 self.reverse_cmap,
                                 self.shift_cox_z,
-                                self.dip_shift,
+                                self.dip_rotation,
                             ]
                         ),
+                        self.model_section,
                     ]
                 ),
             ]
