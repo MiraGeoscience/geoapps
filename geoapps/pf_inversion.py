@@ -558,14 +558,12 @@ def inversion(input_file):
     else:
         model_norms = [2, 2, 2, 2]
 
-    model_norms = np.c_[model_norms]
-
     if "max_iterations" in list(input_dict.keys()):
 
         max_iterations = input_dict["max_iterations"]
         assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
     else:
-        if np.all(model_norms == 2):
+        if np.all(np.r_[model_norms] == 2):
             # Cartesian or not sparse
             max_iterations = 10
         else:
