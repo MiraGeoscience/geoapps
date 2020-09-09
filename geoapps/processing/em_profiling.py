@@ -31,7 +31,7 @@ from geoapps.utils import (
     find_value,
     geophysical_systems,
     signal_processing_1d,
-    get_surface_parts,
+    rotate_azimuth_dip,
 )
 from geoapps.selection import ObjectDataSelection, LineOptions
 
@@ -57,7 +57,7 @@ class EMLineProfiler(BaseApplication):
             description="Time-Domain System:",
         )
         self._groups = base_em_groups()
-        self.group_list = SelectMultiple(description="")
+        self.group_list = Dropdown(description="")
         self.early = np.arange(8, 17).tolist()
         self.middle = np.arange(17, 28).tolist()
         self.late = np.arange(28, 40).tolist()
@@ -73,7 +73,23 @@ class EMLineProfiler(BaseApplication):
         self.model_selection.objects.description = "Surface:"
         self.model_selection.data.description = "Model"
         self.surface_model = None
-        self.model_figure = None
+        self.model_figure = go.Figure()
+        self.model_figure.update_layout(
+            scene={
+                "xaxis_title": "Easting (m)",
+                "yaxis_title": "Northing (m)",
+                "zaxis_title": "Elevation (m)",
+                "yaxis": {"autorange": "reversed"},
+                "xaxis": {"autorange": "reversed"},
+                "camera": {"eye": dict(x=-1, y=1, z=1.0),},
+                "aspectmode": "data",
+            },
+            width=600,
+            height=600,
+            autosize=False,
+            scene_dragmode="orbit",
+        )
+
         self.marker = {"left": "<", "right": ">"}
         self.lines = LineOptions(
             h5file=self.h5file,
@@ -134,6 +150,26 @@ class EMLineProfiler(BaseApplication):
             continuous_update=False,
             orientation="horizontal",
         )
+        self.shift_cox_z = FloatSlider(
+            value=0,
+            min=0,
+            max=1000,
+            step=1.0,
+            description="Z shift (m)",
+            disabled=False,
+            continuous_update=False,
+            orientation="horizontal",
+        )
+        self.dip_shift = FloatSlider(
+            value=0,
+            min=-90,
+            max=90,
+            step=1.0,
+            description="Rotate dip (dd)",
+            disabled=False,
+            continuous_update=False,
+            orientation="horizontal",
+        )
         self.slice_width = FloatSlider(
             value=10.0,
             min=1.0,
@@ -145,6 +181,7 @@ class EMLineProfiler(BaseApplication):
             orientation="vertical",
         )
         self.auto_picker = ToggleButton(description="Pick nearest target", value=False)
+        self.pause_plot_refresh = False
         self.reverse_cmap = ToggleButton(description="Flip colormap", value=False)
         self.focus = FloatSlider(
             value=1.0,
@@ -284,7 +321,9 @@ class EMLineProfiler(BaseApplication):
             description="X-axis label:",
         )
 
-        self.show_model = ToggleButton(description="Show model", value=False)
+        self.show_model = ToggleButton(
+            description="Show model", value=False, button_style="success"
+        )
 
         def plot_data_selection(
             data,
@@ -374,10 +413,13 @@ class EMLineProfiler(BaseApplication):
             x_label,
             colormap,
             reverse,
+            z_shift,
+            dip_shift,
         ):
             self.update_line_model()
-
-            self.plot_model_selection(ind, center, focus, x_label, colormap, reverse)
+            self.plot_model_selection(
+                ind, center, focus, x_label, colormap, reverse, z_shift, dip_shift
+            )
 
         self.model_section = interactive_output(
             plot_model_selection,
@@ -391,6 +433,8 @@ class EMLineProfiler(BaseApplication):
                 "slice_width": self.slice_width,
                 "x_label": self.x_label,
                 "colormap": self.color_maps,
+                "z_shift": self.shift_cox_z,
+                "dip_shift": self.dip_shift,
                 "reverse": self.reverse_cmap,
             },
         )
@@ -438,16 +482,6 @@ class EMLineProfiler(BaseApplication):
         super().__init__(**kwargs)
 
         self.auto_picker.value = True
-
-    # def update_surface_model(self):
-    #     if self.surface_model is None or self.surface_model.name != self.model_selection.objects.value:
-    #         if self.workspace.get_entity(self.model_selection.objects.value):
-    #             self.surface_model = self.workspace.get_entity(
-    #                 self.model_selection.objects.value
-    #             )[0]
-    #             self.surface_model.parts = get_surface_parts(self.surface_model)
-    #
-    #             self.line_update()
 
     def get_data(self):
         if getattr(self, "survey", None) is not None:
@@ -547,7 +581,7 @@ class EMLineProfiler(BaseApplication):
                 if ind in group["gates"]:
                     group["channels"].append(channel)
         self.group_list.options = self.groups.keys()
-        self.group_list.value = [self.group_list.options[0]]
+        self.group_list.value = self.group_list.options[0]
 
     def add_group(self):
         """
@@ -577,71 +611,6 @@ class EMLineProfiler(BaseApplication):
         if self.trigger.value:
             for group in self.group_list.value:
 
-                # for (
-                #     ind,
-                #     (channel, locations, peaks, inflx_dwn, inflx_up, vals, times),
-                # ) in enumerate(
-                #     zip(
-                #         self.groups[group]["channels"],
-                #         self.groups[group]["locations"],
-                #         self.groups[group]["peaks"],
-                #         self.groups[group]["inflx_dwn"],
-                #         self.groups[group]["inflx_up"],
-                #         self.groups[group]["values"],
-                #         self.groups[group]["times"],
-                #     )
-                # ):
-                #
-                #     if ind == 0:
-                #         cox_x = self.lines.profile.interp_x(peaks[0])
-                #         cox_y = self.lines.profile.interp_y(peaks[0])
-                #         cox_z = self.lines.profile.interp_z(peaks[0])
-                #         cox = np.r_[cox_x, cox_y, cox_z]
-                #
-                #         # Compute average dip
-                #         left_ratio = np.abs(
-                #             (peaks[1] - inflx_up[1]) / (peaks[0] - inflx_up[0])
-                #         )
-                #         right_ratio = np.abs(
-                #             (peaks[1] - inflx_dwn[1]) / (peaks[0] - inflx_dwn[0])
-                #         )
-                #
-                #         if left_ratio > right_ratio:
-                #             ratio = right_ratio / left_ratio
-                #             azm = (
-                #                 450.0
-                #                 - np.rad2deg(
-                #                     np.arctan2(
-                #                         (
-                #                             self.lines.profile.interp_y(inflx_up[0])
-                #                             - cox_y
-                #                         ),
-                #                         (
-                #                             self.lines.profile.interp_x(inflx_up[0])
-                #                             - cox_x
-                #                         ),
-                #                     )
-                #                 )
-                #             ) % 360.0
-                #         else:
-                #             ratio = left_ratio / right_ratio
-                #             azm = (
-                #                 450.0
-                #                 - np.rad2deg(
-                #                     np.arctan2(
-                #                         (
-                #                             self.lines.profile.interp_y(inflx_dwn[0])
-                #                             - cox_y
-                #                         ),
-                #                         (
-                #                             self.lines.profile.interp_x(inflx_dwn[0])
-                #                             - cox_x
-                #                         ),
-                #                     )
-                #                 )
-                #             ) % 360.0
-                #
-                #         dip = np.rad2deg(np.arcsin(ratio))
                 tau = self.groups[group]["mad_tau"]
                 dip = self.groups[group]["dip"]
                 azimuth = self.groups[group]["azimuth"]
@@ -699,11 +668,11 @@ class EMLineProfiler(BaseApplication):
         """
         Highlight the group choice
         """
-        highlights = []
-        for group in self.group_list.value:
-            highlights += self.groups[group]["channels"]
-            self.group_color.value = self.groups[group]["color"]
-        self.channels.value = highlights
+        # highlights = []
+        # for group in self.group_list.value:
+        #     highlights +=
+        self.group_color.value = self.groups[self.group_list.value]["color"]
+        self.channels.value = self.groups[self.group_list.value]["channels"]
 
     def plot_data_selection(
         self,
@@ -760,9 +729,9 @@ class EMLineProfiler(BaseApplication):
 
         sub_ind = np.arange(lims[0], lims[1])
 
-        channels = []
-        for group in self.group_list.value:
-            channels += self.groups[group]["channels"]
+        # channels = []
+        # for group in self.group_list.value:
+        channels = self.groups[self.group_list.value]["channels"]
 
         if len(channels) == 0:
             channels = self.channels.options
@@ -859,88 +828,93 @@ class EMLineProfiler(BaseApplication):
 
                 peak = np.min([bump_x.shape[0] - 1, np.searchsorted(bump_x, locs[cox])])
 
-                for ii, group in enumerate(self.group_list.value):
-                    if channel in self.groups[group]["channels"]:
-                        self.groups[group]["inflx_up"].append(
-                            np.r_[bump_x[inflx_up], bump_v[inflx_up]]
-                        )
-                        self.groups[group]["peaks"].append(
-                            np.r_[bump_x[peak], bump_v[peak]]
-                        )
-                        self.groups[group]["times"].append(times[channel])
-                        self.groups[group]["inflx_dwn"].append(
-                            np.r_[bump_x[inflx_dwn], bump_v[inflx_dwn]]
-                        )
-                        self.groups[group]["locations"].append(bump_x)
-                        self.groups[group]["values"].append(bump_v)
+                # for ii, group in enumerate(self.group_list.value):
+                group = self.group_list.value
+                if channel in self.groups[group]["channels"]:
+                    self.groups[group]["inflx_up"].append(
+                        np.r_[bump_x[inflx_up], bump_v[inflx_up]]
+                    )
+                    self.groups[group]["peaks"].append(
+                        np.r_[bump_x[peak], bump_v[peak]]
+                    )
+                    self.groups[group]["times"].append(times[channel])
+                    self.groups[group]["inflx_dwn"].append(
+                        np.r_[bump_x[inflx_dwn], bump_v[inflx_dwn]]
+                    )
+                    self.groups[group]["locations"].append(bump_x)
+                    self.groups[group]["values"].append(bump_v)
 
-                        # Compute average dip
-                        left_ratio = (bump_v[peak] - bump_v[inflx_up]) / (
-                            bump_x[peak] - bump_x[inflx_up]
-                        )
-                        right_ratio = (bump_v[peak] - bump_v[inflx_dwn]) / (
-                            bump_x[inflx_dwn] - bump_x[peak]
-                        )
+                    # Compute average dip
+                    left_ratio = (bump_v[peak] - bump_v[inflx_up]) / (
+                        bump_x[peak] - bump_x[inflx_up]
+                    )
+                    right_ratio = (bump_v[peak] - bump_v[inflx_dwn]) / (
+                        bump_x[inflx_dwn] - bump_x[peak]
+                    )
 
-                        if left_ratio > right_ratio:
-                            ratio = right_ratio / left_ratio
-                            ori = "left"
-                        else:
-                            ratio = left_ratio / right_ratio
-                            ori = "right"
+                    if left_ratio > right_ratio:
+                        ratio = right_ratio / left_ratio
+                        ori = "left"
+                    else:
+                        ratio = left_ratio / right_ratio
+                        ori = "right"
 
-                        dip = np.rad2deg(np.arcsin(ratio))
+                    dip = np.rad2deg(np.arcsin(ratio))
 
-                        # Left
-                        axs.plot(
-                            bump_x[:peak],
-                            bump_v[:peak],
-                            "--",
-                            color=self.groups[group]["color"],
-                        )
-                        # Right
-                        axs.plot(
-                            bump_x[peak:],
-                            bump_v[peak:],
-                            color=self.groups[group]["color"],
-                        )
-                        axs.scatter(
+                    # Left
+                    axs.plot(
+                        bump_x[:peak],
+                        bump_v[:peak],
+                        "--",
+                        color=self.groups[group]["color"],
+                    )
+                    # Right
+                    axs.plot(
+                        bump_x[peak:], bump_v[peak:], color=self.groups[group]["color"],
+                    )
+                    axs.scatter(
+                        self.groups[group]["peaks"][-1][0],
+                        self.groups[group]["peaks"][-1][1],
+                        s=100,
+                        c=self.groups[group]["color"],
+                        marker=self.marker[ori],
+                    )
+                    if ~np.isnan(dip):
+                        axs.text(
                             self.groups[group]["peaks"][-1][0],
                             self.groups[group]["peaks"][-1][1],
-                            s=100,
-                            c=self.groups[group]["color"],
-                            marker=self.marker[ori],
+                            f"{dip:.0f}",
+                            va="bottom",
+                            ha="center",
                         )
-                        if ~np.isnan(dip):
-                            axs.text(
-                                self.groups[group]["peaks"][-1][0],
-                                self.groups[group]["peaks"][-1][1],
-                                f"{dip:.0f}",
-                                va="bottom",
-                                ha="center",
-                            )
-                        axs.scatter(
-                            self.groups[group]["inflx_dwn"][-1][0],
-                            self.groups[group]["inflx_dwn"][-1][1],
-                            s=100,
-                            c=self.groups[group]["color"],
-                            marker="1",
-                        )
-                        axs.scatter(
-                            self.groups[group]["inflx_up"][-1][0],
-                            self.groups[group]["inflx_up"][-1][1],
-                            s=100,
-                            c=self.groups[group]["color"],
-                            marker="2",
-                        )
+                    axs.scatter(
+                        self.groups[group]["inflx_dwn"][-1][0],
+                        self.groups[group]["inflx_dwn"][-1][1],
+                        s=100,
+                        c=self.groups[group]["color"],
+                        marker="1",
+                    )
+                    axs.scatter(
+                        self.groups[group]["inflx_up"][-1][0],
+                        self.groups[group]["inflx_up"][-1][1],
+                        s=100,
+                        c=self.groups[group]["color"],
+                        marker="2",
+                    )
 
-        for group in self.group_list.value:
+        # for group in self.group_list.value:
+        group = self.group_list.value
+        if np.any(self.groups[group]["peaks"]):
+            peaks = np.vstack(self.groups[group]["peaks"])
+            inflx_dwn = np.vstack(self.groups[group]["inflx_dwn"])
+            inflx_up = np.vstack(self.groups[group]["inflx_up"])
 
-            if not np.any(self.groups[group]["peaks"]):
-                continue
-            peaks = self.groups[group]["peaks"][0]
-            inflx_dwn = self.groups[group]["inflx_dwn"][0]
-            inflx_up = self.groups[group]["inflx_up"][0]
+            ratio = peaks[:, 1] / peaks[0, 1]
+            ind = np.where(ratio >= (1 - threshold / 100))[0][-1]
+
+            peaks = np.mean(peaks[: ind + 1, :], axis=0)
+            inflx_dwn = np.mean(inflx_dwn[: ind + 1, :], axis=0)
+            inflx_up = np.mean(inflx_up[: ind + 1, :], axis=0)
 
             cox_x = self.lines.profile.interp_x(peaks[0])
             cox_y = self.lines.profile.interp_y(peaks[0])
@@ -990,23 +964,18 @@ class EMLineProfiler(BaseApplication):
             )
             axs.plot([center_x, center_x], [0, y_max], "g--")
 
-            for group in self.groups.values():
-                if group["peaks"]:
-                    peaks = np.vstack(group["peaks"])
-                    ratio = peaks[:, 1] / peaks[0, 1]
-                    ind = np.where(ratio >= (1 - threshold / 100))[0][-1]
-                    #                 print(ind)
-                    axs.plot(
-                        peaks[: ind + 1, 0],
-                        peaks[: ind + 1, 1],
-                        "--",
-                        color=group["color"],
-                    )
-            #                 axs.plot([peaks[0, 0], peaks[0, 0]], [peaks[0, 1], peaks[-1, 1]], '--', color='k')
-            #                 axs.plot(
-            #                     [group['inflx_up'][ind][0], group['inflx_dwn'][ind][0]]
-            #                     [group['inflx_up'][ind][1], group['inflx_dwn'][ind][1]], '--', color=[0.5,0.5,0.5]
-            #                 )
+            # for group in self.groups.values():
+            if self.groups[group]["peaks"]:
+                peaks = np.vstack(self.groups[group]["peaks"])
+                ratio = peaks[:, 1] / peaks[0, 1]
+                ind = np.where(ratio >= (1 - threshold / 100))[0][-1]
+                #                 print(ind)
+                axs.plot(
+                    peaks[: ind + 1, 0],
+                    peaks[: ind + 1, 1],
+                    "--",
+                    color=self.groups[group]["color"],
+                )
 
             if scale == "symlog":
                 plt.yscale("symlog", linthreshy=scale_value)
@@ -1070,76 +1039,79 @@ class EMLineProfiler(BaseApplication):
         axs = None
         if self.auto_picker.value:
 
-            for group in self.group_list.value:
+            group = self.group_list.value
+            # for group in self.group_list.value:
 
-                if len(self.groups[group]["peaks"]) == 0:
-                    continue
+            if len(self.groups[group]["peaks"]) == 0:
+                return
 
-                peaks = (
-                    np.vstack(self.groups[group]["peaks"])
-                    * self.em_system_specs[self.system.value]["normalization"]
-                )
+            peaks = (
+                np.vstack(self.groups[group]["peaks"])
+                * self.em_system_specs[self.system.value]["normalization"]
+            )
 
-                ratio = peaks[:, 1] / peaks[0, 1]
-                ind = np.where(ratio >= (1 - self.threshold.value / 100))[0][-1]
+            ratio = peaks[:, 1] / peaks[0, 1]
+            ind = np.where(ratio >= (1 - self.threshold.value / 100))[0][-1]
 
-                tc = np.hstack(self.groups[group]["times"][: ind + 1])
-                vals = np.log(peaks[: ind + 1, 1])
+            tc = np.hstack(self.groups[group]["times"][: ind + 1])
+            vals = np.log(peaks[: ind + 1, 1])
 
-                if tc.shape[0] < 2:
-                    continue
-                # Compute linear trend
-                A = np.c_[np.ones_like(tc), tc]
-                a, c = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, vals))
-                d = np.r_[tc.min(), tc.max()]
-                vv = d * c + a
+            if tc.shape[0] < 2:
+                return
+            # Compute linear trend
+            A = np.c_[np.ones_like(tc), tc]
+            a, c = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, vals))
+            d = np.r_[tc.min(), tc.max()]
+            vv = d * c + a
 
-                ratio = np.abs((vv[0] - vv[1]) / (d[0] - d[1]))
-                #                 angl = np.arctan(ratio**-1.)
+            ratio = np.abs((vv[0] - vv[1]) / (d[0] - d[1]))
+            #                 angl = np.arctan(ratio**-1.)
 
-                self.groups[group]["mad_tau"] = ratio ** -1.0
+            self.groups[group]["mad_tau"] = ratio ** -1.0
 
-                if axs is None:
-                    plt.figure(figsize=(8, 8))
-                    axs = plt.subplot()
+            if axs is None:
+                plt.figure(figsize=(8, 8))
+                axs = plt.subplot()
 
-                axs.plot(
-                    d,
-                    np.exp(d * c + a),
-                    "--",
-                    linewidth=2,
-                    color=self.groups[group]["color"],
-                )
-                axs.text(
-                    np.mean(d),
-                    np.exp(np.mean(vv)),
-                    f"{ratio ** -1.:.2e}",
-                    color=self.groups[group]["color"],
-                )
-                #                 plt.yscale('symlog', linthreshy=scale_value)
-                #                 axs.set_aspect('equal')
-                axs.scatter(
-                    np.hstack(self.groups[group]["times"]),
-                    peaks[:, 1],
-                    color=self.groups[group]["color"],
-                    marker="^",
-                )
-                axs.grid(True)
+            axs.plot(
+                d,
+                np.exp(d * c + a),
+                "--",
+                linewidth=2,
+                color=self.groups[group]["color"],
+            )
+            axs.text(
+                np.mean(d),
+                np.exp(np.mean(vv)),
+                f"{ratio ** -1.:.2e}",
+                color=self.groups[group]["color"],
+            )
+            #                 plt.yscale('symlog', linthreshy=scale_value)
+            #                 axs.set_aspect('equal')
+            axs.scatter(
+                np.hstack(self.groups[group]["times"]),
+                peaks[:, 1],
+                color=self.groups[group]["color"],
+                marker="^",
+            )
+            axs.grid(True)
 
-                plt.yscale("symlog")
-                axs.yaxis.set_label_position("right")
-                axs.yaxis.tick_right()
-                axs.set_ylabel("log(V)")
-                axs.set_xlabel("Time (sec)")
-                axs.set_title("Decay - MADTau")
+            plt.yscale("symlog")
+            axs.yaxis.set_label_position("right")
+            axs.yaxis.tick_right()
+            axs.set_ylabel("log(V)")
+            axs.set_xlabel("Time (sec)")
+            axs.set_title("Decay - MADTau")
 
-    def plot_model_selection(self, ind, center, focus, x_label, colormap, reverse):
-
+    def plot_model_selection(
+        self, ind, center, focus, x_label, colormap, reverse, z_shift, dip_shift
+    ):
         if (
             getattr(self, "survey", None) is None
             or getattr(self.lines, "profile", None) is None
             or self.show_model.value is False
             or getattr(self.lines, "model_vertices", None) is None
+            or self.pause_plot_refresh
         ):
             return
 
@@ -1150,31 +1122,52 @@ class EMLineProfiler(BaseApplication):
             getattr(self.lines, "model_vertices", None) is not None
             and getattr(self.lines, "model_values", None) is not None
         ):
+            tree = cKDTree(self.lines.model_vertices)
 
-            if self.model_figure is None:
-                self.model_figure = go.Figure()
-                self.model_figure.update_layout(
-                    scene={
-                        "xaxis_title": "Easting (m)",
-                        "yaxis_title": "Northing (m)",
-                        "zaxis_title": "Elevation (m)",
-                        "yaxis": {"autorange": "reversed"},
-                        "xaxis": {"autorange": "reversed"},
-                        "camera": {"eye": dict(x=-1, y=1, z=1.0),},
-                    },
-                    width=600,
-                    height=600,
-                    scene_dragmode="orbit",
-                )
-
+            self.model_figure.data = []
             # Create dip marker
             center_l = center * self.lines.profile.locations_resampled[-1]
             center_x = float(self.lines.profile.interp_x(center_l))
             center_y = float(self.lines.profile.interp_y(center_l))
             center_z = float(self.lines.profile.interp_z(center_l))
 
-            tree = cKDTree(self.lines.model_vertices)
             _, ind = tree.query(np.c_[center_x, center_y, center_z])
+            self.model_figure.add_trace(
+                go.Scatter3d(
+                    x=self.lines.model_vertices[ind, 0],
+                    y=self.lines.model_vertices[ind, 1],
+                    z=self.lines.model_vertices[ind, 2],
+                    mode="markers",
+                )
+            )
+
+            # for group in self.group_list.value:
+            group = self.group_list.value
+            if not np.any(self.groups[group]["peaks"]):
+                return
+
+            _, ind = tree.query(self.groups[group]["cox"].reshape((-1, 3)))
+            dip = self.groups[group]["dip"] + dip_shift
+            azimuth = self.groups[group]["azimuth"].copy()
+
+            if dip > 90:
+                dip = 180 - dip
+                azimuth += 180
+
+            vec = rotate_azimuth_dip(azimuth, dip,)
+            scaler = 100
+            self.model_figure.add_trace(
+                go.Cone(
+                    x=self.lines.model_vertices[ind, 0],
+                    y=self.lines.model_vertices[ind, 1],
+                    z=self.lines.model_vertices[ind, 2] - z_shift,
+                    u=vec[:, 0] * scaler,
+                    v=vec[:, 1] * scaler,
+                    w=vec[:, 2] * scaler,
+                    showscale=False,
+                )
+            )
+            self.groups[group]["cox"][2] = self.lines.model_vertices[ind, 2]
 
             simplices = self.lines.model_cells.reshape((-1, 3))
             self.model_figure.add_trace(
@@ -1190,13 +1183,18 @@ class EMLineProfiler(BaseApplication):
                 )
             )
 
-            self.model_figure.add_trace(
-                go.Scatter3d(
-                    x=self.lines.model_vertices[ind, 0],
-                    y=self.lines.model_vertices[ind, 1],
-                    z=self.lines.model_vertices[ind, 2],
-                    mode="markers",
-                )
+            if azimuth > 180:
+                azm = azimuth + 90
+            else:
+                azm = azimuth - 90
+            vec = rotate_azimuth_dip(azm, 0)
+            self.model_figure.update_layout(
+                scene={
+                    "camera": {
+                        "center": dict(x=0, y=0, z=0,),
+                        "eye": dict(x=vec[0, 0] * 1.75, y=vec[0, 1] * 1.75, z=0.0,),
+                    }
+                }
             )
 
             self.model_figure.show()
@@ -1252,12 +1250,25 @@ class EMLineProfiler(BaseApplication):
             or self.lines.profile.line_id != self.lines.lines.value
         ):
 
+            lims = [
+                (self.center.value - self.focus.value / 2.0)
+                * self.lines.profile.locations_resampled[-1],
+                (self.center.value + self.focus.value / 2.0)
+                * self.lines.profile.locations_resampled[-1],
+            ]
             x_locs = self.lines.profile.x_locs
             y_locs = self.lines.profile.y_locs
             z_locs = self.lines.profile.z_locs
             xyz = np.c_[x_locs, y_locs, z_locs]
 
-            tree = cKDTree(xyz[:, :2])
+            ind = (
+                (xyz[:, 0] > self.lines.profile.interp_x(lims[0]))
+                * (xyz[:, 0] < self.lines.profile.interp_x(lims[1]))
+                * (xyz[:, 1] > self.lines.profile.interp_y(lims[0]))
+                * (xyz[:, 1] < self.lines.profile.interp_y(lims[1]))
+            )
+
+            tree = cKDTree(xyz[ind, :2])
             ind = tree.query_ball_tree(self.surface_model.tree, self.slice_width.value)
 
             indices = np.zeros(self.surface_model.n_vertices, dtype="bool")
@@ -1268,22 +1279,8 @@ class EMLineProfiler(BaseApplication):
             cells = self.surface_model.cells[np.any(cells_in, axis=1), :]
             vert_ind, cell_ind = np.unique(np.asarray(cells), return_inverse=True)
 
-            if np.std(xyz[:, 1]) > np.std(xyz[:, 0]):
-                start = np.argmin(x_locs)
-            else:
-                start = np.argmin(y_locs)
-
             # Give new indices to subset
-            # vert_ind, cell_ind = np.unique(np.asarray(cell_ind), return_inverse=True)
             self.lines.model_vertices = self.surface_model.vertices[vert_ind, :]
-
-            # self.lines.model_x = np.linalg.norm(
-            #     np.c_[
-            #         x_locs[start] - surf_verts[:, 0], y_locs[start] - surf_verts[:, 1]
-            #     ],
-            #     axis=1,
-            # )
-            # self.lines.model_z = self.surface_model.vertices[vert_ind, 2]
             self.lines.model_cells = cell_ind
             self.lines.vertices_map = vert_ind
             # Save the current line id to skip next time
@@ -1344,7 +1341,19 @@ class EMLineProfiler(BaseApplication):
                 HBox(
                     [self.model_selection.objects, VBox([self.model_selection.data]),]
                 ),
-                HBox([self.model_section, VBox([self.color_maps, self.reverse_cmap])]),
+                HBox(
+                    [
+                        self.model_section,
+                        VBox(
+                            [
+                                self.color_maps,
+                                self.reverse_cmap,
+                                self.shift_cox_z,
+                                self.dip_shift,
+                            ]
+                        ),
+                    ]
+                ),
             ]
             self.show_model.description = "Hide model"
         else:

@@ -18,4 +18,5 @@ from .utils import (
     RectangularBlock,
     format_labels,
     get_surface_parts,
+    rotate_azimuth_dip,
 )

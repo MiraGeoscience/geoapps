@@ -937,6 +937,44 @@ def rotate_vertices(xyz, center, phi, theta):
     return xyzRot + np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
 
 
+def rotate_azimuth_dip(azimuth, dip):
+    """
+    dipazm_2_xyz(dip,azimuth)
+
+    Function converting degree angles for dip and azimuth from north to a
+    3-components in cartesian coordinates.
+
+    INPUT
+    dip     : Value or vector of dip from horizontal in DEGREE
+    azimuth   : Value or vector of azimuth from north in DEGREE
+
+    OUTPUT
+    M       : [n-by-3] Array of xyz components of a unit vector in cartesian
+
+    Created on Dec, 20th 2015
+
+    @author: dominiquef
+    """
+
+    azimuth = np.asarray(azimuth)
+    dip = np.asarray(dip)
+
+    # Number of elements
+    nC = azimuth.size
+
+    M = np.zeros((nC, 3))
+
+    # Modify azimuth from North to cartesian-X
+    inc = -np.deg2rad(np.asarray(dip))
+    dec = np.deg2rad((450.0 - np.asarray(azimuth)) % 360.0)
+
+    M[:, 0] = np.cos(inc) * np.cos(dec)
+    M[:, 1] = np.cos(inc) * np.sin(dec)
+    M[:, 2] = np.sin(inc)
+
+    return M
+
+
 class RectangularBlock:
     """
         Define a rotated rectangular block in 3D space
