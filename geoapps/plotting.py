@@ -18,7 +18,7 @@ from ipywidgets import (
     VBox,
     HBox,
     ToggleButton,
-    ToggleButtons,
+    Text,
     interactive_output,
     Label,
     Layout,
@@ -35,6 +35,32 @@ from geoapps.utils import (
 from geoapps.selection import ObjectDataSelection
 
 
+def normalize(values):
+    ind = ~np.isnan(values)
+    values[ind] = np.abs(values[ind])
+    values[ind] /= values[ind].max()
+    values[ind == False] = 0
+    return values
+
+
+def format_axis(channel, axis, log, threshold):
+    label = channel
+
+    if log:
+        axis = symlog(axis, threshold)
+
+    values = axis[~np.isnan(axis)]
+    ticks = np.linspace(values.min(), values.max(), 5)
+
+    if log:
+        label = f"Log({channel})"
+        ticklabels = inv_symlog(ticks, threshold)
+    else:
+        ticklabels = ticks
+
+    return axis, label, ticks, ticklabels.tolist()
+
+
 class ScatterPlots(BaseApplication):
     """
     Application for 2D and 3D crossplots of data using symlog scaling
@@ -49,60 +75,129 @@ class ScatterPlots(BaseApplication):
         self._data = self.selection.data
         self._objects = self.selection.objects
 
-        self.selection.widget
+        def channel_bounds_setter(caller):
+            self.set_channel_bounds(caller["owner"].name)
 
-        self.selection.data.value
+        self._x = Dropdown()
+        self._x.observe(channel_bounds_setter, names="value")
+        self._x.name = "x"
+        self._x_active = Checkbox(description="Active", value=True, indent=False)
+        self._x_log = Checkbox(description="Log10", value=False, indent=False,)
+        self._x_thresh = FloatText(description="Threshold", value=1e-1, indent=False,)
+        self._x_min = FloatText(description="Min", indent=False,)
+        self._x_max = FloatText(description="Max", indent=False,)
+        self._x_panel = VBox(
+            [
+                self._x_active,
+                HBox([self._x]),
+                HBox([self._x_log, self._x_thresh]),
+                HBox([self._x_min, self._x_max]),
+            ]
+        )
 
-        self._x_channel = Dropdown(description="X-axis", layout=Layout(width="300px"))
-        self._x_active = Checkbox(value=True, indent=False, layout=Layout(width="50px"))
-        self._x_log = Checkbox(value=False, indent=False, layout=Layout(width="50px"))
-        self._x_thresh = FloatText(
-            value=1e-1, indent=False, layout=Layout(width="100px")
+        self._y = Dropdown()
+        self._y.observe(channel_bounds_setter, names="value")
+        self._y.name = "y"
+        self._y_active = Checkbox(description="Active", value=True, indent=False,)
+        self._y_log = Checkbox(description="Log10", value=False, indent=False)
+        self._y_thresh = FloatText(description="Threshold", value=1e-1, indent=False,)
+        self._y_min = FloatText(description="Min", indent=False,)
+        self._y_max = FloatText(description="Max", indent=False,)
+        self._y_panel = VBox(
+            [
+                self._y_active,
+                HBox([self._y]),
+                HBox([self._y_log, self._y_thresh]),
+                HBox([self._y_min, self._y_max]),
+            ]
         )
-        self._y_channel = Dropdown(description="Y-axis")
-        self._y_active = Checkbox(value=True, indent=False, layout=Layout(width="50px"))
-        self._y_log = Checkbox(value=False, indent=False, layout=Layout(width="50px"))
-        self._y_thresh = FloatText(
-            value=1e-1, indent=False, layout=Layout(width="100px")
+
+        self._z = Dropdown()
+        self._z.observe(channel_bounds_setter, names="value")
+        self._z.name = "z"
+        self._z_active = Checkbox(description="Active", value=False, indent=False,)
+        self._z_log = Checkbox(description="Log10", value=False, indent=False,)
+        self._z_thresh = FloatText(description="Threshold", value=1e-1, indent=False,)
+        self._z_min = FloatText(description="Min", indent=False,)
+        self._z_max = FloatText(description="Max", indent=False,)
+        self._z_panel = VBox(
+            [
+                self._z_active,
+                HBox([self._z]),
+                HBox([self._z_log, self._z_thresh]),
+                HBox([self._z_min, self._z_max]),
+            ]
         )
-        self._z_channel = Dropdown(description="Z-axis",)
-        self._z_active = Checkbox(
-            value=False, indent=False, layout=Layout(width="50px")
-        )
-        self._z_log = Checkbox(value=False, indent=False, layout=Layout(width="50px"))
-        self._z_thresh = FloatText(
-            value=1e-1, indent=False, layout=Layout(width="100px")
-        )
-        self._color_channel = Dropdown(description="Color")
-        self._color_log = Checkbox(
-            value=False, indent=False, layout=Layout(width="50px")
-        )
+
+        self._color = Dropdown()
+        self._color.observe(channel_bounds_setter, names="value")
+        self._color.name = "color"
+        self._color_log = Checkbox(description="Log10", value=False, indent=False,)
         self._color_thresh = FloatText(
-            value=1e-1, indent=False, layout=Layout(width="100px")
+            description="Threshold", value=1e-1, indent=False,
         )
-        self._color_active = Checkbox(
-            value=False, indent=False, layout=Layout(width="50px")
-        )
+        self._color_active = Checkbox(description="Active", value=False, indent=False,)
         self._color_maps = Dropdown(
             description="Colormaps",
             options=px.colors.named_colorscales(),
             value="viridis",
         )
-        self._size_channel = Dropdown(description="Size")
-        self._size_active = Checkbox(
-            value=False, indent=False, layout=Layout(width="50px")
+        self._color_min = FloatText(description="Min", indent=False,)
+        self._color_max = FloatText(description="Max", indent=False,)
+        self._color_panel = VBox(
+            [
+                self._color_active,
+                HBox([self._color]),
+                self._color_maps,
+                HBox([self._color_log, self._color_thresh]),
+                HBox([self._color_min, self._color_max]),
+            ]
         )
-        self._size_log = Checkbox(
-            value=False, indent=False, layout=Layout(width="50px")
-        )
+
+        self._size = Dropdown()
+        self._size.observe(channel_bounds_setter, names="value")
+        self._size.name = "size"
+        self._size_active = Checkbox(description="Active", value=False, indent=False,)
+        self._size_log = Checkbox(description="Log10", value=False, indent=False,)
         self._size_thresh = FloatText(
-            value=1e-1, indent=False, layout=Layout(width="100px")
+            description="Threshold", value=1e-1, indent=False,
         )
-        self._size_max = IntSlider(
+        self._size_markers = IntSlider(
             min=1, max=100, value=20, description="Marker size", continuous_update=False
         )
-        self.refresh = ToggleButton(description="Refresh Plot", value=True)
+        self._size_min = FloatText(description="Min", indent=False,)
+        self._size_max = FloatText(description="Max", indent=False,)
+        self._size_panel = VBox(
+            [
+                self._size_active,
+                HBox([self._size]),
+                self._size_markers,
+                HBox([self._size_log, self._size_thresh]),
+                HBox([self._size_min, self._size_max]),
+            ]
+        )
 
+        self.refresh_trigger = ToggleButton(description="Refresh Plot", value=True)
+        self.refresh = True
+
+        # Wrap all axis panels into dropdown
+        def axes_pannels_trigger(_):
+            self.axes_pannels_trigger()
+
+        self.panels = {
+            "X-axis": self._x_panel,
+            "Y-axis": self._y_panel,
+            "Z-axis": self._z_panel,
+            "Color": self._color_panel,
+            "Size": self._size_panel,
+        }
+        self.axes_pannels = Dropdown(
+            options=["X-axis", "Y-axis", "Z-axis", "Color", "Size"],
+            layout=Layout(width="300px"),
+        )
+
+        self.axes_pannels.observe(axes_pannels_trigger)
+        self.axes_options = HBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
 
         self.crossplot_fig = go.FigureWidget()
@@ -112,78 +207,108 @@ class ScatterPlots(BaseApplication):
             x_log,
             x_active,
             x_thresh,
+            x_min,
+            x_max,
             y,
             y_log,
             y_active,
             y_thresh,
+            y_min,
+            y_max,
             z,
             z_log,
             z_active,
             z_thresh,
+            z_min,
+            z_max,
             color,
             color_log,
             color_active,
             color_thresh,
             color_maps,
+            color_min,
+            color_max,
             size,
             size_log,
             size_active,
             size_thresh,
+            size_markers,
+            size_min,
             size_max,
-            refresh,
+            refresh_trigger,
         ):
             self.plot_selection(
                 x,
                 x_log,
                 x_active,
                 x_thresh,
+                x_min,
+                x_max,
                 y,
                 y_log,
                 y_active,
                 y_thresh,
+                y_min,
+                y_max,
                 z,
                 z_log,
                 z_active,
                 z_thresh,
+                z_min,
+                z_max,
                 color,
                 color_log,
                 color_active,
                 color_thresh,
                 color_maps,
+                color_min,
+                color_max,
                 size,
                 size_log,
                 size_active,
                 size_thresh,
+                size_markers,
+                size_min,
                 size_max,
-                refresh,
+                refresh_trigger,
             )
 
         self.crossplot = interactive_output(
             plot_selection,
             {
-                "x": self.x_channel,
+                "x": self.x,
                 "x_log": self.x_log,
                 "x_active": self.x_active,
                 "x_thresh": self.x_thresh,
-                "y": self.y_channel,
+                "x_min": self.x_min,
+                "x_max": self.x_max,
+                "y": self.y,
                 "y_log": self.y_log,
                 "y_thresh": self.y_thresh,
                 "y_active": self.y_active,
-                "z": self.z_channel,
+                "y_min": self.y_min,
+                "y_max": self.y_max,
+                "z": self.z,
                 "z_log": self.z_log,
                 "z_thresh": self.z_thresh,
                 "z_active": self.z_active,
-                "color": self.color_channel,
+                "z_min": self.z_min,
+                "z_max": self.z_max,
+                "color": self.color,
                 "color_log": self.color_log,
                 "color_thresh": self.color_thresh,
                 "color_active": self.color_active,
                 "color_maps": self.color_maps,
-                "size": self.size_channel,
+                "color_min": self.color_min,
+                "color_max": self.color_max,
+                "size": self.size,
                 "size_log": self.size_log,
                 "size_thresh": self.size_thresh,
                 "size_active": self.size_active,
+                "size_markers": self.size_markers,
+                "size_min": self.size_min,
                 "size_max": self.size_max,
-                "refresh": self.refresh,
+                "refresh_trigger": self.refresh_trigger,
             },
         )
 
@@ -192,61 +317,8 @@ class ScatterPlots(BaseApplication):
                 self.file_browser,
                 VBox(
                     [
-                        HBox([self.selection.widget]),
-                        HBox(
-                            [
-                                VBox(
-                                    [
-                                        Label("Axes"),
-                                        self.x_channel,
-                                        self.y_channel,
-                                        self.z_channel,
-                                        self.color_channel,
-                                        self.size_channel,
-                                    ]
-                                ),
-                                VBox(
-                                    [
-                                        Label("Use"),
-                                        self.x_active,
-                                        self.y_active,
-                                        self.z_active,
-                                        self.color_active,
-                                        self.size_active,
-                                    ]
-                                ),
-                                VBox(
-                                    [
-                                        Label("SymLog"),
-                                        self.x_log,
-                                        self.y_log,
-                                        self.z_log,
-                                        self.color_log,
-                                        self.size_log,
-                                    ]
-                                ),
-                                VBox(
-                                    [
-                                        Label(""),
-                                        self.x_thresh,
-                                        self.y_thresh,
-                                        self.z_thresh,
-                                        self.color_thresh,
-                                        self.size_thresh,
-                                    ]
-                                ),
-                                VBox(
-                                    [
-                                        Label(""),
-                                        Label(""),
-                                        Label(""),
-                                        Label(""),
-                                        self.color_maps,
-                                        self.size_max,
-                                    ]
-                                ),
-                            ]
-                        ),
+                        HBox([self.selection.objects, self.selection.data]),
+                        self.axes_options,
                     ]
                 ),
                 self.crossplot,
@@ -281,11 +353,11 @@ class ScatterPlots(BaseApplication):
         return self._data
 
     @property
-    def x_channel(self):
+    def x(self):
         """
         :obj:`ipywidgets.Dropdown`
         """
-        return self._x_channel
+        return self._x
 
     @property
     def x_active(self):
@@ -309,11 +381,25 @@ class ScatterPlots(BaseApplication):
         return self._x_thresh
 
     @property
-    def y_channel(self):
+    def x_min(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._x_min
+
+    @property
+    def x_max(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._x_max
+
+    @property
+    def y(self):
         """
         :obj:`ipywidgets.Dropdown`
         """
-        return self._y_channel
+        return self._y
 
     @property
     def y_active(self):
@@ -337,11 +423,25 @@ class ScatterPlots(BaseApplication):
         return self._y_thresh
 
     @property
-    def z_channel(self):
+    def y_min(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._y_min
+
+    @property
+    def y_max(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._y_max
+
+    @property
+    def z(self):
         """
         :obj:`ipywidgets.Dropdown`
         """
-        return self._z_channel
+        return self._z
 
     @property
     def z_active(self):
@@ -365,11 +465,25 @@ class ScatterPlots(BaseApplication):
         return self._z_thresh
 
     @property
-    def color_channel(self):
+    def z_min(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._z_min
+
+    @property
+    def z_max(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._z_max
+
+    @property
+    def color(self):
         """
         :obj:`ipywidgets.Dropdown`
         """
-        return self._color_channel
+        return self._color
 
     @property
     def color_log(self):
@@ -400,11 +514,25 @@ class ScatterPlots(BaseApplication):
         return self._color_maps
 
     @property
-    def size_channel(self):
+    def color_min(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._color_min
+
+    @property
+    def color_max(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._color_max
+
+    @property
+    def size(self):
         """
         :obj:`ipywidgets.Dropdown`
         """
-        return self._size_channel
+        return self._size
 
     @property
     def size_active(self):
@@ -428,11 +556,31 @@ class ScatterPlots(BaseApplication):
         return self._size_thresh
 
     @property
-    def size_max(self):
+    def size_markers(self):
         """
         :obj:`ipywidgets.IntSlider`
         """
+        return self._size_markers
+
+    @property
+    def size_min(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._size_min
+
+    @property
+    def size_max(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
         return self._size_max
+
+    def axes_pannels_trigger(self):
+        self.axes_options.children = [
+            self.axes_pannels,
+            self.panels[self.axes_pannels.value],
+        ]
 
     def get_channel(self, channel):
         obj, _ = self.selection.get_selected_entities()
@@ -446,29 +594,24 @@ class ScatterPlots(BaseApplication):
             self.data_channels[channel] = values
         return self.data_channels[channel].copy()
 
-    def normalize(self, values):
-        ind = ~np.isnan(values)
-        values[ind] = np.abs(values[ind])
-        values[ind] /= values[ind].max()
-        values[ind == False] = 0
-        return values
+    def set_channel_bounds(self, name):
+        """
+        Set the min and max values for the given axis channel
+        """
+        self.refresh = False
+        channel = getattr(self, "_" + name).value
+        self.get_channel(channel)
 
-    def format_axis(self, channel, axis, log, threshold):
-        label = channel
+        if channel in self.data_channels.keys():
 
-        if log:
-            axis = symlog(axis, threshold)
+            values = self.data_channels[channel]
+            values = values[~np.isnan(values)]
 
-        values = axis[~np.isnan(axis)]
-        ticks = np.linspace(values.min(), values.max(), 5)
-
-        if log:
-            label = f"Log({channel})"
-            ticklabels = inv_symlog(ticks, threshold)
-        else:
-            ticklabels = ticks
-
-        return axis, label, ticks, ticklabels.tolist()
+            cmin = getattr(self, "_" + name + "_min")
+            cmin.value = f"{np.min(values):.2e}"
+            cmax = getattr(self, "_" + name + "_max")
+            cmax.value = f"{np.max(values):.2e}"
+        self.refresh = True
 
     def plot_selection(
         self,
@@ -476,41 +619,57 @@ class ScatterPlots(BaseApplication):
         x_log,
         x_active,
         x_thresh,
+        x_min,
+        x_max,
         y,
         y_log,
         y_active,
         y_thresh,
+        y_min,
+        y_max,
         z,
         z_log,
         z_active,
         z_thresh,
+        z_min,
+        z_max,
         color,
         color_log,
         color_active,
         color_thresh,
         color_maps,
+        color_min,
+        color_max,
         size,
         size_log,
         size_active,
         size_thresh,
+        size_markers,
+        size_min,
         size_max,
-        refresh,
+        refresh_trigger,
     ):
 
-        if not refresh:
+        if not refresh_trigger or not self.refresh:
             return None
 
         if self.get_channel(size) is not None and size_active:
-            size = self.normalize(self.get_channel(size).copy())
+            vals = self.get_channel(size).copy()
+            inbound = (vals > size_min) * (vals < size_max)
+            vals[~inbound] = np.nan
+            size = normalize(vals)
 
             if size_log:
                 size = symlog(size, size_thresh)
-            size *= size_max
+            size *= size_markers
         else:
             size = None
 
         if self.get_channel(color) is not None and color_active:
-            color = self.normalize(self.get_channel(color).copy())
+            vals = self.get_channel(color).copy()
+            inbound = (vals > color_min) * (vals < color_max)
+            vals[~inbound] = np.nan
+            color = normalize(vals)
             if color_log:
                 color = symlog(color, color_thresh)
         else:
@@ -538,17 +697,23 @@ class ScatterPlots(BaseApplication):
                 return
 
             if x_axis is not None:
-                x_axis, x_label, x_ticks, x_ticklabels = self.format_axis(
+                inbound = (x_axis > x_min) * (x_axis < x_max)
+                x_axis[~inbound] = np.nan
+                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
                     x, x_axis, x_log, x_thresh
                 )
 
             if y_axis is not None:
-                y_axis, y_label, y_ticks, y_ticklabels = self.format_axis(
+                inbound = (y_axis > y_min) * (y_axis < y_max)
+                y_axis[~inbound] = np.nan
+                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
                     y, y_axis, y_log, y_thresh
                 )
 
             if z_axis is not None:
-                z_axis, z_label, z_ticks, z_ticklabels = self.format_axis(
+                inbound = (z_axis > z_min) * (z_axis < z_max)
+                z_axis[~inbound] = np.nan
+                z_axis, z_label, z_ticks, z_ticklabels = format_axis(
                     z, z_axis, z_log, z_thresh
                 )
 
@@ -571,15 +736,15 @@ class ScatterPlots(BaseApplication):
                         "zaxis_title": z_label,
                         "xaxis": {
                             "tickvals": x_ticks,
-                            "ticktext": [f"{label:.2e}" for label in x_ticklabels],
+                            # "ticktext": [f"{label:.2e}" for label in x_ticklabels],
                         },
                         "yaxis": {
                             "tickvals": y_ticks,
-                            "ticktext": [f"{label:.2e}" for label in y_ticklabels],
+                            # "ticktext": [f"{label:.2e}" for label in y_ticklabels],
                         },
                         "zaxis": {
                             "tickvals": z_ticks,
-                            "ticktext": [f"{label:.2e}" for label in z_ticklabels],
+                            # "ticktext": [f"{label:.2e}" for label in z_ticklabels],
                         },
                     }
                 )
@@ -598,13 +763,13 @@ class ScatterPlots(BaseApplication):
                     margin=dict(l=0, r=0, b=0, t=0),
                     xaxis={
                         "tickvals": x_ticks,
-                        "ticktext": [f"{label:.2e}" for label in x_ticklabels],
+                        # "ticktext": [f"{label:.2e}" for label in x_ticklabels],
                         "exponentformat": "e",
                         "title": x_label,
                     },
                     yaxis={
                         "tickvals": y_ticks,
-                        "ticktext": [f"{label:.2e}" for label in y_ticklabels],
+                        # "ticktext": [f"{label:.2e}" for label in y_ticklabels],
                         "exponentformat": "e",
                         "title": y_label,
                     },
@@ -613,21 +778,22 @@ class ScatterPlots(BaseApplication):
             self.crossplot_fig.data = []
 
     def update_channels(self):
-        self.refresh.value = False
-
-        for widget in [
-            self.x_channel,
-            self.y_channel,
-            self.z_channel,
-            self.color_channel,
-            self.size_channel,
+        self.refresh_trigger.value = False
+        for name in [
+            "x",
+            "y",
+            "z",
+            "color",
+            "size",
         ]:
+            widget = getattr(self, "_" + name)
             val = widget.value
             widget.options = self.data.value
             if val in widget.options:
                 widget.value = val
-
-        self.refresh.value = True
+            else:
+                self.set_channel_bounds(name)
+        self.refresh_trigger.value = True
 
     def update_data_list(self):
         self.data_channels = {}
