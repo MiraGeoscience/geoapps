@@ -1369,12 +1369,10 @@ def inversion(input_file):
         maxIterCG=max_cg_iterations,
         tolCG=tol_cg,
         stepOffBoundsFact=1e-8,
-        LSshorten=0.1,
+        LSshorten=0.25,
     )
-
     # Create the default L2 inverse problem from the above objects
     invProb = InvProblem.BaseInvProblem(global_misfit, reg, opt, beta=initial_beta)
-
     # Add a list of directives to the inversion
     directiveList = []
 
@@ -1386,27 +1384,13 @@ def inversion(input_file):
             )
         )
 
-    if initial_beta is None:
-        directiveList.append(
-            Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
-        )
-
-    # elif "save_to_ubc" in list(input_dict.keys()):
-    # directiveList.append(
-    #     Directives.SaveUBCModelEveryIteration(
-    #         mapping=activeCellsMap * model_map,
-    #         mesh=mesh,
-    #         fileName=outDir + input_dict["inversion_type"],
-    #         vector=input_dict["inversion_type"][0:3] == "mvi",
-    #     )
-    # )
-
     # Pre-conditioner
     directiveList.append(
         Directives.Update_IRLS(
             f_min_change=1e-4,
+            maxIRLSiter=max_iterations,
             minGNiter=1,
-            beta_tol=0.25,
+            beta_tol=0.5,
             prctile=80,
             floorEpsEnforced=True,
             coolingRate=1,
@@ -1416,6 +1400,11 @@ def inversion(input_file):
             chifact_target=target_chi,
         )
     )
+
+    if initial_beta is None:
+        directiveList.append(
+            Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
+        )
 
     directiveList.append(Directives.UpdatePreconditioner())
 
