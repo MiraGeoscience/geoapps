@@ -1338,7 +1338,7 @@ class Update_IRLS(InversionDirective):
             f_m = abs(reg.f_m)
             max_p += [np.max(f_m)]
 
-        max_p = np.asarray(max_p).max()
+        max_p = np.asarray(max_p).max() * 2.0
 
         scales = [max_p / np.pi, max_p / np.pi]
         for obj, scale in zip(self.reg.objfcts[1:3], scales):

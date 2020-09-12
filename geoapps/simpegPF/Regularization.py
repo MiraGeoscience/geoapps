@@ -1563,7 +1563,7 @@ class SparseDeriv(BaseSparse):
                 W = Utils.sdiag((Ave * (self.scale * self.regmesh.vol)) ** 0.5) * R
 
             dmdx = self.cellDiffStencil * (self.mapping * f_m)
-            dmdx = coterminal(dmdx)
+            dmdx = Utils.sdiag(self.length_scales) * coterminal(dmdx)
             r = W * dmdx
 
         else:
@@ -1655,7 +1655,7 @@ class SparseDeriv(BaseSparse):
                 W = Utils.sdiag((Ave * (self.scale * self.regmesh.vol)) ** 0.5) * R
 
             dmdx = self.cellDiffStencil * (self.mapping * f_m)
-            dmdx = coterminal(dmdx)
+            dmdx = Utils.sdiag(self.length_scales) * coterminal(dmdx)
 
             r = self.gamma * W * dmdx
 
@@ -1685,61 +1685,50 @@ class SparseDeriv(BaseSparse):
         if self.gradientType == "total":
             Ave = getattr(self.regmesh, f"aveCC2F{self.orientation}")
 
-            dmdx = np.abs(
-                self.regmesh.aveFx2CC
-                * self.regmesh.cellDiffxStencil
-                * (self.mapping * f_m)
-            )
+            dmdx = self.regmesh.cellDiffxStencil * (self.mapping * f_m)
 
             if self.space == "spherical":
-                # theta = self.cellDiffStencil * (self.mapping * f_m)
                 dmdx = coterminal(dmdx)
+
+            dmdx = self.regmesh.aveFx2CC * (Utils.sdiag(self.length_x) * dmdx)
 
             if self.regmesh.dim > 1:
 
-                dmdy = np.abs(
-                    self.regmesh.aveFy2CC
-                    * self.regmesh.cellDiffyStencil
-                    * (self.mapping * f_m)
-                )
+                dmdy = self.regmesh.cellDiffyStencil * (self.mapping * f_m)
 
                 if self.space == "spherical":
-                    # theta = self.cellDiffStencil * (self.mapping * f_m)
-                    dmdx += coterminal(dmdy)
-                else:
-                    dmdx += dmdy
+                    dmdy = coterminal(dmdy)
+
+                dmdy = self.regmesh.aveFy2CC * (Utils.sdiag(self.length_y) * dmdy)
 
             if self.regmesh.dim > 2:
 
-                dmdz = np.abs(
-                    self.regmesh.aveFz2CC
-                    * self.regmesh.cellDiffzStencil
-                    * (self.mapping * f_m)
-                )
+                dmdz = self.regmesh.cellDiffzStencil * (self.mapping * f_m)
 
                 if self.space == "spherical":
-                    # theta = self.cellDiffStencil * (self.mapping * f_m)
-                    dmdx += coterminal(dmdz)
-                else:
-                    dmdx += dmdz
+                    dmdz = coterminal(dmdz)
+
+                dmdz = self.regmesh.aveFz2CC * (Utils.sdiag(self.length_z) * dmdz)
+
+            if self.regmesh.dim == 2:
+                dmdx = (dmdx ** 2.0 + dmdy ** 2.0) ** 0.5
+            elif self.regmesh.dim == 3:
+                dmdx = (dmdx ** 2.0 + dmdy ** 2.0 + dmdz ** 2.0) ** 0.5
 
             dmdx = Ave * dmdx
 
-            if self.space == "spherical":
-                # theta = self.cellDiffStencil * (self.mapping * f_m)
-                dmdx = coterminal(dmdx)
-
         else:
             dmdx = self.cellDiffStencil * (self.mapping * f_m)
+
+            if self.space == "spherical":
+                dmdx = Utils.sdiag(self.length_scales) * coterminal(dmdx)
 
         return dmdx
 
     @property
     def cellDiffStencil(self):
 
-        return Utils.sdiag(self.length_scales) * getattr(
-            self.regmesh, f"cellDiff{self.orientation}Stencil"
-        )
+        return getattr(self.regmesh, f"cellDiff{self.orientation}Stencil")
 
     @property
     def W(self):
@@ -1760,11 +1749,13 @@ class SparseDeriv(BaseSparse):
             return (
                 Utils.sdiag((Ave * (self.scale * self.cell_weights)) ** 0.5)
                 * R
+                * Utils.sdiag(self.length_scales)
                 * self.cellDiffStencil
             )
         return (
             Utils.sdiag((Ave * (self.scale * self.regmesh.vol)) ** 0.5)
             * R
+            * Utils.sdiag(self.length_scales)
             * self.cellDiffStencil
         )
 
@@ -1787,6 +1778,45 @@ class SparseDeriv(BaseSparse):
     @length_scales.setter
     def length_scales(self, value):
         self._length_scales = value
+
+    @property
+    def length_x(self):
+
+        if getattr(self, "_length_x", None) is None:
+            Ave = getattr(self.regmesh, "aveCC2Fx")
+
+            length_scales = Ave * (
+                self.regmesh.Pac.T * self.regmesh.mesh.h_gridded[:, 0]
+            )
+            self._length_x = self.ratio * length_scales.min() / length_scales
+
+        return self._length_x
+
+    @property
+    def length_y(self):
+
+        if getattr(self, "_length_y", None) is None:
+            Ave = getattr(self.regmesh, "aveCC2Fy")
+
+            length_scales = Ave * (
+                self.regmesh.Pac.T * self.regmesh.mesh.h_gridded[:, 1]
+            )
+            self._length_y = self.ratio * length_scales.min() / length_scales
+
+        return self._length_y
+
+    @property
+    def length_z(self):
+
+        if getattr(self, "_length_z", None) is None:
+            Ave = getattr(self.regmesh, "aveCC2Fz")
+
+            length_scales = Ave * (
+                self.regmesh.Pac.T * self.regmesh.mesh.h_gridded[:, 2]
+            )
+            self._length_z = self.ratio * length_scales.min() / length_scales
+
+        return self._length_z
 
 
 class Sparse(BaseComboRegularization):
