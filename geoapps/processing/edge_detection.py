@@ -17,7 +17,7 @@ from ipywidgets import (
     Widget,
     interactive_output,
 )
-from geoapps.base import BaseApplication, working_copy
+from geoapps.base import BaseApplication
 from geoapps.utils import filter_xy
 from geoapps.plotting import PlotSelection2D
 
@@ -41,8 +41,6 @@ class EdgeDetectionApp(BaseApplication):
     """
 
     def __init__(self, **kwargs):
-
-        kwargs = working_copy(**kwargs)
 
         self._compute = ToggleButton(
             value=False,
@@ -115,6 +113,7 @@ class EdgeDetectionApp(BaseApplication):
 
         self._widget = VBox(
             [
+                self.project_panel,
                 HBox(
                     [
                         VBox(
@@ -138,7 +137,7 @@ class EdgeDetectionApp(BaseApplication):
                         ),
                         out,
                     ]
-                )
+                ),
             ]
         )
 

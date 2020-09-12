@@ -21,7 +21,7 @@ from ipywidgets.widgets import (
     Widget,
 )
 
-from geoapps.base import BaseApplication, working_copy
+from geoapps.base import BaseApplication
 from geoapps.plotting import plot_plan_data_selection, PlotSelection2D
 from geoapps.utils import find_value, rotate_xy, geophysical_systems
 from geoapps.selection import ObjectDataSelection, LineOptions
@@ -795,8 +795,6 @@ def string_2_list(string):
 class InversionApp(BaseApplication):
     def __init__(self, **kwargs):
 
-        kwargs = working_copy(**kwargs)
-
         super().__init__(**kwargs)
 
         # Load all known em systems
@@ -942,6 +940,7 @@ class InversionApp(BaseApplication):
 
         self._widget = VBox(
             [
+                self.project_panel,
                 HBox(
                     [
                         self.plot_selection.widget,

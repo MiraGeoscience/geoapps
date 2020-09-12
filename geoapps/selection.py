@@ -1,7 +1,7 @@
 import numpy as np
 import ipywidgets as widgets
 from ipywidgets import Dropdown, SelectMultiple, VBox, Widget
-
+from geoh5py.workspace import Workspace
 from geoapps.base import BaseApplication
 from geoapps import utils
 
@@ -75,6 +75,7 @@ class ObjectDataSelection(BaseApplication):
     """
 
     def __init__(self, **kwargs):
+
         super().__init__(**kwargs)
 
         self._add_groups = False
@@ -111,17 +112,7 @@ class ObjectDataSelection(BaseApplication):
         self.objects.observe(update_data_list, names="value")
         self.widget = VBox([self.objects, self.data,])
 
-        if self.h5file is not None:
-            if len(self.object_types) > 0:
-                self.objects.options = [
-                    obj.name
-                    for obj in self.workspace.all_objects()
-                    if isinstance(obj, self.object_types)
-                ]
-            else:
-                self.objects.options = list(self.workspace.list_objects_name.values())
-
-        super().__init__(**kwargs)
+        self.__populate__(**kwargs)
 
     @property
     def add_groups(self):

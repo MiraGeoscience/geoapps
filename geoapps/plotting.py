@@ -66,11 +66,13 @@ class ScatterPlots(BaseApplication):
     Application for 2D and 3D crossplots of data using symlog scaling
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, standalone=True, **kwargs):
 
-        super().__init__(**kwargs)
+        super().__init__()
 
-        self.selection = ObjectDataSelection(select_multiple=True, **kwargs)
+        self.selection = ObjectDataSelection(
+            select_multiple=True, standalone=False, **kwargs
+        )
 
         self._data = self.selection.data
         self._objects = self.selection.objects
@@ -326,7 +328,8 @@ class ScatterPlots(BaseApplication):
             ]
         )
 
-        super().__init__(**kwargs)
+        if standalone:
+            self.instantiate(**kwargs)
 
         def update_channels(_):
             self.update_channels()
@@ -805,7 +808,12 @@ class PlotSelection2D(BaseApplication):
     """
 
     def __init__(self, **kwargs):
-        self.selection = ObjectDataSelection(**kwargs)
+
+        super().__init__(**kwargs)
+
+        self.selection = ObjectDataSelection(workspace=self.workspace)
+        self.objects = self.selection.objects
+        self.data = self.selection.data
         self.collections = []
 
         self._azimuth = FloatSlider(
@@ -860,7 +868,6 @@ class PlotSelection2D(BaseApplication):
         def set_bounding_box(_):
             self.set_bounding_box()
 
-        self.selection.objects.observe(set_bounding_box)
         self.highlight_selection = None
 
         def plot_selection(
@@ -932,9 +939,9 @@ class PlotSelection2D(BaseApplication):
         self.axis = None
         self.indices = None
 
-        super().__init__(**kwargs)
+        self.selection.objects.observe(set_bounding_box)
 
-        set_bounding_box("")
+        self.__populate__(**kwargs)
 
     @property
     def azimuth(self):

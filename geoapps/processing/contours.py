@@ -3,7 +3,7 @@ from geoh5py.workspace import Workspace
 from geoh5py.io import H5Writer
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from scipy.interpolate import LinearNDInterpolator
-from geoapps.base import BaseApplication, working_copy
+from geoapps.base import BaseApplication
 from geoapps.plotting import PlotSelection2D
 from ipywidgets import (
     Text,
@@ -16,6 +16,13 @@ from ipywidgets import (
     Widget,
 )
 
+defaults = {
+    "objects": "Gravity_Magnetics_drape60m",
+    "data": "Airborne_TMI",
+    "contours": "-400:2000:100,-240",
+    "resolution": 50,
+}
+
 
 class ContourValues(BaseApplication):
     """
@@ -24,9 +31,11 @@ class ContourValues(BaseApplication):
 
     def __init__(self, **kwargs):
 
-        kwargs = working_copy(**kwargs)
+        super().__init__(**kwargs)
 
-        self._plot_selection = PlotSelection2D(**kwargs)
+        self._plot_selection = PlotSelection2D(workspace=self.workspace)
+        self._objects = self.plot_selection.objects
+        self._data = self.plot_selection.data
         self._contours = Text(
             value="", description="Contours", disabled=False, continuous_update=False
         )
@@ -40,7 +49,11 @@ class ContourValues(BaseApplication):
             value=False, indent=False, description="Assign Z from values"
         )
 
-        super().__init__(**kwargs)
+        for key, value in defaults.items():
+            try:
+                getattr(self, key).value = value
+            except:
+                pass
 
         out = interactive_output(self.compute_plot, {"contour_values": self.contours},)
 
@@ -59,6 +72,7 @@ class ContourValues(BaseApplication):
         self.export_as.observe(save_selection, names="value")
         self._widget = VBox(
             [
+                self.project_panel,
                 HBox(
                     [
                         VBox(
@@ -83,6 +97,8 @@ class ContourValues(BaseApplication):
                 out,
             ]
         )
+
+        self.__populate__(**kwargs)
 
     @property
     def contours(self):
