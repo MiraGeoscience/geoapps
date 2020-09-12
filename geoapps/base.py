@@ -15,6 +15,7 @@ class BaseApplication:
 
         self._h5file = None
         self._workspace = None
+        self.object_types = []
         self._file_browser = FileChooser()
         self._file_browser.reset(
             path=os.path.abspath("../../assets"), filename="FlinFlon.geoh5"
@@ -24,7 +25,15 @@ class BaseApplication:
         def file_browser_change(_):
             self.file_browser_change()
 
-        self._file_browser._filename.observe(file_browser_change)
+        self._file_browser._select.on_click(file_browser_change)
+
+        self._create_copy = Checkbox(
+            description="Create working copy:", value=True, indent=False
+        )
+
+        self.project_panel = VBox(
+            [Label("Project Selection:"), self._file_browser, self._create_copy]
+        )
 
         self._live_link = Checkbox(
             description="GA Pro - Live link", value=False, indent=False
@@ -53,12 +62,20 @@ class BaseApplication:
             ]
         )
 
+        self.__populate__(**kwargs)
+
+        if self.h5file is not None:
+            self.live_link_path.value = os.path.join(
+                os.path.abspath(os.path.dirname(self.h5file)), "Temp"
+            )
+
+    def __populate__(self, **kwargs):
         for obj in self.__dict__:
             if hasattr(getattr(self, obj), "style"):
                 getattr(self, obj).style = {"description_width": "initial"}
 
         for key, value in kwargs.items():
-            if getattr(self, "_" + key, None) is not None:
+            if hasattr(self, "_" + key):
                 try:
                     if isinstance(getattr(self, "_" + key), Widget):
                         getattr(self, "_" + key).value = value
@@ -67,16 +84,12 @@ class BaseApplication:
                 except:
                     pass
 
-        if self.h5file is not None:
-            self.live_link_path.value = os.path.join(
-                os.path.abspath(os.path.dirname(self.h5file)), "Temp"
-            )
-
     def file_browser_change(self):
         """
         Change the target h5file
         """
-        self.h5file = self.file_browser.selected
+        if not self.file_browser._select.disabled:
+            self.h5file = self.file_browser.selected
 
     def live_link_output(self, entity, data={}):
         """
@@ -111,6 +124,13 @@ class BaseApplication:
         ...
 
     @property
+    def create_copy(self):
+        """
+        :obj:`ipywidgets.Checkbox`: Create a working copy of the target geoh5 file
+        """
+        return self._create_copy
+
+    @property
     def file_browser(self):
         """
         :obj:`ipyfilechooser.FileChooser` widget
@@ -124,18 +144,27 @@ class BaseApplication:
         """
         if getattr(self, "_h5file", None) is None:
 
+            if self._workspace is not None:
+                self._h5file = self._workspace.h5file
+                return self._h5file
+
             if self.file_browser.selected is None:
-                self.h5file = self.file_browser.default
+                h5file = self.file_browser.default
             else:
-                self.h5file = self.file_browser.selected
+                h5file = self.file_browser.selected
+
+            if self.create_copy:
+                h5file = working_copy(h5file)
+
+            self.h5file = h5file
 
         return self._h5file
 
     @h5file.setter
     def h5file(self, value):
+        print("In h5file setter")
         self._h5file = value
-        if value is not None:
-            self._workspace = Workspace(value)
+        self.workspace = Workspace(self.h5file)
 
     @property
     def live_link(self):
@@ -167,24 +196,35 @@ class BaseApplication:
             getattr(self, "_workspace", None) is None
             and getattr(self, "h5file", None) is not None
         ):
-            self._workspace = Workspace(self.h5file)
+            self.workspace = Workspace(self.h5file)
         return self._workspace
 
+    @workspace.setter
+    def workspace(self, workspace):
+        print("In workspace setter of base")
+        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        self._workspace = workspace
+        self._h5file = workspace.h5file
 
-def working_copy(**kwargs):
+        if getattr(self, "objects", None) is not None:
+            self.update_objects_list()
+
+    def update_objects_list(self):
+        if self.workspace is not None:
+            if len(self.object_types) > 0:
+                self.objects.options = [
+                    obj.name
+                    for obj in self.workspace.all_objects()
+                    if isinstance(obj, self.object_types)
+                ]
+            else:
+                self.objects.options = list(self.workspace.list_objects_name.values())
+
+
+def working_copy(h5file):
     """
     Create a copy of the geoh5 project and remove "working_copy" from list
     of arguments for future use
     """
-    if (
-        "h5file" in kwargs.keys()
-        and "working_copy" in kwargs.keys()
-        and kwargs["working_copy"]
-    ):
-        kwargs["h5file"] = copyfile(
-            kwargs["h5file"], kwargs["h5file"][:-6] + "_work.geoh5"
-        )
-
-        del kwargs["working_copy"]
-
-    return kwargs
+    h5file = copyfile(h5file, h5file[:-6] + "_work.geoh5")
+    return h5file
