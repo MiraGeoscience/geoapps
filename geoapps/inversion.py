@@ -496,8 +496,8 @@ class InversionOptions(BaseApplication):
 
         self._ignore_values = widgets.Text(value="<0", tooltip="Dummy value",)
         self._max_iterations = IntText(value=10, description="Max beta Iterations")
-        self._max_cg_iterations = IntText(value=10, description="Max CG Iterations")
-        self._tol_cg = FloatText(value=1e-4, description="CG Tolerance")
+        self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
+        self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
 
         self._beta_start_options = widgets.RadioButtons(
             options=["value", "ratio"],
@@ -1475,12 +1475,12 @@ class InversionApp(BaseApplication):
 
         input_dict["model_norms"] = string_2_list(self.inversion_parameters.norms.value)
 
-        if len(self.inversion_parameters.lower_bound.value) > 1:
+        if len(self.inversion_parameters.lower_bound.value) > 0:
             input_dict["lower_bound"] = string_2_list(
                 self.inversion_parameters.lower_bound.value
             )
 
-        if len(self.inversion_parameters.upper_bound.value) > 1:
+        if len(self.inversion_parameters.upper_bound.value) > 0:
             input_dict["upper_bound"] = string_2_list(
                 self.inversion_parameters.upper_bound.value
             )
