@@ -66,12 +66,12 @@ class ScatterPlots(BaseApplication):
     Application for 2D and 3D crossplots of data using symlog scaling
     """
 
-    def __init__(self, standalone=True, **kwargs):
+    def __init__(self, **kwargs):
 
-        super().__init__()
+        super().__init__(**kwargs)
 
         self.selection = ObjectDataSelection(
-            select_multiple=True, standalone=False, **kwargs
+            select_multiple=True, workspace=self.workspace
         )
 
         self._data = self.selection.data
@@ -316,7 +316,7 @@ class ScatterPlots(BaseApplication):
 
         self.widget = VBox(
             [
-                self.file_browser,
+                self.project_panel,
                 VBox(
                     [
                         HBox([self.selection.objects, self.selection.data]),
@@ -328,8 +328,7 @@ class ScatterPlots(BaseApplication):
             ]
         )
 
-        if standalone:
-            self.instantiate(**kwargs)
+        self.__populate__(**kwargs)
 
         def update_channels(_):
             self.update_channels()
@@ -802,18 +801,19 @@ class ScatterPlots(BaseApplication):
         self.data_channels = {}
 
 
-class PlotSelection2D(BaseApplication):
+class PlotSelection2D(ObjectDataSelection):
     """
     Application for selecting data in 2D plan map view
     """
 
+    defaults = {
+        "h5file": "../../assets/FlinFlon.geoh5",
+        "objects": "Gravity_Magnetics_drape60m",
+        "data": "Airborne_TMI",
+    }
+
     def __init__(self, **kwargs):
 
-        super().__init__(**kwargs)
-
-        self.selection = ObjectDataSelection(workspace=self.workspace)
-        self.objects = self.selection.objects
-        self.data = self.selection.data
         self.collections = []
 
         self._azimuth = FloatSlider(
@@ -863,7 +863,6 @@ class PlotSelection2D(BaseApplication):
             tooltip="Keep plot extent on selection",
             icon="check",
         )
-        self._refresh = ToggleButton(value=False)
 
         def set_bounding_box(_):
             self.set_bounding_box()
@@ -896,11 +895,12 @@ class PlotSelection2D(BaseApplication):
                 refresh,
             )
 
-        self.plotting_data = self.selection.data
+        super().__init__(**self.apply_defaults(**kwargs))
+
         self.window_plot = widgets.interactive_output(
             plot_selection,
             {
-                "data_name": self.plotting_data,
+                "data_name": self.data,
                 "resolution": self.resolution,
                 "center_x": self.center_x,
                 "center_y": self.center_y,
@@ -934,14 +934,13 @@ class PlotSelection2D(BaseApplication):
                 ),
             ]
         )
-        self._widget = VBox([self.selection.widget, self.plot_widget])
+        self._widget = VBox([self.widget, self.plot_widget])
         self.figure = None
         self.axis = None
         self.indices = None
 
-        self.selection.objects.observe(set_bounding_box)
-
-        self.__populate__(**kwargs)
+        self.objects.observe(set_bounding_box, names="value")
+        self.set_bounding_box()
 
     @property
     def azimuth(self):
@@ -980,13 +979,6 @@ class PlotSelection2D(BaseApplication):
         :obj:`ipywidgets.Label`: Data counter included in the selection box.
         """
         return self._data_count
-
-    @property
-    def refresh(self):
-        """
-        :obj:`ipywidgets.ToggleButton`: Switch to refresh the plot
-        """
-        return self._refresh
 
     @property
     def height(self):
@@ -1056,10 +1048,10 @@ class PlotSelection2D(BaseApplication):
         else:
             contours = None
 
-        entity, _ = self.selection.get_selected_entities()
+        entity, _ = self.get_selected_entities()
         data_obj = None
-        if entity.get_data(self.plotting_data.value):
-            data_obj = entity.get_data(self.plotting_data.value)[0]
+        if entity.get_data(self.data.value):
+            data_obj = entity.get_data(self.data.value)[0]
 
         if isinstance(entity, (Grid2D, Surface, Points, Curve)):
 
@@ -1104,7 +1096,7 @@ class PlotSelection2D(BaseApplication):
         lim_x = [1e8, -1e8]
         lim_y = [1e8, -1e8]
 
-        obj, _ = self.selection.get_selected_entities()
+        obj, _ = self.get_selected_entities()
         if isinstance(obj, Grid2D):
             lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
             lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()

@@ -11,16 +11,16 @@ class BaseApplication:
     Base class for geoapps applications
     """
 
+    defaults = {
+        "h5file": "../../assets/FlinFlon.geoh5",
+    }
+
     def __init__(self, **kwargs):
 
         self._h5file = None
         self._workspace = None
         self.object_types = []
         self._file_browser = FileChooser()
-        self._file_browser.reset(
-            path=os.path.abspath("../../assets"), filename="FlinFlon.geoh5"
-        )
-        self._file_browser._apply_selection()
 
         def file_browser_change(_):
             self.file_browser_change()
@@ -45,7 +45,7 @@ class BaseApplication:
         self._live_link.observe(live_link_choice)
 
         self._live_link_path = Text(description="", value="", disabled=True,)
-
+        self._refresh = ToggleButton(value=False)
         self._trigger = ToggleButton(
             value=False,
             description="Compute",
@@ -78,11 +78,23 @@ class BaseApplication:
             if hasattr(self, "_" + key):
                 try:
                     if isinstance(getattr(self, "_" + key), Widget):
-                        getattr(self, "_" + key).value = value
+                        getattr(self, key).value = value
                     else:
-                        setattr(self, "_" + key, value)
+                        setattr(self, key, value)
                 except:
                     pass
+
+    def apply_defaults(self, **kwargs):
+        """
+        Add defaults to the kwargs
+        """
+        for key, value in self.defaults.items():
+            if key in kwargs.keys():
+                continue
+            else:
+                kwargs[key] = value
+
+        return kwargs
 
     def file_browser_change(self):
         """
@@ -162,8 +174,12 @@ class BaseApplication:
 
     @h5file.setter
     def h5file(self, value):
-        print("In h5file setter")
         self._h5file = value
+        self._file_browser.reset(
+            path=os.path.abspath(os.path.dirname(value)),
+            filename=os.path.basename(value),
+        )
+        self._file_browser._apply_selection()
         self.workspace = Workspace(self.h5file)
 
     @property
@@ -181,6 +197,13 @@ class BaseApplication:
         return self._live_link_path
 
     @property
+    def refresh(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Switch to refresh the plot
+        """
+        return self._refresh
+
+    @property
     def trigger(self):
         """
         :obj:`ipywidgets.ToggleButton`: Trigger some computation and output.
@@ -194,31 +217,35 @@ class BaseApplication:
         """
         if (
             getattr(self, "_workspace", None) is None
-            and getattr(self, "h5file", None) is not None
+            and getattr(self, "_h5file", None) is not None
         ):
             self.workspace = Workspace(self.h5file)
         return self._workspace
 
     @workspace.setter
     def workspace(self, workspace):
-        print("In workspace setter of base")
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
         self._h5file = workspace.h5file
 
-        if getattr(self, "objects", None) is not None:
+        if getattr(self, "_objects", None) is not None:
             self.update_objects_list()
+
+        if getattr(self, "update_data_list", None) is not None:
+            self.update_data_list()
 
     def update_objects_list(self):
         if self.workspace is not None:
             if len(self.object_types) > 0:
-                self.objects.options = [
+                self._objects.options = [
                     obj.name
                     for obj in self.workspace.all_objects()
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                self.objects.options = list(self.workspace.list_objects_name.values())
+                self._objects.options = [""] + list(
+                    self.workspace.list_objects_name.values()
+                )
 
 
 def working_copy(h5file):
