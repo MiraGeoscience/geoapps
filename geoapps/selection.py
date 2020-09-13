@@ -74,9 +74,13 @@ class ObjectDataSelection(BaseApplication):
     Application to select an object and corresponding data
     """
 
-    def __init__(self, **kwargs):
+    defaults = {
+        "h5file": "../../assets/FlinFlon.geoh5",
+        "objects": "Gravity_Magnetics_drape60m",
+        "data": "Airborne_TMI",
+    }
 
-        super().__init__(**kwargs)
+    def __init__(self, **kwargs):
 
         self._add_groups = False
         if "object_types" in kwargs.keys() and isinstance(
@@ -110,9 +114,12 @@ class ObjectDataSelection(BaseApplication):
             self.update_data_list(find_value=find_value)
 
         self.objects.observe(update_data_list, names="value")
-        self.widget = VBox([self.objects, self.data,])
 
-        self.__populate__(**kwargs)
+        super().__init__(**self.apply_defaults(**kwargs))
+
+        self._widget = VBox([self.objects, self.data,])
+
+        self.update_objects_list()
 
     @property
     def add_groups(self):
@@ -142,6 +149,13 @@ class ObjectDataSelection(BaseApplication):
         """
         return self._select_multiple
 
+    @property
+    def widget(self):
+        """
+        :obj:`ipywidgets.VBox`: Application layout
+        """
+        return self._widget
+
     def get_selected_entities(self):
         """
         Get entities from an active geoh5py Workspace
@@ -157,7 +171,10 @@ class ObjectDataSelection(BaseApplication):
             return None, None
 
     def update_data_list(self, find_value=[]):
-        if self.workspace.get_entity(self.objects.value):
+        self.refresh.value = False
+        if getattr(self, "workspace", None) is not None and self.workspace.get_entity(
+            self.objects.value
+        ):
             obj = self.workspace.get_entity(self.objects.value)[0]
             options = [
                 name for name in obj.get_data_list() if name != "Visual Parameters"
@@ -172,3 +189,5 @@ class ObjectDataSelection(BaseApplication):
             self.data.options = options
             if find_value:
                 self.data.value = utils.find_value(self.data.options, find_value)
+        else:
+            self.data.options = []
