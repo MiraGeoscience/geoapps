@@ -13,7 +13,6 @@ from ipywidgets import (
     ToggleButton,
     Text,
     VBox,
-    Widget,
     interactive_output,
 )
 from geoapps.utils import filter_xy
