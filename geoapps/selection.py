@@ -114,11 +114,9 @@ class ObjectDataSelection(BaseApplication):
             self.update_data_list(find_value=find_value)
 
         self.objects.observe(update_data_list, names="value")
-
         super().__init__(**self.apply_defaults(**kwargs))
 
         self._widget = VBox([self.objects, self.data,])
-
         self.update_objects_list()
 
     @property
