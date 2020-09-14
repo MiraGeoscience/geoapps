@@ -1,7 +1,6 @@
 import numpy as np
 import ipywidgets as widgets
-from ipywidgets import Dropdown, SelectMultiple, VBox, Widget
-from geoh5py.workspace import Workspace
+from ipywidgets import Dropdown, SelectMultiple, VBox
 from geoapps.base import BaseApplication
 from geoapps import utils
 
@@ -81,7 +80,6 @@ class ObjectDataSelection(BaseApplication):
     }
 
     def __init__(self, **kwargs):
-
         self._add_groups = False
         if "object_types" in kwargs.keys() and isinstance(
             kwargs["object_types"], tuple
@@ -90,28 +88,13 @@ class ObjectDataSelection(BaseApplication):
         else:
             self.object_types = ()
 
-        if "select_multiple" in kwargs.keys():
-            self._select_multiple = kwargs["select_multiple"]
-        else:
-            self._select_multiple = False
-
-        if self.select_multiple:
-            self._data = SelectMultiple(description="Data: ",)
-        else:
-            self._data = Dropdown(description="Data: ",)
-
-        if "objects" in kwargs.keys() and isinstance(kwargs["objects"], Dropdown):
-            self._objects = kwargs["objects"]
-        else:
-            self._objects = Dropdown(description="Object:",)
-
         if "find_value" in kwargs.keys():
-            find_value = kwargs["find_value"]
+            self._find_label = kwargs["find_label"]
         else:
-            find_value = []
+            self._find_label = []
 
         def update_data_list(_):
-            self.update_data_list(find_value=find_value)
+            self.update_data_list()
 
         self.objects.observe(update_data_list, names="value")
         super().__init__(**self.apply_defaults(**kwargs))
@@ -131,20 +114,50 @@ class ObjectDataSelection(BaseApplication):
         """
         Data selector
         """
+        if getattr(self, "_data", None) is None:
+            if self.select_multiple:
+                self._data = SelectMultiple(description="Data: ",)
+            else:
+                self._data = Dropdown(description="Data: ",)
+
         return self._data
+
+    @data.setter
+    def data(self, value):
+        assert isinstance(
+            value, (Dropdown, SelectMultiple)
+        ), f"'Objects' must be of type {Dropdown} or {SelectMultiple}"
+        self._data = value
 
     @property
     def objects(self):
         """
         Object selector
         """
+        if getattr(self, "_objects", None) is None:
+            self._objects = Dropdown(description="Object:",)
         return self._objects
+
+    @objects.setter
+    def objects(self, value):
+        assert isinstance(value, Dropdown), f"'Objects' must be of type {Dropdown}"
+        self._objects = value
+
+    @property
+    def find_label(self):
+        """
+        Object selector
+        """
+        return self._find_label
 
     @property
     def select_multiple(self):
         """
         bool: ALlow to select multiple data
         """
+        if getattr(self, "_select_multiple", None) is None:
+            self._select_multiple = False
+
         return self._select_multiple
 
     @property
@@ -168,7 +181,7 @@ class ObjectDataSelection(BaseApplication):
         else:
             return None, None
 
-    def update_data_list(self, find_value=[]):
+    def update_data_list(self):
         self.refresh.value = False
         if getattr(self, "workspace", None) is not None and self.workspace.get_entity(
             self.objects.value
@@ -185,7 +198,7 @@ class ObjectDataSelection(BaseApplication):
                     + list(options)
                 )
             self.data.options = options
-            if find_value:
-                self.data.value = utils.find_value(self.data.options, find_value)
+            if self.find_label:
+                self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
             self.data.options = []
