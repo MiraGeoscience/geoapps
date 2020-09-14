@@ -1,7 +1,7 @@
 import os
 from shutil import copyfile
 import time
-from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton, Widget
+from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton, Widget, Button
 from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 
@@ -27,12 +27,17 @@ class BaseApplication:
 
         self._file_browser._select.on_click(file_browser_change)
 
-        self._create_copy = Checkbox(
-            description="Create working copy:", value=True, indent=False
+        self._copy_trigger = Button(
+            description="Create copy:", value=True, indent=False
         )
 
+        def create_copy(_):
+            self.create_copy()
+
+        self._copy_trigger.on_click(create_copy)
+
         self.project_panel = VBox(
-            [Label("Project Selection:"), self._file_browser, self._create_copy]
+            [Label("Workspace"), self._file_browser, self._copy_trigger]
         )
 
         self._live_link = Checkbox(
@@ -136,11 +141,11 @@ class BaseApplication:
         ...
 
     @property
-    def create_copy(self):
+    def copy_trigger(self):
         """
         :obj:`ipywidgets.Checkbox`: Create a working copy of the target geoh5 file
         """
-        return self._create_copy
+        return self._copy_trigger
 
     @property
     def file_browser(self):
@@ -160,13 +165,8 @@ class BaseApplication:
                 self._h5file = self._workspace.h5file
                 return self._h5file
 
-            if self.file_browser.selected is None:
-                h5file = self.file_browser.default
-            else:
+            if self.file_browser.selected is not None:
                 h5file = self.file_browser.selected
-
-            if self.create_copy:
-                h5file = working_copy(h5file)
 
             self.h5file = h5file
 
@@ -175,6 +175,7 @@ class BaseApplication:
     @h5file.setter
     def h5file(self, value):
         self._h5file = value
+
         self._file_browser.reset(
             path=os.path.abspath(os.path.dirname(value)),
             filename=os.path.basename(value),
@@ -233,6 +234,11 @@ class BaseApplication:
 
         if getattr(self, "update_data_list", None) is not None:
             self.update_data_list()
+
+    def create_copy(self):
+        if self.h5file is not None:
+            value = working_copy(self.h5file)
+            self.h5file = value
 
     def update_objects_list(self):
         if self.workspace is not None:
