@@ -871,6 +871,13 @@ def rotate_vertices(xyz, center, phi, theta):
     return xyzRot + np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
 
 
+def string_2_list(string):
+    """
+    Convert a list of numbers separated by comma to a list of floats
+    """
+    return [np.float(val) for val in string.split(",") if len(val) > 0]
+
+
 class RectangularBlock:
     """
         Define a rotated rectangular block in 3D space

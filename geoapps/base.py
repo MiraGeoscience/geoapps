@@ -19,7 +19,6 @@ class BaseApplication:
 
         self._h5file = None
         self._workspace = None
-        self.object_types = []
         self._file_browser = FileChooser()
 
         def file_browser_change(_):
@@ -82,8 +81,10 @@ class BaseApplication:
         for key, value in kwargs.items():
             if hasattr(self, "_" + key):
                 try:
-                    if isinstance(getattr(self, "_" + key), Widget):
-                        getattr(self, key).value = value
+                    if isinstance(getattr(self, "_" + key), Widget) and not isinstance(
+                        value, Widget
+                    ):
+                        setattr(getattr(self, key), "value", value)
                     else:
                         setattr(self, key, value)
                 except:
@@ -167,8 +168,7 @@ class BaseApplication:
 
             if self.file_browser.selected is not None:
                 h5file = self.file_browser.selected
-
-            self.h5file = h5file
+                self.h5file = h5file
 
         return self._h5file
 
@@ -212,6 +212,10 @@ class BaseApplication:
         return self._trigger
 
     @property
+    def widget(self):
+        ...
+
+    @property
     def workspace(self):
         """
         Target geoh5py workspace
@@ -229,29 +233,10 @@ class BaseApplication:
         self._workspace = workspace
         self._h5file = workspace.h5file
 
-        if getattr(self, "_objects", None) is not None:
-            self.update_objects_list()
-
-        if getattr(self, "update_data_list", None) is not None:
-            self.update_data_list()
-
     def create_copy(self):
         if self.h5file is not None:
             value = working_copy(self.h5file)
             self.h5file = value
-
-    def update_objects_list(self):
-        if self.workspace is not None:
-            if len(self.object_types) > 0:
-                self._objects.options = [
-                    obj.name
-                    for obj in self.workspace.all_objects()
-                    if isinstance(obj, self.object_types)
-                ]
-            else:
-                self._objects.options = [""] + list(
-                    self.workspace.list_objects_name.values()
-                )
 
 
 def working_copy(h5file):

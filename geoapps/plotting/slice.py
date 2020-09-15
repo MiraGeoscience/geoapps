@@ -266,8 +266,16 @@ class PlotSelection2D(ObjectDataSelection):
 
         entity, _ = self.get_selected_entities()
         data_obj = None
-        if entity.get_data(self.data.value):
-            data_obj = entity.get_data(self.data.value)[0]
+
+        if self.select_multiple and data_name:
+            data_channel = data_name[0]
+        else:
+            data_channel = data_name
+
+        if entity.get_data(data_channel):
+            data_obj = entity.get_data(data_channel)[0]
+        elif data_channel == "Z":
+            data_obj = "Z"
 
         if isinstance(entity, (Grid2D, Surface, Points, Curve)):
 
