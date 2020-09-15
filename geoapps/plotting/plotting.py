@@ -89,11 +89,12 @@ def plot_plan_data_selection(entity, data, **kwargs):
         if isinstance(indices, np.ndarray) and np.all(indices == False):
             indices = None
 
-    if isinstance(getattr(data, "values", None), np.ndarray):
-        if not isinstance(data.values[0], str):
-            values = data.values.copy()
-            values[(values > 1e-18) * (values < 2e-18)] = np.nan
-            values[values == -99999] = np.nan
+    if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
+        data.values[0], str
+    ):
+        values = data.values.copy()
+        values[(values > 1e-18) * (values < 2e-18)] = np.nan
+        values[values == -99999] = np.nan
 
     color_norm = None
     if "color_norm" in kwargs.keys():
@@ -103,7 +104,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
     if "window" in kwargs.keys():
         window = kwargs["window"]
 
-    if data is not None and data.entity_type.color_map is not None:
+    if (
+        data is not None
+        and getattr(data, "entity_type", None) is not None
+        and getattr(data.entity_type, "color_map", None) is not None
+    ):
         new_cmap = data.entity_type.color_map.values
         map_vals = new_cmap["Value"].copy()
         cmap = colors.ListedColormap(
@@ -152,6 +157,10 @@ def plot_plan_data_selection(entity, data, **kwargs):
         if indices is None:
             indices = filter_xy(x, y, resolution, window=window,)
         X, Y = x[indices], y[indices]
+
+        if data == "Z":
+            values = entity.vertices[:, 2]
+
         if values is not None:
             values = values[indices]
 

@@ -26,6 +26,7 @@ class ScatterPlots(ObjectDataSelection):
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "geochem",
         "data": ["Al2O3", "CaO", "V", "MgO"],
+        "x": "Al2O3",
         "y": "CaO",
         "y_log": True,
         "color": "V",
@@ -173,7 +174,7 @@ class ScatterPlots(ObjectDataSelection):
         def update_data_dict(_):
             self.update_data_dict()
 
-        self.objects.observe(update_data_dict)
+        self.objects.observe(update_data_dict, names="value")
 
         super().__init__(**self.apply_defaults(**kwargs))
 
@@ -295,9 +296,6 @@ class ScatterPlots(ObjectDataSelection):
                 self.crossplot_fig,
             ]
         )
-
-        # self.update_data_dict()
-        # self.update_choices()
 
     @property
     def x(self):
@@ -545,7 +543,7 @@ class ScatterPlots(ObjectDataSelection):
         """
         Set the min and max values for the given axis channel
         """
-        self._refresh = False
+        self.refresh.value = False
         channel = getattr(self, "_" + name).value
         self.get_channel(channel)
 
@@ -558,7 +556,7 @@ class ScatterPlots(ObjectDataSelection):
             cmin.value = f"{np.min(values):.2e}"
             cmax = getattr(self, "_" + name + "_max")
             cmax.value = f"{np.max(values):.2e}"
-        self._refresh = True
+        self.refresh.value = True
 
     def plot_selection(
         self,
@@ -597,11 +595,11 @@ class ScatterPlots(ObjectDataSelection):
         refresh_trigger,
     ):
 
-        if not refresh_trigger or not self.refresh:
+        if not refresh_trigger or not self.refresh.value:
             return None
 
         if self.get_channel(size) is not None and size_active:
-            vals = self.get_channel(size).copy()
+            vals = self.get_channel(size)
             inbound = (vals > size_min) * (vals < size_max)
             vals[~inbound] = np.nan
             size = normalize(vals)
@@ -613,7 +611,7 @@ class ScatterPlots(ObjectDataSelection):
             size = None
 
         if self.get_channel(color) is not None and color_active:
-            vals = self.get_channel(color).copy()
+            vals = self.get_channel(color)
             inbound = (vals > color_min) * (vals < color_max)
             vals[~inbound] = np.nan
             color = normalize(vals)
@@ -697,7 +695,6 @@ class ScatterPlots(ObjectDataSelection):
                 )
             # 2D Scatter
             else:
-
                 self.crossplot_fig.add_trace(
                     go.Scatter(
                         x=x_axis,
@@ -739,7 +736,8 @@ class ScatterPlots(ObjectDataSelection):
             if val in widget.options:
                 widget.value = val
             else:
-                self.set_channel_bounds(name)
+                widget.value = None
+
         self.refresh_trigger.value = True
 
     def update_data_dict(self):
