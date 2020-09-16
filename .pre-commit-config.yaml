@@ -35,14 +35,14 @@ repos:
         exclude: \.mdj$
     -   id: mixed-line-ending
     -   id: name-tests-test
--   repo: local
-    hooks:
-    -   id: rstcheck
-        name: rstcheck
-        entry: rstcheck
-        files: '.rst'
-        language: python
-        additional_dependencies: [rstcheck, sphinx]
+# -   repo: local
+#     hooks:
+#     -   id: rstcheck
+#         name: rstcheck
+#         entry: rstcheck
+#         files: '.rst'
+#         language: python
+#         additional_dependencies: [rstcheck, sphinx]
 -   repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.5.1
     hooks:

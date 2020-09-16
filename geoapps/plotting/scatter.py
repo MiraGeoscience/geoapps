@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import plotly.graph_objects as go
+
 import plotly.express as px
 from ipywidgets import (
     Dropdown,
@@ -27,10 +29,13 @@ class ScatterPlots(ObjectDataSelection):
         "add_groups": True,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "geochem",
-        "data": ["Al2O3", "CaO", "V", "MgO"],
+        "data": ["Al2O3", "CaO", "V", "MgO", "Ba"],
         "x": "Al2O3",
         "y": "CaO",
+        "z": "Ba",
         "y_log": True,
+        "z_log": True,
+        "z_active": True,
         "color": "V",
         "color_active": True,
         "color_log": True,
@@ -39,14 +44,14 @@ class ScatterPlots(ObjectDataSelection):
         "color_maps": "inferno",
     }
 
-    def __init__(self, **kwargs):
-
+    def __init__(self, static=False, **kwargs):
+        self.static = static
         self._select_multiple = True
 
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
 
-        self._x = Dropdown()
+        self._x = Dropdown(description="Data:")
         self._x.observe(channel_bounds_setter, names="value")
         self._x.name = "x"
         self._x_active = Checkbox(description="Active", value=True, indent=False)
@@ -63,7 +68,7 @@ class ScatterPlots(ObjectDataSelection):
             ]
         )
 
-        self._y = Dropdown()
+        self._y = Dropdown(description="Data:")
         self._y.observe(channel_bounds_setter, names="value")
         self._y.name = "y"
         self._y_active = Checkbox(description="Active", value=True, indent=False,)
@@ -80,7 +85,7 @@ class ScatterPlots(ObjectDataSelection):
             ]
         )
 
-        self._z = Dropdown()
+        self._z = Dropdown(description="Data:")
         self._z.observe(channel_bounds_setter, names="value")
         self._z.name = "z"
         self._z_active = Checkbox(description="Active", value=False, indent=False,)
@@ -97,7 +102,7 @@ class ScatterPlots(ObjectDataSelection):
             ]
         )
 
-        self._color = Dropdown()
+        self._color = Dropdown(description="Data:")
         self._color.observe(channel_bounds_setter, names="value")
         self._color.name = "color"
         self._color_log = Checkbox(description="Log10", value=False, indent=False,)
@@ -122,7 +127,7 @@ class ScatterPlots(ObjectDataSelection):
             ]
         )
 
-        self._size = Dropdown()
+        self._size = Dropdown(description="Data:")
         self._size.observe(channel_bounds_setter, names="value")
         self._size.name = "size"
         self._size_active = Checkbox(description="Active", value=False, indent=False,)
@@ -166,7 +171,11 @@ class ScatterPlots(ObjectDataSelection):
         self.axes_pannels.observe(axes_pannels_trigger)
         self.axes_options = HBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
-        self.crossplot_fig = go.FigureWidget()
+
+        if not self.static:
+            self.crossplot_fig = go.FigureWidget()
+        else:
+            self.crossplot_fig = None
 
         def update_choices(_):
             self.update_choices()
@@ -290,14 +299,29 @@ class ScatterPlots(ObjectDataSelection):
             },
         )
 
-        self._widget = VBox(
-            [
-                self.project_panel,
-                VBox([HBox([self.objects, self.data]), self.axes_options,]),
-                self.crossplot,
-                self.crossplot_fig,
-            ]
-        )
+        def write_html(_):
+            self.write_html()
+
+        self.trigger.observe(write_html)
+        self.trigger.description = "Save HTML"
+
+        if self.static:
+            self._widget = VBox(
+                [
+                    self.project_panel,
+                    VBox([HBox([self.objects, self.data]), self.axes_options,]),
+                    self.trigger,
+                ]
+            )
+        else:
+            self._widget = VBox(
+                [
+                    self.project_panel,
+                    VBox([HBox([self.objects, self.data]), self.axes_options,]),
+                    self.trigger,
+                    self.crossplot_fig,
+                ]
+            )
 
     @property
     def x(self):
@@ -622,25 +646,20 @@ class ScatterPlots(ObjectDataSelection):
         else:
             color = "black"
 
-        self.crossplot_fig.data = []
         x_axis, y_axis, z_axis = None, None, None
 
         if np.sum([x_active, y_active, z_active]) > 1:
 
             if x_active:
                 x_axis = self.get_channel(x)
-            else:
-                x_axis = self.get_channel(y)
 
             if y_active:
                 y_axis = self.get_channel(y)
-            else:
-                y_axis = self.get_channel(z)
 
             if z_active:
                 z_axis = self.get_channel(z)
 
-            if x_axis is None or y_axis is None:
+            if np.sum([axis is not None for axis in [x_axis, y_axis, z_axis]]) < 2:
                 return
 
             if x_axis is not None:
@@ -649,12 +668,24 @@ class ScatterPlots(ObjectDataSelection):
                 x_axis, x_label, x_ticks, x_ticklabels = format_axis(
                     x, x_axis, x_log, x_thresh
                 )
+            else:
+                inbound = (z_axis > z_min) * (z_axis < z_max)
+                z_axis[~inbound] = np.nan
+                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
+                    z, z_axis, z_log, z_thresh
+                )
 
             if y_axis is not None:
                 inbound = (y_axis > y_min) * (y_axis < y_max)
                 y_axis[~inbound] = np.nan
                 y_axis, y_label, y_ticks, y_ticklabels = format_axis(
                     y, y_axis, y_log, y_thresh
+                )
+            else:
+                inbound = (z_axis > z_min) * (z_axis < z_max)
+                z_axis[~inbound] = np.nan
+                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
+                    z, z_axis, z_log, z_thresh
                 )
 
             if z_axis is not None:
@@ -666,18 +697,18 @@ class ScatterPlots(ObjectDataSelection):
 
             # 3D Scatter
             if np.sum([x_active, y_active, z_active]) == 3:
-                self.crossplot_fig.add_trace(
-                    go.Scatter3d(
-                        x=x_axis,
-                        y=y_axis,
-                        z=z_axis,
-                        mode="markers",
-                        marker={"color": color, "size": size, "colorscale": color_maps},
-                    )
+
+                plot = go.Scatter3d(
+                    x=x_axis,
+                    y=y_axis,
+                    z=z_axis,
+                    mode="markers",
+                    marker={"color": color, "size": size, "colorscale": color_maps},
                 )
 
-                self.crossplot_fig.update_layout(
-                    scene={
+                layout = {
+                    "margin": dict(l=0, r=0, b=0, t=0),
+                    "scene": {
                         "xaxis_title": x_label,
                         "yaxis_title": y_label,
                         "zaxis_title": z_label,
@@ -693,35 +724,43 @@ class ScatterPlots(ObjectDataSelection):
                             "tickvals": z_ticks,
                             # "ticktext": [f"{label:.2e}" for label in z_ticklabels],
                         },
-                    }
-                )
+                    },
+                }
             # 2D Scatter
             else:
-                self.crossplot_fig.add_trace(
-                    go.Scatter(
-                        x=x_axis,
-                        y=y_axis,
-                        mode="markers",
-                        marker={"color": color, "size": size, "colorscale": color_maps},
-                    )
+                plot = go.Scatter(
+                    x=x_axis,
+                    y=y_axis,
+                    mode="markers",
+                    marker={"color": color, "size": size, "colorscale": color_maps},
                 )
-                self.crossplot_fig.update_layout(
-                    margin=dict(l=0, r=0, b=0, t=0),
-                    xaxis={
+
+                layout = {
+                    "margin": dict(l=0, r=0, b=0, t=0),
+                    "xaxis": {
                         "tickvals": x_ticks,
                         # "ticktext": [f"{label:.2e}" for label in x_ticklabels],
                         "exponentformat": "e",
                         "title": x_label,
                     },
-                    yaxis={
+                    "yaxis": {
                         "tickvals": y_ticks,
                         # "ticktext": [f"{label:.2e}" for label in y_ticklabels],
                         "exponentformat": "e",
                         "title": y_label,
                     },
-                )
+                }
+
+            if self.static:
+                self.crossplot_fig = go.FigureWidget([plot], layout=layout)
+            else:
+                self.crossplot_fig.data = []
+                self.crossplot_fig.add_trace(plot)
+                self.crossplot_fig.update_layout(layout)
+                self.crossplot_fig.show()
         else:
-            self.crossplot_fig.data = []
+            if not self.static:
+                self.crossplot_fig.data = []
 
     def update_choices(self):
         self.refresh_trigger.value = False
@@ -744,3 +783,12 @@ class ScatterPlots(ObjectDataSelection):
 
     def update_data_dict(self):
         self.data_channels = {}
+
+    def write_html(self):
+        if self.trigger.value:
+            self.crossplot_fig.write_html(
+                os.path.join(
+                    os.path.abspath(os.path.dirname(self.h5file)), "Crossplot.html"
+                )
+            )
+            self.trigger.value = False
