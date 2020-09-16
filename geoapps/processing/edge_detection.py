@@ -42,7 +42,7 @@ class EdgeDetectionApp(PlotSelection2D):
         "objects": "Gravity_Magnetics_drape60m",
         "data": "Airborne_TMI",
         "resolution": 50,
-        "azimuth": -20,
+        "window": {"azimuth": -20,},
     }
     object_types = (Grid2D,)
 
@@ -185,11 +185,9 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def save_trigger(self):
         entity, _ = self.get_selected_entities()
-        workspace = Workspace(self.h5file)
         if self.trigger.value and getattr(self.trigger, "vertices", None) is not None:
-            if workspace.get_entity(self.export_as.value):
-
-                curve = workspace.get_entity(self.export_as.value)[0]
+            if self.workspace.get_entity(self.export_as.value):
+                curve = self.workspace.get_entity(self.export_as.value)[0]
                 curve._children = []
                 curve.vertices = self.trigger.vertices
                 curve.cells = np.vstack(self.trigger.cells).astype("uint32")
@@ -206,7 +204,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
             else:
                 curve = Curve.create(
-                    Workspace(self.h5file),
+                    self.workspace,
                     name=self.export_as.value,
                     vertices=self.trigger.vertices,
                     cells=self.trigger.cells,
@@ -226,7 +224,6 @@ class EdgeDetectionApp(PlotSelection2D):
             x = grid.centroids[:, 0].reshape(grid.shape, order="F")
             y = grid.centroids[:, 1].reshape(grid.shape, order="F")
             z = grid.centroids[:, 2].reshape(grid.shape, order="F")
-
             grid_data = data.values.reshape(grid.shape, order="F")
             indices = self.indices
             ind_x, ind_y = (

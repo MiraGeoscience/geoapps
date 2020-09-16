@@ -86,7 +86,10 @@ class BaseApplication:
                     ):
                         setattr(getattr(self, key), "value", value)
                     else:
-                        setattr(self, key, value)
+                        try:
+                            setattr(self, key, value)
+                        except:
+                            setattr(self, "_" + key, value)
                 except:
                     pass
 

@@ -15,15 +15,18 @@ class ObjectDataSelection(BaseApplication):
     defaults = {}
 
     def __init__(self, **kwargs):
+        self._object_types = ()
+        self._select_multiple = False
+        self._find_label = []
+        self._add_groups = False
+
         def update_data_list(_):
             self.update_data_list()
 
         self.objects.observe(update_data_list, names="value")
-
         super().__init__(**self.apply_defaults(**kwargs))
 
         self._widget = VBox([self.objects, self.data])
-        # self.update_objects_list()
 
     @property
     def add_groups(self):

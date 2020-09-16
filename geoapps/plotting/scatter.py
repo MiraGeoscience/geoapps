@@ -23,6 +23,8 @@ class ScatterPlots(ObjectDataSelection):
     """
 
     defaults = {
+        "select_multiple": True,
+        "add_groups": True,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "geochem",
         "data": ["Al2O3", "CaO", "V", "MgO"],

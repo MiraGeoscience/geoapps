@@ -29,7 +29,9 @@ class PlotSelection2D(ObjectDataSelection):
     }
 
     def __init__(self, **kwargs):
-
+        self.figure = None
+        self.axis = None
+        self.indices = None
         self.collections = []
 
         self._azimuth = FloatSlider(
@@ -113,6 +115,9 @@ class PlotSelection2D(ObjectDataSelection):
 
         super().__init__(**self.apply_defaults(**kwargs))
 
+        self.objects.observe(set_bounding_box, names="value")
+        self.set_bounding_box()
+
         self.window_plot = widgets.interactive_output(
             plot_selection,
             {
@@ -131,7 +136,7 @@ class PlotSelection2D(ObjectDataSelection):
 
         self.plot_widget = VBox(
             [
-                VBox([self.resolution, self.data_count,]),
+                VBox([self.resolution, self.data_count]),
                 HBox(
                     [
                         self.center_y,
@@ -151,12 +156,11 @@ class PlotSelection2D(ObjectDataSelection):
             ]
         )
         self._widget = VBox([self.widget, self.plot_widget])
-        self.figure = None
-        self.axis = None
-        self.indices = None
 
-        self.objects.observe(set_bounding_box, names="value")
-        self.set_bounding_box()
+        if "window" in kwargs.keys():
+            self.refresh.value = False
+            self.__populate__(**kwargs["window"])
+            self.refresh.value = True
 
     @property
     def azimuth(self):
