@@ -258,6 +258,8 @@ def inversion(input_file):
 
     if "window" in input_dict.keys():
         window = input_dict["window"]
+        window["center"] = [window["center_x"], window["center_y"]]
+        window["size"] = [window["width"], window["height"]]
     else:
         window = None
 
@@ -1394,7 +1396,7 @@ def inversion(input_file):
             maxIRLSiter=max_iterations,
             minGNiter=1,
             beta_tol=0.5,
-            prctile=80,
+            prctile=75,
             floorEpsEnforced=True,
             coolingRate=1,
             coolEps_q=True,

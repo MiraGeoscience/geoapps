@@ -742,20 +742,28 @@ def inversion_defaults():
 
 class InversionApp(PlotSelection2D):
     defaults = {
+        "select_multiple": True,
+        "add_groups": True,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "resolution": 100,
         "inducing_field": "60000, 79, 11",
         "objects": "Gravity_Magnetics_drape60m",
         "data": ["Airborne_TMI"],
-        "topography": {"objects": "Topography"},
+        "resolution": 50,
+        "window": {
+            "center_x": 314600.0,
+            "center_y": 6072200.0,
+            "width": 1000.0,
+            "height": 1500.0,
+            "azimuth": -20,
+        },
+        "inversion_parameters": {"norms": "0, 2, 2, 2"},
+        "topography": {"objects": "Topography", "data": "elevation"},
         "sensor": {"offset": "0, 0, 40", "options": "topo + radar + (dx, dy, dz)"},
     }
 
     def __init__(self, **kwargs):
 
         kwargs = self.apply_defaults(**kwargs)
-        self._select_multiple = True
-        self._add_groups = True
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0", tooltip="Keep <1500 for speed"),)
         self._forward_only = Checkbox(
@@ -840,6 +848,8 @@ class InversionApp(PlotSelection2D):
 
         self.inversion_parameters = InversionOptions()
         self.inversion_parameters.update_workspace(self._workspace)
+        if "inversion_parameters" in kwargs.keys():
+            self.inversion_parameters.__populate__(**kwargs["inversion_parameters"])
 
         self.sensor = SensorOptions()
         self.sensor._objects = self._objects
@@ -883,9 +893,8 @@ class InversionApp(PlotSelection2D):
         def update_octree_param(_):
             self.update_octree_param()
 
-        for item in self.plot_widget.__dict__.values():
-            if isinstance(item, Widget):
-                item.observe(update_octree_param, names="value")
+        for item in ["width", "height", "resolution"]:
+            getattr(self, item).observe(update_octree_param, names="value")
 
         dsep = os.path.sep
         if self.h5file is not None:
@@ -1405,8 +1414,10 @@ class InversionApp(PlotSelection2D):
         input_dict["ignore_values"] = self.inversion_parameters.ignore_values.value
         input_dict["resolution"] = self.resolution.value
         input_dict["window"] = {
-            "center": [self.center_x.value, self.center_y.value,],
-            "size": [self.width.value, self.height.value],
+            "center_x": self.center_x.value,
+            "center_y": self.center_y.value,
+            "width": self.width.value,
+            "height": self.height.value,
             "azimuth": self.azimuth.value,
         }
         input_dict["alphas"] = string_2_list(self.inversion_parameters.alphas.value)

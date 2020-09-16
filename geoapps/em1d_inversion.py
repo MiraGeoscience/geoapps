@@ -187,8 +187,11 @@ def inversion(input_file):
     ignore_values = input_param["ignore_values"]
     max_iteration = input_param["max_iterations"]
     resolution = np.float(input_param["resolution"])
+
     if "window" in input_param.keys():
         window = input_param["window"]
+        window["center"] = [window["center_x"], window["center_y"]]
+        window["size"] = [window["width"], window["height"]]
     else:
         window = None
 
