@@ -1,9 +1,14 @@
-import os
-from shutil import copyfile
+import sys
+import urllib.request
+import zipfile
+from os import mkdir, listdir, path, remove
+import subprocess
+from shutil import copyfile, copy, rmtree
 import time
 from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton, Widget, Button
 from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
+import geoapps
 
 
 class BaseApplication:
@@ -69,8 +74,8 @@ class BaseApplication:
         self.__populate__(**kwargs)
 
         if self.h5file is not None:
-            self.live_link_path.value = os.path.join(
-                os.path.abspath(os.path.dirname(self.h5file)), "Temp"
+            self.live_link_path.value = path.join(
+                path.abspath(path.dirname(self.h5file)), "Temp"
             )
 
     def __populate__(self, **kwargs):
@@ -119,10 +124,10 @@ class BaseApplication:
         :param :obj:`geoh5py.Entity`: Entity to be updated
         :param data: `dict` of values to be added as data {"name": values}
         """
-        if not os.path.exists(self.live_link_path.value):
-            os.mkdir(self.live_link_path.value)
+        if not path.exists(self.live_link_path.value):
+            mkdir(self.live_link_path.value)
 
-        temp_geoh5 = os.path.join(
+        temp_geoh5 = path.join(
             self.live_link_path.value, f"temp{time.time():.3f}.geoh5"
         )
         temp_workspace = Workspace(temp_geoh5)
@@ -180,8 +185,7 @@ class BaseApplication:
         self._h5file = value
 
         self._file_browser.reset(
-            path=os.path.abspath(os.path.dirname(value)),
-            filename=os.path.basename(value),
+            path=path.abspath(path.dirname(value)), filename=path.basename(value),
         )
         self._file_browser._apply_selection()
         self.workspace = Workspace(self.h5file)
@@ -240,6 +244,47 @@ class BaseApplication:
         if self.h5file is not None:
             value = working_copy(self.h5file)
             self.h5file = value
+
+
+def update_apps():
+    """
+    Special widget to update geoapps
+    """
+
+    trigger = Button(
+        value=False, description="Update All", button_style="danger", icon="check",
+    )
+
+    def run_update(_):
+
+        status = subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "--upgrade", "geoapps"]
+        )
+        if status == 1:
+            url = "https://github.com/MiraGeoscience/geoapps/archive/develop.zip"
+            urllib.request.urlretrieve(url, "develop.zip")
+            with zipfile.ZipFile("./develop.zip") as zf:
+                zf.extractall("./")
+
+            temp_dir = "./geoapps-develop/geoapps/applications"
+            for file in listdir(temp_dir):
+                if path.isfile(file):
+                    copy(path.join(temp_dir, file), file)
+
+            rmtree("./geoapps-develop")
+            remove("./develop.zip")
+
+            print(
+                f"You have been updated to version {geoapps.__version__}. You are good to go..."
+            )
+        else:
+            print(
+                f"Current version {geoapps.__version__} is the latest. You are good to go..."
+            )
+
+    trigger.on_click(run_update)
+
+    return trigger
 
 
 def working_copy(h5file):
