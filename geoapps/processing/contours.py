@@ -3,7 +3,7 @@ from geoh5py.workspace import Workspace
 from geoh5py.io import H5Writer
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from scipy.interpolate import LinearNDInterpolator
-from geoapps.base import BaseApplication, working_copy
+from geoapps.base import BaseApplication
 from geoapps.plotting import PlotSelection2D
 from ipywidgets import (
     Text,
@@ -17,58 +17,45 @@ from ipywidgets import (
 )
 
 
-class ContourValues(BaseApplication):
+class ContourValues(PlotSelection2D):
     """
     Application for 2D contouring of spatial data.
     """
 
+    defaults = {
+        "h5file": "../../assets/FlinFlon.geoh5",
+        "objects": "Gravity_Magnetics_drape60m",
+        "data": "Airborne_TMI",
+        "contours": "-400:2000:100,-240",
+        "resolution": 50,
+    }
+
     def __init__(self, **kwargs):
 
-        kwargs = working_copy(**kwargs)
-
-        self._plot_selection = PlotSelection2D(**kwargs)
         self._contours = Text(
             value="", description="Contours", disabled=False, continuous_update=False
         )
         self._export_as = Text(value="Contours", indent=False)
 
-        def update_name(_):
-            self.update_name()
-
-        self.plot_selection.selection.data.observe(update_name, names="value")
         self._z_value = Checkbox(
             value=False, indent=False, description="Assign Z from values"
         )
 
-        super().__init__(**kwargs)
+        super().__init__(**self.apply_defaults(**kwargs))
 
-        out = interactive_output(self.compute_plot, {"contour_values": self.contours},)
+        out = interactive_output(self.compute_plot, {"contour_values": self.contours,})
 
         def save_selection(_):
             self.save_selection()
 
-        self.trigger.observe(save_selection, names="value")
-        self.trigger.description = "Export to GA"
-        self.trigger.button_style = "danger"
-
-        for key in self.plot_selection.__dict__:
-            if isinstance(getattr(self.plot_selection, key, None), Widget):
-                getattr(self.plot_selection, key, None).observe(
-                    save_selection, names="value"
-                )
         self.export_as.observe(save_selection, names="value")
+
         self._widget = VBox(
             [
+                self.project_panel,
                 HBox(
                     [
-                        VBox(
-                            [
-                                Label("Input options:"),
-                                self.plot_selection.selection.widget,
-                                self.contours,
-                                self.plot_selection.plot_widget,
-                            ]
-                        ),
+                        VBox([Label("Input options:"), self.contours, self.widget,]),
                         VBox(
                             [
                                 Label("Output options:"),
@@ -83,6 +70,19 @@ class ContourValues(BaseApplication):
                 out,
             ]
         )
+
+        self.trigger.observe(save_selection, names="value")
+        self.trigger.description = "Export to GA"
+        self.trigger.button_style = "danger"
+
+        def update_name(_):
+            self.update_name()
+
+        self.data.observe(update_name, names="value")
+
+        for key in self.__dict__:
+            if isinstance(getattr(self, key, None), Widget):
+                getattr(self, key, None).observe(save_selection, names="value")
 
     @property
     def contours(self):
@@ -109,13 +109,6 @@ class ContourValues(BaseApplication):
         return self._export_as
 
     @property
-    def plot_selection(self):
-        """
-        :obj:`geoapps.selection.PlotSelection2D`: Selection and 2D plot of an object with data to be contoured
-        """
-        return self._plot_selection
-
-    @property
     def widget(self):
         """
         :obj:`ipywidgets.VBox`: Pre-defined application layout
@@ -133,37 +126,33 @@ class ContourValues(BaseApplication):
         """
         Get current selection and trigger update
         """
-        entity, data = self.plot_selection.selection.get_selected_entities()
+        entity, data = self.get_selected_entities()
         if data is None:
             return
         if contour_values is not None:
-            self.plot_selection.contours.value = contour_values
+            self.contours.value = contour_values
         self.save_selection()
 
     def update_contours(self):
         """
         Assign
         """
-        if self.plot_selection.selection.data.value is not None:
-            self.export_as.value = (
-                self.plot_selection.selection.data.value + "_" + self.contours.value
-            )
+        if self.data.value is not None:
+            self.export_as.value = self.data.value + "_" + self.contours.value
 
     def update_name(self):
-        if self.plot_selection.selection.data.value is not None:
-            self.export_as.value = self.plot_selection.selection.data.value
+        if self.data.value is not None:
+            self.export_as.value = self.data.value
         else:
             self.export_as.value = "Contours"
 
     def save_selection(self):
-        entity, _ = self.plot_selection.selection.get_selected_entities()
-
-        workspace = Workspace(self.h5file)
+        entity, _ = self.get_selected_entities()
 
         if self.trigger.value:
 
-            if getattr(self.plot_selection.contours, "contour_set", None) is not None:
-                contour_set = self.plot_selection.contours.contour_set
+            if getattr(self.contours, "contour_set", None) is not None:
+                contour_set = self.contours.contour_set
 
                 vertices, cells, values = [], [], []
                 count = 0
@@ -195,9 +184,9 @@ class ContourValues(BaseApplication):
                                 np.ones(vertices.shape[0]) * entity.origin["z"],
                             ]
 
-                    if workspace.get_entity(self.export_as.value):
+                    if self.workspace.get_entity(self.export_as.value):
 
-                        curve = workspace.get_entity(self.export_as.value)[0]
+                        curve = self.workspace.get_entity(self.export_as.value)[0]
                         curve._children = []
                         curve.vertices = vertices
                         curve.cells = np.vstack(cells).astype("uint32")
@@ -214,7 +203,7 @@ class ContourValues(BaseApplication):
 
                     else:
                         curve = Curve.create(
-                            workspace,
+                            self.workspace,
                             name=self.export_as.value,
                             vertices=vertices,
                             cells=np.vstack(cells).astype("uint32"),

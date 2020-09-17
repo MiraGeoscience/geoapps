@@ -871,6 +871,13 @@ def rotate_vertices(xyz, center, phi, theta):
     return xyzRot + np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
 
 
+def string_2_list(string):
+    """
+    Convert a list of numbers separated by comma to a list of floats
+    """
+    return [np.float(val) for val in string.split(",") if len(val) > 0]
+
+
 class RectangularBlock:
     """
         Define a rotated rectangular block in 3D space
@@ -1007,6 +1014,20 @@ class RectangularBlock:
             self._vertices = xyz
 
         return self._vertices
+
+
+def symlog(values, threshold):
+    """
+    Convert values to log with linear threshold near zero
+    """
+    return np.sign(values) * np.log10(1 + np.abs(values) / threshold)
+
+
+def inv_symlog(values, threshold):
+    """
+    Compute the inverse symlog mapping
+    """
+    return np.sign(values) * threshold * (-1.0 + 10.0 ** np.abs(values))
 
 
 def raw_moment(data, i_order, j_order):
