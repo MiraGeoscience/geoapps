@@ -7,6 +7,31 @@ This section provides a list of low-level applications that can be combined
 together to form more complex ones.
 
 
+.. _workspaceselection:
+
+Workspace selection
+-------------------
+
+Application adapted from `ipyfilechoose <https://pypi.org/project/ipyfilechooser/>`_ for the selection of a workspace using
+
+
+.. jupyter-execute::
+
+    from geoapps.base import BaseApplication
+
+    app = BaseApplication()
+    app.project_panel
+
+
+.. list-table::
+   :header-rows: 0
+
+   * - Select
+     - Prompts browsing menu
+   * - Create a copy
+     - Make a working copy of the target ``geoh5``
+
+
 .. _objectdataselection:
 
 Object, data selection
@@ -18,14 +43,10 @@ geoh5.
 .. jupyter-execute::
 
     from geoapps.selection import ObjectDataSelection
-
-    # Create an instance with pointer to the target geoh5
     app = ObjectDataSelection(
         h5file="../assets/FlinFlon.geoh5",
         objects="Gravity_Magnetics_drape60m" # [Optional]
     )
-
-    # Display the app
     app.widget
 
 
@@ -40,13 +61,10 @@ Application for the selection and downsampling of data in 2D plan view.
 
     from geoapps.plotting import PlotSelection2D
 
-    # Create an instance with pointer to the target geoh5
     app = PlotSelection2D(
         h5file="../assets/FlinFlon.geoh5",
         objects="Gravity_Magnetics_drape60m" # [Optional]
     )
-
-    # Display the app
     app.widget
 
 .. list-table::

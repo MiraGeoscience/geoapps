@@ -1,8 +1,14 @@
-import os
-from shutil import copyfile
+import sys
+import urllib.request
+import zipfile
+from os import mkdir, listdir, path, remove
+import subprocess
+from shutil import copyfile, copy, rmtree
 import time
-from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton, Widget
+from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton, Widget, Button
 from geoh5py.workspace import Workspace
+from ipyfilechooser import FileChooser
+import geoapps
 
 
 class BaseApplication:
@@ -10,9 +16,34 @@ class BaseApplication:
     Base class for geoapps applications
     """
 
+    defaults = {
+        "h5file": "../../assets/FlinFlon.geoh5",
+    }
+
     def __init__(self, **kwargs):
 
-        self._h5file = "Analyst.geoh5"
+        self._h5file = None
+        self._workspace = None
+        self._file_browser = FileChooser()
+
+        def file_browser_change(_):
+            self.file_browser_change()
+
+        self._file_browser._select.on_click(file_browser_change)
+
+        self._copy_trigger = Button(
+            description="Create copy:", value=True, indent=False
+        )
+
+        def create_copy(_):
+            self.create_copy()
+
+        self._copy_trigger.on_click(create_copy)
+
+        self.project_panel = VBox(
+            [Label("Workspace"), self._file_browser, self._copy_trigger]
+        )
+
         self._live_link = Checkbox(
             description="GA Pro - Live link", value=False, indent=False
         )
@@ -23,7 +54,7 @@ class BaseApplication:
         self._live_link.observe(live_link_choice)
 
         self._live_link_path = Text(description="", value="", disabled=True,)
-
+        self._refresh = ToggleButton(value=False)
         self._trigger = ToggleButton(
             value=False,
             description="Compute",
@@ -40,24 +71,51 @@ class BaseApplication:
             ]
         )
 
+        self.__populate__(**kwargs)
+
+        if self.h5file is not None:
+            self.live_link_path.value = path.join(
+                path.abspath(path.dirname(self.h5file)), "Temp"
+            )
+
+    def __populate__(self, **kwargs):
         for obj in self.__dict__:
             if hasattr(getattr(self, obj), "style"):
                 getattr(self, obj).style = {"description_width": "initial"}
 
         for key, value in kwargs.items():
-            if getattr(self, "_" + key, None) is not None:
+            if hasattr(self, "_" + key):
                 try:
-                    if isinstance(getattr(self, "_" + key), Widget):
-                        getattr(self, "_" + key).value = value
+                    if isinstance(getattr(self, "_" + key), Widget) and not isinstance(
+                        value, Widget
+                    ):
+                        setattr(getattr(self, key), "value", value)
                     else:
-                        setattr(self, "_" + key, value)
+                        try:
+                            setattr(self, key, value)
+                        except:
+                            setattr(self, "_" + key, value)
                 except:
                     pass
 
-        if self.h5file is not None:
-            self.live_link_path.value = os.path.join(
-                os.path.abspath(os.path.dirname(self.h5file)), "Temp"
-            )
+    def apply_defaults(self, **kwargs):
+        """
+        Add defaults to the kwargs
+        """
+        for key, value in self.defaults.items():
+            if key in kwargs.keys():
+                continue
+            else:
+                kwargs[key] = value
+
+        return kwargs
+
+    def file_browser_change(self):
+        """
+        Change the target h5file
+        """
+        if not self.file_browser._select.disabled:
+            self.h5file = self.file_browser.selected
 
     def live_link_output(self, entity, data={}):
         """
@@ -66,10 +124,10 @@ class BaseApplication:
         :param :obj:`geoh5py.Entity`: Entity to be updated
         :param data: `dict` of values to be added as data {"name": values}
         """
-        if not os.path.exists(self.live_link_path.value):
-            os.mkdir(self.live_link_path.value)
+        if not path.exists(self.live_link_path.value):
+            mkdir(self.live_link_path.value)
 
-        temp_geoh5 = os.path.join(
+        temp_geoh5 = path.join(
             self.live_link_path.value, f"temp{time.time():.3f}.geoh5"
         )
         temp_workspace = Workspace(temp_geoh5)
@@ -92,11 +150,45 @@ class BaseApplication:
         ...
 
     @property
+    def copy_trigger(self):
+        """
+        :obj:`ipywidgets.Checkbox`: Create a working copy of the target geoh5 file
+        """
+        return self._copy_trigger
+
+    @property
+    def file_browser(self):
+        """
+        :obj:`ipyfilechooser.FileChooser` widget
+        """
+        return self._file_browser
+
+    @property
     def h5file(self):
         """
         :obj:`str`: Target geoh5 project file.
         """
+        if getattr(self, "_h5file", None) is None:
+
+            if self._workspace is not None:
+                self._h5file = self._workspace.h5file
+                return self._h5file
+
+            if self.file_browser.selected is not None:
+                h5file = self.file_browser.selected
+                self.h5file = h5file
+
         return self._h5file
+
+    @h5file.setter
+    def h5file(self, value):
+        self._h5file = value
+
+        self._file_browser.reset(
+            path=path.abspath(path.dirname(value)), filename=path.basename(value),
+        )
+        self._file_browser._apply_selection()
+        self.workspace = Workspace(self.h5file)
 
     @property
     def live_link(self):
@@ -113,11 +205,22 @@ class BaseApplication:
         return self._live_link_path
 
     @property
+    def refresh(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Switch to refresh the plot
+        """
+        return self._refresh
+
+    @property
     def trigger(self):
         """
         :obj:`ipywidgets.ToggleButton`: Trigger some computation and output.
         """
         return self._trigger
+
+    @property
+    def widget(self):
+        ...
 
     @property
     def workspace(self):
@@ -128,24 +231,71 @@ class BaseApplication:
             getattr(self, "_workspace", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self._workspace = Workspace(self.h5file)
+            self.workspace = Workspace(self.h5file)
         return self._workspace
 
+    @workspace.setter
+    def workspace(self, workspace):
+        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        self._workspace = workspace
+        self._h5file = workspace.h5file
 
-def working_copy(**kwargs):
+    def create_copy(self):
+        if self.h5file is not None:
+            value = working_copy(self.h5file)
+            self.h5file = value
+
+
+def update_apps():
+    """
+    Special widget to update geoapps
+    """
+
+    trigger = Button(
+        value=False, description="Update All", button_style="danger", icon="check",
+    )
+
+    def run_update(_):
+
+        status = subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "--upgrade", "geoapps"]
+        )
+        if status == 1:
+            url = "https://github.com/MiraGeoscience/geoapps/archive/develop.zip"
+            urllib.request.urlretrieve(url, "develop.zip")
+            with zipfile.ZipFile("./develop.zip") as zf:
+                zf.extractall("./")
+
+            temp_dir = "./geoapps-develop/geoapps/applications"
+            for file in listdir(temp_dir):
+                if path.isfile(file):
+                    copy(path.join(temp_dir, file), file)
+
+            rmtree("./geoapps-develop")
+            remove("./develop.zip")
+
+            print(
+                f"You have been updated to version {geoapps.__version__}. You are good to go..."
+            )
+        else:
+            print(
+                f"Current version {geoapps.__version__} is the latest. You are good to go..."
+            )
+
+    trigger.on_click(run_update)
+
+    return VBox(
+        [
+            Label("Warning! Local changes to the notebooks will be lost on update."),
+            trigger,
+        ]
+    )
+
+
+def working_copy(h5file):
     """
     Create a copy of the geoh5 project and remove "working_copy" from list
     of arguments for future use
     """
-    if (
-        "h5file" in kwargs.keys()
-        and "working_copy" in kwargs.keys()
-        and kwargs["working_copy"]
-    ):
-        kwargs["h5file"] = copyfile(
-            kwargs["h5file"], kwargs["h5file"][:-6] + "_work.geoh5"
-        )
-
-        del kwargs["working_copy"]
-
-    return kwargs
+    h5file = copyfile(h5file, h5file[:-6] + "_work.geoh5")
+    return h5file

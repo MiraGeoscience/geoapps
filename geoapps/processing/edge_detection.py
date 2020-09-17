@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib import collections
-import matplotlib.pyplot as plt
 from geoh5py.workspace import Workspace
 from geoh5py.io import H5Writer
 from geoh5py.objects import Grid2D, Curve
@@ -14,15 +13,13 @@ from ipywidgets import (
     ToggleButton,
     Text,
     VBox,
-    Widget,
     interactive_output,
 )
-from geoapps.base import BaseApplication, working_copy
 from geoapps.utils import filter_xy
 from geoapps.plotting import PlotSelection2D
 
 
-class EdgeDetectionApp(BaseApplication):
+class EdgeDetectionApp(PlotSelection2D):
     """
     Widget for Grid2D objects for the automated detection of line features.
     The application relies on the Canny and Hough trandforms from the
@@ -40,9 +37,16 @@ class EdgeDetectionApp(BaseApplication):
     :param line_gap [Hough]: Maximum gap between pixels to still form a line.
     """
 
-    def __init__(self, **kwargs):
+    defaults = {
+        "h5file": "../../assets/FlinFlon.geoh5",
+        "objects": "Gravity_Magnetics_drape60m",
+        "data": "Airborne_TMI",
+        "resolution": 50,
+        "window": {"azimuth": -20,},
+    }
+    object_types = (Grid2D,)
 
-        kwargs = working_copy(**kwargs)
+    def __init__(self, **kwargs):
 
         self._compute = ToggleButton(
             value=False,
@@ -51,10 +55,6 @@ class EdgeDetectionApp(BaseApplication):
             tooltip="Description",
             icon="check",
         )
-
-        # def compute_trigger(_):
-        #     self.compute_trigger()
-        # self.compute.observe(compute_trigger)
         self._export_as = Text(value="Edges", description="Save as:", disabled=False,)
         self._line_length = IntSlider(
             min=1,
@@ -72,7 +72,6 @@ class EdgeDetectionApp(BaseApplication):
             continuous_update=False,
             description="Line Gap",
         )
-        self._plot_selection = PlotSelection2D(object_types=(Grid2D,), **kwargs)
         self._sigma = FloatSlider(
             min=0.0,
             max=10,
@@ -104,25 +103,25 @@ class EdgeDetectionApp(BaseApplication):
             self.save_trigger()
 
         # Make changes to trigger warning color
-        for key in self.plot_selection.__dict__:
-            if isinstance(getattr(self.plot_selection, key, None), Widget):
-                getattr(self.plot_selection, key, None).observe(
-                    save_trigger, names="value"
-                )
-        for key in self.__dict__:
-            if hasattr(getattr(self, key), "button_style") and "compute" not in key:
-                getattr(self, key).observe(save_trigger, names="value")
+        self.trigger.description = "Save to GA"
+        self.trigger.observe(save_trigger)
+        self.trigger.button_style = "success"
+
+        # for key in self.__dict__:
+        #     if isinstance(getattr(self, key, None), Widget):
+        #         getattr(self, key, None).observe(
+        #             save_trigger, names="value"
+        #         )
+        # for key in self.__dict__:
+        #     if hasattr(getattr(self, key), "button_style") and "compute" not in key:
+        #         getattr(self, key).observe(save_trigger, names="value")
 
         self._widget = VBox(
             [
+                self.project_panel,
                 HBox(
                     [
-                        VBox(
-                            [
-                                self.plot_selection.selection.widget,
-                                self.plot_selection.plot_widget,
-                            ]
-                        ),
+                        VBox([self.widget]),
                         VBox(
                             [
                                 self.sigma,
@@ -138,7 +137,7 @@ class EdgeDetectionApp(BaseApplication):
                         ),
                         out,
                     ]
-                )
+                ),
             ]
         )
 
@@ -163,11 +162,6 @@ class EdgeDetectionApp(BaseApplication):
         return self._line_gap
 
     @property
-    def plot_selection(self):
-        """PlotSelection2D"""
-        return self._plot_selection
-
-    @property
     def sigma(self):
         """FloatSlider"""
         return self._sigma
@@ -190,14 +184,10 @@ class EdgeDetectionApp(BaseApplication):
         return self._widget
 
     def save_trigger(self):
-        entity, _ = self.plot_selection.selection.get_selected_entities()
-        workspace = Workspace(self.h5file)
-        self.compute.button_style = "warning"
-        self.trigger.button_style = "danger"
+        entity, _ = self.get_selected_entities()
         if self.trigger.value and getattr(self.trigger, "vertices", None) is not None:
-            if workspace.get_entity(self.export_as.value):
-
-                curve = workspace.get_entity(self.export_as.value)[0]
+            if self.workspace.get_entity(self.export_as.value):
+                curve = self.workspace.get_entity(self.export_as.value)[0]
                 curve._children = []
                 curve.vertices = self.trigger.vertices
                 curve.cells = np.vstack(self.trigger.cells).astype("uint32")
@@ -214,7 +204,7 @@ class EdgeDetectionApp(BaseApplication):
 
             else:
                 curve = Curve.create(
-                    Workspace(self.h5file),
+                    self.workspace,
                     name=self.export_as.value,
                     vertices=self.trigger.vertices,
                     cells=self.trigger.cells,
@@ -229,14 +219,13 @@ class EdgeDetectionApp(BaseApplication):
     def compute_trigger(self, compute):
         if compute:
 
-            grid, data = self.plot_selection.selection.get_selected_entities()
+            grid, data = self.get_selected_entities()
 
             x = grid.centroids[:, 0].reshape(grid.shape, order="F")
             y = grid.centroids[:, 1].reshape(grid.shape, order="F")
             z = grid.centroids[:, 2].reshape(grid.shape, order="F")
-
             grid_data = data.values.reshape(grid.shape, order="F")
-            indices = self.plot_selection.indices
+            indices = self.indices
             ind_x, ind_y = (
                 np.any(indices, axis=1),
                 np.any(indices, axis=0),
@@ -307,51 +296,36 @@ class EdgeDetectionApp(BaseApplication):
                                     ],
                                 ]
                             )
-
                 if coords:
                     coord = np.vstack(coords)
-                    self.plot_selection.selection.objects.lines = coord
+                    self.objects.lines = coord
                     self.plot_store_lines()
-                    self.trigger.button_style = "success"
                 else:
-                    self.plot_selection.selection.objects.lines = None
+                    self.objects.lines = None
 
             self.compute.value = False
-            self.compute.button_style = ""
 
     def plot_store_lines(self):
 
-        xy = self.plot_selection.selection.objects.lines
+        xy = self.objects.lines
         indices_1 = filter_xy(
             xy[1::2, 0],
             xy[1::2, 1],
-            self.plot_selection.resolution.value,
+            self.resolution.value,
             window={
-                "center": [
-                    self.plot_selection.center_x.value,
-                    self.plot_selection.center_y.value,
-                ],
-                "size": [
-                    self.plot_selection.width.value,
-                    self.plot_selection.height.value,
-                ],
-                "azimuth": self.plot_selection.azimuth.value,
+                "center": [self.center_x.value, self.center_y.value,],
+                "size": [self.width.value, self.height.value,],
+                "azimuth": self.azimuth.value,
             },
         )
         indices_2 = filter_xy(
             xy[::2, 0],
             xy[::2, 1],
-            self.plot_selection.resolution.value,
+            self.resolution.value,
             window={
-                "center": [
-                    self.plot_selection.center_x.value,
-                    self.plot_selection.center_y.value,
-                ],
-                "size": [
-                    self.plot_selection.width.value,
-                    self.plot_selection.height.value,
-                ],
-                "azimuth": self.plot_selection.azimuth.value,
+                "center": [self.center_x.value, self.center_y.value,],
+                "size": [self.width.value, self.height.value,],
+                "azimuth": self.azimuth.value,
             },
         )
 
@@ -359,24 +333,21 @@ class EdgeDetectionApp(BaseApplication):
             np.any(np.c_[indices_1, indices_2], axis=1), np.ones(2),
         ).astype(bool)
 
-        xy = self.plot_selection.selection.objects.lines[indices, :2]
-        self.plot_selection.collections = [
+        xy = self.objects.lines[indices, :2]
+        self.collections = [
             collections.LineCollection(
                 np.reshape(xy, (-1, 2, 2)), colors="k", linewidths=2
             )
         ]
-        self.plot_selection.refresh.value = False
-        self.plot_selection.refresh.value = True  # Trigger refresh
+        self.refresh.value = False
+        self.refresh.value = True  # Trigger refresh
 
         if np.any(xy):
-            vertices = np.vstack(
-                self.plot_selection.selection.objects.lines[indices, :]
-            )
+            vertices = np.vstack(self.objects.lines[indices, :])
             cells = np.arange(vertices.shape[0]).astype("uint32").reshape((-1, 2))
             if np.any(cells):
                 self.trigger.vertices = vertices
                 self.trigger.cells = cells
-                self.trigger.button_style = "success"
         else:
             self.trigger.vertices = None
             self.trigger.cells = None
