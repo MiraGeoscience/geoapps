@@ -28,3 +28,4 @@ dependencies:
     - jupyter_sphinx
     - sphinx-rtd-theme
     - plotly
+    - ipyfilechooser
