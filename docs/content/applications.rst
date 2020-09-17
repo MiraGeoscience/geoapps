@@ -13,3 +13,4 @@ the creation of application to the usage of existing ones.
    apps/create_contours.rst
    apps/edge_detection.rst
    apps/geophysical_inversion.rst
+   apps/scatter_plots.rst

@@ -258,6 +258,8 @@ def inversion(input_file):
 
     if "window" in input_dict.keys():
         window = input_dict["window"]
+        window["center"] = [window["center_x"], window["center_y"]]
+        window["size"] = [window["width"], window["height"]]
     else:
         window = None
 
@@ -479,7 +481,7 @@ def inversion(input_file):
                     else:
                         topo = topo_entity.vertices
 
-                    if input_dict["topography"]["GA_object"]["data"] != "Vertices":
+                    if input_dict["topography"]["GA_object"]["data"] != "Z":
                         data = topo_entity.get_data(
                             input_dict["topography"]["GA_object"]["data"]
                         )[0]
@@ -1011,18 +1013,21 @@ def inversion(input_file):
     # Create reference and starting model
     def get_model(input_value, vector=vector_property, save_model=False):
         # Loading a model file
-        if isinstance(input_value, str):
-            print("In model interpolation for " + input_value)
+        if isinstance(input_value, dict):
+            print(f"In model interpolation for {input_value}")
             workspace = Workspace(input_dict["save_to_geoh5"])
-            input_mesh = workspace.get_entity(input_value)[0].parent
+            input_mesh = workspace.get_entity(list(input_value.keys())[0])[0]
 
-            input_model = input_mesh.get_data(input_value)[0].values
+            input_model = input_mesh.get_data(list(input_value.values())[0])[0].values
 
             # Remove null values
             active = ((input_model > 1e-38) * (input_model < 2e-38)) == 0
             input_model = input_model[active]
 
-            xyz_cc = input_mesh.centroids[active, :]
+            if hasattr(input_mesh, "centroids"):
+                xyz_cc = input_mesh.centroids[active, :]
+            else:
+                xyz_cc = input_mesh.vertices[active, :]
 
             if window is not None:
                 xyz_cc = rotate_xy(xyz_cc, window["center"], window["azimuth"])
@@ -1041,7 +1046,6 @@ def inversion(input_file):
                     wght += 1.0 / (rad[:, ii] + 1e-3) ** 0.5
 
                 model /= wght
-                print("Reference model transferred to new mesh!")
 
             if save_model:
                 val = model.copy()
@@ -1049,6 +1053,7 @@ def inversion(input_file):
                 mesh_object.add_data(
                     {"Reference_model": {"values": val[mesh._ubc_order]}}
                 )
+                print("Reference model transferred to new mesh!")
 
             if vector:
                 model = Utils.sdiag(model) * np.kron(
@@ -1072,10 +1077,12 @@ def inversion(input_file):
                     )
                 else:
                     # Assumes amplitude reference value in inducing field direction
-                    model = np.kron(
-                        np.c_[input_value[0], input_value[0], input_value[0]],
-                        np.ones(mesh.nC),
-                    )[0, :]
+                    model = Utils.sdiag(np.ones(mesh.nC) * input_value[0]) * np.kron(
+                        Utils.matutils.dipazm_2_xyz(
+                            dip=survey.srcField.param[1], azm_N=survey.srcField.param[2]
+                        ),
+                        np.ones((mesh.nC, 1)),
+                    )
 
         return mkvc(model)
 
@@ -1247,7 +1254,16 @@ def inversion(input_file):
             Utils.io_utils.writeUBCmagneticsObservations(
                 outDir + "/Obs.mag", survey, dpred
             )
-
+        mesh_object.add_data(
+            {
+                "Starting_model": {
+                    "values": np.linalg.norm(
+                        (activeCellsMap * model_map * mstart).reshape((-1, 3)), axis=1
+                    )[mesh._ubc_order],
+                    "association": "CELL",
+                }
+            }
+        )
         return None
 
     # Global sensitivity weights (linear)
@@ -1380,7 +1396,7 @@ def inversion(input_file):
             maxIRLSiter=max_iterations,
             minGNiter=1,
             beta_tol=0.5,
-            prctile=80,
+            prctile=75,
             floorEpsEnforced=True,
             coolingRate=1,
             coolEps_q=True,

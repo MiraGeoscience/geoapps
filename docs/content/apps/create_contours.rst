@@ -25,13 +25,12 @@ Input data
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.processing import ContourValues
-            app = ContourValues(
-                h5file=r"../assets/FlinFlon.geoh5",
-                objects="Gravity_Magnetics_drape60m",
-                data='Airborne_TMI',
-            )
-            app.plot_selection.selection.widget
+            from geoapps.selection import ObjectDataSelection
+            ObjectDataSelection(
+            select_multiple=True, add_groups=True,
+                 h5file=r"../assets/FlinFlon.geoh5",
+                 objects="Data_FEM_pseudo3D",
+            ).widget
    * - See :ref:`Object, data selection <objectdataselection>`
 
 .. list-table::
@@ -60,13 +59,11 @@ Input data
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.processing import ContourValues
-            app = ContourValues(
-                h5file=r"../assets/FlinFlon.geoh5",
-                objects="Gravity_Magnetics_drape60m",
-                data='Airborne_TMI',
+            from geoapps.plotting import PlotSelection2D
+            app = PlotSelection2D(
+              h5file=r"../assets/FlinFlon.geoh5",
             )
-            app.plot_selection.plot_widget
+            app.widget
    * - See :ref:`Plot and select data <plotselectiondata>`
 
 Output Parameters
