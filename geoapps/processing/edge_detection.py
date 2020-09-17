@@ -40,8 +40,10 @@ class EdgeDetectionApp(PlotSelection2D):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "Gravity_Magnetics_drape60m",
-        "data": "Airborne_TMI",
+        "data": "Airborne_Gxx",
         "resolution": 50,
+        "sigma": 0.5,
+        "compute": True,
         "window": {"azimuth": -20,},
     }
     object_types = (Grid2D,)
