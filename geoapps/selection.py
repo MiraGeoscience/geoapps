@@ -125,6 +125,20 @@ class ObjectDataSelection(BaseApplication):
 
         return self._select_multiple
 
+    @select_multiple.setter
+    def select_multiple(self, value):
+        if getattr(self, "_data", None) is not None:
+            options = self._data.options
+        else:
+            options = []
+
+        self._select_multiple = value
+
+        if value:
+            self._data = SelectMultiple(description="Data: ", options=options)
+        else:
+            self._data = Dropdown(description="Data: ", options=options)
+
     @property
     def widget(self):
         """
@@ -174,11 +188,9 @@ class ObjectDataSelection(BaseApplication):
         ):
             obj = self.workspace.get_entity(self.objects.value)[0]
 
-            options = (
-                [""]
-                + [name for name in obj.get_data_list() if name != "Visual Parameters"]
-                + ["Z"]
-            )
+            options = [
+                name for name in obj.get_data_list() if name != "Visual Parameters"
+            ] + ["Z"]
 
             if self.add_groups and obj.property_groups:
                 options = (
@@ -187,7 +199,7 @@ class ObjectDataSelection(BaseApplication):
                     + ["--- Channels ---"]
                     + list(options)
                 )
-            self.data.options = options
+            self.data.options = [""] + options
             if self.find_label:
                 self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
@@ -212,8 +224,9 @@ class LineOptions(ObjectDataSelection):
     Unique lines selection from selected data channel
     """
 
+    defaults = {"find_label": "line"}
+
     def __init__(self, select_multiple=True, **kwargs):
-        self.find_label = "line"
 
         if select_multiple:
             self._lines = widgets.SelectMultiple(description="Select lines:",)
