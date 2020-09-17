@@ -286,7 +286,7 @@ def update_apps():
 
     return VBox(
         [
-            Label("Warning! Local changed to the notebooks will be lost on update."),
+            Label("Warning! Local changes to the notebooks will be lost on update."),
             trigger,
         ]
     )
