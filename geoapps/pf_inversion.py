@@ -189,7 +189,6 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
 
 def inversion(input_file):
     dsep = os.path.sep
-
     if input_file is not None:
         workDir = dsep.join(os.path.dirname(os.path.abspath(input_file)).split(dsep))
         if len(workDir) > 0:
@@ -1518,5 +1517,5 @@ def inversion(input_file):
 
 if __name__ == "__main__":
 
-    input_file = r"C:\Users\dominiquef\Desktop\Input.json"  # sys.argv[1]
+    input_file = sys.argv[1]
     inversion(input_file)
