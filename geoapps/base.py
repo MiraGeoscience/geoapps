@@ -284,7 +284,12 @@ def update_apps():
 
     trigger.on_click(run_update)
 
-    return trigger
+    return VBox(
+        [
+            Label("Warning! Local changed to the notebooks will be lost on update."),
+            trigger,
+        ]
+    )
 
 
 def working_copy(h5file):
