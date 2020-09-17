@@ -1,7 +1,8 @@
 from distutils.core import setup
 
 from setuptools import find_packages
-with open("README.md", "r") as fh:
+
+with open("README.md") as fh:
     long_description = fh.read()
 
 CLASSIFIERS = [
@@ -21,7 +22,7 @@ CLASSIFIERS = [
 
 setup(
     name="geoapps",
-    version="0.1.5",
+    version="0.1.8",
     packages=find_packages(),
     install_requires=["numpy", "h5py", "scipy", "geoh5py"],
     author="Mira Geoscience",
@@ -37,4 +38,3 @@ setup(
     license="MIT License",
     use_2to3=False,
 )
-

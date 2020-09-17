@@ -26,4 +26,5 @@ dependencies:
     - sphinx_issues
     - nbsphinx
     - jupyter_sphinx
-    - sphinx-rtd-theme
+    - plotly
+    - ipyfilechooser

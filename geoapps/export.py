@@ -439,7 +439,7 @@ def object_to_object_interpolation(h5file):
     def object_pick(_):
         ref_dropdown.value = selection.objects.value
 
-    selection.objects.observe(object_pick)
+    selection.objects.observe(object_pick, names="value")
 
     new_grid = widgets.Text(
         value="InterpGrid", description="New grid name:", disabled=False,

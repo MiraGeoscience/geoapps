@@ -13,7 +13,7 @@ the powerful visualization capabilities of `Geoscience ANALYST
 <https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_
 along with open-source code from the Python ecosystem.
 
-.. figure:: ./images/GA_demo.png
+.. figure:: ./images/index_page.png
 	    :align: center
 	    :width: 600
 
