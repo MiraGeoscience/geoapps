@@ -295,6 +295,7 @@ def object_to_object_interpolation(h5file):
 
             values = {}
             for field in selection.data.value:
+                print(object_from.name, field)
                 model_in = object_from.get_data(field)[0]
                 values[field] = model_in.values.copy()
 
@@ -371,7 +372,7 @@ def object_to_object_interpolation(h5file):
                             np.abs(xyz_out[:, 2] - xyz[ind, 2]) > max_depth.value
                         ] = no_data_value.value
 
-            if topo_options.options_button.value == "Object":
+            if topo_options.options.value == "Object":
                 topo_obj = workspace.get_entity(topo_options.objects.value)[0]
                 if getattr(topo_obj, "vertices", None) is not None:
                     topo = topo_obj.vertices
@@ -394,7 +395,7 @@ def object_to_object_interpolation(h5file):
                 for key in values_interp.keys():
                     values_interp[key][xyz_out[:, 2] > z_interp] = no_data_value.value
             elif (
-                topo_options.options_button.value == "Constant"
+                topo_options.options.value == "Constant"
                 and topo_options.constant.value is not None
             ):
                 xyz_out = object_to.centroids.copy()
@@ -425,7 +426,7 @@ def object_to_object_interpolation(h5file):
 
     names = [""] + list(workspace.list_objects_name.values())
 
-    selection = ObjectDataSelection(h5file=h5file, select_multiple=True)
+    selection = ObjectDataSelection(select_multiple=True, h5file=h5file)
 
     out_mode = widgets.RadioButtons(
         options=["To Object:", "Create 3D Grid"], value="To Object:", disabled=False
@@ -504,8 +505,8 @@ def object_to_object_interpolation(h5file):
 
     topo_options = TopographyOptions(h5file=h5file)
     topo_options.offset.disabled = True
-    topo_options.options_button.options = ["Object", "Constant", "None"]
-    topo_options.options_button.value = "Object"
+    topo_options.options.options = ["Object", "Constant", "None"]
+    topo_options.options.value = "Object"
     # topography, z_value = ObjectDataSelection(h5file)
     # z_value.options = list(z_value.options) + ["Vertices"]
 

@@ -84,11 +84,11 @@ class BaseApplication:
                 getattr(self, obj).style = {"description_width": "initial"}
 
         for key, value in kwargs.items():
-            if hasattr(self, "_" + key):
+            if hasattr(self, "_" + key) or hasattr(self, key):
                 try:
-                    if isinstance(getattr(self, "_" + key), Widget) and not isinstance(
-                        value, Widget
-                    ):
+                    if isinstance(
+                        getattr(self, "_" + key, None), Widget
+                    ) and not isinstance(value, Widget):
                         setattr(getattr(self, key), "value", value)
                     else:
                         try:
