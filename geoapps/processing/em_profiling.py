@@ -1,4 +1,5 @@
 import os
+import re
 import numpy as np
 from scipy.spatial import cKDTree
 import plotly.graph_objects as go
@@ -41,18 +42,26 @@ class EMLineProfiler(ObjectDataSelection):
     Application for the picking of targets along Time-domain EM profiles
     """
 
-    # viz_param = '<IParameterList Version="1.0">\n <Colour>4278190335</Colour>\n <Transparency>0</Transparency>\n <Nodesize>9</Nodesize>\n <Nodesymbol>Sphere</Nodesymbol>\n <Scalenodesbydata>false</Scalenodesbydata>\n <Data></Data>\n <Scale>1</Scale>\n <Scalebyabsolutevalue>[NO STRING REPRESENTATION]</Scalebyabsolutevalue>\n <Orientation toggled="true">{\n    "DataGroup": "AzmDip",\n    "ManualWidth": true,\n    "Scale": false,\n    "ScaleLog": false,\n    "Size": 30,\n    "Symbol": "Tablet",\n    "Width": 30\n}\n</Orientation>\n</IParameterList>\n'
     defaults = {
-        "select_multiple": True,
-        "add_groups": True,
         "object_types": (Curve,),
         "h5file": "../../assets/FlinFlon.geoh5",
+        "time_groups": {
+            "early": {"range": "9-16", "color": "blue"},
+            "early + middle": {"range": "9-27", "color": "green"},
+            "middle": {"range": "17-27", "color": "green"},
+            "middle + late": {"range": "17-40", "color": "yellow"},
+            "early + middle + late": {"range": "9-40", "color": "orange",},
+            "late": {"range": "28-40", "color": "red"},
+        },
         "objects": "Data_TEM_pseudo3D",
         "data": ["Observed"],
-        "model": {"objects": "Inversion_VTEM_Model", "data": "Iteration_7_model"},
+        "model": {"objects": "Inversion_VTEM_Model"},
     }
 
     def __init__(self, **kwargs):
+        self.select_multiple = True
+        self._add_groups = True
+
         kwargs = self.apply_defaults(**kwargs)
 
         self.em_system_specs = geophysical_systems.parameters()
@@ -64,15 +73,12 @@ class EMLineProfiler(ObjectDataSelection):
             ],
             description="Time-Domain System:",
         )
-        self._groups = None
+        self._time_groups = {}
         self.group_list = Dropdown(description="")
-        self.early = np.arange(8, 17).tolist()
-        self.middle = np.arange(17, 28).tolist()
-        self.late = np.arange(28, 40).tolist()
         self.objects.description = "Survey"
         self.surface_model = None
         self._survey = None
-        self.model_figure = go.Figure()
+        self.model_figure = go.FigureWidget()
         self.model_figure.add_trace(go.Scatter3d())
         self.model_figure.add_trace(go.Cone())
         self.model_figure.add_trace(go.Mesh3d())
@@ -83,29 +89,27 @@ class EMLineProfiler(ObjectDataSelection):
                 "zaxis_title": "Elevation (m)",
                 "yaxis": {"autorange": "reversed"},
                 "xaxis": {"autorange": "reversed"},
-                "camera": {"eye": dict(x=-1, y=1, z=1.0),},
                 "aspectmode": "data",
             },
             width=800,
             height=400,
             autosize=False,
-            scene_dragmode="orbit",
             uirevision=False,
         )
 
         self.marker = {"left": "<", "right": ">"}
 
-        def survey_change(_):
-            self.survey_change()
+        def objects_change(_):
+            self.objects_change()
 
-        self.objects.observe(survey_change, names="value")
+        self.objects.observe(objects_change, names="value")
         self.channels = SelectMultiple(description="Channels")
-        self.group_default_early = Text(description="Early", value="9-16")
-        self.group_default_middle = Text(description="Middle", value="17-27")
-        self.group_default_late = Text(description="Late", value="28-40")
+        self._group_early = Text(description="Early")
+        self._group_middle = Text(description="Middle")
+        self._group_late = Text(description="Late")
 
-        def reset_default_groups(_):
-            self.reset_default_groups()
+        def reset_time_groups(_):
+            self.reset_time_groups()
 
         self.data_channels = {}
         self.data_channel_options = {}
@@ -186,7 +190,9 @@ class EMLineProfiler(ObjectDataSelection):
         )
         self.zoom = VBox([self.center, self.focus])
         self.scale_button = ToggleButtons(
-            options=["linear", "symlog",], description="Y-axis scaling",
+            options=["linear", "symlog",],
+            description="Y-axis scaling",
+            orientation="vertical",
         )
         self.scale_value = FloatLogSlider(
             min=-18,
@@ -201,9 +207,6 @@ class EMLineProfiler(ObjectDataSelection):
             description="Time Gate",
             options=self.em_system_specs[self.system.value]["channels"].keys(),
         )
-        self.group_default_early.observe(reset_default_groups, names="value")
-        self.group_default_middle.observe(reset_default_groups, names="value")
-        self.group_default_late.observe(reset_default_groups, names="value")
 
         self.group_add = ToggleButton(description="^ Add New Group ^")
         self.group_name = Text(description="Name")
@@ -212,11 +215,12 @@ class EMLineProfiler(ObjectDataSelection):
         )
 
         self.markers = ToggleButton(description="Show markers")
-        self.groups_setter = ToggleButton(description="Set channel groups", value=False)
+        self.groups_setter = ToggleButton(description="Select Time Groups", value=False)
         self.x_label = ToggleButtons(
             options=["Distance", "Easting", "Northing"],
             value="Distance",
             description="X-axis label:",
+            orientation="vertical",
         )
 
         self.show_model = ToggleButton(
@@ -224,29 +228,28 @@ class EMLineProfiler(ObjectDataSelection):
         )
         self.show_decay = ToggleButton(description="Show decay", value=False)
 
-        def get_data(_):
-            self.get_data()
+        def set_data(_):
+            self.set_data()
 
-        self.data.observe(get_data, names="value")
+        self.data.observe(set_data, names="value")
 
         super().__init__(**kwargs)
-
-        # self.reset_default_groups()
-        # self.get_data()
 
         self.lines = LineOptions(
             select_multiple=False, workspace=self._workspace, _objects=self._objects
         )
+        if "lines" in kwargs.keys():
+            self.lines.__populate__(**kwargs["lines"])
+
         self.model_selection = ObjectDataSelection(
             object_types=(Surface,), workspace=self._workspace
         )
-
         if "model" in kwargs.keys():
             self.model_selection.__populate__(**kwargs["model"])
         self.model_selection.objects.description = "Surface:"
         self.model_selection.data.description = "Model"
 
-        scale_panel = HBox([self.scale_button])
+        scale_panel = VBox([self.scale_button])
 
         def scale_update(_):
             if self.scale_button.value == "symlog":
@@ -262,41 +265,11 @@ class EMLineProfiler(ObjectDataSelection):
         def add_group(_):
             self.add_group()
 
-        def channel_setter(caller):
-            channel = caller["owner"]
-            data_widget = self.data_channel_options[channel.header]
-            data_widget.children[0].value = find_value(
-                data_widget.children[0].options, [channel.header]
-            )
-
         def system_observer(_):
-            system_specs = {}
-            for key, time_gate in self.em_system_specs[self.system.value][
-                "channels"
-            ].items():
-                system_specs[key] = f"{time_gate:.5e}"
-
-            self.channel_selection.options = self.em_system_specs[self.system.value][
-                "channels"
-            ].keys()
-
-            self.data_channel_options = {}
-            for ind, (key, value) in enumerate(system_specs.items()):
-                channel_selection = Dropdown(
-                    description="Channel",
-                    style={"description_width": "initial"},
-                    options=self.channels.options,
-                    value=find_value(self.channels.options, [key]),
-                )
-                channel_selection.header = key
-                channel_selection.observe(channel_setter, names="value")
-
-                channel_time = FloatText(description="Time (s)", value=value)
-
-                self.data_channel_options[key] = VBox([channel_selection, channel_time])
+            self.system_observer()
 
         self.system.observe(system_observer)
-        system_observer("")
+        self.system_observer()
 
         def channel_panel_update(_):
             self.channel_panel.children = [
@@ -316,7 +289,7 @@ class EMLineProfiler(ObjectDataSelection):
             self.system_box_trigger()
 
         self.system_box_option = ToggleButton(
-            description="Set System Specs", value=False
+            description="Select TEM System", value=False
         )
         self.system_box_option.observe(system_box_trigger)
         self.system_box = VBox([self.system_box_option])
@@ -327,6 +300,7 @@ class EMLineProfiler(ObjectDataSelection):
             self.highlight_selection()
 
         self.group_list.observe(highlight_selection, names="value")
+        self.highlight_selection()
 
         def groups_trigger(_):
             self.groups_trigger()
@@ -420,15 +394,15 @@ class EMLineProfiler(ObjectDataSelection):
             ind,
             center,
             focus,
-            objects,
-            model,
-            smoothing,
-            slice_width,
             x_label,
             colormap,
             reverse,
             z_shift,
             dip_rotation,
+            objects,
+            model,
+            smoothing,
+            slice_width,
         ):
             self.update_line_model()
             self.plot_model_selection(
@@ -470,21 +444,26 @@ class EMLineProfiler(ObjectDataSelection):
                             layout=Layout(width="50%"),
                         ),
                         VBox(
-                            [self.system_box, self.groups_widget],
+                            [self.system_box, self.groups_widget, self.decay_panel,],
                             layout=Layout(width="50%"),
                         ),
                     ],
                 ),
                 HBox(
                     [
-                        VBox([self.zoom, self.smoothing, self.residual,],),
+                        VBox(
+                            [
+                                self.zoom,
+                                self.smoothing,
+                                self.residual,
+                                self.x_label,
+                                scale_panel,
+                                self.markers,
+                            ]
+                        ),
                         plotting,
-                        self.decay_panel,
                     ]
                 ),
-                HBox([self.x_label, self.threshold]),
-                scale_panel,
-                self.markers,
                 self.model_panel,
                 self.trigger_widget,
             ]
@@ -492,10 +471,67 @@ class EMLineProfiler(ObjectDataSelection):
 
         self.auto_picker.value = True
 
-    def get_data(self):
+    @property
+    def time_groups(self):
+
+        return self._time_groups
+
+    @time_groups.setter
+    def time_groups(self, groups: dict):
+
+        # Append keys for profiling
+        for group in groups.values():
+            group["channels"] = []
+            group["gates"] = []
+            group["inflx_up"] = []
+            group["inflx_dwn"] = []
+            group["peaks"] = []
+            group["times"] = []
+            group["values"] = []
+            group["locations"] = []
+
+        self._time_groups = groups
+
+    @property
+    def survey(self):
+        """
+
+        """
+
+        return self._survey
+
+    @property
+    def system(self):
+        """
+
+        """
+        return self._system
+
+    @property
+    def group_early(self):
+        """
+
+        """
+        return self._group_early
+
+    @property
+    def group_middle(self):
+        """
+
+        """
+        return self._group_middle
+
+    @property
+    def group_middle(self):
+        """
+
+        """
+        return self._group_middle
+
+    def set_data(self):
         if getattr(self, "survey", None) is not None:
             groups = [p_g.name for p_g in self.survey.property_groups]
-            channels = list(self.data.value)
+            channels = []  # list(self.data.value)
 
             for channel in self.data.value:
                 if channel in groups:
@@ -503,6 +539,8 @@ class EMLineProfiler(ObjectDataSelection):
                         name = self.workspace.get_entity(prop)[0].name
                         if prop not in channels:
                             channels.append(name)
+                else:
+                    channels.append(channel)
 
             self.channels.options = channels
             for channel in channels:
@@ -510,7 +548,7 @@ class EMLineProfiler(ObjectDataSelection):
                     self.data_channels[channel] = self.survey.get_data(channel)[0]
 
             # Generate default groups
-            self.reset_default_groups()
+            self.reset_groups()
 
             for key, widget in self.data_channel_options.items():
                 widget.children[0].options = channels
@@ -519,13 +557,18 @@ class EMLineProfiler(ObjectDataSelection):
             self.auto_picker.value = False
             self.auto_picker.value = True
 
-    def survey_change(self):
+    def objects_change(self):
 
         if self.workspace.get_entity(self.objects.value):
             self._survey = self.workspace.get_entity(self.objects.value)[0]
 
             for aem_system, specs in self.em_system_specs.items():
-                if any([specs["flag"] in channel for channel in self.data.options]):
+                if any(
+                    [
+                        specs["flag"] in channel
+                        for channel in self._survey.get_data_list()
+                    ]
+                ):
                     self.system.value = aem_system
 
     def system_box_trigger(self):
@@ -538,13 +581,43 @@ class EMLineProfiler(ObjectDataSelection):
         else:
             self.system_box.children = [self.system_box_option]
 
+    def system_observer(self):
+        def channel_setter(caller):
+            channel = caller["owner"]
+            data_widget = self.data_channel_options[channel.header]
+            data_widget.children[0].value = find_value(
+                data_widget.children[0].options, [channel.header]
+            )
+
+        system_specs = {}
+        for key, time_gate in self.em_system_specs[self.system.value][
+            "channels"
+        ].items():
+            system_specs[key] = f"{time_gate:.5e}"
+
+        self.channel_selection.options = self.em_system_specs[self.system.value][
+            "channels"
+        ].keys()
+
+        self.data_channel_options = {}
+        for ind, (key, value) in enumerate(system_specs.items()):
+            channel_selection = Dropdown(
+                description="Channel",
+                style={"description_width": "initial"},
+                options=self.channels.options,
+                value=find_value(self.channels.options, [key]),
+            )
+            channel_selection.header = key
+            channel_selection.observe(channel_setter, names="value")
+
+            channel_time = FloatText(description="Time (s)", value=value)
+
+            self.data_channel_options[key] = VBox([channel_selection, channel_time])
+
     def groups_trigger(self):
         if self.groups_setter.value:
             self.groups_widget.children = [
                 self.groups_setter,
-                self.group_default_early,
-                self.group_default_middle,
-                self.group_default_late,
                 self.group_list,
                 self.channels,
                 self.group_name,
@@ -558,24 +631,6 @@ class EMLineProfiler(ObjectDataSelection):
         """
         Assign TEM channel for given gate #
         """
-        # Reset channels
-        for group in self.groups.values():
-            if len(group["defaults"]) > 0:
-                group["channels"] = []
-                group["inflx_up"] = []
-                group["inflx_dwn"] = []
-                group["peaks"] = []
-                group["mad_tau"] = []
-                group["times"] = []
-                group["values"] = []
-                group["locations"] = []
-
-        for ind, channel in enumerate(channels):
-            for group in self.groups.values():
-                if ind in group["gates"]:
-                    group["channels"].append(channel)
-        self.group_list.options = self.groups.keys()
-        self.group_list.value = self.group_list.options[0]
 
     def add_group(self):
         """
@@ -588,7 +643,7 @@ class EMLineProfiler(ObjectDataSelection):
                     self.group_name.value
                 ]
 
-            self.groups[self.group_name.value] = {
+            self.time_groups[self.group_name.value] = {
                 "color": self.group_color.value,
                 "channels": list(self.channels.value),
                 "inflx_up": [],
@@ -605,10 +660,10 @@ class EMLineProfiler(ObjectDataSelection):
         if self.trigger.value:
             # for group in self.group_list.value:
             group = self.group_list.value
-            tau = self.groups[group]["mad_tau"]
-            dip = self.groups[group]["dip"]
-            azimuth = self.groups[group]["azimuth"]
-            cox = self.groups[group]["cox"]
+            tau = self.time_groups[group]["mad_tau"]
+            dip = self.time_groups[group]["dip"]
+            azimuth = self.time_groups[group]["azimuth"]
+            cox = self.time_groups[group]["cox"]
             if self.workspace.get_entity(group):
                 points = self.workspace.get_entity(group)[0]
                 azm_data = points.get_data("azimuth")[0]
@@ -665,8 +720,8 @@ class EMLineProfiler(ObjectDataSelection):
         # highlights = []
         # for group in self.group_list.value:
         #     highlights +=
-        self.group_color.value = self.groups[self.group_list.value]["color"]
-        self.channels.value = self.groups[self.group_list.value]["channels"]
+        self.group_color.value = self.time_groups[self.group_list.value]["color"]
+        self.channels.value = self.time_groups[self.group_list.value]["channels"]
 
     def plot_data_selection(
         self,
@@ -686,15 +741,6 @@ class EMLineProfiler(ObjectDataSelection):
     ):
 
         self.line_update()
-
-        for group in self.groups.values():
-            group["inflx_up"] = []
-            group["inflx_dwn"] = []
-            group["peaks"] = []
-            group["mad_tau"] = []
-            group["times"] = []
-            group["values"] = []
-            group["locations"] = []
 
         if (
             getattr(self, "survey", None) is None
@@ -725,7 +771,11 @@ class EMLineProfiler(ObjectDataSelection):
 
         # channels = []
         # for group in self.group_list.value:
-        channels = self.groups[self.group_list.value]["channels"]
+        try:
+            time_group = self.time_groups[self.group_list.value]
+            channels = time_group["channels"]
+        except KeyError:
+            return
 
         if len(channels) == 0:
             channels = self.channels.options
@@ -735,6 +785,14 @@ class EMLineProfiler(ObjectDataSelection):
             times[channel.children[0].value] = channel.children[1].value
 
         y_min, y_max = np.inf, -np.inf
+        time_group["inflx_up"] = []
+        time_group["inflx_dwn"] = []
+        time_group["peaks"] = []
+        time_group["mad_tau"] = []
+        time_group["times"] = []
+        time_group["values"] = []
+        time_group["locations"] = []
+
         for channel, d in self.data_channels.items():
 
             if channel not in times.keys():
@@ -822,21 +880,18 @@ class EMLineProfiler(ObjectDataSelection):
 
                 peak = np.min([bump_x.shape[0] - 1, np.searchsorted(bump_x, locs[cox])])
 
-                # for ii, group in enumerate(self.group_list.value):
-                group = self.group_list.value
-                if channel in self.groups[group]["channels"]:
-                    self.groups[group]["inflx_up"].append(
+                if channel in time_group["channels"]:
+
+                    time_group["inflx_up"].append(
                         np.r_[bump_x[inflx_up], bump_v[inflx_up]]
                     )
-                    self.groups[group]["peaks"].append(
-                        np.r_[bump_x[peak], bump_v[peak]]
-                    )
-                    self.groups[group]["times"].append(times[channel])
-                    self.groups[group]["inflx_dwn"].append(
+                    time_group["peaks"].append(np.r_[bump_x[peak], bump_v[peak]])
+                    time_group["times"].append(times[channel])
+                    time_group["inflx_dwn"].append(
                         np.r_[bump_x[inflx_dwn], bump_v[inflx_dwn]]
                     )
-                    self.groups[group]["locations"].append(bump_x)
-                    self.groups[group]["values"].append(bump_v)
+                    time_group["locations"].append(bump_x)
+                    time_group["values"].append(bump_v)
 
                     # Compute average dip
                     left_ratio = (bump_v[peak] - bump_v[inflx_up]) / (
@@ -857,51 +912,46 @@ class EMLineProfiler(ObjectDataSelection):
 
                     # Left
                     axs.plot(
-                        bump_x[:peak],
-                        bump_v[:peak],
-                        "--",
-                        color=self.groups[group]["color"],
+                        bump_x[:peak], bump_v[:peak], "--", color=time_group["color"],
                     )
                     # Right
                     axs.plot(
-                        bump_x[peak:], bump_v[peak:], color=self.groups[group]["color"],
+                        bump_x[peak:], bump_v[peak:], color=time_group["color"],
                     )
                     axs.scatter(
-                        self.groups[group]["peaks"][-1][0],
-                        self.groups[group]["peaks"][-1][1],
+                        time_group["peaks"][-1][0],
+                        time_group["peaks"][-1][1],
                         s=100,
-                        c=self.groups[group]["color"],
+                        c=time_group["color"],
                         marker=self.marker[ori],
                     )
                     if ~np.isnan(dip):
                         axs.text(
-                            self.groups[group]["peaks"][-1][0],
-                            self.groups[group]["peaks"][-1][1],
+                            time_group["peaks"][-1][0],
+                            time_group["peaks"][-1][1],
                             f"{dip:.0f}",
                             va="bottom",
                             ha="center",
                         )
                     axs.scatter(
-                        self.groups[group]["inflx_dwn"][-1][0],
-                        self.groups[group]["inflx_dwn"][-1][1],
+                        time_group["inflx_dwn"][-1][0],
+                        time_group["inflx_dwn"][-1][1],
                         s=100,
-                        c=self.groups[group]["color"],
+                        c=time_group["color"],
                         marker="1",
                     )
                     axs.scatter(
-                        self.groups[group]["inflx_up"][-1][0],
-                        self.groups[group]["inflx_up"][-1][1],
+                        time_group["inflx_up"][-1][0],
+                        time_group["inflx_up"][-1][1],
                         s=100,
-                        c=self.groups[group]["color"],
+                        c=time_group["color"],
                         marker="2",
                     )
 
-        # for group in self.group_list.value:
-        group = self.group_list.value
-        if np.any(self.groups[group]["peaks"]):
-            peaks = np.vstack(self.groups[group]["peaks"])
-            inflx_dwn = np.vstack(self.groups[group]["inflx_dwn"])
-            inflx_up = np.vstack(self.groups[group]["inflx_up"])
+        if np.any(time_group["peaks"]):
+            peaks = np.vstack(time_group["peaks"])
+            inflx_dwn = np.vstack(time_group["inflx_dwn"])
+            inflx_up = np.vstack(time_group["inflx_up"])
 
             ratio = peaks[:, 1] / peaks[0, 1]
             ind = np.where(ratio >= (1 - threshold / 100))[0][-1]
@@ -913,7 +963,7 @@ class EMLineProfiler(ObjectDataSelection):
             cox_x = self.lines.profile.interp_x(peaks[0])
             cox_y = self.lines.profile.interp_y(peaks[0])
             cox_z = self.lines.profile.interp_z(peaks[0])
-            self.groups[group]["cox"] = np.r_[cox_x, cox_y, cox_z]
+            time_group["cox"] = np.r_[cox_x, cox_y, cox_z]
 
             # Compute average dip
             left_ratio = np.abs((peaks[1] - inflx_up[1]) / (peaks[0] - inflx_up[0]))
@@ -944,8 +994,8 @@ class EMLineProfiler(ObjectDataSelection):
 
             dip = np.rad2deg(np.arcsin(ratio))
 
-            self.groups[group]["azimuth"] = azm
-            self.groups[group]["dip"] = dip
+            time_group["azimuth"] = azm
+            time_group["dip"] = dip
             self.pause_plot_refresh = True
             self.dip_rotation.value = dip
             self.pause_plot_refresh = False
@@ -961,9 +1011,9 @@ class EMLineProfiler(ObjectDataSelection):
             )
             axs.plot([center_x, center_x], [0, y_max], "g--")
 
-            # for group in self.groups.values():
-            if self.groups[group]["peaks"]:
-                peaks = np.vstack(self.groups[group]["peaks"])
+            # for group in self.time_groups.values():
+            if time_group["peaks"]:
+                peaks = np.vstack(time_group["peaks"])
                 ratio = peaks[:, 1] / peaks[0, 1]
                 ind = np.where(ratio >= (1 - threshold / 100))[0][-1]
                 #                 print(ind)
@@ -971,7 +1021,7 @@ class EMLineProfiler(ObjectDataSelection):
                     peaks[: ind + 1, 0],
                     peaks[: ind + 1, 1],
                     "--",
-                    color=self.groups[group]["color"],
+                    color=time_group["color"],
                 )
 
             if scale == "symlog":
@@ -1039,22 +1089,22 @@ class EMLineProfiler(ObjectDataSelection):
             group = self.group_list.value
             # for group in self.group_list.value:
 
-            if len(self.groups[group]["peaks"]) == 0:
+            if len(self.time_groups[group]["peaks"]) == 0:
                 return
 
             peaks = (
-                np.vstack(self.groups[group]["peaks"])
+                np.vstack(self.time_groups[group]["peaks"])
                 * self.em_system_specs[self.system.value]["normalization"]
             )
 
             ratio = peaks[:, 1] / peaks[0, 1]
             ind = np.where(ratio >= (1 - self.threshold.value / 100))[0][-1]
-
-            tc = np.hstack(self.groups[group]["times"][: ind + 1])
+            tc = np.hstack(self.time_groups[group]["times"][: ind + 1])
             vals = np.log(peaks[: ind + 1, 1])
 
             if tc.shape[0] < 2:
                 return
+
             # Compute linear trend
             A = np.c_[np.ones_like(tc), tc]
             a, c = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, vals))
@@ -1064,7 +1114,7 @@ class EMLineProfiler(ObjectDataSelection):
             ratio = np.abs((vv[0] - vv[1]) / (d[0] - d[1]))
             #                 angl = np.arctan(ratio**-1.)
 
-            self.groups[group]["mad_tau"] = ratio ** -1.0
+            self.time_groups[group]["mad_tau"] = ratio ** -1.0
 
             if axs is None:
                 plt.figure(figsize=(8, 8))
@@ -1075,20 +1125,20 @@ class EMLineProfiler(ObjectDataSelection):
                 np.exp(d * c + a),
                 "--",
                 linewidth=2,
-                color=self.groups[group]["color"],
+                color=self.time_groups[group]["color"],
             )
             axs.text(
                 np.mean(d),
                 np.exp(np.mean(vv)),
                 f"{ratio ** -1.:.2e}",
-                color=self.groups[group]["color"],
+                color=self.time_groups[group]["color"],
             )
             #                 plt.yscale('symlog', linthreshy=scale_value)
             #                 axs.set_aspect('equal')
             axs.scatter(
-                np.hstack(self.groups[group]["times"]),
+                np.hstack(self.time_groups[group]["times"]),
                 peaks[:, 1],
-                color=self.groups[group]["color"],
+                color=self.time_groups[group]["color"],
                 marker="^",
             )
             axs.grid(True)
@@ -1136,18 +1186,18 @@ class EMLineProfiler(ObjectDataSelection):
 
             # for group in self.group_list.value:
             group = self.group_list.value
-            if not np.any(self.groups[group]["peaks"]):
+            if not np.any(self.time_groups[group]["peaks"]):
                 return
 
-            _, ind = tree.query(self.groups[group]["cox"].reshape((-1, 3)))
+            _, ind = tree.query(self.time_groups[group]["cox"].reshape((-1, 3)))
             dip = dip_rotation
-            azimuth = self.groups[group]["azimuth"]
+            azimuth = self.time_groups[group]["azimuth"]
 
             if dip > 90:
                 dip = 180 - dip
                 azimuth += 180
-                self.groups[group]["dip"] = dip
-                self.groups[group]["azimuth"] = azimuth
+                self.time_groups[group]["dip"] = dip
+                self.time_groups[group]["azimuth"] = azimuth
 
             vec = rotate_azimuth_dip(azimuth, dip,)
             scaler = 100
@@ -1160,7 +1210,7 @@ class EMLineProfiler(ObjectDataSelection):
             self.model_figure.data[1].w = vec[:, 2] * scaler
             self.model_figure.data[1].showscale = False
 
-            self.groups[group]["cox"][2] = self.lines.model_vertices[ind, 2]
+            self.time_groups[group]["cox"][2] = self.lines.model_vertices[ind, 2]
 
             simplices = self.lines.model_cells.reshape((-1, 3))
 
@@ -1179,14 +1229,14 @@ class EMLineProfiler(ObjectDataSelection):
             else:
                 azm = azimuth - 90
             vec = rotate_azimuth_dip(azm, 0)
-            self.model_figure.update_layout(
-                scene={
-                    "camera": {
-                        "center": dict(x=0, y=0, z=0.2,),
-                        "eye": dict(x=vec[0, 0] * 0.75, y=vec[0, 1] * 0.75, z=0.2,),
-                    }
-                },
-            )
+            # self.model_figure.update_layout(
+            #     scene={
+            #         "camera": {
+            #             "center": dict(x=0, y=0, z=0.2,),
+            #             "eye": dict(x=vec[0, 0] * 0.75, y=vec[0, 1] * 0.75, z=0.2,),
+            #         }
+            #     },
+            # )
 
             self.model_figure.show()
 
@@ -1290,40 +1340,42 @@ class EMLineProfiler(ObjectDataSelection):
         else:
             self.show_model.description = "Show model"
 
-    def reset_default_groups(self):
+    def reset_groups(self):
 
-        try:
-            first, last = np.asarray(
-                self.group_default_early.value.split("-"), dtype="int"
-            )
-            self.early = np.arange(first, last + 1).tolist()
-        except ValueError:
-            return
+        # for group in self.time_groups.values():
+        #     try:
+        #         first, last = np.asarray(
+        #             group["range"].split("-"), dtype="int"
+        #         )
+        #         group["gates"] = np.arange(first, last + 1).tolist()
+        #     except ValueError:
+        #         pass
 
-        try:
-            first, last = np.asarray(
-                self.group_default_middle.value.split("-"), dtype="int"
-            )
-            self.middle = np.arange(first, last + 1).tolist()
-        except ValueError:
-            return
+        for group in self.time_groups.values():
+            try:
+                first, last = np.asarray(group["range"].split("-"), dtype="int")
+                group["gates"] = np.arange(first, last + 1).tolist()
+                group["channels"] = []
+                group["inflx_up"] = []
+                group["inflx_dwn"] = []
+                group["peaks"] = []
+                group["mad_tau"] = []
+                group["times"] = []
+                group["values"] = []
+                group["locations"] = []
+            except ValueError:
+                pass
 
-        try:
-            first, last = np.asarray(
-                self.group_default_late.value.split("-"), dtype="int"
-            )
-            self.last = np.arange(first, last + 1).tolist()
-        except ValueError:
-            return
+        for channel in self.channels.options:
+            if re.findall(r"\d+", channel):
+                value = int(re.findall(r"\d+", channel)[0])
+                for group in self.time_groups.values():
+                    if value in group["gates"]:
+                        group["channels"].append(channel)
+        self.group_list.options = self.time_groups.keys()
+        self.group_list.value = self.group_list.options[0]
 
-        for group in self.groups.values():
-            gates = []
-            if len(group["defaults"]) > 0:
-                for default in group["defaults"]:
-                    gates += getattr(self, default)
-                group["gates"] = gates
-
-        self.set_default_groups(self.channels.options)
+        # self.set_default_groups(self.channels.options)
 
     def show_model_trigger(self):
         """
@@ -1344,7 +1396,7 @@ class EMLineProfiler(ObjectDataSelection):
                                 self.dip_rotation,
                             ]
                         ),
-                        self.model_section,
+                        self.model_figure,
                     ]
                 ),
             ]
@@ -1358,54 +1410,8 @@ class EMLineProfiler(ObjectDataSelection):
         Add the decay curve plot
         """
         if self.show_decay.value:
-            self.decay_panel.children = [
-                self.show_decay,
-                self.decay,
-            ]
+            self.decay_panel.children = [self.show_decay, self.decay, self.threshold]
             self.show_decay.description = "Hide decay curve"
         else:
             self.decay_panel.children = [self.show_decay]
             self.show_decay.description = "Show decay curve"
-
-    @property
-    def groups(self):
-        if getattr(self, "_groups", None) is None:
-
-            self._groups = {
-                "early": {"color": "blue", "defaults": ["early"],},
-                "early + middle": {"color": "cyan", "defaults": ["early", "middle"],},
-                "middle": {"color": "green", "defaults": ["middle"],},
-                "early + middle + late": {
-                    "color": "orange",
-                    "defaults": ["early", "middle", "late"],
-                },
-                "middle + late": {"color": "yellow", "defaults": ["middle", "late"],},
-                "late": {"color": "red", "defaults": ["late"],},
-            }
-
-            for group in self._groups.values():
-                group["channels"] = []
-                group["gates"] = []
-                group["inflx_up"] = []
-                group["inflx_dwn"] = []
-                group["peaks"] = []
-                group["times"] = []
-                group["values"] = []
-                group["locations"] = []
-
-        return self._groups
-
-    @property
-    def survey(self):
-        """
-
-        """
-
-        return self._survey
-
-    @property
-    def system(self):
-        """
-
-        """
-        return self._system
