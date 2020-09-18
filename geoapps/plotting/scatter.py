@@ -25,8 +25,6 @@ class ScatterPlots(ObjectDataSelection):
     """
 
     defaults = {
-        "select_multiple": True,
-        "add_groups": True,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "geochem",
         "data": ["Al2O3", "CaO", "V", "MgO", "Ba"],
@@ -46,7 +44,8 @@ class ScatterPlots(ObjectDataSelection):
 
     def __init__(self, static=False, **kwargs):
         self.static = static
-        self._select_multiple = True
+        self.select_multiple = True
+        self._add_groups = True
 
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
@@ -309,7 +308,7 @@ class ScatterPlots(ObjectDataSelection):
             self._widget = VBox(
                 [
                     self.project_panel,
-                    VBox([HBox([self.objects, self.data]), self.axes_options,]),
+                    VBox([HBox([self.objects, self.data]), self.axes_options]),
                     self.trigger,
                 ]
             )
@@ -317,7 +316,7 @@ class ScatterPlots(ObjectDataSelection):
             self._widget = VBox(
                 [
                     self.project_panel,
-                    VBox([HBox([self.objects, self.data]), self.axes_options,]),
+                    VBox([HBox([self.objects, self.data]), self.axes_options]),
                     self.trigger,
                     self.crossplot_fig,
                 ]
