@@ -15,11 +15,15 @@ class ObjectDataSelection(BaseApplication):
     defaults = {}
 
     def __init__(self, **kwargs):
+        self.add_groups = False
+
         def update_data_list(_):
             self.update_data_list()
 
-        self.objects.observe(update_data_list, names="value")
         super().__init__(**self.apply_defaults(**kwargs))
+        self.objects.observe(update_data_list, names="value")
+        self.update_data_list()
+
         self._widget = VBox([self.objects, self.data])
 
     @property
@@ -27,9 +31,12 @@ class ObjectDataSelection(BaseApplication):
         """
         bool: Add data groups to the list of data choices
         """
-        if getattr(self, "_add_groups", None) is None:
-            return False
         return self._add_groups
+
+    @add_groups.setter
+    def add_groups(self, value):
+        assert isinstance(value, bool), "add_groups must be of type bool"
+        self._add_groups = value
 
     @property
     def data(self):
@@ -55,14 +62,23 @@ class ObjectDataSelection(BaseApplication):
         """
         Object selector
         """
+
+        def update_data_list(_):
+            self.update_data_list()
+
         if getattr(self, "_objects", None) is None:
             self._objects = Dropdown(description="Object:",)
+            self._objects.observe(update_data_list, names="value")
         return self._objects
 
     @objects.setter
     def objects(self, value):
+        def update_data_list(_):
+            self.update_data_list()
+
         assert isinstance(value, Dropdown), f"'Objects' must be of type {Dropdown}"
         self._objects = value
+        self._objects.observe(update_data_list, names="value")
 
     @property
     def object_types(self):
@@ -158,7 +174,6 @@ class ObjectDataSelection(BaseApplication):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
         self._h5file = workspace.h5file
-
         # Refresh the list of objects
         self.update_objects_list()
 
@@ -166,8 +181,10 @@ class ObjectDataSelection(BaseApplication):
         """
         Get entities from an active geoh5py Workspace
         """
-        if self.workspace is not None and self.workspace.get_entity(self.objects.value):
-            obj = self.workspace.get_entity(self.objects.value)[0]
+        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
+            self.objects.value
+        ):
+            obj = self._workspace.get_entity(self.objects.value)[0]
             if obj.get_data(self.data.value):
                 data = obj.get_data(self.data.value)[0]
                 return obj, data
@@ -178,10 +195,14 @@ class ObjectDataSelection(BaseApplication):
 
     def update_data_list(self):
         self.refresh.value = False
-        if getattr(self, "workspace", None) is not None and self.workspace.get_entity(
+        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
             self.objects.value
         ):
-            obj = self.workspace.get_entity(self.objects.value)[0]
+
+            obj = self._workspace.get_entity(self.objects.value)[0]
+
+            if getattr(obj, "get_data_list", None) is None:
+                return
 
             options = [
                 name for name in obj.get_data_list() if name != "Visual Parameters"
@@ -201,16 +222,16 @@ class ObjectDataSelection(BaseApplication):
             self.data.options = []
 
     def update_objects_list(self):
-        if self.workspace is not None:
+        if getattr(self, "_workspace", None) is not None:
             if len(self.object_types) > 0:
-                self._objects.options = [
+                self.objects.options = [
                     obj.name
-                    for obj in self.workspace.all_objects()
+                    for obj in self._workspace.all_objects()
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                self._objects.options = [""] + list(
-                    self.workspace.list_objects_name.values()
+                self.objects.options = [""] + list(
+                    self._workspace.list_objects_name.values()
                 )
 
 
@@ -222,6 +243,8 @@ class LineOptions(ObjectDataSelection):
     defaults = {"find_label": "line"}
 
     def __init__(self, select_multiple=True, **kwargs):
+        def update_data_list(_):
+            self.update_data_list()
 
         if select_multiple:
             self._lines = widgets.SelectMultiple(description="Select lines:",)
@@ -229,6 +252,7 @@ class LineOptions(ObjectDataSelection):
             self._lines = widgets.Dropdown(description="Select line:",)
 
         super().__init__(**self.apply_defaults(**kwargs))
+        self.objects.observe(update_data_list, names="value")
 
         def update_line_list(_):
             self.update_line_list()
@@ -242,6 +266,9 @@ class LineOptions(ObjectDataSelection):
 
     @property
     def lines(self):
+        """
+        Widget.SelectMultiple or Widget.Dropdown
+        """
         return self._lines
 
     def update_line_list(self):
