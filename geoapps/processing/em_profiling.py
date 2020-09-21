@@ -45,6 +45,7 @@ class EMLineProfiler(ObjectDataSelection):
     defaults = {
         "object_types": (Curve,),
         "h5file": "../../assets/FlinFlon.geoh5",
+        "add_groups": True,
         "time_groups": {
             "early": {"range": "9-16", "color": "blue"},
             "early + middle": {"range": "9-27", "color": "green"},
@@ -59,9 +60,6 @@ class EMLineProfiler(ObjectDataSelection):
     }
 
     def __init__(self, **kwargs):
-        self.select_multiple = True
-        self._add_groups = True
-
         kwargs = self.apply_defaults(**kwargs)
 
         self.em_system_specs = geophysical_systems.parameters()
@@ -75,7 +73,6 @@ class EMLineProfiler(ObjectDataSelection):
         )
         self._time_groups = {}
         self.group_list = Dropdown(description="")
-        self.objects.description = "Survey"
         self.surface_model = None
         self._survey = None
         self.model_figure = go.FigureWidget()
@@ -98,19 +95,10 @@ class EMLineProfiler(ObjectDataSelection):
         )
 
         self.marker = {"left": "<", "right": ">"}
-
-        def objects_change(_):
-            self.objects_change()
-
-        self.objects.observe(objects_change, names="value")
         self.channels = SelectMultiple(description="Channels")
         self._group_early = Text(description="Early")
         self._group_middle = Text(description="Middle")
         self._group_late = Text(description="Late")
-
-        def reset_time_groups(_):
-            self.reset_time_groups()
-
         self.data_channels = {}
         self.data_channel_options = {}
         self.smoothing = IntSlider(
@@ -134,6 +122,22 @@ class EMLineProfiler(ObjectDataSelection):
             step=5,
             continuous_update=False,
             description="Decay threshold (%)",
+        )
+        self.opacity = FloatSlider(
+            value=0.9,
+            min=0.0,
+            max=1.0,
+            step=0.05,
+            continuous_update=False,
+            description="Opacity",
+        )
+        self.doi_percent = FloatSlider(
+            value=20.0,
+            min=0.0,
+            max=100.0,
+            step=0.1,
+            continuous_update=False,
+            description="DOI %",
         )
         self.center = FloatSlider(
             value=0.5,
@@ -227,27 +231,31 @@ class EMLineProfiler(ObjectDataSelection):
             description="Show model", value=False, button_style="success"
         )
         self.show_decay = ToggleButton(description="Show decay", value=False)
+        self.lines = LineOptions(multiple_lines=False)
+        self.model_selection = ObjectDataSelection(object_types=(Surface,))
+        self.doi_selection = ObjectDataSelection()
 
-        def set_data(_):
-            self.set_data()
+        def objects_change(_):
+            self.objects_change()
 
-        self.data.observe(set_data, names="value")
+        self.objects.observe(objects_change, names="value")
 
         super().__init__(**kwargs)
 
-        self.lines = LineOptions(
-            select_multiple=False, workspace=self._workspace, _objects=self._objects
-        )
+        self.objects.description = "Survey"
+
         if "lines" in kwargs.keys():
             self.lines.__populate__(**kwargs["lines"])
 
-        self.model_selection = ObjectDataSelection(
-            object_types=(Surface,), workspace=self._workspace
-        )
         if "model" in kwargs.keys():
             self.model_selection.__populate__(**kwargs["model"])
         self.model_selection.objects.description = "Surface:"
         self.model_selection.data.description = "Model"
+
+        self.doi_selection.update_data_list()
+        if "doi" in kwargs.keys():
+            self.doi_selection.__populate__(**kwargs["doi"])
+        self.doi_selection.data.description = "DOI Layer"
 
         scale_panel = VBox([self.scale_button])
 
@@ -399,14 +407,26 @@ class EMLineProfiler(ObjectDataSelection):
             reverse,
             z_shift,
             dip_rotation,
+            opacity,
             objects,
             model,
+            doi,
             smoothing,
             slice_width,
+            doi_percent,
         ):
             self.update_line_model()
             self.plot_model_selection(
-                ind, center, focus, x_label, colormap, reverse, z_shift, dip_rotation
+                ind,
+                center,
+                focus,
+                x_label,
+                colormap,
+                reverse,
+                z_shift,
+                dip_rotation,
+                opacity,
+                doi_percent,
             )
 
         self.model_section = interactive_output(
@@ -417,6 +437,7 @@ class EMLineProfiler(ObjectDataSelection):
                 "focus": self.focus,
                 "objects": self.model_selection.objects,
                 "model": self.model_selection.data,
+                "doi": self.doi_selection.data,
                 "smoothing": self.smoothing,
                 "slice_width": self.slice_width,
                 "x_label": self.x_label,
@@ -424,6 +445,8 @@ class EMLineProfiler(ObjectDataSelection):
                 "z_shift": self.shift_cox_z,
                 "dip_rotation": self.dip_rotation,
                 "reverse": self.reverse_cmap,
+                "opacity": self.opacity,
+                "doi_percent": self.doi_percent,
             },
         )
 
@@ -459,7 +482,8 @@ class EMLineProfiler(ObjectDataSelection):
                                 self.x_label,
                                 scale_panel,
                                 self.markers,
-                            ]
+                            ],
+                            layout=Layout(width="50%"),
                         ),
                         plotting,
                     ]
@@ -470,6 +494,28 @@ class EMLineProfiler(ObjectDataSelection):
         )
 
         self.auto_picker.value = True
+
+    @property
+    def data(self):
+        """
+        Data selector
+        """
+        if getattr(self, "_data", None) is None:
+            self.data = SelectMultiple(description="Data: ")
+
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        def set_data(_):
+            self.set_data()
+
+        assert isinstance(
+            value, (Dropdown, SelectMultiple)
+        ), f"'Objects' must be of type {Dropdown} or {SelectMultiple}"
+        self._data = value
+        self._data.observe(set_data, names="value")
+        self.set_data()
 
     @property
     def time_groups(self):
@@ -528,6 +574,34 @@ class EMLineProfiler(ObjectDataSelection):
         """
         return self._group_middle
 
+    @property
+    def workspace(self):
+        """
+        Target geoh5py workspace
+        """
+        if (
+            getattr(self, "_workspace", None) is None
+            and getattr(self, "_h5file", None) is not None
+        ):
+            self.workspace = Workspace(self.h5file)
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, workspace):
+        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        self._workspace = workspace
+        self._h5file = workspace.h5file
+
+        # Refresh the list of objects
+        self.update_objects_list()
+
+        self.lines.objects = self.objects
+        self.lines.workspace = workspace
+
+        self.model_selection.workspace = workspace
+        self.doi_selection.objects = self.model_selection.objects
+        self.doi_selection.workspace = workspace
+
     def set_data(self):
         if getattr(self, "survey", None) is not None:
             groups = [p_g.name for p_g in self.survey.property_groups]
@@ -570,6 +644,8 @@ class EMLineProfiler(ObjectDataSelection):
                     ]
                 ):
                     self.system.value = aem_system
+
+            # self.line_update()
 
     def system_box_trigger(self):
         if self.system_box_option.value:
@@ -653,6 +729,9 @@ class EMLineProfiler(ObjectDataSelection):
                 "times": [],
                 "values": [],
                 "locations": [],
+                "cox": [],
+                "azimuth": [],
+                "dip": [],
             }
             self.group_add.value = False
 
@@ -720,8 +799,10 @@ class EMLineProfiler(ObjectDataSelection):
         # highlights = []
         # for group in self.group_list.value:
         #     highlights +=
-        self.group_color.value = self.time_groups[self.group_list.value]["color"]
-        self.channels.value = self.time_groups[self.group_list.value]["channels"]
+
+        if self.group_list.value in list(self.time_groups.keys()):
+            self.group_color.value = self.time_groups[self.group_list.value]["color"]
+            self.channels.value = self.time_groups[self.group_list.value]["channels"]
 
     def plot_data_selection(
         self,
@@ -792,6 +873,9 @@ class EMLineProfiler(ObjectDataSelection):
         time_group["times"] = []
         time_group["values"] = []
         time_group["locations"] = []
+
+        if getattr(self.survey, "line_indices", None) is None:
+            return
 
         for channel, d in self.data_channels.items():
 
@@ -1151,7 +1235,17 @@ class EMLineProfiler(ObjectDataSelection):
             axs.set_title("Decay - MADTau")
 
     def plot_model_selection(
-        self, ind, center, focus, x_label, colormap, reverse, z_shift, dip_rotation
+        self,
+        ind,
+        center,
+        focus,
+        x_label,
+        colormap,
+        reverse,
+        z_shift,
+        dip_rotation,
+        opacity,
+        doi_percent,
     ):
         if (
             getattr(self, "survey", None) is None
@@ -1214,11 +1308,21 @@ class EMLineProfiler(ObjectDataSelection):
 
             simplices = self.lines.model_cells.reshape((-1, 3))
 
+            # doi_model = (
+            #         np.sum(self.lines.doi_values*self.lines.model_values) /
+            #         (self.lines.doi_values.sum() + 1e-3)
+            # )
+
+            # doi_model = np.log10(self.lines.model_values.max())
+            model_values = np.log10(self.lines.model_values)
+            model_values[self.lines.doi_values > doi_percent] = np.nan
+            # print(model_values.min())
+            self.lines.model_values * self.lines.doi_values
             self.model_figure.data[2].x = self.lines.model_vertices[:, 0]
             self.model_figure.data[2].y = self.lines.model_vertices[:, 1]
             self.model_figure.data[2].z = self.lines.model_vertices[:, 2]
-            self.model_figure.data[2].intensity = np.log10(self.lines.model_values)
-            self.model_figure.data[2].opacity = 0.9
+            self.model_figure.data[2].intensity = model_values
+            self.model_figure.data[2].opacity = opacity
             self.model_figure.data[2].i = simplices[:, 0]
             self.model_figure.data[2].j = simplices[:, 1]
             self.model_figure.data[2].k = simplices[:, 2]
@@ -1335,21 +1439,24 @@ class EMLineProfiler(ObjectDataSelection):
                 self.model_selection.data.value
             )[0].values[self.lines.vertices_map]
 
+        if self.surface_model.get_data(self.doi_selection.data.value):
+            doi_values = self.surface_model.get_data(self.doi_selection.data.value)[
+                0
+            ].values[self.lines.vertices_map]
+            doi_values -= doi_values.min()
+            doi_values /= doi_values.max()
+            doi_values *= 100.0
+        else:
+            doi_values = np.zeros_like(self.lines.vertices_map)
+
+        self.lines.doi_values = doi_values
+
         if self.show_model.value:
             self.show_model.description = "Hide model"
         else:
             self.show_model.description = "Show model"
 
     def reset_groups(self):
-
-        # for group in self.time_groups.values():
-        #     try:
-        #         first, last = np.asarray(
-        #             group["range"].split("-"), dtype="int"
-        #         )
-        #         group["gates"] = np.arange(first, last + 1).tolist()
-        #     except ValueError:
-        #         pass
 
         for group in self.time_groups.values():
             try:
@@ -1363,17 +1470,22 @@ class EMLineProfiler(ObjectDataSelection):
                 group["times"] = []
                 group["values"] = []
                 group["locations"] = []
+                group["cox"] = []
+                group["azimuth"] = []
+                group["dip"] = []
+
             except ValueError:
                 pass
 
         for channel in self.channels.options:
             if re.findall(r"\d+", channel):
-                value = int(re.findall(r"\d+", channel)[0])
+                value = int(re.findall(r"\d+", channel)[-1])
                 for group in self.time_groups.values():
                     if value in group["gates"]:
                         group["channels"].append(channel)
         self.group_list.options = self.time_groups.keys()
         self.group_list.value = self.group_list.options[0]
+        self.highlight_selection()
 
         # self.set_default_groups(self.channels.options)
 
@@ -1394,7 +1506,11 @@ class EMLineProfiler(ObjectDataSelection):
                                 self.reverse_cmap,
                                 self.shift_cox_z,
                                 self.dip_rotation,
-                            ]
+                                self.opacity,
+                                self.doi_selection.data,
+                                self.doi_percent,
+                            ],
+                            layout=Layout(width="50%"),
                         ),
                         self.model_figure,
                     ]
