@@ -6,3 +6,4 @@ from .processing import (
 from .contours import ContourValues
 from .em_profiling import EMLineProfiler
 from .edge_detection import EdgeDetectionApp
+from .data_interpolation import DataInterpolation
