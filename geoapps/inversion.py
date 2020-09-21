@@ -1003,10 +1003,13 @@ class InversionApp(PlotSelection2D):
 
         # Refresh the list of objects
         self.update_objects_list()
-        self.inversion_parameters.update_workspace(workspace)
-        self.lines.workspace = workspace
-        self.sensor.workspace = workspace
-        self.topography.workspace = workspace
+
+        # Check for startup
+        if getattr(self, "inversion_parameters", None) is not None:
+            self.inversion_parameters.update_workspace(workspace)
+            self.lines.workspace = workspace
+            self.sensor.workspace = workspace
+            self.topography.workspace = workspace
 
     @property
     def write(self):
