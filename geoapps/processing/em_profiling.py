@@ -74,11 +74,13 @@ class EMLineProfiler(ObjectDataSelection):
         self._time_groups = {}
         self.group_list = Dropdown(description="")
         self.surface_model = None
+        self.borehole_trace = None
         self._survey = None
         self.model_figure = go.FigureWidget()
         self.model_figure.add_trace(go.Scatter3d())
         self.model_figure.add_trace(go.Cone())
         self.model_figure.add_trace(go.Mesh3d())
+        self.model_figure.add_trace(go.Scatter3d())
         self.model_figure.update_layout(
             scene={
                 "xaxis_title": "Easting (m)",
@@ -139,6 +141,7 @@ class EMLineProfiler(ObjectDataSelection):
             continuous_update=False,
             description="DOI %",
         )
+        self.doi_revert = Checkbox(description="Revert", value=False)
         self.center = FloatSlider(
             value=0.5,
             min=0,
@@ -177,7 +180,7 @@ class EMLineProfiler(ObjectDataSelection):
             description="Slice width (m)",
             disabled=False,
             continuous_update=False,
-            orientation="vertical",
+            orientation="horizontal",
         )
         self.auto_picker = ToggleButton(description="Pick nearest target", value=False)
         self.pause_plot_refresh = False
@@ -211,13 +214,11 @@ class EMLineProfiler(ObjectDataSelection):
             description="Time Gate",
             options=self.em_system_specs[self.system.value]["channels"].keys(),
         )
-
         self.group_add = ToggleButton(description="^ Add New Group ^")
         self.group_name = Text(description="Name")
         self.group_color = ColorPicker(
             concise=False, description="Color", value="blue", disabled=False
         )
-
         self.markers = ToggleButton(description="Show markers")
         self.groups_setter = ToggleButton(description="Select Time Groups", value=False)
         self.x_label = ToggleButtons(
@@ -226,14 +227,20 @@ class EMLineProfiler(ObjectDataSelection):
             description="X-axis label:",
             orientation="vertical",
         )
-
         self.show_model = ToggleButton(
             description="Show model", value=False, button_style="success"
+        )
+        self.show_doi = ToggleButton(
+            description="Show DOI", value=False, button_style="success"
+        )
+        self.show_borehole = ToggleButton(
+            description="Show Boreholes", value=False, button_style="success"
         )
         self.show_decay = ToggleButton(description="Show decay", value=False)
         self.lines = LineOptions(multiple_lines=False)
         self.model_selection = ObjectDataSelection(object_types=(Surface,))
         self.doi_selection = ObjectDataSelection()
+        self.boreholes = ObjectDataSelection(object_types=(Points,))
 
         def objects_change(_):
             self.objects_change()
@@ -246,6 +253,11 @@ class EMLineProfiler(ObjectDataSelection):
 
         if "lines" in kwargs.keys():
             self.lines.__populate__(**kwargs["lines"])
+
+        if "boreholes" in kwargs.keys():
+            self.boreholes.__populate__(**kwargs["boreholes"])
+        self.boreholes.objects.description = "Borehole"
+        self.boreholes.data.description = "Markers"
 
         if "model" in kwargs.keys():
             self.model_selection.__populate__(**kwargs["model"])
@@ -410,12 +422,18 @@ class EMLineProfiler(ObjectDataSelection):
             opacity,
             objects,
             model,
-            doi,
             smoothing,
             slice_width,
+            doi_show,
+            doi,
             doi_percent,
+            doi_revert,
+            borehole_show,
+            borehole_object,
+            borehole_data,
         ):
             self.update_line_model()
+            self.update_line_boreholes()
             self.plot_model_selection(
                 ind,
                 center,
@@ -437,7 +455,6 @@ class EMLineProfiler(ObjectDataSelection):
                 "focus": self.focus,
                 "objects": self.model_selection.objects,
                 "model": self.model_selection.data,
-                "doi": self.doi_selection.data,
                 "smoothing": self.smoothing,
                 "slice_width": self.slice_width,
                 "x_label": self.x_label,
@@ -446,16 +463,33 @@ class EMLineProfiler(ObjectDataSelection):
                 "dip_rotation": self.dip_rotation,
                 "reverse": self.reverse_cmap,
                 "opacity": self.opacity,
+                "doi_show": self.show_doi,
+                "doi": self.doi_selection.data,
                 "doi_percent": self.doi_percent,
+                "doi_revert": self.doi_revert,
+                "borehole_show": self.show_borehole,
+                "borehole_object": self.boreholes.objects,
+                "borehole_data": self.boreholes.data,
             },
         )
-
-        self.model_panel = VBox([self.show_model,])
 
         def show_model_trigger(_):
             self.show_model_trigger()
 
+        self.model_panel = VBox([self.show_model])
         self.show_model.observe(show_model_trigger, names="value")
+
+        def show_doi_trigger(_):
+            self.show_doi_trigger()
+
+        self.doi_panel = VBox([self.show_doi])
+        self.show_doi.observe(show_doi_trigger, names="value")
+
+        def show_borehole_trigger(_):
+            self.show_borehole_trigger()
+
+        self.borehole_panel = VBox([self.show_borehole])
+        self.show_borehole.observe(show_borehole_trigger, names="value")
 
         self._widget = VBox(
             [
@@ -599,6 +633,7 @@ class EMLineProfiler(ObjectDataSelection):
         self.lines.workspace = workspace
 
         self.model_selection.workspace = workspace
+        self.boreholes.workspace = workspace
         self.doi_selection.objects = self.model_selection.objects
         self.doi_selection.workspace = workspace
 
@@ -743,6 +778,8 @@ class EMLineProfiler(ObjectDataSelection):
             dip = self.time_groups[group]["dip"]
             azimuth = self.time_groups[group]["azimuth"]
             cox = self.time_groups[group]["cox"]
+            cox[2] -= self.shift_cox_z.value
+
             if self.workspace.get_entity(group):
                 points = self.workspace.get_entity(group)[0]
                 azm_data = points.get_data("azimuth")[0]
@@ -1290,8 +1327,8 @@ class EMLineProfiler(ObjectDataSelection):
             if dip > 90:
                 dip = 180 - dip
                 azimuth += 180
-                self.time_groups[group]["dip"] = dip
-                self.time_groups[group]["azimuth"] = azimuth
+            self.time_groups[group]["dip"] = dip
+            self.time_groups[group]["azimuth"] = azimuth
 
             vec = rotate_azimuth_dip(azimuth, dip,)
             scaler = 100
@@ -1308,14 +1345,10 @@ class EMLineProfiler(ObjectDataSelection):
 
             simplices = self.lines.model_cells.reshape((-1, 3))
 
-            # doi_model = (
-            #         np.sum(self.lines.doi_values*self.lines.model_values) /
-            #         (self.lines.doi_values.sum() + 1e-3)
-            # )
-
-            # doi_model = np.log10(self.lines.model_values.max())
             model_values = np.log10(self.lines.model_values)
-            model_values[self.lines.doi_values > doi_percent] = np.nan
+
+            if self.show_doi.value:
+                model_values[self.lines.doi_values > doi_percent] = np.nan
             # print(model_values.min())
             self.lines.model_values * self.lines.doi_values
             self.model_figure.data[2].x = self.lines.model_vertices[:, 0]
@@ -1328,19 +1361,19 @@ class EMLineProfiler(ObjectDataSelection):
             self.model_figure.data[2].k = simplices[:, 2]
             self.model_figure.data[2].colorscale = colormap
 
-            if azimuth > 180:
-                azm = azimuth + 90
-            else:
-                azm = azimuth - 90
-            vec = rotate_azimuth_dip(azm, 0)
-            # self.model_figure.update_layout(
-            #     scene={
-            #         "camera": {
-            #             "center": dict(x=0, y=0, z=0.2,),
-            #             "eye": dict(x=vec[0, 0] * 0.75, y=vec[0, 1] * 0.75, z=0.2,),
-            #         }
-            #     },
-            # )
+            if (
+                getattr(self.lines, "borehole_vertices", None) is not None
+                and self.show_borehole.value
+            ):
+                self.model_figure.data[3].x = self.lines.borehole_vertices[:, 0]
+                self.model_figure.data[3].y = self.lines.borehole_vertices[:, 1]
+                self.model_figure.data[3].z = self.lines.borehole_vertices[:, 2]
+                self.model_figure.data[3].mode = "markers"
+
+                if getattr(self.lines, "borehole_values", None) is not None:
+                    self.model_figure.data[3].marker = {
+                        "color": self.lines.borehole_values
+                    }
 
             self.model_figure.show()
 
@@ -1439,15 +1472,22 @@ class EMLineProfiler(ObjectDataSelection):
                 self.model_selection.data.value
             )[0].values[self.lines.vertices_map]
 
+        doi_values = np.zeros_like(self.lines.vertices_map)
         if self.surface_model.get_data(self.doi_selection.data.value):
+
             doi_values = self.surface_model.get_data(self.doi_selection.data.value)[
                 0
             ].values[self.lines.vertices_map]
+        elif self.doi_selection.data.value == "Z":
+            doi_values = self.surface_model.vertices[:, 2][self.lines.vertices_map]
+
+        if np.any(doi_values != 0):
             doi_values -= doi_values.min()
             doi_values /= doi_values.max()
             doi_values *= 100.0
-        else:
-            doi_values = np.zeros_like(self.lines.vertices_map)
+
+            if self.doi_revert.value:
+                doi_values = np.abs(100 - doi_values)
 
         self.lines.doi_values = doi_values
 
@@ -1455,6 +1495,39 @@ class EMLineProfiler(ObjectDataSelection):
             self.show_model.description = "Hide model"
         else:
             self.show_model.description = "Show model"
+
+    def update_line_boreholes(self):
+        if getattr(self.lines, "profile", None) is None:
+            return
+
+        entity_name = self.boreholes.objects.value
+        if self.workspace.get_entity(entity_name) and (
+            getattr(self, "borehole_trace", None) is None
+            or self.borehole_trace.name != entity_name
+        ):
+            self.borehole_trace = self.workspace.get_entity(entity_name)[0]
+
+        if getattr(self, "borehole_trace", None) is None:
+            return
+
+        if getattr(self.lines, "model_vertices", None) is not None:
+
+            tree = cKDTree(self.lines.model_vertices)
+            rad, ind = tree.query(self.borehole_trace.vertices)
+
+            # Give new indices to subset
+            if np.any(rad < self.slice_width.value):
+                in_slice = rad < self.slice_width.value
+                self.lines.borehole_vertices = self.borehole_trace.vertices[in_slice, :]
+
+                if self.borehole_trace.get_data(self.boreholes.data.value):
+                    self.lines.borehole_values = self.borehole_trace.get_data(
+                        self.boreholes.data.value
+                    )[0].values[in_slice]
+                else:
+                    self.lines.borehole_values = "black"
+            else:
+                self.lines.borehole_vertices = None
 
     def reset_groups(self):
 
@@ -1504,11 +1577,12 @@ class EMLineProfiler(ObjectDataSelection):
                                 self.model_selection.data,
                                 self.color_maps,
                                 self.reverse_cmap,
+                                self.opacity,
+                                self.doi_panel,
+                                self.borehole_panel,
+                                Label("Adjust Dip Marker"),
                                 self.shift_cox_z,
                                 self.dip_rotation,
-                                self.opacity,
-                                self.doi_selection.data,
-                                self.doi_percent,
                             ],
                             layout=Layout(width="50%"),
                         ),
@@ -1531,3 +1605,34 @@ class EMLineProfiler(ObjectDataSelection):
         else:
             self.decay_panel.children = [self.show_decay]
             self.show_decay.description = "Show decay curve"
+
+    def show_doi_trigger(self):
+        """
+        Add the DOI options
+        """
+        if self.show_doi.value:
+            self.doi_panel.children = [
+                self.show_doi,
+                self.doi_selection.data,
+                self.doi_percent,
+                self.doi_revert,
+            ]
+            self.show_doi.description = "Hide DOI"
+        else:
+            self.doi_panel.children = [self.show_doi]
+            self.show_doi.description = "Show DOI"
+
+    def show_borehole_trigger(self):
+        """
+        Add the DOI options
+        """
+        if self.show_borehole.value:
+            self.borehole_panel.children = [
+                self.show_borehole,
+                self.boreholes.widget,
+                self.slice_width,
+            ]
+            self.show_borehole.description = "Hide Boreholes"
+        else:
+            self.borehole_panel.children = [self.show_borehole]
+            self.show_borehole.description = "Show Boreholes"
