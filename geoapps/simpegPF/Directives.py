@@ -1175,7 +1175,7 @@ class Update_IRLS(InversionDirective):
         # Check if misfit is within the tolerance, otherwise scale beta
         if np.all(
             [
-                np.abs(1.0 - self.invProb.phi_d / self.target) > self.beta_tol,
+                np.abs(1.0 - float(self.invProb.phi_d) / self.target) > self.beta_tol,
                 self.updateBeta,
                 self.mode != 1,
             ]
@@ -1215,13 +1215,16 @@ class Update_IRLS(InversionDirective):
             phi_m_last += [reg(self.invProb.model)]
 
         # After reaching target misfit with l2-norm, switch to IRLS (mode:2)
-        if np.all([self.invProb.phi_d < self.target, self.mode == 1]):
+        if np.all([float(self.invProb.phi_d) < self.target, self.mode == 1]):
             self.startIRLS()
             self.f_old = np.sum(phi_m_last)
 
         # Only update after GN iterations
         if np.all(
-            [(self.opt.iter - self.iterStart) % self.minGNiter == 0, self.mode != 1]
+            [
+                (float(self.opt.iter) - self.iterStart) % self.minGNiter == 0,
+                self.mode != 1,
+            ]
         ):
             if self.fix_Jmatrix:
                 self.invProb.dmisfit.prob.fix_Jmatrix = True
@@ -1277,7 +1280,8 @@ class Update_IRLS(InversionDirective):
                 [
                     self.f_change < self.f_min_change,
                     self.IRLSiter > 1,
-                    np.abs(1.0 - self.invProb.phi_d / self.target) < self.beta_tol,
+                    np.abs(1.0 - float(self.invProb.phi_d) / self.target)
+                    < self.beta_tol,
                 ]
             ):
 

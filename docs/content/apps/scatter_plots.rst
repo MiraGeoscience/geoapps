@@ -5,15 +5,13 @@ This application lets users visualize up to 5D of data pulled from any
 `Geoscience ANALYST
 <https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_
 objects. The application uses the rich graphical interface of
-`Plotly <https://plotly.com/>`_, which allows to:
+`Plotly <https://plotly.com/>`_. This application allows users to:
 
 - Easily flip between 2D and 3D cross-plots.
 - Plot positive and negative values in log scale (symmetric-log)
 - Change the color and size of markers based on property values
 - Zoom, pan, rotate and export figures.
 
-
-.. `Video tutorial available on Youtube <https://youtu.be/sjaQzZlm8qQ>`_
 
 
 .. jupyter-execute::
@@ -26,12 +24,22 @@ objects. The application uses the rich graphical interface of
           h5file=r"../assets/FlinFlon.geoh5",
           static=True
     )
+
     py.iplot(app.crossplot_fig)
 
 
+.. note:: The latest version of applications can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+
+          See the :ref:`Installation page <getting_started>` to get started.
+
+
+Parameters
+----------
+
+The following list of interactive widgets are for documentation and demonstration purposes only.
 
 Input data
-----------
+^^^^^^^^^^
 
 .. list-table::
    :header-rows: 0
@@ -70,7 +78,7 @@ Input data
 
 
 Axes options
-------------
+^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 0

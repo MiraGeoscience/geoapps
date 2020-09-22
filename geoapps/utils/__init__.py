@@ -14,6 +14,7 @@ from .utils import (
     RectangularBlock,
     rotate_vertices,
     rotate_xy,
+    rotate_azimuth_dip,
     running_mean,
     signal_processing_1d,
     string_2_list,

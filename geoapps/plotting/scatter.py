@@ -25,8 +25,6 @@ class ScatterPlots(ObjectDataSelection):
     """
 
     defaults = {
-        "select_multiple": True,
-        "add_groups": True,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "geochem",
         "data": ["Al2O3", "CaO", "V", "MgO", "Ba"],
@@ -42,11 +40,14 @@ class ScatterPlots(ObjectDataSelection):
         "size": "MgO",
         "size_active": True,
         "color_maps": "inferno",
+        "refresh": True,
+        "refresh_trigger": True,
     }
 
     def __init__(self, static=False, **kwargs):
         self.static = static
-        self._select_multiple = True
+        self.select_multiple = True
+        self._add_groups = True
 
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
@@ -150,7 +151,7 @@ class ScatterPlots(ObjectDataSelection):
             ]
         )
 
-        self.refresh_trigger = ToggleButton(description="Refresh Plot", value=True)
+        self._refresh_trigger = ToggleButton(description="Refresh Plot", value=False)
 
         # Wrap all axis panels into dropdown
         def axes_pannels_trigger(_):
@@ -309,7 +310,7 @@ class ScatterPlots(ObjectDataSelection):
             self._widget = VBox(
                 [
                     self.project_panel,
-                    VBox([HBox([self.objects, self.data]), self.axes_options,]),
+                    VBox([HBox([self.objects, self.data]), self.axes_options]),
                     self.trigger,
                 ]
             )
@@ -317,7 +318,7 @@ class ScatterPlots(ObjectDataSelection):
             self._widget = VBox(
                 [
                     self.project_panel,
-                    VBox([HBox([self.objects, self.data]), self.axes_options,]),
+                    VBox([HBox([self.objects, self.data]), self.axes_options]),
                     self.trigger,
                     self.crossplot_fig,
                 ]
@@ -497,6 +498,13 @@ class ScatterPlots(ObjectDataSelection):
         :obj:`ipywidgets.Text`
         """
         return self._color_max
+
+    @property
+    def refresh_trigger(self):
+        """
+
+        """
+        return self._refresh_trigger
 
     @property
     def size(self):

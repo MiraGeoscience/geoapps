@@ -189,7 +189,6 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
 
 def inversion(input_file):
     dsep = os.path.sep
-
     if input_file is not None:
         workDir = dsep.join(os.path.dirname(os.path.abspath(input_file)).split(dsep))
         if len(workDir) > 0:
@@ -369,11 +368,11 @@ def inversion(input_file):
             " 'ubc_grav', 'ubc_mag', 'GA_object'"
         )
 
-    if np.median(survey.dobs) > 100 and "detrend" not in list(input_dict.keys()):
-        print(
-            f"Large background trend detected. Median value removed:{np.median(survey.dobs)}"
-        )
-        survey.dobs -= np.median(survey.dobs)
+    # if np.median(survey.dobs) > 500 and "detrend" not in list(input_dict.keys()):
+    #     print(
+    #         f"Large background trend detected. Median value removed:{np.median(survey.dobs)}"
+    #     )
+    #     survey.dobs -= np.median(survey.dobs)
 
     # 0-level the data if required, data_trend = 0 level
     if "detrend" in list(input_dict.keys()):
@@ -570,7 +569,7 @@ def inversion(input_file):
             max_iterations = 10
         else:
             # Spherical or sparse
-            max_iterations = 20
+            max_iterations = 40
 
     if "max_cg_iterations" in list(input_dict.keys()):
         max_cg_iterations = input_dict["max_cg_iterations"]

@@ -1,3 +1,7 @@
+:orphan:
+
+.. _edgeDetection:
+
 Edge Detection
 ==============
 
@@ -17,8 +21,16 @@ semi-automated fashion. The application uses machine vision algorithms from the 
 `Video tutorial available on Youtube <https://youtu.be/Lpn3xA7xlBs>`_
 
 
+.. note:: The latest version of applications can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+
+          See the :ref:`Installation page <getting_started>` to get started.
+
+
 Input data
 ----------
+
+The following list of interactive widgets are for documentation and demonstration purposes only.
+
 
 .. list-table::
    :header-rows: 0
