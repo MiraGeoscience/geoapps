@@ -218,6 +218,8 @@ class ObjectDataSelection(BaseApplication):
         else:
             self.data.options = []
 
+        self.refresh.value = True
+
     def update_objects_list(self):
         if getattr(self, "_workspace", None) is not None:
             if len(self.object_types) > 0:
