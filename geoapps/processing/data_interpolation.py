@@ -356,7 +356,9 @@ class DataInterpolation(ObjectDataSelection):
             elif hasattr(object_to, "vertices"):
                 xyz_out = object_to.vertices
 
-            if self.topography.options.value == "Object":
+            if self.topography.options.value == "Object" and self.workspace.get_entity(
+                self.topography.objects.value
+            ):
                 topo_obj = self.workspace.get_entity(self.topography.objects.value)[0]
                 if getattr(topo_obj, "vertices", None) is not None:
                     topo = topo_obj.vertices
@@ -388,7 +390,9 @@ class DataInterpolation(ObjectDataSelection):
                         xyz_out[:, 2] > self.topography.constant.value
                     ] = self.no_data_value.value
 
-            if self.xy_extent.value is not None:
+            if self.xy_extent.value is not None and self.workspace.get_entity(
+                self.xy_extent.value
+            ):
                 xy_ref = self.workspace.get_entity(self.xy_extent.value)[0]
                 if hasattr(xy_ref, "centroids"):
                     xy_ref = xy_ref.centroids
