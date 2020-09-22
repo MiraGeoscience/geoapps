@@ -84,17 +84,18 @@ class BaseApplication:
                 getattr(self, obj).style = {"description_width": "initial"}
 
         for key, value in kwargs.items():
-            if hasattr(self, "_" + key):
+            if hasattr(self, "_" + key) or hasattr(self, key):
                 try:
-                    if isinstance(getattr(self, "_" + key), Widget) and not isinstance(
-                        value, Widget
-                    ):
+                    if isinstance(
+                        getattr(self, "_" + key, None), Widget
+                    ) and not isinstance(value, Widget):
                         setattr(getattr(self, key), "value", value)
+                    elif isinstance(value, BaseApplication) and isinstance(
+                        getattr(self, "_" + key, None), BaseApplication
+                    ):
+                        setattr(self, "_" + key, value)
                     else:
-                        try:
-                            setattr(self, key, value)
-                        except:
-                            setattr(self, "_" + key, value)
+                        setattr(self, key, value)
                 except:
                     pass
 
@@ -188,7 +189,7 @@ class BaseApplication:
             path=path.abspath(path.dirname(value)), filename=path.basename(value),
         )
         self._file_browser._apply_selection()
-        self.workspace = Workspace(self.h5file)
+        self.workspace = Workspace(self._h5file)
 
     @property
     def live_link(self):

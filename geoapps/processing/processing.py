@@ -34,7 +34,7 @@ from geoapps.utils import (
 def calculator(h5file):
     w_s = Workspace(h5file)
     selection = ObjectDataSelection(h5file=h5file, select_multiple=False)
-    _, store = ObjectDataSelection(
+    store = ObjectDataSelection(
         h5file=h5file, objects=selection.objects, select_multiple=False
     ).data
     store.description = "Assign result to: "
@@ -103,74 +103,108 @@ def calculator(h5file):
     )
 
 
-def cdi_curve_2_surface(h5file):
+class CDICurve2Surface(ObjectDataSelection):
     """
     Application for the conversion of conductivity/depth curves to
     a pseudo 3D conductivity model on surface.
     """
 
-    workspace = Workspace(h5file)
+    defaults = {
+        "add_groups": True,
+        "select_multiple": True,
+        "h5file": "../../assets/FlinFlon.geoh5",
+        "objects": "CDI_VTEM_model",
+        "data": ["COND"],
+        "max_distance": 100,
+        "max_depth": 400,
+        "elevations": {"data": "ELEV"},
+        "lines": {"data": "Line"},
+    }
 
-    selection = ObjectDataSelection(h5file=h5file, add_groups=True)
-    selection.data.description = "Model fields: "
+    def __init__(self, **kwargs):
+        kwargs = self.apply_defaults(**kwargs)
+        self._lines = ObjectDataSelection(add_groups=True, find_value=["line"])
+        self._topography = TopographyOptions()
+        self._elevations = ObjectDataSelection(add_groups=True)
+        self._z_option = widgets.RadioButtons(
+            options=["elevation", "depth"], description="Layers reference:",
+        )
+        self._max_depth = widgets.FloatText(description="Max depth (m):",)
+        self._max_distance = widgets.FloatText(
+            value=50, description="Max distance (m):",
+        )
+        self._tolerance = widgets.FloatText(value=1, description="Tolerance (m):")
+        self._save_name = widgets.Text("CDI_", description="Name: ")
+        self._convert = widgets.ToggleButton(
+            description="Convert >>", button_style="success"
+        )
 
-    _, line_channel = ObjectDataSelection(
-        h5file=h5file, add_groups=True, objects=selection.objects, find_value=["line"]
-    )
-    line_channel.description = "Line field:"
+        super().__init__(**kwargs)
 
-    topo_options = TopographyOptions(h5file)
+        if "lines" in kwargs.keys():
+            self.lines.__populate__(**kwargs["lines"])
+        if "topography" in kwargs.keys():
+            self.topography.__populate__(**kwargs["topography"])
+        if "elevations" in kwargs.keys():
+            self.elevations.__populate__(**kwargs["elevations"])
 
-    _, elevations = ObjectDataSelection(
-        h5file=h5file, add_groups=True, objects=selection.objects
-    )
-    elevations.description = "Elevations:"
+        self.lines.data.description = "Line field:"
+        self.elevations.data.description = "Elevations:"
+        self.data.description = "Model fields: "
 
-    def z_option_change(_):
-        if z_option.value == "depth":
-            elevations.description = "Depth:"
-            depth_panel.children = [
-                z_option,
+        def z_options_change(_):
+            self.z_options_change()
+
+        self.z_option.observe(z_options_change)
+        self.depth_panel = widgets.HBox([self.z_option, self.elevations.data])
+
+        def convert_trigger(_):
+            self.convert_trigger()
+
+        self.convert.observe(convert_trigger)
+        self._widget = widgets.VBox(
+            [
+                self.project_panel,
                 widgets.VBox(
-                    [elevations, widgets.Label("Topography"), topo_options.widget,]
+                    [
+                        widgets.VBox(
+                            [
+                                self.widget,
+                                self.lines.data,
+                                self.depth_panel,
+                                widgets.Label("Triangulation"),
+                                self.max_depth,
+                                self.max_distance,
+                                self.tolerance,
+                            ]
+                        ),
+                    ]
                 ),
+                widgets.Label("Output"),
+                widgets.HBox([self.convert, self.save_name,]),
             ]
-        else:
-            elevations.description = "Elevation:"
-            depth_panel.children = [z_option, elevations]
+        )
 
-    z_option = widgets.RadioButtons(
-        options=["elevation", "depth"], description="Layers reference:",
-    )
+    def convert_trigger(self):
 
-    z_option.observe(z_option_change)
-
-    max_depth = widgets.FloatText(value=400, description="Max depth (m):",)
-    max_distance = widgets.FloatText(value=50, description="Max distance (m):",)
-
-    tolerance = widgets.FloatText(value=1, description="Tolerance (m):")
-    depth_panel = widgets.HBox([z_option, elevations])
-
-    out_name = widgets.Text("CDI_", description="Name: ")
-
-    def convert_trigger(_):
-
-        if convert.value:
-            if workspace.get_entity(selection.objects.value):
-                curve = workspace.get_entity(selection.objects.value)[0]
-                convert.value = False
+        if self.convert.value:
+            if self.workspace.get_entity(self.objects.value):
+                curve = self.workspace.get_entity(self.objects.value)[0]
+                self.convert.value = False
             else:
-                convert.button_style = "warning"
-                convert.value = False
+                self.convert.button_style = "warning"
+                self.convert.value = False
                 return
 
-            lines_id = curve.get_data(line_channel.value)[0].values
+            lines_id = curve.get_data(self.lines.data.value)[0].values
             lines = numpy.unique(lines_id).tolist()
 
-            if z_option.value == "depth":
-                if topo_options.options_button.value == "Object":
+            if self.z_option.value == "depth":
+                if self.topography.options_button.value == "Object":
 
-                    topo_obj = workspace.get_entity(topo_options.objects.value)[0]
+                    topo_obj = self.workspace.get_entity(self.topography.objects.value)[
+                        0
+                    ]
 
                     if hasattr(topo_obj, "centroids"):
                         vertices = topo_obj.centroids.copy()
@@ -179,23 +213,25 @@ def cdi_curve_2_surface(h5file):
 
                     topo_xy = vertices[:, :2]
 
-                    if topo_options.value.value == "Vertices":
+                    if self.topography.value.value == "Vertices":
                         topo_z = vertices[:, 2]
                     else:
-                        topo_z = topo_obj.get_data(topo_options.value.value)[0].values
+                        topo_z = topo_obj.get_data(self.topography.value.value)[
+                            0
+                        ].values
 
                 else:
                     topo_xy = curve.vertices[:, :2].copy()
 
-                    if topo_options.options_button.value == "Constant":
+                    if self.topography.options_button.value == "Constant":
                         topo_z = (
                             numpy.ones_like(curve.vertices[:, 2])
-                            * topo_options.constant.value
+                            * self.topography.constant.value
                         )
                     else:
                         topo_z = (
                             numpy.ones_like(curve.vertices[:, 2])
-                            + topo_options.offset.value
+                            + self.topography.offset.value
                         )
 
                 surf = Delaunay(topo_xy)
@@ -227,29 +263,32 @@ def cdi_curve_2_surface(h5file):
                 X, Y, Z, M = [], [], [], []
                 # Stack the z-coordinates and model
                 nZ = 0
-                for ind, (z_prop, m_prop) in enumerate(
-                    zip(
-                        curve.get_property_group(elevations.value).properties,
-                        curve.get_property_group(selection.data.value).properties,
-                    )
+                for ind, z_prop in enumerate(
+                    curve.get_property_group(self.elevations.data.value).properties,
                 ):
                     nZ += 1
-                    z_vals = workspace.get_entity(z_prop)[0].values[line_ind]
-                    m_vals = workspace.get_entity(m_prop)[0].values[line_ind]
+                    z_vals = self.workspace.get_entity(z_prop)[0].values[line_ind]
 
+                    m_vals = []
+                    for m in self.data.value:
+                        prop = curve.get_property_group(m).properties[ind]
+                        m_vals.append(
+                            self.workspace.get_entity(prop)[0].values[line_ind]
+                        )
+
+                    m_vals = numpy.vstack(m_vals).T
                     keep = (
                         (z_vals > 1e-38)
                         * (z_vals < 2e-38)
-                        * (m_vals > 1e-38)
-                        * (m_vals < 2e-38)
+                        * numpy.any((m_vals > 1e-38) * (m_vals < 2e-38), axis=1)
                     ) == False
                     keep[numpy.isnan(z_vals)] = False
-                    keep[numpy.isnan(m_vals)] = False
+                    keep[numpy.any(numpy.isnan(m_vals), axis=1)] = False
 
                     X.append(xyz[:, 0][order][keep])
                     Y.append(xyz[:, 1][order][keep])
 
-                    if z_option.value == "depth":
+                    if self.z_option.value == "depth":
                         z_topo = topo(xyz[:, 0][order][keep], xyz[:, 1][order][keep])
 
                         nan_z = numpy.isnan(z_topo)
@@ -262,9 +301,10 @@ def cdi_curve_2_surface(h5file):
                     else:
                         Z.append(z_vals[order][keep])
 
-                    M.append(m_vals[order][keep])
+                    M.append(m_vals[order, :][keep, :])
 
                     if ind == 0:
+
                         x_loc = xyz[:, 0][order][keep]
                         y_loc = xyz[:, 1][order][keep]
                         z_loc = Z[0]
@@ -272,8 +312,9 @@ def cdi_curve_2_surface(h5file):
                 X = numpy.hstack(X)
                 Y = numpy.hstack(Y)
                 Z = numpy.hstack(Z)
-                model.append(numpy.ravel(numpy.hstack(M)))
+                model.append(numpy.vstack(M))
                 line_ids.append(numpy.ones_like(Z.ravel()) * line)
+
                 if numpy.std(y_loc) > numpy.std(x_loc):
                     tri2D = Delaunay(numpy.c_[numpy.ravel(Y), numpy.ravel(Z)])
                     dist = numpy.ravel(Y)
@@ -307,9 +348,16 @@ def cdi_curve_2_surface(h5file):
                     )
 
                     indx *= (
-                        (z <= (topo_top(x) + tolerance.value))
-                        * (z >= (topo_top(x) - max_depth.value - tolerance.value))
-                        * (length < max_distance.value)
+                        (z <= (topo_top(x) + self.tolerance.value))
+                        * (
+                            z
+                            >= (
+                                topo_top(x)
+                                - self.max_depth.value
+                                - self.tolerance.value
+                            )
+                        )
+                        * (length < self.max_distance.value)
                     )
 
                 # Remove the simplices too long
@@ -327,44 +375,136 @@ def cdi_curve_2_surface(h5file):
                 model_count += tri2D.points.shape[0]
 
             surface = Surface.create(
-                workspace,
-                name=out_name.value,
+                self.workspace,
+                name=self.save_name.value,
                 vertices=numpy.vstack(model_vertices),
                 cells=numpy.vstack(model_cells),
             )
 
             surface.add_data(
-                {
-                    selection.data.value: {"values": numpy.hstack(model)},
-                    "Line": {"values": numpy.hstack(line_ids)},
-                }
+                {"Line": {"values": numpy.hstack(line_ids)},}
             )
 
-    convert = widgets.ToggleButton(description="Convert >>", button_style="success")
-    convert.observe(convert_trigger)
-    widget = widgets.VBox(
-        [
-            widgets.VBox(
-                [
-                    widgets.VBox(
-                        [
-                            selection.widget,
-                            line_channel,
-                            depth_panel,
-                            widgets.Label("Triangulation"),
-                            max_depth,
-                            max_distance,
-                            tolerance,
-                        ]
-                    ),
-                ]
-            ),
-            widgets.Label("Output"),
-            widgets.HBox([convert, out_name,]),
-        ]
-    )
+            models = numpy.vstack(model)
+            for ind, field in enumerate(self.data.value):
 
-    return widget
+                surface.add_data(
+                    {field: {"values": models[:, ind]},}
+                )
+
+    def z_options_change(self):
+        if self.z_option.value == "depth":
+            self.elevations.data.description = "Depth:"
+            self.depth_panel.children = [
+                self.z_option,
+                widgets.VBox(
+                    [
+                        self.elevations.data,
+                        widgets.Label("Topography"),
+                        self.topography.widget,
+                    ]
+                ),
+            ]
+        else:
+            self.elevations.data.description = "Elevation:"
+            self.depth_panel.children = [self.z_option, self.elevations.data]
+
+    @property
+    def lines(self):
+        """
+            Line field options
+        """
+        return self._lines
+
+    @property
+    def topography(self):
+        """
+            TopographyOptions()
+        """
+        return self._topography
+
+    @property
+    def elevations(self):
+        """
+            ObjectDataSelection()
+        """
+        return self._elevations
+
+    @elevations.setter
+    def elevations(self, value):
+        assert isinstance(
+            value, ObjectDataSelection
+        ), f"elevations must be an object of type {ObjectDataSelection}"
+        self._elevations = value
+
+    @property
+    def z_option(self):
+        """
+            widgets.RadioButtons()
+        """
+        return self._z_option
+
+    @property
+    def max_depth(self):
+        """
+            widgets.FloatText()
+        """
+        return self._max_depth
+
+    @property
+    def max_distance(self):
+        """
+            widgets.FloatText()
+        """
+        return self._max_distance
+
+    @property
+    def tolerance(self):
+        """
+            widgets.FloatText()
+        """
+        return self._tolerance
+
+    @property
+    def save_name(self):
+        """
+            widgets.Text()
+        """
+        return self._save_name
+
+    @property
+    def convert(self):
+        """
+            widgets.ToggleButton()
+        """
+        return self._convert
+
+    @property
+    def workspace(self):
+        """
+        Target geoh5py workspace
+        """
+        if (
+            getattr(self, "_workspace", None) is None
+            and getattr(self, "_h5file", None) is not None
+        ):
+            self.workspace = Workspace(self.h5file)
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, workspace):
+        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        self._workspace = workspace
+        self._h5file = workspace.h5file
+
+        # Refresh the list of objects
+        self.update_objects_list()
+
+        self.lines.workspace = workspace
+        self.lines.objects = self.objects
+
+        self.elevations.workspace = workspace
+        self.elevations.objects = self.objects
 
 
 def coordinate_transformation_widget(
@@ -443,14 +583,14 @@ def coordinate_transformation_widget(
                         if isinstance(child, FloatData):
 
                             export_grid_2_geotiff(
-                                child, temp_file, epsg_in, dataType="float"
+                                child, temp_file, epsg_in, data_type="float"
                             )
 
                             grid = gdal.Open(temp_file)
                             gdal.Warp(
                                 temp_file_in, grid, dstSRS="EPSG:" + str(int(epsg_out))
                             )
-
+                            print("EPSG:" + str(int(epsg_out)))
                             if count == 0:
                                 grid2d = geotiff_2_grid(
                                     temp_work, temp_file_in, grid_name=obj.name

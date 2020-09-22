@@ -15,17 +15,14 @@ class ObjectDataSelection(BaseApplication):
     defaults = {}
 
     def __init__(self, **kwargs):
+        self._add_groups = False
+        self._find_label = []
         self._object_types = ()
         self._select_multiple = False
-        self._find_label = []
-        self._add_groups = False
 
-        def update_data_list(_):
-            self.update_data_list()
-
-        self.objects.observe(update_data_list, names="value")
         super().__init__(**self.apply_defaults(**kwargs))
 
+        self.update_data_list()
         self._widget = VBox([self.objects, self.data])
 
     @property
@@ -33,9 +30,12 @@ class ObjectDataSelection(BaseApplication):
         """
         bool: Add data groups to the list of data choices
         """
-        if getattr(self, "_add_groups", None) is None:
-            return False
         return self._add_groups
+
+    @add_groups.setter
+    def add_groups(self, value):
+        assert isinstance(value, bool), "add_groups must be of type bool"
+        self._add_groups = value
 
     @property
     def data(self):
@@ -61,14 +61,20 @@ class ObjectDataSelection(BaseApplication):
         """
         Object selector
         """
+
         if getattr(self, "_objects", None) is None:
-            self._objects = Dropdown(description="Object:",)
+            self.objects = Dropdown(description="Object:",)
+
         return self._objects
 
     @objects.setter
     def objects(self, value):
+        def update_data_list(_):
+            self.update_data_list()
+
         assert isinstance(value, Dropdown), f"'Objects' must be of type {Dropdown}"
         self._objects = value
+        self._objects.observe(update_data_list, names="value")
 
     @property
     def object_types(self):
@@ -126,6 +132,20 @@ class ObjectDataSelection(BaseApplication):
 
         return self._select_multiple
 
+    @select_multiple.setter
+    def select_multiple(self, value):
+        if getattr(self, "_data", None) is not None:
+            options = self._data.options
+        else:
+            options = []
+
+        self._select_multiple = value
+
+        if value:
+            self._data = SelectMultiple(description="Data: ", options=options)
+        else:
+            self._data = Dropdown(description="Data: ", options=options)
+
     @property
     def widget(self):
         """
@@ -158,8 +178,10 @@ class ObjectDataSelection(BaseApplication):
         """
         Get entities from an active geoh5py Workspace
         """
-        if self.workspace is not None and self.workspace.get_entity(self.objects.value):
-            obj = self.workspace.get_entity(self.objects.value)[0]
+        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
+            self.objects.value
+        ):
+            obj = self._workspace.get_entity(self.objects.value)[0]
             if obj.get_data(self.data.value):
                 data = obj.get_data(self.data.value)[0]
                 return obj, data
@@ -170,15 +192,19 @@ class ObjectDataSelection(BaseApplication):
 
     def update_data_list(self):
         self.refresh.value = False
-        if getattr(self, "workspace", None) is not None and self.workspace.get_entity(
+        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
             self.objects.value
         ):
-            obj = self.workspace.get_entity(self.objects.value)[0]
-            options = (
-                [""]
-                + [name for name in obj.get_data_list() if name != "Visual Parameters"]
-                + ["Z"]
-            )
+
+            obj = self._workspace.get_entity(self.objects.value)[0]
+
+            if getattr(obj, "get_data_list", None) is None:
+                return
+
+            options = [
+                name for name in obj.get_data_list() if name != "Visual Parameters"
+            ] + ["Z"]
+
             if self.add_groups and obj.property_groups:
                 options = (
                     ["-- Groups --"]
@@ -186,23 +212,25 @@ class ObjectDataSelection(BaseApplication):
                     + ["--- Channels ---"]
                     + list(options)
                 )
-            self.data.options = options
+            self.data.options = [""] + options
             if self.find_label:
                 self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
             self.data.options = []
 
+        self.refresh.value = True
+
     def update_objects_list(self):
-        if self.workspace is not None:
+        if getattr(self, "_workspace", None) is not None:
             if len(self.object_types) > 0:
-                self._objects.options = [
+                self.objects.options = [""] + [
                     obj.name
-                    for obj in self.workspace.all_objects()
+                    for obj in self._workspace.all_objects()
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                self._objects.options = [""] + list(
-                    self.workspace.list_objects_name.values()
+                self.objects.options = [""] + list(
+                    self._workspace.list_objects_name.values()
                 )
 
 
@@ -211,13 +239,10 @@ class LineOptions(ObjectDataSelection):
     Unique lines selection from selected data channel
     """
 
-    def __init__(self, select_multiple=True, **kwargs):
-        self.find_label = "line"
+    defaults = {"find_label": "line"}
 
-        if select_multiple:
-            self._lines = widgets.SelectMultiple(description="Select lines:",)
-        else:
-            self._lines = widgets.Dropdown(description="Select line:",)
+    def __init__(self, **kwargs):
+        self._multiple_lines = None
 
         super().__init__(**self.apply_defaults(**kwargs))
 
@@ -228,14 +253,37 @@ class LineOptions(ObjectDataSelection):
         self.update_data_list()
         self.update_line_list()
 
-        self._widget = VBox([self._data, self._lines])
+        self._widget = VBox([self._data, self.lines])
         self._data.description = "Lines field"
 
     @property
     def lines(self):
+        """
+        Widget.SelectMultiple or Widget.Dropdown
+        """
+        if getattr(self, "_lines", None) is None:
+            if self.multiple_lines:
+                self._lines = widgets.SelectMultiple(description="Select lines:",)
+            else:
+                self._lines = widgets.Dropdown(description="Select line:",)
+
         return self._lines
+
+    @property
+    def multiple_lines(self):
+        if getattr(self, "_multiple_lines", None) is None:
+            self._multiple_lines = True
+
+        return self._multiple_lines
+
+    @multiple_lines.setter
+    def multiple_lines(self, value):
+        assert isinstance(
+            value, bool
+        ), f"'multiple_lines' property must be of type {bool}"
+        self._multiple_lines = value
 
     def update_line_list(self):
         _, data = self.get_selected_entities()
         if data is not None and getattr(data, "values", None) is not None:
-            self._lines.options = [""] + np.unique(data.values).tolist()
+            self.lines.options = [""] + np.unique(data.values).tolist()

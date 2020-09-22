@@ -1,7 +1,7 @@
 Welcome to **geoapps** - Open-source applications in geosciences
 ================================================================
 
-<img align="right" width="50%" src="./docs/images/apps_index.png">
+<img align="right" width="50%" src="https://github.com/MiraGeoscience/geoapps/raw/develop/docs/images/index_page.png">
 
 In short
 --------
@@ -34,5 +34,3 @@ Current sponsors:
 - [Rio Tinto](https://www.riotinto.com/en)
 - [Teck](https://www.teck.com/)
 - [Vale](http://www.vale.com/canada/EN/Pages/default.aspx)
-
-

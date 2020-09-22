@@ -36,7 +36,7 @@ class ChannelOptions:
 
         self._active = Checkbox(value=False, indent=True, description="Active",)
         self._label = widgets.Text(description=description)
-        self._channel_selection = Dropdown(description="Associated Data:")
+        self._channel_selection = Dropdown(description="Data Channel:")
         self._channel_selection.header = key
         self._uncertainties = widgets.Text(description="Error (%, floor)")
         self._offsets = widgets.Text(description="Offsets (x,y,z)")
@@ -482,13 +482,15 @@ class InversionOptions(BaseApplication):
             value="1, 1, 1, 1", description="Scaling alpha_(s, x, y, z)",
         )
         self._norms = widgets.Text(
-            value="2, 2, 2, 2", description="Norms p_(s, x, y, z)",
+            value="2, 2, 2, 2",
+            description="Norms p_(s, x, y, z)",
+            continuous_update=False,
         )
 
-        def check_max_iterations(_):
-            self.check_max_iterations()
-
-        self._norms.observe(check_max_iterations)
+        # def check_max_iterations(_):
+        #     self.check_max_iterations()
+        #
+        # self._norms.observe(check_max_iterations)
 
         self._mesh = MeshOctreeOptions()
         self.inversion_options = {
@@ -541,11 +543,14 @@ class InversionOptions(BaseApplication):
         #                 model_list += [data.name]
         #
 
-    def check_max_iterations(self):
-        if not all([val == 2 for val in string_2_list(self._norms.value)]):
-            self._max_iterations.value = 30
-        else:
-            self._max_iterations.value = 10
+    # def check_max_iterations(self):
+    #     try:
+    #         if all([val == 2 for val in string_2_list(self._norms.value)]):
+    #             self._max_iterations.value = 10
+    #
+    #     except:
+    #         print("Check values of norms. There should be 4 values between [0, 2]")
+    #         self._norms.value = "0, 2, 2, 2"
 
     def inversion_option_change(self):
         self._widget.children[1].children = [
@@ -998,10 +1003,13 @@ class InversionApp(PlotSelection2D):
 
         # Refresh the list of objects
         self.update_objects_list()
-        self.inversion_parameters.update_workspace(workspace)
-        self.lines.workspace = workspace
-        self.sensor.workspace = workspace
-        self.topography.workspace = workspace
+
+        # Check for startup
+        if getattr(self, "inversion_parameters", None) is not None:
+            self.inversion_parameters.update_workspace(workspace)
+            self.lines.workspace = workspace
+            self.sensor.workspace = workspace
+            self.topography.workspace = workspace
 
     @property
     def write(self):
@@ -1163,7 +1171,7 @@ class InversionApp(PlotSelection2D):
                     if values is not None and isinstance(values[0], float):
                         data_widget.children[
                             3
-                        ].value = f"0, {np.percentile(values[values > 2e-18], 5):.2f}"
+                        ].value = f"0, {np.percentile(np.abs(values[np.abs(values) > 2e-18]), 5):.2f}"
 
             # Trigger plot update
             if self.data_channel_choices.value == channel.header:
@@ -1465,6 +1473,11 @@ class InversionApp(PlotSelection2D):
                 }
 
         input_dict["model_norms"] = string_2_list(self.inversion_parameters.norms.value)
+
+        if len(input_dict["model_norms"]) not in [4, 12]:
+            print(
+                f"Norm values should be 4 or 12 values. List of {len(input_dict['model_norms'])} values provided"
+            )
 
         if len(self.inversion_parameters.lower_bound.value) > 0:
             input_dict["lower_bound"] = string_2_list(
