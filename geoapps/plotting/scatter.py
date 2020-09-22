@@ -40,6 +40,8 @@ class ScatterPlots(ObjectDataSelection):
         "size": "MgO",
         "size_active": True,
         "color_maps": "inferno",
+        "refresh": True,
+        "refresh_trigger": True,
     }
 
     def __init__(self, static=False, **kwargs):
@@ -149,7 +151,7 @@ class ScatterPlots(ObjectDataSelection):
             ]
         )
 
-        self.refresh_trigger = ToggleButton(description="Refresh Plot", value=True)
+        self._refresh_trigger = ToggleButton(description="Refresh Plot", value=False)
 
         # Wrap all axis panels into dropdown
         def axes_pannels_trigger(_):
@@ -496,6 +498,13 @@ class ScatterPlots(ObjectDataSelection):
         :obj:`ipywidgets.Text`
         """
         return self._color_max
+
+    @property
+    def refresh_trigger(self):
+        """
+
+        """
+        return self._refresh_trigger
 
     @property
     def size(self):

@@ -36,7 +36,7 @@ class ChannelOptions:
 
         self._active = Checkbox(value=False, indent=True, description="Active",)
         self._label = widgets.Text(description=description)
-        self._channel_selection = Dropdown(description="Associated Data:")
+        self._channel_selection = Dropdown(description="Data Channel:")
         self._channel_selection.header = key
         self._uncertainties = widgets.Text(description="Error (%, floor)")
         self._offsets = widgets.Text(description="Offsets (x,y,z)")
