@@ -20,8 +20,16 @@ This application provides an interface to geophysical inversion using the `SimPE
         :alt: inv_app
 
 
+.. note:: The latest version of applications can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+
+          See the :ref:`Installation page <getting_started>` to get started.
+
+
 Input data
 ----------
+
+The following list of interactive widgets are for documentation and demonstration purposes only.
+
 
 .. list-table::
    :header-rows: 1
@@ -190,8 +198,8 @@ Topography
 
    * - Topography defined by the ``Receiver`` [x, y] locations at constant elevation (m).
 
-Receivers
-^^^^^^^^^
+Sensors
+^^^^^^^
 
 .. list-table::
    :header-rows: 1
