@@ -5,8 +5,9 @@ from os import mkdir, listdir, path, remove
 import subprocess
 from shutil import copyfile, copy, rmtree
 import time
-from ipywidgets import Checkbox, Text, VBox, Label, ToggleButton, Widget, Button
+from ipywidgets import Checkbox, Text, VBox, HBox, Label, ToggleButton, Widget, Button
 from geoh5py.workspace import Workspace
+from geoh5py.groups import ContainerGroup
 from ipyfilechooser import FileChooser
 import geoapps
 
@@ -27,6 +28,10 @@ class BaseApplication:
         self._h5file = None
         self._workspace = None
         self._file_browser = FileChooser()
+        self._ga_group_name = Text(
+            value="", description="To Group", continuous_update=False
+        )
+        self._ga_group = None
 
         def file_browser_change(_):
             self.file_browser_change()
@@ -42,7 +47,7 @@ class BaseApplication:
 
         self._copy_trigger.on_click(create_copy)
 
-        self.project_panel = VBox(
+        self.project_panel = HBox(
             [Label("Workspace"), self._file_browser, self._copy_trigger]
         )
 
@@ -55,36 +60,38 @@ class BaseApplication:
 
         self._live_link.observe(live_link_choice)
 
-        self._live_link_path = Text(description="", value="", disabled=True,)
+        self._live_link_path = FileChooser(show_only_dirs=True)
+
+        self.live_link_panel = VBox([self.live_link])
         self._refresh = ToggleButton(value=False)
-        self._trigger = ToggleButton(
+        self._trigger = Button(
             value=False,
             description="Compute",
             button_style="danger",
             tooltip="Run computation",
             icon="check",
         )
+
         self.trigger_widget = VBox(
-            [
-                self.trigger,
-                self.live_link,
-                Label("Monitoring folder"),
-                self.live_link_path,
-            ]
+            [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
         )
 
         self.__populate__(**kwargs)
 
+        def ga_group_name_update(_):
+            self.ga_group_name_update()
+
+        self.ga_group_name.observe(ga_group_name_update)
+
         if self.h5file is not None:
-            self.live_link_path.value = path.join(
-                path.abspath(path.dirname(self.h5file)), "Temp"
-            )
+            live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
+            if not path.exists(live_path):
+                mkdir(live_path)
+
+            self.live_link_path._set_form_values(live_path, "")
+            self.live_link_path._apply_selection()
 
     def __populate__(self, **kwargs):
-        for obj in self.__dict__:
-            if hasattr(getattr(self, obj), "style"):
-                getattr(self, obj).style = {"description_width": "initial"}
-
         for key, value in kwargs.items():
             if hasattr(self, "_" + key) or hasattr(self, key):
                 try:
@@ -92,6 +99,9 @@ class BaseApplication:
                         value, Widget
                     ):
                         setattr(getattr(self, key), "value", value)
+                        if hasattr(getattr(self, key), "style"):
+                            getattr(self, key).style = {"description_width": "initial"}
+
                     elif isinstance(value, BaseApplication) and isinstance(
                         getattr(self, "_" + key, None), BaseApplication
                     ):
@@ -127,11 +137,8 @@ class BaseApplication:
         :param :obj:`geoh5py.Entity`: Entity to be updated
         :param data: `dict` of values to be added as data {"name": values}
         """
-        if not path.exists(self.live_link_path.value):
-            mkdir(self.live_link_path.value)
-
         temp_geoh5 = path.join(
-            self.live_link_path.value, f"temp{time.time():.3f}.geoh5"
+            self.live_link_path.selected_path, f"temp{time.time():.3f}.geoh5"
         )
         temp_workspace = Workspace(temp_geoh5)
 
@@ -145,9 +152,13 @@ class BaseApplication:
         Enable the monitoring folder
         """
         if self.live_link.value:
-            self.live_link_path.disabled = False
+            self.live_link_panel.children = [
+                self.live_link,
+                Label("Monitoring folder", style={"description_width": "initial"}),
+                self.live_link_path,
+            ]
         else:
-            self.live_link_path.disabled = True
+            self.live_link_panel.children = [self.live_link]
 
     def widget(self):
         ...
@@ -165,6 +176,36 @@ class BaseApplication:
         :obj:`ipyfilechooser.FileChooser` widget
         """
         return self._file_browser
+
+    @property
+    def ga_group(self):
+
+        if getattr(self, "_ga_group", None) is None:
+
+            groups = [
+                group
+                for group in self.workspace.all_groups()
+                if group.name == self.ga_group_name.value
+            ]
+            if any(groups):
+                self._ga_group = groups[0]
+            elif self.ga_group_name.value == "":
+                self._ga_group = self.workspace.root
+            else:
+                self._ga_group = ContainerGroup.create(
+                    self.workspace, name=self.ga_group_name.value
+                )
+                if self.live_link.value:
+                    self.live_link_output(self._ga_group)
+
+        return self._ga_group
+
+    @property
+    def ga_group_name(self):
+        """
+        Default group name to export to
+        """
+        return self._ga_group_name
 
     @property
     def h5file(self):
@@ -203,7 +244,7 @@ class BaseApplication:
     @property
     def live_link_path(self):
         """
-        :obj:`ipywidgets.Text`: Path for the monitoring folder to be copied to Geoscience ANALYST preferences.
+        :obj:`ipyfilechooser.FileChooser`: Path for the monitoring folder to be copied to Geoscience ANALYST preferences.
         """
         return self._live_link_path
 
@@ -247,6 +288,9 @@ class BaseApplication:
         if self.h5file is not None:
             value = working_copy(self.h5file)
             self.h5file = value
+
+    def ga_group_name_update(self):
+        self._ga_group = None
 
 
 def update_apps():

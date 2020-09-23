@@ -8,6 +8,7 @@ import time
 import matplotlib.pyplot as plt
 from geoh5py.workspace import Workspace
 from geoh5py.objects import Points, Curve, Surface
+from geoh5py.groups import ContainerGroup
 from ipywidgets import (
     Dropdown,
     ColorPicker,
@@ -19,6 +20,7 @@ from ipywidgets import (
     FloatText,
     VBox,
     HBox,
+    Box,
     ToggleButton,
     ToggleButtons,
     interactive_output,
@@ -70,6 +72,7 @@ class EMLineProfiler(ObjectDataSelection):
         "show_doi": True,
         "slice_width": 150,
         "x_label": "Easting",
+        "ga_group_name": "EMProfiler",
     }
 
     def __init__(self, **kwargs):
@@ -118,7 +121,7 @@ class EMLineProfiler(ObjectDataSelection):
         if "boreholes" in kwargs.keys():
             self.boreholes.__populate__(**kwargs["boreholes"])
         self.boreholes.objects.description = "Borehole"
-        self.boreholes.data.description = "Markers"
+        self.boreholes.data.description = "Log"
 
         if "model" in kwargs.keys():
             self.model_selection.__populate__(**kwargs["model"])
@@ -192,8 +195,8 @@ class EMLineProfiler(ObjectDataSelection):
         def trigger_click(_):
             self.trigger_click()
 
-        self.trigger.observe(trigger_click)
-        self.trigger.description = "Export to GA"
+        self.trigger.on_click(trigger_click)
+        self.trigger.description = "Export Marker"
 
         def plot_data_selection(
             data,
@@ -342,10 +345,7 @@ class EMLineProfiler(ObjectDataSelection):
                 self.project_panel,
                 HBox(
                     [
-                        VBox(
-                            [self.widget, self.lines.widget,],
-                            layout=Layout(width="50%"),
-                        ),
+                        VBox([self.widget,], layout=Layout(width="50%"),),
                         VBox(
                             [self.system_box, self.groups_widget, self.decay_panel,],
                             layout=Layout(width="50%"),
@@ -360,14 +360,23 @@ class EMLineProfiler(ObjectDataSelection):
                                 self.width,
                                 self.smoothing,
                                 self.residual,
-                                self.x_label,
                                 scale_panel,
                                 self.markers,
                             ],
                             layout=Layout(width="50%"),
                         ),
-                        plotting,
+                        VBox([plotting, self.x_label,]),
                     ]
+                ),
+                Box(
+                    children=[self.lines.widget],
+                    layout=Layout(
+                        display="flex",
+                        flex_flow="row",
+                        align_items="stretch",
+                        width="100%",
+                        justify_content="center",
+                    ),
                 ),
                 self.model_panel,
                 self.trigger_widget,
@@ -820,7 +829,7 @@ class EMLineProfiler(ObjectDataSelection):
                 options=["Distance", "Easting", "Northing"],
                 value="Distance",
                 description="X-axis label:",
-                orientation="vertical",
+                orientation="horizontal",
             )
 
         return self._x_label
@@ -855,7 +864,6 @@ class EMLineProfiler(ObjectDataSelection):
             self.auto_picker.value = True
 
     def objects_change(self):
-
         if self.workspace.get_entity(self.objects.value):
             self._survey = self.workspace.get_entity(self.objects.value)[0]
 
@@ -867,8 +875,6 @@ class EMLineProfiler(ObjectDataSelection):
                     ]
                 ):
                     self.system.value = aem_system
-
-            # self.line_update()
 
     def reset_model_figure(self):
         self.model_figure = go.FigureWidget()
@@ -981,63 +987,60 @@ class EMLineProfiler(ObjectDataSelection):
             self.group_add.value = False
 
     def trigger_click(self):
-        if self.trigger.value:
-            # for group in self.group_list.value:
-            group = self.group_list.value
-            tau = self.time_groups[group]["mad_tau"]
-            dip = self.time_groups[group]["dip"]
-            azimuth = self.time_groups[group]["azimuth"]
-            cox = self.time_groups[group]["cox"]
-            cox[2] -= self.shift_cox_z.value
 
-            if self.workspace.get_entity(group):
-                points = self.workspace.get_entity(group)[0]
-                azm_data = points.get_data("azimuth")[0]
-                azm_vals = azm_data.values.copy()
-                dip_data = points.get_data("dip")[0]
-                dip_vals = dip_data.values.copy()
+        # for group in self.group_list.value:
+        group = self.group_list.value
+        tau = self.time_groups[group]["mad_tau"]
+        dip = self.time_groups[group]["dip"]
+        azimuth = self.time_groups[group]["azimuth"]
+        cox = self.time_groups[group]["cox"]
+        cox[2] -= self.shift_cox_z.value
 
-                tau_data = points.get_data("tau")[0]
-                tau_vals = tau_data.values.copy()
+        points = [child for child in self.ga_group.children if child.name == group]
+        if any(points):
+            points = points[0]
+            azm_data = points.get_data("azimuth")[0]
+            azm_vals = azm_data.values.copy()
+            dip_data = points.get_data("dip")[0]
+            dip_vals = dip_data.values.copy()
 
-                points.vertices = np.vstack([points.vertices, cox.reshape((1, 3))])
-                azm_data.values = np.hstack([azm_vals, azimuth])
-                dip_data.values = np.hstack([dip_vals, dip])
-                tau_data.values = np.hstack([tau_vals, tau])
+            tau_data = points.get_data("tau")[0]
+            tau_vals = tau_data.values.copy()
 
-            else:
-                # if self.workspace.get_entity(group)
-                # parent =
-                points = Points.create(
-                    self.workspace, name=group, vertices=cox.reshape((1, 3))
-                )
-                points.add_data(
-                    {
-                        "azimuth": {"values": np.asarray(azimuth)},
-                        "dip": {"values": np.asarray(dip)},
-                        "tau": {"values": np.asarray(tau)},
-                    }
-                )
-                group = points.find_or_create_property_group(
-                    name="AzmDip", property_group_type="Dip direction & dip"
-                )
-                group.properties = [
-                    points.get_data("azimuth")[0].uid,
-                    points.get_data("dip")[0].uid,
-                ]
+            points.vertices = np.vstack([points.vertices, cox.reshape((1, 3))])
+            azm_data.values = np.hstack([azm_vals, azimuth])
+            dip_data.values = np.hstack([dip_vals, dip])
+            tau_data.values = np.hstack([tau_vals, tau])
 
-            if self.live_link.value:
-                if not os.path.exists(self.live_link_path.value):
-                    os.mkdir(self.live_link_path.value)
+        else:
+            # if self.workspace.get_entity(group)
+            # parent =
+            points = Points.create(
+                self.workspace,
+                name=group,
+                vertices=cox.reshape((1, 3)),
+                parent=self.ga_group,
+            )
+            points.entity_type.name = group
+            points.add_data(
+                {
+                    "azimuth": {"values": np.asarray(azimuth)},
+                    "dip": {"values": np.asarray(dip)},
+                    "tau": {"values": np.asarray(tau)},
+                }
+            )
+            group = points.find_or_create_property_group(
+                name="AzmDip", property_group_type="Dip direction & dip"
+            )
+            group.properties = [
+                points.get_data("azimuth")[0].uid,
+                points.get_data("dip")[0].uid,
+            ]
 
-                temp_geoh5 = os.path.join(
-                    self.live_link_path.value, f"temp{time.time():.3f}.geoh5"
-                )
-                ws_out = Workspace(temp_geoh5)
-                points.copy(parent=ws_out)
+        if self.live_link.value:
+            self.live_link_output(points)
 
-            self.trigger.value = False
-            self.workspace.finalize()
+        self.workspace.finalize()
 
     def highlight_selection(self):
         """
@@ -1094,11 +1097,8 @@ class EMLineProfiler(ObjectDataSelection):
                 (center + width / 2.0) * self.lines.profile.locations_resampled[-1],
             ],
         )
-
         sub_ind = np.arange(lims[0], lims[1])
 
-        # channels = []
-        # for group in self.group_list.value:
         try:
             time_group = self.time_groups[self.group_list.value]
             channels = time_group["channels"]
@@ -1133,7 +1133,7 @@ class EMLineProfiler(ObjectDataSelection):
                 continue
 
             if axs is None:
-                fig = plt.figure(figsize=(12, 8))
+                fig = plt.figure(figsize=(12, 6))
                 axs = plt.subplot()
 
             self.lines.profile.values = d.values[self.survey.line_indices].copy()
@@ -1283,14 +1283,11 @@ class EMLineProfiler(ObjectDataSelection):
             peaks = np.vstack(time_group["peaks"])
             inflx_dwn = np.vstack(time_group["inflx_dwn"])
             inflx_up = np.vstack(time_group["inflx_up"])
-
             ratio = peaks[:, 1] / peaks[0, 1]
             ind = np.where(ratio >= (1 - threshold / 100))[0][-1]
-
             peaks = np.mean(peaks[: ind + 1, :], axis=0)
             inflx_dwn = np.mean(inflx_dwn[: ind + 1, :], axis=0)
             inflx_up = np.mean(inflx_up[: ind + 1, :], axis=0)
-
             cox_x = self.lines.profile.interp_x(peaks[0])
             cox_y = self.lines.profile.interp_y(peaks[0])
             cox_z = self.lines.profile.interp_z(peaks[0])
@@ -1367,7 +1364,6 @@ class EMLineProfiler(ObjectDataSelection):
             axs.set_ylabel("dBdT")
 
             if x_label == "Easting":
-
                 axs.text(
                     center_x,
                     0,
@@ -1382,6 +1378,7 @@ class EMLineProfiler(ObjectDataSelection):
                 ]
                 axs.set_xticklabels(xlbl)
                 axs.set_xlabel("Easting (m)")
+
             elif x_label == "Northing":
                 axs.text(
                     center_x,
@@ -1397,6 +1394,7 @@ class EMLineProfiler(ObjectDataSelection):
                 ]
                 axs.set_xticklabels(xlbl)
                 axs.set_xlabel("Northing (m)")
+
             else:
                 axs.text(
                     center_x,
@@ -1441,9 +1439,7 @@ class EMLineProfiler(ObjectDataSelection):
             a, c = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, vals))
             d = np.r_[tc.min(), tc.max()]
             vv = d * c + a
-
             ratio = np.abs((vv[0] - vv[1]) / (d[0] - d[1]))
-            #                 angl = np.arctan(ratio**-1.)
 
             self.time_groups[group]["mad_tau"] = ratio ** -1.0
 
