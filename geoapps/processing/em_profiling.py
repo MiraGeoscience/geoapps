@@ -56,196 +56,57 @@ class EMLineProfiler(ObjectDataSelection):
         },
         "objects": "Data_TEM_pseudo3D",
         "data": ["Observed"],
-        "model": {"objects": "Inversion_VTEM_Model"},
+        "model": {"objects": "Inversion_VTEM_Model", "data": "Iteration_7_model"},
+        "lines": {"data": "Line", "lines": 6073400.0},
+        "boreholes": {"objects": "geochem", "data": "Al2O3"},
+        "doi": {"data": "Z"},
+        "doi_percent": 60,
+        "doi_revert": True,
+        "center": 0.35,
+        "width": 0.28,
+        "smoothing": 6,
+        "show_model": True,
+        "show_borehole": True,
+        "show_doi": True,
+        "slice_width": 150,
+        "x_label": "Easting",
     }
 
     def __init__(self, **kwargs):
         kwargs = self.apply_defaults(**kwargs)
 
-        self.em_system_specs = geophysical_systems.parameters()
-        self._system = Dropdown(
-            options=[
-                key
-                for key, specs in self.em_system_specs.items()
-                if specs["type"] == "time"
-            ],
-            description="Time-Domain System:",
-        )
-        self._time_groups = {}
-        self.group_list = Dropdown(description="")
-        self.surface_model = None
         self.borehole_trace = None
-        self._survey = None
-        self.model_figure = go.FigureWidget()
-        self.model_figure.add_trace(go.Scatter3d())
-        self.model_figure.add_trace(go.Cone())
-        self.model_figure.add_trace(go.Mesh3d())
-        self.model_figure.add_trace(go.Scatter3d())
-        self.model_figure.update_layout(
-            scene={
-                "xaxis_title": "Easting (m)",
-                "yaxis_title": "Northing (m)",
-                "zaxis_title": "Elevation (m)",
-                "yaxis": {"autorange": "reversed"},
-                "xaxis": {"autorange": "reversed"},
-                "aspectmode": "data",
-            },
-            width=800,
-            height=400,
-            autosize=False,
-            uirevision=False,
-        )
-
-        self.marker = {"left": "<", "right": ">"}
-        self.channels = SelectMultiple(description="Channels")
-        self._group_early = Text(description="Early")
-        self._group_middle = Text(description="Middle")
-        self._group_late = Text(description="Late")
         self.data_channels = {}
         self.data_channel_options = {}
-        self.smoothing = IntSlider(
-            min=0,
-            max=64,
-            value=0,
-            description="Smoothing",
-            continuous_update=False,
-            tooltip="Running mean width",
-        )
-        self.color_maps = Dropdown(
-            description="Colormaps",
-            options=px.colors.named_colorscales(),
-            value="edge",
-        )
-        self.residual = Checkbox(description="Use residual", value=False)
-        self.threshold = FloatSlider(
-            value=50,
-            min=10,
-            max=90,
-            step=5,
-            continuous_update=False,
-            description="Decay threshold (%)",
-        )
-        self.opacity = FloatSlider(
-            value=0.9,
-            min=0.0,
-            max=1.0,
-            step=0.05,
-            continuous_update=False,
-            description="Opacity",
-        )
-        self.doi_percent = FloatSlider(
-            value=20.0,
-            min=0.0,
-            max=100.0,
-            step=0.1,
-            continuous_update=False,
-            description="DOI %",
-        )
-        self.doi_revert = Checkbox(description="Revert", value=False)
-        self.center = FloatSlider(
-            value=0.5,
-            min=0,
-            max=1.0,
-            step=0.001,
-            description="Position (%)",
-            disabled=False,
-            continuous_update=False,
-            orientation="horizontal",
-        )
-        self.shift_cox_z = FloatSlider(
-            value=0,
-            min=0,
-            max=200,
-            step=1.0,
-            description="Z shift (m)",
-            disabled=False,
-            continuous_update=False,
-            orientation="horizontal",
-        )
-        self.dip_rotation = FloatSlider(
-            value=0,
-            min=0,
-            max=90,
-            step=1.0,
-            description="Rotate dip (dd)",
-            disabled=False,
-            continuous_update=False,
-            orientation="horizontal",
-        )
-        self.slice_width = FloatSlider(
-            value=10.0,
-            min=1.0,
-            max=500.0,
-            step=1.0,
-            description="Slice width (m)",
-            disabled=False,
-            continuous_update=False,
-            orientation="horizontal",
-        )
-        self.auto_picker = ToggleButton(description="Pick nearest target", value=False)
+        self.em_system_specs = geophysical_systems.parameters()
+        self.marker = {"left": "<", "right": ">"}
         self.pause_plot_refresh = False
-        self.reverse_cmap = ToggleButton(description="Flip colormap", value=False)
-        self.focus = FloatSlider(
-            value=1.0,
-            min=0.025,
-            max=1.0,
-            step=0.005,
-            description="Width (%)",
-            disabled=False,
-            continuous_update=False,
-            orientation="horizontal",
-        )
-        self.zoom = VBox([self.center, self.focus])
-        self.scale_button = ToggleButtons(
-            options=["linear", "symlog",],
-            description="Y-axis scaling",
-            orientation="vertical",
-        )
-        self.scale_value = FloatLogSlider(
-            min=-18,
-            max=10,
-            step=0.5,
-            base=10,
-            value=1e-2,
-            description="Linear threshold",
-            continuous_update=False,
-        )
-        self.channel_selection = Dropdown(
-            description="Time Gate",
-            options=self.em_system_specs[self.system.value]["channels"].keys(),
-        )
-        self.group_add = ToggleButton(description="^ Add New Group ^")
-        self.group_name = Text(description="Name")
-        self.group_color = ColorPicker(
-            concise=False, description="Color", value="blue", disabled=False
-        )
-        self.markers = ToggleButton(description="Show markers")
-        self.groups_setter = ToggleButton(description="Select Time Groups", value=False)
-        self.x_label = ToggleButtons(
-            options=["Distance", "Easting", "Northing"],
-            value="Distance",
-            description="X-axis label:",
-            orientation="vertical",
-        )
-        self.show_model = ToggleButton(
-            description="Show model", value=False, button_style="success"
-        )
-        self.show_doi = ToggleButton(
-            description="Show DOI", value=False, button_style="success"
-        )
-        self.show_borehole = ToggleButton(
-            description="Show Boreholes", value=False, button_style="success"
-        )
-        self.show_decay = ToggleButton(description="Show decay", value=False)
-        self.lines = LineOptions(multiple_lines=False)
-        self.model_selection = ObjectDataSelection(object_types=(Surface,))
-        self.doi_selection = ObjectDataSelection()
-        self.boreholes = ObjectDataSelection(object_types=(Points,))
+        self.surface_model = None
+        self._survey = None
+        self._time_groups = {}
 
         def objects_change(_):
             self.objects_change()
 
         self.objects.observe(objects_change, names="value")
+
+        def show_model_trigger(_):
+            self.show_model_trigger()
+
+        self.model_panel = VBox([self.show_model])
+        self.show_model.observe(show_model_trigger, names="value")
+
+        def show_doi_trigger(_):
+            self.show_doi_trigger()
+
+        self.doi_panel = VBox([self.show_doi])
+        self.show_doi.observe(show_doi_trigger, names="value")
+
+        def show_borehole_trigger(_):
+            self.show_borehole_trigger()
+
+        self.borehole_panel = VBox([self.show_borehole])
+        self.show_borehole.observe(show_borehole_trigger, names="value")
 
         super().__init__(**kwargs)
 
@@ -282,9 +143,6 @@ class EMLineProfiler(ObjectDataSelection):
 
         self.scale_button.observe(scale_update)
 
-        def add_group(_):
-            self.add_group()
-
         def system_observer(_):
             self.system_observer()
 
@@ -313,6 +171,9 @@ class EMLineProfiler(ObjectDataSelection):
         )
         self.system_box_option.observe(system_box_trigger)
         self.system_box = VBox([self.system_box_option])
+
+        def add_group(_):
+            self.add_group()
 
         self.group_add.observe(add_group)
 
@@ -343,7 +204,7 @@ class EMLineProfiler(ObjectDataSelection):
             scale,
             scale_value,
             center,
-            focus,
+            width,
             groups,
             pick_trigger,
             x_label,
@@ -358,7 +219,7 @@ class EMLineProfiler(ObjectDataSelection):
                 scale,
                 scale_value,
                 center,
-                focus,
+                width,
                 groups,
                 pick_trigger,
                 x_label,
@@ -376,7 +237,7 @@ class EMLineProfiler(ObjectDataSelection):
                 "scale": self.scale_button,
                 "scale_value": self.scale_value,
                 "center": self.center,
-                "focus": self.focus,
+                "width": self.width,
                 "groups": self.group_list,
                 "pick_trigger": self.auto_picker,
                 "x_label": self.x_label,
@@ -413,7 +274,7 @@ class EMLineProfiler(ObjectDataSelection):
         def plot_model_selection(
             ind,
             center,
-            focus,
+            width,
             x_label,
             colormap,
             reverse,
@@ -431,13 +292,14 @@ class EMLineProfiler(ObjectDataSelection):
             borehole_show,
             borehole_object,
             borehole_data,
+            boreholes_size,
         ):
             self.update_line_model()
             self.update_line_boreholes()
             self.plot_model_selection(
                 ind,
                 center,
-                focus,
+                width,
                 x_label,
                 colormap,
                 reverse,
@@ -445,6 +307,7 @@ class EMLineProfiler(ObjectDataSelection):
                 dip_rotation,
                 opacity,
                 doi_percent,
+                boreholes_size,
             )
 
         self.model_section = interactive_output(
@@ -452,7 +315,7 @@ class EMLineProfiler(ObjectDataSelection):
             {
                 "ind": self.lines.lines,
                 "center": self.center,
-                "focus": self.focus,
+                "width": self.width,
                 "objects": self.model_selection.objects,
                 "model": self.model_selection.data,
                 "smoothing": self.smoothing,
@@ -470,26 +333,9 @@ class EMLineProfiler(ObjectDataSelection):
                 "borehole_show": self.show_borehole,
                 "borehole_object": self.boreholes.objects,
                 "borehole_data": self.boreholes.data,
+                "boreholes_size": self.boreholes_size,
             },
         )
-
-        def show_model_trigger(_):
-            self.show_model_trigger()
-
-        self.model_panel = VBox([self.show_model])
-        self.show_model.observe(show_model_trigger, names="value")
-
-        def show_doi_trigger(_):
-            self.show_doi_trigger()
-
-        self.doi_panel = VBox([self.show_doi])
-        self.show_doi.observe(show_doi_trigger, names="value")
-
-        def show_borehole_trigger(_):
-            self.show_borehole_trigger()
-
-        self.borehole_panel = VBox([self.show_borehole])
-        self.show_borehole.observe(show_borehole_trigger, names="value")
 
         self._widget = VBox(
             [
@@ -510,7 +356,8 @@ class EMLineProfiler(ObjectDataSelection):
                     [
                         VBox(
                             [
-                                self.zoom,
+                                self.center,
+                                self.width,
                                 self.smoothing,
                                 self.residual,
                                 self.x_label,
@@ -528,6 +375,79 @@ class EMLineProfiler(ObjectDataSelection):
         )
 
         self.auto_picker.value = True
+
+    @property
+    def auto_picker(self):
+        if getattr(self, "_auto_picker", None) is None:
+            self._auto_picker = ToggleButton(
+                description="Pick nearest target", value=False
+            )
+
+        return self._auto_picker
+
+    @property
+    def boreholes(self):
+        if getattr(self, "_boreholes", None) is None:
+            self._boreholes = ObjectDataSelection(object_types=(Points,))
+
+        return self._boreholes
+
+    @property
+    def boreholes_size(self):
+        if getattr(self, "_boreholes_size", None) is None:
+            self._boreholes_size = IntSlider(
+                value=3,
+                min=1,
+                max=20,
+                description="Marker Size",
+                continuous_update=False,
+            )
+
+        return self._boreholes_size
+
+    @property
+    def center(self):
+        if getattr(self, "_center", None) is None:
+            self._center = FloatSlider(
+                value=0.5,
+                min=0,
+                max=1.0,
+                step=0.001,
+                description="Position (%)",
+                disabled=False,
+                continuous_update=False,
+                orientation="horizontal",
+            )
+
+        return self._center
+
+    @property
+    def channels(self):
+        if getattr(self, "_channels", None) is None:
+            self._channels = SelectMultiple(description="Channels")
+
+        return self._channels
+
+    @property
+    def channel_selection(self):
+        if getattr(self, "_channel_selection", None) is None:
+            self._channel_selection = Dropdown(
+                description="Time Gate",
+                options=self.em_system_specs[self.system.value]["channels"].keys(),
+            )
+
+        return self._channel_selection
+
+    @property
+    def color_maps(self):
+        if getattr(self, "_color_maps", None) is None:
+            self._color_maps = Dropdown(
+                description="Colormaps",
+                options=px.colors.named_colorscales(),
+                value="edge",
+            )
+
+        return self._color_maps
 
     @property
     def data(self):
@@ -552,6 +472,282 @@ class EMLineProfiler(ObjectDataSelection):
         self.set_data()
 
     @property
+    def dip_rotation(self):
+        if getattr(self, "_dip_rotation", None) is None:
+            self._dip_rotation = FloatSlider(
+                value=0,
+                min=0,
+                max=90,
+                step=1.0,
+                description="Rotate dip (dd)",
+                disabled=False,
+                continuous_update=False,
+                orientation="horizontal",
+            )
+
+        return self._dip_rotation
+
+    @property
+    def doi_percent(self):
+        if getattr(self, "_doi_percent", None) is None:
+            self._doi_percent = FloatSlider(
+                value=20.0,
+                min=0.0,
+                max=100.0,
+                step=0.1,
+                continuous_update=False,
+                description="DOI %",
+            )
+
+        return self._doi_percent
+
+    @property
+    def doi_revert(self):
+        if getattr(self, "_doi_revert", None) is None:
+            self._doi_revert = Checkbox(description="Revert", value=False)
+
+        return self._doi_revert
+
+    @property
+    def doi_selection(self):
+        if getattr(self, "_doi_selection", None) is None:
+            self._doi_selection = ObjectDataSelection()
+
+        return self._doi_selection
+
+    @property
+    def width(self):
+        if getattr(self, "_width", None) is None:
+            self._width = FloatSlider(
+                value=1.0,
+                min=0.025,
+                max=1.0,
+                step=0.005,
+                description="Width (%)",
+                disabled=False,
+                continuous_update=False,
+                orientation="horizontal",
+            )
+
+        return self._width
+
+    @property
+    def group_add(self):
+        if getattr(self, "_group_add", None) is None:
+            self._group_add = ToggleButton(description="^ Add New Group ^")
+
+        return self._group_add
+
+    @property
+    def group_color(self):
+        if getattr(self, "_group_color", None) is None:
+            self._group_color = ColorPicker(
+                concise=False, description="Color", value="blue", disabled=False
+            )
+
+        return self._group_color
+
+    @property
+    def group_list(self):
+        if getattr(self, "_group_list", None) is None:
+            self._group_list = Dropdown(description="")
+
+        return self._group_list
+
+    @property
+    def group_name(self):
+        if getattr(self, "_group_name", None) is None:
+            self._group_name = Text(description="Name")
+
+        return self._group_name
+
+    @property
+    def groups_setter(self):
+        if getattr(self, "_groups_setter", None) is None:
+            self._groups_setter = ToggleButton(
+                description="Select Time Groups", value=False
+            )
+
+        return self._groups_setter
+
+    @property
+    def lines(self):
+        if getattr(self, "_lines", None) is None:
+            self._lines = LineOptions(multiple_lines=False)
+
+        return self._lines
+
+    @property
+    def markers(self):
+        if getattr(self, "_markers", None) is None:
+            self._markers = ToggleButton(description="Show markers")
+
+        return self._markers
+
+    @property
+    def model_selection(self):
+        if getattr(self, "_model_selection", None) is None:
+            self._model_selection = ObjectDataSelection(object_types=(Surface,))
+
+        return self._model_selection
+
+    @property
+    def opacity(self):
+        if getattr(self, "_opacity", None) is None:
+            self._opacity = FloatSlider(
+                value=0.9,
+                min=0.0,
+                max=1.0,
+                step=0.05,
+                continuous_update=False,
+                description="Opacity",
+            )
+
+        return self._opacity
+
+    @property
+    def residual(self):
+        if getattr(self, "_residual", None) is None:
+            self._residual = Checkbox(description="Use residual", value=False)
+
+        return self._residual
+
+    @property
+    def reverse_cmap(self):
+        if getattr(self, "_reverse_cmap", None) is None:
+            self._reverse_cmap = ToggleButton(description="Flip colormap", value=False)
+
+        return self._reverse_cmap
+
+    @property
+    def scale_button(self):
+        if getattr(self, "_scale_button", None) is None:
+            self._scale_button = ToggleButtons(
+                options=["linear", "symlog",],
+                description="Y-axis scaling",
+                orientation="vertical",
+            )
+
+        return self._scale_button
+
+    @property
+    def scale_value(self):
+        if getattr(self, "_scale_value", None) is None:
+            self._scale_value = FloatLogSlider(
+                min=-18,
+                max=10,
+                step=0.5,
+                base=10,
+                value=1e-2,
+                description="Linear threshold",
+                continuous_update=False,
+            )
+
+        return self._scale_value
+
+    @property
+    def shift_cox_z(self):
+        if getattr(self, "_shift_cox_z", None) is None:
+            self._shift_cox_z = FloatSlider(
+                value=0,
+                min=0,
+                max=200,
+                step=1.0,
+                description="Z shift (m)",
+                disabled=False,
+                continuous_update=False,
+                orientation="horizontal",
+            )
+
+        return self._shift_cox_z
+
+    @property
+    def show_borehole(self):
+        if getattr(self, "_show_borehole", None) is None:
+            self._show_borehole = ToggleButton(
+                description="Show Boreholes", value=False, button_style="success"
+            )
+
+        return self._show_borehole
+
+    @property
+    def show_decay(self):
+        if getattr(self, "_show_decay", None) is None:
+            self._show_decay = ToggleButton(description="Show decay", value=False)
+
+        return self._show_decay
+
+    @property
+    def show_doi(self):
+        if getattr(self, "_show_doi", None) is None:
+            self._show_doi = ToggleButton(
+                description="Show DOI", value=False, button_style="success"
+            )
+
+        return self._show_doi
+
+    @property
+    def show_model(self):
+        if getattr(self, "_show_model", None) is None:
+            self._show_model = ToggleButton(
+                description="Show model", value=False, button_style="success"
+            )
+
+        return self._show_model
+
+    @property
+    def slice_width(self):
+        if getattr(self, "_slice_width", None) is None:
+            self._slice_width = FloatSlider(
+                value=10.0,
+                min=1.0,
+                max=500.0,
+                step=1.0,
+                description="Slice width (m)",
+                disabled=False,
+                continuous_update=False,
+                orientation="horizontal",
+            )
+
+        return self._slice_width
+
+    @property
+    def smoothing(self):
+        if getattr(self, "_smoothing", None) is None:
+            self._smoothing = IntSlider(
+                min=0,
+                max=64,
+                value=0,
+                description="Smoothing",
+                continuous_update=False,
+                tooltip="Running mean width",
+            )
+
+        return self._smoothing
+
+    @property
+    def survey(self):
+        """
+
+        """
+
+        return self._survey
+
+    @property
+    def system(self):
+        if getattr(self, "__system", None) is None:
+            self._system = Dropdown(
+                options=[
+                    key
+                    for key, specs in self.em_system_specs.items()
+                    if specs["type"] == "time"
+                ],
+                description="Time-Domain System:",
+            )
+
+        return self._system
+
+    @property
     def time_groups(self):
 
         return self._time_groups
@@ -573,40 +769,18 @@ class EMLineProfiler(ObjectDataSelection):
         self._time_groups = groups
 
     @property
-    def survey(self):
-        """
+    def threshold(self):
+        if getattr(self, "_threshold", None) is None:
+            self._threshold = FloatSlider(
+                value=50,
+                min=10,
+                max=90,
+                step=5,
+                continuous_update=False,
+                description="Decay threshold (%)",
+            )
 
-        """
-
-        return self._survey
-
-    @property
-    def system(self):
-        """
-
-        """
-        return self._system
-
-    @property
-    def group_early(self):
-        """
-
-        """
-        return self._group_early
-
-    @property
-    def group_middle(self):
-        """
-
-        """
-        return self._group_middle
-
-    @property
-    def group_middle(self):
-        """
-
-        """
-        return self._group_middle
+        return self._threshold
 
     @property
     def workspace(self):
@@ -636,6 +810,20 @@ class EMLineProfiler(ObjectDataSelection):
         self.boreholes.workspace = workspace
         self.doi_selection.objects = self.model_selection.objects
         self.doi_selection.workspace = workspace
+
+        self.reset_model_figure()
+
+    @property
+    def x_label(self):
+        if getattr(self, "_x_label", None) is None:
+            self._x_label = ToggleButtons(
+                options=["Distance", "Easting", "Northing"],
+                value="Distance",
+                description="X-axis label:",
+                orientation="vertical",
+            )
+
+        return self._x_label
 
     def set_data(self):
         if getattr(self, "survey", None) is not None:
@@ -681,6 +869,28 @@ class EMLineProfiler(ObjectDataSelection):
                     self.system.value = aem_system
 
             # self.line_update()
+
+    def reset_model_figure(self):
+        self.model_figure = go.FigureWidget()
+        self.model_figure.add_trace(go.Scatter3d())
+        self.model_figure.add_trace(go.Cone())
+        self.model_figure.add_trace(go.Mesh3d())
+        self.model_figure.add_trace(go.Scatter3d())
+        self.model_figure.update_layout(
+            scene={
+                "xaxis_title": "Easting (m)",
+                "yaxis_title": "Northing (m)",
+                "zaxis_title": "Elevation (m)",
+                "yaxis": {"autorange": "reversed"},
+                "xaxis": {"autorange": "reversed"},
+                "aspectmode": "data",
+            },
+            width=700,
+            height=500,
+            autosize=False,
+            uirevision=False,
+        )
+        self.show_model.value = False
 
     def system_box_trigger(self):
         if self.system_box_option.value:
@@ -851,7 +1061,7 @@ class EMLineProfiler(ObjectDataSelection):
         scale,
         scale_value,
         center,
-        focus,
+        width,
         groups,
         pick_trigger,
         x_label,
@@ -880,8 +1090,8 @@ class EMLineProfiler(ObjectDataSelection):
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
             [
-                (center - focus / 2.0) * self.lines.profile.locations_resampled[-1],
-                (center + focus / 2.0) * self.lines.profile.locations_resampled[-1],
+                (center - width / 2.0) * self.lines.profile.locations_resampled[-1],
+                (center + width / 2.0) * self.lines.profile.locations_resampled[-1],
             ],
         )
 
@@ -1149,8 +1359,8 @@ class EMLineProfiler(ObjectDataSelection):
                 plt.yscale("symlog", linthreshy=scale_value)
 
             x_lims = [
-                center_x - focus / 2.0 * self.lines.profile.locations_resampled[-1],
-                center_x + focus / 2.0 * self.lines.profile.locations_resampled[-1],
+                center_x - width / 2.0 * self.lines.profile.locations_resampled[-1],
+                center_x + width / 2.0 * self.lines.profile.locations_resampled[-1],
             ]
             axs.set_xlim(x_lims)
             axs.set_title(f"Line: {ind}")
@@ -1275,7 +1485,7 @@ class EMLineProfiler(ObjectDataSelection):
         self,
         ind,
         center,
-        focus,
+        width,
         x_label,
         colormap,
         reverse,
@@ -1283,6 +1493,7 @@ class EMLineProfiler(ObjectDataSelection):
         dip_rotation,
         opacity,
         doi_percent,
+        boreholes_size,
     ):
         if (
             getattr(self, "survey", None) is None
@@ -1314,6 +1525,11 @@ class EMLineProfiler(ObjectDataSelection):
             self.model_figure.data[0].y = self.lines.model_vertices[ind, 1]
             self.model_figure.data[0].z = self.lines.model_vertices[ind, 2]
             self.model_figure.data[0].mode = "markers"
+            self.model_figure.data[0].marker = {
+                "symbol": "diamond",
+                "color": "black",
+                "size": 5,
+            }
 
             # for group in self.group_list.value:
             group = self.group_list.value
@@ -1369,11 +1585,10 @@ class EMLineProfiler(ObjectDataSelection):
                 self.model_figure.data[3].y = self.lines.borehole_vertices[:, 1]
                 self.model_figure.data[3].z = self.lines.borehole_vertices[:, 2]
                 self.model_figure.data[3].mode = "markers"
+                self.model_figure.data[3].marker.size = boreholes_size
 
                 if getattr(self.lines, "borehole_values", None) is not None:
-                    self.model_figure.data[3].marker = {
-                        "color": self.lines.borehole_values
-                    }
+                    self.model_figure.data[3].marker.color = self.lines.borehole_values
 
             self.model_figure.show()
 
@@ -1432,9 +1647,9 @@ class EMLineProfiler(ObjectDataSelection):
         ):
 
             lims = [
-                (self.center.value - self.focus.value / 2.0)
+                (self.center.value - self.width.value / 2.0)
                 * self.lines.profile.locations_resampled[-1],
-                (self.center.value + self.focus.value / 2.0)
+                (self.center.value + self.width.value / 2.0)
                 * self.lines.profile.locations_resampled[-1],
             ]
             x_locs = self.lines.profile.x_locs
@@ -1631,6 +1846,7 @@ class EMLineProfiler(ObjectDataSelection):
                 self.show_borehole,
                 self.boreholes.widget,
                 self.slice_width,
+                self.boreholes_size,
             ]
             self.show_borehole.description = "Hide Boreholes"
         else:

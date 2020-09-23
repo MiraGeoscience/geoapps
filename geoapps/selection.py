@@ -15,12 +15,14 @@ class ObjectDataSelection(BaseApplication):
     defaults = {}
 
     def __init__(self, **kwargs):
+        kwargs = self.apply_defaults(**kwargs)
+
         self._add_groups = False
         self._find_label = []
         self._object_types = ()
         self._select_multiple = False
 
-        super().__init__(**self.apply_defaults(**kwargs))
+        super().__init__(**kwargs)
 
         self.update_data_list()
         self._widget = VBox([self.objects, self.data])
@@ -88,11 +90,11 @@ class ObjectDataSelection(BaseApplication):
 
     @object_types.setter
     def object_types(self, entity_types):
-        if isinstance(entity_types, (list, object_base.ObjectBase)):
+        if not isinstance(entity_types, tuple):
             entity_types = tuple(entity_types)
 
         for entity_type in entity_types:
-            assert isinstance(
+            assert issubclass(
                 entity_type, object_base.ObjectBase
             ), f"Provided object_types must be instances of {object_base.ObjectBase}"
 
@@ -242,9 +244,11 @@ class LineOptions(ObjectDataSelection):
     defaults = {"find_label": "line"}
 
     def __init__(self, **kwargs):
+        kwargs = self.apply_defaults(**kwargs)
+
         self._multiple_lines = None
 
-        super().__init__(**self.apply_defaults(**kwargs))
+        super().__init__(**kwargs)
 
         def update_line_list(_):
             self.update_line_list()
