@@ -22,6 +22,8 @@ class BaseApplication:
 
     def __init__(self, **kwargs):
 
+        kwargs = self.apply_defaults(**kwargs)
+
         self._h5file = None
         self._workspace = None
         self._file_browser = FileChooser()
@@ -86,9 +88,9 @@ class BaseApplication:
         for key, value in kwargs.items():
             if hasattr(self, "_" + key) or hasattr(self, key):
                 try:
-                    if isinstance(
-                        getattr(self, "_" + key, None), Widget
-                    ) and not isinstance(value, Widget):
+                    if isinstance(getattr(self, key, None), Widget) and not isinstance(
+                        value, Widget
+                    ):
                         setattr(getattr(self, key), "value", value)
                     elif isinstance(value, BaseApplication) and isinstance(
                         getattr(self, "_" + key, None), BaseApplication
