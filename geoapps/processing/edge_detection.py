@@ -131,7 +131,7 @@ class EdgeDetectionApp(PlotSelection2D):
                                 self.window_size,
                                 self.compute,
                                 self.export_as,
-                                self.trigger_widget,
+                                self.trigger_panel,
                             ],
                             layout=Layout(width="50%"),
                         ),

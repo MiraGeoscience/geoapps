@@ -379,7 +379,7 @@ class EMLineProfiler(ObjectDataSelection):
                     ),
                 ),
                 self.model_panel,
-                self.trigger_widget,
+                self.trigger_panel,
             ]
         )
 
