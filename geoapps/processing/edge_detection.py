@@ -45,6 +45,7 @@ class EdgeDetectionApp(PlotSelection2D):
         "sigma": 0.5,
         "compute": True,
         "window": {"azimuth": -20,},
+        "ga_group_name": "Edges",
     }
     object_types = (Grid2D,)
 
@@ -106,17 +107,14 @@ class EdgeDetectionApp(PlotSelection2D):
 
         # Make changes to trigger warning color
         self.trigger.description = "Save to GA"
-        self.trigger.observe(save_trigger)
+        self.trigger.on_click(save_trigger)
         self.trigger.button_style = "success"
 
-        # for key in self.__dict__:
-        #     if isinstance(getattr(self, key, None), Widget):
-        #         getattr(self, key, None).observe(
-        #             save_trigger, names="value"
-        #         )
-        # for key in self.__dict__:
-        #     if hasattr(getattr(self, key), "button_style") and "compute" not in key:
-        #         getattr(self, key).observe(save_trigger, names="value")
+        def update_name(_):
+            self.update_name()
+
+        self.data.observe(update_name, names="value")
+        self.update_name()
 
         self._widget = VBox(
             [
@@ -133,7 +131,7 @@ class EdgeDetectionApp(PlotSelection2D):
                                 self.window_size,
                                 self.compute,
                                 self.export_as,
-                                self.trigger_widget,
+                                self.trigger_panel,
                             ],
                             layout=Layout(width="50%"),
                         ),
@@ -187,9 +185,16 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def save_trigger(self):
         entity, _ = self.get_selected_entities()
-        if self.trigger.value and getattr(self.trigger, "vertices", None) is not None:
-            if self.workspace.get_entity(self.export_as.value):
-                curve = self.workspace.get_entity(self.export_as.value)[0]
+        if getattr(self.trigger, "vertices", None) is not None:
+
+            curves = [
+                child
+                for child in self.ga_group.children
+                if child.name == self.export_as.value
+            ]
+            if any(curves):
+                curve = curves[0]
+
                 curve._children = []
                 curve.vertices = self.trigger.vertices
                 curve.cells = np.vstack(self.trigger.cells).astype("uint32")
@@ -210,13 +215,17 @@ class EdgeDetectionApp(PlotSelection2D):
                     name=self.export_as.value,
                     vertices=self.trigger.vertices,
                     cells=self.trigger.cells,
+                    parent=self.ga_group,
                 )
 
             if self.live_link.value:
                 self.live_link_output(curve)
-                self.trigger.value = False
-            else:
-                self.trigger.value = False
+
+    def update_name(self):
+        if self.data.value is not None:
+            self.export_as.value = self.data.value
+        else:
+            self.export_as.value = "Edges"
 
     def compute_trigger(self, compute):
         if compute:

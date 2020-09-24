@@ -82,12 +82,12 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "mirageoscience-apps"
+project = "geoapps"
 
 # The short X.Y version.
-version = "0.1.9"
+version = "0.1.10"
 # The full version, including alpha/beta/rc tags.
-release = "0.1.9"
+release = "0.1.10"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
