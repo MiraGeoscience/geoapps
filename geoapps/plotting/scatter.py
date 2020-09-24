@@ -303,7 +303,7 @@ class ScatterPlots(ObjectDataSelection):
         def write_html(_):
             self.write_html()
 
-        self.trigger.observe(write_html)
+        self.trigger.on_click(write_html)
         self.trigger.description = "Save HTML"
 
         if self.static:
@@ -793,10 +793,8 @@ class ScatterPlots(ObjectDataSelection):
         self.data_channels = {}
 
     def write_html(self):
-        if self.trigger.value:
-            self.crossplot_fig.write_html(
-                os.path.join(
-                    os.path.abspath(os.path.dirname(self.h5file)), "Crossplot.html"
-                )
+        self.crossplot_fig.write_html(
+            os.path.join(
+                os.path.abspath(os.path.dirname(self.h5file)), "Crossplot.html"
             )
-            self.trigger.value = False
+        )

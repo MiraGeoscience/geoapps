@@ -269,6 +269,8 @@ class PlotSelection2D(ObjectDataSelection):
             contours = None
 
         entity, _ = self.get_selected_entities()
+        if entity is None:
+            return
         data_obj = None
 
         if self.select_multiple and data_name:
