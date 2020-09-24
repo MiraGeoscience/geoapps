@@ -72,7 +72,7 @@ class BaseApplication:
             icon="check",
         )
 
-        self.trigger_widget = VBox(
+        self.trigger_panel = VBox(
             [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
         )
 
@@ -82,14 +82,6 @@ class BaseApplication:
             self.ga_group_name_update()
 
         self.ga_group_name.observe(ga_group_name_update)
-
-        if self.h5file is not None:
-            live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
-            if not path.exists(live_path):
-                mkdir(live_path)
-
-            self.live_link_path._set_form_values(live_path, "")
-            self.live_link_path._apply_selection()
 
     def __populate__(self, **kwargs):
         for key, value in kwargs.items():
@@ -152,6 +144,15 @@ class BaseApplication:
         Enable the monitoring folder
         """
         if self.live_link.value:
+
+            if self.h5file is not None:
+                live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
+                if not path.exists(live_path):
+                    mkdir(live_path)
+
+                self.live_link_path._set_form_values(live_path, "")
+                self.live_link_path._apply_selection()
+
             self.live_link_panel.children = [
                 self.live_link,
                 Label("Monitoring folder", style={"description_width": "initial"}),

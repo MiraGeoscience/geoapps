@@ -122,9 +122,5 @@ Output Parameters
             app = ContourValues(
                 h5file=r"../assets/FlinFlon.geoh5",
             )
-            app.trigger_widget
-   * - Triggers write to ``geoh5``
-
-       [OPTIONAL] **Live link (For ANALYST-Pro users)**
-
-       Specify a path for the monitoring folder for live updates.
+            app.trigger_panel
+   * - See :ref:`Trigger panel<trigger_panel>` base applications.

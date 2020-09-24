@@ -67,7 +67,7 @@ class ContourValues(PlotSelection2D):
                                 Label("Save as:"),
                                 self.export_as,
                                 self.z_value,
-                                self.trigger_widget,
+                                self.trigger_panel,
                             ],
                             layout=Layout(width="50%"),
                         ),

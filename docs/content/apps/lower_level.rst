@@ -1,7 +1,7 @@
 :orphan:
 
-Low-level applications
-======================
+Base Applications
+=================
 
 This section provides a list of low-level applications that can be combined
 together to form more complex ones.
@@ -9,8 +9,8 @@ together to form more complex ones.
 
 .. _workspaceselection:
 
-Workspace selection
--------------------
+Project panel
+-------------
 
 Application adapted from `ipyfilechoose <https://pypi.org/project/ipyfilechooser/>`_ for the selection of a workspace using
 
@@ -29,7 +29,32 @@ Application adapted from `ipyfilechoose <https://pypi.org/project/ipyfilechooser
    * - Select
      - Prompts browsing menu
    * - Create a copy
-     - Make a working copy of the target ``geoh5``
+     - Make a working copy of the selected ``geoh5`` in place.
+
+
+.. _trigger_panel:
+
+Run and save
+------------
+
+Application for starting some computation and saving the output to ``geoh5``
+
+.. jupyter-execute::
+
+    from geoapps.base import BaseApplication
+
+    app = BaseApplication()
+    app.trigger_panel
+
+.. list-table::
+   :header-rows: 0
+
+   * - Compute
+     - Trigger some function
+   * - To Group
+     - Create a ``geoh5`` Group to store new objects created. Results added to the project ``Root`` if left empty.
+   * - GA Pro - Live link
+     - Activate the live link mode for GA Pro users.
 
 
 .. _objectdataselection:
@@ -49,6 +74,24 @@ geoh5.
     )
     app.widget
 
+.. list-table::
+   :header-rows: 0
+
+   * - Objects
+     - List of objects present in the target ``geoh5``
+   * - Data
+     - ``Dropdown`` widget for the selection of data contained in the selected object
+   * - [OPTIONAL]
+     -
+   * - ``select_multiple=True``
+     - ``Data`` becomes a ``SelectMultiple`` widget
+   * - ``object_types=()``
+     - Restrict the selectable objects to specific types.
+   * - ``add_groups=False``
+     - If ``True``, data groups are added to the list.
+   * - ``find_label = []``
+     - List of strings used to pre-select data if encountered
+
 
 .. _plotselectiondata:
 
@@ -61,10 +104,7 @@ Application for the selection and downsampling of data in 2D plan view.
 
     from geoapps.plotting import PlotSelection2D
 
-    app = PlotSelection2D(
-        h5file="../assets/FlinFlon.geoh5",
-        objects="Gravity_Magnetics_drape60m" # [Optional]
-    )
+    app = PlotSelection2D(h5file="../assets/FlinFlon.geoh5")
     app.widget
 
 .. list-table::

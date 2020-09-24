@@ -16,7 +16,7 @@ semi-automated fashion. The application uses machine vision algorithms from the 
 
 - Currently available for Grid2D objects.
 - Edges can be exported to `Geoscience ANALYST <https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_ for viewing and editing.
-- See Methodoly_ for algorithmic details
+- See Methodology_ for algorithmic details
 
 `Video tutorial available on Youtube <https://youtu.be/Lpn3xA7xlBs>`_
 
@@ -150,15 +150,11 @@ Parameters controling the `Hough Line Transform`_
             app = EdgeDetectionApp(
                 h5file=r"../assets/FlinFlon.geoh5",
             )
-            app.trigger_widget
-   * - Triggers write to ``geoh5``
-
-       [OPTIONAL] **Live link (For ANALYST-Pro users)**
-
-       Specify a path for the monitoring folder for live updates.
+            app.trigger_panel
+   * - See :ref:`Trigger panel<trigger_panel>` base applications.
 
 
-.. _methodoly:
+.. _methodology:
 
 Methodology
 -----------
