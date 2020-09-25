@@ -19,7 +19,7 @@ class ObjectDataSelection(BaseApplication):
 
         self._add_groups = False
         self._find_label = []
-        self._object_types = ()
+        self._object_types = []
         self._select_multiple = False
 
         super().__init__(**kwargs)
@@ -36,7 +36,7 @@ class ObjectDataSelection(BaseApplication):
 
     @add_groups.setter
     def add_groups(self, value):
-        assert isinstance(value, bool), "add_groups must be of type bool"
+        assert isinstance(value, (bool, str)), "add_groups must be of type bool"
         self._add_groups = value
 
     @property
@@ -84,21 +84,21 @@ class ObjectDataSelection(BaseApplication):
         Entity type
         """
         if getattr(self, "_object_types", None) is None:
-            self._object_types = ()
+            self._object_types = []
 
         return self._object_types
 
     @object_types.setter
     def object_types(self, entity_types):
-        if not isinstance(entity_types, tuple):
-            entity_types = tuple(entity_types)
+        if not isinstance(entity_types, list):
+            entity_types = [entity_types]
 
         for entity_type in entity_types:
             assert issubclass(
                 entity_type, object_base.ObjectBase
             ), f"Provided object_types must be instances of {object_base.ObjectBase}"
 
-        self._object_types = entity_types
+        self._object_types = tuple(entity_types)
 
     @property
     def find_label(self):
@@ -203,18 +203,28 @@ class ObjectDataSelection(BaseApplication):
             if getattr(obj, "get_data_list", None) is None:
                 return
 
-            options = [
-                name for name in obj.get_data_list() if name != "Visual Parameters"
-            ] + ["Z"]
+            options = [""]
 
-            if self.add_groups and obj.property_groups:
+            if (self.add_groups or self.add_groups == "only") and obj.property_groups:
                 options = (
-                    ["-- Groups --"]
+                    options
+                    + ["-- Groups --"]
                     + [p_g.name for p_g in obj.property_groups]
-                    + ["--- Channels ---"]
-                    + list(options)
                 )
-            self.data.options = [""] + options
+
+            if self.add_groups != "only":
+                options = (
+                    options
+                    + ["--- Channels ---"]
+                    + [
+                        name
+                        for name in obj.get_data_list()
+                        if name != "Visual Parameters"
+                    ]
+                    + ["Z"]
+                )
+
+            self.data.options = options
             if self.find_label:
                 self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
