@@ -1,6 +1,7 @@
+import re
 from ipywidgets import FloatText, HBox, Label, RadioButtons, Text, ToggleButton, VBox
 import numpy as np
-from geoh5py.objects import Surface
+from geoh5py.objects import Surface, Curve
 from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator, interp1d
 from scipy.spatial import cKDTree, Delaunay
@@ -15,13 +16,13 @@ class CDICurve2Surface(ObjectDataSelection):
     """
 
     defaults = {
-        "add_groups": True,
+        "add_groups": "only",
         "select_multiple": True,
+        "object_types": Curve,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "CDI_VTEM_model",
         "data": ["COND"],
         "max_distance": 100,
-        "max_depth": 400,
         "elevations": {"data": "ELEV"},
         "lines": {"data": "Line"},
     }
@@ -30,13 +31,13 @@ class CDICurve2Surface(ObjectDataSelection):
         kwargs = self.apply_defaults(**kwargs)
         self._lines = ObjectDataSelection(add_groups=True, find_value=["line"])
         self._topography = TopographyOptions()
-        self._elevations = ObjectDataSelection(add_groups=True)
+        self._elevations = ObjectDataSelection(add_groups="only")
         self._z_option = RadioButtons(
             options=["elevation", "depth"], description="Layers reference:",
         )
-        self._max_depth = FloatText(description="Max depth (m):",)
-        self._max_distance = FloatText(value=50, description="Max distance (m):",)
-        self._tolerance = FloatText(value=1, description="Tolerance (m):")
+        self._max_distance = FloatText(
+            value=50, description="Max Triangulation Distance (m):",
+        )
         self._export_as = Text("CDI_", description="Name: ")
         self._convert = ToggleButton(description="Convert >>", button_style="success")
 
@@ -52,6 +53,12 @@ class CDICurve2Surface(ObjectDataSelection):
 
         self.lines.data.description = "Line field:"
         self.elevations.data.description = "Elevations:"
+
+        def data_change(_):
+            self.data_change()
+
+        self.data.observe(data_change, names="value")
+        self.data_change()
         self.data.description = "Model fields: "
 
         def z_options_change(_):
@@ -64,26 +71,20 @@ class CDICurve2Surface(ObjectDataSelection):
             self.convert_trigger()
 
         self.trigger.on_click(convert_trigger)
-        self._widget = VBox(
+        self._widget = HBox(
             [
-                self.project_panel,
-                HBox(
+                VBox(
                     [
-                        VBox([self.widget, self.lines.data,]),
-                        VBox(
-                            [
-                                Label("Triangulation"),
-                                self.max_depth,
-                                self.max_distance,
-                                self.tolerance,
-                            ]
-                        ),
+                        self.project_panel,
+                        self.widget,
+                        self.depth_panel,
+                        self.lines.data,
+                        self.max_distance,
+                        Label("Output"),
+                        self.export_as,
+                        self.trigger_panel,
                     ]
-                ),
-                self.depth_panel,
-                Label("Output"),
-                self.export_as,
-                self.trigger_panel,
+                )
             ]
         )
 
@@ -96,7 +97,7 @@ class CDICurve2Surface(ObjectDataSelection):
         lines = np.unique(lines_id).tolist()
 
         if self.z_option.value == "depth":
-            if self.topography.options_button.value == "Object":
+            if self.topography.options.value == "Object":
 
                 topo_obj = self.workspace.get_entity(self.topography.objects.value)[0]
 
@@ -107,15 +108,15 @@ class CDICurve2Surface(ObjectDataSelection):
 
                 topo_xy = vertices[:, :2]
 
-                if self.topography.value.value == "Vertices":
+                if self.topography.data.value == "Z":
                     topo_z = vertices[:, 2]
                 else:
-                    topo_z = topo_obj.get_data(self.topography.value.value)[0].values
+                    topo_z = topo_obj.get_data(self.topography.data.value)[0].values
 
             else:
                 topo_xy = curve.vertices[:, :2].copy()
 
-                if self.topography.options_button.value == "Constant":
+                if self.topography.options.value == "Constant":
                     topo_z = (
                         np.ones_like(curve.vertices[:, 2])
                         * self.topography.constant.value
@@ -152,14 +153,15 @@ class CDICurve2Surface(ObjectDataSelection):
             else:
                 order = np.argsort(xyz[:, 0])
 
-            X, Y, Z, M = [], [], [], []
+            X, Y, Z, M, L = [], [], [], [], []
             # Stack the z-coordinates and model
             nZ = 0
             for ind, z_prop in enumerate(
                 curve.get_property_group(self.elevations.data.value).properties,
             ):
+                data = self.workspace.get_entity(z_prop)[0]
                 nZ += 1
-                z_vals = self.workspace.get_entity(z_prop)[0].values[line_ind]
+                z_vals = data.values[line_ind]
 
                 m_vals = []
                 for m in self.data.value:
@@ -191,6 +193,10 @@ class CDICurve2Surface(ObjectDataSelection):
                 else:
                     Z.append(z_vals[order][keep])
 
+                L.append(
+                    np.ones_like(z_vals[order][keep])
+                    * -int(re.findall(r"\d+", data.name)[-1])
+                )
                 M.append(m_vals[order, :][keep, :])
 
                 if ind == 0:
@@ -202,43 +208,26 @@ class CDICurve2Surface(ObjectDataSelection):
             X = np.hstack(X)
             Y = np.hstack(Y)
             Z = np.hstack(Z)
+            L = np.hstack(L)
+
             model.append(np.vstack(M))
             line_ids.append(np.ones_like(Z.ravel()) * line)
 
             if np.std(y_loc) > np.std(x_loc):
-                tri2D = Delaunay(np.c_[np.ravel(Y), np.ravel(Z)])
-                dist = np.ravel(Y)
-                topo_top = interp1d(y_loc, z_loc)
+                tri2D = Delaunay(np.c_[np.ravel(Y), np.ravel(L)])
             else:
-                tri2D = Delaunay(np.c_[np.ravel(X), np.ravel(Z)])
-                dist = np.ravel(X)
-                topo_top = interp1d(x_loc, z_loc)
+                tri2D = Delaunay(np.c_[np.ravel(X), np.ravel(L)])
 
                 # Remove triangles beyond surface edges
+            tri2D.points[:, 1] = np.ravel(Z)
             indx = np.ones(tri2D.simplices.shape[0], dtype=bool)
             for ii in range(3):
-                x = np.mean(
-                    np.c_[
-                        dist[tri2D.simplices[:, ii]], dist[tri2D.simplices[:, ii - 1]],
-                    ],
-                    axis=1,
-                )
-                z = np.mean(
-                    np.c_[Z[tri2D.simplices[:, ii]], Z[tri2D.simplices[:, ii - 1]]],
-                    axis=1,
-                )
-
                 length = np.linalg.norm(
                     tri2D.points[tri2D.simplices[:, ii], :]
                     - tri2D.points[tri2D.simplices[:, ii - 1], :],
                     axis=1,
                 )
-
-                indx *= (
-                    (z <= (topo_top(x) + self.tolerance.value))
-                    * (z >= (topo_top(x) - self.max_depth.value - self.tolerance.value))
-                    * (length < self.max_distance.value)
-                )
+                indx *= length < self.max_distance.value
 
             # Remove the simplices too long
             tri2D.simplices = tri2D.simplices[indx, :]
@@ -268,6 +257,9 @@ class CDICurve2Surface(ObjectDataSelection):
             surface.add_data(
                 {field: {"values": models[:, ind]},}
             )
+
+    def data_change(self):
+        self.export_as.value = self.data.value[0] + "_surface"
 
     def z_options_change(self):
         if self.z_option.value == "depth":
@@ -318,25 +310,11 @@ class CDICurve2Surface(ObjectDataSelection):
         return self._z_option
 
     @property
-    def max_depth(self):
-        """
-            widgets.FloatText()
-        """
-        return self._max_depth
-
-    @property
     def max_distance(self):
         """
             widgets.FloatText()
         """
         return self._max_distance
-
-    @property
-    def tolerance(self):
-        """
-            widgets.FloatText()
-        """
-        return self._tolerance
 
     @property
     def export_as(self):
@@ -378,3 +356,5 @@ class CDICurve2Surface(ObjectDataSelection):
 
         self.elevations.workspace = workspace
         self.elevations.objects = self.objects
+
+        self.topography.workspace = workspace
