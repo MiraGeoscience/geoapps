@@ -35,7 +35,6 @@ The following list of interactive widgets are for documentation and demonstratio
             from geoapps.processing import CDICurve2Surface
             app = CDICurve2Surface(
                 h5file=r"../assets/FlinFlon.geoh5",
-                static=True
             )
             app.project_panel
 
@@ -51,7 +50,6 @@ The following list of interactive widgets are for documentation and demonstratio
             from ipywidgets import HBox
             app = CDICurve2Surface(
                   h5file=r"../assets/FlinFlon.geoh5",
-                  static=True
             )
             HBox([app.objects, app.data])
 
@@ -73,7 +71,7 @@ Z options
             from ipywidgets import HBox
             app = CDICurve2Surface(
                   h5file=r"../assets/FlinFlon.geoh5",
-                  static=True
+
             )
             app.z_option.disabled = True
             app.depth_panel
@@ -92,7 +90,7 @@ Z options
             from ipywidgets import HBox
             app = CDICurve2Surface(
                   h5file=r"../assets/FlinFlon.geoh5",
-                  static=True
+
             )
             app.z_option.value = "depth"
             app.topography.objects.value = "Topography"
@@ -122,7 +120,7 @@ Line
             from ipywidgets import HBox
             app = CDICurve2Surface(
                   h5file=r"../assets/FlinFlon.geoh5",
-                  static=True
+
             )
             app.lines
 
@@ -141,7 +139,7 @@ Triangulation
             from ipywidgets import HBox
             app = CDICurve2Surface(
                   h5file=r"../assets/FlinFlon.geoh5",
-                  static=True
+
             )
             app.max_distance
 

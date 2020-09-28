@@ -1,18 +1,14 @@
-import os
+from os import path, mkdir
 import re
 import discretize
-import ipywidgets as widgets
+from ipywidgets import Dropdown, Text, FloatText, RadioButtons
 import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import HBox, VBox
-from scipy.interpolate import LinearNDInterpolator
-from scipy.spatial import cKDTree
-
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
-from geoapps.inversion import TopographyOptions
 from geoapps.utils import (
     export_curve_2_shapefile,
     export_grid_2_geotiff,
@@ -21,191 +17,323 @@ from geoapps.utils import (
 )
 
 
-def export_widget(h5file):
+class Export(ObjectDataSelection):
     """
     General widget to export geoh5 objects to different file formats.
     Currently supported:
     shapefiles: *.shp
     """
-    workspace = Workspace(h5file)
 
-    dsep = os.path.sep
-    out_dir = (
-        dsep.join(os.path.dirname(os.path.abspath(h5file)).split(dsep)) + os.path.sep
-    )
+    defaults = {
+        "select_multiple": True,
+        "h5file": "../../assets/FlinFlon.geoh5",
+        "objects": "Gravity_Magnetics_drape60m",
+        "data": ["Airborne_Gxx"],
+        "epsg_code": "26914",
+        "file_type": "geotiff",
+        "data_type": "RGB",
+    }
 
-    def save_selection(_):
-        if export.value:
+    def __init__(self, **kwargs):
+        kwargs = self.apply_defaults(**kwargs)
+        self._file_type = Dropdown(
+            options=["ESRI shapefile", "csv", "geotiff", "UBC format"],
+            value="csv",
+            description="Export type",
+        )
+        self._data_type = RadioButtons(options=["float", "RGB",], description="Type:")
+        self._no_data_value = FloatText(description="no-data-value", value=-99999,)
+        self._epsg_code = Text(description="EPSG code:", indent=False, disabled=False)
+        self._export_as = Text(description="Save as:", indent=False, disabled=False,)
 
-            export.value = False  # Reset button
+        self.type_widget = HBox([self.file_type])
 
-            entity = workspace.get_entity(selection.objects.value)[0]
+        def update_options(_):
+            self.update_options()
 
-            if selection.data.value:
+        self.file_type.observe(update_options)
 
-                data_values = {}
+        def update_name(_):
+            self.export_as.value = self.objects.value
 
-                for key in selection.data.value:
-                    if entity.get_data(key):
-                        data_values[key] = entity.get_data(key)[0].values.copy()
-                        data_values[key][
-                            (data_values[key] > 1e-38) * (data_values[key] < 2e-38)
-                        ] = no_data_value.value
-            else:
-                data_values = {}
+        self.objects.observe(update_name, names="value")
+        super().__init__(**kwargs)
+        self.trigger.description = "Export"
 
-            if file_type.value == "csv":
-                dataframe = object_2_dataframe(entity, fields=list(data_values.keys()))
-                dataframe.to_csv(f"{out_dir + export_as.value}" + ".csv", index=False)
+        def save_selection(_):
+            self.save_selection()
 
-            elif file_type.value == "ESRI shapefile":
+        self.trigger.on_click(save_selection)
 
-                assert isinstance(
-                    entity, Curve
-                ), f"Only Curve objects are support for type {file_type.value}"
+        self._widget = VBox(
+            [
+                self.project_panel,
+                HBox([self.widget, self.no_data_value]),
+                self.type_widget,
+                self.export_as,
+                self.trigger,
+                self.live_link_path,
+            ]
+        )
 
-                if selection.data.value:
-                    for key in selection.data.value:
-                        out_name = re.sub(
-                            "[^0-9a-zA-Z]+", "_", export_as.value + "_" + key
-                        )
-                        export_curve_2_shapefile(
-                            entity,
-                            attribute=key,
-                            file_name=out_dir + out_name,
-                            epsg=epsg_code.value,
-                        )
-                        print(f"Object saved to {out_dir + out_name + '.shp'}")
-                else:
-                    out_name = re.sub("[^0-9a-zA-Z]+", "_", export_as.value)
-                    export_curve_2_shapefile(
-                        entity, file_name=out_dir + out_name, epsg=epsg_code.value,
-                    )
-                    print(f"Object saved to {out_dir + out_name + '.shp'}")
+    @property
+    def file_type(self):
+        """
+        ipywidgets.Dropdown()
+        """
+        if getattr(self, "_file_type", None) is None:
+            self._file_type = Dropdown(
+                options=["ESRI shapefile", "csv", "geotiff", "UBC format"],
+                value="csv",
+                description="Export type",
+            )
+        return self._file_type
 
-            elif file_type.value == "geotiff":
+    @property
+    def data_type(self):
+        """
+        ipywidgets.RadioButtons()
+        """
+        if getattr(self, "_data_type", None) is None:
+            self._data_type = RadioButtons(
+                options=["float", "RGB",], description="Type:"
+            )
 
-                for key in selection.data.value:
-                    name = out_dir + export_as.value + "_" + key + ".tif"
-                    if entity.get_data(key):
+        return self._data_type
 
-                        export_grid_2_geotiff(
-                            entity.get_data(key)[0],
-                            name,
-                            epsg_code.value,
-                            data_type=data_type.value,
-                        )
+    @property
+    def no_data_value(self):
+        """
+        ipywidgets.FloatText()
+        """
+        if getattr(self, "_no_data_value", None) is None:
+            self._no_data_value = FloatText(description="no-data-value", value=-99999,)
+        return self._no_data_value
 
-                        if data_type.value == "RGB":
-                            fig, ax = plt.figure(), plt.subplot()
-                            plt.gca().set_visible(False)
-                            (ax, im), _, _, _ = plot_plan_data_selection(
-                                entity, entity.get_data(key)[0], ax=ax
-                            )
-                            plt.colorbar(im, fraction=0.02)
-                            plt.savefig(
-                                out_dir + export_as.value + "_" + key + "_Colorbar.png",
-                                dpi=300,
-                                bbox_inches="tight",
-                            )
+    @property
+    def epsg_code(self):
+        """
+        ipywidgets.Text()
+        """
+        if getattr(self, "_epsg_code", None) is None:
+            self._epsg_code = Text(
+                description="EPSG code:", indent=False, disabled=False
+            )
+        return self._epsg_code
 
-                        print(f"Object saved to {name}")
+    @property
+    def export_as(self):
+        """
+        ipywidgets.Text()
+        """
+        if getattr(self, "_export_as", None) is None:
+            self._export_as = Text(
+                value=self.objects.value,
+                description="Save as:",
+                indent=False,
+                disabled=False,
+            )
+        return self._export_as
 
-            elif file_type.value == "UBC format":
+    @property
+    def workspace(self):
+        """
+        geoh5py.workspace.Workspace
+        Target geoh5py workspace
+        """
+        if (
+            getattr(self, "_workspace", None) is None
+            and getattr(self, "_h5file", None) is not None
+        ):
+            self.workspace = Workspace(self.h5file)
+        return self._workspace
 
-                assert isinstance(
-                    entity, (Octree, BlockModel)
-                ), "Export available for BlockModel or Octree only"
-                if isinstance(entity, Octree):
-                    mesh = octree_2_treemesh(entity)
+    @workspace.setter
+    def workspace(self, workspace):
+        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        self._workspace = workspace
+        self._h5file = workspace.h5file
 
-                    models = {}
-                    for key, item in data_values.items():
-                        ind = np.argsort(mesh._ubc_order)
+        # Refresh the list of objects
+        self.update_objects_list()
 
-                        data_obj = entity.get_data(key)[0]
-                        models[out_dir + data_obj.name + "_" + key + ".mod"] = item[ind]
-                    mesh.writeUBC(out_dir + export_as.value + ".msh", models=models)
+        live_path = path.abspath(path.dirname(self.h5file))
+        if not path.exists(live_path):
+            mkdir(live_path)
 
-                else:
+        self.live_link_path._set_form_values(live_path, "")
+        self.live_link_path._apply_selection()
 
-                    mesh = discretize.TensorMesh(
-                        [
-                            np.abs(entity.u_cells),
-                            np.abs(entity.v_cells),
-                            np.abs(entity.z_cells[::-1]),
-                        ]
-                    )
-
-                    # Move the origin to the bottom SW corner
-                    mesh.x0 = [
-                        entity.origin["x"] + entity.u_cells[entity.u_cells < 0].sum(),
-                        entity.origin["y"] + entity.v_cells[entity.v_cells < 0].sum(),
-                        entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
-                    ]
-
-                    mesh.writeUBC(out_dir + export_as.value + ".msh")
-
-                    if any(data_values):
-                        for key, item in data_values.items():
-
-                            if mesh.x0[2] == entity.origin["z"]:
-                                values = item.copy()
-                                values = values.reshape(
-                                    (mesh.nCz, mesh.nCx, mesh.nCy), order="F"
-                                )[::-1, :, :]
-                                values = values.reshape((-1, 1), order="F")
-                            else:
-                                values = item
-
-                            np.savetxt(out_dir + key + ".mod", values)
-
-    def update_options(_):
-
-        if file_type.value in ["ESRI shapefile"]:
-            type_widget.children = [file_type, epsg_code]
-        elif file_type.value in ["geotiff"]:
-            type_widget.children = [file_type, VBox([epsg_code, data_type])]
+    def save_selection(self):
+        if self.workspace.get_entity(self.objects.value):
+            entity = self.workspace.get_entity(self.objects.value)[0]
         else:
-            type_widget.children = [file_type]
+            return
 
-    file_type = widgets.Dropdown(
-        options=["ESRI shapefile", "csv", "geotiff", "UBC format"],
-        value="csv",
-        description="Export type",
-    )
+        if self.data.value:
 
-    data_type = widgets.RadioButtons(options=["float", "RGB",], description="Type:")
-    no_data_value = widgets.FloatText(description="no-data-value", value=-99999,)
+            data_values = {}
 
-    epsg_code = widgets.Text(description="EPSG code:", indent=False, disabled=False)
+            for key in self.data.value:
+                if entity.get_data(key):
+                    data_values[key] = entity.get_data(key)[0].values.copy()
+                    data_values[key][
+                        (data_values[key] > 1e-38) * (data_values[key] < 2e-38)
+                    ] = self.no_data_value.value
+        else:
+            data_values = {}
 
-    type_widget = HBox([file_type])
+        if self.file_type.value == "csv":
+            dataframe = object_2_dataframe(entity, fields=list(data_values.keys()))
+            dataframe.to_csv(
+                f"{path.join(self.live_link_path.selected_path, self.export_as.value)}"
+                + ".csv",
+                index=False,
+            )
 
-    file_type.observe(update_options)
+        elif self.file_type.value == "ESRI shapefile":
 
-    selection = ObjectDataSelection(h5file=h5file, select_multiple=True)
+            assert isinstance(
+                entity, Curve
+            ), f"Only Curve objects are support for type {self.file_type.value}"
 
-    def update_name(_):
-        export_as.value = selection.objects.value.replace(":", "_")
+            if self.data.value:
+                for key in self.data.value:
+                    out_name = re.sub(
+                        "[^0-9a-zA-Z]+", "_", self.export_as.value + "_" + key
+                    )
+                    export_curve_2_shapefile(
+                        entity,
+                        attribute=key,
+                        file_name=path.join(
+                            self.live_link_path.selected_path, out_name
+                        ),
+                        epsg=self.epsg_code.value,
+                    )
+                    print(
+                        f"Object saved to {path.join(self.live_link_path.selected_path, out_name) + '.shp'}"
+                    )
+            else:
+                out_name = re.sub("[^0-9a-zA-Z]+", "_", self.export_as.value)
+                export_curve_2_shapefile(
+                    entity,
+                    file_name=path.join(self.live_link_path.selected_path, out_name),
+                    epsg=self.epsg_code.value,
+                )
+                print(
+                    f"Object saved to {path.join(self.live_link_path.selected_path, out_name) + '.shp'}"
+                )
 
-    selection.objects.observe(update_name, names="value")
-    export = widgets.ToggleButton(
-        value=False,
-        description="Export",
-        button_style="danger",
-        tooltip="Description",
-        icon="check",
-    )
+        elif self.file_type.value == "geotiff":
+            for key in self.data.value:
+                name = (
+                    path.join(self.live_link_path.selected_path, self.export_as.value)
+                    + "_"
+                    + key
+                    + ".tif"
+                )
+                if entity.get_data(key):
+                    export_grid_2_geotiff(
+                        entity.get_data(key)[0],
+                        name,
+                        self.epsg_code.value,
+                        data_type=self.data_type.value,
+                    )
 
-    export.observe(save_selection, names="value")
+                    if self.data_type.value == "RGB":
+                        fig, ax = plt.figure(), plt.subplot()
+                        plt.gca().set_visible(False)
+                        ax, im, _, _, _ = plot_plan_data_selection(
+                            entity, entity.get_data(key)[0], ax=ax
+                        )
+                        plt.colorbar(im, fraction=0.02)
+                        plt.savefig(
+                            path.join(
+                                self.live_link_path.selected_path, self.export_as.value
+                            )
+                            + "_"
+                            + key
+                            + "_Colorbar.png",
+                            dpi=300,
+                            bbox_inches="tight",
+                        )
 
-    export_as = widgets.Text(
-        value=selection.objects.value,
-        description="Save as:",
-        indent=False,
-        disabled=False,
-    )
-    return VBox(
-        [HBox([selection.widget, no_data_value]), type_widget, export_as, export]
-    )
+                    print(f"Object saved to {name}")
+
+        elif self.file_type.value == "UBC format":
+
+            assert isinstance(
+                entity, (Octree, BlockModel)
+            ), "Export available for BlockModel or Octree only"
+            if isinstance(entity, Octree):
+                mesh = octree_2_treemesh(entity)
+
+                models = {}
+                for key, item in data_values.items():
+                    ind = np.argsort(mesh._ubc_order)
+
+                    data_obj = entity.get_data(key)[0]
+                    models[
+                        path.join(
+                            self.live_link_path.selected_path, self.export_as.value
+                        )
+                        + "_"
+                        + key
+                        + ".mod"
+                    ] = item[ind]
+                mesh.writeUBC(
+                    path.join(self.live_link_path.selected_path, self.export_as.value)
+                    + ".msh",
+                    models=models,
+                )
+
+            else:
+
+                mesh = discretize.TensorMesh(
+                    [
+                        np.abs(entity.u_cells),
+                        np.abs(entity.v_cells),
+                        np.abs(entity.z_cells[::-1]),
+                    ]
+                )
+
+                # Move the origin to the bottom SW corner
+                mesh.x0 = [
+                    entity.origin["x"] + entity.u_cells[entity.u_cells < 0].sum(),
+                    entity.origin["y"] + entity.v_cells[entity.v_cells < 0].sum(),
+                    entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
+                ]
+
+                mesh.writeUBC(
+                    path.join(self.live_link_path.selected_path, self.export_as.value)
+                    + ".msh"
+                )
+
+                if any(data_values):
+                    for key, item in data_values.items():
+
+                        if mesh.x0[2] == entity.origin["z"]:
+                            values = item.copy()
+                            values = values.reshape(
+                                (mesh.nCz, mesh.nCx, mesh.nCy), order="F"
+                            )[::-1, :, :]
+                            values = values.reshape((-1, 1), order="F")
+                        else:
+                            values = item
+
+                        np.savetxt(
+                            path.join(self.live_link_path.selected_path, key) + ".mod",
+                            values,
+                        )
+
+    def update_options(self):
+
+        if self.file_type.value in ["ESRI shapefile"]:
+            self.type_widget.children = [self.file_type, self.epsg_code]
+        elif self.file_type.value in ["geotiff"]:
+            self.type_widget.children = [
+                self.file_type,
+                VBox([self.epsg_code, self.data_type]),
+            ]
+        else:
+            self.type_widget.children = [self.file_type]
