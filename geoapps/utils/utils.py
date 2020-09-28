@@ -124,14 +124,18 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
         file_name, grid2d.shape[0], grid2d.shape[1], num_bands, encode_type,
     )
 
+    # Get rotation
+    angle = -grid2d.rotation
+    vec = rotate_xy(np.r_[np.c_[1, 0], np.c_[0, 1]], [0, 0], angle)
+
     dataset.SetGeoTransform(
         (
             grid2d.origin["x"],
-            grid2d.u_cell_size,
-            0,
+            vec[0, 0] * grid2d.u_cell_size,
+            vec[0, 1] * grid2d.v_cell_size,
             grid2d.origin["y"],
-            0,
-            grid2d.v_cell_size,
+            vec[1, 0] * grid2d.u_cell_size,
+            vec[1, 1] * grid2d.v_cell_size,
         )
     )
 
