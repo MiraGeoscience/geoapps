@@ -36,7 +36,6 @@ The following list of interactive widgets are for documentation and demonstratio
             from geoapps.processing import Calculator
             app = Calculator(
                 h5file=r"../assets/FlinFlon.geoh5",
-                static=True
             )
             app.project_panel
 
@@ -52,7 +51,6 @@ The following list of interactive widgets are for documentation and demonstratio
             from ipywidgets import HBox
             app = Calculator(
                   h5file=r"../assets/FlinFlon.geoh5",
-                  static=True
             )
             app.objects
 
@@ -69,7 +67,6 @@ The following list of interactive widgets are for documentation and demonstratio
             from ipywidgets import HBox
             app = Calculator(
                   h5file=r"../assets/FlinFlon.geoh5",
-                  static=True
             )
             HBox([app.use, app.data])
 
@@ -86,7 +83,6 @@ The following list of interactive widgets are for documentation and demonstratio
             from ipywidgets import HBox
             app = Calculator(
                   h5file=r"../assets/FlinFlon.geoh5",
-                  static=True
             )
             HBox([app.add, app.channel])
 
@@ -106,7 +102,6 @@ Equation
             from ipywidgets import HBox
             app = Calculator(
                   h5file=r"../assets/FlinFlon.geoh5",
-                  static=True
             )
             app.equation.value = "numpy.log10(var['geochem.Al2O3']) / (var['geochem.CaO']/2 + var['geochem.Cu']**3.)"
             app.equation
