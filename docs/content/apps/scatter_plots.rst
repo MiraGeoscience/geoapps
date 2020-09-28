@@ -72,8 +72,7 @@ Input data
 
    * - List of objects with corresponding data and data groups.
 
-       The selected all data made available to populate the scatter plot axes options
-
+       Data selection available to populate the scatter plot axes.
        See :ref:`Object, data selection <objectdataselection>`
 
 
