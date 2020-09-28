@@ -5,8 +5,8 @@
 CDI to 3D surface
 =================
 
-With this application, users can convert CDI curve objects to surfaces for 3D
-visualization.
+With this application, users can convert CDI ``Curve`` to 3D ``Surface`` objects
+for visualization and modeling.
 
 
 .. figure:: ./images/cdi_surface_app.png
@@ -32,8 +32,8 @@ The following list of interactive widgets are for documentation and demonstratio
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.plotting import ScatterPlots
-            app = ScatterPlots(
+            from geoapps.processing import CDICurve2Surface
+            app = CDICurve2Surface(
                 h5file=r"../assets/FlinFlon.geoh5",
                 static=True
             )
@@ -47,19 +47,106 @@ The following list of interactive widgets are for documentation and demonstratio
    * -  .. jupyter-execute::
             :hide-code:
 
-            from geoapps.plotting import ScatterPlots
+            from geoapps.processing import CDICurve2Surface
             from ipywidgets import HBox
-            app = ScatterPlots(
+            app = CDICurve2Surface(
                   h5file=r"../assets/FlinFlon.geoh5",
                   static=True
             )
             HBox([app.objects, app.data])
 
-   * - List of objects with corresponding data and data groups.
-
-       The selected all data made available to populate the scatter plot axes options
+   * - List of objects with corresponding data groups available for transfer to the new ``Surface`` object.
 
        See :ref:`Object, data selection <objectdataselection>`
+
+
+Z options
+^^^^^^^^^
+
+.. list-table::
+   :header-rows: 0
+
+   * -  .. jupyter-execute::
+            :hide-code:
+
+            from geoapps.processing import CDICurve2Surface
+            from ipywidgets import HBox
+            app = CDICurve2Surface(
+                  h5file=r"../assets/FlinFlon.geoh5",
+                  static=True
+            )
+            app.z_option.disabled = True
+            app.depth_panel
+
+
+   * - Assign z-coordinates based on ``Elevation`` (m) field provided by the ``Curve`` object.
+
+
+.. list-table::
+   :header-rows: 0
+
+   * -  .. jupyter-execute::
+            :hide-code:
+
+            from geoapps.processing import CDICurve2Surface
+            from ipywidgets import HBox
+            app = CDICurve2Surface(
+                  h5file=r"../assets/FlinFlon.geoh5",
+                  static=True
+            )
+            app.z_option.value = "depth"
+            app.topography.objects.value = "Topography"
+            app.topography.data.value = "Z"
+            app.z_option.disabled = True
+            app.depth_panel
+
+
+   * - Assign z-coordinates based on ``Depth`` (m) field provided by the ``Curve`` object.
+
+       The absolute z-coordinate requires topography to be defined by either:
+        - A topography ``Object`` with elevation
+        - An offset value ``Relative to Sensor`` (curve vertices)
+        - A ``Constant`` elevation
+
+
+Line
+^^^^
+
+.. list-table::
+   :header-rows: 0
+
+   * -  .. jupyter-execute::
+            :hide-code:
+
+            from geoapps.processing import CDICurve2Surface
+            from ipywidgets import HBox
+            app = CDICurve2Surface(
+                  h5file=r"../assets/FlinFlon.geoh5",
+                  static=True
+            )
+            app.lines
+
+   * - Select ``Line`` field identifier to brake up the sections.
+
+Triangulation
+^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 0
+
+   * -  .. jupyter-execute::
+            :hide-code:
+
+            from geoapps.processing import CDICurve2Surface
+            from ipywidgets import HBox
+            app = CDICurve2Surface(
+                  h5file=r"../assets/FlinFlon.geoh5",
+                  static=True
+            )
+            app.max_distance
+
+   * - Maximum triangulation distance allowed during the ``Surface`` creation.
+       Useful option for CDI curves with missing values.
 
 
 Output Parameters
@@ -76,7 +163,7 @@ Output Parameters
                 h5file=r"../assets/FlinFlon.geoh5",
             )
             app.export_as
-   * - String value used as name of contours added to the ``geoh5`` project.
+   * - String value used to name the new ``Surface`` object.
 
 .. list-table::
    :header-rows: 0
