@@ -5,7 +5,8 @@
 Export
 ======
 
-This application exports objects and data to various file formats.
+This application lets users export objects and data from a ``geoh5`` to
+various open file formats.
 
 
 .. figure:: ./images/export_app.png
@@ -74,8 +75,8 @@ Output Parameters
 
    * - List of file formats currently supported.
 
-ESRI Shapefile
-^^^^^^^^^^^^^^
+ESRI Shapefile (``Points``, ``Curve``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 0
@@ -92,12 +93,12 @@ ESRI Shapefile
             app.file_type.disabled = True
             app.type_widget
 
-   * - Export option for ``Points`` and ``Curve`` objects to **.shp**. Z-coodinate is ignored.
+   * - Export option to **.shp**. Z-coodinate is ignored.
 
-       ``EPSG code``: Coordinate system assigned to the shapefile.
+       ``EPSG code``: Coordinate system assigned to the shapefile (`Spatial Reference <https://spatialreference.org/ref/epsg/>`_).
 
-Column seperated file
-^^^^^^^^^^^^^^^^^^^^^
+Column value (All)
+^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 0
@@ -114,10 +115,10 @@ Column seperated file
             app.file_type.disabled = True
             app.type_widget
 
-   * - Export option to **csv**.
+   * - Export option to **csv**. The x, y and z coordinates of every nodes/cells are appended to the list of data by default.
 
-Geotiff
-^^^^^^^
+Geotiff (``Grid2D``)
+^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 0
@@ -134,10 +135,15 @@ Geotiff
             app.file_type.disabled = True
             app.type_widget
 
-   * - Export option for ``Grid2D`` objects to **.geotiff**.
+   * - Export option to **.geotiff**.
+        - ``EPSG code``: Coordinate system assigned to the shapefile (`Spatial Reference <https://spatialreference.org/ref/epsg/>`_).
+        - ``Type``: Type of geotiff exported
+           - ``Float``: Single-band image containing the float value of selected data.
+           - ``RGB``: 3-band image containing the RGB color displayed in ANALYST.
 
-UBC format
-^^^^^^^^^^
+
+UBC format (``BlockModel``, ``Octree``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 0
@@ -154,7 +160,7 @@ UBC format
             app.file_type.disabled = True
             app.type_widget
 
-   * - Export option for ``BlockModel`` and ``Octree`` objects to UBC file format **.msh** and **.mod**.
+   * - Export option to UBC file format **.msh** and **.mod**.
 
 
 .. list-table::
