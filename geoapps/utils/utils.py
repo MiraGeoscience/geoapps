@@ -165,10 +165,11 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
     band = tiff_object.GetRasterBand(1)
     temp = band.ReadAsArray()
 
-    if grid_name is None:
-        grid_name = os.path.basename(file_name).split(".")[0]
-
+    file_name = os.path.basename(file_name).split(".")[0]
     if grid_object is None:
+        if grid_name is None:
+            grid_name = file_name
+
         grid_object = Grid2D.create(
             workspace,
             name=grid_name,
@@ -186,7 +187,7 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
 
     assert isinstance(grid_object, Grid2D), "Parent object must be a Grid2D"
 
-    grid_object.add_data({grid_object.name + "_band": {"values": temp.ravel()}})
+    grid_object.add_data({file_name: {"values": temp.ravel()}})
 
     del tiff_object
     return grid_object
