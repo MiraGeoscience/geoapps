@@ -1,17 +1,17 @@
 :orphan:
 
-.. _export:
+.. _Coordinate_transformation:
 
-Export
-======
+Coordinate_transformation
+=========================
 
 This application lets users export objects and data from a ``geoh5`` to
 various open file formats.
 
 
-.. figure:: ./images/export_app.png
+.. figure:: ./images/coordinate_transformation_app.png
         :align: center
-        :alt: export
+        :alt: coordinate_transform
 
 
 
@@ -53,7 +53,7 @@ The following list of interactive widgets are for documentation and demonstratio
             )
             HBox([app.objects, app.data])
 
-   * - List of objects and data available for export.
+   * - List of objects available for reprojection.
 
 
 
