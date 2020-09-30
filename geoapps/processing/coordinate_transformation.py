@@ -120,7 +120,7 @@ class CoordinateTransformation(BaseApplication):
                         y,
                     )
 
-                    if self.epsg_in.value == 4326:
+                    if self.epsg_out.value == 4326:
                         x2, y2 = y2, x2
 
                     new_obj = obj.copy(parent=self.ga_group, copy_children=True)
