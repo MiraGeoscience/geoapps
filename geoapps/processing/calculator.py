@@ -22,7 +22,7 @@ class Calculator(ObjectDataSelection):
         self._store = ObjectDataSelection()
         self.store.workspace = self.workspace
         self.store._objects = self.objects
-        self.store.update_data_list()
+        self.store.update_data_list(None)
         self.store.data.description = "Apply to:"
 
         def click_add(_):
@@ -124,7 +124,7 @@ class Calculator(ObjectDataSelection):
         self.update_objects_list()
         self.store.workspace = self.workspace
         self.store._objects = self.objects
-        self.store.update_data_list()
+        self.store.update_data_list(None)
 
     def click_add(self):
         """

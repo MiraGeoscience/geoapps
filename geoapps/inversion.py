@@ -119,7 +119,7 @@ class SensorOptions(ObjectDataSelection):
 
         self._data.description = "Radar (Optional):"
         self._data.style = {"description_width": "initial"}
-        self.update_data_list()
+        self.update_data_list(None)
 
     @property
     def offset(self):
@@ -1195,9 +1195,9 @@ class InversionApp(PlotSelection2D):
         if self.workspace.get_entity(self.objects.value):
             obj = self.workspace.get_entity(self.objects.value)[0]
             data_list = obj.get_data_list()
-            self.sensor.update_data_list()
-            self.lines.update_data_list()
-            self.lines.update_line_list()
+            self.sensor.update_data_list(None)
+            self.lines.update_data_list(None)
+            self.lines.update_line_list(None)
 
             for aem_system, specs in self.em_system_specs.items():
                 if any([specs["flag"] in channel for channel in data_list]):
