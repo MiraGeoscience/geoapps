@@ -12,10 +12,10 @@ class Calculator(ObjectDataSelection):
 
         kwargs = self.apply_defaults(**kwargs)
 
-        self._add = Button(description=">> Create Field >>")
+        self._add = Button(description=">> Create Variable >>")
         self._channel = Text("NewChannel", description="Name: ")
         self._equation = Textarea(layout=Layout(width="75%"))
-        self._use = Button(description=">> Add Field >>")
+        self._use = Button(description=">> Add Variable >>")
 
         super().__init__(**kwargs)
 
@@ -42,8 +42,8 @@ class Calculator(ObjectDataSelection):
             [
                 self.project_panel,
                 self.objects,
-                HBox([self.use, self.data]),
-                HBox([self.add, self.channel]),
+                HBox([self.data, self.use]),
+                HBox([self.channel, self.add]),
                 VBox([self.equation, self.store.data], layout=Layout(width="100%"),),
                 self.trigger,
                 self.live_link_panel,
