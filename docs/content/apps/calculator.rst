@@ -20,134 +20,135 @@ operations or any function from the `Numpy
 
           See the :ref:`Installation page <getting_started>` to get started.
 
+          The following list of interactive widgets are for documentation and demonstration purposes only.
 
-Input data
-----------
+Input Parameters
+----------------
 
-The following list of interactive widgets are for documentation and demonstration purposes only.
+Project
+^^^^^^^
 
+See :ref:`Project panel <workspaceselection>`
 
-.. list-table::
-   :header-rows: 0
+.. jupyter-execute::
+    :hide-code:
 
-   * - .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.processing import Calculator
-            app = Calculator(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.project_panel
-
-   * - See :ref:`Project panel <workspaceselection>`
-
-.. list-table::
-   :header-rows: 0
-
-   * -  .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.processing import Calculator
-            from ipywidgets import HBox
-            app = Calculator(
-                  h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.objects
-
-   * - List of objects available to pull data from.
+    from geoapps.processing import Calculator
+    app = Calculator(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.project_panel
 
 
-.. list-table::
-   :header-rows: 0
 
-   * -  .. jupyter-execute::
-            :hide-code:
+Objects
+^^^^^^^
 
-            from geoapps.processing import Calculator
-            from ipywidgets import HBox
-            app = Calculator(
-                  h5file=r"../assets/FlinFlon.geoh5",
-            )
-            HBox([app.use, app.data])
+List of objects available to pull data from.
 
-   * - Add the selected data as a variable and append to the scripting window.
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import Calculator
+    from ipywidgets import HBox
+    app = Calculator(
+          h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.objects
 
 
-.. list-table::
-   :header-rows: 0
+Add
+^^^
 
-   * -  .. jupyter-execute::
-            :hide-code:
+Add the selected data as a variable and append to the scripting window.
 
-            from geoapps.processing import Calculator
-            from ipywidgets import HBox
-            app = Calculator(
-                  h5file=r"../assets/FlinFlon.geoh5",
-            )
-            HBox([app.add, app.channel])
+.. jupyter-execute::
+    :hide-code:
 
-   * - Add the name as data to the current object. Values of zeros are assigned to the new data by default.
+    from geoapps.processing import Calculator
+    from ipywidgets import HBox
+    app = Calculator(
+          h5file=r"../assets/FlinFlon.geoh5",
+    )
+    HBox([app.data, app.use])
+
+
+Create
+^^^^^^
+
+Add the name as data to the current object. Values of zeros are assigned to the new data by default.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import Calculator
+    from ipywidgets import HBox
+    app = Calculator(
+          h5file=r"../assets/FlinFlon.geoh5",
+    )
+    HBox([app.channel, app.add])
 
 
 Equation
 ^^^^^^^^
 
-.. list-table::
-   :header-rows: 0
+Scripting window used to compute values.
 
-   * -  .. jupyter-execute::
-            :hide-code:
+All core Python element-wise operators are accepted: add (``+``), subtract (``-``), multiply
+(``*``), divide (``/``), power (``**``). Line breaks between operations can be used
+for clarity but must be surrounded by parentheses ().
 
-            from geoapps.processing import Calculator
-            from ipywidgets import HBox
-            app = Calculator(
-                  h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.equation.value = "numpy.log10(var['geochem.Al2O3']) / (var['geochem.CaO']/2 + var['geochem.Cu']**3.)"
-            app.equation
-   * - Scripting window used to compute values.
+`Numpy <https://numpy.org/doc/stable/reference/index.html>`_ operations can also be used e.g.: ``numpy.log10(var)`` (log base 10)
 
-       All core Python element-wise operators are accepted: add (+), subtract (-), multiply
-       (*), divide (/), power (**). Line breaks between operations can be used
-       for clarity but must be surrounded by parentheses ().
+.. jupyter-execute::
+    :hide-code:
 
-       `Numpy <https://numpy.org/doc/stable/reference/index.html>`_ operations can also be used e.g.: numpy.log10() (log base 10)
+    from geoapps.processing import Calculator
+    from ipywidgets import HBox
+    app = Calculator(
+          h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.equation.value = "numpy.log10(var['geochem.Al2O3']) / (var['geochem.CaO']/2 + var['geochem.Cu']**3.)"
+    app.equation
 
 
 Output Parameters
 -----------------
 
-.. list-table::
-   :header-rows: 0
+Store
+^^^^^
 
-   * - .. jupyter-execute::
-            :hide-code:
+Assign the result to the specified data.
 
-            from geoapps.processing import Calculator
-            app = Calculator(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.store.data
-   * - Assign the result to the specified data.
+.. jupyter-execute::
+    :hide-code:
 
-.. list-table::
-   :header-rows: 0
+    from geoapps.processing import Calculator
+    app = Calculator(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.store.data
 
-   * - .. jupyter-execute::
-            :hide-code:
 
-            from geoapps.processing import Calculator
-            app = Calculator(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.trigger
+Compute
+^^^^^^^
 
-   * - .. jupyter-execute::
-            :hide-code:
+See :ref:`Trigger panel<trigger_panel>` base applications.
 
-            from geoapps.processing import Calculator
-            app = Calculator(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.live_link_panel
-   * - See :ref:`Trigger panel<trigger_panel>` base applications.
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import Calculator
+    app = Calculator(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.trigger
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import Calculator
+    app = Calculator(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.live_link_panel

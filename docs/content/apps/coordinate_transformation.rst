@@ -2,7 +2,7 @@
 
 .. _Coordinate_transformation:
 
-Coordinate_transformation
+Coordinate Transformation
 =========================
 
 This application lets users export objects and data from a ``geoh5`` to
@@ -19,172 +19,85 @@ various open file formats.
 
           See the :ref:`Installation page <getting_started>` to get started.
 
-
-Input data
-----------
-
-The following list of interactive widgets are for documentation and demonstration purposes only.
+          The following list of interactive widgets are for documentation and demonstration purposes only.
 
 
-.. list-table::
-   :header-rows: 0
+Input Parameters
+----------------
 
-   * - .. jupyter-execute::
+Project
+^^^^^^^
+
+See :ref:`Project panel <workspaceselection>`
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import CoordinateTransformation
+    app = CoordinateTransformation(
+        h5file=r"../assets/FlinFlon.geoh5"
+    )
+    app.project_panel
+
+
+Objects
+^^^^^^^
+
+List of objects available for reprojection.
+
+.. jupyter-execute::
             :hide-code:
 
-            from geoapps.export import Export
-            app = Export(
-                h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.project_panel
-
-   * - See :ref:`Project panel <workspaceselection>`
-
-.. list-table::
-   :header-rows: 0
-
-   * -  .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.export import Export
+            from geoapps.processing import CoordinateTransformation
             from ipywidgets import HBox
-            app = Export(
+            app = CoordinateTransformation(
                   h5file=r"../assets/FlinFlon.geoh5"
             )
-            HBox([app.objects, app.data])
+            app.objects
 
-   * - List of objects available for reprojection.
+Input EPSG
+^^^^^^^^^^
 
+`EPSG code <https://spatialreference.org/ref/epsg/>`_ describing the current object coordinate system.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import CoordinateTransformation
+    from ipywidgets import HBox
+    app = CoordinateTransformation(
+          h5file=r"../assets/FlinFlon.geoh5"
+    )
+    app.epsg_in
+
+
+Output
+^^^^^^
+
+`EPSG code <https://spatialreference.org/ref/epsg/>`_ describing the new coordinate system.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import CoordinateTransformation
+    from ipywidgets import HBox
+    app = CoordinateTransformation(
+          h5file=r"../assets/FlinFlon.geoh5"
+    )
+    app.epsg_out
 
 
 Output Parameters
 -----------------
 
-.. list-table::
-   :header-rows: 0
+See :ref:`Trigger Panel <trigger_panel>` documentation.
 
-   * -  .. jupyter-execute::
-            :hide-code:
+.. jupyter-execute::
+    :hide-code:
 
-            from geoapps.export import Export
-            from ipywidgets import HBox
-            app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.file_type
-
-   * - List of file formats currently supported.
-
-ESRI Shapefile (``Points``, ``Curve``)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 0
-
-   * -  .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.export import Export
-            from ipywidgets import HBox
-            app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.file_type.value = "ESRI shapefile"
-            app.file_type.disabled = True
-            app.type_widget
-
-   * - Export option to **.shp**. Z-coodinate is ignored.
-
-       ``EPSG code``: Coordinate system assigned to the shapefile (`Spatial Reference <https://spatialreference.org/ref/epsg/>`_).
-
-Column value (All)
-^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 0
-
-   * -  .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.export import Export
-            from ipywidgets import HBox
-            app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.file_type.value = "csv"
-            app.file_type.disabled = True
-            app.type_widget
-
-   * - Export option to **csv**. The x, y and z coordinates of every nodes/cells are appended to the list of data by default.
-
-Geotiff (``Grid2D``)
-^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 0
-
-   * -  .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.export import Export
-            from ipywidgets import HBox
-            app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.file_type.value = "geotiff"
-            app.file_type.disabled = True
-            app.type_widget
-
-   * - Export option to **.geotiff**.
-        - ``EPSG code``: Coordinate system assigned to the shapefile (`Spatial Reference <https://spatialreference.org/ref/epsg/>`_).
-        - ``Type``: Type of geotiff exported
-           - ``Float``: Single-band image containing the float value of selected data.
-           - ``RGB``: 3-band image containing the RGB color displayed in ANALYST.
-
-
-UBC format (``BlockModel``, ``Octree``)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 0
-
-   * -  .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.export import Export
-            from ipywidgets import HBox
-            app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.file_type.value = "UBC format"
-            app.file_type.disabled = True
-            app.type_widget
-
-   * - Export option to UBC mesh (**.msh**) and model (**.mod**) format.
-
-
-.. list-table::
-   :header-rows: 0
-
-   * - .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.export import Export
-            app = Export(
-                h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.trigger
-   * - Export trigger button.
-
-.. list-table::
-   :header-rows: 0
-
-   * - .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.export import Export
-            app = Export(
-                h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.live_link_path
-   * - Set export directory.
+    from geoapps.processing import CoordinateTransformation
+    from ipywidgets import HBox
+    app = CoordinateTransformation(
+          h5file=r"../assets/FlinFlon.geoh5"
+    )
+    app.trigger_panel
