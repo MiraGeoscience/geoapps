@@ -14,8 +14,7 @@ from ipywidgets import (
     Label,
     RadioButtons,
 )
-from geoapps.selection import ObjectDataSelection
-from geoapps.inversion import TopographyOptions
+from geoapps.selection import ObjectDataSelection, TopographyOptions
 
 
 class DataInterpolation(ObjectDataSelection):
@@ -26,6 +25,8 @@ class DataInterpolation(ObjectDataSelection):
     defaults = {
         "select_multiple": True,
         "h5file": "../../assets/FlinFlon.geoh5",
+        "objects": "Inversion_VTEM_Model",
+        "data": "Iteration_7_model",
     }
 
     def __init__(self, **kwargs):

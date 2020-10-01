@@ -1,6 +1,6 @@
 import numpy as np
 import ipywidgets as widgets
-from ipywidgets import Dropdown, SelectMultiple, VBox
+from ipywidgets import Dropdown, SelectMultiple, VBox, FloatText
 from geoh5py.workspace import Workspace
 from geoh5py.objects import object_base
 from geoapps.base import BaseApplication
@@ -301,3 +301,56 @@ class LineOptions(ObjectDataSelection):
         _, data = self.get_selected_entities()
         if data is not None and getattr(data, "values", None) is not None:
             self.lines.options = [""] + np.unique(data.values).tolist()
+
+
+class TopographyOptions(ObjectDataSelection):
+    """
+    Define the topography used by the inversion
+    """
+
+    def __init__(self, **kwargs):
+        self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
+        self._offset = FloatText(description="Vertical offset (+ve up)")
+        self._constant = FloatText(description="Elevation (m)",)
+
+        super().__init__(**kwargs)
+
+        self.objects.value = utils.find_value(self.objects.options, self.find_label)
+        self.option_list = {
+            "Object": self.widget,
+            "Relative to Sensor": self.offset,
+            "Constant": self.constant,
+            "None": widgets.Label("No topography"),
+        }
+        self._options = widgets.RadioButtons(
+            options=["Object", "Relative to Sensor", "Constant"],
+            description="Define by:",
+        )
+
+        def update_options(_):
+            self.update_options()
+
+        self.options.observe(update_options)
+        self._widget = VBox([self.options, self.option_list[self.options.value]])
+
+    @property
+    def panel(self):
+        return self._panel
+
+    @property
+    def constant(self):
+        return self._constant
+
+    @property
+    def offset(self):
+        return self._offset
+
+    @property
+    def options(self):
+        return self._options
+
+    def update_options(self):
+        self._widget.children = [
+            self.options,
+            self.option_list[self.options.value],
+        ]
