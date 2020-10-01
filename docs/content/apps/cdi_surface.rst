@@ -19,159 +19,196 @@ for visualization and modeling.
 
           See the :ref:`Installation page <getting_started>` to get started.
 
+          The following list of interactive widgets are for documentation and demonstration purposes only.
 
-Input data
-----------
+Input Parameters
+----------------
 
-The following list of interactive widgets are for documentation and demonstration purposes only.
+Project
+^^^^^^^
+
+See :ref:`Project panel <workspaceselection>`
 
 
-.. list-table::
-   :header-rows: 0
+.. jupyter-execute::
+    :hide-code:
 
-   * - .. jupyter-execute::
-            :hide-code:
+    from geoapps.processing import CDICurve2Surface
+    app = CDICurve2Surface(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.project_panel
 
-            from geoapps.processing import CDICurve2Surface
-            app = CDICurve2Surface(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.project_panel
+Object and data
+^^^^^^^^^^^^^^^
 
-   * - See :ref:`Project panel <workspaceselection>`
+List of objects with corresponding data groups available for transfer to the
+new ``Surface`` object.
 
-.. list-table::
-   :header-rows: 0
+See :ref:`Object, data selection <objectdataselection>`
 
-   * -  .. jupyter-execute::
-            :hide-code:
+.. jupyter-execute::
+    :hide-code:
 
-            from geoapps.processing import CDICurve2Surface
-            from ipywidgets import HBox
-            app = CDICurve2Surface(
-                  h5file=r"../assets/FlinFlon.geoh5",
-            )
-            HBox([app.objects, app.data])
-
-   * - List of objects with corresponding data groups available for transfer to the new ``Surface`` object.
-
-       See :ref:`Object, data selection <objectdataselection>`
+    from geoapps.processing import CDICurve2Surface
+    from ipywidgets import HBox
+    app = CDICurve2Surface(
+          h5file=r"../assets/FlinFlon.geoh5",
+    )
+    HBox([app.objects, app.data])
 
 
 Z options
 ^^^^^^^^^
 
-.. list-table::
-   :header-rows: 0
+Elevation
+"""""""""
 
-   * -  .. jupyter-execute::
-            :hide-code:
+Assign z-coordinates based on ``Elevation`` (m) field provided by the
+``Curve`` object.
 
-            from geoapps.processing import CDICurve2Surface
-            from ipywidgets import HBox
-            app = CDICurve2Surface(
-                  h5file=r"../assets/FlinFlon.geoh5",
+.. jupyter-execute::
+    :hide-code:
 
-            )
-            app.z_option.disabled = True
-            app.depth_panel
+    from geoapps.processing import CDICurve2Surface
+    from ipywidgets import HBox
+    app = CDICurve2Surface(
+          h5file=r"../assets/FlinFlon.geoh5",
 
+    )
+    app.z_option.disabled = True
+    app.depth_panel
 
-   * - Assign z-coordinates based on ``Elevation`` (m) field provided by the ``Curve`` object.
+Depth
+"""""
 
+Assign z-coordinates based on a ``Depth`` field provided by the ``Curve``
+object
 
-.. list-table::
-   :header-rows: 0
+.. jupyter-execute::
+        :hide-code:
 
-   * -  .. jupyter-execute::
-            :hide-code:
+        from geoapps.processing import CDICurve2Surface
+        from ipywidgets import HBox
+        app = CDICurve2Surface(
+              h5file=r"../assets/FlinFlon.geoh5",
 
-            from geoapps.processing import CDICurve2Surface
-            from ipywidgets import HBox
-            app = CDICurve2Surface(
-                  h5file=r"../assets/FlinFlon.geoh5",
+        )
+        app.z_option.value = "depth"
+        app.z_option.disabled = True
+        HBox([app.z_option, app.elevations.data])
 
-            )
-            app.z_option.value = "depth"
-            app.topography.objects.value = "Topography"
-            app.topography.data.value = "Z"
-            app.z_option.disabled = True
-            app.depth_panel
+The final elevation is assigned relative to either:
 
+  - A topography ``Object`` with elevation
 
-   * - Assign z-coordinates based on ``Depth`` (m) field provided by the ``Curve`` object.
+    .. jupyter-execute::
+        :hide-code:
 
-       The absolute z-coordinate requires topography to be defined by either:
-        - A topography ``Object`` with elevation
-        - An offset value ``Relative to Sensor`` (curve vertices)
-        - A ``Constant`` elevation
+        from geoapps.processing import CDICurve2Surface
+        from ipywidgets import HBox
+        app = CDICurve2Surface(
+              h5file=r"../assets/FlinFlon.geoh5",
+
+        )
+        app.z_option.value = "depth"
+        app.topography.objects.value = "Topography"
+        app.topography.data.value = "Z"
+        app.z_option.disabled = True
+        app.topography.options.disabled = True
+        app.topography.widget
+
+  - A constant offset value ``Relative to Sensor`` (below curve vertices)
+
+    .. jupyter-execute::
+        :hide-code:
+
+        from geoapps.processing import CDICurve2Surface
+        from ipywidgets import HBox
+        app = CDICurve2Surface(
+              h5file=r"../assets/FlinFlon.geoh5",
+
+        )
+        app.z_option.value = "depth"
+        app.topography.options.value = "Relative to Sensor"
+        app.topography.options.disabled = True
+        app.topography.widget
+
+  - A ``Constant`` elevation
+
+    .. jupyter-execute::
+        :hide-code:
+
+        from geoapps.processing import CDICurve2Surface
+        from ipywidgets import HBox
+        app = CDICurve2Surface(
+              h5file=r"../assets/FlinFlon.geoh5",
+
+        )
+        app.z_option.value = "depth"
+        app.topography.options.value = "Constant"
+        app.topography.options.disabled = True
+        app.topography.widget
+
 
 
 Line
 ^^^^
 
-.. list-table::
-   :header-rows: 0
+Select ``Line`` field identifier to brake up the sections.
 
-   * -  .. jupyter-execute::
-            :hide-code:
+.. jupyter-execute::
+    :hide-code:
 
-            from geoapps.processing import CDICurve2Surface
-            from ipywidgets import HBox
-            app = CDICurve2Surface(
-                  h5file=r"../assets/FlinFlon.geoh5",
+    from geoapps.processing import CDICurve2Surface
+    from ipywidgets import HBox
+    app = CDICurve2Surface(
+          h5file=r"../assets/FlinFlon.geoh5",
 
-            )
-            app.lines
+    )
+    app.lines.data
 
-   * - Select ``Line`` field identifier to brake up the sections.
 
 Triangulation
 ^^^^^^^^^^^^^
 
-.. list-table::
-   :header-rows: 0
+Maximum triangulation distance allowed during the ``Surface`` creation.
 
-   * -  .. jupyter-execute::
-            :hide-code:
+Useful option for CDI curves with missing values.
 
-            from geoapps.processing import CDICurve2Surface
-            from ipywidgets import HBox
-            app = CDICurve2Surface(
-                  h5file=r"../assets/FlinFlon.geoh5",
+.. jupyter-execute::
+    :hide-code:
 
-            )
-            app.max_distance
+    from geoapps.processing import CDICurve2Surface
+    from ipywidgets import HBox
+    app = CDICurve2Surface(
+          h5file=r"../assets/FlinFlon.geoh5",
 
-   * - Maximum triangulation distance allowed during the ``Surface`` creation.
-       Useful option for CDI curves with missing values.
+    )
+    app.max_distance
 
 
 Output Parameters
 -----------------
 
-.. list-table::
-   :header-rows: 0
+String value used to name the new ``Surface`` object.
 
-   * - .. jupyter-execute::
-            :hide-code:
+.. jupyter-execute::
+    :hide-code:
 
-            from geoapps.processing import CDICurve2Surface
-            app = CDICurve2Surface(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.export_as
-   * - String value used to name the new ``Surface`` object.
+    from geoapps.processing import CDICurve2Surface
+    app = CDICurve2Surface(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.export_as
 
-.. list-table::
-   :header-rows: 0
+See :ref:`Trigger panel<trigger_panel>` base applications.
 
-   * - .. jupyter-execute::
-            :hide-code:
+.. jupyter-execute::
+    :hide-code:
 
-            from geoapps.processing import CDICurve2Surface
-            app = CDICurve2Surface(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.trigger_panel
-   * - See :ref:`Trigger panel<trigger_panel>` base applications.
+    from geoapps.processing import CDICurve2Surface
+    app = CDICurve2Surface(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.trigger_panel
