@@ -24,7 +24,7 @@ class ObjectDataSelection(BaseApplication):
 
         super().__init__(**kwargs)
 
-        self.update_data_list()
+        self.update_data_list(None)
         self._widget = VBox([self.objects, self.data])
 
     @property
@@ -63,7 +63,6 @@ class ObjectDataSelection(BaseApplication):
         """
         Object selector
         """
-
         if getattr(self, "_objects", None) is None:
             self.objects = Dropdown(description="Object:",)
 
@@ -71,12 +70,9 @@ class ObjectDataSelection(BaseApplication):
 
     @objects.setter
     def objects(self, value):
-        def update_data_list(_):
-            self.update_data_list()
-
         assert isinstance(value, Dropdown), f"'Objects' must be of type {Dropdown}"
         self._objects = value
-        self._objects.observe(update_data_list, names="value")
+        self._objects.observe(self.update_data_list, names="value")
 
     @property
     def object_types(self):
@@ -192,7 +188,7 @@ class ObjectDataSelection(BaseApplication):
         else:
             return None, None
 
-    def update_data_list(self):
+    def update_data_list(self, _):
         self.refresh.value = False
         if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
             self.objects.value
@@ -234,16 +230,24 @@ class ObjectDataSelection(BaseApplication):
 
     def update_objects_list(self):
         if getattr(self, "_workspace", None) is not None:
+            value = self.objects.value
+
             if len(self.object_types) > 0:
-                self.objects.options = [""] + [
+                options = [""] + [
                     obj.name
                     for obj in self._workspace.all_objects()
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                self.objects.options = [""] + list(
-                    self._workspace.list_objects_name.values()
-                )
+                options = [""] + list(self._workspace.list_objects_name.values())
+
+            if value in options:  # Silent update
+                self.objects.unobserve(self.update_data_list, names="value")
+                self.objects.options = options
+                self.objects.value = value
+                self._objects.observe(self.update_data_list, names="value")
+            else:
+                self.objects.options = options
 
 
 class LineOptions(ObjectDataSelection):
@@ -264,8 +268,8 @@ class LineOptions(ObjectDataSelection):
             self.update_line_list()
 
         self._data.observe(update_line_list, names="value")
-        self.update_data_list()
-        self.update_line_list()
+        self.update_data_list(None)
+        self.update_line_list(None)
 
         self._widget = VBox([self._data, self.lines])
         self._data.description = "Lines field"
