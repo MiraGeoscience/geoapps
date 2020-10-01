@@ -28,6 +28,7 @@ class BaseApplication:
         self._h5file = None
         self._workspace = None
         self._file_browser = FileChooser()
+
         self._ga_group_name = Text(
             value="", description="To Group", continuous_update=False
         )
@@ -37,9 +38,13 @@ class BaseApplication:
             self.file_browser_change()
 
         self._file_browser._select.on_click(file_browser_change)
+        self._file_browser._select.style = {"description_width": "initial"}
 
         self._copy_trigger = Button(
-            description="Create copy:", value=True, indent=False
+            description="Create copy:",
+            value=True,
+            indent=False,
+            style={"description_width": "initial"},
         )
 
         def create_copy(_):
@@ -48,11 +53,18 @@ class BaseApplication:
         self._copy_trigger.on_click(create_copy)
 
         self.project_panel = HBox(
-            [Label("Workspace"), self._file_browser, self._copy_trigger]
+            [
+                Label("Workspace", style={"description_width": "initial"}),
+                self._file_browser,
+                self._copy_trigger,
+            ]
         )
 
         self._live_link = Checkbox(
-            description="GA Pro - Live link", value=False, indent=False
+            description="GA Pro - Live link",
+            value=False,
+            indent=False,
+            style={"description_width": "initial"},
         )
 
         def live_link_choice(_):
