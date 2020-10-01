@@ -264,10 +264,7 @@ class LineOptions(ObjectDataSelection):
 
         super().__init__(**kwargs)
 
-        def update_line_list(_):
-            self.update_line_list()
-
-        self._data.observe(update_line_list, names="value")
+        self._data.observe(self.update_line_list, names="value")
         self.update_data_list(None)
         self.update_line_list(None)
 
@@ -301,7 +298,7 @@ class LineOptions(ObjectDataSelection):
         ), f"'multiple_lines' property must be of type {bool}"
         self._multiple_lines = value
 
-    def update_line_list(self):
+    def update_line_list(self, _):
         _, data = self.get_selected_entities()
         if data is not None and getattr(data, "values", None) is not None:
             self.lines.options = [""] + np.unique(data.values).tolist()
