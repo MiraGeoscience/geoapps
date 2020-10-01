@@ -24,7 +24,7 @@ from ipywidgets.widgets import (
 from geoapps.base import BaseApplication
 from geoapps.plotting import PlotSelection2D
 from geoapps.utils import find_value, geophysical_systems, string_2_list
-from geoapps.selection import ObjectDataSelection, LineOptions
+from geoapps.selection import ObjectDataSelection, LineOptions, TopographyOptions
 
 
 class ChannelOptions:
@@ -120,59 +120,6 @@ class SensorOptions(ObjectDataSelection):
         self._data.description = "Radar (Optional):"
         self._data.style = {"description_width": "initial"}
         self.update_data_list()
-
-    @property
-    def offset(self):
-        return self._offset
-
-    @property
-    def options(self):
-        return self._options
-
-    def update_options(self):
-        self._widget.children = [
-            self.options,
-            self.option_list[self.options.value],
-        ]
-
-
-class TopographyOptions(ObjectDataSelection):
-    """
-    Define the topography used by the inversion
-    """
-
-    def __init__(self, **kwargs):
-        self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
-        self._offset = FloatText(description="Vertical offset (+ve up)")
-        self._constant = FloatText(description="Elevation (m)",)
-
-        super().__init__(**kwargs)
-
-        self.objects.value = find_value(self.objects.options, self.find_label)
-        self.option_list = {
-            "Object": self.widget,
-            "Relative to Sensor": self.offset,
-            "Constant": self.constant,
-            "None": widgets.Label("No topography"),
-        }
-        self._options = widgets.RadioButtons(
-            options=["Object", "Relative to Sensor", "Constant"],
-            description="Define by:",
-        )
-
-        def update_options(_):
-            self.update_options()
-
-        self.options.observe(update_options)
-        self._widget = VBox([self.options, self.option_list[self.options.value]])
-
-    @property
-    def panel(self):
-        return self._panel
-
-    @property
-    def constant(self):
-        return self._constant
 
     @property
     def offset(self):

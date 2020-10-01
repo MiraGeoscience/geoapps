@@ -3,10 +3,9 @@ from ipywidgets import FloatText, HBox, Label, RadioButtons, Text, ToggleButton,
 import numpy as np
 from geoh5py.objects import Surface, Curve
 from geoh5py.workspace import Workspace
-from scipy.interpolate import LinearNDInterpolator, interp1d
+from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree, Delaunay
-from geoapps.inversion import TopographyOptions
-from geoapps.selection import ObjectDataSelection
+from geoapps.selection import ObjectDataSelection, TopographyOptions
 
 
 class CDICurve2Surface(ObjectDataSelection):
@@ -33,7 +32,9 @@ class CDICurve2Surface(ObjectDataSelection):
         self._topography = TopographyOptions()
         self._elevations = ObjectDataSelection(add_groups="only")
         self._z_option = RadioButtons(
-            options=["elevation", "depth"], description="Layers reference:",
+            options=["elevation", "depth"],
+            description="Layers reference:",
+            style={"description_width": "initial"},
         )
         self._max_distance = FloatText(
             value=50, description="Max Triangulation Distance (m):",
