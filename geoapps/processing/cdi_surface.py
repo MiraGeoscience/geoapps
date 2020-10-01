@@ -259,6 +259,11 @@ class CDICurve2Surface(ObjectDataSelection):
                 {field: {"values": models[:, ind]},}
             )
 
+        if self.live_link.value:
+            self.live_link_output(self.ga_group)
+
+        self.workspace.finalize()
+
     def data_change(self):
         self.export_as.value = self.data.value[0] + "_surface"
 
