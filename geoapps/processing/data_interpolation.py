@@ -35,33 +35,36 @@ class DataInterpolation(ObjectDataSelection):
         "method": "Inverse Distance",
         "new_grid": "InterpGrid",
         "no_data_value": 1e-8,
-        "out_mode": "Create 3D Grid",
+        "out_mode": "TO Object",
+        "out_object": "O2O_Interp_25m",
         "padding_distance": "0, 0, 0, 0, 0, 0",
-        "skew_angle": 70,
-        "skew_factor": 0.25,
+        "skew_angle": 0,
+        "skew_factor": 1.0,
         "space": "Log",
         "topography": {"objects": "Topography", "data": "Z"},
     }
 
-    def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
+    def __init__(self, use_defaults=True, **kwargs):
+
+        if use_defaults:
+            kwargs = self.apply_defaults(**kwargs)
 
         self._core_cell_size = Text(description="Smallest cells",)
         self._depth_core = FloatText(description="Core depth (m)",)
         self._expansion_fact = FloatText(description="Expansion factor",)
-        self._max_distance = FloatText(description="Maximum distance XY (m)",)
-        self._max_depth = FloatText(description="Maximum distance Z (m)",)
+        self._max_distance = FloatText(description="Maximum distance (m)",)
+        self._max_depth = FloatText(description="Maximum depth (m)",)
         self._method = RadioButtons(options=["Nearest", "Linear", "Inverse Distance"],)
-        self._new_grid = Text(description="New grid name:",)
-        self._no_data_value = FloatText(description="No-Data-Value",)
+        self._new_grid = Text(description="Name",)
+        self._no_data_value = FloatText()
         self._out_mode = RadioButtons(options=["To Object", "Create 3D Grid"],)
         self._out_object = Dropdown()
         self._padding_distance = Text(description="Pad Distance (W, E, N, S, D, U)",)
         self._skew_angle = FloatText(description="Azimuth (d.dd)",)
-        self._skew_factor = FloatText(description="Factor",)
+        self._skew_factor = FloatText(description="Factor (>0)",)
         self._space = RadioButtons(options=["Linear", "Log"])
-        self._xy_extent = Dropdown(description="Trim xy extent with:",)
-        self._xy_reference = Dropdown(description="XY Extent from:",)
+        self._xy_extent = Dropdown(description="Object hull",)
+        self._xy_reference = Dropdown(description="Lateral Extent",)
 
         def object_pick(_):
             self.object_pick()
@@ -69,10 +72,10 @@ class DataInterpolation(ObjectDataSelection):
         self.objects.observe(object_pick, names="value")
 
         self.method_skew = VBox(
-            [Label("Skew interpolation"), self.skew_angle, self.skew_factor]
+            [Label("Skew parameters"), self.skew_angle, self.skew_factor]
         )
-        self.method_panel = HBox([self.method])
-        self.out_panel = HBox([self.out_mode, self.out_object])
+        self.method_panel = VBox([self.method])
+        self.out_panel = VBox([self.out_mode, self.out_object])
         self.new_grid_panel = VBox(
             [
                 self.new_grid,
@@ -84,15 +87,8 @@ class DataInterpolation(ObjectDataSelection):
             ]
         )
 
-        def method_update(_):
-            self.method_update()
-
-        self.method.observe(method_update)
-
-        def out_update(_):
-            self.out_update()
-
-        self.out_mode.observe(out_update)
+        self.method.observe(self.method_update)
+        self.out_mode.observe(self.out_update)
 
         super().__init__(**kwargs)
 
@@ -103,38 +99,46 @@ class DataInterpolation(ObjectDataSelection):
         self.trigger.on_click(interpolate_call)
         self.trigger.description = "Interpolate"
         self._topography = TopographyOptions()
-        self.topography.workspace = self._workspace
         self.topography.offset.disabled = True
         self.topography.options.options = ["Object", "Constant", "None"]
 
-        if "topography" in kwargs.keys():
-            self.topography.__populate__(**kwargs["topography"])
+        if getattr(self, "_workspace", None) is not None:
+            self.topography.workspace = self._workspace
+            if "topography" in kwargs.keys():
+                self.topography.__populate__(**kwargs["topography"])
 
+        self.parameter_choices = Dropdown(
+            description="Interpolation Parameters",
+            options=[
+                "Method",
+                "Scaling",
+                "Horizontal Extent",
+                "Vertical Extent",
+                "No-data-value",
+            ],
+            style={"description_width": "initial"},
+        )
+        self.parameters = {
+            "Method": self.method_panel,
+            "Scaling": self.space,
+            "Horizontal Extent": VBox([self.xy_extent, self.max_distance]),
+            "Vertical Extent": VBox([self.topography.widget, self.max_depth]),
+            "No-data-value": self.no_data_value,
+        }
+
+        self.parameter_panel = HBox([self.parameter_choices, self.method_panel])
+
+        self.parameter_choices.observe(self.parameter_change)
         self._widget = VBox(
             [
                 self.project_panel,
                 HBox(
                     [
-                        VBox([Label("Input"), self.widget]),
-                        VBox([Label("Output"), self.out_panel]),
+                        VBox([Label("Source"), self.widget]),
+                        VBox([Label("Destination"), self.out_panel]),
                     ]
                 ),
-                VBox(
-                    [
-                        Label("Interpolation Parameters"),
-                        HBox(
-                            [
-                                VBox([Label("Space"), self.space]),
-                                VBox([Label("Method"), self.method_panel]),
-                            ]
-                        ),
-                        self.no_data_value,
-                        self.max_distance,
-                        self.max_depth,
-                        VBox([Label("Cut with topo"), self.topography.widget]),
-                        self.xy_extent,
-                    ]
-                ),
+                self.parameter_panel,
                 self.trigger,
                 self.live_link_panel,
             ]
@@ -287,6 +291,12 @@ class DataInterpolation(ObjectDataSelection):
         if getattr(self, "topography", None) is not None:
             self.topography.workspace = workspace
 
+    def parameter_change(self, _):
+        self.parameter_panel.children = [
+            self.parameter_choices,
+            self.parameters[self.parameter_choices.value],
+        ]
+
     def update_objects_choices(self):
         # Refresh the list of objects for all
         self.update_objects_list()
@@ -303,13 +313,18 @@ class DataInterpolation(ObjectDataSelection):
         self.xy_extent.options = self.objects.options
         self.xy_extent.value = value
 
-    def method_update(self):
+    def method_update(self, _):
         if self.method.value == "Inverse Distance":
             self.method_panel.children = [self.method, self.method_skew]
+        elif self.method.value == "Linear":
+            self.method_panel.children = [
+                self.method,
+                Label("Warning! Very slow on 3D objects"),
+            ]
         else:
             self.method_panel.children = [self.method]
 
-    def out_update(self):
+    def out_update(self, _):
         if self.out_mode.value == "To Object":
             self.out_panel.children = [self.out_mode, self.out_object]
         else:
@@ -396,7 +411,8 @@ class DataInterpolation(ObjectDataSelection):
 
             values[field][values[field] == self.no_data_value.value] = np.nan
             if self.space.value == "Log":
-                values[field] = np.log(values[field])
+                sign = np.sign(values[field])
+                values[field] = np.log(np.abs(values[field]))
 
         values_interp = {}
         if self.method.value == "Linear":
@@ -446,7 +462,7 @@ class DataInterpolation(ObjectDataSelection):
 
         for key in values_interp.keys():
             if self.space.value == "Log":
-                values_interp[key] = np.exp(values_interp[key])
+                values_interp[key] = sign * np.exp(values_interp[key])
 
             values_interp[key][np.isnan(values_interp[key])] = self.no_data_value.value
 
