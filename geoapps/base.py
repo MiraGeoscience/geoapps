@@ -33,11 +33,7 @@ class BaseApplication:
             value="", description="To Group", continuous_update=False
         )
         self._ga_group = None
-
-        def file_browser_change(_):
-            self.file_browser_change()
-
-        self._file_browser._select.on_click(file_browser_change)
+        self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
 
         self._copy_trigger = Button(
@@ -127,7 +123,7 @@ class BaseApplication:
 
         return kwargs
 
-    def file_browser_change(self):
+    def file_browser_change(self, _):
         """
         Change the target h5file
         """
