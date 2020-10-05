@@ -3,7 +3,7 @@ import urllib.request
 import zipfile
 from os import mkdir, listdir, path, remove
 import subprocess
-from shutil import copyfile, copy, rmtree
+from shutil import copyfile, copy, rmtree, move
 import time
 from ipywidgets import Checkbox, Text, VBox, HBox, Label, ToggleButton, Widget, Button
 from geoh5py.workspace import Workspace
@@ -137,15 +137,24 @@ class BaseApplication:
         :param :obj:`geoh5py.Entity`: Entity to be updated
         :param data: `dict` of values to be added as data {"name": values}
         """
-        temp_geoh5 = path.join(
-            self.live_link_path.selected_path, f"temp{time.time():.3f}.geoh5"
-        )
-        temp_workspace = Workspace(temp_geoh5)
+        working_path = path.join(self.live_link_path.selected_path, ".working")
+        if not path.exists(working_path):
+            mkdir(working_path)
+
+        temp_geoh5 = f"temp{time.time():.3f}.geoh5"
+
+        temp_workspace = Workspace(path.join(working_path, temp_geoh5))
 
         for key, value in data.items():
             entity.add_data({key: {"values": value}})
 
         entity.copy(parent=temp_workspace)
+
+        # Move the geoh5 in monitoring and delete the old
+        move(
+            path.join(working_path, temp_geoh5),
+            path.join(self.live_link_path.selected_path, temp_geoh5),
+        )
 
     def live_link_choice(self):
         """
