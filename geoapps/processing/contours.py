@@ -220,9 +220,8 @@ class ContourValues(PlotSelection2D):
                         parent=self.ga_group,
                     )
 
+                curve.add_data({self.contours.value: {"values": np.hstack(values)}})
+
                 if self.live_link.value:
-                    self.live_link_output(
-                        curve, data={self.contours.value: np.hstack(values)}
-                    )
-                else:
-                    curve.add_data({self.contours.value: {"values": np.hstack(values)}})
+                    self.live_link_output(self.ga_group)
+                self.workspace.finalize()
