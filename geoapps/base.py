@@ -150,7 +150,7 @@ class BaseApplication:
 
         entity.copy(parent=temp_workspace)
 
-        # Move the geoh5 in monitoring and delete the old
+        # Move the geoh5 to monitoring folder
         move(
             path.join(working_path, temp_geoh5),
             path.join(self.live_link_path.selected_path, temp_geoh5),
