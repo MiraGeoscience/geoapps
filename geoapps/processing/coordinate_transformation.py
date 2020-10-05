@@ -127,6 +127,8 @@ class CoordinateTransformation(BaseApplication):
                     new_obj.vertices = numpy.c_[x2, y2, obj.vertices[:, 2]]
                     new_obj.name = new_obj.name + f"_EPSG{self.epsg_out.value}"
 
+            if self.live_link.value:
+                self.live_link_output(self.ga_group)
             self.workspace.finalize()
 
     @property
