@@ -13,6 +13,10 @@ from geoh5py.data import FloatData
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 from scipy.interpolate import interp1d
+import urllib
+from shapely.geometry import mapping, LineString
+import fiona
+from fiona.crs import from_epsg
 
 
 def find_value(labels, strings, default=None):
@@ -194,21 +198,7 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
 
 
 def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
-    import urllib
-
-    try:
-        from shapely.geometry import mapping, LineString
-        import fiona
-        from fiona.crs import from_epsg
-
-    except ModuleNotFoundError as err:
-        print(err, "Trying to install through geopandas, hang tight...")
-        import os
-
-        os.system("conda install -c conda-forge geopandas=0.7.0")
-        from shapely.geometry import mapping, LineString
-        import fiona
-        from fiona.crs import from_epsg
+    attribute_vals = None
 
     if epsg is not None and epsg.isdigit():
         crs = from_epsg(int(epsg))
@@ -227,9 +217,8 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
     else:
         crs = None
 
-    if attribute is not None:
-        if curve.get_data(attribute):
-            attribute_vals = curve.get_data(attribute)[0].values
+    if attribute is not None and curve.get_data(attribute):
+        attribute_vals = curve.get_data(attribute)[0].values
 
     polylines, values = [], []
     for lid in curve.unique_parts:
@@ -237,13 +226,13 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
         ind_line = np.where(curve.parts == lid)[0]
         polylines += [curve.vertices[ind_line, :2]]
 
-        if attribute is not None:
+        if attribute_vals is not None:
             values += [attribute_vals[ind_line]]
 
     # Define a polygon feature geometry with one attribute
     schema = {"geometry": "LineString"}
 
-    if attribute is not None:
+    if values:
         attr_name = attribute.replace(":", "_")
         schema["properties"] = {attr_name: "float"}
     else:
