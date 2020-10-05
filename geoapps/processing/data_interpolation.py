@@ -404,14 +404,14 @@ class DataInterpolation(ObjectDataSelection):
 
             xyz_out = object_to.centroids.copy()
 
-        values = {}
+        values, sign = {}, {}
         for field in self.data.value:
             model_in = object_from.get_data(field)[0]
             values[field] = model_in.values.copy()
 
             values[field][values[field] == self.no_data_value.value] = np.nan
             if self.space.value == "Log":
-                sign = np.sign(values[field])
+                sign[field] = np.sign(values[field])
                 values[field] = np.log(np.abs(values[field]))
 
         values_interp = {}
@@ -420,6 +420,7 @@ class DataInterpolation(ObjectDataSelection):
             for key, value in values.items():
                 F = LinearNDInterpolator(xyz, value)
                 values_interp[key] = F(xyz_out)
+                sign[key] = np.ones_like(values_interp[key])
 
         elif self.method.value == "Inverse Distance":
 
@@ -453,16 +454,18 @@ class DataInterpolation(ObjectDataSelection):
                     weight += 1.0 / (rad[:, ii] + 1e-1)
 
                 values_interp[key] /= weight
+                sign[key] = sign[key][ind[:, 0]]
 
         else:
             # Find nearest cells
             for key, value in values.items():
                 rad, ind = tree.query(xyz_out)
                 values_interp[key] = value[ind]
+                sign[key] = sign[key][ind]
 
         for key in values_interp.keys():
             if self.space.value == "Log":
-                values_interp[key] = sign * np.exp(values_interp[key])
+                values_interp[key] = sign[key] * np.exp(values_interp[key])
 
             values_interp[key][np.isnan(values_interp[key])] = self.no_data_value.value
 

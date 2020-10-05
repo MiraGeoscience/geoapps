@@ -219,7 +219,9 @@ class EdgeDetectionApp(PlotSelection2D):
                 )
 
             if self.live_link.value:
-                self.live_link_output(curve)
+                self.live_link_output(self.ga_group)
+
+            self.workspace.finalize()
 
     def update_name(self):
         if self.data.value is not None:
