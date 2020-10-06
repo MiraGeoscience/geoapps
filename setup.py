@@ -2,6 +2,9 @@ from distutils.core import setup
 
 from setuptools import find_packages
 
+with open("README.md") as fh:
+    long_description = fh.read()
+
 CLASSIFIERS = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Science/Research",
@@ -19,15 +22,17 @@ CLASSIFIERS = [
 
 setup(
     name="geoapps",
-    version="0.1.3",
+    version="0.2.0",
     packages=find_packages(),
     install_requires=["numpy", "h5py", "scipy", "geoh5py"],
     author="Mira Geoscience",
     author_email="dominiquef@mirageoscience.com",
     description="Open-sourced Applications in Geoscience",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     keywords="earth sciences",
-    url="https://mirageoscience-apps.readthedocs.io/en/latest/",
-    download_url="https://github.com/MiraGeoscience/mirageoscience-apps.git",
+    url="https://geoapps.readthedocs.io/en/latest/index.html",
+    download_url="https://github.com/MiraGeoscience/geoapps.git",
     classifiers=CLASSIFIERS,
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     license="MIT License",

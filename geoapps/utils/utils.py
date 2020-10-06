@@ -13,6 +13,10 @@ from geoh5py.data import FloatData
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 from scipy.interpolate import interp1d
+import urllib
+from shapely.geometry import mapping, LineString
+import fiona
+from fiona.crs import from_epsg
 
 
 def find_value(labels, strings, default=None):
@@ -26,6 +30,37 @@ def find_value(labels, strings, default=None):
     if value is None:
         value = default
     return value
+
+
+def get_surface_parts(surface):
+    """
+    Find the connected cells from a surface
+
+    :param :obj:`geoh5yp.objects.surface`: Input surface with cells
+
+    :return: parts, numpy.array of int
+        Array of parts id for each of the surface vertices
+    """
+    cell_sorted = np.sort(surface.cells, axis=1)
+    cell_sorted = cell_sorted[np.argsort(cell_sorted[:, 0]), :]
+
+    parts = np.zeros(surface.vertices.shape[0], dtype="int")
+    count = 1
+    for ii in range(cell_sorted.shape[0] - 1):
+
+        if (
+            (cell_sorted[ii, 0] in cell_sorted[ii + 1 :, :])
+            or (cell_sorted[ii, 1] in cell_sorted[ii + 1 :, :])
+            or (cell_sorted[ii, 2] in cell_sorted[ii + 1 :, :])
+        ):
+            parts[cell_sorted[ii, :]] = count
+        else:
+            parts[cell_sorted[ii, :]] = count
+            count += 1
+
+    parts[cell_sorted[-1, :]] = count
+
+    return parts
 
 
 def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
@@ -93,14 +128,18 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
         file_name, grid2d.shape[0], grid2d.shape[1], num_bands, encode_type,
     )
 
+    # Get rotation
+    angle = -grid2d.rotation
+    vec = rotate_xy(np.r_[np.c_[1, 0], np.c_[0, 1]], [0, 0], angle)
+
     dataset.SetGeoTransform(
         (
             grid2d.origin["x"],
-            grid2d.u_cell_size,
-            0,
+            vec[0, 0] * grid2d.u_cell_size,
+            vec[0, 1] * grid2d.v_cell_size,
             grid2d.origin["y"],
-            0,
-            grid2d.v_cell_size,
+            vec[1, 0] * grid2d.u_cell_size,
+            vec[1, 1] * grid2d.v_cell_size,
         )
     )
 
@@ -130,10 +169,11 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
     band = tiff_object.GetRasterBand(1)
     temp = band.ReadAsArray()
 
-    if grid_name is None:
-        grid_name = os.path.basename(file_name).split(".")[0]
-
+    file_name = os.path.basename(file_name).split(".")[0]
     if grid_object is None:
+        if grid_name is None:
+            grid_name = file_name
+
         grid_object = Grid2D.create(
             workspace,
             name=grid_name,
@@ -151,28 +191,14 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
 
     assert isinstance(grid_object, Grid2D), "Parent object must be a Grid2D"
 
-    grid_object.add_data({grid_object.name + "_band": {"values": temp.ravel()}})
+    grid_object.add_data({file_name: {"values": temp.ravel()}})
 
     del tiff_object
     return grid_object
 
 
 def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
-    import urllib
-
-    try:
-        from shapely.geometry import mapping, LineString
-        import fiona
-        from fiona.crs import from_epsg
-
-    except ModuleNotFoundError as err:
-        print(err, "Trying to install through geopandas, hang tight...")
-        import os
-
-        os.system("conda install -c conda-forge geopandas=0.7.0")
-        from shapely.geometry import mapping, LineString
-        import fiona
-        from fiona.crs import from_epsg
+    attribute_vals = None
 
     if epsg is not None and epsg.isdigit():
         crs = from_epsg(int(epsg))
@@ -191,9 +217,8 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
     else:
         crs = None
 
-    if attribute is not None:
-        if curve.get_data(attribute):
-            attribute_vals = curve.get_data(attribute)[0].values
+    if attribute is not None and curve.get_data(attribute):
+        attribute_vals = curve.get_data(attribute)[0].values
 
     polylines, values = [], []
     for lid in curve.unique_parts:
@@ -201,13 +226,13 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
         ind_line = np.where(curve.parts == lid)[0]
         polylines += [curve.vertices[ind_line, :2]]
 
-        if attribute is not None:
+        if attribute_vals is not None:
             values += [attribute_vals[ind_line]]
 
     # Define a polygon feature geometry with one attribute
     schema = {"geometry": "LineString"}
 
-    if attribute is not None:
+    if values:
         attr_name = attribute.replace(":", "_")
         schema["properties"] = {attr_name: "float"}
     else:
@@ -372,6 +397,12 @@ class signal_processing_1d:
     """
 
     def __init__(self, locs, values, **kwargs):
+        self._interpolation = "linear"
+        self._smoothing = 0
+        self._residual = False
+        self._locations_resampled = None
+        self._values_padded = None
+        self._fft = None
 
         if np.std(locs[:, 1]) > np.std(locs[:, 0]):
             start = np.argmin(locs[:, 1])
@@ -394,13 +425,10 @@ class signal_processing_1d:
             axis=1,
         )
 
-        self._locations = dist_line
+        self.locations = dist_line
 
         if values is not None:
             self._values = values[self.sorting]
-        self._interpolation = "linear"
-        self._smoothing = 0
-        self._residual = False
 
         for key, value in kwargs.items():
             if getattr(self, key, None) is not None:
@@ -456,16 +484,23 @@ class signal_processing_1d:
         """
         return self._locations
 
+    @locations.setter
+    def locations(self, locations):
+
+        self._locations = locations
+        self.values_resampled = None
+
+        sort = np.argsort(locations)
+        start = locations[sort[0]] * 1.0
+        end = locations[sort[-1]] * 1.0
+        self._locations_resampled = np.arange(start, end, self.hx)
+        self.locations_resampled
+
     @property
     def locations_resampled(self):
         """
         Position of values resampled on a fix interval
         """
-        if getattr(self, "_locations_resampled", None) is None:
-            sort = np.argsort(self.locations)
-            self._locations_resampled = np.arange(
-                self.locations[sort[0]], self.locations[sort[-1]], self.hx
-            )
         return self._locations_resampled
 
     @property
@@ -535,7 +570,6 @@ class signal_processing_1d:
                 / 2.0
                 + 0.5
             )
-
             self._values_padded = tapper * values_padded
 
         return self._values_padded
@@ -764,6 +798,32 @@ def object_2_dataframe(entity, fields=[], inplace=False):
     return d_f
 
 
+def csv_2_zarr(input_csv, out_dir="zarr", rowchunks=100000, dask_chunks="64MB"):
+    """
+    Zarr conversion for large CSV files
+
+    NOTE: Need testing
+    """
+    # Need to run this part only once
+    if ~os.path.exists(out_dir):
+        for ii, chunk in enumerate(pd.read_csv(input_csv, chunksize=rowchunks)):
+            array = chunk.to_numpy()[1:, :]
+            da_array = da.from_array(array, chunks=dask_chunks)
+            da.to_zarr(da_array, url=out_dir + fr"\Tile{ii}")
+
+    # Just read the header
+    header = pd.read_csv(input_csv, nrows=1)
+
+    # Stack all the blocks in one big zarr
+    count = len([name for name in os.listdir(out_dir)])
+    dask_arrays = []
+    for ii in range(count):
+        block = da.from_zarr(out_dir + f"/Tile{ii}")
+        dask_arrays.append(block)
+
+    return header, da.vstack(dask_arrays)
+
+
 def data_2_zarr(h5file, entity_name, downsampling=1, fields=[], zarr_file="data.zarr"):
     """
     Convert an data entity and values to a dictionary of zarr's
@@ -870,6 +930,51 @@ def rotate_vertices(xyz, center, phi, theta):
     xyzRot = R.dot(xyz.T).T
 
     return xyzRot + np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
+
+
+def rotate_azimuth_dip(azimuth, dip):
+    """
+    dipazm_2_xyz(dip,azimuth)
+
+    Function converting degree angles for dip and azimuth from north to a
+    3-components in cartesian coordinates.
+
+    INPUT
+    dip     : Value or vector of dip from horizontal in DEGREE
+    azimuth   : Value or vector of azimuth from north in DEGREE
+
+    OUTPUT
+    M       : [n-by-3] Array of xyz components of a unit vector in cartesian
+
+    Created on Dec, 20th 2015
+
+    @author: dominiquef
+    """
+
+    azimuth = np.asarray(azimuth)
+    dip = np.asarray(dip)
+
+    # Number of elements
+    nC = azimuth.size
+
+    M = np.zeros((nC, 3))
+
+    # Modify azimuth from North to cartesian-X
+    inc = -np.deg2rad(np.asarray(dip))
+    dec = np.deg2rad((450.0 - np.asarray(azimuth)) % 360.0)
+
+    M[:, 0] = np.cos(inc) * np.cos(dec)
+    M[:, 1] = np.cos(inc) * np.sin(dec)
+    M[:, 2] = np.sin(inc)
+
+    return M
+
+
+def string_2_list(string):
+    """
+    Convert a list of numbers separated by comma to a list of floats
+    """
+    return [np.float(val) for val in string.split(",") if len(val) > 0]
 
 
 class RectangularBlock:
@@ -1008,6 +1113,20 @@ class RectangularBlock:
             self._vertices = xyz
 
         return self._vertices
+
+
+def symlog(values, threshold):
+    """
+    Convert values to log with linear threshold near zero
+    """
+    return np.sign(values) * np.log10(1 + np.abs(values) / threshold)
+
+
+def inv_symlog(values, threshold):
+    """
+    Compute the inverse symlog mapping
+    """
+    return np.sign(values) * threshold * (-1.0 + 10.0 ** np.abs(values))
 
 
 def raw_moment(data, i_order, j_order):
