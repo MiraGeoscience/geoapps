@@ -128,7 +128,7 @@ class EMLineProfiler(ObjectDataSelection):
         self.model_selection.objects.description = "Surface:"
         self.model_selection.data.description = "Model"
 
-        self.doi_selection.update_data_list()
+        self.doi_selection.update_data_list(None)
         if "doi" in kwargs.keys():
             self.doi_selection.__populate__(**kwargs["doi"])
         self.doi_selection.data.description = "DOI Layer"

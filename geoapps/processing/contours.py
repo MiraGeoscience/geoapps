@@ -33,6 +33,7 @@ class ContourValues(PlotSelection2D):
 
     def __init__(self, **kwargs):
 
+        kwargs = self.apply_defaults(**kwargs)
         self._contours = Text(
             value="", description="Contours", disabled=False, continuous_update=False
         )
@@ -42,7 +43,7 @@ class ContourValues(PlotSelection2D):
             value=False, indent=False, description="Assign Z from values"
         )
 
-        super().__init__(**self.apply_defaults(**kwargs))
+        super().__init__(**kwargs)
 
         out = interactive_output(self.compute_plot, {"contour_values": self.contours,})
 
@@ -219,9 +220,8 @@ class ContourValues(PlotSelection2D):
                         parent=self.ga_group,
                     )
 
+                curve.add_data({self.contours.value: {"values": np.hstack(values)}})
+
                 if self.live_link.value:
-                    self.live_link_output(
-                        curve, data={self.contours.value: np.hstack(values)}
-                    )
-                else:
-                    curve.add_data({self.contours.value: {"values": np.hstack(values)}})
+                    self.live_link_output(self.ga_group)
+                self.workspace.finalize()

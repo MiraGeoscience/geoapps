@@ -1,6 +1,6 @@
 import numpy as np
 import ipywidgets as widgets
-from ipywidgets import Dropdown, SelectMultiple, VBox
+from ipywidgets import Dropdown, SelectMultiple, VBox, FloatText
 from geoh5py.workspace import Workspace
 from geoh5py.objects import object_base
 from geoapps.base import BaseApplication
@@ -19,12 +19,12 @@ class ObjectDataSelection(BaseApplication):
 
         self._add_groups = False
         self._find_label = []
-        self._object_types = ()
+        self._object_types = []
         self._select_multiple = False
 
         super().__init__(**kwargs)
 
-        self.update_data_list()
+        self.update_data_list(None)
         self._widget = VBox([self.objects, self.data])
 
     @property
@@ -36,7 +36,7 @@ class ObjectDataSelection(BaseApplication):
 
     @add_groups.setter
     def add_groups(self, value):
-        assert isinstance(value, bool), "add_groups must be of type bool"
+        assert isinstance(value, (bool, str)), "add_groups must be of type bool"
         self._add_groups = value
 
     @property
@@ -63,7 +63,6 @@ class ObjectDataSelection(BaseApplication):
         """
         Object selector
         """
-
         if getattr(self, "_objects", None) is None:
             self.objects = Dropdown(description="Object:",)
 
@@ -71,12 +70,9 @@ class ObjectDataSelection(BaseApplication):
 
     @objects.setter
     def objects(self, value):
-        def update_data_list(_):
-            self.update_data_list()
-
         assert isinstance(value, Dropdown), f"'Objects' must be of type {Dropdown}"
         self._objects = value
-        self._objects.observe(update_data_list, names="value")
+        self._objects.observe(self.update_data_list, names="value")
 
     @property
     def object_types(self):
@@ -84,21 +80,21 @@ class ObjectDataSelection(BaseApplication):
         Entity type
         """
         if getattr(self, "_object_types", None) is None:
-            self._object_types = ()
+            self._object_types = []
 
         return self._object_types
 
     @object_types.setter
     def object_types(self, entity_types):
-        if not isinstance(entity_types, tuple):
-            entity_types = tuple(entity_types)
+        if not isinstance(entity_types, list):
+            entity_types = [entity_types]
 
         for entity_type in entity_types:
             assert issubclass(
                 entity_type, object_base.ObjectBase
             ), f"Provided object_types must be instances of {object_base.ObjectBase}"
 
-        self._object_types = entity_types
+        self._object_types = tuple(entity_types)
 
     @property
     def find_label(self):
@@ -192,7 +188,7 @@ class ObjectDataSelection(BaseApplication):
         else:
             return None, None
 
-    def update_data_list(self):
+    def update_data_list(self, _):
         self.refresh.value = False
         if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
             self.objects.value
@@ -203,18 +199,28 @@ class ObjectDataSelection(BaseApplication):
             if getattr(obj, "get_data_list", None) is None:
                 return
 
-            options = [
-                name for name in obj.get_data_list() if name != "Visual Parameters"
-            ] + ["Z"]
+            options = [""]
 
-            if self.add_groups and obj.property_groups:
+            if (self.add_groups or self.add_groups == "only") and obj.property_groups:
                 options = (
-                    ["-- Groups --"]
+                    options
+                    + ["-- Groups --"]
                     + [p_g.name for p_g in obj.property_groups]
-                    + ["--- Channels ---"]
-                    + list(options)
                 )
-            self.data.options = [""] + options
+
+            if self.add_groups != "only":
+                options = (
+                    options
+                    + ["--- Channels ---"]
+                    + [
+                        name
+                        for name in obj.get_data_list()
+                        if name != "Visual Parameters"
+                    ]
+                    + ["Z"]
+                )
+
+            self.data.options = options
             if self.find_label:
                 self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
@@ -224,16 +230,24 @@ class ObjectDataSelection(BaseApplication):
 
     def update_objects_list(self):
         if getattr(self, "_workspace", None) is not None:
+            value = self.objects.value
+
             if len(self.object_types) > 0:
-                self.objects.options = [""] + [
+                options = [""] + [
                     obj.name
                     for obj in self._workspace.all_objects()
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                self.objects.options = [""] + list(
-                    self._workspace.list_objects_name.values()
-                )
+                options = [""] + list(self._workspace.list_objects_name.values())
+
+            if value in options:  # Silent update
+                self.objects.unobserve(self.update_data_list, names="value")
+                self.objects.options = options
+                self.objects.value = value
+                self._objects.observe(self.update_data_list, names="value")
+            else:
+                self.objects.options = options
 
 
 class LineOptions(ObjectDataSelection):
@@ -250,12 +264,9 @@ class LineOptions(ObjectDataSelection):
 
         super().__init__(**kwargs)
 
-        def update_line_list(_):
-            self.update_line_list()
-
-        self._data.observe(update_line_list, names="value")
-        self.update_data_list()
-        self.update_line_list()
+        self._data.observe(self.update_line_list, names="value")
+        self.update_data_list(None)
+        self.update_line_list(None)
 
         self._widget = VBox([self._data, self.lines])
         self._data.description = "Lines field"
@@ -287,7 +298,60 @@ class LineOptions(ObjectDataSelection):
         ), f"'multiple_lines' property must be of type {bool}"
         self._multiple_lines = value
 
-    def update_line_list(self):
+    def update_line_list(self, _):
         _, data = self.get_selected_entities()
         if data is not None and getattr(data, "values", None) is not None:
             self.lines.options = [""] + np.unique(data.values).tolist()
+
+
+class TopographyOptions(ObjectDataSelection):
+    """
+    Define the topography used by the inversion
+    """
+
+    def __init__(self, **kwargs):
+        self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
+        self._offset = FloatText(description="Vertical offset (+ve up)")
+        self._constant = FloatText(description="Elevation (m)",)
+
+        super().__init__(**kwargs)
+
+        self.objects.value = utils.find_value(self.objects.options, self.find_label)
+        self.option_list = {
+            "Object": self.widget,
+            "Relative to Sensor": self.offset,
+            "Constant": self.constant,
+            "None": widgets.Label("No topography"),
+        }
+        self._options = widgets.RadioButtons(
+            options=["Object", "Relative to Sensor", "Constant"],
+            description="Define by:",
+        )
+
+        def update_options(_):
+            self.update_options()
+
+        self.options.observe(update_options)
+        self._widget = VBox([self.options, self.option_list[self.options.value]])
+
+    @property
+    def panel(self):
+        return self._panel
+
+    @property
+    def constant(self):
+        return self._constant
+
+    @property
+    def offset(self):
+        return self._offset
+
+    @property
+    def options(self):
+        return self._options
+
+    def update_options(self):
+        self._widget.children = [
+            self.options,
+            self.option_list[self.options.value],
+        ]
