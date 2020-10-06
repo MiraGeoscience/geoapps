@@ -1,3 +1,7 @@
+:orphan:
+
+.. _inversionApp:
+
 Geophysical inversion (SimPEG)
 ==============================
 
@@ -16,8 +20,16 @@ This application provides an interface to geophysical inversion using the `SimPE
         :alt: inv_app
 
 
+.. note:: The latest version of applications can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+
+          See the :ref:`Installation page <getting_started>` to get started.
+
+
 Input data
 ----------
+
+The following list of interactive widgets are for documentation and demonstration purposes only.
+
 
 .. list-table::
    :header-rows: 1
@@ -28,9 +40,9 @@ Input data
 
             from geoapps.selection import ObjectDataSelection
             ObjectDataSelection(
+            select_multiple=True, add_groups=True,
                  h5file=r"../assets/FlinFlon.geoh5",
                  objects="Data_FEM_pseudo3D",
-                 select_multiple=True, add_groups=True
             ).widget
    * - List of objects with corresponding data and data groups.
        The selected data are used to populate **2- Data Components**
@@ -39,13 +51,11 @@ Input data
    * - .. jupyter-execute::
             :hide-code:
 
-            from geoapps.processing import ContourValues
-            app = ContourValues(
-                h5file=r"../assets/FlinFlon.geoh5",
-                objects="Gravity_Magnetics_drape60m",
-                data='Airborne_TMI',
+            from geoapps.plotting import PlotSelection2D
+            app = PlotSelection2D(
+              h5file=r"../assets/FlinFlon.geoh5",
             )
-            app.plot_selection.plot_widget
+            app.widget
    * - See :ref:`Plot and select data <plotselectiondata>`
 
 
@@ -153,8 +163,8 @@ Topography
                 h5file=r"../assets/FlinFlon.geoh5",
                 objects="Topography", value="Vertices"
             )
-            app.options_button.value="Object"
-            app.options_button.disabled=True
+            app.options.value="Object"
+            app.options.disabled=True
             app.widget
 
    * - Topography defined by an object x,y location and data z-data value.
@@ -168,8 +178,8 @@ Topography
                 h5file=r"../assets/FlinFlon.geoh5",
                 objects="Topography", value="Vertices"
             )
-            app.options_button.value="Drape Height"
-            app.options_button.disabled=True
+            app.options.value="Relative to Sensor"
+            app.options.disabled=True
             app.offset.value = -40
             app.widget
 
@@ -182,14 +192,14 @@ Topography
                 h5file=r"../assets/FlinFlon.geoh5",
                 objects="Topography", value="Vertices"
             )
-            app.options_button.value="Constant"
-            app.options_button.disabled=True
+            app.options.value="Constant"
+            app.options.disabled=True
             app.widget
 
    * - Topography defined by the ``Receiver`` [x, y] locations at constant elevation (m).
 
-Receivers
-^^^^^^^^^
+Sensors
+^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -201,8 +211,8 @@ Receivers
             from geoapps.inversion import SensorOptions
             h5file = r"../assets/FlinFlon.geoh5"
             app = SensorOptions(h5file=h5file, objects="Data_FEM_pseudo3D")
-            app.options_button.value="(x, y, z) + offset(x,y,z)"
-            app.options_button.disabled=True
+            app.options.value="sensor location + (dx, dy, dz)"
+            app.options.disabled=True
             app.widget
    * - Receiver locations defined by a constant offset from the
        ``Receiver`` [x, y, z] locations.
@@ -214,10 +224,10 @@ Receivers
             from geoapps.inversion import SensorOptions
             h5file = r"../assets/FlinFlon.geoh5"
             app = SensorOptions(h5file=h5file, objects="Data_FEM_pseudo3D")
-            app.options_button.value="(x, y, topo + radar) + offset(x,y,z)"
-            app.value.options = list(app.value.options) + ["radar"]
-            app.value.value = 'radar'
-            app.options_button.disabled=True
+            app.options.value="topo + radar + (dx, dy, dz)"
+            app.data.options = list(app.data.options) + ["radar"]
+            app.data.value = 'radar'
+            app.options.disabled=True
             app.widget
    * - Receiver locations defined by the ``Receiver`` [x, y] locations
 
@@ -313,9 +323,10 @@ Initial model used to begin the inversion.
             widgets = InversionOptions(h5file=h5file)
             widgets.starting_model.options.value = "Model"
             widgets.starting_model.options.disabled = True
-            widgets.starting_model.list.value = "VTEM_model"
+            widgets.starting_model.objects.value = "O2O_Interp_25m"
+            widgets.starting_model.data.value = "VTEM_model"
             widgets.starting_model.widget
-   * - Model values selected from any Surface, BlockModel or Octree object
+   * - Model object and values selected from any Surface, BlockModel or Octree object
 
        Values are interpolated onto the inversion mesh using a nearest neighbor algorithm.
    * -  .. jupyter-execute::
@@ -346,7 +357,8 @@ Susceptibility values used in the forward calculations only.
             widgets = InversionOptions(h5file=h5file)
             widgets.susceptibility_model.options.value = "Model"
             widgets.susceptibility_model.options.disabled = True
-            widgets.susceptibility_model.list.value = "VTEM_model"
+            widgets.susceptibility_model.objects.value = "O2O_Interp_25m"
+            widgets.susceptibility_model.data.value = "VTEM_model"
             widgets.susceptibility_model.widget
    * - Model values selected from any Surface, BlockModel or Octree object
 
@@ -406,7 +418,8 @@ Parameters controlling the regularization function.
             widgets = InversionOptions(h5file=h5file)
             widgets.reference_model.options.value = "Model"
             widgets.reference_model.options.disabled = True
-            widgets.reference_model.list.value = "VTEM_model"
+            widgets.reference_model.objects.value = "O2O_Interp_25m"
+            widgets.reference_model.data.value = "VTEM_model"
             widgets.reference_model.widget
    * - Model values selected from any Surface, BlockModel or Octree object
 

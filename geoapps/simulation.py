@@ -49,14 +49,23 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
 
     def plot_layout(objects, data, blocks, dip, azimuth, update):
-        obj = workspace.get_entity(objects)[0]
-        obs = obj.get_data(data)[0]
+
+        if workspace.get_entity(objects):
+            obj = workspace.get_entity(objects)[0]
+        else:
+            return
+
+        if obj.get_data(data):
+            obs = obj.get_data(data)[0]
+        else:
+            obs = None
+
         plt.figure(figsize=(10, 12))
         axs = plt.subplot(projection="3d")
         axs.view_init(dip, ((450 - azimuth) % 360) + 180)
         if getattr(obj, "vertices", None) is not None:
 
-            if isinstance(obs.values[0], np.float):
+            if isinstance(getattr(obs, "values", None), np.float):
                 values = obs.values
             else:
                 values = None
@@ -104,13 +113,18 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
 
         set_axes_equal(axs)
 
-    object_selection = ObjectDataSelection(h5file=h5file, interactive=True).widget
+    object_selection = ObjectDataSelection(h5file=h5file, interactive=True)
 
-    obj = workspace.get_entity(object_selection.children[0].children[0].value)[0]
-    if getattr(obj, "vertices", None) is not None:
-        xyz = obj.vertices
-    else:
-        xyz = obj.centroids
+    xyz = []
+    for obj_name in object_selection.objects.options:
+        if workspace.get_entity(obj_name):
+            obj = workspace.get_entity(obj_name)[0]
+            if getattr(obj, "vertices", None) is not None:
+                xyz += [obj.vertices]
+            else:
+                xyz += [obj.centroids]
+
+    xyz = np.vstack(xyz)
 
     azimuth = widgets.FloatSlider(
         min=-180,
@@ -239,8 +253,8 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
     interactive_plot = widgets.interactive_output(
         plot_layout,
         {
-            "objects": object_selection.children[0].children[0],
-            "data": object_selection.children[0].children[1],
+            "objects": object_selection.objects,
+            "data": object_selection.data,
             "blocks": block_add,
             "azimuth": azimuth,
             "dip": dip,
@@ -267,9 +281,7 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
             # Create a group
             out_group = ContainerGroup.create(workspace, name=sim_name.value)
 
-            obj = workspace.get_entity(object_selection.children[0].children[0].value)[
-                0
-            ]
+            obj = workspace.get_entity(object_selection.objects.value)[0]
             obj_out = obj.copy(parent=out_group)
 
             # Export data on Points
@@ -308,9 +320,7 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
     def run_simulation(_):
 
         if forward.value:
-            obj = workspace.get_entity(object_selection.children[0].children[0].value)[
-                0
-            ]
+            obj = workspace.get_entity(object_selection.objects.value)[0]
 
             if getattr(obj, "vertices", None) is not None:
                 xyz = obj.vertices
@@ -442,14 +452,14 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         if survey_type.value == "Magnetics":
             survey_type_panel.children = [
                 survey_type,
-                object_selection,
+                object_selection.widget,
                 components_panel,
                 inducing_field,
             ]
         else:
             survey_type_panel.children = [
                 survey_type,
-                object_selection,
+                object_selection.widget,
                 components_panel,
             ]
 
@@ -462,14 +472,14 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         value=inducing_field, description="Inducing Field [Amp, Inc, Dec]",
     )
     survey_type_panel = widgets.VBox(
-        [survey_type, object_selection, components_panel, inducing_field]
+        [survey_type, object_selection.widget, components_panel, inducing_field]
     )
     survey_type.observe(update_survey_type)
 
     def plot_simulation(plot, run):
 
-        objects = object_selection.children[0].children[0].value
-        data = object_selection.children[0].children[1].value
+        objects = object_selection.objects.value
+        data = object_selection.data.value
 
         if plot:
             if workspace.get_entity(objects):
@@ -479,8 +489,13 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                 else:
                     xyz = obj.centroids
 
-            if obj.get_data(data):
-                obs = obj.get_data(data)[0]
+                if obj.get_data(data):
+                    obs = obj.get_data(data)[0]
+                else:
+                    return
+            else:
+                return
+
             nC = len(components.value)
 
             if (
@@ -509,7 +524,12 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
                 for ind, comp in enumerate(components.value):
                     axs = plt.subplot(int(np.ceil(nC / 2) + 1), 2, ind + 2)
                     im = axs.tricontourf(
-                        trian, export_ga.data[ind::nC], cmap="Spectral_r", levels=100
+                        trian,
+                        export_ga.data[ind::nC],
+                        cmap="Spectral_r",
+                        levels=100,
+                        vmin=obs.values.min(),
+                        vmax=obs.values.max(),
                     )
                     plt.colorbar(im)
                     axs.set_yticklabels([])

@@ -187,8 +187,11 @@ def inversion(input_file):
     ignore_values = input_param["ignore_values"]
     max_iteration = input_param["max_iterations"]
     resolution = np.float(input_param["resolution"])
+
     if "window" in input_param.keys():
         window = input_param["window"]
+        window["center"] = [window["center_x"], window["center_y"]]
+        window["size"] = [window["width"], window["height"]]
     else:
         window = None
 
@@ -276,7 +279,7 @@ def inversion(input_file):
                     else:
                         topo = topo_entity.vertices
 
-                    if input_param["topography"]["GA_object"]["data"] != "Vertices":
+                    if input_param["topography"]["GA_object"]["data"] != "Z":
 
                         data = topo_entity.get_data(
                             input_param["topography"]["GA_object"]["data"]
@@ -440,6 +443,7 @@ def inversion(input_file):
     model_vertices = []
     model_cells = []
     pred_count = 0
+    model_line_ids = []
     line_ids = []
     data_ordering = []
     pred_vertices = []
@@ -508,6 +512,7 @@ def inversion(input_file):
             model_ordering.append(temp[:, order].T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_cells.append(tri2D.simplices + model_count)
+            model_line_ids.append(np.ones_like(np.ravel(X)) * np.float(line))
 
             line_ids.append(np.ones_like(order) * np.float(line))
             data_ordering.append(order + pred_count)
@@ -532,6 +537,9 @@ def inversion(input_file):
             cells=np.vstack(model_cells),
             parent=out_group,
         )
+
+        surface.add_data({"Line": {"values": np.hstack(model_line_ids)}})
+
         model_ordering = np.hstack(model_ordering).astype(int)
         curve = Curve.create(
             workspace,
@@ -548,11 +556,11 @@ def inversion(input_file):
     reference = "BFHS"
     if "reference_model" in list(input_param.keys()):
         if "model" in list(input_param["reference_model"].keys()):
-            print("Interpolating reference model")
-            con_object = workspace.get_entity(input_param["reference_model"]["model"])[
-                0
-            ]
-            con_model = con_object.values
+
+            input_model = input_param["reference_model"]["model"]
+            print(f"Interpolating reference model {input_model}")
+            con_object = workspace.get_entity(list(input_model.keys())[0])[0]
+            con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
             if hasattr(con_object.parent, "centroids"):
                 grid = con_object.parent.centroids
@@ -574,9 +582,12 @@ def inversion(input_file):
     starting = np.log(1e-3)
     if "starting_model" in list(input_param.keys()):
         if "model" in list(input_param["starting_model"].keys()):
-            print("Interpolating starting model")
-            con_object = workspace.get_entity(input_param["starting_model"]["model"])[0]
-            con_model = con_object.values
+
+            input_model = input_param["starting_model"]["model"]
+
+            print(f"Interpolating starting model {input_model}")
+            con_object = workspace.get_entity(list(input_model.keys())[0])[0]
+            con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
             if hasattr(con_object.parent, "centroids"):
                 grid = con_object.parent.centroids
@@ -596,9 +607,11 @@ def inversion(input_file):
 
     if "susceptibility" in list(input_param.keys()):
         if "model" in list(input_param["susceptibility"].keys()):
-            print("Interpolating susceptibility model")
-            sus_object = workspace.get_entity(input_param["susceptibility"]["model"])[0]
-            sus_model = sus_object.values
+
+            input_model = input_param["susceptibility_model"]["model"]
+            print(f"Interpolating susceptibility model {input_model}")
+            sus_object = workspace.get_entity(list(input_model.keys())[0])[0]
+            sus_model = sus_object.get_data(list(input_model.values())[0])[0].values
 
             if hasattr(sus_object.parent, "centroids"):
                 grid = sus_object.parent.centroids
@@ -611,11 +624,11 @@ def inversion(input_file):
             sus = sus_model[ind]
             susceptibility = sus[np.argsort(model_ordering)]
 
-        elif "value" in list(input_param["susceptibility"].keys()):
+        elif "value" in list(input_param["susceptibility_model"].keys()):
 
             susceptibility = (
                 np.ones(np.vstack(model_vertices).shape[0])
-                * input_param["susceptibility"]["value"]
+                * input_param["susceptibility_model"]["value"]
             )
     else:
         susceptibility = np.zeros(np.vstack(model_vertices).shape[0])

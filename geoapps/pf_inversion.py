@@ -189,7 +189,6 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
 
 def inversion(input_file):
     dsep = os.path.sep
-
     if input_file is not None:
         workDir = dsep.join(os.path.dirname(os.path.abspath(input_file)).split(dsep))
         if len(workDir) > 0:
@@ -258,6 +257,8 @@ def inversion(input_file):
 
     if "window" in input_dict.keys():
         window = input_dict["window"]
+        window["center"] = [window["center_x"], window["center_y"]]
+        window["size"] = [window["width"], window["height"]]
     else:
         window = None
 
@@ -367,11 +368,11 @@ def inversion(input_file):
             " 'ubc_grav', 'ubc_mag', 'GA_object'"
         )
 
-    if np.median(survey.dobs) > 100 and "detrend" not in list(input_dict.keys()):
-        print(
-            f"Large background trend detected. Median value removed:{np.median(survey.dobs)}"
-        )
-        survey.dobs -= np.median(survey.dobs)
+    # if np.median(survey.dobs) > 500 and "detrend" not in list(input_dict.keys()):
+    #     print(
+    #         f"Large background trend detected. Median value removed:{np.median(survey.dobs)}"
+    #     )
+    #     survey.dobs -= np.median(survey.dobs)
 
     # 0-level the data if required, data_trend = 0 level
     if "detrend" in list(input_dict.keys()):
@@ -479,7 +480,7 @@ def inversion(input_file):
                     else:
                         topo = topo_entity.vertices
 
-                    if input_dict["topography"]["GA_object"]["data"] != "Vertices":
+                    if input_dict["topography"]["GA_object"]["data"] != "Z":
                         data = topo_entity.get_data(
                             input_dict["topography"]["GA_object"]["data"]
                         )[0]
@@ -547,8 +548,8 @@ def inversion(input_file):
 
     topo_interp_function = NearestNDInterpolator(topo[:, :2], topo[:, 2])
 
-    if "target_chi" in list(input_dict.keys()):
-        target_chi = input_dict["target_chi"]
+    if "chi_factor" in list(input_dict.keys()):
+        target_chi = input_dict["chi_factor"]
     else:
         target_chi = 1
 
@@ -558,19 +559,17 @@ def inversion(input_file):
     else:
         model_norms = [2, 2, 2, 2]
 
-    model_norms = np.c_[model_norms]
-
     if "max_iterations" in list(input_dict.keys()):
 
         max_iterations = input_dict["max_iterations"]
         assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
     else:
-        if np.all(model_norms == 2):
+        if np.all(np.r_[model_norms] == 2):
             # Cartesian or not sparse
             max_iterations = 10
         else:
             # Spherical or sparse
-            max_iterations = 20
+            max_iterations = 40
 
     if "max_cg_iterations" in list(input_dict.keys()):
         max_cg_iterations = input_dict["max_cg_iterations"]
@@ -1013,18 +1012,21 @@ def inversion(input_file):
     # Create reference and starting model
     def get_model(input_value, vector=vector_property, save_model=False):
         # Loading a model file
-        if isinstance(input_value, str):
-            print("In model interpolation for " + input_value)
+        if isinstance(input_value, dict):
+            print(f"In model interpolation for {input_value}")
             workspace = Workspace(input_dict["save_to_geoh5"])
-            input_mesh = workspace.get_entity(input_value)[0].parent
+            input_mesh = workspace.get_entity(list(input_value.keys())[0])[0]
 
-            input_model = input_mesh.get_data(input_value)[0].values
+            input_model = input_mesh.get_data(list(input_value.values())[0])[0].values
 
             # Remove null values
             active = ((input_model > 1e-38) * (input_model < 2e-38)) == 0
             input_model = input_model[active]
 
-            xyz_cc = input_mesh.centroids[active, :]
+            if hasattr(input_mesh, "centroids"):
+                xyz_cc = input_mesh.centroids[active, :]
+            else:
+                xyz_cc = input_mesh.vertices[active, :]
 
             if window is not None:
                 xyz_cc = rotate_xy(xyz_cc, window["center"], window["azimuth"])
@@ -1043,14 +1045,14 @@ def inversion(input_file):
                     wght += 1.0 / (rad[:, ii] + 1e-3) ** 0.5
 
                 model /= wght
-                print("Reference model transferred to new mesh!")
 
             if save_model:
                 val = model.copy()
-                val[activeCells == False] = -99999
+                val[activeCells == False] = no_data_value
                 mesh_object.add_data(
                     {"Reference_model": {"values": val[mesh._ubc_order]}}
                 )
+                print("Reference model transferred to new mesh!")
 
             if vector:
                 model = Utils.sdiag(model) * np.kron(
@@ -1074,10 +1076,12 @@ def inversion(input_file):
                     )
                 else:
                     # Assumes amplitude reference value in inducing field direction
-                    model = np.kron(
-                        np.c_[input_value[0], input_value[0], input_value[0]],
-                        np.ones(mesh.nC),
-                    )[0, :]
+                    model = Utils.sdiag(np.ones(mesh.nC) * input_value[0]) * np.kron(
+                        Utils.matutils.dipazm_2_xyz(
+                            dip=survey.srcField.param[1], azm_N=survey.srcField.param[2]
+                        ),
+                        np.ones((mesh.nC, 1)),
+                    )
 
         return mkvc(model)
 
@@ -1209,7 +1213,7 @@ def inversion(input_file):
 
         wr = prob.getJtJdiag(np.ones_like(mstart), W=local_misfit.W.diagonal())
 
-        activeCellsTemp = Maps.InjectActiveCells(mesh, activeCells, 1e-8)
+        # activeCellsTemp = Maps.InjectActiveCells(mesh, activeCells, 1e-8)
 
         global_weights += wr
 
@@ -1249,7 +1253,16 @@ def inversion(input_file):
             Utils.io_utils.writeUBCmagneticsObservations(
                 outDir + "/Obs.mag", survey, dpred
             )
-
+        mesh_object.add_data(
+            {
+                "Starting_model": {
+                    "values": np.linalg.norm(
+                        (activeCellsMap * model_map * mstart).reshape((3, -1)), axis=0
+                    )[mesh._ubc_order],
+                    "association": "CELL",
+                }
+            }
+        )
         return None
 
     # Global sensitivity weights (linear)
@@ -1360,51 +1373,42 @@ def inversion(input_file):
         maxIterCG=max_cg_iterations,
         tolCG=tol_cg,
         stepOffBoundsFact=1e-8,
-        LSshorten=0.1,
+        LSshorten=0.25,
     )
-
     # Create the default L2 inverse problem from the above objects
     invProb = InvProblem.BaseInvProblem(global_misfit, reg, opt, beta=initial_beta)
-
     # Add a list of directives to the inversion
     directiveList = []
 
     if vector_property:
         directiveList.append(
             Directives.VectorInversion(
-                inversion_type=input_dict["inversion_type"], chifact_target=2
+                inversion_type=input_dict["inversion_type"],
+                chifact_target=target_chi * 2,
             )
         )
-
-    if initial_beta is None:
-        directiveList.append(
-            Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
-        )
-
-    # elif "save_to_ubc" in list(input_dict.keys()):
-    # directiveList.append(
-    #     Directives.SaveUBCModelEveryIteration(
-    #         mapping=activeCellsMap * model_map,
-    #         mesh=mesh,
-    #         fileName=outDir + input_dict["inversion_type"],
-    #         vector=input_dict["inversion_type"][0:3] == "mvi",
-    #     )
-    # )
 
     # Pre-conditioner
     directiveList.append(
         Directives.Update_IRLS(
             f_min_change=1e-4,
+            maxIRLSiter=max_iterations,
             minGNiter=1,
-            beta_tol=0.25,
-            prctile=80,
+            beta_tol=0.5,
+            prctile=75,
             floorEpsEnforced=True,
             coolingRate=1,
             coolEps_q=True,
             coolEpsFact=1.2,
             betaSearch=False,
+            chifact_target=target_chi,
         )
     )
+
+    if initial_beta is None:
+        directiveList.append(
+            Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
+        )
 
     directiveList.append(Directives.UpdatePreconditioner())
 
@@ -1466,7 +1470,7 @@ def inversion(input_file):
     print(
         "Start Inversion: "
         + inversion_style
-        + "\nTarget Misfit: %.2e (%.0f data with chifact = %g)"
+        + "\nTarget Misfit: %.2e (%.0f data with chifact = %g) / 2"
         % (0.5 * target_chi * len(survey.std), len(survey.std), target_chi)
     )
 

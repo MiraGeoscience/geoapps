@@ -6,14 +6,11 @@ This section provides information on how to create your own applications using
 <https://ipywidgets.readthedocs.io/en/latest/examples/Widget%20Basics.html>`_.
 
 
-.. note:: To be continued ...
 
+.. toctree::
+   :maxdepth: 2
 
-.. .. toctree::
-..    :maxdepth: 2
-
-..    apps/create_contours.rst
-..    apps/geophysical_inversion.rst
+   apps/lower_level.rst
 
 
 .. ./../_examples/Automated_Lineament.ipynb
