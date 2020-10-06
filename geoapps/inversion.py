@@ -434,11 +434,6 @@ class InversionOptions(BaseApplication):
             continuous_update=False,
         )
 
-        # def check_max_iterations(_):
-        #     self.check_max_iterations()
-        #
-        # self._norms.observe(check_max_iterations)
-
         self._mesh = MeshOctreeOptions()
         self.inversion_options = {
             "output name": self._output_name,
@@ -479,25 +474,9 @@ class InversionOptions(BaseApplication):
             layout=Layout(width="100%"),
         )
 
-        # model_list = []
-        # for obj in self.workspace.all_objects():
-        #     if isinstance(obj, (BlockModel, Octree, Surface)):
-        #         for data in obj.children:
-        #             if (
-        #                 getattr(data, "values", None) is not None
-        #                 and data.name != "Visual Parameters"
-        #             ):
-        #                 model_list += [data.name]
-        #
-
-    # def check_max_iterations(self):
-    #     try:
-    #         if all([val == 2 for val in string_2_list(self._norms.value)]):
-    #             self._max_iterations.value = 10
-    #
-    #     except:
-    #         print("Check values of norms. There should be 4 values between [0, 2]")
-    #         self._norms.value = "0, 2, 2, 2"
+        for obj in self.__dict__:
+            if hasattr(getattr(self, obj), "style"):
+                getattr(self, obj).style = {"description_width": "initial"}
 
     def inversion_option_change(self):
         self._widget.children[1].children = [
@@ -708,9 +687,10 @@ class InversionApp(PlotSelection2D):
             "height": 1500.0,
             "azimuth": -20,
         },
-        "inversion_parameters": {"norms": "0, 2, 2, 2"},
+        "inversion_parameters": {"norms": "0, 2, 2, 2", "max_iterations": 20},
         "topography": {"objects": "Topography", "data": "elevation"},
         "sensor": {"offset": "0, 0, 40", "options": "topo + radar + (dx, dy, dz)"},
+        "padding_distance": "1000, 1000, 1000, 1000, 0, 0",
     }
 
     def __init__(self, **kwargs):
@@ -772,6 +752,8 @@ class InversionApp(PlotSelection2D):
         #                 val.observe(update_options)
 
         # self.plot_widget.layout = Layout(width="60%")
+        self.mesh_octree = MeshOctreeOptions(**kwargs)
+        self.mesh_1D = Mesh1DOptions(**kwargs)
 
         super().__init__(**kwargs)
 
@@ -789,8 +771,6 @@ class InversionApp(PlotSelection2D):
             self.data_channel_choices_observer()
 
         self.data_channel_choices.observe(data_channel_choices_observer, names="value")
-        self.mesh_octree = MeshOctreeOptions(**kwargs)
-        self.mesh_1D = Mesh1DOptions(**kwargs)
 
         # Define widgets linked to common object
         self.topography = TopographyOptions()
@@ -804,16 +784,14 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.__populate__(**kwargs["inversion_parameters"])
 
         self.sensor = SensorOptions()
-        self.sensor._objects = self._objects
         self.sensor.workspace = self._workspace
+        self.sensor.objects = self.objects
         if "sensor" in kwargs.keys():
             self.sensor.__populate__(**kwargs["sensor"])
 
         self.lines = LineOptions()
-        self.lines._objects = self._objects
         self.lines.workspace = self._workspace
-
-        # self.__populate__()
+        self.lines.objects = self.objects
 
         def update_selection(_):
             self.update_selection()
