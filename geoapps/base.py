@@ -1,9 +1,8 @@
 import sys
 import urllib.request
 import zipfile
-from os import mkdir, listdir, path, remove
-import subprocess
-from shutil import copyfile, copy, rmtree
+from os import mkdir, listdir, path, remove, system
+from shutil import copyfile, copy, rmtree, move
 import time
 from ipywidgets import Checkbox, Text, VBox, HBox, Label, ToggleButton, Widget, Button
 from geoh5py.workspace import Workspace
@@ -28,18 +27,19 @@ class BaseApplication:
         self._h5file = None
         self._workspace = None
         self._file_browser = FileChooser()
+
         self._ga_group_name = Text(
             value="", description="To Group", continuous_update=False
         )
         self._ga_group = None
-
-        def file_browser_change(_):
-            self.file_browser_change()
-
-        self._file_browser._select.on_click(file_browser_change)
+        self._file_browser._select.on_click(self.file_browser_change)
+        self._file_browser._select.style = {"description_width": "initial"}
 
         self._copy_trigger = Button(
-            description="Create copy:", value=True, indent=False
+            description="Create copy:",
+            value=True,
+            indent=False,
+            style={"description_width": "initial"},
         )
 
         def create_copy(_):
@@ -48,11 +48,18 @@ class BaseApplication:
         self._copy_trigger.on_click(create_copy)
 
         self.project_panel = HBox(
-            [Label("Workspace"), self._file_browser, self._copy_trigger]
+            [
+                Label("Workspace", style={"description_width": "initial"}),
+                self._file_browser,
+                self._copy_trigger,
+            ]
         )
 
         self._live_link = Checkbox(
-            description="GA Pro - Live link", value=False, indent=False
+            description="GA Pro - Live link",
+            value=False,
+            indent=False,
+            style={"description_width": "initial"},
         )
 
         def live_link_choice(_):
@@ -115,7 +122,7 @@ class BaseApplication:
 
         return kwargs
 
-    def file_browser_change(self):
+    def file_browser_change(self, _):
         """
         Change the target h5file
         """
@@ -129,15 +136,24 @@ class BaseApplication:
         :param :obj:`geoh5py.Entity`: Entity to be updated
         :param data: `dict` of values to be added as data {"name": values}
         """
-        temp_geoh5 = path.join(
-            self.live_link_path.selected_path, f"temp{time.time():.3f}.geoh5"
-        )
-        temp_workspace = Workspace(temp_geoh5)
+        working_path = path.join(self.live_link_path.selected_path, ".working")
+        if not path.exists(working_path):
+            mkdir(working_path)
+
+        temp_geoh5 = f"temp{time.time():.3f}.geoh5"
+
+        temp_workspace = Workspace(path.join(working_path, temp_geoh5))
 
         for key, value in data.items():
             entity.add_data({key: {"values": value}})
 
         entity.copy(parent=temp_workspace)
+
+        # Move the geoh5 to monitoring folder
+        move(
+            path.join(working_path, temp_geoh5),
+            path.join(self.live_link_path.selected_path, temp_geoh5),
+        )
 
     def live_link_choice(self):
         """
@@ -305,30 +321,35 @@ def update_apps():
 
     def run_update(_):
 
-        status = subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--upgrade", "geoapps"]
+        # status = subprocess.check_call(
+        #     [sys.executable, "-m", "pip", "install", "--upgrade", "geoapps"]
+        # )
+        # if status == 1:
+
+        url = "https://github.com/MiraGeoscience/geoapps/archive/develop.zip"
+        urllib.request.urlretrieve(url, "develop.zip")
+        with zipfile.ZipFile("./develop.zip") as zf:
+            zf.extractall("./")
+
+        temp_dir = "./geoapps-develop/geoapps/applications"
+        for file in listdir(temp_dir):
+            if path.isfile(file):
+                copy(path.join(temp_dir, file), file)
+
+        system(
+            "start cmd.exe @cmd /k  conda install "
+            + "--name geoapps --file ./geoapps-develop/environment.yml --prune"
         )
-        if status == 1:
-            url = "https://github.com/MiraGeoscience/geoapps/archive/develop.zip"
-            urllib.request.urlretrieve(url, "develop.zip")
-            with zipfile.ZipFile("./develop.zip") as zf:
-                zf.extractall("./")
+        rmtree("./geoapps-develop")
+        remove("./develop.zip")
 
-            temp_dir = "./geoapps-develop/geoapps/applications"
-            for file in listdir(temp_dir):
-                if path.isfile(file):
-                    copy(path.join(temp_dir, file), file)
-
-            rmtree("./geoapps-develop")
-            remove("./develop.zip")
-
-            print(
-                f"You have been updated to version {geoapps.__version__}. You are good to go..."
-            )
-        else:
-            print(
-                f"Current version {geoapps.__version__} is the latest. You are good to go..."
-            )
+        print(
+            f"You have been updated to version {geoapps.__version__}. You are good to go..."
+        )
+        # else:
+        #     print(
+        #         f"Current version {geoapps.__version__} is the latest. You are good to go..."
+        #     )
 
     trigger.on_click(run_update)
 

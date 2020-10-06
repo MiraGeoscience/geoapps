@@ -13,6 +13,10 @@ from geoh5py.data import FloatData
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 from scipy.interpolate import interp1d
+import urllib
+from shapely.geometry import mapping, LineString
+import fiona
+from fiona.crs import from_epsg
 
 
 def find_value(labels, strings, default=None):
@@ -124,14 +128,18 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
         file_name, grid2d.shape[0], grid2d.shape[1], num_bands, encode_type,
     )
 
+    # Get rotation
+    angle = -grid2d.rotation
+    vec = rotate_xy(np.r_[np.c_[1, 0], np.c_[0, 1]], [0, 0], angle)
+
     dataset.SetGeoTransform(
         (
             grid2d.origin["x"],
-            grid2d.u_cell_size,
-            0,
+            vec[0, 0] * grid2d.u_cell_size,
+            vec[0, 1] * grid2d.v_cell_size,
             grid2d.origin["y"],
-            0,
-            grid2d.v_cell_size,
+            vec[1, 0] * grid2d.u_cell_size,
+            vec[1, 1] * grid2d.v_cell_size,
         )
     )
 
@@ -161,10 +169,11 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
     band = tiff_object.GetRasterBand(1)
     temp = band.ReadAsArray()
 
-    if grid_name is None:
-        grid_name = os.path.basename(file_name).split(".")[0]
-
+    file_name = os.path.basename(file_name).split(".")[0]
     if grid_object is None:
+        if grid_name is None:
+            grid_name = file_name
+
         grid_object = Grid2D.create(
             workspace,
             name=grid_name,
@@ -182,28 +191,14 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
 
     assert isinstance(grid_object, Grid2D), "Parent object must be a Grid2D"
 
-    grid_object.add_data({grid_object.name + "_band": {"values": temp.ravel()}})
+    grid_object.add_data({file_name: {"values": temp.ravel()}})
 
     del tiff_object
     return grid_object
 
 
 def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
-    import urllib
-
-    try:
-        from shapely.geometry import mapping, LineString
-        import fiona
-        from fiona.crs import from_epsg
-
-    except ModuleNotFoundError as err:
-        print(err, "Trying to install through geopandas, hang tight...")
-        import os
-
-        os.system("conda install -c conda-forge geopandas=0.7.0")
-        from shapely.geometry import mapping, LineString
-        import fiona
-        from fiona.crs import from_epsg
+    attribute_vals = None
 
     if epsg is not None and epsg.isdigit():
         crs = from_epsg(int(epsg))
@@ -222,9 +217,8 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
     else:
         crs = None
 
-    if attribute is not None:
-        if curve.get_data(attribute):
-            attribute_vals = curve.get_data(attribute)[0].values
+    if attribute is not None and curve.get_data(attribute):
+        attribute_vals = curve.get_data(attribute)[0].values
 
     polylines, values = [], []
     for lid in curve.unique_parts:
@@ -232,13 +226,13 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
         ind_line = np.where(curve.parts == lid)[0]
         polylines += [curve.vertices[ind_line, :2]]
 
-        if attribute is not None:
+        if attribute_vals is not None:
             values += [attribute_vals[ind_line]]
 
     # Define a polygon feature geometry with one attribute
     schema = {"geometry": "LineString"}
 
-    if attribute is not None:
+    if values:
         attr_name = attribute.replace(":", "_")
         schema["properties"] = {attr_name: "float"}
     else:

@@ -1048,7 +1048,7 @@ def inversion(input_file):
 
             if save_model:
                 val = model.copy()
-                val[activeCells == False] = -99999
+                val[activeCells == False] = no_data_value
                 mesh_object.add_data(
                     {"Reference_model": {"values": val[mesh._ubc_order]}}
                 )
@@ -1213,7 +1213,7 @@ def inversion(input_file):
 
         wr = prob.getJtJdiag(np.ones_like(mstart), W=local_misfit.W.diagonal())
 
-        activeCellsTemp = Maps.InjectActiveCells(mesh, activeCells, 1e-8)
+        # activeCellsTemp = Maps.InjectActiveCells(mesh, activeCells, 1e-8)
 
         global_weights += wr
 
@@ -1257,7 +1257,7 @@ def inversion(input_file):
             {
                 "Starting_model": {
                     "values": np.linalg.norm(
-                        (activeCellsMap * model_map * mstart).reshape((-1, 3)), axis=1
+                        (activeCellsMap * model_map * mstart).reshape((3, -1)), axis=0
                     )[mesh._ubc_order],
                     "association": "CELL",
                 }
