@@ -1,8 +1,7 @@
 import sys
 import urllib.request
 import zipfile
-from os import mkdir, listdir, path, remove
-import subprocess
+from os import mkdir, listdir, path, remove, system
 from shutil import copyfile, copy, rmtree, move
 import time
 from ipywidgets import Checkbox, Text, VBox, HBox, Label, ToggleButton, Widget, Button
@@ -322,30 +321,35 @@ def update_apps():
 
     def run_update(_):
 
-        status = subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "--upgrade", "geoapps"]
+        # status = subprocess.check_call(
+        #     [sys.executable, "-m", "pip", "install", "--upgrade", "geoapps"]
+        # )
+        # if status == 1:
+
+        url = "https://github.com/MiraGeoscience/geoapps/archive/develop.zip"
+        urllib.request.urlretrieve(url, "develop.zip")
+        with zipfile.ZipFile("./develop.zip") as zf:
+            zf.extractall("./")
+
+        temp_dir = "./geoapps-develop/geoapps/applications"
+        for file in listdir(temp_dir):
+            if path.isfile(file):
+                copy(path.join(temp_dir, file), file)
+
+        system(
+            "start cmd.exe @cmd /k  conda install "
+            + "--name geoapps --file ./geoapps-develop/environment.yml --prune"
         )
-        if status == 1:
-            url = "https://github.com/MiraGeoscience/geoapps/archive/develop.zip"
-            urllib.request.urlretrieve(url, "develop.zip")
-            with zipfile.ZipFile("./develop.zip") as zf:
-                zf.extractall("./")
+        rmtree("./geoapps-develop")
+        remove("./develop.zip")
 
-            temp_dir = "./geoapps-develop/geoapps/applications"
-            for file in listdir(temp_dir):
-                if path.isfile(file):
-                    copy(path.join(temp_dir, file), file)
-
-            rmtree("./geoapps-develop")
-            remove("./develop.zip")
-
-            print(
-                f"You have been updated to version {geoapps.__version__}. You are good to go..."
-            )
-        else:
-            print(
-                f"Current version {geoapps.__version__} is the latest. You are good to go..."
-            )
+        print(
+            f"You have been updated to version {geoapps.__version__}. You are good to go..."
+        )
+        # else:
+        #     print(
+        #         f"Current version {geoapps.__version__} is the latest. You are good to go..."
+        #     )
 
     trigger.on_click(run_update)
 
