@@ -1,4 +1,4 @@
-import sys
+import time
 import urllib.request
 import zipfile
 from os import mkdir, listdir, path, remove, system
@@ -321,11 +321,6 @@ def update_apps():
 
     def run_update(_):
 
-        # status = subprocess.check_call(
-        #     [sys.executable, "-m", "pip", "install", "--upgrade", "geoapps"]
-        # )
-        # if status == 1:
-
         url = "https://github.com/MiraGeoscience/geoapps/archive/develop.zip"
         urllib.request.urlretrieve(url, "develop.zip")
         with zipfile.ZipFile("./develop.zip") as zf:
@@ -336,12 +331,12 @@ def update_apps():
             if path.isfile(file):
                 copy(path.join(temp_dir, file), file)
 
-        system(
-            "start cmd.exe @cmd /k  conda install "
-            + "--name geoapps --file ./geoapps-develop/environment.yml --prune"
-        )
+        copy(path.join("geoapps-develop", "environment.yml"), "environment.yml")
+        system(r"start cmd.exe @cmd /k ..\..\Install_or_Update.bat")
+
         rmtree("./geoapps-develop")
         remove("./develop.zip")
+        remove("./environment.yml")
 
         print(
             f"You have been updated to version {geoapps.__version__}. You are good to go..."
