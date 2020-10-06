@@ -646,7 +646,7 @@ class ScatterPlots(ObjectDataSelection):
 
         if self.get_channel(color) is not None and color_active:
             vals = self.get_channel(color)
-            inbound = (vals > color_min) * (vals < color_max)
+            inbound = (vals >= color_min) * (vals <= color_max)
             vals[~inbound] = np.nan
             color = normalize(vals)
             if color_log:
@@ -671,33 +671,33 @@ class ScatterPlots(ObjectDataSelection):
                 return
 
             if x_axis is not None:
-                inbound = (x_axis > x_min) * (x_axis < x_max)
+                inbound = (x_axis >= x_min) * (x_axis <= x_max)
                 x_axis[~inbound] = np.nan
                 x_axis, x_label, x_ticks, x_ticklabels = format_axis(
                     x, x_axis, x_log, x_thresh
                 )
             else:
-                inbound = (z_axis > z_min) * (z_axis < z_max)
+                inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 z_axis[~inbound] = np.nan
                 x_axis, x_label, x_ticks, x_ticklabels = format_axis(
                     z, z_axis, z_log, z_thresh
                 )
 
             if y_axis is not None:
-                inbound = (y_axis > y_min) * (y_axis < y_max)
+                inbound = (y_axis >= y_min) * (y_axis <= y_max)
                 y_axis[~inbound] = np.nan
                 y_axis, y_label, y_ticks, y_ticklabels = format_axis(
                     y, y_axis, y_log, y_thresh
                 )
             else:
-                inbound = (z_axis > z_min) * (z_axis < z_max)
+                inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 z_axis[~inbound] = np.nan
                 y_axis, y_label, y_ticks, y_ticklabels = format_axis(
                     z, z_axis, z_log, z_thresh
                 )
 
             if z_axis is not None:
-                inbound = (z_axis > z_min) * (z_axis < z_max)
+                inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 z_axis[~inbound] = np.nan
                 z_axis, z_label, z_ticks, z_ticklabels = format_axis(
                     z, z_axis, z_log, z_thresh
