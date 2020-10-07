@@ -562,10 +562,10 @@ def inversion(input_file):
             con_object = workspace.get_entity(list(input_model.keys())[0])[0]
             con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
-            if hasattr(con_object.parent, "centroids"):
-                grid = con_object.parent.centroids
+            if hasattr(con_object, "centroids"):
+                grid = con_object.centroids
             else:
-                grid = con_object.parent.vertices
+                grid = con_object.vertices
 
             tree = cKDTree(grid)
             _, ind = tree.query(np.vstack(model_vertices))
@@ -589,10 +589,10 @@ def inversion(input_file):
             con_object = workspace.get_entity(list(input_model.keys())[0])[0]
             con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
-            if hasattr(con_object.parent, "centroids"):
-                grid = con_object.parent.centroids
+            if hasattr(con_object, "centroids"):
+                grid = con_object.centroids
             else:
-                grid = con_object.parent.vertices
+                grid = con_object.vertices
 
             tree = cKDTree(grid)
             _, ind = tree.query(np.vstack(model_vertices))
@@ -605,18 +605,18 @@ def inversion(input_file):
                 input_param["starting_model"]["value"]
             )
 
-    if "susceptibility" in list(input_param.keys()):
-        if "model" in list(input_param["susceptibility"].keys()):
+    if "susceptibility_model" in list(input_param.keys()):
+        if "model" in list(input_param["susceptibility_model"].keys()):
 
             input_model = input_param["susceptibility_model"]["model"]
             print(f"Interpolating susceptibility model {input_model}")
             sus_object = workspace.get_entity(list(input_model.keys())[0])[0]
             sus_model = sus_object.get_data(list(input_model.values())[0])[0].values
 
-            if hasattr(sus_object.parent, "centroids"):
-                grid = sus_object.parent.centroids
+            if hasattr(sus_object, "centroids"):
+                grid = sus_object.centroids
             else:
-                grid = sus_object.parent.vertices
+                grid = sus_object.vertices
 
             tree = cKDTree(grid)
             _, ind = tree.query(np.vstack(model_vertices))
