@@ -771,7 +771,7 @@ def octree_2_treemesh(mesh):
     return treemesh
 
 
-def object_2_dataframe(entity, fields=[], inplace=False):
+def object_2_dataframe(entity, fields=[], inplace=False, vertices=True):
     """
     Convert an object to a pandas dataframe
     """
@@ -780,11 +780,11 @@ def object_2_dataframe(entity, fields=[], inplace=False):
     elif getattr(entity, "centroids", None) is not None:
         locs = entity.centroids
 
-    data_dict = {
-        "X": locs[:, 0],
-        "Y": locs[:, 1],
-        "Z": locs[:, 2],
-    }
+    data_dict = {}
+    if vertices:
+        data_dict["X"] = locs[:, 0]
+        data_dict["Y"] = locs[:, 1]
+        data_dict["Z"] = locs[:, 2]
 
     d_f = pd.DataFrame(data_dict, columns=list(data_dict.keys()))
     for field in fields:
