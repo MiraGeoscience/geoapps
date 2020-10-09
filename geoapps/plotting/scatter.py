@@ -48,6 +48,7 @@ class ScatterPlots(ObjectDataSelection):
         self.static = static
         self.select_multiple = True
         self._add_groups = True
+        self.custom_colormap = []
 
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
@@ -182,11 +183,7 @@ class ScatterPlots(ObjectDataSelection):
             self.update_choices()
 
         self.data.observe(update_choices, names="value")
-
-        def update_data_dict(_):
-            self.update_data_dict()
-
-        self.objects.observe(update_data_dict, names="value")
+        self.objects.observe(self.update_data_dict, names="value")
 
         super().__init__(**self.apply_defaults(**kwargs))
 
@@ -660,14 +657,21 @@ class ScatterPlots(ObjectDataSelection):
 
             if x_active:
                 x_axis = self.get_channel(x)
+                if x_axis is None:
+                    x_active = False
 
             if y_active:
                 y_axis = self.get_channel(y)
+                if y_axis is None:
+                    y_active = False
 
             if z_active:
                 z_axis = self.get_channel(z)
+                if z_axis is None:
+                    z_active = False
 
             if np.sum([axis is not None for axis in [x_axis, y_axis, z_axis]]) < 2:
+                self.crossplot_fig.data = []
                 return
 
             if x_axis is not None:
@@ -702,6 +706,9 @@ class ScatterPlots(ObjectDataSelection):
                 z_axis, z_label, z_ticks, z_ticklabels = format_axis(
                     z, z_axis, z_log, z_thresh
                 )
+
+            if self.custom_colormap:
+                color_maps = self.custom_colormap
 
             # 3D Scatter
             if np.sum([x_active, y_active, z_active]) == 3:
@@ -772,6 +779,19 @@ class ScatterPlots(ObjectDataSelection):
 
     def update_choices(self):
         self.refresh_trigger.value = False
+
+        for channel in self.data.value:
+            self.get_channel(channel)
+
+        keys = list(self.data_channels.keys())
+        for key in keys:
+            if key not in self.data.value:
+                del self.data_channels[key]
+
+        self.update_axes()
+        self.refresh_trigger.value = True
+
+    def update_axes(self):
         for name in [
             "x",
             "y",
@@ -781,15 +801,13 @@ class ScatterPlots(ObjectDataSelection):
         ]:
             widget = getattr(self, "_" + name)
             val = widget.value
-            widget.options = self.data.value
+            widget.options = list(self.data_channels.keys())
             if val in widget.options:
                 widget.value = val
             else:
                 widget.value = None
 
-        self.refresh_trigger.value = True
-
-    def update_data_dict(self):
+    def update_data_dict(self, _):
         self.data_channels = {}
 
     def write_html(self):
