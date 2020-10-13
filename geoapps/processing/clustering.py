@@ -49,9 +49,8 @@ class Clustering(ScatterPlots):
         self._channels_plot_options = Dropdown(description="Channels")
         self._n_clusters = IntSlider(
             min=2,
-            max=10,
+            max=100,
             step=1,
-            value=4,
             description="Number of clusters",
             continuous_update=False,
             style={"description_width": "initial"},
@@ -81,8 +80,7 @@ class Clustering(ScatterPlots):
             description="Show Inertia", value=False, button_style="success"
         )
         self.inertia_panel = VBox([self.show_inertia])
-        self.show_inertia.observe(self.show_inertia_trigger)
-
+        self.show_inertia.observe(self.show_inertia_trigger, names="value")
         self.histogram_panel = VBox([self.channels_plot_options])
         self.boxplot_panel = VBox([self.channels_plot_options])
         self.stats_table = interactive_output(
@@ -94,9 +92,7 @@ class Clustering(ScatterPlots):
 
         self.ga_group_name.description = "Name"
         self.ga_group_name.value = "MyCluster"
-
         self.plotting_options.observe(self.show_trigger, names="value")
-
         self.channels_plot_options.observe(self.make_hist_plot, names="value")
         self.channels_plot_options.observe(self.make_box_plot, names="value")
         self.trigger.description = "Run Clustering"
@@ -123,7 +119,7 @@ class Clustering(ScatterPlots):
             description="Group", options=np.arange(self.n_clusters.max)
         )
         self.groups_panel = VBox([self.groups_colorpickers[0]])
-        self.groups_options.observe(self.groups_panel_change)
+        self.groups_options.observe(self.groups_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
 
         self.filter_dataframe(None)
@@ -154,6 +150,10 @@ class Clustering(ScatterPlots):
                 self.trigger_panel,
             ]
         )
+
+        # Prime the app with clusters
+        for val in [2, 4, 8, 16, 32, 64]:
+            self.n_clusters.value = val
 
     @property
     def channels_plot_options(self):
@@ -201,6 +201,7 @@ class Clustering(ScatterPlots):
         elif self.plotting_options.value == "Crossplot":
             self.input_box.children = [
                 self.plotting_options,
+                self.downsampling,
                 self.axes_options,
                 self.crossplot_fig,
             ]
@@ -256,7 +257,7 @@ class Clustering(ScatterPlots):
             self.n_clusters.value
         ].labels_.astype(float)
         self.color_max.value = self.n_clusters.value
-        self.update_choices(refresh_plot=False)
+        self.update_choices(None, refresh_plot=False)
         self.update_colormap(None)
         self.color.value = "kmeans"
         self.color_active.value = True
@@ -519,7 +520,7 @@ class Clustering(ScatterPlots):
 
         self.workspace.finalize()
 
-    def update_choices(self, refresh_plot=True):
+    def update_choices(self, _, refresh_plot=True):
         self.refresh_trigger.value = False
 
         for channel in self.data.value:
@@ -531,4 +532,10 @@ class Clustering(ScatterPlots):
                 del self.data_channels[key]
 
         self.update_axes()
+
+        if self.downsampling.value != 100:
+            self.update_downsampling(None)
+        else:
+            self.refresh_trigger.value = refresh_plot
+
         self.refresh_trigger.value = refresh_plot

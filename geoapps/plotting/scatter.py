@@ -1,12 +1,12 @@
 import os
 import numpy as np
 import plotly.graph_objects as go
-
 import plotly.express as px
 from ipywidgets import (
     Dropdown,
     Checkbox,
     IntSlider,
+    FloatSlider,
     FloatText,
     VBox,
     HBox,
@@ -14,7 +14,7 @@ from ipywidgets import (
     interactive_output,
     Layout,
 )
-from geoapps.utils import symlog
+from geoapps.utils import symlog, random_sampling
 from geoapps.selection import ObjectDataSelection
 from geoapps.plotting import normalize, format_axis
 
@@ -49,9 +49,18 @@ class ScatterPlots(ObjectDataSelection):
         self.select_multiple = True
         self._add_groups = True
         self.custom_colormap = []
+        self._indices = None
 
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
+
+        self._downsampling = FloatSlider(
+            description="Downsampling (%)",
+            min=0.1,
+            max=100,
+            style={"description_width": "initial"},
+            continuous_update=False,
+        )
 
         self._x = Dropdown(description="Data:")
         self._x.observe(channel_bounds_setter, names="value")
@@ -170,7 +179,7 @@ class ScatterPlots(ObjectDataSelection):
             layout=Layout(width="300px"),
         )
 
-        self.axes_pannels.observe(axes_pannels_trigger)
+        self.axes_pannels.observe(axes_pannels_trigger, names="value")
         self.axes_options = HBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
 
@@ -179,11 +188,9 @@ class ScatterPlots(ObjectDataSelection):
         else:
             self.crossplot_fig = None
 
-        def update_choices(_):
-            self.update_choices()
-
-        self.data.observe(update_choices, names="value")
-        self.objects.observe(self.update_data_dict, names="value")
+        self.data.observe(self.update_choices, names="value")
+        self.objects.observe(self.update_objects, names="value")
+        self.downsampling.observe(self.update_downsampling, names="value")
 
         super().__init__(**self.apply_defaults(**kwargs))
 
@@ -307,7 +314,9 @@ class ScatterPlots(ObjectDataSelection):
             self._widget = VBox(
                 [
                     self.project_panel,
-                    VBox([HBox([self.objects, self.data]), self.axes_options]),
+                    HBox([self.objects, self.data]),
+                    self.downsampling,
+                    self.axes_options,
                     self.trigger,
                 ]
             )
@@ -315,11 +324,154 @@ class ScatterPlots(ObjectDataSelection):
             self._widget = VBox(
                 [
                     self.project_panel,
-                    VBox([HBox([self.objects, self.data]), self.axes_options]),
+                    HBox([self.objects, self.data]),
+                    self.downsampling,
+                    self.axes_options,
                     self.trigger,
                     self.crossplot_fig,
                 ]
             )
+
+    @property
+    def n_values(self):
+        """
+        Number of values contained by the current object
+        """
+
+        obj, _ = self.get_selected_entities()
+        if obj is not None:
+            # Check number of points
+            if hasattr(obj, "centroids"):
+                return obj.n_cells
+            elif hasattr(obj, "vertices"):
+                return obj.n_vertices
+        return None
+
+    @property
+    def indices(self):
+        """
+        Bool or array of int
+        Indices of data to be plotted
+        """
+        if getattr(self, "_indices", None) is None:
+            if self.n_values is not None:
+                self._indices = np.ones(self.n_values, dtype="bool")
+            else:
+                return None
+
+        return self._indices
+
+    @property
+    def color(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._color
+
+    @property
+    def color_log(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._color_log
+
+    @property
+    def color_thresh(self):
+        """
+        :obj:`ipywidgets.FloatText`
+        """
+        return self._color_thresh
+
+    @property
+    def color_active(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._color_active
+
+    @property
+    def color_maps(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._color_maps
+
+    @property
+    def color_min(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._color_min
+
+    @property
+    def color_max(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._color_max
+
+    @property
+    def downsampling(self):
+        """
+        :obj:`ipywidgets.IntSlider`
+        """
+        return self._downsampling
+
+    @property
+    def refresh_trigger(self):
+        """
+
+        """
+        return self._refresh_trigger
+
+    @property
+    def size(self):
+        """
+        :obj:`ipywidgets.Dropdown`
+        """
+        return self._size
+
+    @property
+    def size_active(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._size_active
+
+    @property
+    def size_log(self):
+        """
+        :obj:`ipywidgets.Checkbox`
+        """
+        return self._size_log
+
+    @property
+    def size_thresh(self):
+        """
+        :obj:`ipywidgets.FloatText`
+        """
+        return self._size_thresh
+
+    @property
+    def size_markers(self):
+        """
+        :obj:`ipywidgets.IntSlider`
+        """
+        return self._size_markers
+
+    @property
+    def size_min(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._size_min
+
+    @property
+    def size_max(self):
+        """
+        :obj:`ipywidgets.Text`
+        """
+        return self._size_max
 
     @property
     def x(self):
@@ -447,111 +599,6 @@ class ScatterPlots(ObjectDataSelection):
         """
         return self._z_max
 
-    @property
-    def color(self):
-        """
-        :obj:`ipywidgets.Dropdown`
-        """
-        return self._color
-
-    @property
-    def color_log(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._color_log
-
-    @property
-    def color_thresh(self):
-        """
-        :obj:`ipywidgets.FloatText`
-        """
-        return self._color_thresh
-
-    @property
-    def color_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._color_active
-
-    @property
-    def color_maps(self):
-        """
-        :obj:`ipywidgets.Dropdown`
-        """
-        return self._color_maps
-
-    @property
-    def color_min(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._color_min
-
-    @property
-    def color_max(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._color_max
-
-    @property
-    def refresh_trigger(self):
-        """
-
-        """
-        return self._refresh_trigger
-
-    @property
-    def size(self):
-        """
-        :obj:`ipywidgets.Dropdown`
-        """
-        return self._size
-
-    @property
-    def size_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._size_active
-
-    @property
-    def size_log(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._size_log
-
-    @property
-    def size_thresh(self):
-        """
-        :obj:`ipywidgets.FloatText`
-        """
-        return self._size_thresh
-
-    @property
-    def size_markers(self):
-        """
-        :obj:`ipywidgets.IntSlider`
-        """
-        return self._size_markers
-
-    @property
-    def size_min(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._size_min
-
-    @property
-    def size_max(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._size_max
-
     def axes_pannels_trigger(self):
         self.axes_options.children = [
             self.axes_pannels,
@@ -564,10 +611,22 @@ class ScatterPlots(ObjectDataSelection):
         if channel is None:
             return None
 
-        if channel not in self.data_channels.keys() and obj.get_data(channel):
-            values = obj.get_data(channel)[0].values.copy()
-            values[(values > 1e-38) * (values < 2e-38)] = np.nan
+        if channel not in self.data_channels.keys():
+
+            if obj.get_data(channel):
+                values = obj.get_data(channel)[0].values.copy()
+                values[(values > 1e-38) * (values < 2e-38)] = np.nan
+            elif channel == "Z":
+                # Check number of points
+                if hasattr(obj, "centroids"):
+                    values = obj.centroids[:, 2]
+                elif hasattr(obj, "vertices"):
+                    values = obj.vertices[:, 2]
+            else:
+                return
+
             self.data_channels[channel] = values
+
         return self.data_channels[channel].copy()
 
     def set_channel_bounds(self, name):
@@ -629,8 +688,11 @@ class ScatterPlots(ObjectDataSelection):
         if not refresh_trigger or not self.refresh.value:
             return None
 
+        if self.downsampling.value < 100.0 and self.indices.shape[0] == self.n_values:
+            return None
+
         if self.get_channel(size) is not None and size_active:
-            vals = self.get_channel(size)
+            vals = self.get_channel(size)[self.indices]
             inbound = (vals > size_min) * (vals < size_max)
             vals[~inbound] = np.nan
             size = normalize(vals)
@@ -642,7 +704,7 @@ class ScatterPlots(ObjectDataSelection):
             size = None
 
         if self.get_channel(color) is not None and color_active:
-            vals = self.get_channel(color)
+            vals = self.get_channel(color)[self.indices]
             inbound = (vals >= color_min) * (vals <= color_max)
             vals[~inbound] = np.nan
             color = normalize(vals)
@@ -659,16 +721,22 @@ class ScatterPlots(ObjectDataSelection):
                 x_axis = self.get_channel(x)
                 if x_axis is None:
                     x_active = False
+                else:
+                    x_axis = x_axis[self.indices]
 
             if y_active:
                 y_axis = self.get_channel(y)
                 if y_axis is None:
                     y_active = False
+                else:
+                    y_axis = y_axis[self.indices]
 
             if z_active:
                 z_axis = self.get_channel(z)
                 if z_axis is None:
                     z_active = False
+                else:
+                    z_axis = z_axis[self.indices]
 
             if np.sum([axis is not None for axis in [x_axis, y_axis, z_axis]]) < 2:
                 self.crossplot_fig.data = []
@@ -777,20 +845,6 @@ class ScatterPlots(ObjectDataSelection):
             if not self.static:
                 self.crossplot_fig.data = []
 
-    def update_choices(self):
-        self.refresh_trigger.value = False
-
-        for channel in self.data.value:
-            self.get_channel(channel)
-
-        keys = list(self.data_channels.keys())
-        for key in keys:
-            if key not in self.data.value:
-                del self.data_channels[key]
-
-        self.update_axes()
-        self.refresh_trigger.value = True
-
     def update_axes(self):
         for name in [
             "x",
@@ -807,8 +861,59 @@ class ScatterPlots(ObjectDataSelection):
             else:
                 widget.value = None
 
-    def update_data_dict(self, _):
+    def update_choices(self, _):
+        self.refresh_trigger.value = False
+
+        for channel in self.data.value:
+            self.get_channel(channel)
+
+        keys = list(self.data_channels.keys())
+        for key in keys:
+            if key not in self.data.value:
+                del self.data_channels[key]
+
+        self.update_axes()
+
+        if self.downsampling.value != 100:
+            self.update_downsampling(None)
+        else:
+            self.refresh_trigger.value = True
+
+    def update_downsampling(self, _):
+
+        if not list(self.data_channels.values()):
+            return
+
+        self.refresh_trigger.value = False
+
+        values = []
+        for axis in [self.x, self.y, self.z]:
+            vals = self.get_channel(axis.value)
+            if vals is not None:
+                values.append(vals)
+
+        if len(values) < 2:
+            return
+
+        values = np.vstack(values)
+        values[np.isnan(values)] = 0
+        # Normalize all columns
+        values = (values - np.min(values, axis=1)[:, None]) / (
+            np.max(values, axis=1) - np.min(values, axis=1)
+        )[:, None]
+        self._indices = random_sampling(
+            values.T,
+            int(self.downsampling.value / 100.0 * values.shape[1]),
+            bandwidth=2.0,
+            rtol=1e0,
+            method="hist",
+        )
+        self.refresh_trigger.value = True
+
+    def update_objects(self, _):
         self.data_channels = {}
+        self.downsampling.value = 5000 / self.n_values * 100
+        self._indices = None
 
     def write_html(self):
         self.crossplot_fig.write_html(
