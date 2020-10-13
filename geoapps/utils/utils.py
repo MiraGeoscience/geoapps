@@ -1161,16 +1161,15 @@ def random_sampling(values, size, method="hist", n_bins=100, bandwidth=0.2, rtol
         probabilities /= probabilities.sum()
     else:
         probabilities = np.zeros(values.shape[0])
-        for val in range(values.shape[1]):
-            pop, bins = np.histogram(values[:, val], n_bins)
+        for ind in range(values.shape[1]):
+            pop, bins = np.histogram(values[:, ind], n_bins)
+            ind = np.digitize(values[:, ind], bins)
+            ind[ind > n_bins] = n_bins
+            probabilities += 1.0 / (pop[ind - 1] + 1)
 
-            bin_vals = np.searchsorted(bins, values[:, val])
-            bin_vals[bin_vals > n_bins - 1] = n_bins - 1
-            probabilities += pop[bin_vals] + 1
-
-        probabilities = 1.0 / probabilities
         probabilities /= probabilities.sum()
 
+    np.random.seed = 0
     return np.random.choice(
         np.arange(values.shape[0]), replace=False, p=probabilities, size=size
     )
