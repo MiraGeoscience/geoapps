@@ -583,12 +583,12 @@ class SaveOutputEveryIteration(SaveEveryIteration):
                     self.opt.iter,
                     self.beta[self.opt.iter - 1],
                     self.phi_d[self.opt.iter - 1],
-                    self.phi_m[self.opt.iter - 1],
+                    self.phi_m[self.opt.iter - 1][0],
                     self.phi_m_small[self.opt.iter - 1],
                     self.phi_m_smooth_x[self.opt.iter - 1],
                     self.phi_m_smooth_y[self.opt.iter - 1],
                     self.phi_m_smooth_z[self.opt.iter - 1],
-                    self.phi[self.opt.iter - 1],
+                    self.phi[self.opt.iter - 1][0],
                 )
             )
             f.close()
