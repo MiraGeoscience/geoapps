@@ -1388,6 +1388,13 @@ def inversion(input_file):
             )
         )
 
+    if vector_property:
+        cool_eps_fact = 1.5
+        prctile = 75
+    else:
+        cool_eps_fact = 1.2
+        prctile = 50
+
     # Pre-conditioner
     directiveList.append(
         Directives.Update_IRLS(
@@ -1395,11 +1402,11 @@ def inversion(input_file):
             maxIRLSiter=max_iterations,
             minGNiter=1,
             beta_tol=0.5,
-            prctile=75,
+            prctile=prctile,
             floorEpsEnforced=True,
             coolingRate=1,
             coolEps_q=True,
-            coolEpsFact=1.2,
+            coolEpsFact=cool_eps_fact,
             betaSearch=False,
             chifact_target=target_chi,
         )
@@ -1427,6 +1434,7 @@ def inversion(input_file):
                 attribute=model_type,
                 association="CELL",
                 sorting=mesh._ubc_order,
+                no_data_value=no_data_value,
             )
         )
 
@@ -1440,6 +1448,7 @@ def inversion(input_file):
                     association="CELL",
                     sorting=mesh._ubc_order,
                     replace_values=True,
+                    no_data_value=no_data_value,
                 )
             )
 
