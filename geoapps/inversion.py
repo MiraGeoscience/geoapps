@@ -826,15 +826,6 @@ class InversionApp(PlotSelection2D):
         for item in ["width", "height", "resolution"]:
             getattr(self, item).observe(update_octree_param, names="value")
 
-        dsep = os.path.sep
-        if self.h5file is not None:
-            self._inv_dir = (
-                dsep.join(os.path.dirname(os.path.abspath(self.h5file)).split(dsep))
-                + dsep
-            )
-        else:
-            self._inv_dir = os.getcwd() + dsep
-
         self._widget = VBox(
             [
                 self.project_panel,
@@ -858,6 +849,7 @@ class InversionApp(PlotSelection2D):
                 ),
                 self.inversion_parameters.widget,
                 self.forward_only,
+                self.export_directory,
                 self.write,
                 self.run,
             ]
@@ -936,6 +928,13 @@ class InversionApp(PlotSelection2D):
             self.sensor.workspace = workspace
             self.topography.workspace = workspace
 
+        export_path = os.path.abspath(os.path.dirname(self.h5file))
+        if not os.path.exists(export_path):
+            os.mkdir(export_path)
+
+        self.export_directory._set_form_values(export_path, "")
+        self.export_directory._apply_selection()
+
     @property
     def write(self):
         """
@@ -952,15 +951,13 @@ class InversionApp(PlotSelection2D):
                 os.system(
                     "start cmd.exe @cmd /k "
                     + 'python -m geoapps.pf_inversion "'
-                    + self._inv_dir
-                    + f'\\{self.inversion_parameters.output_name.value}.json"'
+                    + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
                 )
             else:
                 os.system(
                     "start cmd.exe @cmd /k "
                     + 'python -m geoapps.em1d_inversion "'
-                    + self._inv_dir
-                    + f'\\{self.inversion_parameters.output_name.value}.json"'
+                    + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
                 )
             self.run.value = False
             self.run.button_style = ""
@@ -1290,8 +1287,8 @@ class InversionApp(PlotSelection2D):
 
         input_dict = {
             "out_group": self.inversion_parameters.output_name.value,
-            "workspace": self.h5file,
-            "save_to_geoh5": self.h5file,
+            "workspace": os.path.abspath(self.h5file),
+            "save_to_geoh5": os.path.abspath(self.h5file),
         }
         if self.system.value in ["Gravity", "Magnetics"]:
             input_dict["inversion_type"] = self.system.value.lower()
@@ -1494,7 +1491,7 @@ class InversionApp(PlotSelection2D):
             self.run.button_style = "danger"
         else:
             self.write.button_style = ""
-            file = self._inv_dir + f"{self.inversion_parameters.output_name.value}.json"
+            file = f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
             with open(file, "w") as f:
                 json.dump(input_dict, f, indent=4)
             self.run.button_style = "success"
