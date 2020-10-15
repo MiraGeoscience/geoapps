@@ -378,7 +378,14 @@ class InversionOptions(BaseApplication):
         self._lower_bound = widgets.Text(value=None, description="Lower bound value",)
         self._upper_bound = widgets.Text(value=None, description="Upper bound value",)
 
-        self._ignore_values = widgets.Text(value="<0", tooltip="Dummy value",)
+        self._ignore_values = widgets.Text(
+            value="<0",
+            tooltip="Dummy value",
+            description="Data (i.e. <0 = no negatives)",
+        )
+        self._air_values = widgets.FloatText(
+            value=0, description="Air cells fill value"
+        )
         self._max_iterations = IntText(value=10, description="Max beta Iterations")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
@@ -445,7 +452,7 @@ class InversionOptions(BaseApplication):
             ),
             "upper-lower bounds": VBox([self._upper_bound, self._lower_bound]),
             "mesh": self.mesh.widget,
-            "ignore values (<0 = no negatives)": self._ignore_values,
+            "ignore values": VBox([self._ignore_values, self._air_values]),
             "optimization": self._optimization,
         }
         self.option_choices = widgets.Dropdown(
@@ -493,6 +500,10 @@ class InversionOptions(BaseApplication):
     @property
     def alphas(self):
         return self._alphas
+
+    @property
+    def air_values(self):
+        return self._air_values
 
     @property
     def beta_start(self):
@@ -687,9 +698,9 @@ class InversionApp(PlotSelection2D):
             "height": 1500.0,
             "azimuth": -20,
         },
-        "inversion_parameters": {"norms": "0, 2, 2, 2", "max_iterations": 20},
+        "inversion_parameters": {"norms": "0, 2, 2, 2", "max_iterations": 25},
         "topography": {"objects": "Topography", "data": "elevation"},
-        "sensor": {"offset": "0, 0, 40", "options": "topo + radar + (dx, dy, dz)"},
+        "sensor": {"offset": "0, 0, 60", "options": "topo + radar + (dx, dy, dz)"},
         "padding_distance": "1000, 1000, 1000, 1000, 0, 0",
     }
 
@@ -826,15 +837,6 @@ class InversionApp(PlotSelection2D):
         for item in ["width", "height", "resolution"]:
             getattr(self, item).observe(update_octree_param, names="value")
 
-        dsep = os.path.sep
-        if self.h5file is not None:
-            self._inv_dir = (
-                dsep.join(os.path.dirname(os.path.abspath(self.h5file)).split(dsep))
-                + dsep
-            )
-        else:
-            self._inv_dir = os.getcwd() + dsep
-
         self._widget = VBox(
             [
                 self.project_panel,
@@ -858,6 +860,7 @@ class InversionApp(PlotSelection2D):
                 ),
                 self.inversion_parameters.widget,
                 self.forward_only,
+                self.export_directory,
                 self.write,
                 self.run,
             ]
@@ -936,6 +939,13 @@ class InversionApp(PlotSelection2D):
             self.sensor.workspace = workspace
             self.topography.workspace = workspace
 
+        export_path = os.path.abspath(os.path.dirname(self.h5file))
+        if not os.path.exists(export_path):
+            os.mkdir(export_path)
+
+        self.export_directory._set_form_values(export_path, "")
+        self.export_directory._apply_selection()
+
     @property
     def write(self):
         """
@@ -952,15 +962,13 @@ class InversionApp(PlotSelection2D):
                 os.system(
                     "start cmd.exe @cmd /k "
                     + 'python -m geoapps.pf_inversion "'
-                    + self._inv_dir
-                    + f'\\{self.inversion_parameters.output_name.value}.json"'
+                    + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
                 )
             else:
                 os.system(
                     "start cmd.exe @cmd /k "
                     + 'python -m geoapps.em1d_inversion "'
-                    + self._inv_dir
-                    + f'\\{self.inversion_parameters.output_name.value}.json"'
+                    + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
                 )
             self.run.value = False
             self.run.button_style = ""
@@ -1006,6 +1014,9 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.lower_bound.value = ""
             self.inversion_parameters.upper_bound.value = ""
             self.inversion_parameters.ignore_values.value = "-99999"
+            self.inversion_parameters.air_values.disabled = False
+            self.inversion_parameters.air_values.value = 0
+            self.inversion_parameters.max_iterations = 25
 
         else:
             tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
@@ -1049,6 +1060,9 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.lower_bound.value = "1e-5"
             self.inversion_parameters.upper_bound.value = "10"
             self.inversion_parameters.ignore_values.value = "<0"
+            self.inversion_parameters.air_values.disabled = True
+            self.inversion_parameters.air_values.value = 1e-8
+            self.inversion_parameters.max_iterations = 10
             # Switch mesh options
             self.inversion_parameters._mesh = self.mesh_1D
             self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.widget
@@ -1290,8 +1304,8 @@ class InversionApp(PlotSelection2D):
 
         input_dict = {
             "out_group": self.inversion_parameters.output_name.value,
-            "workspace": self.h5file,
-            "save_to_geoh5": self.h5file,
+            "workspace": os.path.abspath(self.h5file),
+            "save_to_geoh5": os.path.abspath(self.h5file),
         }
         if self.system.value in ["Gravity", "Magnetics"]:
             input_dict["inversion_type"] = self.system.value.lower()
@@ -1345,6 +1359,7 @@ class InversionApp(PlotSelection2D):
 
         input_dict["tol_cg"] = self.inversion_parameters.tol_cg.value
         input_dict["ignore_values"] = self.inversion_parameters.ignore_values.value
+        input_dict["no_data_value"] = self.inversion_parameters.air_values.value
         input_dict["resolution"] = self.resolution.value
         input_dict["window"] = {
             "center_x": self.center_x.value,
@@ -1494,7 +1509,7 @@ class InversionApp(PlotSelection2D):
             self.run.button_style = "danger"
         else:
             self.write.button_style = ""
-            file = self._inv_dir + f"{self.inversion_parameters.output_name.value}.json"
+            file = f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
             with open(file, "w") as f:
                 json.dump(input_dict, f, indent=4)
             self.run.button_style = "success"

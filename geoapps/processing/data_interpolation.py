@@ -303,15 +303,18 @@ class DataInterpolation(ObjectDataSelection):
 
         value = self.out_object.value
         self.out_object.options = self.objects.options
-        self.out_object.value = value
+        if value in self.out_object.options:
+            self.out_object.value = value
 
         value = self.xy_reference.value
         self.xy_reference.options = self.objects.options
-        self.xy_reference.value = value
+        if value in self.xy_reference.options:
+            self.xy_reference.value = value
 
         value = self.xy_extent.value
         self.xy_extent.options = self.objects.options
-        self.xy_extent.value = value
+        if value in self.xy_extent.options:
+            self.xy_extent.value = value
 
     def method_update(self, _):
         if self.method.value == "Inverse Distance":
@@ -372,6 +375,13 @@ class DataInterpolation(ObjectDataSelection):
             )
 
             # Use discretize to build a tensor mesh
+            delta_z = xyz_ref[:, 2].max() - xyz_ref[:, 2]
+            xyz_ref = xyz_ref[delta_z < self.depth_core.value, :]
+            depth_core = (
+                self.depth_core.value
+                - (xyz_ref[:, 2].max() - xyz_ref[:, 2].min())
+                + h[2]
+            )
             mesh = discretize.utils.meshutils.mesh_builder_xyz(
                 xyz_ref,
                 h,
@@ -380,16 +390,15 @@ class DataInterpolation(ObjectDataSelection):
                     [pads[2], pads[3]],
                     [pads[4], pads[5]],
                 ],
-                depth_core=self.depth_core.value,
+                depth_core=depth_core,
                 expansion_factor=self.expansion_fact.value,
             )
-
             object_to = BlockModel.create(
                 self.workspace,
                 origin=[mesh.x0[0], mesh.x0[1], xyz_ref[:, 2].max()],
                 u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
                 v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-                z_cell_delimiters=-(xyz_ref[:, 2].max() - mesh.vectorNz[::-1]),
+                z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
                 name=self.new_grid.value,
             )
 
