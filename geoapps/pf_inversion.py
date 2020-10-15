@@ -16,6 +16,7 @@ See README for description of options
 """
 import json
 import multiprocessing
+from multiprocessing.pool import ThreadPool
 import os
 import sys
 
@@ -753,8 +754,7 @@ def inversion(input_file):
 
     if parallelized:
         dask.config.set({"array.chunk-size": str(max_chunk_size) + "MiB"})
-        dask.config.set(scheduler="threads")
-        dask.config.set(num_workers=n_cpu)
+        dask.config.set(scheduler="threads", pool=ThreadPool(n_cpu))
 
     ###############################################################################
     # Processing
