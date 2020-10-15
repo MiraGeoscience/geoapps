@@ -67,7 +67,7 @@ class BaseApplication:
 
         self._live_link.observe(live_link_choice)
 
-        self._live_link_path = FileChooser(show_only_dirs=True)
+        self._export_directory = FileChooser(show_only_dirs=True)
 
         self.live_link_panel = VBox([self.live_link])
         self._refresh = ToggleButton(value=False)
@@ -136,7 +136,7 @@ class BaseApplication:
         :param :obj:`geoh5py.Entity`: Entity to be updated
         :param data: `dict` of values to be added as data {"name": values}
         """
-        working_path = path.join(self.live_link_path.selected_path, ".working")
+        working_path = path.join(self.export_directory.selected_path, ".working")
         if not path.exists(working_path):
             mkdir(working_path)
 
@@ -152,7 +152,7 @@ class BaseApplication:
         # Move the geoh5 to monitoring folder
         move(
             path.join(working_path, temp_geoh5),
-            path.join(self.live_link_path.selected_path, temp_geoh5),
+            path.join(self.export_directory.selected_path, temp_geoh5),
         )
 
     def live_link_choice(self):
@@ -166,13 +166,13 @@ class BaseApplication:
                 if not path.exists(live_path):
                     mkdir(live_path)
 
-                self.live_link_path._set_form_values(live_path, "")
-                self.live_link_path._apply_selection()
+                self.export_directory._set_form_values(live_path, "")
+                self.export_directory._apply_selection()
 
             self.live_link_panel.children = [
                 self.live_link,
                 Label("Monitoring folder", style={"description_width": "initial"}),
-                self.live_link_path,
+                self.export_directory,
             ]
         else:
             self.live_link_panel.children = [self.live_link]
@@ -259,11 +259,11 @@ class BaseApplication:
         return self._live_link
 
     @property
-    def live_link_path(self):
+    def export_directory(self):
         """
         :obj:`ipyfilechooser.FileChooser`: Path for the monitoring folder to be copied to Geoscience ANALYST preferences.
         """
-        return self._live_link_path
+        return self._export_directory
 
     @property
     def refresh(self):
