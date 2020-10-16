@@ -1,6 +1,6 @@
 import json
 import os
-
+import multiprocessing
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
 import numpy as np
@@ -370,9 +370,9 @@ class InversionOptions(BaseApplication):
         self._uncert_mode = widgets.RadioButtons(
             options=[
                 "Estimated (%|data| + background)",
-                r"User input (\%|data| + floor)",
+                "User input (%|data| + floor)",
             ],
-            value=r"User input (\%|data| + floor)",
+            value="User input (%|data| + floor)",
             disabled=False,
         )
         self._lower_bound = widgets.Text(value=None, description="Lower bound value",)
@@ -389,7 +389,10 @@ class InversionOptions(BaseApplication):
         self._max_iterations = IntText(value=10, description="Max beta Iterations")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
-
+        self._n_cpu = IntText(
+            value=int(multiprocessing.cpu_count() / 2), description="Max CPUs"
+        )
+        self._max_ram = FloatText(value=2.0, description="Max RAM (Gb)")
         self._beta_start_options = widgets.RadioButtons(
             options=["value", "ratio"],
             value="ratio",
@@ -410,6 +413,8 @@ class InversionOptions(BaseApplication):
                 self._beta_start_panel,
                 self._max_cg_iterations,
                 self._tol_cg,
+                self._n_cpu,
+                self._max_ram,
             ]
         )
         self._starting_model = ModelOptions(**kwargs)
@@ -536,6 +541,20 @@ class InversionOptions(BaseApplication):
     @property
     def max_cg_iterations(self):
         return self._max_cg_iterations
+
+    @property
+    def n_cpu(self):
+        """
+        ipywidgets.IntText()
+        """
+        return self._n_cpu
+
+    @property
+    def max_ram(self):
+        """
+        ipywidgets.IntText()
+        """
+        return self._max_ram
 
     @property
     def mesh(self):
@@ -1016,7 +1035,7 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.ignore_values.value = "-99999"
             self.inversion_parameters.air_values.disabled = False
             self.inversion_parameters.air_values.value = 0
-            self.inversion_parameters.max_iterations = 25
+            self.inversion_parameters.max_iterations.value = 25
 
         else:
             tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
@@ -1062,7 +1081,7 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.ignore_values.value = "<0"
             self.inversion_parameters.air_values.disabled = True
             self.inversion_parameters.air_values.value = 1e-8
-            self.inversion_parameters.max_iterations = 10
+            self.inversion_parameters.max_iterations.value = 10
             # Switch mesh options
             self.inversion_parameters._mesh = self.mesh_1D
             self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.widget
@@ -1349,6 +1368,9 @@ class InversionApp(PlotSelection2D):
         input_dict[
             "max_cg_iterations"
         ] = self.inversion_parameters.max_cg_iterations.value
+
+        input_dict["n_cpu"] = self.inversion_parameters.n_cpu.value
+        input_dict["max_ram"] = self.inversion_parameters.max_ram.value
 
         if self.inversion_parameters.beta_start_options.value == "value":
             input_dict["initial_beta"] = self.inversion_parameters.beta_start.value
