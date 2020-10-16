@@ -583,12 +583,12 @@ class SaveOutputEveryIteration(SaveEveryIteration):
                     self.opt.iter,
                     self.beta[self.opt.iter - 1],
                     self.phi_d[self.opt.iter - 1],
-                    self.phi_m[self.opt.iter - 1],
+                    self.phi_m[self.opt.iter - 1][0],
                     self.phi_m_small[self.opt.iter - 1],
                     self.phi_m_smooth_x[self.opt.iter - 1],
                     self.phi_m_smooth_y[self.opt.iter - 1],
                     self.phi_m_smooth_z[self.opt.iter - 1],
-                    self.phi[self.opt.iter - 1],
+                    self.phi[self.opt.iter - 1][0],
                 )
             )
             f.close()
@@ -793,6 +793,7 @@ class SaveIterationsGeoH5(InversionDirective):
     save_objective_function = False
     data_type = {}
     replace_values = False
+    no_data_value = None
 
     def initialize(self):
 
@@ -812,15 +813,7 @@ class SaveIterationsGeoH5(InversionDirective):
         if self.mapping is not None:
             prop = self.mapping * prop
 
-        if self.attribute == "mvi_model":
-            prop = np.linalg.norm(prop.reshape((-1, 3), order="F"), axis=1)
-        elif self.attribute == "mvi_model_s":
-            prop = prop.reshape((-1, 3), order="F")[:, 0]
-        elif self.attribute == "mvi_angles_s":
-            prop = prop.reshape((-1, 3), order="F")[:, 1:].ravel()
-        elif self.attribute == "mvi_angles":
-            atp = Utils.matutils.xyz2atp(prop.reshape((-1, 3), order="F"))
-            prop = atp.reshape((-1, 3), order="F")[:, 1:].ravel()
+        prop = self.check_mvi_format(prop)
 
         for ii, channel in enumerate(self.channels):
 
@@ -879,15 +872,7 @@ class SaveIterationsGeoH5(InversionDirective):
         if self.mapping is not None:
             prop = self.mapping * prop
 
-        if self.attribute == "mvi_model":
-            prop = np.linalg.norm(prop.reshape((-1, 3), order="F"), axis=1)
-        elif self.attribute == "mvi_model_s":
-            prop = prop.reshape((-1, 3), order="F")[:, 0]
-        elif self.attribute == "mvi_angles_s":
-            prop = prop.reshape((-1, 3), order="F")[:, 1:].ravel()
-        elif self.attribute == "mvi_angles":
-            atp = Utils.matutils.xyz2atp(prop.reshape((-1, 3), order="F"))
-            prop = atp.reshape((-1, 3), order="F")[:, 1:].ravel()
+        prop = self.check_mvi_format(prop)
 
         for ii, channel in enumerate(self.channels):
             attr = prop[ii :: len(self.channels)]
@@ -953,6 +938,32 @@ class SaveIterationsGeoH5(InversionDirective):
             )
 
         self.h5_object.workspace.finalize()
+
+    def check_mvi_format(self, values):
+        if "mvi" in self.attribute:
+            values = values.reshape((-1, 3), order="F")
+            if self.no_data_value is not None:
+                ndv_ind = values[:, 0] == self.no_data_value
+                values[ndv_ind, :] = 0
+            else:
+                ndv_ind = np.zeros(values.shape[0], dtype="bool")
+
+            if self.attribute == "mvi_model":
+                values = np.linalg.norm(values, axis=1)
+            elif self.attribute == "mvi_model_s":
+                values = values[:, 0]
+            elif self.attribute == "mvi_angles":
+                atp = Utils.matutils.xyz2atp(values)
+                values = atp.reshape((-1, 3), order="F")
+
+            if "model" in self.attribute:
+                values[ndv_ind] = self.no_data_value
+            elif "angles" in self.attribute:
+                values = np.rad2deg(values[:, 1:])
+                values[ndv_ind, :] = self.no_data_value
+                values = values.ravel()
+
+        return values
 
 
 class VectorInversion(InversionDirective):

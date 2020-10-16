@@ -186,5 +186,5 @@ UBC format (``BlockModel``, ``Octree``)
             app = Export(
                 h5file=r"../assets/FlinFlon.geoh5"
             )
-            app.live_link_path
+            app.export_directory
    * - Set export directory.

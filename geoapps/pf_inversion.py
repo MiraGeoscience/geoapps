@@ -16,6 +16,7 @@ See README for description of options
 """
 import json
 import multiprocessing
+from multiprocessing.pool import ThreadPool
 import os
 import sys
 
@@ -606,7 +607,7 @@ def inversion(input_file):
     if "n_cpu" in list(input_dict.keys()):
         n_cpu = input_dict["n_cpu"]
     else:
-        n_cpu = multiprocessing.cpu_count()
+        n_cpu = multiprocessing.cpu_count() / 2
 
     if "max_ram" in list(input_dict.keys()):
         max_ram = input_dict["max_ram"]
@@ -753,8 +754,7 @@ def inversion(input_file):
 
     if parallelized:
         dask.config.set({"array.chunk-size": str(max_chunk_size) + "MiB"})
-        dask.config.set(scheduler="threads")
-        dask.config.set(num_workers=n_cpu)
+        dask.config.set(scheduler="threads", pool=ThreadPool(n_cpu))
 
     ###############################################################################
     # Processing
@@ -1388,6 +1388,13 @@ def inversion(input_file):
             )
         )
 
+    if vector_property:
+        cool_eps_fact = 1.5
+        prctile = 75
+    else:
+        cool_eps_fact = 1.2
+        prctile = 50
+
     # Pre-conditioner
     directiveList.append(
         Directives.Update_IRLS(
@@ -1395,11 +1402,11 @@ def inversion(input_file):
             maxIRLSiter=max_iterations,
             minGNiter=1,
             beta_tol=0.5,
-            prctile=75,
+            prctile=prctile,
             floorEpsEnforced=True,
             coolingRate=1,
             coolEps_q=True,
-            coolEpsFact=1.2,
+            coolEpsFact=cool_eps_fact,
             betaSearch=False,
             chifact_target=target_chi,
         )
@@ -1427,6 +1434,7 @@ def inversion(input_file):
                 attribute=model_type,
                 association="CELL",
                 sorting=mesh._ubc_order,
+                no_data_value=no_data_value,
             )
         )
 
@@ -1440,6 +1448,7 @@ def inversion(input_file):
                     association="CELL",
                     sorting=mesh._ubc_order,
                     replace_values=True,
+                    no_data_value=no_data_value,
                 )
             )
 
@@ -1462,6 +1471,9 @@ def inversion(input_file):
     #         vector=input_dict["inversion_type"][0:3] == 'mvi'
     #     )
     # )
+    # save_output = Directives.SaveOutputEveryIteration()
+    # save_output.fileName = workDir + "Output"
+    # directiveList.append(save_output)
 
     # Put all the parts together
     inv = Inversion.BaseInversion(invProb, directiveList=directiveList)

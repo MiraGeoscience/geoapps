@@ -22,7 +22,7 @@ from sklearn.cluster import KMeans
 
 class Clustering(ScatterPlots):
     defaults = {
-        "h5file": r"C:\Users\dominiquef\Documents\GIT\mira\mirageoscience-apps\assets\FlinFlon.geoh5",
+        "h5file": r"../../assets/FlinFlon.geoh5",
         "objects": "geochem",
         "data": ["Al2O3", "CaO", "V", "MgO", "Ba"],
         "x": "Al2O3",

@@ -265,7 +265,9 @@ class CDICurve2Surface(ObjectDataSelection):
         self.workspace.finalize()
 
     def data_change(self):
-        self.export_as.value = self.data.value[0] + "_surface"
+
+        if self.data.value:
+            self.export_as.value = self.data.value[0] + "_surface"
 
     def z_options_change(self):
         if self.z_option.value == "depth":
@@ -357,10 +359,9 @@ class CDICurve2Surface(ObjectDataSelection):
         # Refresh the list of objects
         self.update_objects_list()
 
-        self.lines.workspace = workspace
         self.lines.objects = self.objects
-
-        self.elevations.workspace = workspace
         self.elevations.objects = self.objects
 
+        self.lines.workspace = workspace
+        self.elevations.workspace = workspace
         self.topography.workspace = workspace

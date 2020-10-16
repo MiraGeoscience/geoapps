@@ -177,7 +177,11 @@ def inversion(input_file):
 
     em_specs = geophysical_systems.parameters()[input_param["system"]]
 
-    nThread = int(multiprocessing.cpu_count() / 2)
+    if "n_cpu" in input_param.keys():
+        n_cpu = int(input_param["n_cpu"])
+    else:
+        n_cpu = int(multiprocessing.cpu_count() / 2)
+
     lower_bound = input_param["lower_bound"][0]
     upper_bound = input_param["upper_bound"][0]
     chi_target = input_param["chi_factor"]
@@ -787,7 +791,7 @@ def inversion(input_file):
                 sigmaMap=sigmaMap,
                 hz=hz_BFHS,
                 parallel=True,
-                n_cpu=nThread,
+                n_cpu=n_cpu,
                 verbose=False,
                 Solver=PardisoSolver,
             )
@@ -823,7 +827,7 @@ def inversion(input_file):
                 sigmaMap=sigmaMap,
                 hz=hz_BFHS,
                 parallel=True,
-                n_cpu=nThread,
+                n_cpu=n_cpu,
                 verbose=False,
                 Solver=PardisoSolver,
             )
@@ -904,7 +908,7 @@ def inversion(input_file):
             sigmaMap=mapping,
             hz=hz,
             parallel=True,
-            n_cpu=nThread,
+            n_cpu=n_cpu,
             Solver=PardisoSolver,
             chi=susceptibility,
         )
@@ -914,7 +918,7 @@ def inversion(input_file):
             sigmaMap=mapping,
             hz=hz,
             parallel=True,
-            n_cpu=nThread,
+            n_cpu=n_cpu,
             Solver=PardisoSolver,
         )
 
