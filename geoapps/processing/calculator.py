@@ -20,8 +20,8 @@ class Calculator(ObjectDataSelection):
         super().__init__(**kwargs)
 
         self._store = ObjectDataSelection()
-        self.store.workspace = self.workspace
-        self.store._objects = self.objects
+        self.store._workspace = self.workspace
+        self.store.objects = self.objects
         self.store.update_data_list(None)
         self.store.data.description = "Apply to:"
 
@@ -122,8 +122,8 @@ class Calculator(ObjectDataSelection):
 
         # Refresh the list of objects
         self.update_objects_list()
-        self.store.workspace = self.workspace
-        self.store._objects = self.objects
+        self.store._workspace = self.workspace
+        self.store.objects = self.objects
         self.store.update_data_list(None)
 
     def click_add(self):
