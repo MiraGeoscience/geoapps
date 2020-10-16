@@ -72,7 +72,7 @@ class Export(ObjectDataSelection):
                 self.type_widget,
                 self.export_as,
                 self.trigger,
-                self.live_link_path,
+                self.export_directory,
             ]
         )
 
@@ -157,12 +157,12 @@ class Export(ObjectDataSelection):
         # Refresh the list of objects
         self.update_objects_list()
 
-        live_path = path.abspath(path.dirname(self.h5file))
-        if not path.exists(live_path):
-            mkdir(live_path)
+        export_path = path.abspath(path.dirname(self.h5file))
+        if not path.exists(export_path):
+            mkdir(export_path)
 
-        self.live_link_path._set_form_values(live_path, "")
-        self.live_link_path._apply_selection()
+        self.export_directory._set_form_values(export_path, "")
+        self.export_directory._apply_selection()
 
     def save_selection(self):
         if self.workspace.get_entity(self.objects.value):
@@ -186,7 +186,7 @@ class Export(ObjectDataSelection):
         if self.file_type.value == "csv":
             dataframe = object_2_dataframe(entity, fields=list(data_values.keys()))
             dataframe.to_csv(
-                f"{path.join(self.live_link_path.selected_path, self.export_as.value)}"
+                f"{path.join(self.export_directory.selected_path, self.export_as.value)}"
                 + ".csv",
                 index=False,
             )
@@ -206,28 +206,28 @@ class Export(ObjectDataSelection):
                         entity,
                         attribute=key,
                         file_name=path.join(
-                            self.live_link_path.selected_path, out_name
+                            self.export_directory.selected_path, out_name
                         ),
                         epsg=self.epsg_code.value,
                     )
                     print(
-                        f"Object saved to {path.join(self.live_link_path.selected_path, out_name) + '.shp'}"
+                        f"Object saved to {path.join(self.export_directory.selected_path, out_name) + '.shp'}"
                     )
             else:
                 out_name = re.sub("[^0-9a-zA-Z]+", "_", self.export_as.value)
                 export_curve_2_shapefile(
                     entity,
-                    file_name=path.join(self.live_link_path.selected_path, out_name),
+                    file_name=path.join(self.export_directory.selected_path, out_name),
                     epsg=self.epsg_code.value,
                 )
                 print(
-                    f"Object saved to {path.join(self.live_link_path.selected_path, out_name) + '.shp'}"
+                    f"Object saved to {path.join(self.export_directory.selected_path, out_name) + '.shp'}"
                 )
 
         elif self.file_type.value == "geotiff":
             for key in self.data.value:
                 name = (
-                    path.join(self.live_link_path.selected_path, self.export_as.value)
+                    path.join(self.export_directory.selected_path, self.export_as.value)
                     + "_"
                     + key
                     + ".tif"
@@ -249,7 +249,8 @@ class Export(ObjectDataSelection):
                         plt.colorbar(im, fraction=0.02)
                         plt.savefig(
                             path.join(
-                                self.live_link_path.selected_path, self.export_as.value
+                                self.export_directory.selected_path,
+                                self.export_as.value,
                             )
                             + "_"
                             + key
@@ -275,14 +276,14 @@ class Export(ObjectDataSelection):
                     data_obj = entity.get_data(key)[0]
                     models[
                         path.join(
-                            self.live_link_path.selected_path, self.export_as.value
+                            self.export_directory.selected_path, self.export_as.value
                         )
                         + "_"
                         + key
                         + ".mod"
                     ] = item[ind]
                 mesh.writeUBC(
-                    path.join(self.live_link_path.selected_path, self.export_as.value)
+                    path.join(self.export_directory.selected_path, self.export_as.value)
                     + ".msh",
                     models=models,
                 )
@@ -305,7 +306,7 @@ class Export(ObjectDataSelection):
                 ]
 
                 mesh.writeUBC(
-                    path.join(self.live_link_path.selected_path, self.export_as.value)
+                    path.join(self.export_directory.selected_path, self.export_as.value)
                     + ".msh"
                 )
 
@@ -322,7 +323,8 @@ class Export(ObjectDataSelection):
                             values = item
 
                         np.savetxt(
-                            path.join(self.live_link_path.selected_path, key) + ".mod",
+                            path.join(self.export_directory.selected_path, key)
+                            + ".mod",
                             values,
                         )
 
