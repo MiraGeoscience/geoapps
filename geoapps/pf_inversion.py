@@ -607,7 +607,7 @@ def inversion(input_file):
     if "n_cpu" in list(input_dict.keys()):
         n_cpu = input_dict["n_cpu"]
     else:
-        n_cpu = multiprocessing.cpu_count()
+        n_cpu = multiprocessing.cpu_count() / 2
 
     if "max_ram" in list(input_dict.keys()):
         max_ram = input_dict["max_ram"]
@@ -1471,9 +1471,9 @@ def inversion(input_file):
     #         vector=input_dict["inversion_type"][0:3] == 'mvi'
     #     )
     # )
-    save_output = Directives.SaveOutputEveryIteration()
-    save_output.fileName = workDir + "Output"
-    directiveList.append(save_output)
+    # save_output = Directives.SaveOutputEveryIteration()
+    # save_output.fileName = workDir + "Output"
+    # directiveList.append(save_output)
 
     # Put all the parts together
     inv = Inversion.BaseInversion(invProb, directiveList=directiveList)
