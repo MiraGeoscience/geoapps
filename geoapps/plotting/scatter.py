@@ -355,7 +355,6 @@ class ScatterPlots(ObjectDataSelection):
         """
         if getattr(self, "_indices", None) is None:
             if self.n_values is not None:
-                print("Resetting indices")
                 self._indices = np.ones(self.n_values, dtype="bool")
             else:
                 return None
