@@ -16,8 +16,10 @@ from IPython.display import display
 import plotly.graph_objects as go
 import numpy as np
 from geoapps.plotting import ScatterPlots
-from geoapps.utils import object_2_dataframe, symlog
+from geoapps.utils import object_2_dataframe, symlog, random_sampling
 from sklearn.cluster import KMeans
+from scipy.spatial import cKDTree
+from time import time
 
 
 class Clustering(ScatterPlots):
@@ -51,6 +53,7 @@ class Clustering(ScatterPlots):
             min=2,
             max=100,
             step=1,
+            value=8,
             description="Number of clusters",
             continuous_update=False,
             style={"description_width": "initial"},
@@ -71,13 +74,12 @@ class Clustering(ScatterPlots):
                 "width": 400,
                 "xaxis": {"title": "Number of clusters"},
                 "showlegend": False,
-                "title_text": "Clustering Inertia",
             }
         )
         self._refresh_clusters = Button(description="Refresh", button_style="warning")
         self.refresh_clusters.on_click(self.run_clustering)
         self._show_inertia = ToggleButton(
-            description="Show Inertia", value=False, button_style="success"
+            description="Show Inertia", value=True, button_style="success"
         )
         self.inertia_panel = VBox([self.show_inertia])
         self.show_inertia.observe(self.show_inertia_trigger, names="value")
@@ -89,14 +91,13 @@ class Clustering(ScatterPlots):
         )
 
         super().__init__(**kwargs)
-
         self.ga_group_name.description = "Name"
         self.ga_group_name.value = "MyCluster"
         self.plotting_options.observe(self.show_trigger, names="value")
         self.channels_plot_options.observe(self.make_hist_plot, names="value")
         self.channels_plot_options.observe(self.make_box_plot, names="value")
+        self.downsampling.observe(self.update_choices, names="value")
         self.trigger.description = "Run Clustering"
-        self.data.observe(self.filter_dataframe, names="value")
         self.groups_colorpickers = {}
         self.groups_boxplots = {}
         self.colormap = {}
@@ -112,7 +113,7 @@ class Clustering(ScatterPlots):
             self.groups_colorpickers[ii].observe(self.update_colormap, names="value")
             self.groups_colorpickers[ii].observe(self.make_box_plot, names="value")
 
-        self.update_colormap(None)
+        self.update_colormap(None, refresh_plot=False)
         self.custom_colormap = list(self.colormap.values())
 
         self._groups_options = Dropdown(
@@ -122,7 +123,6 @@ class Clustering(ScatterPlots):
         self.groups_options.observe(self.groups_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
 
-        self.filter_dataframe(None)
         self.show_trigger(None)
         self.run_clustering(None)
 
@@ -150,10 +150,6 @@ class Clustering(ScatterPlots):
                 self.trigger_panel,
             ]
         )
-
-        # Prime the app with clusters
-        for val in [2, 4, 8, 16, 32, 64]:
-            self.n_clusters.value = val
 
     @property
     def channels_plot_options(self):
@@ -222,7 +218,7 @@ class Clustering(ScatterPlots):
                 self.plotting_options,
             ]
 
-    def update_colormap(self, _):
+    def update_colormap(self, _, refresh_plot=True):
         self.refresh_trigger.value = False
         self.colormap = {}
         for ii in range(self.n_clusters.value):
@@ -242,29 +238,77 @@ class Clustering(ScatterPlots):
                 ]
 
         self.custom_colormap = list(self.colormap.values())
-        self.refresh_trigger.value = True
+        self.refresh_trigger.value = refresh_plot
+
+    def update_downsampling(self, _, refresh_plot=True):
+
+        if not self.channels_plot_options.options:
+            return
+
+        self.refresh_trigger.value = False
+
+        values = []
+        for channel in self.channels_plot_options.options:
+            vals = self.get_channel(channel)
+            if vals is not None:
+                values.append(vals)
+
+        if len(values) < 2:
+            return
+
+        values = np.vstack(values)
+        values[np.isnan(values)] = 0
+        # Normalize all columns
+        values = (values - np.min(values, axis=1)[:, None]) / (
+            np.max(values, axis=1) - np.min(values, axis=1)
+        )[:, None]
+        self._indices = random_sampling(
+            values.T,
+            int(self.downsampling.value / 100.0 * values.shape[1]),
+            bandwidth=2.0,
+            rtol=1e0,
+            method="hist",
+        )
+        self.refresh_trigger.value = refresh_plot
 
     def run_clustering(self, _):
         self.trigger.description = "Running ..."
+
         self.refresh_trigger.value = False
+        self.show_inertia.value = False
 
-        if self.n_clusters.value not in self.clusters.keys():
-            self.clusters[self.n_clusters.value] = KMeans(
-                n_clusters=self.n_clusters.value, random_state=0
-            ).fit(self.dataframe_scaled.values)
+        if self.downsampling.value != 100:
+            tree = cKDTree(self.dataframe_scaled.values[self.indices, :])
+            out_group = np.ones(self.dataframe_scaled.values.shape[0], dtype="bool")
+            out_group[self.indices] = False
+            _, ind_out = tree.query(self.dataframe_scaled.values[out_group, :])
 
-        self.data_channels["kmeans"] = self.clusters[
-            self.n_clusters.value
-        ].labels_.astype(float)
+        # Prime the app with clusters
+        for val in [2, 4, 8, 16, 32, self.n_clusters.value]:
+            self.refresh_clusters.description = f"Running ... {val}"
+            if val not in self.clusters.keys():
+                kmeans = KMeans(n_clusters=val, random_state=0).fit(
+                    self.dataframe_scaled.values[self.indices]
+                )
+                self.clusters[val] = kmeans
+
+        full = np.zeros(self.dataframe_scaled.values.shape[0])
+        cluster_ids = self.clusters[self.n_clusters.value].labels_.astype(float)
+        full[self.indices] = cluster_ids
+        if self.downsampling.value != 100:
+            full[out_group] = cluster_ids[ind_out]
+
+        self.data_channels["kmeans"] = full
+        self.update_axes()
         self.color_max.value = self.n_clusters.value
-        self.update_choices(None, refresh_plot=False)
-        self.update_colormap(None)
+        self.update_colormap(None, refresh_plot=False)
         self.color.value = "kmeans"
         self.color_active.value = True
-        self.refresh_trigger.value = True
         self.plotting_options.value = "Crossplot"
         self.trigger.description = "Export"
+        self.refresh_clusters.description = "Refresh"
         self.show_inertia_trigger(None)
+        self.refresh_trigger.value = True
 
     def show_inertia_trigger(self, _):
         """
@@ -456,8 +500,32 @@ class Clustering(ScatterPlots):
             #             self.heatmap_fig.update_yaxes()
             self.heatmap_fig.show()
 
-    def filter_dataframe(self, _):
+    def save_cluster(self, _):
+
+        if "kmeans" in self.data_channels.keys():
+            obj, _ = self.get_selected_entities()
+
+            if self.ga_group_name.value in obj.get_data_list():
+                data = obj.get_data(self.ga_group_name.value)[0]
+                data.values = self.data_channels["kmeans"]
+            else:
+                obj.add_data(
+                    {self.ga_group_name.value: {"values": self.data_channels["kmeans"]}}
+                )
+
+        if self.live_link.value:
+            self.live_link_output(obj)
+
+        self.workspace.finalize()
+
+    def update_choices(self, _, refresh_plot=True):
+
         self.clusters = {}
+        self.show_inertia.value = False
+
+        if "kmeans" in self.data_channels.keys():
+            del self.data_channels["kmeans"]
+
         obj, _ = self.get_selected_entities()
         fields = self.data.value
         dataframe = object_2_dataframe(obj, fields=fields, vertices=False)
@@ -502,25 +570,6 @@ class Clustering(ScatterPlots):
 
             self.channels_plot_options.options = fields
 
-    def save_cluster(self, _):
-
-        if "kmeans" in self.data_channels.keys():
-            obj, _ = self.get_selected_entities()
-
-            if self.ga_group_name.value in obj.get_data_list():
-                data = obj.get_data(self.ga_group_name.value)[0]
-                data.values = self.data_channels["kmeans"]
-            else:
-                obj.add_data(
-                    {self.ga_group_name.value: {"values": self.data_channels["kmeans"]}}
-                )
-
-        if self.live_link.value:
-            self.live_link_output(obj)
-
-        self.workspace.finalize()
-
-    def update_choices(self, _, refresh_plot=True):
         self.refresh_trigger.value = False
 
         for channel in self.data.value:
@@ -534,8 +583,6 @@ class Clustering(ScatterPlots):
         self.update_axes()
 
         if self.downsampling.value != 100:
-            self.update_downsampling(None)
-        else:
-            self.refresh_trigger.value = refresh_plot
+            self.update_downsampling(None, refresh_plot=False)
 
         self.refresh_trigger.value = refresh_plot
