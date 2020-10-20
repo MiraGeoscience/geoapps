@@ -355,6 +355,7 @@ class ScatterPlots(ObjectDataSelection):
         """
         if getattr(self, "_indices", None) is None:
             if self.n_values is not None:
+                print("Resetting indices")
                 self._indices = np.ones(self.n_values, dtype="bool")
             else:
                 return None
@@ -856,6 +857,7 @@ class ScatterPlots(ObjectDataSelection):
             widget = getattr(self, "_" + name)
             val = widget.value
             widget.options = list(self.data_channels.keys())
+
             if val in widget.options:
                 widget.value = val
             else:
@@ -875,11 +877,11 @@ class ScatterPlots(ObjectDataSelection):
         self.update_axes()
 
         if self.downsampling.value != 100:
-            self.update_downsampling(None)
-        else:
-            self.refresh_trigger.value = True
+            self.update_downsampling(None, refresh_plot=False)
 
-    def update_downsampling(self, _):
+        self.refresh_trigger.value = True
+
+    def update_downsampling(self, _, refresh_plot=True):
 
         if not list(self.data_channels.values()):
             return
@@ -908,12 +910,13 @@ class ScatterPlots(ObjectDataSelection):
             rtol=1e0,
             method="hist",
         )
-        self.refresh_trigger.value = True
+        self.refresh_trigger.value = refresh_plot
 
     def update_objects(self, _):
         self.data_channels = {}
         self.downsampling.value = 5000 / self.n_values * 100
         self._indices = None
+        self.update_downsampling(None, refresh_plot=False)
 
     def write_html(self):
         self.crossplot_fig.write_html(
