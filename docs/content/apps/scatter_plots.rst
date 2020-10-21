@@ -1,3 +1,5 @@
+.. _scatter_plot:
+
 Scatter Plots
 =============
 
