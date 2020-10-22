@@ -12,15 +12,18 @@ results using bar, scatter, inertia and cross-correlation plots.
         :alt: inv_app
 
 
-.. note:: The latest version of applications can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
-
-          See the :ref:`Installation page <getting_started>` to get started.
-
 
 Parameters
 ==========
 
-The following list of interactive widgets are for documentation and demonstration purposes only.
+List of interactive widgets making up the application.
+
+.. note:: For demonstration purposes only.
+
+          The latest version of the application can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+
+          See the :ref:`Installation page <getting_started>` to get started.
+
 
 Workspace
 ---------
@@ -58,6 +61,23 @@ See :ref:`Object, Data Selection <objectdataselection>`
     )
     HBox([app.objects, app.data])
 
+
+Clustering
+----------
+
+Chose the number of clusters (groups). By default, the application will run
+KMeans for 2, 4, 8, 16 and 32 groups in order to draw a meaningful :ref:`Inertia Curve <inertia_curve>`
+
+.. jupyter-execute::
+    :hide-code:
+
+        from geoapps.processing import Clustering
+        from ipywidgets import HBox
+        app = Clustering(
+              h5file=r"../assets/FlinFlon.geoh5",
+              static=True
+        )
+        HBox([app.objects, app.data])
 
 
 Analytics
@@ -130,8 +150,8 @@ and by an approximate Probability Density Function (PDF) calculated over all fie
 kmeans algorithm for speedup. Data points omitted by the algorithm are
 assigned to a group in post-processing using a nearest neighbor interpolation.
 
-.. note:: Beware that results may change significantly depending on the chosen number of
-clusters and % downsampling.
+.. warning:: Results may change significantly depending on the chosen number of
+          clusters and % downsampling.
 
 
 Statistics
@@ -202,3 +222,9 @@ Display histograms for each data field. By default, data fields are normalized b
       app.scaling_dict[field]
     ]))
     py.iplot(app.histoplot_dict[field])
+
+
+.. _inertia_curve:
+
+Inertia
+^^^^^^^
