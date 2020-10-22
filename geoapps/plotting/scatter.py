@@ -355,7 +355,7 @@ class ScatterPlots(ObjectDataSelection):
         """
         if getattr(self, "_indices", None) is None:
             if self.n_values is not None:
-                self._indices = np.ones(self.n_values, dtype="bool")
+                self._indices = np.arange(self.n_values)
             else:
                 return None
 
@@ -689,7 +689,7 @@ class ScatterPlots(ObjectDataSelection):
             return None
 
         if self.downsampling.value < 100.0 and self.indices.shape[0] == self.n_values:
-            return None
+            return self.update_downsampling(None)
 
         if self.get_channel(size) is not None and size_active:
             vals = self.get_channel(size)[self.indices]
