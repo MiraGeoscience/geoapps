@@ -29,7 +29,7 @@ See :ref:`Workspace selection <workspaceselection>`
 
     from geoapps.processing import Clustering
     app = Clustering(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
         static=True
     )
     app.project_panel
@@ -48,7 +48,7 @@ See :ref:`Object, Data Selection <objectdataselection>`
     from geoapps.processing import Clustering
     from ipywidgets import HBox
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
     HBox([app.objects, app.data])
@@ -66,7 +66,7 @@ KMeans for 2, 4, 8, 16 and 32 groups in order to draw a meaningful :ref:`Inertia
         from geoapps.processing import Clustering
         from ipywidgets import VBox
         app = Clustering(
-              h5file=r"../assets/FlinFlon.geoh5",
+              h5file=r"../assets/FlinFlon_light.geoh5",
               static=True
         )
         VBox([app.n_clusters, app.refresh_clusters,])
@@ -89,7 +89,7 @@ Assign a specific color to a given cluster group.
     from ipywidgets import VBox
 
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
     VBox([
@@ -108,7 +108,7 @@ Plotting options to analyze the KMeans clustering.
 
     from geoapps.processing import Clustering
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
     app.plotting_options
@@ -131,7 +131,7 @@ The color values displayed correspond to the cluster groups.
     import plotly.offline as py
 
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
     display(VBox([
@@ -159,7 +159,7 @@ Density Function (PDF) of all fields.
     import plotly.offline as py
 
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
     display(VBox([
@@ -196,7 +196,7 @@ Display data statistics using the `pandas.DataFrame.describe <https://pandas.pyd
     import plotly.offline as py
 
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
 
@@ -217,7 +217,7 @@ Display the confusion matrix for the chosen data fields used by the kmeans.
     import plotly.offline as py
 
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
     app.plotting_options.value = "Confusion Matrix"
@@ -237,7 +237,7 @@ Display histograms for each data field. By default, data fields are normalized b
     from ipywidgets import VBox
 
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
     app.plotting_options.value = "Histogram"
@@ -276,7 +276,7 @@ generally thought to be at the point of maximum curvature.
     from ipywidgets import VBox
 
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
     app.plotting_options.value = "Inertia"
@@ -296,7 +296,7 @@ Display boxplots describing the range of values within each cluster for a chosen
     from ipywidgets import VBox
 
     app = Clustering(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
     app.plotting_options.value = "Boxplot"
@@ -316,7 +316,7 @@ See :ref:`Trigger panel<trigger_panel>` base applications.
 
     from geoapps.processing import Clustering
     app = Clustering(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
         static=True
     )
     app.trigger_panel
