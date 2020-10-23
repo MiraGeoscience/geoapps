@@ -14,11 +14,11 @@ data/models at a set resolution and extant.
         :alt: data_interp
 
 
-.. note:: The latest version of applications can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+.. note:: Active widgets on this page are for demonstration only.
+
+          The latest version of the application can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
 
           See the :ref:`Installation page <getting_started>` to get started.
-
-          The following list of interactive widgets are for documentation and demonstration purposes only.
 
 
 Input Parameters
@@ -26,6 +26,8 @@ Input Parameters
 
 Project
 ^^^^^^^
+
+Select a target ``geoh5`` file. See :ref:`Project panel <workspaceselection>`
 
 .. jupyter-execute::
     :hide-code:
@@ -36,10 +38,13 @@ Project
     )
     app.project_panel
 
-See :ref:`Project panel <workspaceselection>`
+
 
 Source Object/Data
 ^^^^^^^^^^^^^^^^^^
+
+List of objects with corresponding data groups available for transfer to the
+neighboring object. See :ref:`Object, data selection <objectdataselection>`
 
 .. jupyter-execute::
     :hide-code:
@@ -51,10 +56,6 @@ Source Object/Data
     )
     VBox([app.objects, app.data])
 
-List of objects with corresponding data groups available for transfer to the
-neighboring object.
-
-See :ref:`Object, data selection <objectdataselection>`
 
 
 Destination
@@ -64,6 +65,8 @@ Object to transfer data onto.
 
 To Object
 """""""""
+
+List of objects available in the target ``geoh5``.
 
 .. jupyter-execute::
     :hide-code:
@@ -76,10 +79,12 @@ To Object
     app.out_mode.disabled = True
     app.out_panel
 
-List of objects available in the target ``geoh5``.
 
 Create 3D Grid
 """"""""""""""
+
+Create a new ``BlockModel`` object to transfer data onto. Useful for merging
+EM1D inversion results.
 
 .. jupyter-execute::
     :hide-code:
@@ -92,8 +97,7 @@ Create 3D Grid
     app.out_mode.disabled = True
     app.out_panel
 
-Create a new ``BlockModel`` object to transfer data onto. Useful for merging
-EM1D inversion results.
+
 
 - **Name**: Name assigned to the new ``BlockModel`` object.
 - **Lateral Extent**: Use an object (usually the ``Source`` object) to determine the horizontal extent of the new grid.
@@ -105,6 +109,9 @@ EM1D inversion results.
 Interpolation Parameters
 ------------------------
 
+List of additional parameters controlling the interpolation.
+
+
 .. jupyter-execute::
     :hide-code:
 
@@ -114,10 +121,11 @@ Interpolation Parameters
     )
     app.parameter_choices
 
-List of additional parameters controlling the interpolation.
 
-Method
-^^^^^^
+Interpolation methods
+^^^^^^^^^^^^^^^^^^^^^
+
+Type of algorithm used to interpolate values.
 
 .. jupyter-execute::
     :hide-code:
@@ -128,9 +136,6 @@ Method
     )
     app.method
 
-Interpolation methods
-"""""""""""""""""""""
-
 - **Nearest**: (Fastest) Use the nearest neighbors between the ``Source`` and ``Destination`` objects (vertices or centroids). Uses `Scipy.spatial.cKDTree <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html>`_
 - **Linear**: (Slowest) Use a Delaunay triangulation from `Scipy.interpolate.LinearNDInterpolator <https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html>`_
 - **Inverse Distance**: Weighted averaging using 8 nearest neighbors:
@@ -139,7 +144,15 @@ Interpolation methods
 
   where :math:`r_i` is the radial distance between a vertex/centroid to its :math:`i^{th}` nearest neighbor.
 
-  .. jupyter-execute::
+Skew Parameters
+"""""""""""""""
+Options for dealing with spatially elongated ``Source`` values
+
+ - *Azimuth*: Angle (degree) from North of ``Source`` object orientation.
+ - *Factor*: Aspect ratio between the in-line spacing and the line separation  (i.e. 25 m stations / 100 line spacing => 0.25)
+
+
+.. jupyter-execute::
     :hide-code:
 
     from geoapps.processing import DataInterpolation
@@ -148,13 +161,13 @@ Interpolation methods
     )
     app.method_skew
 
-  Optional skew parameters available to deal with elongated ``Source``
-   - *Azimuth*: Angle (degree) from North of ``Source`` object orientation.
-   - *Factor*: Aspect ratio between the in-line spacing and the line separation  (i.e. 25 m stations / 100 line spacing => 0.25)
-
 
 Scaling
 ^^^^^^^
+
+Conversion of values to ``linear`` or ``log`` space before interpolation.
+Interpolating the log is usually preferred when dealing with large dynamic
+ranges, such as resistivity.
 
 .. jupyter-execute::
     :hide-code:
@@ -177,6 +190,8 @@ Add limits to the horizontal extrapolation of the data.
 Object hull
 """""""""""
 
+Use radial distance from an object vertices or centroids.
+
 .. jupyter-execute::
     :hide-code:
 
@@ -187,11 +202,11 @@ Object hull
     )
     app.xy_extent
 
-Use radial distance from an object vertices or centroids.
-
 
 Max distance
 """"""""""""
+
+Set the maximum extrapolation distance (m).
 
 .. jupyter-execute::
     :hide-code:
@@ -203,8 +218,6 @@ Max distance
     )
     app.max_distance
 
-Set the maximum extrapolation distance (m).
-
 
 Vertical Extent
 ^^^^^^^^^^^^^^^
@@ -213,6 +226,8 @@ Add limits to the vertical extrapolation of the data.
 
 Topography
 """"""""""
+
+Define the upper boundary from topography (see :ref:`Topography <topo_widget>`)
 
 .. jupyter-execute::
     :hide-code:
@@ -224,12 +239,12 @@ Topography
     )
     app.topography.widget
 
-Define the upper boundary from topography.
-See the :ref:`Topography <topo_widget>` widget for details.
 
 
 Max depth
 """""""""
+
+Set the maximum depth (vertical distance below ``Source``) to extrapolate data.
 
 .. jupyter-execute::
     :hide-code:
@@ -241,18 +256,17 @@ Max depth
     )
     app.max_depth
 
-Set the maximum depth (vertical distance below ``Source``) to extrapolate data.
 
-.. - Choose an object and associated data
-.. - Pick a destination object or create a 3D grid
-.. - Select the ``Space`` to use for interpolation:
-..  - ``Linear``
-..  - ``Log``
-.. - Select the ``Method``
-..  - ``Nearest``: Nearest neighbour interpolation using [scipy.spatial.cKDTree](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html) (Fastest)
-..  - ``Linear``: Linear interpolation from [scipy.interpolate.LinearNDInterpolator](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html) (Slowest)
-..  - ``Inverse Distance``:
-..    - Azimuth (lines orientation angle from North)
-..    - Factor (ratio between along vs cross line distance)
-..      - e.g.: For EW orientation @ 200 m line spacing and stations 25 m apart. Use -> Azimuth: 90, Factor: 0.125 (25/200)
-.. - Interpolate your data/model !
+Output
+------
+
+See :ref:`Trigger panel<trigger_panel>` base applications.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import DataInterpolation
+    app = DataInterpolation(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.trigger_panel
