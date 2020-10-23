@@ -422,6 +422,8 @@ class DataInterpolation(ObjectDataSelection):
             if self.space.value == "Log":
                 sign[field] = np.sign(values[field])
                 values[field] = np.log(np.abs(values[field]))
+            else:
+                sign[field] = np.ones_like(values[field])
 
         values_interp = {}
         if self.method.value == "Linear":
@@ -429,7 +431,6 @@ class DataInterpolation(ObjectDataSelection):
             for key, value in values.items():
                 F = LinearNDInterpolator(xyz, value)
                 values_interp[key] = F(xyz_out)
-                sign[key] = np.ones_like(values_interp[key])
 
         elif self.method.value == "Inverse Distance":
 

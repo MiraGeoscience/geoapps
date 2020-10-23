@@ -565,6 +565,10 @@ class InversionOptions(BaseApplication):
         return self._norms
 
     @property
+    def optimization(self):
+        return self._optimization
+
+    @property
     def output_name(self):
         return self._output_name
 
