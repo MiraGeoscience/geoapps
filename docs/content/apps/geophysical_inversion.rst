@@ -739,3 +739,81 @@ Target data misfit where :math:`\chi=1` corresponds to :math:`\phi_d=N`
     h5file = r"../assets/FlinFlon.geoh5"
     widgets = InversionOptions(h5file=h5file)
     widgets.chi_factor
+
+
+Starting trade-off (:math:`\beta`)
+""""""""""""""""""""""""""""""""""
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import InversionOptions
+    h5file = r"../assets/FlinFlon.geoh5"
+    widgets = InversionOptions(h5file=h5file)
+    widgets.beta_start_options
+
+**ratio**:
+
+Factor multiplying the initial :math:`\beta` defined by the ratio
+between the initial misfit and regularization:
+
+.. math:: \beta_0 = \gamma * \phi_d / \phi_m
+
+**value**:
+
+Fixed :math:`\beta` value specified by the user.
+
+Max CG Iterations
+"""""""""""""""""
+
+Maximum number of Conjugate Gradient (CG) iterations per Gauss-Newton solve.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import InversionOptions
+    h5file = r"../assets/FlinFlon.geoh5"
+    widgets = InversionOptions(h5file=h5file)
+    widgets.max_cg_iterations
+
+
+CG Tolerance
+""""""""""""
+
+Threshold on the minimum Conjugate Gradient (CG) step to end the Gauss-Newton solve.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import InversionOptions
+    h5file = r"../assets/FlinFlon.geoh5"
+    widgets = InversionOptions(h5file=h5file)
+    widgets.tol_cg
+
+
+Max CPUs
+""""""""
+
+Maximum number of threads used for the parallelization. Defaults to half the system thread count.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import InversionOptions
+    h5file = r"../assets/FlinFlon.geoh5"
+    widgets = InversionOptions(h5file=h5file)
+    widgets.n_cpu
+
+Max RAM (Gb)
+""""""""""""
+
+Approximate memory (RAM) used during the inversion. The value is used to calculate the chunk size for the storage of the sensitivity matrix on solid-state drive.
+(See `dask.array.to_zarr <https://docs.dask.org/en/latest/array-api.html#dask.array.to_zarr>`_)
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import InversionOptions
+    h5file = r"../assets/FlinFlon.geoh5"
+    widgets = InversionOptions(h5file=h5file)
+    widgets.max_ram

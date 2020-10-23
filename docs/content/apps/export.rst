@@ -170,6 +170,6 @@ Set export directory and trigger export
         h5file=r"../assets/FlinFlon.geoh5"
     )
     VBox([
-      app.trigger
+      app.trigger,
       app.export_directory
     ])
