@@ -40,7 +40,7 @@ Select a ``Grid2D`` and associated data (see :ref:`Object, data selection <objec
     from geoapps.selection import ObjectDataSelection
     ObjectDataSelection(
     select_multiple=True, add_groups=True,
-         h5file=r"../assets/FlinFlon.geoh5",
+         h5file=r"../assets/FlinFlon_light.geoh5",
          objects="Data_FEM_pseudo3D",
     ).widget
 
@@ -56,7 +56,7 @@ See :ref:`Plot and select data <plotselectiondata>`
 
     from geoapps.plotting import PlotSelection2D
     app = PlotSelection2D(
-      h5file=r"../assets/FlinFlon.geoh5",
+      h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.widget
 
@@ -77,7 +77,7 @@ Standard deviation of the Gaussian filter used in the Canny algorithm.
 
     from geoapps.processing import EdgeDetectionApp
     app = EdgeDetectionApp(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.sigma
 
@@ -98,7 +98,7 @@ Detection threshold
 
     from geoapps.processing import EdgeDetectionApp
     app = EdgeDetectionApp(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.threshold
 
@@ -113,7 +113,7 @@ Filter for the minimum length (pixels) of detected lines.
 
     from geoapps.processing import EdgeDetectionApp
     app = EdgeDetectionApp(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.line_length
 
@@ -129,7 +129,7 @@ Maximum gap between pixels to still form a line.
 
     from geoapps.processing import EdgeDetectionApp
     app = EdgeDetectionApp(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.line_gap
 
@@ -148,7 +148,7 @@ Window size (square) used for the tiling of the data (see :ref:`Methodology <met
 
     from geoapps.processing import EdgeDetectionApp
     app = EdgeDetectionApp(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.window_size
 
@@ -165,7 +165,7 @@ See :ref:`Trigger panel<trigger_panel>` base applications.
 
     from geoapps.processing import EdgeDetectionApp
     app = EdgeDetectionApp(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.trigger_panel
 

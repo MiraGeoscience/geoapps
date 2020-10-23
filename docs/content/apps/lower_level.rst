@@ -74,7 +74,7 @@ Object, data selection
 
     from geoapps.selection import ObjectDataSelection
     app = ObjectDataSelection(
-        h5file="../assets/FlinFlon.geoh5",
+        h5file="../assets/FlinFlon_light.geoh5",
         objects="Gravity_Magnetics_drape60m" # [Optional]
     )
     app.widget
@@ -102,7 +102,7 @@ Plot and select data
 
     from geoapps.plotting import PlotSelection2D
 
-    app = PlotSelection2D(h5file="../assets/FlinFlon.geoh5")
+    app = PlotSelection2D(h5file="../assets/FlinFlon_light.geoh5")
     app.widget
 
 Application for the selection and downsampling of data in 2D plan view.
@@ -145,32 +145,31 @@ Limit the plot to the window extent
 Topography Options
 ------------------
 
+Generic widget to define topography.
+
 .. jupyter-execute::
 
     from geoapps.selection import TopographyOptions
 
-    app = TopographyOptions(h5file="../assets/FlinFlon.geoh5")
+    app = TopographyOptions(h5file="../assets/FlinFlon_light.geoh5")
     app.options
 
-Generic widget to define topography.
-
-Options
-^^^^^^^
 
 Object
 """"""
+
+Select an ``Object`` and ``Data`` defining x, y (from vertices or centroids) and vertical position.
 
 .. jupyter-execute::
     :hide-code:
 
     from geoapps.selection import TopographyOptions
-    app = TopographyOptions(h5file="../assets/FlinFlon.geoh5")
+    app = TopographyOptions(h5file="../assets/FlinFlon_light.geoh5")
     app.options.disabled = True
-    app.objects.value = "Topography"
-    app.data.value = "Z"
+    app.objects.value = "Gravity_Magnetics_drape60m"
+    app.data.value = "Topography"
     app.widget
 
-Select an ``Object`` and ``Data`` defining x, y (from vertices or centroids) and vertical position.
 
 Relative to Sensor
 """"""""""""""""""
@@ -179,7 +178,7 @@ Relative to Sensor
     :hide-code:
 
     from geoapps.selection import TopographyOptions
-    app = TopographyOptions(h5file="../assets/FlinFlon.geoh5")
+    app = TopographyOptions(h5file="../assets/FlinFlon_light.geoh5")
     app.options.disabled = True
     app.options.value = "Relative to Sensor"
     app.options.disabled = True
@@ -195,7 +194,7 @@ Constant
     :hide-code:
 
     from geoapps.selection import TopographyOptions
-    app = TopographyOptions(h5file="../assets/FlinFlon.geoh5")
+    app = TopographyOptions(h5file="../assets/FlinFlon_light.geoh5")
     app.options.disabled = True
     app.options.value = "Constant"
     app.widget
