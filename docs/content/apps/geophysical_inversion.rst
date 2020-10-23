@@ -369,6 +369,13 @@ Starting model
 
 Initial model used to begin the inversion.
 
+Object and values
+"""""""""""""""""
+
+Model object and values selected from any Surface, BlockModel or Octree object.
+Values are interpolated onto the inversion mesh using a nearest neighbor
+algorithm.
+
 .. jupyter-execute::
     :hide-code:
 
@@ -381,12 +388,12 @@ Initial model used to begin the inversion.
     widgets.starting_model.data.value = "VTEM_model"
     widgets.starting_model.widget
 
-Object and values
-"""""""""""""""""
 
-Model object and values selected from any Surface, BlockModel or Octree object
-Values are interpolated onto the inversion mesh using a nearest neighbor
-algorithm.
+
+Constant
+""""""""
+
+Constant background half-space value.
 
 .. jupyter-execute::
     :hide-code:
@@ -399,10 +406,6 @@ algorithm.
     widgets.starting_model.options.disabled = True
     widgets.starting_model.widget
 
-Constant
-""""""""
-
-Constant background half-space value.
 
 
 Susceptibility model *(FEM Only)*
@@ -413,8 +416,9 @@ Susceptibility values used in the forward calculations only.
 Object and values
 """""""""""""""""
 
-Model values selected from any ``Surface``, ``BlockModel`` or ``Octree`` object Values are
-interpolated onto the inversion mesh using a nearest neighbor algorithm.
+Model values selected from any ``Surface``, ``BlockModel`` or ``Octree``
+object. Values are interpolated onto the inversion mesh using a nearest
+neighbor algorithm.
 
 .. jupyter-execute::
     :hide-code:
@@ -457,6 +461,12 @@ Reference model
 
 Reference model used in the `objective function <https://giftoolscookbook.readthedocs.io/en/latest/content/fundamentals/ObjectiveFunction.html#the-objective-function>`_.
 
+
+None
+""""
+
+**(Gravity/Magnetics only)** No reference value.
+
 .. jupyter-execute::
     :hide-code:
 
@@ -467,10 +477,6 @@ Reference model used in the `objective function <https://giftoolscookbook.readth
     widgets.reference_model.options.disabled = True
     widgets.reference_model.widget
 
-None
-""""
-
-**(Gravity/Magnetics only)** No reference value.
 
 Best-fitting halfspace
 """"""""""""""""""""""
@@ -493,8 +499,9 @@ Best-fitting halfspace
 Object and values
 """""""""""""""""
 
-Model values selected from any ``Surface``, ``BlockModel`` or ``Octree`` object Values are
-interpolated onto the inversion mesh using a nearest neighbor algorithm.
+Model values selected from any ``Surface``, ``BlockModel`` or ``Octree``
+object. Values are interpolated onto the inversion mesh using a nearest
+neighbor algorithm.
 
 .. jupyter-execute::
     :hide-code:
@@ -661,6 +668,67 @@ in regions without data.
     from geoapps.inversion import MeshOctreeOptions
     widgets = MeshOctreeOptions()
     widgets.max_distance
+
+
+1D Mesh (EM only)
+^^^^^^^^^^^^^^^^^
+
+For laterally constrained 1D inversions (time or frequency), the earth is
+discretized into layer models connected by the regularization function. The
+following parameters define the 1D mesh repeated below each transmitter/receiver pairs.
+
+
+Smallest cell (m)
+"""""""""""""""""
+
+Smallest layer at the top of the 1D mesh.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import Mesh1DOptions
+    widgets = Mesh1DOptions()
+    widgets.hz_min
+
+
+Expansion factor
+""""""""""""""""
+
+Rate of cell expansion from the smallest cell size.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import Mesh1DOptions
+    widgets = Mesh1DOptions()
+    widgets.hz_expansion
+
+
+Number of cells
+"""""""""""""""
+
+Total number of layers below each station.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import Mesh1DOptions
+    widgets = Mesh1DOptions()
+    widgets.n_cells
+
+
+Max depth
+"""""""""
+
+Returns the full depth of the 1D mesh given the parameters selected above.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import Mesh1DOptions
+    widgets = Mesh1DOptions()
+    widgets.cell_count
+
 
 Bounds
 ^^^^^^
