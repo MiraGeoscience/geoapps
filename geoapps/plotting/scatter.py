@@ -6,13 +6,13 @@ from ipywidgets import (
     Dropdown,
     Checkbox,
     IntSlider,
-    FloatSlider,
     FloatText,
     VBox,
     HBox,
     ToggleButton,
     interactive_output,
     Layout,
+    Label,
 )
 from geoapps.utils import symlog, random_sampling
 from geoapps.selection import ObjectDataSelection
@@ -54,10 +54,9 @@ class ScatterPlots(ObjectDataSelection):
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
 
-        self._downsampling = FloatSlider(
-            description="Downsampling (%)",
-            min=0.1,
-            max=100,
+        self._downsampling = IntSlider(
+            description="Population",
+            min=1,
             style={"description_width": "initial"},
             continuous_update=False,
         )
@@ -194,79 +193,8 @@ class ScatterPlots(ObjectDataSelection):
 
         super().__init__(**self.apply_defaults(**kwargs))
 
-        def plot_selection(
-            x,
-            x_log,
-            x_active,
-            x_thresh,
-            x_min,
-            x_max,
-            y,
-            y_log,
-            y_active,
-            y_thresh,
-            y_min,
-            y_max,
-            z,
-            z_log,
-            z_active,
-            z_thresh,
-            z_min,
-            z_max,
-            color,
-            color_log,
-            color_active,
-            color_thresh,
-            color_maps,
-            color_min,
-            color_max,
-            size,
-            size_log,
-            size_active,
-            size_thresh,
-            size_markers,
-            size_min,
-            size_max,
-            refresh_trigger,
-        ):
-            self.plot_selection(
-                x,
-                x_log,
-                x_active,
-                x_thresh,
-                x_min,
-                x_max,
-                y,
-                y_log,
-                y_active,
-                y_thresh,
-                y_min,
-                y_max,
-                z,
-                z_log,
-                z_active,
-                z_thresh,
-                z_min,
-                z_max,
-                color,
-                color_log,
-                color_active,
-                color_thresh,
-                color_maps,
-                color_min,
-                color_max,
-                size,
-                size_log,
-                size_active,
-                size_thresh,
-                size_markers,
-                size_min,
-                size_max,
-                refresh_trigger,
-            )
-
         self.crossplot = interactive_output(
-            plot_selection,
+            self.plot_selection,
             {
                 "x": self.x,
                 "x_log": self.x_log,
@@ -315,7 +243,7 @@ class ScatterPlots(ObjectDataSelection):
                 [
                     self.project_panel,
                     HBox([self.objects, self.data]),
-                    self.downsampling,
+                    HBox([Label("Downsampling:"), self.downsampling]),
                     self.axes_options,
                     self.trigger,
                 ]
@@ -325,7 +253,7 @@ class ScatterPlots(ObjectDataSelection):
                 [
                     self.project_panel,
                     HBox([self.objects, self.data]),
-                    self.downsampling,
+                    VBox([Label("Downsampling"), self.downsampling]),
                     self.axes_options,
                     self.trigger,
                     self.crossplot_fig,
@@ -688,7 +616,10 @@ class ScatterPlots(ObjectDataSelection):
         if not refresh_trigger or not self.refresh.value:
             return None
 
-        if self.downsampling.value < 100.0 and self.indices.shape[0] == self.n_values:
+        if (
+            self.downsampling.value != self.n_values
+            and self.indices.shape[0] == self.n_values
+        ):
             return self.update_downsampling(None)
 
         if self.get_channel(size) is not None and size_active:
@@ -875,7 +806,7 @@ class ScatterPlots(ObjectDataSelection):
 
         self.update_axes()
 
-        if self.downsampling.value != 100:
+        if self.downsampling.value != self.n_values:
             self.update_downsampling(None, refresh_plot=False)
 
         self.refresh_trigger.value = True
@@ -903,17 +834,14 @@ class ScatterPlots(ObjectDataSelection):
             np.max(values, axis=1) - np.min(values, axis=1)
         )[:, None]
         self._indices = random_sampling(
-            values.T,
-            int(self.downsampling.value / 100.0 * values.shape[1]),
-            bandwidth=2.0,
-            rtol=1e0,
-            method="hist",
+            values.T, self.downsampling.value, bandwidth=2.0, rtol=1e0, method="hist",
         )
         self.refresh_trigger.value = refresh_plot
 
     def update_objects(self, _):
         self.data_channels = {}
-        self.downsampling.value = 5000 / self.n_values * 100
+        self.downsampling.max = self.n_values
+        self.downsampling.value = np.min([5000, self.n_values])
         self._indices = None
         self.update_downsampling(None, refresh_plot=False)
 
