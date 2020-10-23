@@ -1,5 +1,5 @@
 import os
-
+from sklearn.neighbors import KernelDensity
 import gdal
 import dask
 import dask.array as da
@@ -771,7 +771,7 @@ def octree_2_treemesh(mesh):
     return treemesh
 
 
-def object_2_dataframe(entity, fields=[], inplace=False, vertices=True):
+def object_2_dataframe(entity, fields=[], inplace=False, vertices=True, index=None):
     """
     Convert an object to a pandas dataframe
     """
@@ -780,18 +780,21 @@ def object_2_dataframe(entity, fields=[], inplace=False, vertices=True):
     elif getattr(entity, "centroids", None) is not None:
         locs = entity.centroids
 
+    if index is None:
+        index = np.arange(locs.shape[0])
+
     data_dict = {}
     if vertices:
-        data_dict["X"] = locs[:, 0]
-        data_dict["Y"] = locs[:, 1]
-        data_dict["Z"] = locs[:, 2]
+        data_dict["X"] = locs[index, 0]
+        data_dict["Y"] = locs[index, 1]
+        data_dict["Z"] = locs[index, 2]
 
     d_f = pd.DataFrame(data_dict, columns=list(data_dict.keys()))
     for field in fields:
         if entity.get_data(field):
             obj = entity.get_data(field)[0]
             if obj.values.shape[0] == locs.shape[0]:
-                d_f[field] = obj.values.copy()
+                d_f[field] = obj.values.copy()[index]
                 if inplace:
                     obj.values = None
 
@@ -1134,6 +1137,45 @@ def raw_moment(data, i_order, j_order):
     y_indices, x_indicies = np.mgrid[:nrows, :ncols]
 
     return (data * x_indicies ** i_order * y_indices ** j_order).sum()
+
+
+def random_sampling(values, size, method="hist", n_bins=100, bandwidth=0.2, rtol=1e-4):
+    """
+    Perform a random sampling of the rows of the input array based on
+    the distribution of the columns values.
+
+    Parameters
+    ----------
+
+    values: numpy.array of float
+        Input array of values N x M, where N >> M
+    size: int
+        Number of indices (rows) to be extracted from the original array
+
+    Returns
+    -------
+    indices: numpy.array of int
+        Indices of samples randomly selected from the PDF
+    """
+    if method == "pdf":
+        kde_skl = KernelDensity(bandwidth=bandwidth, rtol=rtol)
+        kde_skl.fit(values)
+        probabilities = np.exp(kde_skl.score_samples(values))
+        probabilities /= probabilities.sum()
+    else:
+        probabilities = np.zeros(values.shape[0])
+        for ind in range(values.shape[1]):
+            pop, bins = np.histogram(values[:, ind], n_bins)
+            ind = np.digitize(values[:, ind], bins)
+            ind[ind > n_bins] = n_bins
+            probabilities += 1.0 / (pop[ind - 1] + 1)
+
+        probabilities /= probabilities.sum()
+
+    np.random.seed = 0
+    return np.random.choice(
+        np.arange(values.shape[0]), replace=False, p=probabilities, size=size
+    )
 
 
 def moments_cov(data):

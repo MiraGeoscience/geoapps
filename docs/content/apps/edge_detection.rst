@@ -9,9 +9,7 @@ With this application, users can create lines along edges (lineaments) from grid
 semi-automated fashion. The application uses machine vision algorithms from the `Scikit-Image
 <https://scikit-image.org/>`_ open-source package.
 
-.. figure:: ./images/edge_detection_app.png
-        :align: center
-        :alt: inv_app
+.. image:: ./images/edge_detection.gif
 
 
 - Currently available for Grid2D objects.
@@ -21,7 +19,9 @@ semi-automated fashion. The application uses machine vision algorithms from the 
 `Video tutorial available on Youtube <https://youtu.be/Lpn3xA7xlBs>`_
 
 
-.. note:: The latest version of applications can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+.. note:: Active widgets on this page are for demonstration only.
+
+          The latest version of the application can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
 
           See the :ref:`Installation page <getting_started>` to get started.
 
@@ -29,129 +29,146 @@ semi-automated fashion. The application uses machine vision algorithms from the 
 Input data
 ----------
 
-The following list of interactive widgets are for documentation and demonstration purposes only.
+Object and data
+^^^^^^^^^^^^^^^
+
+Select a ``Grid2D`` and associated data (see :ref:`Object, data selection <objectdataselection>`)
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.selection import ObjectDataSelection
+    ObjectDataSelection(
+    select_multiple=True, add_groups=True,
+         h5file=r"../assets/FlinFlon.geoh5",
+         objects="Data_FEM_pseudo3D",
+    ).widget
 
 
-.. list-table::
-   :header-rows: 0
 
-   * - .. jupyter-execute::
-            :hide-code:
+Windowing
+^^^^^^^^^
 
-            from geoapps.selection import ObjectDataSelection
-            ObjectDataSelection(
-            select_multiple=True, add_groups=True,
-                 h5file=r"../assets/FlinFlon.geoh5",
-                 objects="Data_FEM_pseudo3D",
-            ).widget
-   * - See :ref:`Object, data selection <objectdataselection>`
+See :ref:`Plot and select data <plotselectiondata>`
 
+.. jupyter-execute::
+    :hide-code:
 
-.. list-table::
-   :header-rows: 0
-
-   * - .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.plotting import PlotSelection2D
-            app = PlotSelection2D(
-              h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.widget
-   * - See :ref:`Plot and select data <plotselectiondata>`
-
-Detection Parameters
---------------------
-
-Parameter for the Canny_ edge detection.
-
-.. list-table::
-   :header-rows: 0
-
-   * - .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.processing import EdgeDetectionApp
-            app = EdgeDetectionApp(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.sigma
-   * - Standard deviation of the Gaussian filter used in the Canny algorithm.
+    from geoapps.plotting import PlotSelection2D
+    app = PlotSelection2D(
+      h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.widget
 
 
-Parameters controling the `Hough Line Transform`_
+Canny Edge Parameters
+---------------------
 
-.. list-table::
-   :header-rows: 0
+See Canny_ edge detection documentation.
 
-   * - .. jupyter-execute::
-            :hide-code:
+Sigma
+^^^^^
 
-            from geoapps.processing import EdgeDetectionApp
-            app = EdgeDetectionApp(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.threshold
+Standard deviation of the Gaussian filter used in the Canny algorithm.
 
-.. list-table::
-   :header-rows: 0
 
-   * - .. jupyter-execute::
-            :hide-code:
+.. jupyter-execute::
+    :hide-code:
 
-            from geoapps.processing import EdgeDetectionApp
-            app = EdgeDetectionApp(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.line_length
+    from geoapps.processing import EdgeDetectionApp
+    app = EdgeDetectionApp(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.sigma
 
-   * - Minimum accepted pixel length of detected lines
 
-.. list-table::
-   :header-rows: 0
 
-   * - .. jupyter-execute::
-            :hide-code:
+Hough Line Parameters
+---------------------
 
-            from geoapps.processing import EdgeDetectionApp
-            app = EdgeDetectionApp(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.line_gap
+See `Hough Line Transform`_ documention.
 
-   * - Maximum gap between pixels to still form a line.
+Treshold
+^^^^^^^^
+
+Detection threshold
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import EdgeDetectionApp
+    app = EdgeDetectionApp(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.threshold
+
+
+Line length
+^^^^^^^^^^^
+
+Filter for the minimum length (pixels) of detected lines.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import EdgeDetectionApp
+    app = EdgeDetectionApp(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.line_length
+
+
+
+Line Gap
+^^^^^^^^
+
+Maximum gap between pixels to still form a line.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import EdgeDetectionApp
+    app = EdgeDetectionApp(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.line_gap
+
+
 
 .. _window size:
 
-.. list-table::
-   :header-rows: 0
 
-   * - .. jupyter-execute::
-            :hide-code:
+Window Size
+^^^^^^^^^^^
 
-            from geoapps.processing import EdgeDetectionApp
-            app = EdgeDetectionApp(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.window_size
+Window size (square) used for the tiling of the data (see :ref:`Methodology <methodology>`)
 
-   * - Maximum window size (square).
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import EdgeDetectionApp
+    app = EdgeDetectionApp(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.window_size
 
 
-*Output*
 
-.. list-table::
-   :header-rows: 0
 
-   * - .. jupyter-execute::
-            :hide-code:
+Output
+------
 
-            from geoapps.processing import EdgeDetectionApp
-            app = EdgeDetectionApp(
-                h5file=r"../assets/FlinFlon.geoh5",
-            )
-            app.trigger_panel
-   * - See :ref:`Trigger panel<trigger_panel>` base applications.
+See :ref:`Trigger panel<trigger_panel>` base applications.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import EdgeDetectionApp
+    app = EdgeDetectionApp(
+        h5file=r"../assets/FlinFlon.geoh5",
+    )
+    app.trigger_panel
+
 
 
 .. _methodology:
