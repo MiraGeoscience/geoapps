@@ -34,7 +34,7 @@ Select a target ``geoh5`` file. See :ref:`Project panel <workspaceselection>`
 
     from geoapps.processing import DataInterpolation
     app = DataInterpolation(
-        h5file=r"../assets/FlinFlon.geoh5"
+        h5file=r"../assets/FlinFlon_light.geoh5"
     )
     app.project_panel
 
@@ -52,7 +52,7 @@ neighboring object. See :ref:`Object, data selection <objectdataselection>`
     from geoapps.processing import DataInterpolation
     from ipywidgets import VBox
     app = DataInterpolation(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
     )
     VBox([app.objects, app.data])
 
@@ -73,7 +73,7 @@ List of objects available in the target ``geoh5``.
 
     from geoapps.processing import DataInterpolation
     app = DataInterpolation(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.out_mode.value = "To Object"
     app.out_mode.disabled = True
@@ -91,7 +91,7 @@ EM1D inversion results.
 
     from geoapps.processing import DataInterpolation
     app = DataInterpolation(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.out_mode.value = "Create 3D Grid"
     app.out_mode.disabled = True
@@ -267,6 +267,6 @@ See :ref:`Trigger panel<trigger_panel>` base applications.
 
     from geoapps.processing import DataInterpolation
     app = DataInterpolation(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.trigger_panel

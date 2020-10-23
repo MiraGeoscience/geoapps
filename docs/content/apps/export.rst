@@ -32,7 +32,7 @@ Select target ``geoh5`` file (see :ref:`Project panel <workspaceselection>`)
 
     from geoapps.export import Export
     app = Export(
-        h5file=r"../assets/FlinFlon.geoh5"
+        h5file=r"../assets/FlinFlon_light.geoh5"
     )
     app.project_panel
 
@@ -49,7 +49,7 @@ Select from the list of objects and data available for export (see :ref:`Object,
             from geoapps.export import Export
             from ipywidgets import HBox
             app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
+                  h5file=r"../assets/FlinFlon_light.geoh5"
             )
             HBox([app.objects, app.data])
 
@@ -66,7 +66,7 @@ List of file formats currently supported.
             from geoapps.export import Export
             from ipywidgets import HBox
             app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
+                  h5file=r"../assets/FlinFlon_light.geoh5"
             )
             app.file_type
 
@@ -86,7 +86,7 @@ Export option to **.shp**. Z-coodinate is ignored.
             from geoapps.export import Export
             from ipywidgets import HBox
             app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
+                  h5file=r"../assets/FlinFlon_light.geoh5"
             )
             app.file_type.value = "ESRI shapefile"
             app.file_type.disabled = True
@@ -105,7 +105,7 @@ Export option to **csv**. The x, y and z coordinates of every nodes/cells are ap
             from geoapps.export import Export
             from ipywidgets import HBox
             app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
+                  h5file=r"../assets/FlinFlon_light.geoh5"
             )
             app.file_type.value = "csv"
             app.file_type.disabled = True
@@ -128,7 +128,7 @@ Export option to **.geotiff**.
             from geoapps.export import Export
             from ipywidgets import HBox
             app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
+                  h5file=r"../assets/FlinFlon_light.geoh5"
             )
             app.file_type.value = "geotiff"
             app.file_type.disabled = True
@@ -148,7 +148,7 @@ Export option to UBC mesh (**.msh**) and model (**.mod**) format.
             from geoapps.export import Export
             from ipywidgets import HBox
             app = Export(
-                  h5file=r"../assets/FlinFlon.geoh5"
+                  h5file=r"../assets/FlinFlon_light.geoh5"
             )
             app.file_type.value = "UBC format"
             app.file_type.disabled = True
@@ -167,7 +167,7 @@ Set export directory and trigger export
     from ipywidgets import VBox
 
     app = Export(
-        h5file=r"../assets/FlinFlon.geoh5"
+        h5file=r"../assets/FlinFlon_light.geoh5"
     )
     VBox([
       app.trigger,

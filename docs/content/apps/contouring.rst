@@ -42,7 +42,7 @@ See :ref:`Object, data selection <objectdataselection>`
     from geoapps.selection import ObjectDataSelection
     ObjectDataSelection(
     select_multiple=True, add_groups=True,
-         h5file=r"../assets/FlinFlon.geoh5",
+         h5file=r"../assets/FlinFlon_light.geoh5",
          objects="Data_FEM_pseudo3D",
     ).widget
 
@@ -63,7 +63,7 @@ Numerical values or range of values to draw contours:
 
     from geoapps.processing import ContourValues
     app = ContourValues(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
         contours="-400:100:2000, -240"
     )
     app.contours
@@ -78,7 +78,7 @@ See :ref:`Plot and select data <plotselectiondata>`
 
     from geoapps.plotting import PlotSelection2D
     app = PlotSelection2D(
-      h5file=r"../assets/FlinFlon.geoh5",
+      h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.widget
 
@@ -96,7 +96,7 @@ String value used as name of contours added to the ``geoh5`` project.
 
     from geoapps.processing import ContourValues
     app = ContourValues(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.export_as
 
@@ -114,7 +114,7 @@ Option to export contours with Z (elevation) based on data values.
 
     from geoapps.processing import ContourValues
     app = ContourValues(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.z_value
 
@@ -129,6 +129,6 @@ See :ref:`Trigger panel<trigger_panel>` base applications.
 
     from geoapps.processing import ContourValues
     app = ContourValues(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.trigger_panel

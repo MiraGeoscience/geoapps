@@ -21,11 +21,9 @@ for visualization and modeling.
 
           See the :ref:`Installation page <getting_started>` to get started.
 
-Input Parameters
-----------------
 
 Project
-^^^^^^^
+-------
 
 See :ref:`Project panel <workspaceselection>`
 
@@ -35,12 +33,12 @@ See :ref:`Project panel <workspaceselection>`
 
     from geoapps.processing import CDICurve2Surface
     app = CDICurve2Surface(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.project_panel
 
 Object and data
-^^^^^^^^^^^^^^^
+---------------
 
 List of objects with corresponding data groups available for transfer to the
 new ``Surface`` object.
@@ -53,16 +51,16 @@ See :ref:`Object, data selection <objectdataselection>`
     from geoapps.processing import CDICurve2Surface
     from ipywidgets import HBox
     app = CDICurve2Surface(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
     )
     HBox([app.objects, app.data])
 
 
 Z options
-^^^^^^^^^
+---------
 
 Elevation
-"""""""""
+^^^^^^^^^
 
 Assign z-coordinates based on ``Elevation`` (m) field provided by the
 ``Curve`` object.
@@ -73,14 +71,14 @@ Assign z-coordinates based on ``Elevation`` (m) field provided by the
     from geoapps.processing import CDICurve2Surface
     from ipywidgets import HBox
     app = CDICurve2Surface(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
 
     )
     app.z_option.disabled = True
     app.depth_panel
 
 Depth
-"""""
+^^^^^
 
 Assign z-coordinates based on a ``Depth`` field provided by the ``Curve``
 object
@@ -91,65 +89,28 @@ object
         from geoapps.processing import CDICurve2Surface
         from ipywidgets import HBox
         app = CDICurve2Surface(
-              h5file=r"../assets/FlinFlon.geoh5",
+              h5file=r"../assets/FlinFlon_light.geoh5",
 
         )
         app.z_option.value = "depth"
         app.z_option.disabled = True
         HBox([app.z_option, app.elevations.data])
 
-The final elevation is assigned relative to either:
+The final elevation is assigned relative to topography. (See :ref:`Topography Widget <topo_widget>`)
 
-  - A topography ``Object`` with elevation
+.. jupyter-execute::
+    :hide-code:
 
-    .. jupyter-execute::
-        :hide-code:
+    from geoapps.processing import CDICurve2Surface
+    from ipywidgets import HBox
+    app = CDICurve2Surface(
+          h5file=r"../assets/FlinFlon_light.geoh5",
 
-        from geoapps.processing import CDICurve2Surface
-        from ipywidgets import HBox
-        app = CDICurve2Surface(
-              h5file=r"../assets/FlinFlon.geoh5",
-
-        )
-        app.z_option.value = "depth"
-        app.topography.objects.value = "Topography"
-        app.topography.data.value = "Z"
-        app.z_option.disabled = True
-        app.topography.options.disabled = True
-        app.topography.widget
-
-  - A constant offset value ``Relative to Sensor`` (below curve vertices)
-
-    .. jupyter-execute::
-        :hide-code:
-
-        from geoapps.processing import CDICurve2Surface
-        from ipywidgets import HBox
-        app = CDICurve2Surface(
-              h5file=r"../assets/FlinFlon.geoh5",
-
-        )
-        app.z_option.value = "depth"
-        app.topography.options.value = "Relative to Sensor"
-        app.topography.options.disabled = True
-        app.topography.widget
-
-  - A ``Constant`` elevation
-
-    .. jupyter-execute::
-        :hide-code:
-
-        from geoapps.processing import CDICurve2Surface
-        from ipywidgets import HBox
-        app = CDICurve2Surface(
-              h5file=r"../assets/FlinFlon.geoh5",
-
-        )
-        app.z_option.value = "depth"
-        app.topography.options.value = "Constant"
-        app.topography.options.disabled = True
-        app.topography.widget
-
+    )
+    app.z_option.value = "depth"
+    app.topography.objects.value = "Gravity_Magnetics_drape60m"
+    app.topography.data.value = "Topography"
+    app.topography.widget
 
 
 Line
@@ -163,7 +124,7 @@ Select ``Line`` field identifier to brake up the sections.
     from geoapps.processing import CDICurve2Surface
     from ipywidgets import HBox
     app = CDICurve2Surface(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
 
     )
     app.lines.data
@@ -182,7 +143,7 @@ Useful option for CDI curves with missing values.
     from geoapps.processing import CDICurve2Surface
     from ipywidgets import HBox
     app = CDICurve2Surface(
-          h5file=r"../assets/FlinFlon.geoh5",
+          h5file=r"../assets/FlinFlon_light.geoh5",
 
     )
     app.max_distance
@@ -198,7 +159,7 @@ String value used to name the new ``Surface`` object.
 
     from geoapps.processing import CDICurve2Surface
     app = CDICurve2Surface(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.export_as
 
@@ -209,6 +170,6 @@ See :ref:`Trigger panel<trigger_panel>` base applications.
 
     from geoapps.processing import CDICurve2Surface
     app = CDICurve2Surface(
-        h5file=r"../assets/FlinFlon.geoh5",
+        h5file=r"../assets/FlinFlon_light.geoh5",
     )
     app.trigger_panel

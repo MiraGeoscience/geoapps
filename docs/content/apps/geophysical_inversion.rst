@@ -42,7 +42,7 @@ See :ref:`Object, data selection <objectdataselection>`
     from geoapps.selection import ObjectDataSelection
     ObjectDataSelection(
     select_multiple=True, add_groups=True,
-         h5file=r"../assets/FlinFlon.geoh5",
+         h5file=r"../assets/FlinFlon_light.geoh5",
          objects="Data_FEM_pseudo3D",
     ).widget
 
@@ -57,7 +57,7 @@ See :ref:`Plot and select data <plotselectiondata>`
 
             from geoapps.plotting import PlotSelection2D
             app = PlotSelection2D(
-              h5file=r"../assets/FlinFlon.geoh5",
+              h5file=r"../assets/FlinFlon_light.geoh5",
             )
             app.widget
 
@@ -177,7 +177,7 @@ Topography, Sensor and Line Location Options
 Topography
 ^^^^^^^^^^
 
-Options to define the upper limit of the model (air/ground interface).
+Options to define the upper limit of the model (air/ground interface) (see ref:`Topography Widget <topo_widget>`)
 
 .. jupyter-execute::
     :hide-code:
@@ -185,63 +185,6 @@ Options to define the upper limit of the model (air/ground interface).
     Dropdown(
       options=["Topography", "Receivers", "Line ID (EM)"],
     )
-
-
-Object and data
-"""""""""""""""
-
-Topography defined by an object x,y location and data z-data value.
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import TopographyOptions
-    app = TopographyOptions(
-        h5file=r"../assets/FlinFlon.geoh5",
-        objects="Topography", value="Vertices"
-    )
-    app.options.value="Object"
-    app.options.disabled=True
-    app.widget
-
-
-Relative to sensor
-""""""""""""""""""
-
-Topography defined by the ``Receiver`` [x, y, z] locations and z-drape value
-(-below), also known as draped survey.
-
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import TopographyOptions
-    app = TopographyOptions(
-        h5file=r"../assets/FlinFlon.geoh5",
-        objects="Topography", value="Vertices"
-    )
-    app.options.value="Relative to Sensor"
-    app.options.disabled=True
-    app.offset.value = -40
-    app.widget
-
-Constant
-""""""""
-
-Topography defined at constant elevation (m).
-
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import TopographyOptions
-    app = TopographyOptions(
-        h5file=r"../assets/FlinFlon.geoh5",
-        objects="Topography", value="Vertices"
-    )
-    app.options.value="Constant"
-    app.options.disabled=True
-    app.widget
 
 
 Sensors
@@ -260,7 +203,7 @@ aircraft.
     :hide-code:
 
     from geoapps.inversion import SensorOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     app = SensorOptions(h5file=h5file, objects="Data_FEM_pseudo3D")
     app.options.value="sensor location + (dx, dy, dz)"
     app.options.disabled=True
@@ -279,7 +222,7 @@ elevation (radar height).
     :hide-code:
 
     from geoapps.inversion import SensorOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     app = SensorOptions(h5file=h5file, objects="Data_FEM_pseudo3D")
     app.options.value="topo + radar + (dx, dy, dz)"
     app.data.options = list(app.data.options) + ["radar"]
@@ -298,7 +241,7 @@ Line ID
     :hide-code:
 
     from geoapps.inversion import LineOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     app = LineOptions(h5file=h5file, objects="Data_FEM_pseudo3D")
     app.widget
 
@@ -312,7 +255,7 @@ List of parameters controlling the inversion.
     :hide-code:
 
     from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     widgets = InversionOptions(h5file=h5file)
     widgets.option_choices
 
@@ -325,7 +268,7 @@ Name given to the inversion group added to the ANALYST project.
     :hide-code:
 
     from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     widgets = InversionOptions(h5file=h5file)
     widgets.output_name
 
@@ -338,7 +281,7 @@ Target data misfit where 1 = number of data
     :hide-code:
 
     from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     widgets = InversionOptions(h5file=h5file)
     widgets.chi_factor
 
@@ -351,7 +294,7 @@ Global changes to the data uncertainties
      :hide-code:
 
      from geoapps.inversion import InversionOptions
-     h5file = r"../assets/FlinFlon.geoh5"
+     h5file = r"../assets/FlinFlon_light.geoh5"
      widgets = InversionOptions(h5file=h5file)
      widgets.uncert_mode
 
@@ -369,6 +312,15 @@ Starting model
 
 Initial model used to begin the inversion.
 
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import InversionOptions
+    h5file = r"../assets/FlinFlon_light.geoh5"
+    widgets = InversionOptions(h5file=h5file)
+    widgets.starting_model.options.value = "Model"
+    widgets.starting_model.widget
+
 Object and values
 """""""""""""""""
 
@@ -376,42 +328,26 @@ Model object and values selected from any Surface, BlockModel or Octree object.
 Values are interpolated onto the inversion mesh using a nearest neighbor
 algorithm.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.starting_model.options.value = "Model"
-    widgets.starting_model.options.disabled = True
-    widgets.starting_model.objects.value = "O2O_Interp_25m"
-    widgets.starting_model.data.value = "VTEM_model"
-    widgets.starting_model.widget
-
-
 
 Constant
 """"""""
 
 Constant background half-space value.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.starting_model.options.value = "Value"
-    widgets.starting_model.value.value = 1e-4
-    widgets.starting_model.options.disabled = True
-    widgets.starting_model.widget
-
-
 
 Susceptibility model *(FEM Only)*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Susceptibility values used in the forward calculations only.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import InversionOptions
+    h5file = r"../assets/FlinFlon_light.geoh5"
+    widgets = InversionOptions(h5file=h5file)
+    widgets.susceptibility_model.options.value = "Model"
+    widgets.susceptibility_model.widget
 
 Object and values
 """""""""""""""""
@@ -420,34 +356,10 @@ Model values selected from any ``Surface``, ``BlockModel`` or ``Octree``
 object. Values are interpolated onto the inversion mesh using a nearest
 neighbor algorithm.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.susceptibility_model.options.value = "Model"
-    widgets.susceptibility_model.options.disabled = True
-    widgets.susceptibility_model.objects.value = "O2O_Interp_25m"
-    widgets.susceptibility_model.data.value = "VTEM_model"
-    widgets.susceptibility_model.widget
-
 
 Constant
 """"""""
-
 Constant background susceptibility value (SI).
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.susceptibility_model.options.value = "Value"
-    widgets.susceptibility_model.value.value = 1e-4
-    widgets.susceptibility_model.options.disabled = True
-    widgets.susceptibility_model.widget
 
 
 Regularization
@@ -462,20 +374,19 @@ Reference model
 Reference model used in the `objective function <https://giftoolscookbook.readthedocs.io/en/latest/content/fundamentals/ObjectiveFunction.html#the-objective-function>`_.
 
 
-None
-""""
-
-**(Gravity/Magnetics only)** No reference value.
-
 .. jupyter-execute::
     :hide-code:
 
     from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     widgets = InversionOptions(h5file=h5file)
-    widgets.reference_model.options.value = "None"
-    widgets.reference_model.options.disabled = True
+    widgets.reference_model.options.value = "Model"
     widgets.reference_model.widget
+
+None
+""""
+
+**(Gravity/Magnetics only)** No reference value.
 
 
 Best-fitting halfspace
@@ -485,17 +396,6 @@ Best-fitting halfspace
 (single conductivity value) at each station
 
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.reference_model.options.value = "Best-fitting halfspace"
-    widgets.reference_model.options.disabled = True
-    widgets.reference_model.widget
-
-
 Object and values
 """""""""""""""""
 
@@ -503,34 +403,11 @@ Model values selected from any ``Surface``, ``BlockModel`` or ``Octree``
 object. Values are interpolated onto the inversion mesh using a nearest
 neighbor algorithm.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.reference_model.options.value = "Model"
-    widgets.reference_model.options.disabled = True
-    widgets.reference_model.objects.value = "O2O_Interp_25m"
-    widgets.reference_model.data.value = "VTEM_model"
-    widgets.reference_model.widget
 
 Constant
 """"""""
 
 Constant half-space value
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.reference_model.options.value = "Value"
-    widgets.reference_model.options.disabled = True
-    widgets.reference_model.value.value = "1e-4"
-    widgets.reference_model.widget
-
 
 
 :math:`\alpha`-Scaling
@@ -542,7 +419,7 @@ Scaling between the components of the regularization function.
       :hide-code:
 
       from geoapps.inversion import InversionOptions
-      h5file = r"../assets/FlinFlon.geoh5"
+      h5file = r"../assets/FlinFlon_light.geoh5"
       widgets = InversionOptions(h5file=h5file)
       widgets.alphas
 
@@ -558,7 +435,7 @@ p_z` (see `Sparse and Blocky Norms <https://giftoolscookbook.readthedocs.io/en/l
       :hide-code:
 
       from geoapps.inversion import InversionOptions
-      h5file = r"../assets/FlinFlon.geoh5"
+      h5file = r"../assets/FlinFlon_light.geoh5"
       widgets = InversionOptions(h5file=h5file)
       widgets.norms
 
@@ -575,6 +452,12 @@ An octree mesh is defined by a tree structure such that cells are subdivided
 it into smaller cells in eight octants. The following parameters allow to
 control the extent size and rules of cells refinement.
 
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import MeshOctreeOptions
+    widgets = MeshOctreeOptions()
+    widgets.widget
 
 .. figure:: ./images/Octree_refinement.png
         :scale: 50%
@@ -586,12 +469,6 @@ Smallest cells
 
 Dimensions (x,y,z) of the smallest octree cells.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import MeshOctreeOptions
-    widgets = MeshOctreeOptions()
-    widgets.core_cell_size
 
 Layers below topography
 """""""""""""""""""""""
@@ -600,13 +477,6 @@ Number of layers of cells at each octree level below the topography surface.
 As topography generally extends further, it is common practice to use only
 coarse cells once outside of the survey area.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import MeshOctreeOptions
-    widgets = MeshOctreeOptions()
-    widgets.octree_levels_topo
-
 
 Layers below data
 """""""""""""""""
@@ -614,26 +484,12 @@ Layers below data
 Number of layers of cells at each octree level below the observation points.
 
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import MeshOctreeOptions
-    widgets = MeshOctreeOptions()
-    widgets.octree_levels_obs
-
 .. _min_depth:
 
 Minimum depth (m)
 """""""""""""""""
 
 Minimum depth (m) of the mesh, rounded up to the next power of 2.
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import MeshOctreeOptions
-    widgets = MeshOctreeOptions()
-    widgets.depth_core
 
 
 Padding [W,E,N,S,D,U] (m)
@@ -645,14 +501,6 @@ padding can be added at depth, but it is recommended to set it through the
 :ref:`Minimum depth <min_depth>` parameter.
 
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import MeshOctreeOptions
-    widgets = MeshOctreeOptions()
-    widgets.padding_distance
-
-
 Max triangulation length
 """"""""""""""""""""""""
 
@@ -662,14 +510,6 @@ between points far apart are filtered out, reducing the number of small cells
 in regions without data.
 
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import MeshOctreeOptions
-    widgets = MeshOctreeOptions()
-    widgets.max_distance
-
-
 1D Mesh (EM only)
 ^^^^^^^^^^^^^^^^^
 
@@ -677,18 +517,19 @@ For laterally constrained 1D inversions (time or frequency), the earth is
 discretized into layer models connected by the regularization function. The
 following parameters define the 1D mesh repeated below each transmitter/receiver pairs.
 
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.inversion import Mesh1DOptions
+    widgets = Mesh1DOptions()
+    widgets.widget
+
 
 Smallest cell (m)
 """""""""""""""""
 
 Smallest layer at the top of the 1D mesh.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import Mesh1DOptions
-    widgets = Mesh1DOptions()
-    widgets.hz_min
 
 
 Expansion factor
@@ -696,38 +537,17 @@ Expansion factor
 
 Rate of cell expansion from the smallest cell size.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import Mesh1DOptions
-    widgets = Mesh1DOptions()
-    widgets.hz_expansion
-
 
 Number of cells
 """""""""""""""
 
 Total number of layers below each station.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import Mesh1DOptions
-    widgets = Mesh1DOptions()
-    widgets.n_cells
-
 
 Max depth
 """""""""
 
 Returns the full depth of the 1D mesh given the parameters selected above.
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import Mesh1DOptions
-    widgets = Mesh1DOptions()
-    widgets.cell_count
 
 
 Bounds
@@ -741,7 +561,7 @@ Open bounds if left empty [-inf, inf].
     :hide-code:
 
     from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     widgets = InversionOptions(h5file=h5file)
     widgets.lower_bound.value = "1e-5"
     widgets.upper_bound.value = "1e-1"
@@ -756,7 +576,7 @@ Ignore values
     :hide-code:
 
     from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     widgets = InversionOptions(h5file=h5file)
     widgets.ignore_values
 
@@ -777,20 +597,21 @@ Fill values used to populate the model above ground (air cells)
 Optimization
 ^^^^^^^^^^^^
 
-Max beta Iterations
-"""""""""""""""""""
-
-Maximum number of :math:`\beta`-iterations allowed.
-Note that when applying sparse norms, the inversion may require >20 iterations to converge.
-
+Parameters controlling various aspects of the inversion algorithm.
 
 .. jupyter-execute::
     :hide-code:
 
     from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
+    h5file = r"../assets/FlinFlon_light.geoh5"
     widgets = InversionOptions(h5file=h5file)
-    widgets.max_iterations
+    widgets.optimization
+
+Max beta Iterations
+"""""""""""""""""""
+
+Maximum number of :math:`\beta`-iterations allowed.
+Note that when applying sparse norms, the inversion may require >20 iterations to converge.
 
 
 Target misfit
@@ -800,25 +621,8 @@ Target data misfit where :math:`\chi=1` corresponds to :math:`\phi_d=N`
 (number of data). (See `Data Misfit and Uncertainties <https://giftoolscookbook.readthedocs.io/en/latest/content/fundamentals/Uncertainties.html#data-misfit-and-uncertainties>`_)
 
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.chi_factor
-
-
 Starting trade-off (:math:`\beta`)
 """"""""""""""""""""""""""""""""""
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.beta_start_options
 
 **ratio**:
 
@@ -836,27 +640,11 @@ Max CG Iterations
 
 Maximum number of Conjugate Gradient (CG) iterations per Gauss-Newton solve.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.max_cg_iterations
-
 
 CG Tolerance
 """"""""""""
 
 Threshold on the minimum Conjugate Gradient (CG) step to end the Gauss-Newton solve.
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.tol_cg
 
 
 Max CPUs
@@ -864,24 +652,9 @@ Max CPUs
 
 Maximum number of threads used for the parallelization. Defaults to half the system thread count.
 
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.n_cpu
 
 Max RAM (Gb)
 """"""""""""
 
 Approximate memory (RAM) used during the inversion. The value is used to calculate the chunk size for the storage of the sensitivity matrix on solid-state drive.
 (See `dask.array.to_zarr <https://docs.dask.org/en/latest/array-api.html#dask.array.to_zarr>`_)
-
-.. jupyter-execute::
-    :hide-code:
-
-    from geoapps.inversion import InversionOptions
-    h5file = r"../assets/FlinFlon.geoh5"
-    widgets = InversionOptions(h5file=h5file)
-    widgets.max_ram
