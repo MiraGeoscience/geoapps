@@ -15,35 +15,35 @@ various open file formats.
 
 
 
-.. note:: The latest version of applications can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+.. note:: Active widgets on this page are for demonstration only.
+
+          The latest version of the application can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
 
           See the :ref:`Installation page <getting_started>` to get started.
+
+
+Worksapce
+---------
+
+Select target ``geoh5`` file (see :ref:`Project panel <workspaceselection>`)
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.export import Export
+    app = Export(
+        h5file=r"../assets/FlinFlon.geoh5"
+    )
+    app.project_panel
+
 
 
 Input data
 ----------
 
-The following list of interactive widgets are for documentation and demonstration purposes only.
+Select from the list of objects and data available for export (see :ref:`Object, data selection <objectdataselection>`)
 
-
-.. list-table::
-   :header-rows: 0
-
-   * - .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.export import Export
-            app = Export(
-                h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.project_panel
-
-   * - See :ref:`Project panel <workspaceselection>`
-
-.. list-table::
-   :header-rows: 0
-
-   * -  .. jupyter-execute::
+.. jupyter-execute::
             :hide-code:
 
             from geoapps.export import Export
@@ -53,17 +53,14 @@ The following list of interactive widgets are for documentation and demonstratio
             )
             HBox([app.objects, app.data])
 
-   * - List of objects and data available for export.
-
 
 
 Output Parameters
 -----------------
 
-.. list-table::
-   :header-rows: 0
+List of file formats currently supported.
 
-   * -  .. jupyter-execute::
+.. jupyter-execute::
             :hide-code:
 
             from geoapps.export import Export
@@ -73,15 +70,17 @@ Output Parameters
             )
             app.file_type
 
-   * - List of file formats currently supported.
+
 
 ESRI Shapefile (``Points``, ``Curve``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. list-table::
-   :header-rows: 0
+Export option to **.shp**. Z-coodinate is ignored.
 
-   * -  .. jupyter-execute::
+``EPSG code``: Coordinate system assigned to the shapefile (`Spatial Reference <https://spatialreference.org/ref/epsg/>`_).
+
+
+.. jupyter-execute::
             :hide-code:
 
             from geoapps.export import Export
@@ -93,17 +92,14 @@ ESRI Shapefile (``Points``, ``Curve``)
             app.file_type.disabled = True
             app.type_widget
 
-   * - Export option to **.shp**. Z-coodinate is ignored.
-
-       ``EPSG code``: Coordinate system assigned to the shapefile (`Spatial Reference <https://spatialreference.org/ref/epsg/>`_).
 
 Column value (All)
 ^^^^^^^^^^^^^^^^^^
 
-.. list-table::
-   :header-rows: 0
+Export option to **csv**. The x, y and z coordinates of every nodes/cells are appended to the list of data by default.
 
-   * -  .. jupyter-execute::
+
+.. jupyter-execute::
             :hide-code:
 
             from geoapps.export import Export
@@ -115,15 +111,18 @@ Column value (All)
             app.file_type.disabled = True
             app.type_widget
 
-   * - Export option to **csv**. The x, y and z coordinates of every nodes/cells are appended to the list of data by default.
 
 Geotiff (``Grid2D``)
 ^^^^^^^^^^^^^^^^^^^^
 
-.. list-table::
-   :header-rows: 0
+Export option to **.geotiff**.
+        - ``EPSG code``: Coordinate system assigned to the shapefile (`Spatial Reference <https://spatialreference.org/ref/epsg/>`_).
+        - ``Type``: Type of geotiff exported
+           - ``Float``: Single-band image containing the float value of selected data.
+           - ``RGB``: 3-band image containing the RGB color displayed in ANALYST.
 
-   * -  .. jupyter-execute::
+
+.. jupyter-execute::
             :hide-code:
 
             from geoapps.export import Export
@@ -135,20 +134,15 @@ Geotiff (``Grid2D``)
             app.file_type.disabled = True
             app.type_widget
 
-   * - Export option to **.geotiff**.
-        - ``EPSG code``: Coordinate system assigned to the shapefile (`Spatial Reference <https://spatialreference.org/ref/epsg/>`_).
-        - ``Type``: Type of geotiff exported
-           - ``Float``: Single-band image containing the float value of selected data.
-           - ``RGB``: 3-band image containing the RGB color displayed in ANALYST.
 
 
 UBC format (``BlockModel``, ``Octree``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. list-table::
-   :header-rows: 0
+Export option to UBC mesh (**.msh**) and model (**.mod**) format.
 
-   * -  .. jupyter-execute::
+
+.. jupyter-execute::
             :hide-code:
 
             from geoapps.export import Export
@@ -160,31 +154,22 @@ UBC format (``BlockModel``, ``Octree``)
             app.file_type.disabled = True
             app.type_widget
 
-   * - Export option to UBC mesh (**.msh**) and model (**.mod**) format.
 
+Output
+------
 
-.. list-table::
-   :header-rows: 0
+Set export directory and trigger export
 
-   * - .. jupyter-execute::
-            :hide-code:
+.. jupyter-execute::
+    :hide-code:
 
-            from geoapps.export import Export
-            app = Export(
-                h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.trigger
-   * - Export trigger button.
+    from geoapps.export import Export
+    from ipywidgets import VBox
 
-.. list-table::
-   :header-rows: 0
-
-   * - .. jupyter-execute::
-            :hide-code:
-
-            from geoapps.export import Export
-            app = Export(
-                h5file=r"../assets/FlinFlon.geoh5"
-            )
-            app.export_directory
-   * - Set export directory.
+    app = Export(
+        h5file=r"../assets/FlinFlon.geoh5"
+    )
+    VBox([
+      app.trigger
+      app.export_directory
+    ])

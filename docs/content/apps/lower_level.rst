@@ -7,6 +7,13 @@ This section provides a list of low-level applications that can be combined
 together to form more complex ones.
 
 
+.. note:: Active widgets on this page are for demonstration only.
+
+          The latest version of the application can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+
+          See the :ref:`Installation page <getting_started>` to get started.
+
+
 .. _workspaceselection:
 
 Project panel

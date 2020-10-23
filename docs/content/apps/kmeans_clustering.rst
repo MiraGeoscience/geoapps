@@ -1,24 +1,16 @@
 KMeans Clustering
 *****************
 
-This application lets users cluster data pulled from `Geoscience ANALYST <https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_
+This application lets users cluster data stored on `Geoscience ANALYST <https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_
 objects using the `Scikit-Learn KMeans <https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html?highlight=kmeans#sklearn.cluster.KMeans>`_
-clustering algorithm. In addition, users are able to assess the clustering
-results using bar, scatter, inertia and cross-correlation plots.
+clustering algorithm. Leveraging `Plotly <https://plotly.com/>`_ visualization tools, users are able to assess the clustering
+results using histogram, box, scatter, inertia and cross-correlation plots.
 
 
-.. figure:: ./images/data_clustering.png
-        :align: center
-        :alt: inv_app
+.. image:: ./images/clustering_app.gif
 
 
-
-Parameters
-==========
-
-List of interactive widgets making up the application.
-
-.. note:: For demonstration purposes only.
+.. note:: Active widgets on this page are for demonstration only.
 
           The latest version of the application can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
 
@@ -72,12 +64,38 @@ KMeans for 2, 4, 8, 16 and 32 groups in order to draw a meaningful :ref:`Inertia
     :hide-code:
 
         from geoapps.processing import Clustering
-        from ipywidgets import HBox
+        from ipywidgets import VBox
         app = Clustering(
               h5file=r"../assets/FlinFlon.geoh5",
               static=True
         )
-        HBox([app.objects, app.data])
+        VBox([app.n_clusters, app.refresh_clusters,])
+
+**Refresh**
+
+Re-run the clustering after changing the list of input data or :ref:`downsampling <downsampling>`.
+
+
+Groups Color
+^^^^^^^^^^^^
+
+Assign a specific color to a given cluster group.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import Clustering
+    import plotly.offline as py
+    from ipywidgets import VBox
+
+    app = Clustering(
+          h5file=r"../assets/FlinFlon.geoh5",
+          static=True
+    )
+    VBox([
+      app.groups_options,
+      app.color_pickers[app.groups_options.value]
+    ])
 
 
 Analytics
@@ -123,6 +141,15 @@ The color values displayed correspond to the cluster groups.
     py.iplot(app.crossplot_fig)
 
 
+.. _downsampling:
+
+Downsampling
+^^^^^^^^^^^^
+
+Reduce the number of data points displayed on the scatter plot for efficiency.
+Data points are selected based on the random sampling of the combined Probability
+Density Function (PDF) of all fields.
+
 .. jupyter-execute::
     :hide-code:
 
@@ -140,18 +167,20 @@ The color values displayed correspond to the cluster groups.
       ])
       )
 
-Downsample the data displayed by the scatter plot for efficiency.
-Data points (rows) are randomly sampled using `numpy.random.choice
-<https://numpy.org/doc/stable/reference/random/generated/numpy.random.choice.html>`_,
-and by an approximate Probability Density Function (PDF) calculated over all fields.
+**Apply to kmeans**
+"""""""""""""""""""
 
-
-**Apply to clustering**: Optionally, downsampling can also be applied to the
+Optionally, downsampling can also be applied to the
 kmeans algorithm for speedup. Data points omitted by the algorithm are
 assigned to a group in post-processing using a nearest neighbor interpolation.
 
-.. warning:: Results may change significantly depending on the chosen number of
-          clusters and % downsampling.
+
+.. image:: ./images/Histogram.gif
+
+
+.. warning:: Results may change significantly when combining a large number of
+             clusters with a small sampling population. It is recommended to use the complete dataset
+             as a final product.
 
 
 Statistics
@@ -176,8 +205,8 @@ Display data statistics using the `pandas.DataFrame.describe <https://pandas.pyd
     )
 
 
-Heatmap
-^^^^^^^
+Confusion Matrix
+^^^^^^^^^^^^^^^^
 
 Display the confusion matrix for the chosen data fields used by the kmeans.
 
@@ -200,8 +229,6 @@ Histograms
 
 Display histograms for each data field. By default, data fields are normalized between [0, 1].
 
-**Scale**: Option to increase the weight of a data field.
-
 .. jupyter-execute::
     :hide-code:
 
@@ -219,12 +246,77 @@ Display histograms for each data field. By default, data fields are normalized b
 
     display(VBox([
       app.channels_plot_options,
-      app.scaling_dict[field]
+      app.scalings[field]
     ]))
-    py.iplot(app.histoplot_dict[field])
+    py.iplot(app.histo_plots[field])
+
+
+**Scale**
+"""""""""
+
+Option to increase the weight of a specific data field.
 
 
 .. _inertia_curve:
 
+
 Inertia
 ^^^^^^^
+
+Display the clusters inertia, or sum squares of distances between each sample
+to the center of its cluster group. The optimal number of clusters is
+generally thought to be at the point of maximum curvature.
+
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import Clustering
+    import plotly.offline as py
+    from ipywidgets import VBox
+
+    app = Clustering(
+          h5file=r"../assets/FlinFlon.geoh5",
+          static=True
+    )
+    app.plotting_options.value = "Inertia"
+    py.iplot(app.inertia_plot)
+
+
+Boxplot
+^^^^^^^
+
+Display boxplots describing the range of values within each cluster for a chosen data field.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import Clustering
+    import plotly.offline as py
+    from ipywidgets import VBox
+
+    app = Clustering(
+          h5file=r"../assets/FlinFlon.geoh5",
+          static=True
+    )
+    app.plotting_options.value = "Boxplot"
+    app.make_box_plot(None)
+    field = app.channels_plot_options.value
+    display(app.channels_plot_options)
+    py.iplot(app.box_plots[field])
+
+
+Output
+------
+
+See :ref:`Trigger panel<trigger_panel>` base applications.
+
+.. jupyter-execute::
+    :hide-code:
+
+    from geoapps.processing import Clustering
+    app = Clustering(
+        h5file=r"../assets/FlinFlon.geoh5",
+        static=True
+    )
+    app.trigger_panel

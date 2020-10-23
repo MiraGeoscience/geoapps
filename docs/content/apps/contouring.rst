@@ -21,11 +21,11 @@ either as 2D or 3D curves.
 
 
 
-.. note:: The latest version of applications can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
+.. note:: Active widgets on this page are for demonstration only.
+
+          The latest version of the application can be `downloaded here <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_.
 
           See the :ref:`Installation page <getting_started>` to get started.
-
-          The following list of interactive widgets are for documentation and demonstration purposes only.
 
 
 Input Parameters
