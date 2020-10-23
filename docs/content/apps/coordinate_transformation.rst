@@ -35,7 +35,7 @@ See :ref:`Project panel <workspaceselection>`
 
     from geoapps.processing import CoordinateTransformation
     app = CoordinateTransformation(
-        h5file=r"../assets/FlinFlon.geoh5"
+        h5file=r"../assets/FlinFlon_light.geoh5"
     )
     app.project_panel
 
@@ -51,7 +51,7 @@ List of objects available for reprojection.
             from geoapps.processing import CoordinateTransformation
             from ipywidgets import HBox
             app = CoordinateTransformation(
-                  h5file=r"../assets/FlinFlon.geoh5"
+                  h5file=r"../assets/FlinFlon_light.geoh5"
             )
             app.objects
 
@@ -66,7 +66,7 @@ Input EPSG
     from geoapps.processing import CoordinateTransformation
     from ipywidgets import HBox
     app = CoordinateTransformation(
-          h5file=r"../assets/FlinFlon.geoh5"
+          h5file=r"../assets/FlinFlon_light.geoh5"
     )
     app.epsg_in
 
@@ -82,7 +82,7 @@ Output
     from geoapps.processing import CoordinateTransformation
     from ipywidgets import HBox
     app = CoordinateTransformation(
-          h5file=r"../assets/FlinFlon.geoh5"
+          h5file=r"../assets/FlinFlon_light.geoh5"
     )
     app.epsg_out
 
@@ -98,6 +98,6 @@ See :ref:`Trigger Panel <trigger_panel>` documentation.
     from geoapps.processing import CoordinateTransformation
     from ipywidgets import HBox
     app = CoordinateTransformation(
-          h5file=r"../assets/FlinFlon.geoh5"
+          h5file=r"../assets/FlinFlon_light.geoh5"
     )
     app.trigger_panel
