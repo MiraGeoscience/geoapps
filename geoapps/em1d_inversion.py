@@ -796,7 +796,7 @@ def inversion(input_file):
                 Solver=PardisoSolver,
             )
         else:
-            time_index = np.arange(3)
+            time_index = np.arange(6)
             dobs_reduced = get_data_time_index(
                 survey.dobs, n_sounding, time, time_index
             )
