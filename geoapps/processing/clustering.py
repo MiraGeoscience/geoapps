@@ -55,9 +55,6 @@ class Clustering(ScatterPlots):
         self.colormap = {}
         self.clusters = {}
         self._channels_plot_options = Dropdown(description="Channels")
-        self._downsample_clustering = Checkbox(
-            description="Apply to kmeans", style={"description_width": "initial"},
-        )
         self._n_clusters = IntSlider(
             min=2,
             max=100,
@@ -79,10 +76,10 @@ class Clustering(ScatterPlots):
             description="Analytics",
         )
         self.input_box = VBox([self.plotting_options])
-        self.heatmap_fig = go.FigureWidget()
-        self.heatmap_plot = interactive_output(
-            self.make_heatmap, {"channels": self.data, "show": self.plotting_options,}
-        )
+        # self.heatmap_fig = go.FigureWidget()
+        # self.heatmap_plot = interactive_output(
+        #     self.make_heatmap, {"channels": self.data, "show": self.plotting_options,}
+        # )
         self._refresh_clusters = Button(description="Refresh", button_style="warning")
         self.refresh_clusters.on_click(self.run_clustering)
         self.histogram_panel = VBox([self.channels_plot_options])
@@ -100,7 +97,7 @@ class Clustering(ScatterPlots):
                 HBox(
                     [
                         Label("Downsampling:", style={"description_width": "initial"}),
-                        VBox([self.downsampling, self._downsample_clustering]),
+                        self.downsampling,
                     ]
                 ),
             ]
@@ -108,7 +105,6 @@ class Clustering(ScatterPlots):
         self.ga_group_name.description = "Name"
         self.ga_group_name.value = "MyCluster"
         self.plotting_options.observe(self.show_trigger, names="value")
-        self.downsample_clustering.observe(self.update_choices, names="value")
         self.downsampling.observe(self.update_choices, names="value")
         self.channels_plot_options.observe(self.make_hist_plot, names="value")
         self.channels_plot_options.observe(self.make_box_plot, names="value")
@@ -170,11 +166,6 @@ class Clustering(ScatterPlots):
         return self._channels_plot_options
 
     @property
-    def downsample_clustering(self):
-        """ipywidgets.Checkbox()"""
-        return self._downsample_clustering
-
-    @property
     def groups_options(self):
         """ipywidgets.Dropdown()"""
         return self._groups_options
@@ -219,6 +210,7 @@ class Clustering(ScatterPlots):
                 self.stats_table,
             ]
         elif self.plotting_options.value == "Confusion Matrix":
+            self.make_heatmap(None)
             self.input_box.children = [self.plotting_options, self.heatmap_fig]
         elif self.plotting_options.value == "Crossplot":
             self.input_box.children = [
@@ -466,24 +458,40 @@ class Clustering(ScatterPlots):
                 self.dataframe.describe(percentiles=None, include=None, exclude=None)
             )
 
-    def make_heatmap(self, channels, show):
+    def make_heatmap(self, _):
         """
         Generate a consfusion matrix
         """
-        if show == "Confusion Matrix" and getattr(self, "dataframe", None) is not None:
+        if (
+            self.plotting_options.value == "Confusion Matrix"
+            and getattr(self, "dataframe", None) is not None
+        ):
             dataframe = self.dataframe.copy()
             corrs = dataframe.corr()
-            self.heatmap_fig.data = []
-            self.heatmap_fig.add_trace(
-                go.Heatmap(
-                    x=list(corrs.columns),
-                    y=list(corrs.index),
-                    z=corrs.values,
-                    type="heatmap",
-                    colorscale="Viridis",
-                    zsmooth=False,
-                )
+
+            plot = go.Heatmap(
+                x=list(corrs.columns),
+                y=list(corrs.index),
+                z=corrs.values,
+                type="heatmap",
+                colorscale="Viridis",
+                zsmooth=False,
             )
+
+            if self.static:
+                self.heatmap_fig = go.FigureWidget([plot])
+            else:
+                if getattr(self, "heatmap_fig", None) is None:
+
+                    self.heatmap_fig = go.FigureWidget()
+
+                self.heatmap_fig.data = []
+                self.heatmap_fig.add_trace(plot)
+                self.boxplot_panel.children = [
+                    self.channels_plot_options,
+                    self.heatmap_fig,
+                ]
+
             self.heatmap_fig.update_scenes(
                 aspectratio=dict(x=1, y=1, z=0.7), aspectmode="manual"
             )
@@ -630,14 +638,9 @@ class Clustering(ScatterPlots):
 
                 values += [vals]
 
-            if self.downsample_clustering.value:
-                n_samples = self.downsampling.value
-            else:
-                n_samples = self.n_values
-
             values = np.vstack(values).T
             self._indices = random_sampling(
-                values, n_samples, bandwidth=2.0, rtol=1e0, method="hist",
+                values, self.downsampling.value, bandwidth=2.0, rtol=1e0, method="hist",
             )
 
             self.dataframe = pd.DataFrame(values[self.indices, :], columns=fields,)

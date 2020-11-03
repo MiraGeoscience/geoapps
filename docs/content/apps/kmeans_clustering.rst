@@ -146,7 +146,7 @@ The color values displayed correspond to the cluster groups.
 Downsampling
 ^^^^^^^^^^^^
 
-Reduce the number of data points displayed on the scatter plot for efficiency.
+Reduce the number of data points displayed on the scatter plot and kmeans clustering for efficiency.
 Data points are selected based on the random sampling of the combined Probability
 Density Function (PDF) of all fields.
 
@@ -154,7 +154,6 @@ Density Function (PDF) of all fields.
     :hide-code:
 
     from geoapps.processing import Clustering
-    from ipywidgets import HBox, VBox
 
     import plotly.offline as py
 
@@ -162,17 +161,9 @@ Density Function (PDF) of all fields.
           h5file=r"../assets/FlinFlon_light.geoh5",
           static=True
     )
-    display(VBox([
-      HBox([app.downsampling, app._downsample_clustering]),
-      ])
+    display(
+      app.downsampling,
       )
-
-**Apply to kmeans**
-"""""""""""""""""""
-
-Optionally, downsampling can also be applied to the
-kmeans algorithm for speedup. Data points omitted by the algorithm are
-assigned to a group in post-processing using a nearest neighbor interpolation.
 
 
 .. image:: ./images/Histogram.gif
