@@ -215,22 +215,11 @@ Display the confusion matrix for the chosen data fields used by the kmeans.
     py.iplot(app.heatmap_fig)
 
 
+
 Histograms
 ^^^^^^^^^^
 
 Display histograms for each data field. By default, data fields are normalized between [0, 1].
-
-Scale
-"""""
-
-Option to increase the weight of a specific data field.
-
-.. _kmeans_bounds:
-
-Upper/Lower Bounds
-""""""""""""""""""
-
-Option to set bound values on the data range.
 
 .. jupyter-execute::
     :hide-code:
@@ -255,6 +244,17 @@ Option to set bound values on the data range.
     py.iplot(app.histo_plots[field])
 
 
+Scale
+"""""
+
+Option to increase the weight of a specific data field.
+
+.. _kmeans_bounds:
+
+Upper/Lower Bounds
+""""""""""""""""""
+
+Option to set bound values on the data range.
 
 
 
