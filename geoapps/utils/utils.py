@@ -1157,20 +1157,25 @@ def random_sampling(values, size, method="hist", n_bins=100, bandwidth=0.2, rtol
     indices: numpy.array of int
         Indices of samples randomly selected from the PDF
     """
-    if method == "pdf":
-        kde_skl = KernelDensity(bandwidth=bandwidth, rtol=rtol)
-        kde_skl.fit(values)
-        probabilities = np.exp(kde_skl.score_samples(values))
-        probabilities /= probabilities.sum()
+    if size == values.shape[0]:
+        return np.where(np.all(~np.isnan(values), axis=1))[0]
     else:
-        probabilities = np.zeros(values.shape[0])
-        for ind in range(values.shape[1]):
-            pop, bins = np.histogram(values[:, ind], n_bins)
-            ind = np.digitize(values[:, ind], bins)
-            ind[ind > n_bins] = n_bins
-            probabilities += 1.0 / (pop[ind - 1] + 1)
+        if method == "pdf":
+            kde_skl = KernelDensity(bandwidth=bandwidth, rtol=rtol)
+            kde_skl.fit(values)
+            probabilities = np.exp(kde_skl.score_samples(values))
+            probabilities /= probabilities.sum()
+        else:
+            probabilities = np.zeros(values.shape[0])
+            for ind in range(values.shape[1]):
+                pop, bins = np.histogram(values[:, ind], n_bins)
+                ind = np.digitize(values[:, ind], bins)
+                ind[ind > n_bins] = n_bins
+                probabilities += 1.0 / (pop[ind - 1] + 1)
 
-        probabilities /= probabilities.sum()
+            probabilities /= probabilities.sum()
+
+    probabilities[np.any(np.isnan(values), axis=1)] = 0
 
     np.random.seed = 0
     return np.random.choice(

@@ -193,6 +193,7 @@ class ScatterPlots(ObjectDataSelection):
 
         super().__init__(**self.apply_defaults(**kwargs))
 
+        self.refresh_trigger.value = False
         self.crossplot = interactive_output(
             self.plot_selection,
             {
@@ -561,7 +562,7 @@ class ScatterPlots(ObjectDataSelection):
         """
         Set the min and max values for the given axis channel
         """
-        self.refresh.value = False
+
         channel = getattr(self, "_" + name).value
         self.get_channel(channel)
 
@@ -574,7 +575,6 @@ class ScatterPlots(ObjectDataSelection):
             cmin.value = f"{np.min(values):.2e}"
             cmax = getattr(self, "_" + name + "_max")
             cmax.value = f"{np.max(values):.2e}"
-        self.refresh.value = True
 
     def plot_selection(
         self,
@@ -613,7 +613,7 @@ class ScatterPlots(ObjectDataSelection):
         refresh_trigger,
     ):
 
-        if not refresh_trigger or not self.refresh.value:
+        if not self.refresh_trigger.value or not self.refresh.value:
             return None
 
         if (
@@ -776,7 +776,8 @@ class ScatterPlots(ObjectDataSelection):
             if not self.static:
                 self.crossplot_fig.data = []
 
-    def update_axes(self):
+    def update_axes(self, refresh_plot=True):
+        self.refresh_trigger.value = False
         for name in [
             "x",
             "y",
@@ -792,6 +793,8 @@ class ScatterPlots(ObjectDataSelection):
                 widget.value = val
             else:
                 widget.value = None
+        if refresh_plot:
+            self.refresh_trigger.value = True
 
     def update_choices(self, _):
         self.refresh_trigger.value = False
@@ -804,7 +807,7 @@ class ScatterPlots(ObjectDataSelection):
             if key not in self.data.value:
                 del self.data_channels[key]
 
-        self.update_axes()
+        self.update_axes(refresh_plot=False)
 
         if self.downsampling.value != self.n_values:
             self.update_downsampling(None, refresh_plot=False)
@@ -812,12 +815,10 @@ class ScatterPlots(ObjectDataSelection):
         self.refresh_trigger.value = True
 
     def update_downsampling(self, _, refresh_plot=True):
-
         if not list(self.data_channels.values()):
             return
 
         self.refresh_trigger.value = False
-
         values = []
         for axis in [self.x, self.y, self.z]:
             vals = self.get_channel(axis.value)
@@ -828,11 +829,13 @@ class ScatterPlots(ObjectDataSelection):
             return
 
         values = np.vstack(values)
-        values[np.isnan(values)] = 0
+        nans = np.isnan(values)
+        values[nans] = 0
         # Normalize all columns
         values = (values - np.min(values, axis=1)[:, None]) / (
             np.max(values, axis=1) - np.min(values, axis=1)
         )[:, None]
+        values[nans] = np.nan
         self._indices = random_sampling(
             values.T, self.downsampling.value, bandwidth=2.0, rtol=1e0, method="hist",
         )
