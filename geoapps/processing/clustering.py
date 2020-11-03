@@ -23,6 +23,10 @@ import pandas as pd
 
 
 class Clustering(ScatterPlots):
+    """
+    Application for the clustering of data.
+    """
+
     defaults = {
         "h5file": r"../../assets/FlinFlon.geoh5",
         "objects": "geochem",
@@ -206,12 +210,14 @@ class Clustering(ScatterPlots):
         ]
 
     def show_trigger(self, _):
+        """
+        Update and display a specific plot.
+        """
         if self.plotting_options.value == "Statistics":
             self.input_box.children = [
                 self.plotting_options_panel,
                 self.stats_table,
             ]
-            # self.make_stats_table(None, "Statistics")
         elif self.plotting_options.value == "Confusion Matrix":
             self.input_box.children = [self.plotting_options, self.heatmap_fig]
         elif self.plotting_options.value == "Crossplot":
@@ -245,6 +251,9 @@ class Clustering(ScatterPlots):
             ]
 
     def check_color(self, _):
+        """
+        Reset the color channel on the scatter plot.
+        """
         if self.color.value == "kmeans":
             self.update_colormap(None)
             self.color_maps.disabled = True
@@ -253,6 +262,9 @@ class Clustering(ScatterPlots):
             self.color_maps.disabled = False
 
     def update_colormap(self, _, refresh_plot=True):
+        """
+        Change the colormap for clusters
+        """
         self.refresh_trigger.value = False
         self.colormap = {}
         for ii in range(self.n_clusters.value):
@@ -275,6 +287,9 @@ class Clustering(ScatterPlots):
         self.refresh_trigger.value = refresh_plot
 
     def update_objects(self, _):
+        """
+        Reset all attributes on object change.
+        """
         # Reset in all
         self.data_channels = {}
         self.clusters = {}
@@ -292,6 +307,9 @@ class Clustering(ScatterPlots):
         self.downsampling.value = np.min([5000, self.n_values])
 
     def run_clustering(self, _):
+        """
+        Normalize the the selected data and perform the kmeans clustering.
+        """
         self.trigger.description = "Running ..."
         self.refresh_trigger.value = False
 
@@ -330,7 +348,7 @@ class Clustering(ScatterPlots):
 
     def make_inertia_plot(self, _):
         """
-        Add the inertia plot
+        Generate an inertia plot
         """
         if (
             self.plotting_options.value == "Inertia"
@@ -363,6 +381,9 @@ class Clustering(ScatterPlots):
             )
 
     def make_hist_plot(self, _):
+        """
+        Generate an histogram plot for the selected data channel.
+        """
         if (
             self.plotting_options.value == "Histogram"
             and self.channels_plot_options.value in self.scalings.keys()
@@ -390,6 +411,9 @@ class Clustering(ScatterPlots):
                 ]
 
     def make_box_plot(self, _):
+        """
+        Generate a box plot for each cluster.
+        """
         if (
             self.plotting_options.value == "Boxplot"
             and getattr(self, "dataframe", None) is not None
@@ -411,7 +435,7 @@ class Clustering(ScatterPlots):
                         fillcolor=self.color_pickers[ii].value,
                         marker_color=self.color_pickers[ii].value,
                         line_color=self.color_pickers[ii].value,
-                        #                     name=g, showlegend=False
+                        showlegend=False,
                     )
                 )
 
@@ -434,12 +458,18 @@ class Clustering(ScatterPlots):
             )
 
     def make_stats_table(self, channels, show):
+        """
+        Generate a table of statistics using pandas
+        """
         if show == "Statistics" and getattr(self, "dataframe", None) is not None:
             display(
                 self.dataframe.describe(percentiles=None, include=None, exclude=None)
             )
 
     def make_heatmap(self, channels, show):
+        """
+        Generate a consfusion matrix
+        """
         if show == "Confusion Matrix" and getattr(self, "dataframe", None) is not None:
             dataframe = self.dataframe.copy()
             corrs = dataframe.corr()
@@ -515,7 +545,9 @@ class Clustering(ScatterPlots):
             self.heatmap_fig.show()
 
     def save_cluster(self, _):
-
+        """
+        Write cluster groups to the target geoh5 object.
+        """
         if "kmeans" in self.data_channels.keys():
             obj, _ = self.get_selected_entities()
 
@@ -533,13 +565,12 @@ class Clustering(ScatterPlots):
             self.workspace.finalize()
 
     def update_downsampling(self, _, refresh_plot=True):
-        """
-        Handled by update_choices
-        """
-        return
+        ...
 
     def update_choices(self, _, refresh_plot=True):
-
+        """
+        Trigger a re-write of the dataframe on changes of data, downsampling, scale or bounds.
+        """
         self.clusters = {}
 
         if "kmeans" in self.data_channels.keys():
@@ -550,10 +581,11 @@ class Clustering(ScatterPlots):
         for channel in self.data.value:
             self.get_channel(channel)
 
-        fields = list(self.data_channels.keys())
-        for key in fields:
+        for key in list(self.data_channels.keys()):
             if key not in list(self.data.value) + ["kmeans"]:
                 del self.data_channels[key]
+
+        fields = list(self.data_channels.keys())
 
         if len(fields) > 0:
             values = []

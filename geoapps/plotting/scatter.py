@@ -815,6 +815,7 @@ class ScatterPlots(ObjectDataSelection):
         self.refresh_trigger.value = True
 
     def update_downsampling(self, _, refresh_plot=True):
+
         if not list(self.data_channels.values()):
             return
 
