@@ -211,7 +211,7 @@ class Clustering(ScatterPlots):
             ]
         elif self.plotting_options.value == "Confusion Matrix":
             self.make_heatmap(None)
-            self.input_box.children = [self.plotting_options, self.heatmap_fig]
+            self.input_box.children = [self.plotting_options_panel, self.heatmap_fig]
         elif self.plotting_options.value == "Crossplot":
             self.input_box.children = [
                 self.plotting_options_panel,
@@ -482,15 +482,10 @@ class Clustering(ScatterPlots):
                 self.heatmap_fig = go.FigureWidget([plot])
             else:
                 if getattr(self, "heatmap_fig", None) is None:
-
                     self.heatmap_fig = go.FigureWidget()
 
                 self.heatmap_fig.data = []
                 self.heatmap_fig.add_trace(plot)
-                self.boxplot_panel.children = [
-                    self.channels_plot_options,
-                    self.heatmap_fig,
-                ]
 
             self.heatmap_fig.update_scenes(
                 aspectratio=dict(x=1, y=1, z=0.7), aspectmode="manual"
@@ -550,7 +545,7 @@ class Clustering(ScatterPlots):
                 yaxis={"autorange": "reversed"},
             )
             #             self.heatmap_fig.update_yaxes()
-            self.heatmap_fig.show()
+            # self.heatmap_fig.show()
 
     def save_cluster(self, _):
         """
