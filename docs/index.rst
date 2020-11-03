@@ -18,6 +18,16 @@ along with open-source code from the Python ecosystem.
 	    :width: 600
 
 
+The Latest
+^^^^^^^^^^
+
+Release 0.2.5
+"""""""""""""
+
+- :ref:`Upper/lower bound values <kmeans_bounds>` added to the KMeans clustering application.
+- Fix for documentation
+
+
 Contents:
 ^^^^^^^^^
 
