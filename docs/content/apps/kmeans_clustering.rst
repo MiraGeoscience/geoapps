@@ -234,6 +234,8 @@ Scale
 
 Option to increase the weight of a specific data field.
 
+.. _kmeans_bounds:
+
 Upper/Lower Bounds
 """"""""""""""""""
 
