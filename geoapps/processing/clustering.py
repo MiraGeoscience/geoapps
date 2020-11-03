@@ -16,10 +16,9 @@ from IPython.display import display
 import plotly.graph_objects as go
 import numpy as np
 from geoapps.plotting import ScatterPlots
-from geoapps.utils import object_2_dataframe, symlog, random_sampling
+from geoapps.utils import random_sampling
 from sklearn.cluster import KMeans
 from scipy.spatial import cKDTree
-from time import time
 import pandas as pd
 
 
@@ -275,36 +274,6 @@ class Clustering(ScatterPlots):
         self.custom_colormap = list(self.colormap.values())
         self.refresh_trigger.value = refresh_plot
 
-    # def update_downsampling(self, _, refresh_plot=True):
-    #
-    #     if not self.channels_plot_options.options:
-    #         return
-    #
-    #     self.refresh_trigger.value = False
-    #     self.clusters = {}
-    #     values = []
-    #     for channel in self.channels_plot_options.options:
-    #         vals = self.get_channel(channel)
-    #         if vals is not None:
-    #             values.append(vals)
-    #
-    #     if len(values) < 1:
-    #         return
-    #
-    #     values = np.vstack(values)
-    #     values[np.isnan(values)] = 0
-    #     # Normalize all columns
-    #     values = (values - np.min(values, axis=1)[:, None]) / (
-    #         np.max(values, axis=1) - np.min(values, axis=1)
-    #     )[:, None]
-    #     self._indices = random_sampling(
-    #         values.T, self.downsampling.value, bandwidth=2.0, rtol=1e0, method="hist",
-    #     )
-    #
-    #     if refresh_plot:
-    #         self.update_choices(None)
-    #         self.show_trigger(None)
-
     def update_objects(self, _):
         # Reset in all
         self.data_channels = {}
@@ -402,19 +371,6 @@ class Clustering(ScatterPlots):
             and getattr(self, "dataframe", None) is not None
         ):
             field = self.channels_plot_options.value
-
-            # values = self.dataframe[field].copy()
-            # if self.log_dict[field].value:
-            #     values = symlog(values, 1.0)
-
-            # bounds = (values < self.lower_bounds[field].value) | (values > self.upper_bounds[field].value)
-            # values = (
-            #     (values - min(values))
-            #     / (max(values) - min(values))
-            #     * self.scalings[field].value
-            # )
-            # values[bounds] = np.nan
-            # self.dataframe_scaled[field] = values
             plot = go.Histogram(x=self.dataframe[field], histnorm="percent", name=field)
 
             if self.static:
@@ -446,11 +402,7 @@ class Clustering(ScatterPlots):
 
                 cluster_ind = self.data_channels["kmeans"][self.indices] == ii
                 x = np.ones(np.sum(cluster_ind)) * ii
-
-                # if self.downsample_clustering.value:
                 y = self.data_channels[field][self.indices][cluster_ind]
-                # else:
-                #     y = self.dataframe.loc[self.data_channels["kmeans"] == ii, field]
 
                 boxes.append(
                     go.Box(
@@ -490,7 +442,6 @@ class Clustering(ScatterPlots):
     def make_heatmap(self, channels, show):
         if show == "Confusion Matrix" and getattr(self, "dataframe", None) is not None:
             dataframe = self.dataframe.copy()
-            #             dataframe = dataframe.drop(['X', 'Y', 'Z'], axis=1)
             corrs = dataframe.corr()
             self.heatmap_fig.data = []
             self.heatmap_fig.add_trace(
@@ -513,36 +464,34 @@ class Clustering(ScatterPlots):
                 margin=dict(t=0, b=0, l=0, r=0),
                 template="plotly_white",
                 updatemenus=[
-                    dict(
-                        buttons=list(
-                            [
-                                dict(
-                                    args=["type", "heatmap"],
-                                    label="Heatmap",
-                                    method="restyle",
-                                ),
-                                dict(
-                                    args=["type", "surface"],
-                                    label="3D Surface",
-                                    method="restyle",
-                                ),
-                            ]
-                        ),
-                        direction="down",
-                        pad={"r": 10, "t": 10},
-                        showactive=True,
-                        x=0.01,
-                        xanchor="left",
-                        y=1.15,
-                        yanchor="top",
-                    ),
-                    dict(
-                        buttons=[
-                            dict(
-                                args=["colorscale", label],
-                                label=label,
-                                method="restyle",
-                            )
+                    {
+                        "buttons": [
+                            {
+                                "args": ["type", "heatmap"],
+                                "label": "Heatmap",
+                                "method": "restyle",
+                            },
+                            {
+                                "args": ["type", "surface"],
+                                "label": "3D Surface",
+                                "method": "restyle",
+                            },
+                        ],
+                        "direction": "down",
+                        "pad": {"r": 10, "t": 10},
+                        "showactive": True,
+                        "x": 0.01,
+                        "xanchor": "left",
+                        "y": 1.15,
+                        "yanchor": "top",
+                    },
+                    {
+                        "buttons": [
+                            {
+                                "args": ["colorscale", label],
+                                "label": label,
+                                "method": "restyle",
+                            }
                             for label in [
                                 "Viridis",
                                 "Rainbow",
@@ -551,14 +500,14 @@ class Clustering(ScatterPlots):
                                 "Greens",
                             ]
                         ],
-                        direction="down",
-                        pad={"r": 10, "t": 10},
-                        showactive=True,
-                        x=0.32,
-                        xanchor="left",
-                        y=1.15,
-                        yanchor="top",
-                    ),
+                        "direction": "down",
+                        "pad": {"r": 10, "t": 10},
+                        "showactive": True,
+                        "x": 0.32,
+                        "xanchor": "left",
+                        "y": 1.15,
+                        "yanchor": "top",
+                    },
                 ],
                 yaxis={"autorange": "reversed"},
             )
@@ -606,11 +555,6 @@ class Clustering(ScatterPlots):
             if key not in list(self.data.value) + ["kmeans"]:
                 del self.data_channels[key]
 
-        # if dataframe.columns.size > 0:
-        #     self.dataframe = dataframe
-        #     self.dataframe_scaled = dataframe.copy()
-        #             self.dataframe_scaled.drop(["X", "Y", "Z"], axis=1)
-
         if len(fields) > 0:
             values = []
             for field in fields:
@@ -647,21 +591,12 @@ class Clustering(ScatterPlots):
                     self.log_dict[field] = Checkbox(description="Log", value=False)
                     self.log_dict[field].observe(self.update_choices, names="value")
 
-                # values = self.dataframe[field].copy()
-                # if self.log_dict[field].value:
-                #     values = symlog(values, 1.0)
-
                 vals[
                     (vals < self.lower_bounds[field].value)
                     | (vals > self.upper_bounds[field].value)
                 ] = np.nan
 
-                # values[bounds] = np.nan
-                # self.dataframe_scaled[field] = values
                 values += [vals]
-
-            # if self.downsample_clustering.value:
-            # self.update_downsampling(None, refresh_plot=False)
 
             if self.downsample_clustering.value:
                 n_samples = self.downsampling.value
@@ -687,16 +622,6 @@ class Clustering(ScatterPlots):
             self._mapping = np.empty(self.n_values, dtype="int")
             self._mapping[out_group] = ind_out
             self._mapping[self.indices] = np.arange(self.indices.shape[0])
-
-            # self.dataframe = pd.DataFrame(
-            #     self.dataframe.values[self.indices, :],
-            #     columns=self.dataframe.columns,
-            # )
-            # self.dataframe_scaled = pd.DataFrame(
-            #     self.dataframe_scaled.values[self.indices, :],
-            #     columns=self.dataframe.columns,
-            # )
-
             self.channels_plot_options.options = fields
 
         else:
