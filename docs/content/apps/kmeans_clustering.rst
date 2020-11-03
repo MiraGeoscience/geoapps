@@ -234,12 +234,17 @@ Scale
 
 Option to increase the weight of a specific data field.
 
+Upper/Lower Bounds
+""""""""""""""""""
+
+Option to set bound values on the data range.
+
 .. jupyter-execute::
     :hide-code:
 
     from geoapps.processing import Clustering
     import plotly.offline as py
-    from ipywidgets import VBox
+    from ipywidgets import HBox
 
     app = Clustering(
           h5file=r"../assets/FlinFlon_light.geoh5",
@@ -251,7 +256,8 @@ Option to increase the weight of a specific data field.
 
     display(VBox([
       app.channels_plot_options,
-      app.scalings[field]
+      app.scalings[field],
+      HBox([app.lower_bounds[field], app.upper_bounds[field]]),
     ]))
     py.iplot(app.histo_plots[field])
 
