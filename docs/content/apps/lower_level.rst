@@ -156,7 +156,7 @@ Generic widget to define topography.
 
 
 Object
-""""""
+^^^^^^
 
 Select an ``Object`` and ``Data`` defining x, y (from vertices or centroids) and vertical position.
 
@@ -172,7 +172,7 @@ Select an ``Object`` and ``Data`` defining x, y (from vertices or centroids) and
 
 
 Relative to Sensor
-""""""""""""""""""
+^^^^^^^^^^^^^^^^^^
 
 .. jupyter-execute::
     :hide-code:
@@ -188,7 +188,7 @@ Topography is defined by a vertical offset from a selected object position (vert
 
 
 Constant
-""""""""
+^^^^^^^^
 
 .. jupyter-execute::
     :hide-code:

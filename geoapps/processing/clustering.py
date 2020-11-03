@@ -137,7 +137,7 @@ class Clustering(ScatterPlots):
         self.groups_options.observe(self.groups_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
 
-        self.update_choices(None, refresh_plot=False)
+        self.update_choices(None)
         self.run_clustering(None)
 
         self.trigger.on_click(self.save_cluster)
@@ -661,6 +661,5 @@ class Clustering(ScatterPlots):
             self.dataframe_scaled = None
             self._mapping = None
 
-        self.update_axes(refresh_plot=False)
+        self.update_axes(refresh_plot=refresh_plot)
         self.show_trigger(None)
-        self.refresh_trigger.value = refresh_plot

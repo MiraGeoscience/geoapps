@@ -193,7 +193,6 @@ class ScatterPlots(ObjectDataSelection):
 
         super().__init__(**self.apply_defaults(**kwargs))
 
-        self.refresh_trigger.value = False
         self.crossplot = interactive_output(
             self.plot_selection,
             {

@@ -229,6 +229,11 @@ Histograms
 
 Display histograms for each data field. By default, data fields are normalized between [0, 1].
 
+Scale
+"""""
+
+Option to increase the weight of a specific data field.
+
 .. jupyter-execute::
     :hide-code:
 
@@ -251,10 +256,7 @@ Display histograms for each data field. By default, data fields are normalized b
     py.iplot(app.histo_plots[field])
 
 
-**Scale**
-"""""""""
 
-Option to increase the weight of a specific data field.
 
 
 .. _inertia_curve:
