@@ -1051,8 +1051,8 @@ def inversion(input_file):
     for ind, channel in enumerate(channels):
         if channel in list(input_param["data"]["channels"].keys()):
             res = (
-                dobs[ind::block][data_ordering]
-                - invProb.dpred[ind::block][data_ordering]
+                invProb.dpred[ind::block][data_ordering]
+                - dobs[ind::block][data_ordering]
             )
 
             d = curve.add_data(
