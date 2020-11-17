@@ -280,6 +280,9 @@ class EMLineProfiler(ObjectDataSelection):
             width,
             x_label,
             colormap,
+            log,
+            min,
+            max,
             reverse,
             z_shift,
             dip_rotation,
@@ -305,6 +308,9 @@ class EMLineProfiler(ObjectDataSelection):
                 width,
                 x_label,
                 colormap,
+                log,
+                min,
+                max,
                 reverse,
                 z_shift,
                 dip_rotation,
@@ -325,6 +331,9 @@ class EMLineProfiler(ObjectDataSelection):
                 "slice_width": self.slice_width,
                 "x_label": self.x_label,
                 "colormap": self.color_maps,
+                "log": self.model_log,
+                "min": self.model_min,
+                "max": self.model_max,
                 "z_shift": self.shift_cox_z,
                 "dip_rotation": self.dip_rotation,
                 "reverse": self.reverse_cmap,
@@ -486,7 +495,7 @@ class EMLineProfiler(ObjectDataSelection):
             self._dip_rotation = FloatSlider(
                 value=0,
                 min=0,
-                max=90,
+                max=180,
                 step=1.0,
                 description="Rotate dip (dd)",
                 disabled=False,
@@ -592,6 +601,31 @@ class EMLineProfiler(ObjectDataSelection):
             self._markers = ToggleButton(description="Show markers")
 
         return self._markers
+
+    @property
+    def model_log(self):
+        if getattr(self, "_model_log", None) is None:
+            self._model_log = Checkbox(description="log", value=True, indent=False)
+
+        return self._model_log
+
+    @property
+    def model_max(self):
+        if getattr(self, "_model_max", None) is None:
+            self._model_max = FloatText(
+                description="max", value=1e-1, continuous_update=False
+            )
+
+        return self._model_max
+
+    @property
+    def model_min(self):
+        if getattr(self, "_model_min", None) is None:
+            self._model_min = FloatText(
+                description="min", value=1e-4, continuous_update=False
+            )
+
+        return self._model_min
 
     @property
     def model_selection(self):
@@ -1484,6 +1518,9 @@ class EMLineProfiler(ObjectDataSelection):
         width,
         x_label,
         colormap,
+        log,
+        min,
+        max,
         reverse,
         z_shift,
         dip_rotation,
@@ -1539,6 +1576,10 @@ class EMLineProfiler(ObjectDataSelection):
             if dip > 90:
                 dip = 180 - dip
                 azimuth += 180
+                self.pause_plot_refresh = True
+                self.dip_rotation.value = dip
+                self.pause_plot_refresh = False
+
             self.time_groups[group]["dip"] = dip
             self.time_groups[group]["azimuth"] = azimuth
 
@@ -1557,7 +1598,12 @@ class EMLineProfiler(ObjectDataSelection):
 
             simplices = self.lines.model_cells.reshape((-1, 3))
 
-            model_values = np.log10(self.lines.model_values)
+            if log:
+                model_values = np.log10(self.lines.model_values)
+                min = np.log10(min)
+                max = np.log10(max)
+            else:
+                model_values = self.lines.model_values
 
             if self.show_doi.value:
                 model_values[self.lines.doi_values > doi_percent] = np.nan
@@ -1572,6 +1618,8 @@ class EMLineProfiler(ObjectDataSelection):
             self.model_figure.data[2].j = simplices[:, 1]
             self.model_figure.data[2].k = simplices[:, 2]
             self.model_figure.data[2].colorscale = colormap
+            self.model_figure.data[2].cmin = min
+            self.model_figure.data[2].cmax = max
 
             if (
                 getattr(self.lines, "borehole_vertices", None) is not None
@@ -1786,6 +1834,9 @@ class EMLineProfiler(ObjectDataSelection):
                             [
                                 self.model_selection.objects,
                                 self.model_selection.data,
+                                self.model_log,
+                                self.model_min,
+                                self.model_max,
                                 self.color_maps,
                                 self.reverse_cmap,
                                 self.opacity,
