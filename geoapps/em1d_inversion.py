@@ -27,7 +27,7 @@ from .simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from .utils import filter_xy, rotate_xy, geophysical_systems
+from .utils import filter_xy, rotate_xy, geophysical_systems, running_mean
 
 
 class SaveIterationsGeoH5(Directives.InversionDirective):
@@ -256,10 +256,9 @@ def inversion(input_file):
         vertices = entity.vertices
 
     win_ind = filter_xy(vertices[:, 0], vertices[:, 1], resolution, window=window,)
+    locations = vertices.copy()
 
-    locations = vertices[win_ind, :]
-
-    def get_topography():
+    def get_topography(locations):
         topo = None
         if "topography" in list(input_param.keys()):
             topo = locations.copy()
@@ -312,9 +311,7 @@ def inversion(input_file):
 
             for line in values:
 
-                line_ind = np.where(
-                    entity.get_data(key)[0].values[win_ind] == np.float(line)
-                )[0]
+                line_ind = np.where(entity.get_data(key)[0].values == np.float(line))[0]
 
                 if len(line_ind) < 2:
                     continue
@@ -324,9 +321,15 @@ def inversion(input_file):
                 # Compute the orientation between each station
                 angles = np.arctan2(xyz[1:, 1] - xyz[:-1, 1], xyz[1:, 0] - xyz[:-1, 0])
                 angles = np.r_[angles[0], angles].tolist()
-                dxy = np.zeros_like(xyz)
-                for ind, angle in enumerate(angles):
-                    dxy[ind, :] = rotate_xy(offsets, [0, 0], np.rad2deg(angle))
+                angles = running_mean(angles, width=5)
+                # dxy = np.zeros_like(xyz)
+
+                # for ind, angle in enumerate(angles):
+                #     dxy[ind, :] = rotate_xy(offsets, [0, 0], np.rad2deg(angle))
+
+                dxy = np.vstack(
+                    [rotate_xy(offsets, [0, 0], np.rad2deg(angle)) for angle in angles]
+                )
 
                 # Move the stations
                 locations[line_ind, 0] += dxy[:, 0]
@@ -344,10 +347,12 @@ def inversion(input_file):
 
             locations = offset_receivers_xy(locations, bird_offset)
             locations[:, 2] += bird_offset[0, 2]
-            dem = get_topography()
+
+            locations = locations[win_ind, :]
+            dem = get_topography(locations)
 
         else:
-            dem = get_topography()
+            dem = get_topography(locations[win_ind, :])
             F = LinearNDInterpolator(dem[:, :2], dem[:, 2])
 
             if "constant_drape" in list(input_param["receivers_offset"].keys()):
@@ -360,7 +365,7 @@ def inversion(input_file):
                     input_param["receivers_offset"]["radar_drape"][:3]
                 ).reshape((-1, 3))
 
-            locations = offset_receivers_xy(locations, bird_offset)
+            locations = offset_receivers_xy(locations, bird_offset)[win_ind, :]
             z_topo = F(locations[:, :2])
             if np.any(np.isnan(z_topo)):
                 tree = cKDTree(dem[:, :2])
@@ -378,7 +383,8 @@ def inversion(input_file):
                 locations[:, 2] += z_channel[win_ind]
 
     else:
-        dem = get_topography()
+        locations = locations[win_ind, :]
+        dem = get_topography(locations)
 
     F = LinearNDInterpolator(dem[:, :2], dem[:, 2])
     z_topo = F(locations[:, :2])
