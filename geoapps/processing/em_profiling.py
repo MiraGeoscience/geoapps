@@ -286,6 +286,7 @@ class EMLineProfiler(ObjectDataSelection):
             reverse,
             z_shift,
             dip_rotation,
+            azimuth_rotation,
             opacity,
             objects,
             model,
@@ -314,6 +315,7 @@ class EMLineProfiler(ObjectDataSelection):
                 reverse,
                 z_shift,
                 dip_rotation,
+                azimuth_rotation,
                 opacity,
                 doi_percent,
                 boreholes_size,
@@ -336,6 +338,7 @@ class EMLineProfiler(ObjectDataSelection):
                 "max": self.model_max,
                 "z_shift": self.shift_cox_z,
                 "dip_rotation": self.dip_rotation,
+                "azimuth_rotation": self.azimuth_rotation,
                 "reverse": self.reverse_cmap,
                 "opacity": self.opacity,
                 "doi_show": self.show_doi,
@@ -402,6 +405,23 @@ class EMLineProfiler(ObjectDataSelection):
             )
 
         return self._auto_picker
+
+    @property
+    def azimuth_rotation(self):
+        if getattr(self, "_azimuth_rotation", None) is None:
+            self._azimuth_rotation = FloatSlider(
+                value=0,
+                min=0,
+                max=360,
+                step=1.0,
+                description="Rotate azimuth (dd)",
+                disabled=False,
+                continuous_update=False,
+                orientation="horizontal",
+                style={"description_width": "initial"},
+            )
+
+        return self._azimuth_rotation
 
     @property
     def boreholes(self):
@@ -501,6 +521,7 @@ class EMLineProfiler(ObjectDataSelection):
                 disabled=False,
                 continuous_update=False,
                 orientation="horizontal",
+                style={"description_width": "initial"},
             )
 
         return self._dip_rotation
@@ -1360,6 +1381,7 @@ class EMLineProfiler(ObjectDataSelection):
             time_group["dip"] = dip
             self.pause_plot_refresh = True
             self.dip_rotation.value = dip
+            self.azimuth_rotation.value = azm
             self.pause_plot_refresh = False
 
         if axs is not None:
@@ -1524,6 +1546,7 @@ class EMLineProfiler(ObjectDataSelection):
         reverse,
         z_shift,
         dip_rotation,
+        azimuth_rotation,
         opacity,
         doi_percent,
         boreholes_size,
@@ -1571,13 +1594,14 @@ class EMLineProfiler(ObjectDataSelection):
 
             _, ind = tree.query(self.time_groups[group]["cox"].reshape((-1, 3)))
             dip = dip_rotation
-            azimuth = self.time_groups[group]["azimuth"]
+            azimuth = azimuth_rotation  # self.time_groups[group]["azimuth"]
 
             if dip > 90:
                 dip = 180 - dip
-                azimuth += 180
+                azimuth = (azimuth + 180) % 360.0
                 self.pause_plot_refresh = True
                 self.dip_rotation.value = dip
+                self.azimuth_rotation.value = azimuth
                 self.pause_plot_refresh = False
 
             self.time_groups[group]["dip"] = dip
@@ -1845,6 +1869,7 @@ class EMLineProfiler(ObjectDataSelection):
                                 Label("Adjust Dip Marker"),
                                 self.shift_cox_z,
                                 self.dip_rotation,
+                                self.azimuth_rotation,
                             ],
                             layout=Layout(width="50%"),
                         ),
