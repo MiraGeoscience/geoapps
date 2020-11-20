@@ -1,5 +1,6 @@
 import os
 from sklearn.neighbors import KernelDensity
+from skimage.measure import marching_cubes
 import gdal
 import dask
 import dask.array as da
@@ -1297,6 +1298,59 @@ def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
     axs.set_xticklabels([tick_format % x for x in xticks.tolist()], va="center")
     axs.autoscale(tight=True)
     axs.set_aspect(aspect)
+
+
+def iso_surface(
+    locations, values, levels, resolution=100,
+):
+    """
+    Generate 3D iso surface from x, y, z locations and values.
+
+    Parameters
+    ----------
+    locations
+        N x 3 array of floats of values positions
+    values
+        Array of floats
+    levels
+        List of iso values
+    resolution
+        Grid size used to generate the iso surface
+
+    Returns
+    -------
+    surfaces: list
+        List of surfaces (one per levels) defined by
+        vertices and faces.
+    """
+    grid = []
+    for ii in range(3):
+        grid += [
+            np.arange(
+                locations[:, ii].min(), locations[:, ii].max() + resolution, resolution
+            )
+        ]
+
+    y, x, z = np.meshgrid(grid[1], grid[0], grid[2])
+
+    tree = cKDTree(locations)
+    _, ind = tree.query(np.c_[x.flatten(), y.flatten(), z.flatten()])
+    values = values[ind].reshape(x.shape)
+
+    surfaces = []
+    for level in levels:
+        verts, faces, _, _ = marching_cubes(values, level=level)
+
+        vertices = []
+        for ii in range(3):
+            F = interp1d(
+                np.arange(grid[ii].shape[0]), grid[ii], fill_value="extrapolate"
+            )
+            vertices += [F(verts[:, ii])]
+
+        surfaces += [[np.vstack(vertices).T, faces]]
+
+    return surfaces
 
 
 # def refine_cells(self, indices):
