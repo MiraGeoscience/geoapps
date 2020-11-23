@@ -14,8 +14,18 @@ the powerful visualization capabilities of `Geoscience ANALYST
 along with open-source code from the Python ecosystem.
 
 .. figure:: ./images/index_page.png
-	    :align: center
-	    :width: 600
+        :align: center
+        :width: 600
+
+
+The Latest
+^^^^^^^^^^
+
+Release 0.2.5
+"""""""""""""
+
+- :ref:`Upper/lower bound values <kmeans_bounds>` added to the KMeans clustering application.
+- Fix for documentation
 
 
 Contents:
