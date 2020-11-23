@@ -8,6 +8,7 @@ dependencies:
   - git
   - pip
   - simpeg=0.13.1
+  - discretize=0.5.1
   - matplotlib
   - ipywidgets
   - ipykernel
