@@ -10,6 +10,7 @@ from geoh5py.workspace import Workspace
 from geoh5py.objects import Points, Curve, Surface
 from geoh5py.groups import ContainerGroup
 from ipywidgets import (
+    Button,
     Dropdown,
     ColorPicker,
     SelectMultiple,
@@ -68,18 +69,18 @@ class EMLineProfiler(ObjectDataSelection):
         "center": 0.35,
         "width": 0.28,
         "smoothing": 6,
-        "show_model": True,
-        "show_borehole": True,
+        # "show_model": False,
+        # "show_borehole": False,
         "markers": True,
-        "show_doi": True,
+        # "show_doi": False,
         "slice_width": 150,
-        "x_label": "Easting",
+        "x_label": "Distance",
         "ga_group_name": "EMProfiler",
     }
 
     def __init__(self, **kwargs):
         kwargs = self.apply_defaults(**kwargs)
-
+        self.all_anomalies = []
         self.borehole_trace = None
         self.data_channels = {}
         self.data_channel_options = {}
@@ -89,15 +90,11 @@ class EMLineProfiler(ObjectDataSelection):
         self.surface_model = None
         self._survey = None
         self._time_groups = {}
-
         self.objects.observe(self.objects_change, names="value")
-
         self.model_panel = VBox([self.show_model])
         self.show_model.observe(self.show_model_trigger, names="value")
-
         self.doi_panel = VBox([self.show_doi])
         self.show_doi.observe(self.show_doi_trigger, names="value")
-
         self.borehole_panel = VBox([self.show_borehole])
         self.show_borehole.observe(self.show_borehole_trigger, names="value")
 
@@ -143,6 +140,7 @@ class EMLineProfiler(ObjectDataSelection):
         self.highlight_selection(None)
         self.groups_setter.observe(self.groups_trigger)
         self.groups_widget = VBox([self.groups_setter])
+        self.run_all.on_click(self.run_all_click)
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export Marker"
         plotting = interactive_output(
@@ -162,7 +160,7 @@ class EMLineProfiler(ObjectDataSelection):
                 "center": self.center,
                 "width": self.width,
                 "groups": self.group_list,
-                "pick_trigger": self.auto_picker,
+                "plot_trigger": self.plot_trigger,
                 "x_label": self.x_label,
                 "threshold": self.threshold,
             },
@@ -175,7 +173,7 @@ class EMLineProfiler(ObjectDataSelection):
                 "residual": self.residual,
                 "center": self.center,
                 "groups": self.group_list,
-                "pick_trigger": self.auto_picker,
+                "plot_trigger": self.plot_trigger,
                 "threshold": self.threshold,
             },
         )
@@ -206,6 +204,11 @@ class EMLineProfiler(ObjectDataSelection):
                 "borehole_object": self.boreholes.objects,
                 "borehole_data": self.boreholes.data,
                 "boreholes_size": self.boreholes_size,
+                "max_migration": self.max_migration,
+                "min_channels": self.min_channels,
+                "min_amplitude": self.min_amplitude,
+                "min_width": self.min_width,
+                "plot_trigger": self.plot_trigger,
             },
         )
         self._widget = VBox(
@@ -219,6 +222,16 @@ class EMLineProfiler(ObjectDataSelection):
                             layout=Layout(width="50%"),
                         ),
                     ],
+                ),
+                Box(
+                    children=[self.lines.widget],
+                    layout=Layout(
+                        display="flex",
+                        flex_flow="row",
+                        align_items="stretch",
+                        width="100%",
+                        justify_content="center",
+                    ),
                 ),
                 HBox(
                     [
@@ -234,38 +247,30 @@ class EMLineProfiler(ObjectDataSelection):
                                 Label("Visual Parameters"),
                                 self.center,
                                 self.width,
+                                self.x_label,
                                 self.scale_panel,
                                 self.markers,
                             ],
                             layout=Layout(width="50%"),
                         ),
-                        VBox([plotting, self.x_label,]),
+                        VBox([plotting]),
                     ]
                 ),
-                Box(
-                    children=[self.lines.widget],
-                    layout=Layout(
-                        display="flex",
-                        flex_flow="row",
-                        align_items="stretch",
-                        width="100%",
-                        justify_content="center",
-                    ),
-                ),
                 self.model_panel,
+                self.run_all,
                 self.trigger_panel,
             ]
         )
-        self.auto_picker.value = True
+        self.plot_trigger.value = True
 
     @property
-    def auto_picker(self):
-        if getattr(self, "_auto_picker", None) is None:
-            self._auto_picker = ToggleButton(
+    def plot_trigger(self):
+        if getattr(self, "_plot_trigger", None) is None:
+            self._plot_trigger = ToggleButton(
                 description="Pick nearest target", value=False
             )
 
-        return self._auto_picker
+        return self._plot_trigger
 
     # @property
     # def azimuth_rotation(self):
@@ -312,7 +317,7 @@ class EMLineProfiler(ObjectDataSelection):
                 min=0,
                 max=1.0,
                 step=0.001,
-                description="Position (%)",
+                description="Window Center",
                 disabled=False,
                 continuous_update=False,
                 orientation="horizontal",
@@ -420,7 +425,7 @@ class EMLineProfiler(ObjectDataSelection):
                 min=0.025,
                 max=1.0,
                 step=0.005,
-                description="Width (%)",
+                description="Window Width",
                 disabled=False,
                 continuous_update=False,
                 orientation="horizontal",
@@ -627,6 +632,15 @@ class EMLineProfiler(ObjectDataSelection):
         return self._reverse_cmap
 
     @property
+    def run_all(self):
+        if getattr(self, "_run_all", None) is None:
+            self._run_all = Button(
+                description="Process All Lines", button_style="warning"
+            )
+
+        return self._run_all
+
+    @property
     def scale_button(self):
         if getattr(self, "_scale_button", None) is None:
             self._scale_button = ToggleButtons(
@@ -672,7 +686,7 @@ class EMLineProfiler(ObjectDataSelection):
     def show_borehole(self):
         if getattr(self, "_show_borehole", None) is None:
             self._show_borehole = ToggleButton(
-                description="Show Boreholes", value=False, button_style="success"
+                description="Show Boreholes", value=False,
             )
 
         return self._show_borehole
@@ -687,18 +701,14 @@ class EMLineProfiler(ObjectDataSelection):
     @property
     def show_doi(self):
         if getattr(self, "_show_doi", None) is None:
-            self._show_doi = ToggleButton(
-                description="Show DOI", value=False, button_style="success"
-            )
+            self._show_doi = ToggleButton(description="Show DOI", value=False,)
 
         return self._show_doi
 
     @property
     def show_model(self):
         if getattr(self, "_show_model", None) is None:
-            self._show_model = ToggleButton(
-                description="Show model", value=False, button_style="success"
-            )
+            self._show_model = ToggleButton(description="Show model", value=False,)
 
         return self._show_model
 
@@ -859,8 +869,8 @@ class EMLineProfiler(ObjectDataSelection):
                 widget.children[0].options = channels
                 widget.children[0].value = find_value(channels, [key])
 
-            self.auto_picker.value = False
-            self.auto_picker.value = True
+            self.plot_trigger.value = False
+            self.plot_trigger.value = True
 
     def objects_change(self, _):
         if self.workspace.get_entity(self.objects.value):
@@ -948,9 +958,7 @@ class EMLineProfiler(ObjectDataSelection):
                 self.groups_setter,
                 self.group_list,
                 self.channels,
-                # self.group_name,
                 self.group_color,
-                # self.group_add,
             ]
         else:
             self.groups_widget.children = [self.groups_setter]
@@ -962,60 +970,79 @@ class EMLineProfiler(ObjectDataSelection):
 
     def edit_group(self, _):
         """
-        Add a group to the list of groups
+        Change channels associated with groups
         """
-        # if self.group_name.value not in self.group_list.options:
-        #     self.group_list.options = list(self.group_list.options) + [
-        #         self.group_name.value
-        #     ]
+        gates = []
+        all_gates = []  # Track unique gates
         print("In edit groups")
-        self.time_groups[self.group_name.value] = {
-            "color": self.group_color.value,
-            "channels": list(self.channels.value),
-        }
-        print(self.time_groups[self.group_name.value])
+        for key in range(3):
+            if self.time_groups[key]["name"] == self.group_list.value:
+                group_gates = []
+                for channel in list(self.channels.value):
+                    if re.findall(r"\d+", channel):
+                        value = int(re.findall(r"\d+", channel)[-1])
+                        if value not in all_gates:
+                            group_gates += [value]
+
+                gates += [group_gates]
+            else:
+                gates += [self.time_groups[key]["gates"]]
+            all_gates.extend(gates[-1])
+
+        # Refresh only if list of gats has changed
+        if not all_gates == list(self.channel_to_gate.values()):
+            self.reset_groups(gates=gates)
+            self.plot_trigger.value = False
+            self.plot_trigger.value = True
+
+    def run_all_click(self, _):
+        """
+        Process the entire Curve object for all lines
+        """
+
+        anomalies = []
+        for line_id in list(self.lines.lines.options)[1:]:
+            xyz = self.get_line_xyz(line_id)
+
+            if xyz is None:
+                continue
+
+            profile = signal_processing_1d(
+                xyz, None, smoothing=self.smoothing.value, residual=self.residual.value
+            )
+            anomalies += [self.find_anomalies(profile, minimal_output=True)]
+
+        self.all_anomalies = anomalies
+        self.trigger.button_style = "success"
 
     def trigger_click(self, _):
 
         # for group in self.group_list.value:
-        group = self.group_list.value
-        tau = self.time_groups[group]["mad_tau"]
-        dip = self.time_groups[group]["dip"]
-        azimuth = self.time_groups[group]["azimuth"]
-        cox = self.time_groups[group]["cox"]
-        cox[2] -= self.shift_cox_z.value
+        if not self.all_anomalies:
+            return
 
-        points = [child for child in self.ga_group.children if child.name == group]
-        if any(points):
-            points = points[0]
-            azm_data = points.get_data("azimuth")[0]
-            azm_vals = azm_data.values.copy()
-            dip_data = points.get_data("dip")[0]
-            dip_vals = dip_data.values.copy()
+        # Append all lines
+        time_group, tau, dip, azimuth, cox = [], [], [], [], []
+        for line in self.all_anomalies:
 
-            tau_data = points.get_data("tau")[0]
-            tau_vals = tau_data.values.copy()
+            time_group += [line["time_group"]]
+            tau += [line["tau"]]
+            dip += [line["dip"]]
+            azimuth += [line["azimuth"]]
+            cox += [line["cox"]]
 
-            points.vertices = np.vstack([points.vertices, cox.reshape((1, 3))])
-            azm_data.values = np.hstack([azm_vals, azimuth])
-            dip_data.values = np.hstack([dip_vals, dip])
-            tau_data.values = np.hstack([tau_vals, tau])
+        if cox:
+            time_group = np.hstack(time_group)
 
-        else:
-            # if self.workspace.get_entity(group)
-            # parent =
             points = Points.create(
-                self.workspace,
-                name=group,
-                vertices=cox.reshape((1, 3)),
-                parent=self.ga_group,
+                self.workspace, name=self.ga_group_name.value, vertices=np.vstack(cox),
             )
-            points.entity_type.name = group
+            points.entity_type.name = self.ga_group_name.value
             points.add_data(
                 {
-                    "azimuth": {"values": np.asarray(azimuth)},
-                    "dip": {"values": np.asarray(dip)},
-                    "tau": {"values": np.asarray(tau)},
+                    "azimuth": {"values": np.hstack(azimuth)},
+                    "dip": {"values": np.hstack(dip)},
+                    "tau": {"values": np.hstack(tau)},
                 }
             )
             group = points.find_or_create_property_group(
@@ -1040,16 +1067,17 @@ class EMLineProfiler(ObjectDataSelection):
                 self.group_color.value = group["color"]
                 self.channels.value = group["channels"]
 
-    def find_anomalies(self, profile):
+    def find_anomalies(self, profile, minimal_output=False):
         """
         Find all anomalies along the profile defined by
         lows, inflection points and a peak.
         """
         anomalies = {
-            "channel": [],
+            "gates": [],
             "start": [],
             "inflx_up": [],
             "peak": [],
+            "peak_values": [],
             "inflx_dwn": [],
             "end": [],
             "azimuth": [],
@@ -1057,16 +1085,19 @@ class EMLineProfiler(ObjectDataSelection):
             "group": [],
             "time_group": [],
         }
-        locs = self.lines.profile.locations_resampled
-
-        xy = np.c_[self.lines.profile.interp_x(locs), self.lines.profile.interp_y(locs)]
+        locs = profile.locations_resampled
+        normalization = self.em_system_specs[self.system.value]["normalization"]
+        xy = np.c_[profile.interp_x(locs), profile.interp_y(locs)]
         angles = np.arctan2(xy[1:, 1] - xy[:-1, 1], xy[1:, 0] - xy[:-1, 0])
         angles = np.r_[angles[0], angles].tolist()
         azimuth = (450.0 - np.rad2deg(running_mean(angles, width=5))) % 360.0
 
-        for c_ind, (channel, d) in enumerate(self.data_channels.items()):
+        for channel, d in self.data_channels.items():
+            if channel not in list(self.channel_to_gate.keys()):
+                continue
+
             profile.values = d.values[self.survey.line_indices].copy()
-            values = self.lines.profile.values_resampled
+            values = profile.values_resampled
             dx = profile.derivative(order=1)
             ddx = profile.derivative(order=2)
 
@@ -1119,10 +1150,11 @@ class EMLineProfiler(ObjectDataSelection):
                 if (delta_amp > self.min_amplitude.value) & (
                     delta_x > self.min_width.value
                 ):
-                    anomalies["channel"] += [c_ind]
+                    anomalies["gates"] += [self.channel_to_gate[channel]]
                     anomalies["start"] += [start]
                     anomalies["inflx_up"] += [inflx_up]
                     anomalies["peak"] += [peak]
+                    anomalies["peak_values"] += [values[peak]]
                     anomalies["inflx_dwn"] += [inflx_dwn]
                     anomalies["end"] += [end]
                     anomalies["group"] += [-1]
@@ -1138,47 +1170,72 @@ class EMLineProfiler(ObjectDataSelection):
                         if channel in channels
                     ]
 
-                    left_ratio = np.abs(values[peak] - values[inflx_up]) / np.abs(
-                        locs[peak] - locs[inflx_up]
-                    )
-                    right_ratio = np.abs(values[peak] - values[inflx_dwn]) / np.abs(
-                        locs[peak] - locs[inflx_dwn]
-                    )
+                    # Normalize measures of anomaly shape
+                    dm = np.r_[
+                        np.abs(values[peak] - values[inflx_up]),
+                        np.abs(values[peak] - values[inflx_dwn]),
+                    ]
+                    dm /= np.linalg.norm(dm)
+                    dx = np.r_[
+                        np.abs(locs[peak] - locs[inflx_up]),
+                        np.abs(locs[peak] - locs[inflx_dwn]),
+                    ]
+                    dx /= np.linalg.norm(dx)
 
-                    if left_ratio > right_ratio:
-                        ratio = right_ratio / left_ratio
-                        anomalies["azimuth"] += [azimuth[peak]]
-                    else:
-                        ratio = left_ratio / right_ratio
+                    ratio = (dm[1] / dx[1]) / (dm[0] / dx[0])
+                    if ratio > 1:
+                        ratio = ratio ** -1.0
+
+                    if (dm[0] + dx[0]) > (dm[1] + dx[1]):
                         anomalies["azimuth"] += [(azimuth[peak] + 180) % 360.0]
+                    else:
+                        anomalies["azimuth"] += [azimuth[peak]]
 
-                    anomalies["dip"] = [np.rad2deg(np.arcsin(ratio))]
+                    anomalies["dip"] += [np.rad2deg(np.arccos(ratio))]
 
         if len(anomalies["peak"]) == 0:
-            return anomalies
+            return {}
 
         # Re-cast as numpy arrays
         for key, values in anomalies.items():
             anomalies[key] = np.hstack(values)
 
-        group = -1
+        group_id = -1
+        groups = []
         peaks_position = locs[anomalies["peak"]]
         for ii in range(peaks_position.shape[0]):
             # Skip if already labeled
             if anomalies["group"][ii] != -1:
                 continue
 
-            group += 1  # Increment group id
+            group_id += 1  # Increment group id
+
             dist = np.abs(peaks_position[ii] - peaks_position)
 
             # Find anomalies across channels within horizontal range
             near = (dist < self.max_migration.value) & (anomalies["group"] == -1)
-            anomalies["group"][near] = group
+            anomalies["group"][near] = group_id
+
+            groups += [
+                {
+                    "gates": anomalies["gates"][near],
+                    "start": anomalies["start"][near],
+                    "inflx_up": anomalies["inflx_up"][near],
+                    "peak": anomalies["peak"][near],
+                    "peak_values": anomalies["peak_values"][near]
+                    * np.prod(normalization),
+                    "inflx_dwn": anomalies["inflx_dwn"][near],
+                    "end": anomalies["end"][near],
+                    "azimuth": anomalies["azimuth"][near],
+                    "dip": anomalies["dip"][near],
+                    "time_group": anomalies["time_group"][near],
+                }
+            ]
 
         # Check time groups and expand to longest spans (e.g. early+mid+late)
-        for group in np.unique(anomalies["group"]).tolist():
-            ind = anomalies["group"] == group
-            in_gate, count = np.unique(anomalies["time_group"][ind], return_counts=True)
+        remove_group = []
+        for key, group in enumerate(groups):
+            in_gate, count = np.unique(group["time_group"], return_counts=True)
             in_gate = in_gate[
                 (count > self.min_channels.value) & (in_gate != -1)
             ].tolist()
@@ -1187,75 +1244,63 @@ class EMLineProfiler(ObjectDataSelection):
                 for ii, time_group in enumerate(self.time_groups.values())
                 if in_gate == time_group["label"]
             ]
-            if len(in_gate) > 0:
-                anomalies["time_group"][ind] = time_group[0]
+            if len(in_gate) > 0 and len(time_group) > 0:
 
-            # Estimate tau and dip direction on group
-            #
-            # left_ratio = (
-            #     bump_v[peak] - bump_v[inflx_up]) / (
-            #     bump_x[peak] - bump_x[inflx_up]
-            # )
-            # right_ratio = (bump_v[peak] - bump_v[inflx_dwn]) / (
-            #     bump_x[inflx_dwn] - bump_x[peak]
-            # )
-            #
-            # if left_ratio > right_ratio:
-            #     ratio = right_ratio / left_ratio
-            #     ori = "left"
-            # else:
-            #     ratio = left_ratio / right_ratio
-            #     ori = "right"
-        #
-        #             dip = np.rad2deg(np.arcsin(ratio))
-        #
+                group["time_group"] = time_group[0]
+                group["azimuth"] = np.median(group["azimuth"])
+                group["dip"] = np.median(group["dip"])
 
-        # if np.any(time_group["peaks"]):
-        #     peaks = np.vstack(time_group["peaks"])
-        #     inflx_dwn = np.vstack(time_group["inflx_dwn"])
-        #     inflx_up = np.vstack(time_group["inflx_up"])
-        #     ratio = peaks[:, 1] / peaks[0, 1]
-        #     ind = np.where(ratio >= (1 - threshold / 100))[0][-1]
-        #     peaks = np.mean(peaks[: ind + 1, :], axis=0)
-        #     inflx_dwn = np.mean(inflx_dwn[: ind + 1, :], axis=0)
-        #     inflx_up = np.mean(inflx_up[: ind + 1, :], axis=0)
-        #     cox_x = self.lines.profile.interp_x(peaks[0])
-        #     cox_y = self.lines.profile.interp_y(peaks[0])
-        #     cox_z = self.lines.profile.interp_z(peaks[0])
-        #     time_group["cox"] = np.r_[cox_x, cox_y, cox_z]
-        #
-        #     # Compute average dip
-        #     left_ratio = np.abs((peaks[1] - inflx_up[1]) / (peaks[0] - inflx_up[0]))
-        #     right_ratio = np.abs((peaks[1] - inflx_dwn[1]) / (peaks[0] - inflx_dwn[0]))
-        #
-        #     if left_ratio > right_ratio:
-        #         ratio = right_ratio / left_ratio
-        #         azm = (
-        #             450.0
-        #             - np.rad2deg(
-        #                 np.arctan2(
-        #                     (self.lines.profile.interp_y(inflx_up[0]) - cox_y),
-        #                     (self.lines.profile.interp_x(inflx_up[0]) - cox_x),
-        #                 )
-        #             )
-        #         ) % 360.0
-        #     else:
-        #         ratio = left_ratio / right_ratio
-        #         azm = (
-        #             450.0
-        #             - np.rad2deg(
-        #                 np.arctan2(
-        #                     (self.lines.profile.interp_y(inflx_dwn[0]) - cox_y),
-        #                     (self.lines.profile.interp_x(inflx_dwn[0]) - cox_x),
-        #                 )
-        #             )
-        #         ) % 360.0
-        #
-        #     dip = np.rad2deg(np.arcsin(ratio))
-        #
-        #     time_group["azimuth"] = azm
-        #     time_group["dip"] = dip
-        return anomalies
+                # Compute tau
+                times = np.hstack(
+                    [
+                        self.data_channel_options[f"[{ii}]"].children[1].value
+                        for ii in group["gates"]
+                    ]
+                )
+                values = np.log(group["peak_values"])
+
+                if times.shape[0] < 2:
+                    continue
+
+                # Compute linear trend
+                A = np.c_[np.ones_like(times), times]
+                y0, slope = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, values))
+                group["linear_fit"] = [y0, slope]
+            else:
+                remove_group += [group]
+
+        # Clean out groups outside thresholds
+        for key in remove_group:
+            groups.remove(key)
+
+        if minimal_output:
+
+            anomalies = {
+                "cox": [],
+                "azimuth": [],
+                "dip": [],
+                "time_group": [],
+                "tau": [],
+            }
+            for group in groups:
+                anomalies["cox"] += [
+                    np.mean(
+                        np.c_[
+                            profile.interp_x(locs[group["peak"]]),
+                            profile.interp_y(locs[group["peak"]]),
+                            profile.interp_z(locs[group["peak"]]),
+                        ],
+                        axis=0,
+                    )
+                ]
+                anomalies["azimuth"] += [group["azimuth"]]
+                anomalies["dip"] += [group["dip"]]
+                anomalies["time_group"] += [group["time_group"]]
+                anomalies["tau"] += [group["linear_fit"][0] ** -1.0]
+
+            return anomalies
+
+        return groups
 
     def plot_data_selection(
         self,
@@ -1273,7 +1318,7 @@ class EMLineProfiler(ObjectDataSelection):
         center,
         width,
         groups,
-        pick_trigger,
+        plot_trigger,
         x_label,
         threshold,
     ):
@@ -1283,6 +1328,7 @@ class EMLineProfiler(ObjectDataSelection):
         if (
             getattr(self, "survey", None) is None
             or getattr(self.lines, "profile", None) is None
+            or self.plot_trigger.value is False
         ):
             return
 
@@ -1310,12 +1356,14 @@ class EMLineProfiler(ObjectDataSelection):
         if getattr(self.survey, "line_indices", None) is None:
             return
 
-        # data = []
         locs = self.lines.profile.locations_resampled
-        for ind, (channel, d) in enumerate(self.data_channels.items()):
+        for channel, d in self.data_channels.items():
+
+            if channel not in list(self.channel_to_gate.keys()):
+                continue
 
             if axs is None:
-                fig = plt.figure(figsize=(12, 6))
+                plt.figure(figsize=(12, 6))
                 axs = plt.subplot()
 
             self.lines.profile.values = d.values[self.survey.line_indices].copy()
@@ -1326,71 +1374,69 @@ class EMLineProfiler(ObjectDataSelection):
             axs.plot(locs, values, color=[0.5, 0.5, 0.5, 1])
 
             # Plot the anomalies by time group color
-            c_ind = np.where(self.lines.anomalies["channel"] == ind)[0].tolist()
-            for ii in c_ind:
-                start = self.lines.anomalies["start"][ii]
-                end = self.lines.anomalies["end"][ii]
+            for group in self.lines.anomalies:
+                query = np.where(group["gates"] == self.channel_to_gate[channel])[0]
+
+                if (
+                    len(query) == 0
+                    or group["peak"][query[0]] < lims[0]
+                    or group["peak"][query[0]] > lims[1]
+                ):
+                    continue
+
+                ii = query[0]
+                start = group["start"][ii]
+                end = group["end"][ii]
                 axs.plot(
                     locs[start:end],
                     values[start:end],
-                    color=self.time_groups[self.lines.anomalies["time_group"][ii]][
-                        "color"
-                    ],
+                    color=self.time_groups[group["time_group"]]["color"],
                 )
 
-                if self.lines.anomalies["azimuth"][ii] < 180:
+                if group["azimuth"] < 180:
                     ori = "right"
                 else:
                     ori = "left"
 
                 axs.scatter(
-                    locs[self.lines.anomalies["peak"][ii]],
-                    values[self.lines.anomalies["peak"][ii]],
+                    locs[group["peak"][ii]],
+                    values[group["peak"][ii]],
                     s=200,
-                    c=self.time_groups[self.lines.anomalies["time_group"][ii]]["color"],
+                    c=self.time_groups[group["time_group"]]["color"],
                     marker=self.marker[ori],
                 )
 
-            if markers and len(c_ind) > 0:
-                # for anomaly in self.lines.anomalies.values:
-                axs.scatter(
-                    locs[self.lines.anomalies["peak"][c_ind]],
-                    values[self.lines.anomalies["peak"][c_ind]],
-                    s=100,
-                    color=np.c_[0, 0, 0, 0],
-                    edgecolors="r",
-                    marker="o",
-                )
-                axs.scatter(
-                    locs[self.lines.anomalies["start"][c_ind]],
-                    values[self.lines.anomalies["start"][c_ind]],
-                    s=100,
-                    color=np.c_[0, 0, 0, 0],
-                    edgecolors="b",
-                    marker="o",
-                )
-                axs.scatter(
-                    locs[self.lines.anomalies["end"][c_ind]],
-                    values[self.lines.anomalies["end"][c_ind]],
-                    s=100,
-                    color=np.c_[0, 0, 0, 0],
-                    edgecolors="c",
-                    marker="o",
-                )
-                axs.scatter(
-                    locs[self.lines.anomalies["inflx_up"][c_ind]],
-                    values[self.lines.anomalies["inflx_up"][c_ind]],
-                    color="k",
-                    marker="1",
-                    s=100,
-                )
-                axs.scatter(
-                    locs[self.lines.anomalies["inflx_dwn"][c_ind]],
-                    values[self.lines.anomalies["inflx_dwn"][c_ind]],
-                    color="k",
-                    marker="2",
-                    s=100,
-                )
+                if markers:
+                    axs.scatter(
+                        locs[group["start"][ii]],
+                        values[group["start"][ii]],
+                        s=100,
+                        color=np.c_[0, 0, 0, 0],
+                        edgecolors="b",
+                        marker="o",
+                    )
+                    axs.scatter(
+                        locs[group["end"][ii]],
+                        values[group["end"][ii]],
+                        s=100,
+                        color=np.c_[0, 0, 0, 0],
+                        edgecolors="c",
+                        marker="o",
+                    )
+                    axs.scatter(
+                        locs[group["inflx_up"][ii]],
+                        values[group["inflx_up"][ii]],
+                        color="k",
+                        marker="1",
+                        s=100,
+                    )
+                    axs.scatter(
+                        locs[group["inflx_dwn"][ii]],
+                        values[group["inflx_dwn"][ii]],
+                        color="k",
+                        marker="2",
+                        s=100,
+                    )
 
             if not residual:
                 raw = self.lines.profile._values_resampled_raw
@@ -1410,9 +1456,10 @@ class EMLineProfiler(ObjectDataSelection):
         ]
         axs.set_xlim(x_lims)
         axs.set_ylim([y_min, y_max])
-        axs.set_title(f"Line: {ind}")
+        # axs.set_title(f"Line: {ind}")
         axs.set_ylabel("dBdT")
 
+        axs.scatter(center_x, (y_min + y_max) / 2, s=100, c="k", marker="d")
         if x_label == "Easting":
             axs.text(
                 center_x,
@@ -1459,72 +1506,61 @@ class EMLineProfiler(ObjectDataSelection):
         axs.grid(True)
 
     def plot_decay_curve(
-        self, ind, smoothing, residual, center, groups, pick_trigger, threshold
+        self, ind, smoothing, residual, center, groups, plot_trigger, threshold
     ):
         axs = None
-        if self.auto_picker.value:
+        if self.plot_trigger.value:
 
-            group = self.group_list.value
-            # for group in self.group_list.value:
+            center_x = self.center.value * self.lines.profile.locations_resampled[-1]
+            # Loop through groups and find nearest to cursor
+            dist = np.inf
+            for anomaly in self.lines.anomalies:
+                delta_x = np.abs(
+                    center_x
+                    - self.lines.profile.locations_resampled[anomaly["peak"][0]]
+                )
+                if delta_x < dist:
+                    dist = delta_x
+                    group = anomaly
 
-            # if len(self.time_groups[group]["peaks"]) == 0:
-            #     return
-            #
-            # peaks = (
-            #     np.vstack(self.time_groups[group]["peaks"])
-            #     * self.em_system_specs[self.system.value]["normalization"]
-            # )
-            #
-            # ratio = peaks[:, 1] / peaks[0, 1]
-            # ind = np.where(ratio >= (1 - self.threshold.value / 100))[0][-1]
-            # tc = np.hstack(self.time_groups[group]["times"][: ind + 1])
-            # vals = np.log(peaks[: ind + 1, 1])
-            #
-            # if tc.shape[0] < 2:
-            #     return
-            #
-            # # Compute linear trend
-            # A = np.c_[np.ones_like(tc), tc]
-            # a, c = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, vals))
-            # d = np.r_[tc.min(), tc.max()]
-            # vv = d * c + a
-            # ratio = np.abs((vv[0] - vv[1]) / (d[0] - d[1]))
-            #
-            # self.time_groups[group]["mad_tau"] = ratio ** -1.0
-            #
-            # if axs is None:
-            #     plt.figure(figsize=(8, 8))
-            #     axs = plt.subplot()
-            #
-            # axs.plot(
-            #     d,
-            #     np.exp(d * c + a),
-            #     "--",
-            #     linewidth=2,
-            #     color=self.time_groups[group]["color"],
-            # )
-            # axs.text(
-            #     np.mean(d),
-            #     np.exp(np.mean(vv)),
-            #     f"{ratio ** -1.:.2e}",
-            #     color=self.time_groups[group]["color"],
-            # )
-            # #                 plt.yscale('symlog', linthreshy=scale_value)
-            # #                 axs.set_aspect('equal')
-            # axs.scatter(
-            #     np.hstack(self.time_groups[group]["times"]),
-            #     peaks[:, 1],
-            #     color=self.time_groups[group]["color"],
-            #     marker="^",
-            # )
-            # axs.grid(True)
-            #
-            # plt.yscale("symlog")
-            # axs.yaxis.set_label_position("right")
-            # axs.yaxis.tick_right()
-            # axs.set_ylabel("log(V)")
-            # axs.set_xlabel("Time (sec)")
-            # axs.set_title("Decay - MADTau")
+            # Get the times of the group and plot the linear regression
+            times = np.hstack(
+                [
+                    self.data_channel_options[f"[{ii}]"].children[1].value
+                    for ii in group["gates"]
+                ]
+            )
+
+            if axs is None:
+                plt.figure(figsize=(8, 8))
+                axs = plt.subplot()
+
+            y = np.exp(times * group["linear_fit"][1] + group["linear_fit"][0])
+            axs.plot(
+                times, y, "--", linewidth=2, color="k",
+            )
+            axs.text(
+                np.mean(times),
+                np.mean(y),
+                f"Tau: {group['linear_fit'][0] ** -1.:.2e}",
+                color="k",
+            )
+            #                 plt.yscale('symlog', linthreshy=scale_value)
+            #                 axs.set_aspect('equal')
+            axs.scatter(
+                times,
+                group["peak_values"],
+                color=self.time_groups[group["time_group"]]["color"],
+                marker="^",
+            )
+            axs.grid(True)
+
+            plt.yscale("log")
+            axs.yaxis.set_label_position("right")
+            axs.yaxis.tick_right()
+            axs.set_ylabel("log(V)")
+            axs.set_xlabel("Time (sec)")
+            axs.set_title("Decay - MADTau")
 
     def plot_model_selection(
         self,
@@ -1550,6 +1586,11 @@ class EMLineProfiler(ObjectDataSelection):
         borehole_object,
         borehole_data,
         boreholes_size,
+        max_migration,
+        min_channels,
+        min_amplitude,
+        min_width,
+        plot_trigger,
     ):
         self.update_line_model()
         self.update_line_boreholes()
@@ -1559,7 +1600,7 @@ class EMLineProfiler(ObjectDataSelection):
             or getattr(self.lines, "profile", None) is None
             or self.show_model.value is False
             or getattr(self.lines, "model_vertices", None) is None
-            or self.pause_plot_refresh
+            or plot_trigger is False
         ):
             return
 
@@ -1590,38 +1631,39 @@ class EMLineProfiler(ObjectDataSelection):
                 "size": 5,
             }
 
-            # for group in self.group_list.value:
-            # group = self.group_list.value
-            # if not np.any(self.time_groups[group]["peaks"]):
-            #     return
-            #
-            # _, ind = tree.query(self.time_groups[group]["cox"].reshape((-1, 3)))
-            # dip = dip_rotation
-            # azimuth = azimuth_rotation  # self.time_groups[group]["azimuth"]
-            #
-            # if dip > 90:
-            #     dip = 180 - dip
-            #     azimuth = (azimuth + 180) % 360.0
-            #     self.pause_plot_refresh = True
-            #     self.dip_rotation.value = dip
-            #     self.azimuth_rotation.value = azimuth
-            #     self.pause_plot_refresh = False
-            #
-            # self.time_groups[group]["dip"] = dip
-            # self.time_groups[group]["azimuth"] = azimuth
+            cox, azimuth, dip = [], [], []
+            locs = self.lines.profile.locations_resampled
+            for group in self.lines.anomalies:
+                cox += [
+                    [
+                        self.lines.profile.interp_x(locs[group["peak"][0]]),
+                        self.lines.profile.interp_y(locs[group["peak"][0]]),
+                        self.lines.profile.interp_z(locs[group["peak"][0]]),
+                    ]
+                ]
+                azimuth += [group["azimuth"]]
+                dip += [group["dip"]]
 
-            # vec = rotate_azimuth_dip(azimuth, dip,)
-            scaler = 100
+            self.model_figure.data[1].x = []
+            self.model_figure.data[1].y = []
+            self.model_figure.data[1].z = []
 
-            self.model_figure.data[1].x = self.lines.model_vertices[ind, 0]
-            self.model_figure.data[1].y = self.lines.model_vertices[ind, 1]
-            self.model_figure.data[1].z = self.lines.model_vertices[ind, 2]
-            # self.model_figure.data[1].u = vec[:, 0] * scaler
-            # self.model_figure.data[1].v = vec[:, 1] * scaler
-            # self.model_figure.data[1].w = vec[:, 2] * scaler
-            # self.model_figure.data[1].showscale = False
-
-            # self.time_groups[group]["cox"][2] = self.lines.model_vertices[ind, 2]
+            if len(cox) > 0:
+                vec = rotate_azimuth_dip(np.hstack(azimuth), np.hstack(dip))
+                cox = np.vstack(cox)
+                scaler = 100
+                self.model_figure.data[1].x = cox[:, 0]
+                self.model_figure.data[1].y = cox[:, 1]
+                self.model_figure.data[1].z = cox[:, 2]
+                self.model_figure.data[1].u = vec[:, 0] * scaler
+                self.model_figure.data[1].v = vec[:, 1] * scaler
+                self.model_figure.data[1].w = vec[:, 2] * scaler
+                self.model_figure.data[1].colorscale = [
+                    [0, "rgb(0,0,0)"],
+                    [1, "rgb(0,0,0)"],
+                ]
+                self.model_figure.data[1].showscale = False
+            # else:
 
             simplices = self.lines.model_cells.reshape((-1, 3))
 
@@ -1835,27 +1877,24 @@ class EMLineProfiler(ObjectDataSelection):
             else:
                 self.lines.borehole_vertices = None
 
-    def reset_groups(self):
-        print("Reseting groups")
-        start = self.em_system_specs[self.system.value]["channel_start_index"]
-        end = len(self.em_system_specs[self.system.value]["channels"].keys()) + 1
+    def reset_groups(self, gates=None):
 
-        # Divide channels in three equal blocks
-        block = int((end - start) / 3)
-        early = np.arange(start, start + block).tolist()
-        mid = np.arange(start + block, start + 2 * block).tolist()
-        late = np.arange(start + 2 * block, end).tolist()
+        if gates is None:
+            start = self.em_system_specs[self.system.value]["channel_start_index"]
+            end = len(self.em_system_specs[self.system.value]["channels"].keys()) + 1
 
-        gates = [early, mid, late]
+            # Divide channels in three equal blocks
+            block = int((end - start) / 3)
+            early = np.arange(start, start + block).tolist()
+            mid = np.arange(start + block, start + 2 * block).tolist()
+            late = np.arange(start + 2 * block, end).tolist()
+
+            gates = [early, mid, late]
         for group in self.time_groups.values():
-            try:
-                group["gates"] = []
-                group["channels"] = []
-                for ind in group["label"]:
-                    group["gates"] += gates[ind]
-
-            except ValueError:
-                pass
+            group["gates"] = []
+            group["channels"] = []
+            for ind in group["label"]:
+                group["gates"] += gates[ind]
 
         for channel in self.channels.options:
             if re.findall(r"\d+", channel):
@@ -1865,7 +1904,21 @@ class EMLineProfiler(ObjectDataSelection):
                         group["channels"].append(channel)
 
         self.highlight_selection(None)
-
+        self.channel_to_gate = {
+            c: g
+            for c, g in zip(
+                (
+                    self.time_groups[0]["channels"]
+                    + self.time_groups[1]["channels"]
+                    + self.time_groups[2]["channels"]
+                ),
+                (
+                    self.time_groups[0]["gates"]
+                    + self.time_groups[1]["gates"]
+                    + self.time_groups[2]["gates"]
+                ),
+            )
+        }
         # self.set_default_groups(self.channels.options)
 
     def show_model_trigger(self, _):
@@ -1901,6 +1954,8 @@ class EMLineProfiler(ObjectDataSelection):
                 ),
             ]
             self.show_model.description = "Hide model"
+            self.plot_trigger.value = False
+            self.plot_trigger.value = True
         else:
             self.model_panel.children = [self.show_model]
             self.show_model.description = "Show model"
