@@ -5,6 +5,8 @@ from scipy.spatial import cKDTree
 import plotly.graph_objects as go
 import plotly.express as px
 import time
+from dask.distributed import get_client
+import dask
 import matplotlib.pyplot as plt
 from geoh5py.workspace import Workspace
 from geoh5py.objects import Points, Curve, Surface
@@ -37,6 +39,7 @@ from geoapps.utils import (
     signal_processing_1d,
     rotate_azimuth_dip,
     running_mean,
+    hex_to_rgb,
 )
 from geoapps.selection import ObjectDataSelection, LineOptions
 
@@ -51,12 +54,16 @@ class EMLineProfiler(ObjectDataSelection):
         "h5file": "../../assets/FlinFlon.geoh5",
         "add_groups": True,
         "time_groups": {
-            0: {"name": "early", "label": [0], "color": "blue"},
-            1: {"name": "middle", "label": [1], "color": "yellow"},
-            2: {"name": "late", "label": [2], "color": "red"},
-            3: {"name": "early + middle", "label": [0, 1], "color": "cyan"},
-            4: {"name": "early + middle + late", "label": [0, 1, 2], "color": "green",},
-            5: {"name": "middle + late", "label": [1, 2], "color": "orange"},
+            0: {"name": "early", "label": [0], "color": "#0000FF"},
+            1: {"name": "middle", "label": [1], "color": "#FFFF00"},
+            2: {"name": "late", "label": [2], "color": "#FF0000"},
+            3: {"name": "early + middle", "label": [0, 1], "color": "#00FFFF"},
+            4: {
+                "name": "early + middle + late",
+                "label": [0, 1, 2],
+                "color": "#008000",
+            },
+            5: {"name": "middle + late", "label": [1, 2], "color": "#FFA500"},
         },
         "objects": "Data_TEM_pseudo3D",
         "data": ["Observed"],
@@ -79,6 +86,7 @@ class EMLineProfiler(ObjectDataSelection):
     }
 
     def __init__(self, **kwargs):
+        self.client = get_client()
         kwargs = self.apply_defaults(**kwargs)
         self.all_anomalies = []
         self.borehole_trace = None
@@ -863,7 +871,7 @@ class EMLineProfiler(ObjectDataSelection):
                     self.data_channels[channel] = self.survey.get_data(channel)[0]
 
             # Generate default groups
-            # self.reset_groups()
+            self.reset_groups()
 
             for key, widget in self.data_channel_options.items():
                 widget.children[0].options = channels
@@ -974,7 +982,6 @@ class EMLineProfiler(ObjectDataSelection):
         """
         gates = []
         all_gates = []  # Track unique gates
-        print("In edit groups")
         for key in range(3):
             if self.time_groups[key]["name"] == self.group_list.value:
                 group_gates = []
@@ -989,8 +996,8 @@ class EMLineProfiler(ObjectDataSelection):
                 gates += [self.time_groups[key]["gates"]]
             all_gates.extend(gates[-1])
 
-        # Refresh only if list of gats has changed
-        if not all_gates == list(self.channel_to_gate.values()):
+        # Refresh only if list of gates has changed
+        if not all_gates == [channel["gate"] for channel in self.active_channels]:
             self.reset_groups(gates=gates)
             self.plot_trigger.value = False
             self.plot_trigger.value = True
@@ -1001,18 +1008,37 @@ class EMLineProfiler(ObjectDataSelection):
         """
 
         anomalies = []
+        vertices = self.client.scatter(self.survey.vertices)
+        channels = self.client.scatter(self.active_channels)
+        time_groups = self.client.scatter(self.time_groups)
         for line_id in list(self.lines.lines.options)[1:]:
-            xyz = self.get_line_xyz(line_id)
+            line_indices = self.get_line_indices(line_id)
 
-            if xyz is None:
+            if line_indices is None:
                 continue
 
-            profile = signal_processing_1d(
-                xyz, None, smoothing=self.smoothing.value, residual=self.residual.value
-            )
-            anomalies += [self.find_anomalies(profile, minimal_output=True)]
+            anomalies += [
+                self.client.compute(
+                    find_anomalies(
+                        vertices,
+                        line_indices,
+                        channels,
+                        time_groups,
+                        data_normalization=self.em_system_specs[self.system.value][
+                            "normalization"
+                        ],
+                        smoothing=self.smoothing.value,
+                        use_residual=self.residual.value,
+                        min_amplitude=self.min_amplitude.value,
+                        min_width=self.min_width.value,
+                        max_migration=self.max_migration.value,
+                        min_channels=self.min_channels.value,
+                        minimal_output=True,
+                    )
+                )
+            ]
 
-        self.all_anomalies = anomalies
+        self.all_anomalies = self.client.gather(anomalies)
         self.trigger.button_style = "success"
 
     def trigger_click(self, _):
@@ -1022,29 +1048,57 @@ class EMLineProfiler(ObjectDataSelection):
             return
 
         # Append all lines
-        time_group, tau, dip, azimuth, cox = [], [], [], [], []
+        time_group, tau, migration, azimuth, cox, amplitude = [], [], [], [], [], []
         for line in self.all_anomalies:
 
             time_group += [line["time_group"]]
             tau += [line["tau"]]
-            dip += [line["dip"]]
+            migration += [line["migration"]]
+            amplitude += [line["amplitude"]]
             azimuth += [line["azimuth"]]
             cox += [line["cox"]]
 
         if cox:
-            time_group = np.hstack(time_group)
+            time_group = np.hstack(time_group) + 1  # Start count at 1
+
+            # Create reference values and color_map
+            group_map, color_map = {}, []
+            for ind, group in self.time_groups.items():
+                group_map[ind + 1] = group["name"]
+                color_map += [[ind + 1] + hex_to_rgb(group["color"]) + [1]]
+
+            color_map = np.core.records.fromarrays(
+                np.vstack(color_map).T, names=["Value", "Red", "Green", "Blue", "Alpha"]
+            )
 
             points = Points.create(
                 self.workspace, name=self.ga_group_name.value, vertices=np.vstack(cox),
             )
             points.entity_type.name = self.ga_group_name.value
+            migration = np.hstack(migration)
+            dip = migration / migration.max()
+            dip = np.rad2deg(np.arccos(dip))
             points.add_data(
                 {
+                    "amplitude": {"values": np.hstack(amplitude)},
                     "azimuth": {"values": np.hstack(azimuth)},
-                    "dip": {"values": np.hstack(dip)},
+                    "dip": {"values": dip},
                     "tau": {"values": np.hstack(tau)},
                 }
             )
+            time_group_data = points.add_data(
+                {
+                    "time_group": {
+                        "type": "referenced",
+                        "values": np.hstack(time_group),
+                        "value_map": group_map,
+                    }
+                }
+            )
+            time_group_data.entity_type.color_map = {
+                "name": "Time Groups",
+                "values": color_map,
+            }
             group = points.find_or_create_property_group(
                 name="AzmDip", property_group_type="Dip direction & dip"
             )
@@ -1067,240 +1121,213 @@ class EMLineProfiler(ObjectDataSelection):
                 self.group_color.value = group["color"]
                 self.channels.value = group["channels"]
 
-    def find_anomalies(self, profile, minimal_output=False):
-        """
-        Find all anomalies along the profile defined by
-        lows, inflection points and a peak.
-        """
-        anomalies = {
-            "gates": [],
-            "start": [],
-            "inflx_up": [],
-            "peak": [],
-            "peak_values": [],
-            "inflx_dwn": [],
-            "end": [],
-            "azimuth": [],
-            "dip": [],
-            "group": [],
-            "time_group": [],
-        }
-        locs = profile.locations_resampled
-        normalization = self.em_system_specs[self.system.value]["normalization"]
-        xy = np.c_[profile.interp_x(locs), profile.interp_y(locs)]
-        angles = np.arctan2(xy[1:, 1] - xy[:-1, 1], xy[1:, 0] - xy[:-1, 0])
-        angles = np.r_[angles[0], angles].tolist()
-        azimuth = (450.0 - np.rad2deg(running_mean(angles, width=5))) % 360.0
-
-        for channel, d in self.data_channels.items():
-            if channel not in list(self.channel_to_gate.keys()):
-                continue
-
-            profile.values = d.values[self.survey.line_indices].copy()
-            values = profile.values_resampled
-            dx = profile.derivative(order=1)
-            ddx = profile.derivative(order=2)
-
-            peaks = np.where((np.diff(np.sign(dx)) != 0) & (ddx[1:] < 0))[0]
-            lows = np.where((np.diff(np.sign(dx)) != 0) & (ddx[1:] > 0))[0]
-
-            # Add end of line as possible bump limits
-            lows = np.r_[0, lows, locs.shape[0] - 1]
-
-            up_inflx = np.where((np.diff(np.sign(ddx)) != 0) & (dx[1:] > 0))[0]
-            dwn_inflx = np.where((np.diff(np.sign(ddx)) != 0) & (dx[1:] < 0))[0]
-
-            if len(peaks) == 0 or len(lows) < 2:
-                continue
-
-            for peak in peaks:
-                ind = np.median(
-                    [0, lows.shape[0] - 1, np.searchsorted(locs[lows], locs[peak]) - 1]
-                ).astype(int)
-                start = lows[ind]
-                ind = np.median(
-                    [0, lows.shape[0] - 1, np.searchsorted(locs[lows], locs[peak])]
-                ).astype(int)
-                end = np.min([locs.shape[0] - 1, lows[ind]])
-                ind = np.median(
-                    [
-                        0,
-                        up_inflx.shape[0] - 1,
-                        np.searchsorted(locs[up_inflx], locs[peak]) - 1,
-                    ]
-                ).astype(int)
-                inflx_up = up_inflx[ind]
-                #         inflx_up = np.max([0, inflx_up])
-                ind = np.median(
-                    [
-                        0,
-                        dwn_inflx.shape[0] - 1,
-                        np.searchsorted(locs[dwn_inflx], locs[peak]),
-                    ]
-                ).astype(int)
-                inflx_dwn = np.min([locs.shape[0] - 1, dwn_inflx[ind] + 1])
-
-                # Check amplitude and width thresholds
-                delta_amp = (
-                    np.abs(values[peak] - np.min([values[start], values[end]]))
-                    / np.min([values[start], values[end]])
-                ) * 100.0
-                delta_x = locs[end] - locs[start]
-
-                if (delta_amp > self.min_amplitude.value) & (
-                    delta_x > self.min_width.value
-                ):
-                    anomalies["gates"] += [self.channel_to_gate[channel]]
-                    anomalies["start"] += [start]
-                    anomalies["inflx_up"] += [inflx_up]
-                    anomalies["peak"] += [peak]
-                    anomalies["peak_values"] += [values[peak]]
-                    anomalies["inflx_dwn"] += [inflx_dwn]
-                    anomalies["end"] += [end]
-                    anomalies["group"] += [-1]
-                    anomalies["time_group"] += [
-                        ind
-                        for ind, channels in enumerate(
-                            [
-                                self.time_groups[0]["channels"],
-                                self.time_groups[1]["channels"],
-                                self.time_groups[2]["channels"],
-                            ]
-                        )
-                        if channel in channels
-                    ]
-
-                    # Normalize measures of anomaly shape
-                    dm = np.r_[
-                        np.abs(values[peak] - values[inflx_up]),
-                        np.abs(values[peak] - values[inflx_dwn]),
-                    ]
-                    dm /= np.linalg.norm(dm)
-                    dx = np.r_[
-                        np.abs(locs[peak] - locs[inflx_up]),
-                        np.abs(locs[peak] - locs[inflx_dwn]),
-                    ]
-                    dx /= np.linalg.norm(dx)
-
-                    ratio = (dm[1] / dx[1]) / (dm[0] / dx[0])
-                    if ratio > 1:
-                        ratio = ratio ** -1.0
-
-                    if (dm[0] + dx[0]) > (dm[1] + dx[1]):
-                        anomalies["azimuth"] += [(azimuth[peak] + 180) % 360.0]
-                    else:
-                        anomalies["azimuth"] += [azimuth[peak]]
-
-                    anomalies["dip"] += [np.rad2deg(np.arccos(ratio))]
-
-        if len(anomalies["peak"]) == 0:
-            return {}
-
-        # Re-cast as numpy arrays
-        for key, values in anomalies.items():
-            anomalies[key] = np.hstack(values)
-
-        group_id = -1
-        groups = []
-        peaks_position = locs[anomalies["peak"]]
-        for ii in range(peaks_position.shape[0]):
-            # Skip if already labeled
-            if anomalies["group"][ii] != -1:
-                continue
-
-            group_id += 1  # Increment group id
-
-            dist = np.abs(peaks_position[ii] - peaks_position)
-
-            # Find anomalies across channels within horizontal range
-            near = (dist < self.max_migration.value) & (anomalies["group"] == -1)
-            anomalies["group"][near] = group_id
-
-            groups += [
-                {
-                    "gates": anomalies["gates"][near],
-                    "start": anomalies["start"][near],
-                    "inflx_up": anomalies["inflx_up"][near],
-                    "peak": anomalies["peak"][near],
-                    "peak_values": anomalies["peak_values"][near]
-                    * np.prod(normalization),
-                    "inflx_dwn": anomalies["inflx_dwn"][near],
-                    "end": anomalies["end"][near],
-                    "azimuth": anomalies["azimuth"][near],
-                    "dip": anomalies["dip"][near],
-                    "time_group": anomalies["time_group"][near],
-                }
-            ]
-
-        # Check time groups and expand to longest spans (e.g. early+mid+late)
-        remove_group = []
-        for key, group in enumerate(groups):
-            in_gate, count = np.unique(group["time_group"], return_counts=True)
-            in_gate = in_gate[
-                (count > self.min_channels.value) & (in_gate != -1)
-            ].tolist()
-            time_group = [
-                ii
-                for ii, time_group in enumerate(self.time_groups.values())
-                if in_gate == time_group["label"]
-            ]
-            if len(in_gate) > 0 and len(time_group) > 0:
-
-                group["time_group"] = time_group[0]
-                group["azimuth"] = np.median(group["azimuth"])
-                group["dip"] = np.median(group["dip"])
-
-                # Compute tau
-                times = np.hstack(
-                    [
-                        self.data_channel_options[f"[{ii}]"].children[1].value
-                        for ii in group["gates"]
-                    ]
-                )
-                values = np.log(group["peak_values"])
-
-                if times.shape[0] < 2:
-                    continue
-
-                # Compute linear trend
-                A = np.c_[np.ones_like(times), times]
-                y0, slope = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, values))
-                group["linear_fit"] = [y0, slope]
-            else:
-                remove_group += [group]
-
-        # Clean out groups outside thresholds
-        for key in remove_group:
-            groups.remove(key)
-
-        if minimal_output:
-
-            anomalies = {
-                "cox": [],
-                "azimuth": [],
-                "dip": [],
-                "time_group": [],
-                "tau": [],
-            }
-            for group in groups:
-                anomalies["cox"] += [
-                    np.mean(
-                        np.c_[
-                            profile.interp_x(locs[group["peak"]]),
-                            profile.interp_y(locs[group["peak"]]),
-                            profile.interp_z(locs[group["peak"]]),
-                        ],
-                        axis=0,
-                    )
-                ]
-                anomalies["azimuth"] += [group["azimuth"]]
-                anomalies["dip"] += [group["dip"]]
-                anomalies["time_group"] += [group["time_group"]]
-                anomalies["tau"] += [group["linear_fit"][0] ** -1.0]
-
-            return anomalies
-
-        return groups
+    # def self.find_anomalies(self, profile, minimal_output=False):
+    #     """
+    #     Find all anomalies along the profile defined by
+    #     lows, inflection points and a peak. Neighbouring anomalies are then grouped and
+    #     assigned a time_group label.
+    #
+    #     :return: list of dict
+    #     """
+    #     locs = profile.locations_resampled
+    #     normalization = self.em_system_specs[self.system.value]["normalization"]
+    #     xy = np.c_[profile.interp_x(locs), profile.interp_y(locs)]
+    #     angles = np.arctan2(xy[1:, 1] - xy[:-1, 1], xy[1:, 0] - xy[:-1, 0])
+    #     angles = np.r_[angles[0], angles].tolist()
+    #     azimuth = (450.0 - np.rad2deg(running_mean(angles, width=5))) % 360.0
+    #     anomalies = {
+    #         "gates": [],
+    #         "start": [],
+    #         "inflx_up": [],
+    #         "peak": [],
+    #         "peak_values": [],
+    #         "inflx_dwn": [],
+    #         "end": [],
+    #         "group": [],
+    #         "time_group": [],
+    #     }
+    #     for channel, d in self.data_channels.items():
+    #         if channel not in list(self.channel_to_gate.keys()):
+    #             continue
+    #
+    #         profile.values = d.values[self.survey.line_indices].copy()
+    #         values = profile.values_resampled
+    #         dx = profile.derivative(order=1)
+    #         ddx = profile.derivative(order=2)
+    #
+    #         peaks = np.where((np.diff(np.sign(dx)) != 0) & (ddx[1:] < 0))[0]
+    #         lows = np.where((np.diff(np.sign(dx)) != 0) & (ddx[1:] > 0))[0]
+    #
+    #         # Add end of line as possible bump limits
+    #         lows = np.r_[0, lows, locs.shape[0] - 1]
+    #
+    #         up_inflx = np.where((np.diff(np.sign(ddx)) != 0) & (dx[1:] > 0))[0]
+    #         dwn_inflx = np.where((np.diff(np.sign(ddx)) != 0) & (dx[1:] < 0))[0]
+    #
+    #         if len(peaks) == 0 or len(lows) < 2:
+    #             continue
+    #
+    #         for peak in peaks:
+    #             ind = np.median(
+    #                 [0, lows.shape[0] - 1, np.searchsorted(locs[lows], locs[peak]) - 1]
+    #             ).astype(int)
+    #             start = lows[ind]
+    #             ind = np.median(
+    #                 [0, lows.shape[0] - 1, np.searchsorted(locs[lows], locs[peak])]
+    #             ).astype(int)
+    #             end = np.min([locs.shape[0] - 1, lows[ind]])
+    #             ind = np.median(
+    #                 [
+    #                     0,
+    #                     up_inflx.shape[0] - 1,
+    #                     np.searchsorted(locs[up_inflx], locs[peak]) - 1,
+    #                 ]
+    #             ).astype(int)
+    #             inflx_up = up_inflx[ind]
+    #             #         inflx_up = np.max([0, inflx_up])
+    #             ind = np.median(
+    #                 [
+    #                     0,
+    #                     dwn_inflx.shape[0] - 1,
+    #                     np.searchsorted(locs[dwn_inflx], locs[peak]),
+    #                 ]
+    #             ).astype(int)
+    #             inflx_dwn = np.min([locs.shape[0] - 1, dwn_inflx[ind] + 1])
+    #
+    #             # Check amplitude and width thresholds
+    #             delta_amp = (
+    #                 np.abs(values[peak] - np.min([values[start], values[end]]))
+    #                 / np.min([values[start], values[end]])
+    #             ) * 100.0
+    #             delta_x = locs[end] - locs[start]
+    #
+    #             if (delta_amp > self.min_amplitude.value) & (
+    #                 delta_x > self.min_width.value
+    #             ):
+    #                 anomalies["gates"] += [self.channel_to_gate[channel]]
+    #                 anomalies["start"] += [start]
+    #                 anomalies["inflx_up"] += [inflx_up]
+    #                 anomalies["peak"] += [peak]
+    #                 anomalies["peak_values"] += [values[peak]]
+    #                 anomalies["inflx_dwn"] += [inflx_dwn]
+    #                 anomalies["end"] += [end]
+    #                 anomalies["group"] += [-1]
+    #                 anomalies["time_group"] += [
+    #                     ind
+    #                     for ind, channels in enumerate(
+    #                         [
+    #                             self.time_groups[0]["channels"],
+    #                             self.time_groups[1]["channels"],
+    #                             self.time_groups[2]["channels"],
+    #                         ]
+    #                     )
+    #                     if channel in channels
+    #                 ]
+    #
+    #     if len(anomalies["peak"]) == 0:
+    #         return {}
+    #
+    #     if minimal_output:
+    #         groups = {
+    #             "cox": [],
+    #             "azimuth": [],
+    #             "migration": [],
+    #             "time_group": [],
+    #             "tau": [],
+    #         }
+    #     else:
+    #         groups = []
+    #
+    #     # Re-cast as numpy arrays
+    #     for key, values in anomalies.items():
+    #         anomalies[key] = np.hstack(values)
+    #
+    #     group_id = -1
+    #     peaks_position = locs[anomalies["peak"]]
+    #     for ii in range(peaks_position.shape[0]):
+    #         # Skip if already labeled
+    #         if anomalies["group"][ii] != -1:
+    #             continue
+    #
+    #         group_id += 1  # Increment group id
+    #
+    #         dist = np.abs(peaks_position[ii] - peaks_position)
+    #
+    #         # Find anomalies across channels within horizontal range
+    #         near = (dist < self.max_migration.value) & (anomalies["group"] == -1)
+    #         anomalies["group"][near] = group_id
+    #
+    #         in_gate, count = np.unique(anomalies["time_group"][near], return_counts=True)
+    #         in_gate = in_gate[
+    #             (count > self.min_channels.value) & (in_gate != -1)
+    #             ].tolist()
+    #         time_group = [
+    #             ii
+    #             for ii, time_group in enumerate(self.time_groups.values())
+    #             if in_gate == time_group["label"]
+    #         ]
+    #         if len(in_gate) > 0 and len(time_group) > 0:
+    #
+    #             time_group = time_group[0]
+    #             gates = anomalies["gates"][near]
+    #             cox = anomalies["peak"][near]
+    #             cox_sort = np.argsort(locs[cox])
+    #             azm = azimuth[cox[0]]
+    #             if cox_sort[-1] < cox_sort[0]:
+    #                 azm = (azm + 180) % 360.0
+    #
+    #             migration = np.abs(locs[cox[cox_sort[-1]]] - locs[cox[cox_sort[0]]])
+    #
+    #             # Compute tau
+    #             times = np.hstack(
+    #                 [
+    #                     self.data_channel_options[f"[{ii}]"].children[1].value
+    #                     for ii in gates
+    #                 ]
+    #             )
+    #             values = anomalies["peak_values"][near] * np.prod(normalization)
+    #
+    #             if times.shape[0] < 2:
+    #                 continue
+    #
+    #             # Compute linear trend
+    #             A = np.c_[np.ones_like(times), times]
+    #             y0, slope = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, np.log(values)))
+    #             linear_fit = [y0, slope]
+    #
+    #             if minimal_output:
+    #                 groups["cox"] += [
+    #                     np.mean(
+    #                         np.c_[
+    #                             profile.interp_x(locs[cox]),
+    #                             profile.interp_y(locs[cox]),
+    #                             profile.interp_z(locs[cox]),
+    #                         ],
+    #                         axis=0,
+    #                     )
+    #                 ]
+    #                 groups["azimuth"] += [azm]
+    #                 groups["migration"] += [migration]
+    #                 groups["time_group"] += [time_group]
+    #                 groups["tau"] += [np.abs(linear_fit[0] ** -1.0)]
+    #             else:
+    #                 groups += [
+    #                     {
+    #                         "gates": gates,
+    #                         "start": anomalies["start"][near],
+    #                         "inflx_up": anomalies["inflx_up"][near],
+    #                         "peak": cox,
+    #                         "peak_values": values,
+    #                         "inflx_dwn": anomalies["inflx_dwn"][near],
+    #                         "end": anomalies["end"][near],
+    #                         "azimuth": azm,
+    #                         "migration": migration,
+    #                         "time_group": time_group,
+    #                         "linear_fit": linear_fit
+    #                     }
+    #                 ]
+    #
+    #     return groups
 
     def plot_data_selection(
         self,
@@ -1329,6 +1356,7 @@ class EMLineProfiler(ObjectDataSelection):
             getattr(self, "survey", None) is None
             or getattr(self.lines, "profile", None) is None
             or self.plot_trigger.value is False
+            or len(self.active_channels) == 0
         ):
             return
 
@@ -1357,16 +1385,12 @@ class EMLineProfiler(ObjectDataSelection):
             return
 
         locs = self.lines.profile.locations_resampled
-        for channel, d in self.data_channels.items():
-
-            if channel not in list(self.channel_to_gate.keys()):
-                continue
-
+        for channel in self.active_channels:
             if axs is None:
                 plt.figure(figsize=(12, 6))
                 axs = plt.subplot()
 
-            self.lines.profile.values = d.values[self.survey.line_indices].copy()
+            self.lines.profile.values = channel["values"][self.survey.line_indices]
             values = self.lines.profile.values_resampled
             y_min = np.min([values[sub_ind].min(), y_min])
             y_max = np.max([values[sub_ind].max(), y_max])
@@ -1375,7 +1399,7 @@ class EMLineProfiler(ObjectDataSelection):
 
             # Plot the anomalies by time group color
             for group in self.lines.anomalies:
-                query = np.where(group["gates"] == self.channel_to_gate[channel])[0]
+                query = np.where(group["gates"] == channel["gate"])[0]
 
                 if (
                     len(query) == 0
@@ -1509,7 +1533,7 @@ class EMLineProfiler(ObjectDataSelection):
         self, ind, smoothing, residual, center, groups, plot_trigger, threshold
     ):
         axs = None
-        if self.plot_trigger.value:
+        if self.plot_trigger.value and hasattr(self.lines, "profile"):
 
             center_x = self.center.value * self.lines.profile.locations_resampled[-1]
             # Loop through groups and find nearest to cursor
@@ -1526,8 +1550,9 @@ class EMLineProfiler(ObjectDataSelection):
             # Get the times of the group and plot the linear regression
             times = np.hstack(
                 [
-                    self.data_channel_options[f"[{ii}]"].children[1].value
-                    for ii in group["gates"]
+                    channel["time"]
+                    for channel in self.active_channels
+                    if channel["gate"] in list(group["gates"])
                 ]
             )
 
@@ -1542,7 +1567,7 @@ class EMLineProfiler(ObjectDataSelection):
             axs.text(
                 np.mean(times),
                 np.mean(y),
-                f"Tau: {group['linear_fit'][0] ** -1.:.2e}",
+                f"Tau: {np.abs(group['linear_fit'][0] ** -1.):.2e}",
                 color="k",
             )
             #                 plt.yscale('symlog', linthreshy=scale_value)
@@ -1642,14 +1667,18 @@ class EMLineProfiler(ObjectDataSelection):
                     ]
                 ]
                 azimuth += [group["azimuth"]]
-                dip += [group["dip"]]
+                dip += [group["migration"]]
 
             self.model_figure.data[1].x = []
             self.model_figure.data[1].y = []
             self.model_figure.data[1].z = []
 
             if len(cox) > 0:
-                vec = rotate_azimuth_dip(np.hstack(azimuth), np.hstack(dip))
+                dip = np.hstack(dip)
+                dip /= dip.max()
+                dip = np.rad2deg(np.arsin(dip))
+
+                vec = rotate_azimuth_dip(np.hstack(azimuth), dip)
                 cox = np.vstack(cox)
                 scaler = 100
                 self.model_figure.data[1].x = cox[:, 0]
@@ -1730,20 +1759,34 @@ class EMLineProfiler(ObjectDataSelection):
         ):
             return
 
-        xyz = self.get_line_xyz(self.lines.lines.value)
+        line_indices = self.get_line_indices(self.lines.lines.value)
 
-        if xyz is None:
+        if line_indices is None:
             return
-
-        self.lines.profile = signal_processing_1d(
-            xyz, None, smoothing=self.smoothing.value, residual=self.residual.value
-        )
-        self.lines.anomalies = self.find_anomalies(self.lines.profile)
+        self.survey.line_indices = line_indices
+        self.lines.anomalies, self.lines.profile = self.client.compute(
+            find_anomalies(
+                self.survey.vertices,
+                line_indices,
+                self.active_channels,
+                self.time_groups,
+                data_normalization=self.em_system_specs[self.system.value][
+                    "normalization"
+                ],
+                smoothing=self.smoothing.value,
+                use_residual=self.residual.value,
+                min_amplitude=self.min_amplitude.value,
+                min_width=self.min_width.value,
+                max_migration=self.max_migration.value,
+                min_channels=self.min_channels.value,
+                return_profile=True,
+            )
+        ).result()
 
         if self.show_model.value:
             self.update_line_model()
 
-    def get_line_xyz(self, line_id):
+    def get_line_indices(self, line_id):
         """
         Find the vertices for a given line ID
         """
@@ -1754,8 +1797,7 @@ class EMLineProfiler(ObjectDataSelection):
         if len(indices) == 0:
             return
 
-        self.survey.line_indices = indices
-        return self.survey.vertices[indices, :]
+        return indices
 
     def update_line_model(self):
         if getattr(self.lines, "profile", None) is None:
@@ -1904,8 +1946,8 @@ class EMLineProfiler(ObjectDataSelection):
                         group["channels"].append(channel)
 
         self.highlight_selection(None)
-        self.channel_to_gate = {
-            c: g
+        self.active_channels = [
+            {"name": c, "gate": g}
             for c, g in zip(
                 (
                     self.time_groups[0]["channels"]
@@ -1918,7 +1960,13 @@ class EMLineProfiler(ObjectDataSelection):
                     + self.time_groups[2]["gates"]
                 ),
             )
-        }
+        ]
+        for channel in self.active_channels:
+            channel["time"] = (
+                self.data_channel_options[f"[{channel['gate']}]"].children[1].value
+            )
+            channel["values"] = self.data_channels[channel["name"]].values.copy()
+
         # self.set_default_groups(self.channels.options)
 
     def show_model_trigger(self, _):
@@ -2002,3 +2050,259 @@ class EMLineProfiler(ObjectDataSelection):
         else:
             self.borehole_panel.children = [self.show_borehole]
             self.show_borehole.description = "Show Boreholes"
+
+        return
+
+
+@dask.delayed
+def find_anomalies(
+    locations,
+    line_indices,
+    channels,
+    time_groups,
+    smoothing=1,
+    use_residual=False,
+    data_normalization=[1],
+    min_amplitude=0.25,
+    min_width=200,
+    max_migration=50,
+    min_channels=3,
+    minimal_output=False,
+    return_profile=False,
+):
+    """
+    Find all anomalies along a line profile of data.
+    Anomalies are detected based on the lows, inflection points and a peaks.
+    Neighbouring anomalies are then grouped and assigned a time_group label.
+
+    :param: :obj:`geoh5py.objects.Curve`
+        Curve object containing data.
+    :param: list
+        List of Data channels
+    :param: array of int or bool
+        Array defining a line of data from the input Curve object
+
+
+    :return: list of dict
+    smoothing=self.smoothing.value, use_residual=self.residual.value, min_amplitude=self.min_amplitude.value
+    min_width=self.min_width.value, max_migration=self.max_migration.value, min_channels=self.min_channels.value,
+    """
+    profile = signal_processing_1d(
+        locations[line_indices], None, smoothing=smoothing, residual=use_residual
+    )
+    locs = profile.locations_resampled
+    # normalization = self.em_system_specs[self.system.value]["normalization"]
+    xy = np.c_[profile.interp_x(locs), profile.interp_y(locs)]
+    angles = np.arctan2(xy[1:, 1] - xy[:-1, 1], xy[1:, 0] - xy[:-1, 0])
+    angles = np.r_[angles[0], angles].tolist()
+    azimuth = (450.0 - np.rad2deg(running_mean(angles, width=5))) % 360.0
+    anomalies = {
+        "gates": [],
+        "start": [],
+        "inflx_up": [],
+        "peak": [],
+        "peak_values": [],
+        "inflx_dwn": [],
+        "end": [],
+        "amplitude": [],
+        "group": [],
+        "time_group": [],
+    }
+    for channel in channels:
+        # if channel not in list(self.channel_to_gate.keys()):
+        #     continue
+
+        profile.values = channel["values"][line_indices].copy()
+        values = profile.values_resampled
+
+        dx = profile.derivative(order=1)
+        ddx = profile.derivative(order=2)
+
+        peaks = np.where((np.diff(np.sign(dx)) != 0) & (ddx[1:] < 0))[0]
+        lows = np.where((np.diff(np.sign(dx)) != 0) & (ddx[1:] > 0))[0]
+
+        # Add end of line as possible bump limits
+        lows = np.r_[0, lows, locs.shape[0] - 1]
+
+        up_inflx = np.where((np.diff(np.sign(ddx)) != 0) & (dx[1:] > 0))[0]
+        dwn_inflx = np.where((np.diff(np.sign(ddx)) != 0) & (dx[1:] < 0))[0]
+
+        if len(peaks) == 0 or len(lows) < 2:
+            continue
+
+        for peak in peaks:
+            ind = np.median(
+                [0, lows.shape[0] - 1, np.searchsorted(locs[lows], locs[peak]) - 1]
+            ).astype(int)
+            start = lows[ind]
+            ind = np.median(
+                [0, lows.shape[0] - 1, np.searchsorted(locs[lows], locs[peak])]
+            ).astype(int)
+            end = np.min([locs.shape[0] - 1, lows[ind]])
+            ind = np.median(
+                [
+                    0,
+                    up_inflx.shape[0] - 1,
+                    np.searchsorted(locs[up_inflx], locs[peak]) - 1,
+                ]
+            ).astype(int)
+            inflx_up = up_inflx[ind]
+            #         inflx_up = np.max([0, inflx_up])
+            ind = np.median(
+                [
+                    0,
+                    dwn_inflx.shape[0] - 1,
+                    np.searchsorted(locs[dwn_inflx], locs[peak]),
+                ]
+            ).astype(int)
+            inflx_dwn = np.min([locs.shape[0] - 1, dwn_inflx[ind] + 1])
+
+            # Check amplitude and width thresholds
+            delta_amp = (
+                np.abs(values[peak] - np.min([values[start], values[end]]))
+                / np.min([values[start], values[end]])
+            ) * 100.0
+            delta_x = locs[end] - locs[start]
+
+            amplitude = np.sum(np.abs(values[start:end])) * profile.hx
+            if (delta_amp > min_amplitude) & (delta_x > min_width):
+                anomalies["gates"] += [channel["gate"]]
+                anomalies["start"] += [start]
+                anomalies["inflx_up"] += [inflx_up]
+                anomalies["peak"] += [peak]
+                anomalies["peak_values"] += [values[peak]]
+                anomalies["inflx_dwn"] += [inflx_dwn]
+                anomalies["amplitude"] += [amplitude]
+                anomalies["end"] += [end]
+                anomalies["group"] += [-1]
+                anomalies["time_group"] += [
+                    ind
+                    for ind, time_group in enumerate(
+                        [
+                            time_groups[0]["channels"],
+                            time_groups[1]["channels"],
+                            time_groups[2]["channels"],
+                        ]
+                    )
+                    if channel["name"] in time_group
+                ]
+
+    if len(anomalies["peak"]) == 0:
+        if return_profile:
+            return {}, profile
+        else:
+            return {}
+
+    if minimal_output:
+        groups = {
+            "amplitude": [],
+            "azimuth": [],
+            "cox": [],
+            "migration": [],
+            "time_group": [],
+            "tau": [],
+        }
+    else:
+        groups = []
+
+    # Re-cast as numpy arrays
+    for key, values in anomalies.items():
+        anomalies[key] = np.hstack(values)
+
+    group_id = -1
+    peaks_position = locs[anomalies["peak"]]
+    for ii in range(peaks_position.shape[0]):
+        # Skip if already labeled
+        if anomalies["group"][ii] != -1:
+            continue
+
+        group_id += 1  # Increment group id
+
+        dist = np.abs(peaks_position[ii] - peaks_position)
+
+        # Find anomalies across channels within horizontal range
+        near = (dist < max_migration) & (anomalies["group"] == -1)
+
+        anomalies["group"][near] = group_id
+
+        in_gate, count = np.unique(anomalies["time_group"][near], return_counts=True)
+        in_gate = in_gate[(count > min_channels) & (in_gate != -1)].tolist()
+        time_group = [
+            ii
+            for ii, time_group in enumerate(time_groups.values())
+            if in_gate == time_group["label"]
+        ]
+        if len(in_gate) > 0 and len(time_group) > 0:
+
+            time_group = time_group[0]
+            gates = anomalies["gates"][near]
+
+            # Check for duplicate times within range
+            _, u_count = np.unique(anomalies["gates"][near], return_counts=True)
+            if np.any(u_count > 1):
+                continue
+
+            cox = anomalies["peak"][near]
+            cox_sort = np.argsort(locs[cox])
+            azm = azimuth[cox[0]]
+            if cox_sort[-1] < cox_sort[0]:
+                azm = (azm + 180) % 360.0
+
+            migration = np.abs(locs[cox[cox_sort[-1]]] - locs[cox[cox_sort[0]]])
+
+            # Compute tau
+            times = np.hstack(
+                [
+                    channel["time"]
+                    for channel in channels
+                    if channel["gate"] in list(gates)
+                ]
+            )
+            values = anomalies["peak_values"][near] * np.prod(data_normalization)
+            amplitude = np.sum(anomalies["amplitude"][near])
+            if times.shape[0] < 2:
+                continue
+
+            # Compute linear trend
+            A = np.c_[np.ones_like(times), times]
+            y0, slope = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, np.log(values)))
+            linear_fit = [y0, slope]
+
+            if minimal_output:
+                groups["cox"] += [
+                    np.mean(
+                        np.c_[
+                            profile.interp_x(locs[cox]),
+                            profile.interp_y(locs[cox]),
+                            profile.interp_z(locs[cox]),
+                        ],
+                        axis=0,
+                    )
+                ]
+                groups["azimuth"] += [azm]
+                groups["migration"] += [migration]
+                groups["amplitude"] += [amplitude]
+                groups["time_group"] += [time_group]
+                groups["tau"] += [np.abs(linear_fit[0] ** -1.0)]
+            else:
+                groups += [
+                    {
+                        "gates": gates,
+                        "start": anomalies["start"][near],
+                        "inflx_up": anomalies["inflx_up"][near],
+                        "peak": cox,
+                        "peak_values": values,
+                        "inflx_dwn": anomalies["inflx_dwn"][near],
+                        "end": anomalies["end"][near],
+                        "azimuth": azm,
+                        "migration": migration,
+                        "amplitude": amplitude,
+                        "time_group": time_group,
+                        "linear_fit": linear_fit,
+                    }
+                ]
+
+    if return_profile:
+        return groups, profile
+    else:
+        return groups
