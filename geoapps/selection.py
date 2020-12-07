@@ -3,6 +3,7 @@ import ipywidgets as widgets
 from ipywidgets import Dropdown, SelectMultiple, VBox, FloatText
 from geoh5py.workspace import Workspace
 from geoh5py.objects import object_base
+from geoh5py.data.primitive_type_enum import PrimitiveTypeEnum
 from geoapps.base import BaseApplication
 from geoapps import utils
 
@@ -209,13 +210,15 @@ class ObjectDataSelection(BaseApplication):
                 )
 
             if self.add_groups != "only":
+                data_list = obj.get_data_list(attribute="uid")
                 options = (
                     options
                     + ["--- Channels ---"]
                     + [
-                        name
-                        for name in obj.get_data_list()
-                        if name != "Visual Parameters"
+                        obj.get_data(uid)[0].name
+                        for uid in data_list
+                        if obj.get_data(uid)[0].entity_type.primitive_type
+                        == PrimitiveTypeEnum.FLOAT
                     ]
                     + ["Z"]
                 )
