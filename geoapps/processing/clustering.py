@@ -560,9 +560,36 @@ class Clustering(ScatterPlots):
                 data = obj.get_data(self.ga_group_name.value)[0]
                 data.values = self.data_channels["kmeans"]
             else:
-                obj.add_data(
-                    {self.ga_group_name.value: {"values": self.data_channels["kmeans"]}}
+
+                # Create reference values and color_map
+                group_map, color_map = {}, []
+                for ii in range(self.n_clusters.value):
+                    colorpicker = self.color_pickers[ii]
+
+                    color = colorpicker.value.lstrip("#")
+
+                    # group_map, color_map = {}, []
+                    # for ind, group in self.time_groups.items():
+                    group_map[ii + 1] = f"Cluster_{ii}"
+                    color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+                #
+                color_map = np.core.records.fromarrays(
+                    np.vstack(color_map).T,
+                    names=["Value", "Red", "Green", "Blue", "Alpha"],
                 )
+                cluster_groups = obj.add_data(
+                    {
+                        self.ga_group_name.value: {
+                            "type": "referenced",
+                            "values": self.data_channels["kmeans"],
+                            "value_map": group_map,
+                        }
+                    }
+                )
+                cluster_groups.entity_type.color_map = {
+                    "name": "Cluster Groups",
+                    "values": color_map,
+                }
 
             if self.live_link.value:
                 self.live_link_output(obj)
