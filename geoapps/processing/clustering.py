@@ -16,7 +16,7 @@ from IPython.display import display
 import plotly.graph_objects as go
 import numpy as np
 from geoapps.plotting import ScatterPlots
-from geoapps.utils import random_sampling
+from geoapps.utils import random_sampling, hex_to_rgb
 from sklearn.cluster import KMeans
 from scipy.spatial import cKDTree
 import pandas as pd
@@ -556,9 +556,28 @@ class Clustering(ScatterPlots):
         if "kmeans" in self.data_channels.keys():
             obj, _ = self.get_selected_entities()
 
+            # Create reference values and color_map
+            group_map, color_map = {}, []
+            for ii in range(self.n_clusters.value):
+                colorpicker = self.color_pickers[ii]
+
+                color = colorpicker.value.lstrip("#")
+
+                # group_map, color_map = {}, []
+                # for ind, group in self.time_groups.items():
+                group_map[ii + 1] = f"Cluster_{ii}"
+                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+
+            color_map = np.core.records.fromarrays(
+                np.vstack(color_map).T,
+                names=["Value", "Red", "Green", "Blue", "Alpha"],
+            )
             if self.ga_group_name.value in obj.get_data_list():
                 data = obj.get_data(self.ga_group_name.value)[0]
-                data.values = self.data_channels["kmeans"]
+                data.entity_type.value_map = group_map
+                data.entity_type.color_map.values = color_map
+                data.values = self.data_channels["kmeans"] + 1
+
             else:
 
                 # Create reference values and color_map
@@ -581,7 +600,7 @@ class Clustering(ScatterPlots):
                     {
                         self.ga_group_name.value: {
                             "type": "referenced",
-                            "values": self.data_channels["kmeans"],
+                            "values": self.data_channels["kmeans"] + 1,
                             "value_map": group_map,
                         }
                     }
