@@ -295,8 +295,10 @@ class Clustering(ScatterPlots):
         self.channels_plot_options.value = None
         self._mapping = None
         self._indices = None
-        self.downsampling.max = self.n_values
-        self.downsampling.value = np.min([5000, self.n_values])
+
+        if self.n_values is not None:
+            self.downsampling.max = self.n_values
+            self.downsampling.value = np.min([5000, self.n_values])
 
     def run_clustering(self, _):
         """
