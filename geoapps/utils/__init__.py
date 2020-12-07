@@ -22,4 +22,5 @@ from .utils import (
     tensor_2_block_model,
     treemesh_2_octree,
     random_sampling,
+    hex_to_rgb,
 )
