@@ -304,6 +304,9 @@ class Clustering(ScatterPlots):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
+        if self.dataframe is None:
+            return
+
         self.trigger.description = "Running ..."
         self.refresh_trigger.value = False
 
@@ -575,7 +578,14 @@ class Clustering(ScatterPlots):
             if self.ga_group_name.value in obj.get_data_list():
                 data = obj.get_data(self.ga_group_name.value)[0]
                 data.entity_type.value_map = group_map
-                data.entity_type.color_map.values = color_map
+
+                if data.entity_type.color_map is None:
+                    data.entity_type.color_map = {
+                        "name": "Cluster Groups",
+                        "values": color_map,
+                    }
+                else:
+                    data.entity_type.color_map.values = color_map
                 data.values = self.data_channels["kmeans"] + 1
 
             else:
