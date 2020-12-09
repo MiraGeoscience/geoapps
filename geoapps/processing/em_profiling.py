@@ -1006,7 +1006,6 @@ class EMLineProfiler(ObjectDataSelection):
         """
         Process the entire Curve object for all lines
         """
-
         anomalies = []
         vertices = self.client.scatter(self.survey.vertices)
         channels = self.client.scatter(self.active_channels)
@@ -1050,13 +1049,13 @@ class EMLineProfiler(ObjectDataSelection):
         # Append all lines
         time_group, tau, migration, azimuth, cox, amplitude = [], [], [], [], [], []
         for line in self.all_anomalies:
-
-            time_group += [line["time_group"]]
-            tau += [line["tau"]]
-            migration += [line["migration"]]
-            amplitude += [line["amplitude"]]
-            azimuth += [line["azimuth"]]
-            cox += [line["cox"]]
+            if "time_group" in list(line.keys()) and len(line["cox"]) > 0:
+                time_group += [line["time_group"]]
+                tau += [line["tau"]]
+                migration += [line["migration"]]
+                amplitude += [line["amplitude"]]
+                azimuth += [line["azimuth"]]
+                cox += [line["cox"]]
 
         if cox:
             time_group = np.hstack(time_group) + 1  # Start count at 1
@@ -1676,7 +1675,7 @@ class EMLineProfiler(ObjectDataSelection):
             if len(cox) > 0:
                 dip = np.hstack(dip)
                 dip /= dip.max()
-                dip = np.rad2deg(np.arsin(dip))
+                dip = np.rad2deg(np.arcsin(dip))
 
                 vec = rotate_azimuth_dip(np.hstack(azimuth), dip)
                 cox = np.vstack(cox)
@@ -2160,7 +2159,7 @@ def find_anomalies(
             # Check amplitude and width thresholds
             delta_amp = (
                 np.abs(values[peak] - np.min([values[start], values[end]]))
-                / np.min([values[start], values[end]])
+                / (np.min([values[start], values[end]]) + 2e-32)
             ) * 100.0
             delta_x = locs[end] - locs[start]
 
@@ -2260,7 +2259,7 @@ def find_anomalies(
             )
             values = anomalies["peak_values"][near] * np.prod(data_normalization)
             amplitude = np.sum(anomalies["amplitude"][near])
-            if times.shape[0] < 2:
+            if times.shape[0] < 2 or len(cox) == 0:
                 continue
 
             # Compute linear trend
@@ -2302,6 +2301,8 @@ def find_anomalies(
                     }
                 ]
 
+    # if minimal_output and len(groups["cox"])>0:
+    #     groups["cox"] = np.vstack(groups["cox"]).reshape((-1, 3))
     if return_profile:
         return groups, profile
     else:
