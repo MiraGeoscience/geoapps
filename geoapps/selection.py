@@ -2,7 +2,7 @@ import numpy as np
 import ipywidgets as widgets
 from ipywidgets import Dropdown, SelectMultiple, VBox, FloatText
 from geoh5py.workspace import Workspace
-from geoh5py.objects import object_base
+from geoh5py.objects.object_base import ObjectBase
 from geoh5py.data.primitive_type_enum import PrimitiveTypeEnum
 from geoapps.base import BaseApplication
 from geoapps import utils
@@ -92,8 +92,8 @@ class ObjectDataSelection(BaseApplication):
 
         for entity_type in entity_types:
             assert issubclass(
-                entity_type, object_base.ObjectBase
-            ), f"Provided object_types must be instances of {object_base.ObjectBase}"
+                entity_type, ObjectBase
+            ), f"Provided object_types must be instances of {ObjectBase}"
 
         self._object_types = tuple(entity_types)
 
@@ -180,7 +180,9 @@ class ObjectDataSelection(BaseApplication):
         if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
             self.objects.value
         ):
-            obj = self._workspace.get_entity(self.objects.value)[0]
+            for entity in self._workspace.get_entity(self.objects.value):
+                if isinstance(entity, ObjectBase):
+                    obj = entity
             if obj.get_data(self.data.value):
                 data = obj.get_data(self.data.value)[0]
                 return obj, data
@@ -195,7 +197,9 @@ class ObjectDataSelection(BaseApplication):
             self.objects.value
         ):
 
-            obj = self._workspace.get_entity(self.objects.value)[0]
+            for entity in self._workspace.get_entity(self.objects.value):
+                if isinstance(entity, ObjectBase):
+                    obj = entity
 
             if getattr(obj, "get_data_list", None) is None:
                 return

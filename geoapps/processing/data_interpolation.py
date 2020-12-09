@@ -2,7 +2,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 from scipy.interpolate import LinearNDInterpolator
 import discretize
-from geoh5py.objects import BlockModel
+from geoh5py.objects import BlockModel, ObjectBase
 from geoh5py.workspace import Workspace
 from ipywidgets import (
     Dropdown,
@@ -335,7 +335,9 @@ class DataInterpolation(ObjectDataSelection):
 
     def interpolate_call(self):
 
-        object_from = self.workspace.get_entity(self.objects.value)[0]
+        for entity in self._workspace.get_entity(self.objects.value):
+            if isinstance(entity, ObjectBase):
+                object_from = entity
 
         if hasattr(object_from, "centroids"):
             xyz = object_from.centroids.copy()
@@ -349,7 +351,9 @@ class DataInterpolation(ObjectDataSelection):
 
         if self.out_mode.value == "To Object":
 
-            object_to = self.workspace.get_entity(self.out_object.value)[0]
+            for entity in self._workspace.get_entity(self.out_object.value):
+                if isinstance(entity, ObjectBase):
+                    object_to = entity
 
             if hasattr(object_to, "centroids"):
                 xyz_out = object_to.centroids.copy()
@@ -358,7 +362,9 @@ class DataInterpolation(ObjectDataSelection):
 
         else:
 
-            ref_in = self.workspace.get_entity(self.xy_reference.value)[0]
+            for entity in self._workspace.get_entity(self.xy_reference.value):
+                if isinstance(entity, ObjectBase):
+                    ref_in = entity
 
             if hasattr(ref_in, "centroids"):
                 xyz_ref = ref_in.centroids
@@ -506,7 +512,11 @@ class DataInterpolation(ObjectDataSelection):
         if self.topography.options.value == "Object" and self.workspace.get_entity(
             self.topography.objects.value
         ):
-            topo_obj = self.workspace.get_entity(self.topography.objects.value)[0]
+
+            for entity in self._workspace.get_entity(self.topography.objects.value):
+                if isinstance(entity, ObjectBase):
+                    topo_obj = entity
+
             if getattr(topo_obj, "vertices", None) is not None:
                 topo = topo_obj.vertices
             else:
@@ -538,7 +548,10 @@ class DataInterpolation(ObjectDataSelection):
         if self.xy_extent.value is not None and self.workspace.get_entity(
             self.xy_extent.value
         ):
-            xy_ref = self.workspace.get_entity(self.xy_extent.value)[0]
+
+            for entity in self._workspace.get_entity(self.xy_extent.objects.value):
+                if isinstance(entity, ObjectBase):
+                    xy_ref = entity
             if hasattr(xy_ref, "centroids"):
                 xy_ref = xy_ref.centroids
             elif hasattr(xy_ref, "vertices"):
