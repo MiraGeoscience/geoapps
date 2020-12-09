@@ -561,6 +561,8 @@ class Clustering(ScatterPlots):
 
             # Create reference values and color_map
             group_map, color_map = {}, []
+            cluster_values = self.data_channels["kmeans"] + 1
+            cluster_values[self._inactive_set] = 0
             for ii in range(self.n_clusters.value):
                 colorpicker = self.color_pickers[ii]
 
@@ -575,6 +577,7 @@ class Clustering(ScatterPlots):
                 np.vstack(color_map).T,
                 names=["Value", "Red", "Green", "Blue", "Alpha"],
             )
+
             if self.ga_group_name.value in obj.get_data_list():
                 data = obj.get_data(self.ga_group_name.value)[0]
                 data.entity_type.value_map = group_map
@@ -586,7 +589,7 @@ class Clustering(ScatterPlots):
                     }
                 else:
                     data.entity_type.color_map.values = color_map
-                data.values = self.data_channels["kmeans"] + 1
+                data.values = cluster_values
 
             else:
 
@@ -610,7 +613,7 @@ class Clustering(ScatterPlots):
                     {
                         self.ga_group_name.value: {
                             "type": "referenced",
-                            "values": self.data_channels["kmeans"] + 1,
+                            "values": cluster_values,
                             "value_map": group_map,
                         }
                     }
@@ -689,33 +692,44 @@ class Clustering(ScatterPlots):
                     | (vals > self.upper_bounds[field].value)
                 ] = np.nan
 
+                vals[(vals > 1e-38) * (vals < 2e-38)] = np.nan
                 values += [vals]
 
             values = np.vstack(values).T
-            self._indices = random_sampling(
-                values, self.downsampling.value, bandwidth=2.0, rtol=1e0, method="hist",
+
+            active_set = np.where(np.all(~np.isnan(values), axis=1))[0]
+            samples = random_sampling(
+                values[active_set, :],
+                np.min([self.downsampling.value, len(active_set)]),
+                bandwidth=2.0,
+                rtol=1e0,
+                method="hist",
             )
-
+            self._indices = active_set[samples]
             self.dataframe = pd.DataFrame(values[self.indices, :], columns=fields,)
-
             tree = cKDTree(self.dataframe.values)
-            out_group = np.ones(self.n_values, dtype="bool")
-            out_group[self.indices] = False
+            inactive_set = np.ones(self.n_values, dtype="bool")
+            inactive_set[self.indices] = False
+            out_values = values[inactive_set, :]
+            for ii in range(values.shape[1]):
+                out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
+                    values[self.indices, ii]
+                )
 
-            out_values = values[out_group, :]
-            out_values[np.isnan(out_values)] = 0
             _, ind_out = tree.query(out_values)
             del tree
 
             self._mapping = np.empty(self.n_values, dtype="int")
-            self._mapping[out_group] = ind_out
+            self._mapping[inactive_set] = ind_out
             self._mapping[self.indices] = np.arange(self.indices.shape[0])
+            self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
             self.channels_plot_options.options = fields
 
         else:
             self.dataframe = None
             self.dataframe_scaled = None
             self._mapping = None
+            self._inactive_set = None
 
         self.update_axes(refresh_plot=refresh_plot)
         self.show_trigger(None)
