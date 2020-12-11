@@ -43,18 +43,24 @@ class Export(ObjectDataSelection):
             description="Export type",
         )
         self._data_type = RadioButtons(options=["float", "RGB",], description="Type:")
-        self._no_data_value = FloatText(description="no-data-value", value=-99999,)
+        self._no_data_value = FloatText(
+            description="No-Data-Value",
+            value=-99999,
+            style={"description_width": "initial"},
+        )
         self._epsg_code = Text(
-            description="Authority:#", indent=False, continuous_update=False
+            description="Projection:", indent=False, continuous_update=False
         )
         self._export_as = Text(
             description="Save as:", indent=False, continuous_update=False
         )
-        self._wkt_code = Textarea(description="wkt", continuous_update=False)
+        self._wkt_code = Textarea(
+            description="WKT:", continuous_update=False, layout=Layout(width="75%")
+        )
         self.epsg_code.observe(self.set_wkt, names="value")
         self.wkt_code.observe(self.set_authority_code, names="value")
 
-        self.type_widget = HBox([self.file_type])
+        self.type_widget = VBox([self.file_type])
 
         def update_options(_):
             self.update_options()
@@ -76,8 +82,9 @@ class Export(ObjectDataSelection):
         self._widget = VBox(
             [
                 self.project_panel,
-                HBox([self.widget, self.no_data_value]),
+                self.widget,
                 self.type_widget,
+                self.no_data_value,
                 self.export_as,
                 self.trigger,
                 self.export_directory,
@@ -362,12 +369,13 @@ class Export(ObjectDataSelection):
         if self.file_type.value in ["ESRI shapefile"]:
             self.type_widget.children = [
                 self.file_type,
-                HBox([self.epsg_code, self.wkt_code]),
+                VBox([self.epsg_code, self.wkt_code]),
             ]
         elif self.file_type.value in ["geotiff"]:
             self.type_widget.children = [
                 self.file_type,
-                VBox([HBox([self.epsg_code, self.wkt_code]), self.data_type]),
+                VBox([VBox([self.epsg_code, self.wkt_code])]),
+                self.data_type,
             ]
         else:
             self.type_widget.children = [self.file_type]
