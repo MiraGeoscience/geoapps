@@ -59,7 +59,7 @@ class CoordinateTransformation(BaseApplication):
         """
         Run the coordinate transformation
         """
-        if self.code_in.value != 0 and self.code_out.value != 0:
+        if self.wkt_in.value != "" and self.wkt_out.value != "":
             for name in self.objects.value:
                 obj = self.workspace.get_entity(name)[0]
                 temp_work = Workspace(self.workspace.name + "temp")
@@ -111,12 +111,12 @@ class CoordinateTransformation(BaseApplication):
 
                     x, y = obj.vertices[:, 0].tolist(), obj.vertices[:, 1].tolist()
 
-                    if self.code_in.value == 4326:
+                    if self.code_in.value == "EPSG:4326":
                         x, y = y, x
 
                     x2, y2 = transform(self.wkt_in.value, self.wkt_out.value, x, y,)
 
-                    if self.code_out.value == 4326:
+                    if self.code_out.value == "EPSG:4326":
                         x2, y2 = y2, x2
 
                     new_obj = obj.copy(parent=self.ga_group, copy_children=True)
@@ -211,11 +211,14 @@ class CoordinateTransformation(BaseApplication):
         self.wkt_in.observe(self.set_authority_in, names="value")
 
     def set_authority_in(self, _):
-        self.epsg_in.unobserve_all("value")
-        self.epsg_in.value = re.findall(
-            r'AUTHORITY\["(\D+","\d+)"\]', self.wkt_in.value
-        )[-1].replace('","', ":")
-        self.epsg_in.observe(self.set_wkt, names="value")
+        self.code_in.unobserve_all("value")
+
+        code = re.findall(r'AUTHORITY\["(\D+","\d+)"\]', self.wkt_in.value)
+        if code:
+            self.code_in.value = code[-1].replace('","', ":")
+        else:
+            self.code_in.value = ""
+        self.code_in.observe(self.set_wkt_in, names="value")
 
     def set_wkt_out(self, _):
         datasetSRS = osr.SpatialReference()
@@ -226,8 +229,10 @@ class CoordinateTransformation(BaseApplication):
         self.wkt_out.observe(self.set_authority_out, names="value")
 
     def set_authority_out(self, _):
-        self.epsg_out.unobserve_all("value")
-        self.epsg_out.value = re.findall(
-            r'AUTHORITY\["(\D+","\d+)"\]', self.wkt_out.value
-        )[-1].replace('","', ":")
-        self.epsg_out.observe(self.set_wkt, names="value")
+        self.code_out.unobserve_all("value")
+        code = re.findall(r'AUTHORITY\["(\D+","\d+)"\]', self.wkt_out.value)
+        if code:
+            self.code_out.value = code[-1].replace('","', ":")
+        else:
+            self.code_out.value = ""
+        self.code_out.observe(self.set_wkt_out, names="value")
