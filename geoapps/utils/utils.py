@@ -63,7 +63,7 @@ def get_surface_parts(surface):
     return parts
 
 
-def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
+def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="float"):
     """
         Source:
 
@@ -143,13 +143,12 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
         )
     )
 
-    datasetSRS = osr.SpatialReference()
-
     try:
-        datasetSRS.ImportFromEPSG(int(epsg_code))
+        dataset.SetProjection(wkt_code)
     except ValueError:
-        print(f"A valid EPSG# is required. Provided {epsg_code}")
-    dataset.SetProjection(datasetSRS.ExportToWkt())
+        print(
+            f"A valid well-known-text (wkt) code is required. Provided {wkt_code} not understood"
+        )
 
     if num_bands == 1:
         dataset.GetRasterBand(1).WriteArray(array)
@@ -197,25 +196,8 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
     return grid_object
 
 
-def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
+def export_curve_2_shapefile(curve, attribute=None, wkt_code=None, file_name=None):
     attribute_vals = None
-
-    if epsg is not None and epsg.isdigit():
-        crs = from_epsg(int(epsg))
-
-        wkt = urllib.request.urlopen(
-            "http://spatialreference.org/ref/epsg/{}/prettywkt/".format(str(int(epsg)))
-        )
-        # remove spaces between characters
-        remove_spaces = wkt.read().replace(b" ", b"")
-        # create the .prj file
-        prj = open(file_name + ".prj", "w")
-
-        epsg = remove_spaces.replace(b"\n", b"")
-        prj.write(epsg.decode("utf-8"))
-        prj.close()
-    else:
-        crs = None
 
     if attribute is not None and curve.get_data(attribute):
         attribute_vals = curve.get_data(attribute)[0].values
@@ -239,7 +221,11 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
         schema["properties"] = {"id": "int"}
 
     with fiona.open(
-        file_name + ".shp", "w", driver="ESRI Shapefile", schema=schema, crs=crs
+        file_name + ".shp",
+        "w",
+        driver="ESRI Shapefile",
+        schema=schema,
+        crs_wkt=wkt_code,
     ) as c:
 
         # If there are multiple geometries, put the "for" loop here
