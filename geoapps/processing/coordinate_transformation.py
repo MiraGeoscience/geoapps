@@ -1,7 +1,7 @@
 import re
 import os
 import osr
-from ipywidgets import SelectMultiple, VBox, HBox, Text, Textarea
+from ipywidgets import SelectMultiple, VBox, HBox, Text, Textarea, Layout
 import numpy
 from geoh5py.data import FloatData
 from geoh5py.objects import Curve, Grid2D, Points, Surface
@@ -142,25 +142,29 @@ class CoordinateTransformation(BaseApplication):
     @property
     def code_in(self):
         if getattr(self, "_code_in", None) is None:
-            self._code_in = Text(description="In code:", continuous_update=False)
+            self._code_in = Text(
+                description="Input Projection:", continuous_update=False
+            )
         return self._code_in
 
     @property
     def code_out(self):
         if getattr(self, "_code_out", None) is None:
-            self._code_out = Text(description="Output:", continuous_update=False)
+            self._code_out = Text(
+                description="Output Projection:", continuous_update=False
+            )
         return self._code_out
 
     @property
     def wkt_in(self):
         if getattr(self, "_wkt_in", None) is None:
-            self._wkt_in = Textarea(description="wkt")
+            self._wkt_in = Textarea(description="<=> WKT", layout=Layout(width="50%"))
         return self._wkt_in
 
     @property
     def wkt_out(self):
         if getattr(self, "_wkt_out", None) is None:
-            self._wkt_out = Textarea(description="wkt")
+            self._wkt_out = Textarea(description="<=> WKT", layout=Layout(width="50%"))
         return self._wkt_out
 
     @property
