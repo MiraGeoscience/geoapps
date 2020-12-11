@@ -359,9 +359,11 @@ class Export(ObjectDataSelection):
 
     def set_authority_code(self, _):
         self.epsg_code.unobserve_all("value")
-        self.epsg_code.value = re.findall(
-            r'AUTHORITY\["(\D+","\d+)"\]', self.wkt_code.value
-        )[-1].replace('","', ":")
+        code = re.findall(r'AUTHORITY\["(\D+","\d+)"\]', self.wkt_code.value)
+        if code:
+            self.epsg_code.value = code[-1].replace('","', ":")
+        else:
+            self.epsg_code.value = ""
         self.epsg_code.observe(self.set_wkt, names="value")
 
     def update_options(self):
