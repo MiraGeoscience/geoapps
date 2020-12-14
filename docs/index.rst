@@ -21,6 +21,14 @@ along with open-source code from the Python ecosystem.
 The Latest
 ^^^^^^^^^^
 
+Release 0.2.6
+"""""""""""""
+
+(December 14th, 2020)
+
+- Update KMeans clustering application for reference data.
+
+
 Release 0.2.5
 """""""""""""
 

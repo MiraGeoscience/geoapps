@@ -16,7 +16,7 @@ from IPython.display import display
 import plotly.graph_objects as go
 import numpy as np
 from geoapps.plotting import ScatterPlots
-from geoapps.utils import random_sampling
+from geoapps.utils import random_sampling, hex_to_rgb
 from sklearn.cluster import KMeans
 from scipy.spatial import cKDTree
 import pandas as pd
@@ -110,12 +110,9 @@ class Clustering(ScatterPlots):
         self.channels_plot_options.observe(self.make_box_plot, names="value")
         self.trigger.description = "Run Clustering"
 
-        r = lambda: np.random.randint(0, 255)
         for ii in range(self.n_clusters.max):
             self.color_pickers[ii] = ColorPicker(
-                concise=False,
-                description=("Color"),
-                value=f"#{r():02X}{r():02X}{r():02X}",
+                concise=False, description=("Color"), value=colors[ii],
             )
             self.color_pickers[ii].uid = ii
             self.color_pickers[ii].observe(self.update_colormap, names="value")
@@ -295,13 +292,18 @@ class Clustering(ScatterPlots):
         self.channels_plot_options.value = None
         self._mapping = None
         self._indices = None
-        self.downsampling.max = self.n_values
-        self.downsampling.value = np.min([5000, self.n_values])
+
+        if self.n_values is not None:
+            self.downsampling.max = self.n_values
+            self.downsampling.value = np.min([5000, self.n_values])
 
     def run_clustering(self, _):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
+        if self.dataframe is None:
+            return
+
         self.trigger.description = "Running ..."
         self.refresh_trigger.value = False
 
@@ -314,7 +316,7 @@ class Clustering(ScatterPlots):
             nns = ~np.isnan(vals)
             vals[nns] = (
                 (vals[nns] - min(vals[nns]))
-                / (max(vals[nns]) - min(vals[nns]))
+                / (max(vals[nns]) - min(vals[nns]) + 1e-32)
                 * self.scalings[field].value
             )
             values += [vals]
@@ -554,13 +556,69 @@ class Clustering(ScatterPlots):
         if "kmeans" in self.data_channels.keys():
             obj, _ = self.get_selected_entities()
 
+            # Create reference values and color_map
+            group_map, color_map = {}, []
+            cluster_values = self.data_channels["kmeans"] + 1
+            cluster_values[self._inactive_set] = 0
+            for ii in range(self.n_clusters.value):
+                colorpicker = self.color_pickers[ii]
+
+                color = colorpicker.value.lstrip("#")
+
+                # group_map, color_map = {}, []
+                # for ind, group in self.time_groups.items():
+                group_map[ii + 1] = f"Cluster_{ii}"
+                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+
+            color_map = np.core.records.fromarrays(
+                np.vstack(color_map).T,
+                names=["Value", "Red", "Green", "Blue", "Alpha"],
+            )
+
             if self.ga_group_name.value in obj.get_data_list():
                 data = obj.get_data(self.ga_group_name.value)[0]
-                data.values = self.data_channels["kmeans"]
+                data.entity_type.value_map = group_map
+
+                if data.entity_type.color_map is None:
+                    data.entity_type.color_map = {
+                        "name": "Cluster Groups",
+                        "values": color_map,
+                    }
+                else:
+                    data.entity_type.color_map.values = color_map
+                data.values = cluster_values
+
             else:
-                obj.add_data(
-                    {self.ga_group_name.value: {"values": self.data_channels["kmeans"]}}
+
+                # Create reference values and color_map
+                group_map, color_map = {}, []
+                for ii in range(self.n_clusters.value):
+                    colorpicker = self.color_pickers[ii]
+
+                    color = colorpicker.value.lstrip("#")
+
+                    # group_map, color_map = {}, []
+                    # for ind, group in self.time_groups.items():
+                    group_map[ii + 1] = f"Cluster_{ii}"
+                    color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+                #
+                color_map = np.core.records.fromarrays(
+                    np.vstack(color_map).T,
+                    names=["Value", "Red", "Green", "Blue", "Alpha"],
                 )
+                cluster_groups = obj.add_data(
+                    {
+                        self.ga_group_name.value: {
+                            "type": "referenced",
+                            "values": cluster_values,
+                            "value_map": group_map,
+                        }
+                    }
+                )
+                cluster_groups.entity_type.color_map = {
+                    "name": "Cluster Groups",
+                    "values": color_map,
+                }
 
             if self.live_link.value:
                 self.live_link_output(obj)
@@ -631,33 +689,152 @@ class Clustering(ScatterPlots):
                     | (vals > self.upper_bounds[field].value)
                 ] = np.nan
 
+                vals[(vals > 1e-38) * (vals < 2e-38)] = np.nan
                 values += [vals]
 
             values = np.vstack(values).T
-            self._indices = random_sampling(
-                values, self.downsampling.value, bandwidth=2.0, rtol=1e0, method="hist",
+
+            active_set = np.where(np.all(~np.isnan(values), axis=1))[0]
+            samples = random_sampling(
+                values[active_set, :],
+                np.min([self.downsampling.value, len(active_set)]),
+                bandwidth=2.0,
+                rtol=1e0,
+                method="hist",
             )
-
+            self._indices = active_set[samples]
             self.dataframe = pd.DataFrame(values[self.indices, :], columns=fields,)
-
             tree = cKDTree(self.dataframe.values)
-            out_group = np.ones(self.n_values, dtype="bool")
-            out_group[self.indices] = False
+            inactive_set = np.ones(self.n_values, dtype="bool")
+            inactive_set[self.indices] = False
+            out_values = values[inactive_set, :]
+            for ii in range(values.shape[1]):
+                out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
+                    values[self.indices, ii]
+                )
 
-            out_values = values[out_group, :]
-            out_values[np.isnan(out_values)] = 0
             _, ind_out = tree.query(out_values)
             del tree
 
             self._mapping = np.empty(self.n_values, dtype="int")
-            self._mapping[out_group] = ind_out
+            self._mapping[inactive_set] = ind_out
             self._mapping[self.indices] = np.arange(self.indices.shape[0])
+            self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
             self.channels_plot_options.options = fields
 
         else:
             self.dataframe = None
             self.dataframe_scaled = None
             self._mapping = None
+            self._inactive_set = None
 
         self.update_axes(refresh_plot=refresh_plot)
         self.show_trigger(None)
+
+
+colors = [
+    "#000000",
+    "#FFFF00",
+    "#1CE6FF",
+    "#FF34FF",
+    "#FF4A46",
+    "#008941",
+    "#006FA6",
+    "#A30059",
+    "#FFDBE5",
+    "#7A4900",
+    "#0000A6",
+    "#63FFAC",
+    "#B79762",
+    "#004D43",
+    "#8FB0FF",
+    "#997D87",
+    "#5A0007",
+    "#809693",
+    "#FEFFE6",
+    "#1B4400",
+    "#4FC601",
+    "#3B5DFF",
+    "#4A3B53",
+    "#FF2F80",
+    "#61615A",
+    "#BA0900",
+    "#6B7900",
+    "#00C2A0",
+    "#FFAA92",
+    "#FF90C9",
+    "#B903AA",
+    "#D16100",
+    "#DDEFFF",
+    "#000035",
+    "#7B4F4B",
+    "#A1C299",
+    "#300018",
+    "#0AA6D8",
+    "#013349",
+    "#00846F",
+    "#372101",
+    "#FFB500",
+    "#C2FFED",
+    "#A079BF",
+    "#CC0744",
+    "#C0B9B2",
+    "#C2FF99",
+    "#001E09",
+    "#00489C",
+    "#6F0062",
+    "#0CBD66",
+    "#EEC3FF",
+    "#456D75",
+    "#B77B68",
+    "#7A87A1",
+    "#788D66",
+    "#885578",
+    "#FAD09F",
+    "#FF8A9A",
+    "#D157A0",
+    "#BEC459",
+    "#456648",
+    "#0086ED",
+    "#886F4C",
+    "#34362D",
+    "#B4A8BD",
+    "#00A6AA",
+    "#452C2C",
+    "#636375",
+    "#A3C8C9",
+    "#FF913F",
+    "#938A81",
+    "#575329",
+    "#00FECF",
+    "#B05B6F",
+    "#8CD0FF",
+    "#3B9700",
+    "#04F757",
+    "#C8A1A1",
+    "#1E6E00",
+    "#7900D7",
+    "#A77500",
+    "#6367A9",
+    "#A05837",
+    "#6B002C",
+    "#772600",
+    "#D790FF",
+    "#9B9700",
+    "#549E79",
+    "#FFF69F",
+    "#201625",
+    "#72418F",
+    "#BC23FF",
+    "#99ADC0",
+    "#3A2465",
+    "#922329",
+    "#5B4534",
+    "#FDE8DC",
+    "#404E55",
+    "#0089A3",
+    "#CB7E98",
+    "#A4E804",
+    "#324E72",
+    "#6A3A4C",
+]
