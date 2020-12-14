@@ -214,7 +214,7 @@ class ObjectDataSelection(BaseApplication):
                 )
 
             if self.add_groups != "only":
-                data_list = obj.get_data_list(attribute="uid")
+                data_list = obj.get_data_list()
                 options = (
                     options
                     + ["--- Channels ---"]
