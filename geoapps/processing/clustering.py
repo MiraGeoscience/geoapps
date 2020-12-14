@@ -316,7 +316,7 @@ class Clustering(ScatterPlots):
             nns = ~np.isnan(vals)
             vals[nns] = (
                 (vals[nns] - min(vals[nns]))
-                / (max(vals[nns]) - min(vals[nns]))
+                / (max(vals[nns]) - min(vals[nns]) + 1e-32)
                 * self.scalings[field].value
             )
             values += [vals]
