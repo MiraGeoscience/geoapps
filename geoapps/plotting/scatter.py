@@ -159,7 +159,6 @@ class ScatterPlots(ObjectDataSelection):
                 HBox([self._size_min, self._size_max]),
             ]
         )
-
         self._refresh_trigger = ToggleButton(description="Refresh Plot", value=False)
 
         # Wrap all axis panels into dropdown
@@ -177,7 +176,6 @@ class ScatterPlots(ObjectDataSelection):
             options=["X-axis", "Y-axis", "Z-axis", "Color", "Size"],
             layout=Layout(width="300px"),
         )
-
         self.axes_pannels.observe(axes_pannels_trigger, names="value")
         self.axes_options = HBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
@@ -612,7 +610,11 @@ class ScatterPlots(ObjectDataSelection):
         refresh_trigger,
     ):
 
-        if not self.refresh_trigger.value or not self.refresh.value:
+        if (
+            not self.refresh_trigger.value
+            or not self.refresh.value
+            or self.indices is None
+        ):
             return None
 
         if (
