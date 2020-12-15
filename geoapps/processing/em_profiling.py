@@ -80,7 +80,7 @@ class EMLineProfiler(ObjectDataSelection):
         # "show_borehole": False,
         "markers": True,
         # "show_doi": False,
-        "slice_width": 150,
+        "slice_width": 25,
         "x_label": "Distance",
         "ga_group_name": "EMProfiler",
     }
