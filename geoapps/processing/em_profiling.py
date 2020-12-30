@@ -577,10 +577,8 @@ class EMLineProfiler(ObjectDataSelection):
         Filter out small data values.
         """
         if getattr(self, "_min_value", None) is None:
-            self._min_value = FloatSlider(
+            self._min_value = FloatText(
                 value=0,
-                min=0,
-                max=1000,
                 continuous_update=False,
                 description="Minimum data value",
                 style={"description_width": "initial"},
@@ -1887,9 +1885,6 @@ class EMLineProfiler(ObjectDataSelection):
 
         if d_max > -np.inf:
             self.plot_trigger.value = False
-            self.min_value.min = -1e8
-            self.min_value.max = d_max
-            self.min_value.min = d_min
             self.min_value.value = d_min
         # self.set_default_groups(self.channels.options)
 
