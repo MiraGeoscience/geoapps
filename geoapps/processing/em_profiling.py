@@ -160,6 +160,7 @@ class EMLineProfiler(ObjectDataSelection):
                 "max_migration": self.max_migration,
                 "min_channels": self.min_channels,
                 "min_amplitude": self.min_amplitude,
+                "min_value": self.min_value,
                 "min_width": self.min_width,
                 "residual": self.residual,
                 "markers": self.markers,
@@ -215,6 +216,7 @@ class EMLineProfiler(ObjectDataSelection):
                 "max_migration": self.max_migration,
                 "min_channels": self.min_channels,
                 "min_amplitude": self.min_amplitude,
+                "min_value": self.min_value,
                 "min_width": self.min_width,
                 "plot_trigger": self.plot_trigger,
             },
@@ -250,6 +252,7 @@ class EMLineProfiler(ObjectDataSelection):
                                 self.max_migration,
                                 self.min_channels,
                                 self.min_amplitude,
+                                self.min_value,
                                 self.min_width,
                                 self.residual,
                                 Label("Visual Parameters"),
@@ -559,6 +562,23 @@ class EMLineProfiler(ObjectDataSelection):
             )
 
         return self._min_channels
+
+    @property
+    def min_value(self):
+        """
+        Filter out small data values.
+        """
+        if getattr(self, "_min_value", None) is None:
+            self._min_value = FloatSlider(
+                value=0,
+                min=0,
+                max=1000,
+                continuous_update=False,
+                description="Minimum data value",
+                style={"description_width": "initial"},
+            )
+
+        return self._min_value
 
     @property
     def min_width(self):
@@ -1029,6 +1049,7 @@ class EMLineProfiler(ObjectDataSelection):
                         smoothing=self.smoothing.value,
                         use_residual=self.residual.value,
                         min_amplitude=self.min_amplitude.value,
+                        min_value=self.min_value.value,
                         min_width=self.min_width.value,
                         max_migration=self.max_migration.value,
                         min_channels=self.min_channels.value,
@@ -1336,6 +1357,7 @@ class EMLineProfiler(ObjectDataSelection):
         max_migration,
         min_channels,
         min_amplitude,
+        min_value,
         min_width,
         residual,
         markers,
@@ -1478,7 +1500,7 @@ class EMLineProfiler(ObjectDataSelection):
             center_x + width / 2.0 * self.lines.profile.locations_resampled[-1],
         ]
         axs.set_xlim(x_lims)
-        axs.set_ylim([y_min, y_max])
+        axs.set_ylim([np.max([y_min, min_value]), y_max])
         # axs.set_title(f"Line: {ind}")
         axs.set_ylabel("dBdT")
 
@@ -1537,6 +1559,7 @@ class EMLineProfiler(ObjectDataSelection):
             center_x = self.center.value * self.lines.profile.locations_resampled[-1]
             # Loop through groups and find nearest to cursor
             dist = np.inf
+            group = None
             for anomaly in self.lines.anomalies:
                 delta_x = np.abs(
                     center_x
@@ -1547,44 +1570,47 @@ class EMLineProfiler(ObjectDataSelection):
                     group = anomaly
 
             # Get the times of the group and plot the linear regression
-            times = np.hstack(
-                [
+            times = []
+            if group is not None:
+                times = [
                     channel["time"]
                     for channel in self.active_channels
                     if channel["gate"] in list(group["gates"])
                 ]
-            )
 
-            if axs is None:
-                plt.figure(figsize=(8, 8))
-                axs = plt.subplot()
+            if any(times):
+                times = np.hstack(times)
 
-            y = np.exp(times * group["linear_fit"][1] + group["linear_fit"][0])
-            axs.plot(
-                times, y, "--", linewidth=2, color="k",
-            )
-            axs.text(
-                np.mean(times),
-                np.mean(y),
-                f"Tau: {np.abs(group['linear_fit'][0] ** -1.):.2e}",
-                color="k",
-            )
-            #                 plt.yscale('symlog', linthreshy=scale_value)
-            #                 axs.set_aspect('equal')
-            axs.scatter(
-                times,
-                group["peak_values"],
-                color=self.time_groups[group["time_group"]]["color"],
-                marker="^",
-            )
-            axs.grid(True)
+                if axs is None:
+                    plt.figure(figsize=(8, 8))
+                    axs = plt.subplot()
 
-            plt.yscale("log")
-            axs.yaxis.set_label_position("right")
-            axs.yaxis.tick_right()
-            axs.set_ylabel("log(V)")
-            axs.set_xlabel("Time (sec)")
-            axs.set_title("Decay - MADTau")
+                y = np.exp(times * group["linear_fit"][1] + group["linear_fit"][0])
+                axs.plot(
+                    times, y, "--", linewidth=2, color="k",
+                )
+                axs.text(
+                    np.mean(times),
+                    np.mean(y),
+                    f"Tau: {np.abs(group['linear_fit'][0] ** -1.):.2e}",
+                    color="k",
+                )
+                #                 plt.yscale('symlog', linthreshy=scale_value)
+                #                 axs.set_aspect('equal')
+                axs.scatter(
+                    times,
+                    group["peak_values"],
+                    color=self.time_groups[group["time_group"]]["color"],
+                    marker="^",
+                )
+                axs.grid(True)
+
+                plt.yscale("log")
+                axs.yaxis.set_label_position("right")
+                axs.yaxis.tick_right()
+                axs.set_ylabel("log(V)")
+                axs.set_xlabel("Time (sec)")
+                axs.set_title("Decay - MADTau")
 
     def plot_model_selection(
         self,
@@ -1613,6 +1639,7 @@ class EMLineProfiler(ObjectDataSelection):
         max_migration,
         min_channels,
         min_amplitude,
+        min_value,
         min_width,
         plot_trigger,
     ):
@@ -1775,6 +1802,7 @@ class EMLineProfiler(ObjectDataSelection):
                 smoothing=self.smoothing.value,
                 use_residual=self.residual.value,
                 min_amplitude=self.min_amplitude.value,
+                min_value=self.min_value.value,
                 min_width=self.min_width.value,
                 max_migration=self.max_migration.value,
                 min_channels=self.min_channels.value,
@@ -1960,12 +1988,21 @@ class EMLineProfiler(ObjectDataSelection):
                 ),
             )
         ]
+        d_min, d_max = np.inf, -np.inf
         for channel in self.active_channels:
             channel["time"] = (
                 self.data_channel_options[f"[{channel['gate']}]"].children[1].value
             )
             channel["values"] = self.data_channels[channel["name"]].values.copy()
+            d_min = np.min([d_min, channel["values"].min()])
+            d_max = np.max([d_max, channel["values"].max()])
 
+        if d_max > -np.inf:
+            self.plot_trigger.value = False
+            self.min_value.min = -1e8
+            self.min_value.max = d_max
+            self.min_value.min = d_min
+            self.min_value.value = d_min
         # self.set_default_groups(self.channels.options)
 
     def show_model_trigger(self, _):
@@ -2063,6 +2100,7 @@ def find_anomalies(
     use_residual=False,
     data_normalization=[1],
     min_amplitude=0.25,
+    min_value=-np.inf,
     min_width=200,
     max_migration=50,
     min_channels=3,
@@ -2117,14 +2155,22 @@ def find_anomalies(
         dx = profile.derivative(order=1)
         ddx = profile.derivative(order=2)
 
-        peaks = np.where((np.diff(np.sign(dx)) != 0) & (ddx[1:] < 0))[0]
-        lows = np.where((np.diff(np.sign(dx)) != 0) & (ddx[1:] > 0))[0]
+        peaks = np.where(
+            (np.diff(np.sign(dx)) != 0) & (ddx[1:] < 0) & (values[:-1] > min_value)
+        )[0]
+        lows = np.where(
+            (np.diff(np.sign(dx)) != 0) & (ddx[1:] > 0) & (values[:-1] > min_value)
+        )[0]
 
         # Add end of line as possible bump limits
         lows = np.r_[0, lows, locs.shape[0] - 1]
 
-        up_inflx = np.where((np.diff(np.sign(ddx)) != 0) & (dx[1:] > 0))[0]
-        dwn_inflx = np.where((np.diff(np.sign(ddx)) != 0) & (dx[1:] < 0))[0]
+        up_inflx = np.where(
+            (np.diff(np.sign(ddx)) != 0) & (dx[1:] > 0) & (values[:-1] > min_value)
+        )[0]
+        dwn_inflx = np.where(
+            (np.diff(np.sign(ddx)) != 0) & (dx[1:] < 0) & (values[:-1] > min_value)
+        )[0]
 
         if len(peaks) == 0 or len(lows) < 2:
             continue
@@ -2220,10 +2266,27 @@ def find_anomalies(
         dist = np.abs(peaks_position[ii] - peaks_position)
 
         # Find anomalies across channels within horizontal range
-        near = (dist < max_migration) & (anomalies["group"] == -1)
+        near = np.where((dist < max_migration) & (anomalies["group"] == -1))[0]
+
+        # Reject from group if channel gap >1
+        u_gates, u_count = np.unique(anomalies["gates"][near], return_counts=True)
+        if len(u_gates) > 1 and np.any((u_gates[1:] - u_gates[:-1]) > 2):
+            cutoff = u_gates[np.where((u_gates[1:] - u_gates[:-1]) > 2)[0][0]]
+            near = near[anomalies["gates"][near] > cutoff, ...]
+
+        # Check for multiple nearest peaks on single channel
+        # and keep the nearest
+        u_gates, u_count = np.unique(anomalies["gates"][near], return_counts=True)
+        for gate in u_gates[np.where(u_count > 1)]:
+            mask = np.ones_like(near, dtype="bool")
+            sub_ind = anomalies["gates"][near] == gate
+            sub_ind[np.where(sub_ind)[0][np.argmin(dist[near][sub_ind])]] = False
+            mask[sub_ind] = False
+            near = near[mask, ...]
 
         anomalies["group"][near] = group_id
 
+        # Keep largest overlapping time group
         in_gate, count = np.unique(anomalies["time_group"][near], return_counts=True)
         in_gate = in_gate[(count > min_channels) & (in_gate != -1)].tolist()
         time_group = [
@@ -2233,14 +2296,8 @@ def find_anomalies(
         ]
         if len(in_gate) > 0 and len(time_group) > 0:
 
-            time_group = time_group[0]
+            time_group = np.max(time_group)
             gates = anomalies["gates"][near]
-
-            # Check for duplicate times within range
-            _, u_count = np.unique(anomalies["gates"][near], return_counts=True)
-            if np.any(u_count > 1):
-                continue
-
             cox = anomalies["peak"][near]
             cox_sort = np.argsort(locs[cox])
             azm = azimuth[cox[0]]
@@ -2264,6 +2321,9 @@ def find_anomalies(
 
             # Compute linear trend
             A = np.c_[np.ones_like(times), times]
+
+            if A.shape[0] != values.shape[0]:
+                print(A.shape, values.shape)
             y0, slope = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, np.log(values)))
             linear_fit = [y0, slope]
 
