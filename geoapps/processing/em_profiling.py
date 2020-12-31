@@ -1208,13 +1208,13 @@ class EMLineProfiler(ObjectDataSelection):
                 }
                 Points.create(
                     self.workspace,
-                    name="Inflexion_Up",
+                    name="Inflection_Up",
                     vertices=np.vstack(inflx_up),
                     parent=self.ga_group,
                 )
                 Points.create(
                     self.workspace,
-                    name="Inflexion_Down",
+                    name="Inflection_Down",
                     vertices=np.vstack(inflx_dwn),
                     parent=self.ga_group,
                 )
@@ -2037,7 +2037,6 @@ def find_anomalies(
 
         dx = profile.derivative(order=1)
         ddx = profile.derivative(order=2)
-
         peaks = np.where(
             (np.diff(np.sign(dx)) != 0) & (ddx[1:] < 0) & (values[:-1] > min_value)
         )[0]
@@ -2055,7 +2054,7 @@ def find_anomalies(
             (np.diff(np.sign(ddx)) != 0) & (dx[1:] < 0) & (values[:-1] > min_value)
         )[0]
 
-        if len(peaks) == 0 or len(lows) < 2:
+        if len(peaks) == 0 or len(lows) < 2 or len(up_inflx) < 2 or len(dwn_inflx) < 2:
             continue
 
         for peak in peaks:
