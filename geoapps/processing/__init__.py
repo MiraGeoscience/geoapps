@@ -4,5 +4,5 @@ from .coordinate_transformation import CoordinateTransformation
 from .contours import ContourValues
 from .data_interpolation import DataInterpolation
 from .edge_detection import EdgeDetectionApp
-from .em_profiling import EMLineProfiler
+from .peak_finder import PeakFinder
 from .clustering import Clustering
