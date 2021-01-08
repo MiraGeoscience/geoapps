@@ -1,16 +1,13 @@
-import os
 import re
 import numpy as np
 from scipy.spatial import cKDTree
 import plotly.graph_objects as go
 import plotly.express as px
-import time
 from dask.distributed import get_client
 import dask
 import matplotlib.pyplot as plt
 from geoh5py.workspace import Workspace
 from geoh5py.objects import Points, Curve, Surface
-from geoh5py.groups import ContainerGroup
 from ipywidgets import (
     Button,
     Dropdown,
@@ -30,9 +27,7 @@ from ipywidgets import (
     FloatLogSlider,
     Label,
     Layout,
-    RadioButtons,
 )
-from geoapps.base import BaseApplication
 from geoapps.utils import (
     find_value,
     geophysical_systems,
@@ -88,10 +83,7 @@ class PeakFinder(ObjectDataSelection):
         "width": 1000,
         "smoothing": 6,
         "tem_checkbox": True,
-        # "show_model": False,
-        # "show_borehole": False,
         "markers": True,
-        # "show_doi": False,
         "slice_width": 25,
         "x_label": "Distance",
         "ga_group_name": "PeakFinder",
@@ -143,7 +135,6 @@ class PeakFinder(ObjectDataSelection):
         self.doi_selection.data.description = "DOI Layer"
         self.scale_panel = VBox([self.scale_button])
         self.scale_button.observe(self.scale_update)
-
         self.channel_selection.observe(self.channel_panel_update, names="value")
         self.channel_panel = VBox(
             [
@@ -165,7 +156,6 @@ class PeakFinder(ObjectDataSelection):
         self.trigger.on_click(self.trigger_click)
         self.flip_sign.observe(self.set_data, names="value")
         self.trigger.description = "Export Peaks"
-
         self.trigger_panel = VBox(
             [
                 VBox([self.trigger, self.structural_markers, self.ga_group_name]),
@@ -193,7 +183,6 @@ class PeakFinder(ObjectDataSelection):
                 "groups": self.group_list,
                 "plot_trigger": self.plot_trigger,
                 "x_label": self.x_label,
-                "threshold": self.threshold,
             },
         )
         self.decay = interactive_output(
@@ -205,7 +194,6 @@ class PeakFinder(ObjectDataSelection):
                 "center": self.center,
                 "groups": self.group_list,
                 "plot_trigger": self.plot_trigger,
-                "threshold": self.threshold,
             },
         )
         self.decay_panel = VBox([self.show_decay])
@@ -306,6 +294,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def plot_trigger(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Trigger refresh of all plots
+        """
         if getattr(self, "_plot_trigger", None) is None:
             self._plot_trigger = ToggleButton(
                 description="Pick nearest target", value=False
@@ -315,6 +306,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def boreholes(self):
+        """
+        :obj:`geoapps.selection.ObjectDataSelection`: Widget for the selection of borehole data
+        """
         if getattr(self, "_boreholes", None) is None:
             self._boreholes = ObjectDataSelection(object_types=Points)
 
@@ -322,6 +316,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def boreholes_size(self):
+        """
+        :obj:`ipywidgets.IntSlider`: Adjust the size of borehole markers
+        """
         if getattr(self, "_boreholes_size", None) is None:
             self._boreholes_size = IntSlider(
                 value=3,
@@ -335,6 +332,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def center(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Adjust the data plot center position along line
+        """
         if getattr(self, "_center", None) is None:
             self._center = FloatSlider(
                 min=0,
@@ -350,6 +350,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def channels(self):
+        """
+        :obj:`ipywidgets.SelectMultiple`: Selection of data channels
+        """
         if getattr(self, "_channels", None) is None:
             self._channels = SelectMultiple(description="Channels")
 
@@ -357,6 +360,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def channel_selection(self):
+        """
+        :obj:`ipywidgets.Dropdown`: Selection of data channels expected from the selected em system
+        """
         if getattr(self, "_channel_selection", None) is None:
             self._channel_selection = Dropdown(
                 description="Time Gate",
@@ -367,6 +373,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def color_maps(self):
+        """
+        :obj:`ipywidgets.Dropdown`: Selection of colormap used by the model plot
+        """
         if getattr(self, "_color_maps", None) is None:
             self._color_maps = Dropdown(
                 description="Colormaps",
@@ -379,7 +388,7 @@ class PeakFinder(ObjectDataSelection):
     @property
     def data(self):
         """
-        Data selector
+        :obj:`ipywidgets.SelectMultiple`: Data selection used by the application
         """
         if getattr(self, "_data", None) is None:
             self.data = SelectMultiple(description="Data: ")
@@ -396,24 +405,10 @@ class PeakFinder(ObjectDataSelection):
         self.set_data(None)
 
     @property
-    def dip_rotation(self):
-        if getattr(self, "_dip_rotation", None) is None:
-            self._dip_rotation = FloatSlider(
-                value=0,
-                min=0,
-                max=180,
-                step=1.0,
-                description="Rotate dip (dd)",
-                disabled=False,
-                continuous_update=False,
-                orientation="horizontal",
-                style={"description_width": "initial"},
-            )
-
-        return self._dip_rotation
-
-    @property
     def doi_percent(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Define the DOI index used to mask the model plot
+        """
         if getattr(self, "_doi_percent", None) is None:
             self._doi_percent = FloatSlider(
                 value=20.0,
@@ -428,6 +423,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def doi_revert(self):
+        """
+        :obj:`ipywidgets.Checkbox`: Apply the inverse of the DOI index
+        """
         if getattr(self, "_doi_revert", None) is None:
             self._doi_revert = Checkbox(description="Revert", value=False)
 
@@ -435,6 +433,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def doi_selection(self):
+        """
+        :obj:`geoapps.selection.ObjectDataSelection`: Widget for the selection of a DOI model
+        """
         if getattr(self, "_doi_selection", None) is None:
             self._doi_selection = ObjectDataSelection()
 
@@ -442,6 +443,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def flip_sign(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Apply a sign flip to the selected data
+        """
         if getattr(self, "_flip_sign", None) is None:
             self._flip_sign = ToggleButton(
                 description="Invert data (-1)", button_style="warning"
@@ -450,14 +454,10 @@ class PeakFinder(ObjectDataSelection):
         return self._flip_sign
 
     @property
-    def group_add(self):
-        if getattr(self, "_group_add", None) is None:
-            self._group_add = ToggleButton(description="^ Add New Group ^")
-
-        return self._group_add
-
-    @property
     def group_color(self):
+        """
+        :obj:`ipywidgets.ColorPicker`: Assign a color to the selected group
+        """
         if getattr(self, "_group_color", None) is None:
             self._group_color = ColorPicker(
                 concise=False, description="Color", value="blue", disabled=False
@@ -467,6 +467,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def group_list(self):
+        """
+        :obj:`ipywidgets.Dropdown`: List of default time data groups
+        """
         if getattr(self, "_group_list", None) is None:
             self._group_list = Dropdown(
                 description="",
@@ -483,14 +486,10 @@ class PeakFinder(ObjectDataSelection):
         return self._group_list
 
     @property
-    def group_name(self):
-        if getattr(self, "_group_name", None) is None:
-            self._group_name = Text(description="Name")
-
-        return self._group_name
-
-    @property
     def groups_setter(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Display the group options panel
+        """
         if getattr(self, "_groups_setter", None) is None:
             self._groups_setter = ToggleButton(
                 description="Select Time Groups", value=False
@@ -501,7 +500,7 @@ class PeakFinder(ObjectDataSelection):
     @property
     def lines(self):
         """
-        Line selection widget. Stores the profile for plotting.
+        :obj:`geoapps.selection.LineOptions`: Line selection widget defining the profile used for plotting.
         """
         if getattr(self, "_lines", None) is None:
             self._lines = LineOptions(multiple_lines=False)
@@ -510,6 +509,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def markers(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Display markers on the data plot
+        """
         if getattr(self, "_markers", None) is None:
             self._markers = ToggleButton(description="Show markers")
 
@@ -518,7 +520,7 @@ class PeakFinder(ObjectDataSelection):
     @property
     def max_migration(self):
         """
-        Filter anomalies based on maximum horizontal migration of peaks.
+        :obj:`ipywidgets.FloatSlider`: Filter anomalies based on maximum horizontal migration of peaks.
         """
         if getattr(self, "_max_migration", None) is None:
             self._max_migration = FloatSlider(
@@ -537,7 +539,7 @@ class PeakFinder(ObjectDataSelection):
     @property
     def min_amplitude(self):
         """
-        Filter small anomalies based on amplitude ratio
+        :obj:`ipywidgets.IntSlider`: Filter small anomalies based on amplitude ratio
         between peaks and lows.
         """
         if getattr(self, "_min_amplitude", None) is None:
@@ -555,7 +557,7 @@ class PeakFinder(ObjectDataSelection):
     @property
     def min_channels(self):
         """
-        Filter peak groups based on minimum number of data channels overlap.
+        :obj:`ipywidgets.IntSlider`: Filter peak groups based on minimum number of data channels overlap.
         """
         if getattr(self, "_min_channels", None) is None:
             self._min_channels = IntSlider(
@@ -573,7 +575,7 @@ class PeakFinder(ObjectDataSelection):
     @property
     def min_value(self):
         """
-        Filter out small data values.
+        :obj:`ipywidgets.FloatText`: Filter out small data values.
         """
         if getattr(self, "_min_value", None) is None:
             self._min_value = FloatText(
@@ -588,7 +590,7 @@ class PeakFinder(ObjectDataSelection):
     @property
     def min_width(self):
         """
-        Filter small anomalies based on width
+        :obj:`ipywidgets.FloatSlider`: Filter small anomalies based on width
         between lows.
         """
         if getattr(self, "_min_width", None) is None:
@@ -606,6 +608,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def model_log(self):
+        """
+        :obj:`ipywidgets.Checkbox`: Display model values in log10 scale
+        """
         if getattr(self, "_model_log", None) is None:
             self._model_log = Checkbox(description="log", value=True, indent=False)
 
@@ -613,6 +618,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def model_max(self):
+        """
+        :obj:`ipywidgets.FloatText`: Upper bound value used to plot the model
+        """
         if getattr(self, "_model_max", None) is None:
             self._model_max = FloatText(
                 description="max", value=1e-1, continuous_update=False
@@ -622,6 +630,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def model_min(self):
+        """
+        :obj:`ipywidgets.FloatText`: Lower bound value used to plot the model
+        """
         if getattr(self, "_model_min", None) is None:
             self._model_min = FloatText(
                 description="min", value=1e-4, continuous_update=False
@@ -631,6 +642,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def model_selection(self):
+        """
+        :obj:`geoapps.selection.ObjectDataSelection`: Widget for the selection of a surface model object and values
+        """
         if getattr(self, "_model_selection", None) is None:
             self._model_selection = ObjectDataSelection(object_types=Surface)
 
@@ -638,6 +652,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def opacity(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Adjust the transparency of the model plot
+        """
         if getattr(self, "_opacity", None) is None:
             self._opacity = FloatSlider(
                 value=0.9,
@@ -652,6 +669,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def residual(self):
+        """
+        :obj:`ipywidgets.Checkbox`: Use the residual between the original and smoothed data profile
+        """
         if getattr(self, "_residual", None) is None:
             self._residual = Checkbox(description="Use residual", value=False)
 
@@ -659,6 +679,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def reverse_cmap(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Reverse the colormap used by the model plot
+        """
         if getattr(self, "_reverse_cmap", None) is None:
             self._reverse_cmap = ToggleButton(description="Flip colormap", value=False)
 
@@ -666,6 +689,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def run_all(self):
+        """
+        :obj:`ipywidgets.Button`: Trigger the peak finder calculation for all lines
+        """
         if getattr(self, "_run_all", None) is None:
             self._run_all = Button(
                 description="Process All Lines", button_style="warning"
@@ -675,6 +701,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def scale_button(self):
+        """
+        :obj:`ipywidgets.ToggleButtons`: Scale the vertical axis of the data plot
+        """
         if getattr(self, "_scale_button", None) is None:
             self._scale_button = ToggleButtons(
                 options=["linear", "symlog",],
@@ -686,6 +715,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def scale_value(self):
+        """
+        :obj:`ipywidgets.FloatLogSlider`: Threshold value used by th symlog scaling
+        """
         if getattr(self, "_scale_value", None) is None:
             self._scale_value = FloatLogSlider(
                 min=-18,
@@ -700,23 +732,10 @@ class PeakFinder(ObjectDataSelection):
         return self._scale_value
 
     @property
-    def shift_cox_z(self):
-        if getattr(self, "_shift_cox_z", None) is None:
-            self._shift_cox_z = FloatSlider(
-                value=0,
-                min=0,
-                max=200,
-                step=1.0,
-                description="Z shift (m)",
-                disabled=False,
-                continuous_update=False,
-                orientation="horizontal",
-            )
-
-        return self._shift_cox_z
-
-    @property
     def show_borehole(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Display the borehole panel
+        """
         if getattr(self, "_show_borehole", None) is None:
             self._show_borehole = ToggleButton(
                 description="Show Boreholes", value=False,
@@ -726,6 +745,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def show_decay(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Display the decay curve plot
+        """
         if getattr(self, "_show_decay", None) is None:
             self._show_decay = ToggleButton(description="Show decay", value=False)
 
@@ -733,6 +755,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def show_doi(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Display the doi options panel
+        """
         if getattr(self, "_show_doi", None) is None:
             self._show_doi = ToggleButton(description="Show DOI", value=False,)
 
@@ -740,6 +765,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def show_model(self):
+        """
+        :obj:`ipywidgets.ToggleButton`: Display the model plot options panel
+        """
         if getattr(self, "_show_model", None) is None:
             self._show_model = ToggleButton(description="Show model", value=False,)
 
@@ -747,6 +775,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def slice_width(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Change the search radius for plotting around the model section
+        """
         if getattr(self, "_slice_width", None) is None:
             self._slice_width = FloatSlider(
                 value=10.0,
@@ -763,6 +794,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def smoothing(self):
+        """
+        :obj:`ipywidgets.IntSlider`: Number of neighboring data points used for the running mean smoothing
+        """
         if getattr(self, "_smoothing", None) is None:
             self._smoothing = IntSlider(
                 min=0,
@@ -777,6 +811,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def structural_markers(self):
+        """
+        :obj:`ipywidgets.Checkbox`: Export peaks as structural markers
+        """
         if getattr(self, "_structural_markers", None) is None:
             self._structural_markers = Checkbox(description="Structural Markers")
 
@@ -785,13 +822,15 @@ class PeakFinder(ObjectDataSelection):
     @property
     def survey(self):
         """
-
+        Selected curve object
         """
-
         return self._survey
 
     @property
     def system(self):
+        """
+        :obj:`ipywidgets.Dropdown`: Selection of a TEM system
+        """
         if getattr(self, "_system", None) is None:
             self._system = Dropdown(
                 options=[
@@ -807,6 +846,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def tem_checkbox(self):
+        """
+        :obj:`ipywidgets.Checkbox`: Enable options specific to TEM data groups
+        """
         if getattr(self, "_tem_checkbox", None) is None:
             self._tem_checkbox = Checkbox(description="TEM Data", value=True)
 
@@ -814,6 +856,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def time_groups(self):
+        """
+        Dict of time groups used to classify peaks
+        """
         return self._time_groups
 
     @time_groups.setter
@@ -821,21 +866,10 @@ class PeakFinder(ObjectDataSelection):
         self._time_groups = groups
 
     @property
-    def threshold(self):
-        if getattr(self, "_threshold", None) is None:
-            self._threshold = FloatSlider(
-                value=50,
-                min=10,
-                max=90,
-                step=5,
-                continuous_update=False,
-                description="Decay threshold (%)",
-            )
-
-        return self._threshold
-
-    @property
     def width(self):
+        """
+        :obj:`ipywidgets.FloatSlider`: Adjust the length of data displayed on the data plot
+        """
         if getattr(self, "_width", None) is None:
             self._width = FloatSlider(
                 min=0.0,
@@ -877,6 +911,9 @@ class PeakFinder(ObjectDataSelection):
 
     @property
     def x_label(self):
+        """
+        :obj:`ipywidgets.ToggleButtons`: Units of distance displayed on the data plot
+        """
         if getattr(self, "_x_label", None) is None:
             self._x_label = ToggleButtons(
                 options=["Distance", "Easting", "Northing"],
@@ -1354,7 +1391,6 @@ class PeakFinder(ObjectDataSelection):
         groups,
         plot_trigger,
         x_label,
-        threshold,
     ):
 
         if self.pause_plot_refresh:
@@ -1536,9 +1572,7 @@ class PeakFinder(ObjectDataSelection):
 
         axs.grid(True)
 
-    def plot_decay_curve(
-        self, ind, smoothing, residual, center, groups, plot_trigger, threshold
-    ):
+    def plot_decay_curve(self, ind, smoothing, residual, center, groups, plot_trigger):
         axs = None
 
         if self.pause_plot_refresh:
@@ -1802,7 +1836,6 @@ class PeakFinder(ObjectDataSelection):
         self.pause_plot_refresh = True
 
         if self.previous_line != self.lines.lines.value:
-            print(self.center.max, self.center.value)
             if self.center.value >= self.center.max:
                 self.center.value = 0
                 self.center.max = self.lines.profile.locations_resampled[-1]
@@ -2045,10 +2078,6 @@ class PeakFinder(ObjectDataSelection):
                                 self.opacity,
                                 self.doi_panel,
                                 self.borehole_panel,
-                                # Label("Adjust Dip Marker"),
-                                # self.shift_cox_z,
-                                # self.dip_rotation,
-                                # self.azimuth_rotation,
                             ],
                             layout=Layout(width="50%"),
                         ),
@@ -2068,7 +2097,7 @@ class PeakFinder(ObjectDataSelection):
         Add the decay curve plot
         """
         if self.show_decay.value:
-            self.decay_panel.children = [self.show_decay, self.decay, self.threshold]
+            self.decay_panel.children = [self.show_decay, self.decay]
             self.show_decay.description = "Hide decay curve"
         else:
             self.decay_panel.children = [self.show_decay]
