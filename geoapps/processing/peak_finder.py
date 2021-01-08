@@ -54,19 +54,30 @@ class PeakFinder(ObjectDataSelection):
         "h5file": "../../assets/FlinFlon.geoh5",
         "add_groups": True,
         "time_groups": {
-            0: {"name": "early", "label": [0], "color": "#0000FF"},
-            1: {"name": "middle", "label": [1], "color": "#FFFF00"},
-            2: {"name": "late", "label": [2], "color": "#FF0000"},
-            3: {"name": "early + middle", "label": [0, 1], "color": "#00FFFF"},
+            0: {"name": "early", "label": [0], "color": "#0000FF", "channels": []},
+            1: {"name": "middle", "label": [1], "color": "#FFFF00", "channels": []},
+            2: {"name": "late", "label": [2], "color": "#FF0000", "channels": []},
+            3: {
+                "name": "early + middle",
+                "label": [0, 1],
+                "color": "#00FFFF",
+                "channels": [],
+            },
             4: {
                 "name": "early + middle + late",
                 "label": [0, 1, 2],
                 "color": "#008000",
+                "channels": [],
             },
-            5: {"name": "middle + late", "label": [1, 2], "color": "#FFA500"},
+            5: {
+                "name": "middle + late",
+                "label": [1, 2],
+                "color": "#FFA500",
+                "channels": [],
+            },
         },
         "objects": "Data_TEM_pseudo3D",
-        "data": ["Sf[24]"],
+        "data": ["Observed"],
         "model": {"objects": "Inversion_VTEM_Model", "data": "Iteration_7_model"},
         "lines": {"data": "Line", "lines": 6073400.0},
         "boreholes": {"objects": "geochem", "data": "Al2O3"},
@@ -106,10 +117,11 @@ class PeakFinder(ObjectDataSelection):
         self.show_doi.observe(self.show_doi_trigger, names="value")
         self.borehole_panel = VBox([self.show_borehole])
         self.show_borehole.observe(self.show_borehole_trigger, names="value")
-        # self.lines.lines.observe(self.update_line_params, names="value")
+        self.system.observe(self.system_observer, names="value")
 
         super().__init__(**kwargs)
 
+        self.previous_line = self.lines.lines.value
         self.objects.description = "Survey"
 
         if "lines" in kwargs.keys():
@@ -131,8 +143,7 @@ class PeakFinder(ObjectDataSelection):
         self.doi_selection.data.description = "DOI Layer"
         self.scale_panel = VBox([self.scale_button])
         self.scale_button.observe(self.scale_update)
-        self.system.observe(self.system_observer, names="value")
-        self.system_observer(None)
+
         self.channel_selection.observe(self.channel_panel_update, names="value")
         self.channel_panel = VBox(
             [
@@ -199,8 +210,9 @@ class PeakFinder(ObjectDataSelection):
         )
         self.decay_panel = VBox([self.show_decay])
         self.show_decay.observe(self.show_decay_trigger, names="value")
-
-        self.tem_box = HBox([self.tem_checkbox],)
+        self.tem_box = HBox(
+            [self.tem_checkbox, self.system_box, self.groups_widget, self.decay_panel,]
+        )
         self.tem_checkbox.observe(self.tem_checkbox_click, names="value")
         self.tem_checkbox_click(None)
         self.model_section = interactive_output(
@@ -532,7 +544,7 @@ class PeakFinder(ObjectDataSelection):
             self._min_amplitude = IntSlider(
                 value=25,
                 min=0,
-                max=1000,
+                max=100,
                 continuous_update=False,
                 description="Minimum amplitude (%)",
                 style={"description_width": "initial"},
@@ -796,7 +808,7 @@ class PeakFinder(ObjectDataSelection):
     @property
     def tem_checkbox(self):
         if getattr(self, "_tem_checkbox", None) is None:
-            self._tem_checkbox = Checkbox(description="TEM Data", value=False)
+            self._tem_checkbox = Checkbox(description="TEM Data", value=True)
 
         return self._tem_checkbox
 
@@ -924,6 +936,7 @@ class PeakFinder(ObjectDataSelection):
                     ]
                 ):
                     self.system.value = aem_system
+                    break
 
     def reset_model_figure(self):
         self.model_figure = go.FigureWidget()
@@ -1012,27 +1025,34 @@ class PeakFinder(ObjectDataSelection):
         """
         Change channels associated with groups
         """
-        gates = []
-        all_gates = []  # Track unique gates
-        for key in range(3):
-            if self.time_groups[key]["name"] == self.group_list.value:
-                group_gates = []
-                for channel in list(self.channels.value):
-                    if re.findall(r"\d+", channel):
-                        value = int(re.findall(r"\d+", channel)[-1])
-                        if value not in all_gates:
-                            group_gates += [value]
-
-                gates += [group_gates]
-            else:
-                gates += [self.time_groups[key]["gates"]]
-            all_gates.extend(gates[-1])
+        # gates = []
+        # all_gates = []  # Track unique gates
+        # for key in range(3):
+        #     if self.time_groups[key]["name"] == self.group_list.value:
+        #         group_gates = []
+        #         for channel in list(self.channels.value):
+        #             if re.findall(r"\d+", channel):
+        #                 value = int(re.findall(r"\d+", channel)[-1])
+        #                 if value not in all_gates:
+        #                     group_gates += [value]
+        #
+        #         gates += [group_gates]
+        #     else:
+        #         gates += [self.time_groups[key]["gates"]]
+        #     all_gates.extend(gates[-1])
 
         # Refresh only if list of gates has changed
-        if not all_gates == [channel["gate"] for channel in self.active_channels]:
-            self.reset_groups(gates=gates)
-            self.plot_trigger.value = False
-            self.plot_trigger.value = True
+        # if not all_gates == [channel["gate"] for channel in self.active_channels]:
+        gates = {}
+        for key, group in self.time_groups.items():
+            if group["name"] == self.group_list.value and group["channels"] != list(
+                self.channels.value
+            ):
+                gates[key] = list(self.channels.value)
+
+        self.reset_groups(gates=gates)
+        self.plot_trigger.value = False
+        self.plot_trigger.value = True
 
     def run_all_click(self, _):
         """
@@ -1337,6 +1357,9 @@ class PeakFinder(ObjectDataSelection):
         threshold,
     ):
 
+        if self.pause_plot_refresh:
+            return
+
         self.line_update()
 
         if (
@@ -1344,7 +1367,6 @@ class PeakFinder(ObjectDataSelection):
             or getattr(self.lines, "profile", None) is None
             or self.plot_trigger.value is False
             or len(self.active_channels) == 0
-            or self.pause_plot_refresh
         ):
             return
 
@@ -1370,7 +1392,7 @@ class PeakFinder(ObjectDataSelection):
             return
 
         locs = self.lines.profile.locations_resampled
-        for channel in self.active_channels:
+        for cc, channel in enumerate(self.active_channels):
             if axs is None:
                 plt.figure(figsize=(12, 6))
                 axs = plt.subplot()
@@ -1384,7 +1406,7 @@ class PeakFinder(ObjectDataSelection):
 
             # Plot the anomalies by time group color
             for group in self.lines.anomalies:
-                query = np.where(group["gates"] == channel["gate"])[0]
+                query = np.where(group["channels"] == cc)[0]
 
                 if (
                     len(query) == 0
@@ -1472,7 +1494,7 @@ class PeakFinder(ObjectDataSelection):
         if x_label == "Easting":
             axs.text(
                 center,
-                0,
+                y_min,
                 f"{self.lines.profile.interp_x(center):.0f} m E",
                 va="top",
                 ha="center",
@@ -1488,7 +1510,7 @@ class PeakFinder(ObjectDataSelection):
         elif x_label == "Northing":
             axs.text(
                 center,
-                0,
+                y_min,
                 f"{self.lines.profile.interp_y(center):.0f} m N",
                 va="top",
                 ha="center",
@@ -1504,7 +1526,7 @@ class PeakFinder(ObjectDataSelection):
         else:
             axs.text(
                 center,
-                0,
+                y_min,
                 f"{center:.0f} m",
                 va="top",
                 ha="center",
@@ -1541,8 +1563,8 @@ class PeakFinder(ObjectDataSelection):
             if group is not None and group["linear_fit"] is not None:
                 times = [
                     channel["time"]
-                    for channel in self.active_channels
-                    if channel["gate"] in list(group["gates"])
+                    for ii, channel in enumerate(self.active_channels)
+                    if ii in list(group["channels"])
                 ]
 
             if any(times):
@@ -1777,27 +1799,27 @@ class PeakFinder(ObjectDataSelection):
                 return_profile=True,
             )
         ).result()
-
         self.pause_plot_refresh = True
 
-        if self.center.value == self.center.min or (
-            self.center.value > self.lines.profile.locations_resampled[-1]
-        ):
-            self.center.value = 0
-            self.center.max = self.lines.profile.locations_resampled[-1]
-            self.center.value = self.lines.profile.locations_resampled[-1] * 0.5
+        if self.previous_line != self.lines.lines.value:
+            print(self.center.max, self.center.value)
+            if self.center.value >= self.center.max:
+                self.center.value = 0
+                self.center.max = self.lines.profile.locations_resampled[-1]
+                self.center.value = self.lines.profile.locations_resampled[-1] * 0.5
+            else:
+                self.center.max = self.lines.profile.locations_resampled[-1]
 
-        self.center.max = self.lines.profile.locations_resampled[-1]
+        if self.previous_line != self.lines.lines.value:
 
-        if self.width.value == self.width.min or (
-            self.width.value > self.lines.profile.locations_resampled[-1]
-        ):
-            self.width.value = 0
-            self.center.max = self.lines.profile.locations_resampled[-1]
-            self.width.value = self.lines.profile.locations_resampled[-1] * 0.5
+            if self.width.value >= self.width.max:
+                self.width.value = 0
+                self.width.max = self.lines.profile.locations_resampled[-1]
+                self.width.value = self.lines.profile.locations_resampled[-1] * 0.5
+            else:
+                self.width.max = self.lines.profile.locations_resampled[-1]
 
-        self.width.max = self.lines.profile.locations_resampled[-1]
-
+        self.previous_line = self.lines.lines.value
         if self.show_model.value:
             self.update_line_model()
 
@@ -1934,53 +1956,63 @@ class PeakFinder(ObjectDataSelection):
             else:
                 self.lines.borehole_vertices = None
 
-    def reset_groups(self, gates=None):
+    def reset_groups(self, gates={}):
+        if gates:
+            for key, values in gates.items():
+                if key in list(self.time_groups.keys()):
+                    self.time_groups[key]["channels"] = values
 
-        if gates is None:
-            start = self.em_system_specs[self.system.value]["channel_start_index"]
-            end = len(self.em_system_specs[self.system.value]["channels"].keys()) + 1
+        else:
+            for group in self.time_groups.values():
+                group["channels"] = []
 
-            # Divide channels in three equal blocks
-            block = int((end - start) / 3)
-            early = np.arange(start, start + block).tolist()
-            mid = np.arange(start + block, start + 2 * block).tolist()
-            late = np.arange(start + 2 * block, end).tolist()
+            if self.tem_checkbox.value:
+                start = self.em_system_specs[self.system.value]["channel_start_index"]
+                end = (
+                    len(self.em_system_specs[self.system.value]["channels"].keys()) + 1
+                )
 
-            gates = [early, mid, late]
-        for group in self.time_groups.values():
-            group["gates"] = []
-            group["channels"] = []
-            for ind in group["label"]:
-                group["gates"] += gates[ind]
+                # Divide channels in three equal blocks
+                block = int((end - start) / 3)
+                early = np.arange(start, start + block).tolist()
+                mid = np.arange(start + block, start + 2 * block).tolist()
+                late = np.arange(start + 2 * block, end).tolist()
 
-        for channel in self.channels.options:
-            if re.findall(r"\d+", channel):
-                value = int(re.findall(r"\d+", channel)[-1])
+                gates = [[], [], []]
+                try:
+                    for channel in self.channels.options:
+                        [
+                            gates[ii].append(channel)
+                            for ii, block in enumerate([early, mid, late])
+                            if int(re.findall(r"\d+", channel)[-1]) in block
+                        ]
+                except IndexError:
+                    print(
+                        "Could not find a time channel for the given list of time channels"
+                    )
+                    return
+
                 for group in self.time_groups.values():
-                    if value in group["gates"]:
-                        group["channels"].append(channel)
+                    for ind in group["label"]:
+                        group["channels"] += gates[ind]
+            else:  # Group 0 takes it all
+                self.time_groups[0]["channels"] = list(self.channels.options)
 
-        self.highlight_selection(None)
         self.active_channels = [
-            {"name": c, "gate": g}
-            for c, g in zip(
-                (
-                    self.time_groups[0]["channels"]
-                    + self.time_groups[1]["channels"]
-                    + self.time_groups[2]["channels"]
-                ),
-                (
-                    self.time_groups[0]["gates"]
-                    + self.time_groups[1]["gates"]
-                    + self.time_groups[2]["gates"]
-                ),
+            {"name": c}
+            for c in (
+                self.time_groups[0]["channels"]
+                + self.time_groups[1]["channels"]
+                + self.time_groups[2]["channels"]
             )
         ]
         d_min, d_max = np.inf, -np.inf
         for channel in self.active_channels:
-            channel["time"] = (
-                self.data_channel_options[f"[{channel['gate']}]"].children[1].value
-            )
+            if self.tem_checkbox.value:
+                gate = int(re.findall(r"\d+", channel["name"])[-1])
+                channel["time"] = (
+                    self.data_channel_options[f"[{gate}]"].children[1].value
+                )
             channel["values"] = (-1.0) ** self.flip_sign.value * self.data_channels[
                 channel["name"]
             ].values.copy()
@@ -2086,11 +2118,11 @@ class PeakFinder(ObjectDataSelection):
             ]
             self.max_migration.disabled = False
             self.min_channels.disabled = False
-            self.set_data(None)
         else:
             self.tem_box.children = [self.tem_checkbox]
             self.max_migration.disabled = True
             self.min_channels.disabled = True
+        self.set_data(None)
 
 
 @dask.delayed
@@ -2102,7 +2134,7 @@ def find_anomalies(
     smoothing=1,
     use_residual=False,
     data_normalization=[1],
-    min_amplitude=0.25,
+    min_amplitude=25,
     min_value=-np.inf,
     min_width=200,
     max_migration=50,
@@ -2137,7 +2169,7 @@ def find_anomalies(
     angles = np.r_[angles[0], angles].tolist()
     azimuth = (450.0 - np.rad2deg(running_mean(angles, width=5))) % 360.0
     anomalies = {
-        "gates": [],
+        "channel": [],
         "start": [],
         "inflx_up": [],
         "peak": [],
@@ -2148,7 +2180,7 @@ def find_anomalies(
         "group": [],
         "time_group": [],
     }
-    for channel in channels:
+    for cc, channel in enumerate(channels):
         # if channel not in list(self.channel_to_gate.keys()):
         #     continue
         values = channel["values"][line_indices].copy()
@@ -2213,7 +2245,7 @@ def find_anomalies(
 
             amplitude = np.sum(np.abs(values[start:end])) * profile.hx
             if (delta_amp > min_amplitude) & (delta_x > min_width):
-                anomalies["gates"] += [channel["gate"]]
+                anomalies["channel"] += [cc]
                 anomalies["start"] += [start]
                 anomalies["inflx_up"] += [inflx_up]
                 anomalies["peak"] += [peak]
@@ -2275,18 +2307,18 @@ def find_anomalies(
         near = np.where((dist < max_migration) & (anomalies["group"] == -1))[0]
 
         # Reject from group if channel gap >1
-        u_gates, u_count = np.unique(anomalies["gates"][near], return_counts=True)
+        u_gates, u_count = np.unique(anomalies["channel"][near], return_counts=True)
         if len(u_gates) > 1 and np.any((u_gates[1:] - u_gates[:-1]) > 2):
 
             cutoff = u_gates[np.where((u_gates[1:] - u_gates[:-1]) > 2)[0][0]]
-            near = near[anomalies["gates"][near] > cutoff, ...]  # Remove after cutoff
+            near = near[anomalies["channel"][near] > cutoff, ...]  # Remove after cutoff
 
         # Check for multiple nearest peaks on single channel
         # and keep the nearest
-        u_gates, u_count = np.unique(anomalies["gates"][near], return_counts=True)
+        u_gates, u_count = np.unique(anomalies["channel"][near], return_counts=True)
         for gate in u_gates[np.where(u_count > 1)]:
             mask = np.ones_like(near, dtype="bool")
-            sub_ind = anomalies["gates"][near] == gate
+            sub_ind = anomalies["channel"][near] == gate
             sub_ind[np.where(sub_ind)[0][np.argmin(dist[near][sub_ind])]] = False
             mask[sub_ind] = False
             near = near[mask, ...]
@@ -2304,7 +2336,7 @@ def find_anomalies(
         if len(in_gate) > 0 and len(time_group) > 0:
 
             time_group = np.max(time_group)
-            gates = anomalies["gates"][near]
+            gates = anomalies["channel"][near]
             cox = anomalies["peak"][near]
             cox_sort = np.argsort(locs[cox])
             azm = azimuth[cox[0]]
@@ -2312,19 +2344,17 @@ def find_anomalies(
                 azm = (azm + 180) % 360.0
 
             migration = np.abs(locs[cox[cox_sort[-1]]] - locs[cox[cox_sort[0]]])
-
-            # Compute tau
-            times = np.hstack(
-                [
-                    channel["time"]
-                    for channel in channels
-                    if channel["gate"] in list(gates)
-                ]
-            )
             values = anomalies["peak_values"][near] * np.prod(data_normalization)
             amplitude = np.sum(anomalies["amplitude"][near])
+            # Compute tau
+            times = [
+                channel["time"]
+                for ii, channel in enumerate(channels)
+                if (ii in list(gates) and "time" in channel.keys())
+            ]
 
-            if times.shape[0] > 1 and len(cox) > 0:
+            if len(times) > 1 and len(cox) > 0:
+                times = np.hstack(times)
                 # Compute linear trend
                 A = np.c_[np.ones_like(times), times]
                 y0, slope = np.linalg.solve(np.dot(A.T, A), np.dot(A.T, np.log(values)))
@@ -2384,7 +2414,7 @@ def find_anomalies(
             else:
                 groups += [
                     {
-                        "gates": gates,
+                        "channels": gates,
                         "start": anomalies["start"][near],
                         "inflx_up": anomalies["inflx_up"][near],
                         "peak": cox,
