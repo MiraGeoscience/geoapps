@@ -65,7 +65,7 @@ class ObjectDataSelection(BaseApplication):
         Object selector
         """
         if getattr(self, "_objects", None) is None:
-            self.objects = Dropdown(description="Object:",)
+            self.objects = Dropdown(description="Object:", options=[""])
 
         return self._objects
 
@@ -270,6 +270,9 @@ class LineOptions(ObjectDataSelection):
         self._multiple_lines = None
 
         super().__init__(**kwargs)
+
+        if "objects" in kwargs.keys() and isinstance(kwargs["objects"], Dropdown):
+            self._objects.observe(self.update_data_list, names="value")
 
         self._data.observe(self.update_line_list, names="value")
         self.update_data_list(None)
