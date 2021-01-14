@@ -114,7 +114,7 @@ class BaseApplication:
         """
         Add defaults to the kwargs
         """
-        for key, value in self.defaults.items():
+        for key, value in self.defaults.copy().items():
             if key in kwargs.keys():
                 continue
             else:
