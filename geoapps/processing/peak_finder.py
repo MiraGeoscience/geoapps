@@ -35,6 +35,7 @@ from geoapps.utils import (
     rotate_azimuth_dip,
     running_mean,
     hex_to_rgb,
+    colors,
 )
 from geoapps.selection import ObjectDataSelection, LineOptions
 
@@ -48,29 +49,6 @@ class PeakFinder(ObjectDataSelection):
         "object_types": Curve,
         "h5file": "../../assets/FlinFlon.geoh5",
         "add_groups": True,
-        "time_groups": {
-            0: {"name": "early", "label": [0], "color": "#0000FF", "channels": []},
-            1: {"name": "middle", "label": [1], "color": "#FFFF00", "channels": []},
-            2: {"name": "late", "label": [2], "color": "#FF0000", "channels": []},
-            3: {
-                "name": "early + middle",
-                "label": [0, 1],
-                "color": "#00FFFF",
-                "channels": [],
-            },
-            4: {
-                "name": "early + middle + late",
-                "label": [0, 1, 2],
-                "color": "#008000",
-                "channels": [],
-            },
-            5: {
-                "name": "middle + late",
-                "label": [1, 2],
-                "color": "#FFA500",
-                "channels": [],
-            },
-        },
         "objects": "Data_TEM_pseudo3D",
         "data": ["Observed"],
         "model": {"objects": "Inversion_VTEM_Model", "data": "Iteration_7_model"},
@@ -101,7 +79,7 @@ class PeakFinder(ObjectDataSelection):
         self.pause_plot_refresh = False
         self.surface_model = None
         self._survey = None
-        self._time_groups = {}
+        self._time_groups = None
         self.objects.observe(self.objects_change, names="value")
         # self.objects.observe(self.update_data_list, names="value")
         self.model_panel = VBox([self.show_model])
@@ -871,6 +849,31 @@ class PeakFinder(ObjectDataSelection):
         """
         Dict of time groups used to classify peaks
         """
+
+        if getattr(self, "_time_groups", None) is None:
+            self._time_groups = {
+                0: {"name": "early", "label": [0], "color": "#0000FF", "channels": []},
+                1: {"name": "middle", "label": [1], "color": "#FFFF00", "channels": []},
+                2: {"name": "late", "label": [2], "color": "#FF0000", "channels": []},
+                3: {
+                    "name": "early + middle",
+                    "label": [0, 1],
+                    "color": "#00FFFF",
+                    "channels": [],
+                },
+                4: {
+                    "name": "early + middle + late",
+                    "label": [0, 1, 2],
+                    "color": "#008000",
+                    "channels": [],
+                },
+                5: {
+                    "name": "middle + late",
+                    "label": [1, 2],
+                    "color": "#FFA500",
+                    "channels": [],
+                },
+            }
         return self._time_groups
 
     @time_groups.setter
@@ -1006,7 +1009,6 @@ class PeakFinder(ObjectDataSelection):
 
             if not_tem:
                 self.tem_box.children = [self.tem_checkbox]
-                self.max_migration.disabled = True
                 self.min_channels.disabled = True
             else:
                 self.tem_box.children = [
@@ -1015,7 +1017,6 @@ class PeakFinder(ObjectDataSelection):
                     self.groups_widget,
                     self.decay_panel,
                 ]
-                self.max_migration.disabled = False
                 self.min_channels.disabled = False
 
             self.set_data(None)
@@ -1163,6 +1164,8 @@ class PeakFinder(ObjectDataSelection):
         self.all_anomalies = self.client.gather(anomalies)
         self.trigger.button_style = "success"
         self.run_all.description = "Process All Lines"
+
+        # Re-assign groups
 
     def trigger_click(self, _):
         """
@@ -1348,21 +1351,7 @@ class PeakFinder(ObjectDataSelection):
                     parent=self.ga_group,
                 )
                 time_group_data.copy(parent=inflx_pts)
-                # time_group_data = inflx_pts.add_data(
-                #     {
-                #         "time_group": {
-                #             "type": "referenced",
-                #             "values": np.repeat(
-                #                 np.hstack(time_group), [ii.shape[0] for ii in inflx_dwn]
-                #             ),
-                #             "value_map": group_map,
-                #         }
-                #     }
-                # )
-                # time_group_data.entity_type.color_map = {
-                #     "name": "Time Groups",
-                #     "values": color_map,
-                # }
+
                 start_pts = Points.create(
                     self.workspace,
                     name="Starts",
@@ -1370,21 +1359,7 @@ class PeakFinder(ObjectDataSelection):
                     parent=self.ga_group,
                 )
                 time_group_data.copy(parent=start_pts)
-                # time_group_data = start_pt.add_data(
-                #     {
-                #         "time_group": {
-                #             "type": "referenced",
-                #             "values": np.repeat(
-                #                 np.hstack(time_group), [ii.shape[0] for ii in start]
-                #             ),
-                #             "value_map": group_map,
-                #         }
-                #     }
-                # )
-                # time_group_data.entity_type.color_map = {
-                #     "name": "Time Groups",
-                #     "values": color_map,
-                # }
+
                 end_pts = Points.create(
                     self.workspace,
                     name="Ends",
@@ -1392,31 +1367,13 @@ class PeakFinder(ObjectDataSelection):
                     parent=self.ga_group,
                 )
                 time_group_data.copy(parent=end_pts)
-                # time_group_data = end_pt.add_data(
-                #     {
-                #         "time_group": {
-                #             "type": "referenced",
-                #             "values": np.repeat(
-                #                 np.hstack(time_group), [ii.shape[0] for ii in end]
-                #             ),
-                #             "value_map": group_map,
-                #         }
-                #     }
-                # )
-                # time_group_data.entity_type.color_map = {
-                #     "name": "Time Groups",
-                #     "values": color_map,
-                # }
+
                 peak_pts = Points.create(
                     self.workspace,
                     name="Peaks",
                     vertices=np.vstack(peaks),
                     parent=self.ga_group,
                 )
-                peak_pts.add_data(
-                    {"skew": {"values": skew},}
-                )
-                time_group_data.copy(parent=peak_pts)
 
         if self.live_link.value:
             self.live_link_output(points)
@@ -1469,6 +1426,9 @@ class PeakFinder(ObjectDataSelection):
             or len(self.active_channels) == 0
         ):
             return
+
+        center = self.center.value
+        width = self.width.value
 
         axs = None
         if (
@@ -1905,21 +1865,25 @@ class PeakFinder(ObjectDataSelection):
         self.pause_plot_refresh = True
 
         if self.previous_line != self.lines.lines.value:
-            if self.center.value >= self.center.max:
+            end = self.lines.profile.locations_resampled[-1]
+            mid = self.lines.profile.locations_resampled[-1] * 0.5
+
+            if self.center.value >= end:
                 self.center.value = 0
-                self.center.max = self.lines.profile.locations_resampled[-1]
-                self.center.value = self.lines.profile.locations_resampled[-1] * 0.5
+                self.center.max = end
+                self.center.value = mid
             else:
-                self.center.max = self.lines.profile.locations_resampled[-1]
+                self.center.max = end
 
         if self.previous_line != self.lines.lines.value:
-
-            if self.width.value >= self.width.max:
+            end = self.lines.profile.locations_resampled[-1]
+            mid = self.lines.profile.locations_resampled[-1] * 0.5
+            if self.width.value >= end:
                 self.width.value = 0
-                self.width.max = self.lines.profile.locations_resampled[-1]
-                self.width.value = self.lines.profile.locations_resampled[-1] * 0.5
+                self.width.max = end
+                self.width.value = mid
             else:
-                self.width.max = self.lines.profile.locations_resampled[-1]
+                self.width.max = end
 
         self.previous_line = self.lines.lines.value
         if self.show_model.value:
@@ -2065,8 +2029,7 @@ class PeakFinder(ObjectDataSelection):
                     self.time_groups[key]["channels"] = values
 
         else:
-            for group in self.time_groups.values():
-                group["channels"] = []
+            self._time_groups = None
 
             if self.tem_checkbox.value:
                 start = self.em_system_specs[self.system.value]["channel_start_index"]
@@ -2080,37 +2043,43 @@ class PeakFinder(ObjectDataSelection):
                 mid = np.arange(start + block, start + 2 * block).tolist()
                 late = np.arange(start + 2 * block, end).tolist()
 
-                gates = [[], [], []]
+                gates_list = [[], [], []]
                 try:
                     for channel in self.channels.options:
                         [
-                            gates[ii].append(channel)
+                            gates_list[ii].append(channel)
                             for ii, block in enumerate([early, mid, late])
                             if int(re.findall(r"\d+", channel)[-1]) in block
                         ]
 
-                    for group in self.time_groups.values():
-                        for ind in group["label"]:
-                            group["channels"] += gates[ind]
+                    for key, gates in enumerate(gates_list):
+                        self.time_groups[key]["channels"] = gates
 
                 except IndexError:
                     print(
                         "Could not find a time channel for the given list of time channels"
                     )
-                    self.time_groups[0]["channels"] = list(self.channels.options)
                     self.tem_checkbox.value = False
 
-            else:  # Group 0 takes it all
-                self.time_groups[0]["channels"] = list(self.channels.options)
+            else:  # One group per selected channel
+                self._time_groups = {}
+                for ii, channel in enumerate(self.channels.options):
+                    self._time_groups[ii] = {
+                        "name": channel,
+                        "label": [ii],
+                        "color": colors[ii],
+                        "channels": [channel],
+                    }
 
-        self.active_channels = [
-            {"name": c}
-            for c in (
-                self.time_groups[0]["channels"]
-                + self.time_groups[1]["channels"]
-                + self.time_groups[2]["channels"]
-            )
-        ]
+        channels = []
+        for group in self.time_groups.values():
+            [
+                channels.append(channel)
+                for channel in group["channels"]
+                if channel not in channels
+            ]
+
+        self.active_channels = [{"name": c} for c in channels]
         d_min, d_max = np.inf, -np.inf
         for channel in self.active_channels:
             if self.tem_checkbox.value:
@@ -2343,7 +2312,6 @@ def find_anomalies(
                 / (np.abs(np.min([values[start], values[end]])) + 2e-32)
             ) * 100.0
             delta_x = locs[end] - locs[start]
-
             amplitude = np.sum(np.abs(values[start:end])) * profile.hx
             if (delta_amp > min_amplitude) & (delta_x > min_width):
                 anomalies["channel"] += [cc]
@@ -2356,15 +2324,9 @@ def find_anomalies(
                 anomalies["end"] += [end]
                 anomalies["group"] += [-1]
                 anomalies["time_group"] += [
-                    ind
-                    for ind, time_group in enumerate(
-                        [
-                            time_groups[0]["channels"],
-                            time_groups[1]["channels"],
-                            time_groups[2]["channels"],
-                        ]
-                    )
-                    if channel["name"] in time_group
+                    key
+                    for key, time_group in time_groups.items()
+                    if channel["name"] in time_group["channels"]
                 ]
 
     if len(anomalies["peak"]) == 0:
@@ -2426,130 +2388,143 @@ def find_anomalies(
             mask[sub_ind] = False
             near = near[mask, ...]
 
-        anomalies["group"][near] = group_id
-
         # Keep largest overlapping time group
         in_gate, count = np.unique(anomalies["time_group"][near], return_counts=True)
         in_gate = in_gate[(count >= min_channels) & (in_gate != -1)].tolist()
-        time_group = [
-            ii
-            for ii, time_group in enumerate(time_groups.values())
-            if in_gate == time_group["label"]
-        ]
-        if len(in_gate) > 0 and len(time_group) > 0:
-
-            time_group = np.max(time_group)
-            gates = anomalies["channel"][near]
-            cox = anomalies["peak"][near]
-            inflx_dwn = anomalies["inflx_dwn"][near]
-            inflx_up = anomalies["inflx_up"][near]
-            cox_sort = np.argsort(locs[cox])
-            azimuth_near = azimuth[near]
-            dip_direction = azimuth[cox[0]]
-
-            if cox_sort[-1] < cox_sort[0]:
-                dip_direction = (dip_direction + 180) % 360.0
-
-            migration = np.abs(locs[cox[cox_sort[-1]]] - locs[cox[cox_sort[0]]])
-            up = locs[inflx_up][cox_sort]
-            up[azimuth_near > 180] = locs[inflx_dwn][cox_sort][azimuth_near > 180]
-            down = locs[inflx_dwn][cox_sort]
-            down[azimuth_near > 180] = locs[inflx_up][cox_sort][azimuth_near > 180]
-            skew = (locs[cox][cox_sort[0]] - up) / (down - locs[cox][cox_sort[0]])
-            skew[skew < 1] = -1.0 / skew[skew < 1]
-            values = anomalies["peak_values"][near] * np.prod(data_normalization)
-            amplitude = np.sum(anomalies["amplitude"][near])
-            times = [
-                channel["time"]
-                for ii, channel in enumerate(channels)
-                if (ii in list(gates) and "time" in channel.keys())
+        time_group = np.max(
+            [
+                ii
+                for ii, group in enumerate(time_groups.values())
+                if all([(gate in in_gate) for gate in group["label"]])
             ]
-            linear_fit = None
+        )
 
-            if len(times) > 2 and len(cox) > 0:
-                times = np.hstack(times)[values > 0]
-                if len(times) > 2:
-                    # Compute linear trend
-                    A = np.c_[np.ones_like(times), times]
-                    y0, slope = np.linalg.solve(
-                        np.dot(A.T, A), np.dot(A.T, np.log(values[values > 0]))
-                    )
-                    linear_fit = [y0, slope]
+        # Remove anomalies not in group
+        # channel_list = [time_groups[ii]["channels"] for ii in time_groups[time_group]["label"]]
+        # mask = [ii for ii, id in enumerate(near) if channels[anomalies["channel"][id]] not in channel_list]
+        # near = near[mask, ...]
 
-            if minimal_output:
-                groups["skew"] += [skew]
-                groups["cox"] += [
-                    np.mean(
-                        np.c_[
-                            profile.interp_x(locs[cox[cox_sort[0]]]),
-                            profile.interp_y(locs[cox[cox_sort[0]]]),
-                            profile.interp_z(locs[cox[cox_sort[0]]]),
-                        ],
-                        axis=0,
-                    )
-                ]
-                groups["azimuth"] += [dip_direction]
-                groups["migration"] += [migration]
-                groups["amplitude"] += [amplitude]
-                groups["time_group"] += [time_group]
-                groups["inflx_dwn"] += [
-                    np.c_[
-                        profile.interp_x(locs[inflx_dwn]),
-                        profile.interp_y(locs[inflx_dwn]),
-                        profile.interp_z(locs[inflx_dwn]),
-                    ]
-                ]
-                groups["inflx_up"] += [
-                    np.c_[
-                        profile.interp_x(locs[inflx_up]),
-                        profile.interp_y(locs[inflx_up]),
-                        profile.interp_z(locs[inflx_up]),
-                    ]
-                ]
-                start = anomalies["start"][near]
-                groups["start"] += [
-                    np.c_[
-                        profile.interp_x(locs[start]),
-                        profile.interp_y(locs[start]),
-                        profile.interp_z(locs[start]),
-                    ]
-                ]
-                end = anomalies["end"][near]
-                groups["peaks"] += [
-                    np.c_[
-                        profile.interp_x(locs[cox]),
-                        profile.interp_y(locs[cox]),
-                        profile.interp_z(locs[cox]),
-                    ]
-                ]
-                groups["end"] += [
-                    np.c_[
-                        profile.interp_x(locs[end]),
-                        profile.interp_y(locs[end]),
-                        profile.interp_z(locs[end]),
-                    ]
-                ]
+        anomalies["group"][near] = group_id
 
-                if linear_fit is not None:
-                    groups["tau"] += [np.abs(linear_fit[0] ** -1.0)]
+        #
+        # if len(in_gate) > 0 and len(time_group) > 0:
 
-            else:
-                groups += [
-                    {
-                        "channels": gates,
-                        "start": anomalies["start"][near],
-                        "inflx_up": anomalies["inflx_up"][near],
-                        "peak": cox,
-                        "peak_values": values,
-                        "inflx_dwn": anomalies["inflx_dwn"][near],
-                        "end": anomalies["end"][near],
-                        "azimuth": dip_direction,
-                        "migration": migration,
-                        "amplitude": amplitude,
-                        "time_group": time_group,
-                        "linear_fit": linear_fit,
-                    }
+        gates = anomalies["channel"][near]
+        cox = anomalies["peak"][near]
+        inflx_dwn = anomalies["inflx_dwn"][near]
+        inflx_up = anomalies["inflx_up"][near]
+        cox_sort = np.argsort(locs[cox])
+        azimuth_near = azimuth[near]
+        dip_direction = azimuth[cox[0]]
+
+        if cox_sort[-1] < cox_sort[0]:
+            dip_direction = (dip_direction + 180) % 360.0
+
+        migration = np.abs(locs[cox[cox_sort[-1]]] - locs[cox[cox_sort[0]]])
+        skew = (locs[cox][cox_sort[0]] - locs[inflx_up][cox_sort]) / (
+            locs[inflx_dwn][cox_sort] - locs[cox][cox_sort[0]]
+        )
+        skew[azimuth_near > 180] = 1.0 / (skew[azimuth_near > 180] + 1e-2)
+
+        # Change skew factor from [-100, 1]
+        flip_skew = skew < 1
+        skew[flip_skew] = 1.0 / (skew[flip_skew] + 1e-2)
+        skew = 1.0 - skew
+        skew[flip_skew] *= -1
+
+        values = anomalies["peak_values"][near] * np.prod(data_normalization)
+        amplitude = np.sum(anomalies["amplitude"][near])
+        times = [
+            channel["time"]
+            for ii, channel in enumerate(channels)
+            if (ii in list(gates) and "time" in channel.keys())
+        ]
+        linear_fit = None
+
+        if len(times) > 2 and len(cox) > 0:
+            times = np.hstack(times)[values > 0]
+            if len(times) > 2:
+                # Compute linear trend
+                A = np.c_[np.ones_like(times), times]
+                y0, slope = np.linalg.solve(
+                    np.dot(A.T, A), np.dot(A.T, np.log(values[values > 0]))
+                )
+                linear_fit = [y0, slope]
+
+        if minimal_output:
+            groups["skew"] += [np.mean(skew)]
+            groups["cox"] += [
+                np.mean(
+                    np.c_[
+                        profile.interp_x(locs[cox[cox_sort[0]]]),
+                        profile.interp_y(locs[cox[cox_sort[0]]]),
+                        profile.interp_z(locs[cox[cox_sort[0]]]),
+                    ],
+                    axis=0,
+                )
+            ]
+            groups["azimuth"] += [dip_direction]
+            groups["migration"] += [migration]
+            groups["amplitude"] += [amplitude]
+            # groups["time_group"] += [time_group]
+            groups["inflx_dwn"] += [
+                np.c_[
+                    profile.interp_x(locs[inflx_dwn]),
+                    profile.interp_y(locs[inflx_dwn]),
+                    profile.interp_z(locs[inflx_dwn]),
                 ]
+            ]
+            groups["inflx_up"] += [
+                np.c_[
+                    profile.interp_x(locs[inflx_up]),
+                    profile.interp_y(locs[inflx_up]),
+                    profile.interp_z(locs[inflx_up]),
+                ]
+            ]
+            start = anomalies["start"][near]
+            groups["start"] += [
+                np.c_[
+                    profile.interp_x(locs[start]),
+                    profile.interp_y(locs[start]),
+                    profile.interp_z(locs[start]),
+                ]
+            ]
+            end = anomalies["end"][near]
+            groups["peaks"] += [
+                np.c_[
+                    profile.interp_x(locs[cox]),
+                    profile.interp_y(locs[cox]),
+                    profile.interp_z(locs[cox]),
+                ]
+            ]
+            groups["end"] += [
+                np.c_[
+                    profile.interp_x(locs[end]),
+                    profile.interp_y(locs[end]),
+                    profile.interp_z(locs[end]),
+                ]
+            ]
+
+            if linear_fit is not None:
+                groups["tau"] += [np.abs(linear_fit[0] ** -1.0)]
+
+        else:
+            groups += [
+                {
+                    "channels": gates,
+                    "start": anomalies["start"][near],
+                    "inflx_up": anomalies["inflx_up"][near],
+                    "peak": cox,
+                    "peak_values": values,
+                    "inflx_dwn": anomalies["inflx_dwn"][near],
+                    "end": anomalies["end"][near],
+                    "azimuth": dip_direction,
+                    "migration": migration,
+                    "amplitude": amplitude,
+                    # "time_group": time_group,
+                    "linear_fit": linear_fit,
+                }
+            ]
 
     # if minimal_output and len(groups["cox"])>0:
     #     groups["cox"] = np.vstack(groups["cox"]).reshape((-1, 3))
