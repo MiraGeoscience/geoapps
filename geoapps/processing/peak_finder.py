@@ -1010,6 +1010,7 @@ class PeakFinder(ObjectDataSelection):
             if not_tem:
                 self.tem_box.children = [self.tem_checkbox]
                 self.min_channels.disabled = True
+                self.max_migration.disabled = False
             else:
                 self.tem_box.children = [
                     self.tem_checkbox,
@@ -1018,6 +1019,7 @@ class PeakFinder(ObjectDataSelection):
                     self.decay_panel,
                 ]
                 self.min_channels.disabled = False
+                self.max_migration.disabled = False
 
             self.set_data(None)
 
@@ -1167,6 +1169,33 @@ class PeakFinder(ObjectDataSelection):
 
         # Re-assign groups
 
+    def regroup(self):
+        group_id = -1
+        for group in self.lines.anomalies:
+
+            channels = group["channels"].tolist()
+
+            labels = [self.active_channels[ii]["name"] for ii in channels]
+            match = False
+            for key, time_group in self.time_groups.items():
+                if labels == time_group["channels"]:
+                    group["time_group"] = key
+                    match = True
+                    print("matchfound:", key)
+
+                    break
+
+            if match:
+                continue
+            group_id += 1
+            # Passed through
+            self.time_groups[group_id] = {}
+            self.time_groups[group_id]["channels"] = labels
+            self.time_groups[group_id]["name"] = "-".join(labels)
+            self.time_groups[group_id]["color"] = colors[group_id]
+
+            group["time_group"] = group_id
+
     def trigger_click(self, _):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
@@ -1174,6 +1203,9 @@ class PeakFinder(ObjectDataSelection):
         # for group in self.group_list.value:
         if not self.all_anomalies:
             return
+
+        if not self.tem_checkbox:
+            self.regroup()
 
         # Append all lines
         (
@@ -1191,19 +1223,24 @@ class PeakFinder(ObjectDataSelection):
             peaks,
         ) = ([], [], [], [], [], [], [], [], [], [], [], [])
         for line in self.all_anomalies:
-            if "time_group" in list(line.keys()) and len(line["cox"]) > 0:
-                time_group += [line["time_group"]]
-                tau += [line["tau"]]
-                migration += [line["migration"]]
-                amplitude += [line["amplitude"]]
-                azimuth += [line["azimuth"]]
-                cox += [line["cox"]]
-                inflx_dwn += line["inflx_dwn"]
-                inflx_up += line["inflx_up"]
-                start += line["start"]
-                end += line["end"]
-                skew += line["skew"]
-                peaks += line["peaks"]
+            for group in line:
+                if "time_group" in list(group.keys()) and len(group["cox"]) > 0:
+                    time_group += [group["time_group"]]
+
+                    if group["linear_fit"] is None:
+                        tau += [0]
+                    else:
+                        tau += [np.abs(group["linear_fit"][0] ** -1.0)]
+                    migration += [group["migration"]]
+                    amplitude += [group["amplitude"]]
+                    azimuth += [group["azimuth"]]
+                    cox += [group["cox"]]
+                    inflx_dwn += [group["inflx_dwn"]]
+                    inflx_up += [group["inflx_up"]]
+                    start += [group["start"]]
+                    end += [group["end"]]
+                    skew += [group["skew"]]
+                    peaks += [group["peaks"]]
 
         if cox:
             time_group = np.hstack(time_group) + 1  # Start count at 1
@@ -1230,7 +1267,10 @@ class PeakFinder(ObjectDataSelection):
             skew = np.hstack(skew)
             azimuth = np.hstack(azimuth)
             points.add_data(
-                {"amplitude": {"values": np.hstack(amplitude)},}
+                {
+                    "amplitude": {"values": np.hstack(amplitude)},
+                    "skew": {"values": skew},
+                }
             )
 
             if self.tem_checkbox.value:
@@ -1438,6 +1478,9 @@ class PeakFinder(ObjectDataSelection):
             self.lines.profile.residual = residual
             self.lines.profile.smoothing = smoothing
             self.line_update()
+
+        if not self.tem_checkbox:
+            self.regroup()
 
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
@@ -2335,23 +2378,7 @@ def find_anomalies(
         else:
             return {}
 
-    if minimal_output:
-        groups = {
-            "amplitude": [],
-            "azimuth": [],
-            "cox": [],
-            "migration": [],
-            "time_group": [],
-            "tau": [],
-            "inflx_dwn": [],
-            "inflx_up": [],
-            "start": [],
-            "skew": [],
-            "peaks": [],
-            "end": [],
-        }
-    else:
-        groups = []
+    groups = []
 
     # Re-cast as numpy arrays
     for key, values in anomalies.items():
@@ -2451,80 +2478,64 @@ def find_anomalies(
                 )
                 linear_fit = [y0, slope]
 
+        group = {
+            "channels": gates,
+            "start": anomalies["start"][near],
+            "inflx_up": anomalies["inflx_up"][near],
+            "peak": cox,
+            "inflx_dwn": anomalies["inflx_dwn"][near],
+            "end": anomalies["end"][near],
+            "azimuth": dip_direction,
+            "migration": migration,
+            "amplitude": amplitude,
+            "time_group": time_group,
+            "linear_fit": linear_fit,
+        }
         if minimal_output:
-            groups["skew"] += [np.mean(skew)]
-            groups["cox"] += [
-                np.mean(
-                    np.c_[
-                        profile.interp_x(locs[cox[cox_sort[0]]]),
-                        profile.interp_y(locs[cox[cox_sort[0]]]),
-                        profile.interp_z(locs[cox[cox_sort[0]]]),
-                    ],
-                    axis=0,
-                )
-            ]
-            groups["azimuth"] += [dip_direction]
-            groups["migration"] += [migration]
-            groups["amplitude"] += [amplitude]
-            # groups["time_group"] += [time_group]
-            groups["inflx_dwn"] += [
+
+            group["skew"] = np.mean(skew)
+            group["cox"] = np.mean(
                 np.c_[
-                    profile.interp_x(locs[inflx_dwn]),
-                    profile.interp_y(locs[inflx_dwn]),
-                    profile.interp_z(locs[inflx_dwn]),
-                ]
+                    profile.interp_x(locs[cox[cox_sort[0]]]),
+                    profile.interp_y(locs[cox[cox_sort[0]]]),
+                    profile.interp_z(locs[cox[cox_sort[0]]]),
+                ],
+                axis=0,
+            )
+            group["inflx_dwn"] = np.c_[
+                profile.interp_x(locs[inflx_dwn]),
+                profile.interp_y(locs[inflx_dwn]),
+                profile.interp_z(locs[inflx_dwn]),
             ]
-            groups["inflx_up"] += [
-                np.c_[
-                    profile.interp_x(locs[inflx_up]),
-                    profile.interp_y(locs[inflx_up]),
-                    profile.interp_z(locs[inflx_up]),
-                ]
+            group["inflx_up"] = np.c_[
+                profile.interp_x(locs[inflx_up]),
+                profile.interp_y(locs[inflx_up]),
+                profile.interp_z(locs[inflx_up]),
             ]
             start = anomalies["start"][near]
-            groups["start"] += [
-                np.c_[
-                    profile.interp_x(locs[start]),
-                    profile.interp_y(locs[start]),
-                    profile.interp_z(locs[start]),
-                ]
-            ]
-            end = anomalies["end"][near]
-            groups["peaks"] += [
-                np.c_[
-                    profile.interp_x(locs[cox]),
-                    profile.interp_y(locs[cox]),
-                    profile.interp_z(locs[cox]),
-                ]
-            ]
-            groups["end"] += [
-                np.c_[
-                    profile.interp_x(locs[end]),
-                    profile.interp_y(locs[end]),
-                    profile.interp_z(locs[end]),
-                ]
+            group["start"] = np.c_[
+                profile.interp_x(locs[start]),
+                profile.interp_y(locs[start]),
+                profile.interp_z(locs[start]),
             ]
 
-            if linear_fit is not None:
-                groups["tau"] += [np.abs(linear_fit[0] ** -1.0)]
+            end = anomalies["end"][near]
+            group["peaks"] = np.c_[
+                profile.interp_x(locs[cox]),
+                profile.interp_y(locs[cox]),
+                profile.interp_z(locs[cox]),
+            ]
+
+            group["end"] = np.c_[
+                profile.interp_x(locs[end]),
+                profile.interp_y(locs[end]),
+                profile.interp_z(locs[end]),
+            ]
 
         else:
-            groups += [
-                {
-                    "channels": gates,
-                    "start": anomalies["start"][near],
-                    "inflx_up": anomalies["inflx_up"][near],
-                    "peak": cox,
-                    "peak_values": values,
-                    "inflx_dwn": anomalies["inflx_dwn"][near],
-                    "end": anomalies["end"][near],
-                    "azimuth": dip_direction,
-                    "migration": migration,
-                    "amplitude": amplitude,
-                    # "time_group": time_group,
-                    "linear_fit": linear_fit,
-                }
-            ]
+            group["peak_values"] = values
+
+        groups += [group]
 
     # if minimal_output and len(groups["cox"])>0:
     #     groups["cox"] = np.vstack(groups["cox"]).reshape((-1, 3))
