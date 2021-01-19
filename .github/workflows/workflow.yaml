@@ -11,13 +11,10 @@ jobs:
     name: Codecov Workflow
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
     defaults:
       run:
         shell: bash
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python
@@ -40,5 +37,15 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
           flags: unittests
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install Black
+        run: pip install black
       - name: Run black --check .
         run: black --check .
