@@ -26,6 +26,9 @@ jobs:
           python-version: 3.8
       - name: Generate coverage report
         run: |
+          conda install --yes --quiet numpy scipy matplotlib ipython h5py
+          conda install --yes -c conda-forge simpeg=0.13.1 geopandas scikit-learn
+          pip install -r requirements_dev.txt
           pip install pytest
           pip install pytest-cov
           pytest --cov=./ --cov-report=xml

@@ -37,8 +37,7 @@ install:
 
 # Run test
 script:
-  # - nosetests $TEST_DIR --with-cov --cov SimPEG --cov-config .coveragerc -v -s
-  - nosetests $TEST_DIR --with-cov --cov geoh5py --cov-config .coveragerc -v -s;
+  - nosetests $TEST_DIR --with-cov --cov geoapps --cov-config .coveragerc -v -s;
 
 
 # Calculate coverage
