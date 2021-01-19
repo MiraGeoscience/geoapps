@@ -24,11 +24,13 @@ jobs:
         uses: actions/setup-python@master
         with:
           python-version: 3.8
-      - name: Generate coverage report
+      - name: Install dependencies
         run: |
           conda install --yes --quiet numpy scipy matplotlib ipython h5py
           conda install --yes -c conda-forge simpeg=0.13.1 geopandas scikit-learn
           pip install -r requirements_dev.txt
+      - name: Generate Coverage
+        run: |
           pip install pytest
           pip install pytest-cov
           pytest --cov=./ --cov-report=xml
@@ -38,3 +40,5 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
           flags: unittests
+      - name: Run black --check .
+        run: black --check .
