@@ -3,7 +3,7 @@ import ipywidgets as widgets
 from ipywidgets import Dropdown, SelectMultiple, VBox, FloatText
 from geoh5py.workspace import Workspace
 from geoh5py.objects.object_base import ObjectBase
-from geoh5py.data.primitive_type_enum import PrimitiveTypeEnum
+from geoh5py.data import FloatData, IntegerData
 from geoapps.base import BaseApplication
 from geoapps import utils
 
@@ -221,8 +221,7 @@ class ObjectDataSelection(BaseApplication):
                     + [
                         obj.get_data(uid)[0].name
                         for uid in data_list
-                        if obj.get_data(uid)[0].entity_type.primitive_type
-                        == PrimitiveTypeEnum.FLOAT
+                        if isinstance(obj.get_data(uid)[0], (IntegerData, FloatData))
                     ]
                     + ["Z"]
                 )
