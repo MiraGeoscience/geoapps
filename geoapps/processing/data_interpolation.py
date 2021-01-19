@@ -419,11 +419,11 @@ class DataInterpolation(ObjectDataSelection):
 
             xyz_out = object_to.centroids.copy()
 
-        values, sign = {}, {}
+        values, sign, dtype = {}, {}, {}
         for field in self.data.value:
             model_in = object_from.get_data(field)[0]
-            values[field] = model_in.values.copy()
-
+            values[field] = np.asarray(model_in.values, dtype=float).copy()
+            dtype[field] = model_in.values.dtype
             values[field][values[field] == self.no_data_value.value] = np.nan
             if self.space.value == "Log":
                 sign[field] = np.sign(values[field])
@@ -565,7 +565,14 @@ class DataInterpolation(ObjectDataSelection):
                 ] = self.no_data_value.value
 
         for key in values_interp.keys():
-            object_to.add_data({key + "_interp": {"values": values_interp[key]}})
+            if dtype[field] == np.dtype("int32"):
+                primitive = "integer"
+                vals = np.round(values_interp[key]).astype(dtype[field])
+            else:
+                primitive = "float"
+                vals = values_interp[key].astype(dtype[field])
+
+            object_to.add_data({key + "_interp": {"values": vals, "type": primitive}})
 
         if self.live_link.value:
             self.live_link_output(object_to)
