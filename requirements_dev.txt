@@ -1,0 +1,10 @@
+empymod
+geoh5py
+geoapps
+numpydoc
+sphinx_issues
+nbsphinx
+jupyter_sphinx
+plotly==4.9.0
+ipyfilechooser
+ezdxf

@@ -2,7 +2,7 @@ from distutils.core import setup
 
 from setuptools import find_packages
 
-with open("README.md") as fh:
+with open("README.rst") as fh:
     long_description = fh.read()
 
 CLASSIFIERS = [
