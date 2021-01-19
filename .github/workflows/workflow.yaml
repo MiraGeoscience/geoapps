@@ -1,4 +1,4 @@
-name: Geoapps Master Workflow
+name: Python Master Workflow
 on:
   push:
     branches:
@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ubuntu-latest
+        os: [ubuntu-latest]
     defaults:
       run:
         shell: bash
