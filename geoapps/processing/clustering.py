@@ -689,6 +689,12 @@ class Clustering(ScatterPlots):
             values = np.vstack(values).T
 
             active_set = np.where(np.all(~np.isnan(values), axis=1))[0]
+
+            if len(active_set) == 0:
+                print("No rows were found without no-data-values. Check input field")
+                self.dataframe = None
+                return
+
             samples = random_sampling(
                 values[active_set, :],
                 np.min([self.downsampling.value, len(active_set)]),

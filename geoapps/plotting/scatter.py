@@ -540,7 +540,7 @@ class ScatterPlots(ObjectDataSelection):
         if channel not in self.data_channels.keys():
 
             if obj.get_data(channel):
-                values = obj.get_data(channel)[0].values.copy()
+                values = np.asarray(obj.get_data(channel)[0].values, dtype=float).copy()
                 values[(values > 1e-38) * (values < 2e-38)] = np.nan
             elif channel == "Z":
                 # Check number of points
@@ -825,7 +825,7 @@ class ScatterPlots(ObjectDataSelection):
         for axis in [self.x, self.y, self.z]:
             vals = self.get_channel(axis.value)
             if vals is not None:
-                values.append(vals)
+                values.append(np.asarray(vals, dtype=float))
 
         if len(values) < 2:
             return
