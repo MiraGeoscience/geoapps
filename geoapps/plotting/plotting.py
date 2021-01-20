@@ -92,7 +92,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
     if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
         data.values[0], str
     ):
-        values = data.values.copy()
+        values = np.asarray(data.values, dtype=float).copy()
         values[(values > 1e-18) * (values < 2e-18)] = np.nan
         values[values == -99999] = np.nan
 
@@ -134,7 +134,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
         Y = y[ind_x, :][:, ind_y]
 
         if values is not None:
-            values = values.reshape(entity.shape, order="F")
+            values = np.asarray(values.reshape(entity.shape, order="F"), dtype=float)
             values[indices == False] = np.nan
             values = values[ind_x, :][:, ind_y]
 
