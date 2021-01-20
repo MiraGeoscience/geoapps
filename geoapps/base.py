@@ -27,14 +27,12 @@ class BaseApplication:
         self._h5file = None
         self._workspace = None
         self._file_browser = FileChooser()
-
         self._ga_group_name = Text(
             value="", description="To Group", continuous_update=False
         )
         self._ga_group = None
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
-
         self._copy_trigger = Button(
             description="Create copy:",
             value=True,
@@ -46,7 +44,6 @@ class BaseApplication:
             self.create_copy()
 
         self._copy_trigger.on_click(create_copy)
-
         self.project_panel = HBox(
             [
                 Label("Workspace", style={"description_width": "initial"}),
@@ -54,7 +51,6 @@ class BaseApplication:
                 self._copy_trigger,
             ]
         )
-
         self._live_link = Checkbox(
             description="GA Pro - Live link",
             value=False,
@@ -66,9 +62,7 @@ class BaseApplication:
             self.live_link_choice()
 
         self._live_link.observe(live_link_choice)
-
         self._export_directory = FileChooser(show_only_dirs=True)
-
         self.live_link_panel = VBox([self.live_link])
         self._refresh = ToggleButton(value=False)
         self._trigger = Button(
@@ -82,7 +76,6 @@ class BaseApplication:
         self.trigger_panel = VBox(
             [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
         )
-
         self.__populate__(**kwargs)
 
         def ga_group_name_update(_):

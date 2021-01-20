@@ -21,6 +21,17 @@ along with open-source code from the Python ecosystem.
 The Latest
 ^^^^^^^^^^
 
+Release 0.2.9
+"""""""""""""
+
+(January 19th, 2021)
+
+- Allow integer data types
+- Update data dependencies for ezdxf
+- Begin adding skeleton for unit tests (0% coverage)
+
+
+
 Release 0.2.6
 """""""""""""
 
