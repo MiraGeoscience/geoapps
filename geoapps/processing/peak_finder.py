@@ -3,7 +3,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 import plotly.graph_objects as go
 import plotly.express as px
-from dask.distributed import get_client
+from dask.distributed import Client, get_client
 import dask
 import matplotlib.pyplot as plt
 from geoh5py.workspace import Workspace
@@ -67,9 +67,16 @@ class PeakFinder(ObjectDataSelection):
         "ga_group_name": "PeakFinder",
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, static=False, **kwargs):
+        self.static = static
+
         kwargs = self.apply_defaults(**kwargs)
-        self.client = get_client()
+
+        try:
+            self.client = get_client()
+        except ValueError:
+            self.client = Client()
+
         self.all_anomalies = []
         self.borehole_trace = None
         self.data_channels = {}
@@ -706,6 +713,7 @@ class PeakFinder(ObjectDataSelection):
                 value=1e-2,
                 description="Linear threshold",
                 continuous_update=False,
+                style={"description_width": "initial"},
             )
 
         return self._scale_value
@@ -1771,18 +1779,26 @@ class PeakFinder(ObjectDataSelection):
             self.model_figure.data[0].mode = "markers"
             self.model_figure.data[0].marker = {
                 "symbol": "diamond",
-                "color": "black",
-                "size": 5,
+                "color": "red",
+                "size": 10,
             }
 
             cox, azimuth, dip = [], [], []
             locs = self.lines.profile.locations_resampled
             for group in self.lines.anomalies:
-                cox += [
-                    [
+                _, ind = tree.query(
+                    np.c_[
                         self.lines.profile.interp_x(locs[group["peak"][0]]),
                         self.lines.profile.interp_y(locs[group["peak"][0]]),
                         self.lines.profile.interp_z(locs[group["peak"][0]]),
+                    ]
+                )
+
+                cox += [
+                    np.c_[
+                        self.lines.model_vertices[ind, 0],
+                        self.lines.model_vertices[ind, 1],
+                        self.lines.model_vertices[ind, 2],
                     ]
                 ]
                 azimuth += [group["azimuth"]]
@@ -1794,7 +1810,7 @@ class PeakFinder(ObjectDataSelection):
 
             if len(cox) > 0:
                 dip = np.hstack(dip)
-                dip /= dip.max()
+                dip /= dip.max() + 1e-4
                 dip = np.rad2deg(np.arcsin(dip))
 
                 vec = rotate_azimuth_dip(np.hstack(azimuth), dip)
@@ -2418,18 +2434,28 @@ def find_anomalies(
         # Keep largest overlapping time group
         in_gate, count = np.unique(anomalies["time_group"][near], return_counts=True)
         in_gate = in_gate[(count >= min_channels) & (in_gate != -1)].tolist()
-        time_group = np.max(
-            [
-                ii
-                for ii, group in enumerate(time_groups.values())
-                if all([(gate in in_gate) for gate in group["label"]])
-            ]
-        )
+
+        time_group = [
+            ii
+            for ii, group in enumerate(time_groups.values())
+            if all([(gate in in_gate) for gate in group["label"]])
+        ]
+
+        if any(time_group):
+            time_group = np.max(time_group)
+        else:
+            continue
 
         # Remove anomalies not in group
-        # channel_list = [time_groups[ii]["channels"] for ii in time_groups[time_group]["label"]]
-        # mask = [ii for ii, id in enumerate(near) if channels[anomalies["channel"][id]] not in channel_list]
-        # near = near[mask, ...]
+        channel_list = [
+            time_groups[ii]["channels"] for ii in time_groups[time_group]["label"]
+        ]
+        mask = [
+            ii
+            for ii, id in enumerate(near)
+            if channels[anomalies["channel"][id]] not in channel_list
+        ]
+        near = near[mask, ...]
 
         anomalies["group"][near] = group_id
 
@@ -2483,6 +2509,14 @@ def find_anomalies(
             "start": anomalies["start"][near],
             "inflx_up": anomalies["inflx_up"][near],
             "peak": cox,
+            "cox": np.mean(
+                np.c_[
+                    profile.interp_x(locs[cox[cox_sort[0]]]),
+                    profile.interp_y(locs[cox[cox_sort[0]]]),
+                    profile.interp_z(locs[cox[cox_sort[0]]]),
+                ],
+                axis=0,
+            ),
             "inflx_dwn": anomalies["inflx_dwn"][near],
             "end": anomalies["end"][near],
             "azimuth": dip_direction,
@@ -2494,14 +2528,6 @@ def find_anomalies(
         if minimal_output:
 
             group["skew"] = np.mean(skew)
-            group["cox"] = np.mean(
-                np.c_[
-                    profile.interp_x(locs[cox[cox_sort[0]]]),
-                    profile.interp_y(locs[cox[cox_sort[0]]]),
-                    profile.interp_z(locs[cox[cox_sort[0]]]),
-                ],
-                axis=0,
-            )
             group["inflx_dwn"] = np.c_[
                 profile.interp_x(locs[inflx_dwn]),
                 profile.interp_y(locs[inflx_dwn]),
