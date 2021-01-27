@@ -10,3 +10,4 @@ Gallery of applications currently available
     :reversed:
 
     applications/calculator
+    applications/contouring
