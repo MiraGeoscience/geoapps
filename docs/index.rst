@@ -47,6 +47,7 @@ Release 0.2.5
 - Fix for documentation
 
 
+
 Contents:
 ^^^^^^^^^
 
@@ -54,6 +55,6 @@ Contents:
    :maxdepth: 2
 
    content/installation.rst
-   content/applications.rst
+   content/applications
    content/howto.rst
    content/feedback.rst
