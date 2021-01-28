@@ -19,16 +19,15 @@ import multiprocessing
 from multiprocessing.pool import ThreadPool
 import os
 import sys
-
 import dask
 import numpy as np
 from discretize.utils import meshutils
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Grid2D, Octree, Points
+from geoh5py.objects import Grid2D, Octree, Points, BlockModel
 from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
 from scipy.spatial import Delaunay, cKDTree
-from geoapps.utils import filter_xy
+from geoapps.utils import filter_xy, block_model_2_tensor, octree_2_treemesh
 from geoapps.simpegPF import (
     PF,
     DataMisfit,
@@ -665,7 +664,16 @@ def inversion(input_file):
     if "starting_model" in list(input_dict.keys()):
         if "model" in list(input_dict["starting_model"].keys()):
             starting_model = input_dict["starting_model"]["model"]
+            input_mesh = workspace.get_entity(list(starting_model.keys())[0])[0]
 
+            if isinstance(input_mesh, BlockModel):
+
+                input_mesh, _ = block_model_2_tensor(input_mesh)
+            else:
+                input_mesh = octree_2_treemesh(input_mesh)
+
+            input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2] + 1300]
+            print("converting", input_mesh.x0)
         else:
             starting_model = np.r_[input_dict["starting_model"]["value"]]
             assert (
@@ -1253,16 +1261,28 @@ def inversion(input_file):
             Utils.io_utils.writeUBCmagneticsObservations(
                 outDir + "/Obs.mag", survey, dpred
             )
-        mesh_object.add_data(
-            {
-                "Starting_model": {
-                    "values": np.linalg.norm(
-                        (activeCellsMap * model_map * mstart).reshape((3, -1)), axis=0
-                    )[mesh._ubc_order],
-                    "association": "CELL",
+            mesh_object.add_data(
+                {
+                    "Starting_model": {
+                        "values": np.linalg.norm(
+                            (activeCellsMap * model_map * mstart).reshape((3, -1)),
+                            axis=0,
+                        )[mesh._ubc_order],
+                        "association": "CELL",
+                    }
                 }
-            }
-        )
+            )
+        else:
+            mesh_object.add_data(
+                {
+                    "Starting_model": {
+                        "values": (activeCellsMap * model_map * mstart)[
+                            mesh._ubc_order
+                        ],
+                        "association": "CELL",
+                    }
+                }
+            )
         return None
 
     # Global sensitivity weights (linear)
