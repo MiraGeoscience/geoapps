@@ -31,12 +31,11 @@ class Calculator(ObjectDataSelection):
 
         self.trigger.on_click(self.click_trigger)
 
-        self.data_panel = HBox([self.data, self.use])
+        self.data_panel = VBox([self.objects, HBox([self.data, self.use])])
         self.trigger_panel = VBox([self.trigger, self.live_link_panel])
         self._widget = VBox(
             [
                 self.project_panel,
-                self.objects,
                 self.data_panel,
                 VBox([self.equation], layout=Layout(width="100%"),),
                 self.trigger_panel,
