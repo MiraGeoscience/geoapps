@@ -44,11 +44,10 @@ class BaseApplication:
             self.create_copy()
 
         self._copy_trigger.on_click(create_copy)
-        self.project_panel = HBox(
+        self.project_panel = VBox(
             [
                 Label("Workspace", style={"description_width": "initial"}),
-                self._file_browser,
-                self._copy_trigger,
+                HBox([self._file_browser, self._copy_trigger,]),
             ]
         )
         self._live_link = Checkbox(

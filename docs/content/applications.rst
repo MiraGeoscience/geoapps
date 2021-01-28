@@ -9,5 +9,6 @@ Gallery of applications currently available
     :glob:
     :reversed:
 
+    applications/base_applications
     applications/calculator
     applications/contouring
