@@ -48,7 +48,7 @@ class ContourValues(PlotSelection2D):
         out = interactive_output(self.compute_plot, {"contour_values": self.contours,})
 
         # self.export_as.observe(save_selection, names="value")
-
+        self.data_panel = VBox([self.objects, self.data])
         self._widget = VBox(
             [
                 self.project_panel,
@@ -57,8 +57,7 @@ class ContourValues(PlotSelection2D):
                         VBox(
                             [
                                 Label("Input options:"),
-                                self.objects,
-                                self.data,
+                                self.data_panel,
                                 self.contours,
                                 self.plot_widget,
                             ]
