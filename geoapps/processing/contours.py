@@ -59,7 +59,7 @@ class ContourValues(PlotSelection2D):
                                 Label("Input options:"),
                                 self.data_panel,
                                 self.contours,
-                                self.plot_widget,
+                                self.window_selection,
                             ]
                         ),
                         VBox(

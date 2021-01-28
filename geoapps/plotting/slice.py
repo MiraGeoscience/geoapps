@@ -134,7 +134,7 @@ class PlotSelection2D(ObjectDataSelection):
             },
         )
 
-        self.plot_widget = VBox(
+        self.window_selection = VBox(
             [
                 VBox([self.resolution, self.data_count]),
                 HBox(
@@ -155,7 +155,7 @@ class PlotSelection2D(ObjectDataSelection):
                 ),
             ]
         )
-        self._widget = VBox([self.widget, self.plot_widget])
+        self._widget = VBox([self.widget, self.window_selection])
 
         if "window" in kwargs.keys():
             self.refresh.value = False
