@@ -43,7 +43,7 @@ Release 0.2.6
 Release 0.2.5
 """""""""""""
 
-- :ref:`Upper/lower bound values <kmeans_bounds>` added to the KMeans clustering application.
+- Upper/lower bound values added to the KMeans clustering application.
 - Fix for documentation
 
 
