@@ -28,7 +28,10 @@ class BaseApplication:
         self._workspace = None
         self._file_browser = FileChooser()
         self._ga_group_name = Text(
-            value="", description="To Group", continuous_update=False
+            value="",
+            description="Output Name:",
+            continuous_update=False,
+            style={"description_width": "initial"},
         )
         self._ga_group = None
         self._file_browser._select.on_click(self.file_browser_change)
@@ -56,11 +59,7 @@ class BaseApplication:
             indent=False,
             style={"description_width": "initial"},
         )
-
-        def live_link_choice(_):
-            self.live_link_choice()
-
-        self._live_link.observe(live_link_choice)
+        self._live_link.observe(self.live_link_choice)
         self._export_directory = FileChooser(show_only_dirs=True)
         self.live_link_panel = VBox([self.live_link])
         self._refresh = ToggleButton(value=False)
@@ -72,8 +71,14 @@ class BaseApplication:
             icon="check",
         )
 
-        self.trigger_panel = VBox(
+        self.output_panel = VBox(
             [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
+        )
+        self.monitoring_panel = VBox(
+            [
+                Label("Monitoring folder", style={"description_width": "initial"}),
+                self.export_directory,
+            ]
         )
         self.__populate__(**kwargs)
 
@@ -81,6 +86,11 @@ class BaseApplication:
             self.ga_group_name_update()
 
         self.ga_group_name.observe(ga_group_name_update)
+
+        self._main = VBox([self.project_panel, self.output_panel])
+
+    def __call__(self):
+        return self._main
 
     def __populate__(self, **kwargs):
         for key, value in kwargs.items():
@@ -147,7 +157,7 @@ class BaseApplication:
             path.join(self.export_directory.selected_path, temp_geoh5),
         )
 
-    def live_link_choice(self):
+    def live_link_choice(self, _):
         """
         Enable the monitoring folder
         """
@@ -161,16 +171,15 @@ class BaseApplication:
                 self.export_directory._set_form_values(live_path, "")
                 self.export_directory._apply_selection()
 
-            self.live_link_panel.children = [
-                self.live_link,
-                Label("Monitoring folder", style={"description_width": "initial"}),
-                self.export_directory,
-            ]
+            self.live_link_panel.children = [self.live_link, self.monitoring_panel]
         else:
             self.live_link_panel.children = [self.live_link]
 
-    def widget(self):
-        ...
+    def main(self):
+        """
+        :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
+        """
+        return self._main
 
     @property
     def copy_trigger(self):
@@ -270,10 +279,6 @@ class BaseApplication:
         :obj:`ipywidgets.ToggleButton`: Trigger some computation and output.
         """
         return self._trigger
-
-    @property
-    def widget(self):
-        ...
 
     @property
     def workspace(self):

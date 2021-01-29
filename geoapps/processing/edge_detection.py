@@ -116,12 +116,12 @@ class EdgeDetectionApp(PlotSelection2D):
         self.data.observe(update_name, names="value")
         self.update_name()
 
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
                 HBox(
                     [
-                        VBox([self.widget]),
+                        self.main,
                         VBox(
                             [
                                 self.sigma,
@@ -175,13 +175,6 @@ class EdgeDetectionApp(PlotSelection2D):
     def window_size(self):
         """IntSlider"""
         return self._window_size
-
-    @property
-    def widget(self):
-        """
-        :obj:`ipywidgets.VBox`: Pre-defined application layout
-        """
-        return self._widget
 
     def save_trigger(self):
         entity, _ = self.get_selected_entities()

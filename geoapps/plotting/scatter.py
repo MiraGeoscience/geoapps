@@ -237,7 +237,7 @@ class ScatterPlots(ObjectDataSelection):
         self.trigger.description = "Save HTML"
 
         if self.static:
-            self._widget = VBox(
+            self._main = VBox(
                 [
                     self.project_panel,
                     HBox([self.objects, self.data]),
@@ -247,7 +247,7 @@ class ScatterPlots(ObjectDataSelection):
                 ]
             )
         else:
-            self._widget = VBox(
+            self._main = VBox(
                 [
                     self.project_panel,
                     HBox([self.objects, self.data]),

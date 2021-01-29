@@ -134,7 +134,7 @@ class Clustering(ScatterPlots):
         self.run_clustering(None)
 
         self.trigger.on_click(self.save_cluster)
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
                 HBox(
@@ -153,7 +153,7 @@ class Clustering(ScatterPlots):
                         self.input_box,
                     ]
                 ),
-                self.trigger_panel,
+                self.output_panel,
             ]
         )
 

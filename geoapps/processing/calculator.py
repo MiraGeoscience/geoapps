@@ -32,15 +32,18 @@ class Calculator(ObjectDataSelection):
         self.trigger.on_click(self.click_trigger)
 
         self.data_panel = VBox([self.objects, HBox([self.data, self.use])])
-        self.trigger_panel = VBox([self.trigger, self.live_link_panel])
-        self._widget = VBox(
+        self.output_panel = VBox([self.trigger, self.live_link_panel])
+        self._main = VBox(
             [
                 self.project_panel,
                 self.data_panel,
                 VBox([self.equation], layout=Layout(width="100%"),),
-                self.trigger_panel,
+                self.output_panel,
             ]
         )
+
+    def __call__(self):
+        return self.main
 
     @property
     def equation(self):

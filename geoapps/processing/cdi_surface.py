@@ -72,18 +72,18 @@ class CDICurve2Surface(ObjectDataSelection):
             self.convert_trigger()
 
         self.trigger.on_click(convert_trigger)
-        self._widget = HBox(
+        self._main = HBox(
             [
                 VBox(
                     [
                         self.project_panel,
-                        self.widget,
+                        self.main,
                         self.depth_panel,
                         self.lines.data,
                         self.max_distance,
                         Label("Output"),
                         self.export_as,
-                        self.trigger_panel,
+                        self.output_panel,
                     ]
                 )
             ]

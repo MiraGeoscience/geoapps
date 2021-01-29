@@ -41,7 +41,7 @@ class ChannelOptions:
         self._uncertainties = widgets.Text(description="Error (%, floor)")
         self._offsets = widgets.Text(description="Offsets (x,y,z)")
 
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self._active,
                 self._label,
@@ -83,8 +83,8 @@ class ChannelOptions:
         return self._offsets
 
     @property
-    def widget(self):
-        return self._widget
+    def main(self):
+        return self._main
 
 
 class SensorOptions(ObjectDataSelection):
@@ -115,7 +115,7 @@ class SensorOptions(ObjectDataSelection):
             self.update_options()
 
         self.options.observe(update_options, names="value")
-        self._widget = VBox([self.options, self.option_list[self.options.value]])
+        self._main = VBox([self.options, self.option_list[self.options.value]])
 
         self._data.description = "Radar (Optional):"
         self._data.style = {"description_width": "initial"}
@@ -130,7 +130,7 @@ class SensorOptions(ObjectDataSelection):
         return self._options
 
     def update_options(self):
-        self._widget.children = [
+        self._main.children = [
             self.options,
             self.option_list[self.options.value],
         ]
@@ -160,7 +160,7 @@ class MeshOctreeOptions:
             value=1000, description="Max triangulation length",
         )
 
-        self._widget = widgets.VBox(
+        self._main = widgets.VBox(
             [
                 Label("Octree Mesh"),
                 self._core_cell_size,
@@ -209,7 +209,7 @@ class MeshOctreeOptions:
 
     @property
     def widget(self):
-        return self._widget
+        return self._main
 
 
 class Mesh1DOptions:
@@ -231,7 +231,7 @@ class Mesh1DOptions:
         self.hz_expansion.observe(update_hz_count)
         self.hz_min.observe(update_hz_count)
 
-        self._widget = VBox(
+        self._main = VBox(
             [
                 Label("1D Mesh"),
                 self.hz_min,
@@ -282,8 +282,8 @@ class Mesh1DOptions:
         return self._n_cells
 
     @property
-    def widget(self):
-        return self._widget
+    def main(self):
+        return self._main
 
 
 class ModelOptions(ObjectDataSelection):
@@ -309,21 +309,21 @@ class ModelOptions(ObjectDataSelection):
 
         super().__init__(**kwargs)
 
-        self.selection_widget = self.widget
-        self._widget = widgets.VBox(
+        self.selection_widget = self.main
+        self._main = widgets.VBox(
             [self._description, widgets.VBox([self._options, self._value])]
         )
 
     def update_panel(self):
 
         if self._options.value == "Model":
-            self._widget.children[1].children = [self._options, self.selection_widget]
-            self._widget.children[1].children[1].layout.visibility = "visible"
+            self._main.children[1].children = [self._options, self.selection_widget]
+            self._main.children[1].children[1].layout.visibility = "visible"
         elif self._options.value == "Value":
-            self._widget.children[1].children = [self._options, self._value]
-            self._widget.children[1].children[1].layout.visibility = "visible"
+            self._main.children[1].children = [self._options, self._value]
+            self._main.children[1].children[1].layout.visibility = "visible"
         else:
-            self._widget.children[1].children[1].layout.visibility = "hidden"
+            self._main.children[1].children[1].layout.visibility = "hidden"
 
     @property
     def description(self):
@@ -345,10 +345,6 @@ class ModelOptions(ObjectDataSelection):
     @property
     def value(self):
         return self._value
-
-    @property
-    def widget(self):
-        return self._widget
 
 
 class InversionOptions(BaseApplication):
@@ -473,7 +469,7 @@ class InversionOptions(BaseApplication):
 
         super().__init__(**self.apply_defaults(**kwargs))
 
-        self._widget = widgets.VBox(
+        self._main = widgets.VBox(
             [
                 HBox([widgets.Label("Inversion Options")]),
                 HBox(
@@ -491,7 +487,7 @@ class InversionOptions(BaseApplication):
                 getattr(self, obj).style = {"description_width": "initial"}
 
     def inversion_option_change(self):
-        self._widget.children[1].children = [
+        self._main.children[1].children = [
             self.option_choices,
             self.inversion_options[self.option_choices.value],
         ]
@@ -591,13 +587,6 @@ class InversionOptions(BaseApplication):
     @property
     def uncert_mode(self):
         return self._uncert_mode
-
-    @property
-    def widget(self):
-        """
-        :obj:`ipywidgets.VBox`: Pre-defined application layout
-        """
-        return self._widget
 
     def update_ref(self):
         alphas = string_2_list(self.alphas.value)
@@ -860,12 +849,12 @@ class InversionApp(PlotSelection2D):
         for item in ["width", "height", "resolution"]:
             getattr(self, item).observe(update_octree_param, names="value")
 
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
                 HBox(
                     [
-                        self.widget,
+                        self.main,
                         VBox(
                             [
                                 VBox([Label(""), self.survey_type_panel]),

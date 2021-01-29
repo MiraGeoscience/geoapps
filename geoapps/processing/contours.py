@@ -49,7 +49,7 @@ class ContourValues(PlotSelection2D):
 
         # self.export_as.observe(save_selection, names="value")
         self.data_panel = VBox([self.objects, self.data])
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
                 HBox(
@@ -67,7 +67,7 @@ class ContourValues(PlotSelection2D):
                                 Label("Save as:"),
                                 self.export_as,
                                 self.z_value,
-                                self.trigger_panel,
+                                self.output_panel,
                             ],
                             layout=Layout(width="50%"),
                         ),
@@ -117,13 +117,6 @@ class ContourValues(PlotSelection2D):
         :obj:`ipywidgets.Text`: Name given to the Curve object
         """
         return self._export_as
-
-    @property
-    def widget(self):
-        """
-        :obj:`ipywidgets.VBox`: Pre-defined application layout
-        """
-        return self._widget
 
     @property
     def z_value(self):

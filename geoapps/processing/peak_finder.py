@@ -221,14 +221,12 @@ class PeakFinder(ObjectDataSelection):
         )
         self.ga_group_name.description = "Save As"
 
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
                 HBox(
                     [
-                        VBox(
-                            [self.widget, self.flip_sign], layout=Layout(width="50%"),
-                        ),
+                        VBox([self.main, self.flip_sign], layout=Layout(width="50%"),),
                         Box(
                             children=[self.lines.widget],
                             layout=Layout(

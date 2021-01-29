@@ -40,7 +40,7 @@ class CoordinateTransformation(BaseApplication):
         kwargs = self.apply_defaults(**kwargs)
         super().__init__(**kwargs)
 
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
                 self.objects,
@@ -158,13 +158,6 @@ class CoordinateTransformation(BaseApplication):
                 description="EPSG # out:", disabled=False, continuous_update=False
             )
         return self._epsg_out
-
-    @property
-    def widget(self):
-        """
-        :obj:`ipywidgets.VBox`: Pre-defined application layout
-        """
-        return self._widget
 
     @property
     def workspace(self):

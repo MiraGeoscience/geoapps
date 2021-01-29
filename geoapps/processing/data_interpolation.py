@@ -129,12 +129,12 @@ class DataInterpolation(ObjectDataSelection):
         self.parameter_panel = HBox([self.parameter_choices, self.method_panel])
 
         self.parameter_choices.observe(self.parameter_change)
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
                 HBox(
                     [
-                        VBox([Label("Source"), self.widget]),
+                        VBox([Label("Source"), self.main]),
                         VBox([Label("Destination"), self.out_panel]),
                     ]
                 ),
@@ -262,10 +262,6 @@ class DataInterpolation(ObjectDataSelection):
         :obj:`ipywidgets.Dropdown()`
         """
         return self._xy_reference
-
-    @property
-    def widget(self):
-        return self._widget
 
     @property
     def workspace(self):
