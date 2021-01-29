@@ -22,6 +22,7 @@ dependencies:
   - pip:
     - empymod
     - geoh5py
+    - geoapps
     - numpydoc
     - sphinx_issues
     - nbsphinx
