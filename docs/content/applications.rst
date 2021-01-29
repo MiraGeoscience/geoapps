@@ -3,12 +3,47 @@ Applications
 
 Gallery of applications currently available
 
+
+Base Applications
+-----------------
+
 .. nbgallery::
-    :caption: This is a thumbnail gallery:
-    :name: rst-gallery
+    :name: base_applications
     :glob:
     :reversed:
 
-    applications/base_applications
-    applications/calculator
+    applications/base_application
+    applications/object_data_selection
+
+
+Object Creation
+---------------
+
+.. nbgallery::
+    :name: object_creation
+    :glob:
+    :reversed:
+
     applications/contouring
+
+
+Data Analysis
+-------------
+
+
+.. nbgallery::
+    :name: data_manipulation
+    :glob:
+    :reversed:
+
+    applications/calculator
+
+
+
+Plotting
+--------
+
+.. nbgallery::
+    :name: plotting
+    :glob:
+    :reversed:
