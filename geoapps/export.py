@@ -65,10 +65,10 @@ class Export(ObjectDataSelection):
 
         self.trigger.on_click(save_selection)
 
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
-                HBox([self.widget, self.no_data_value]),
+                HBox([self.main, self.no_data_value]),
                 self.type_widget,
                 self.export_as,
                 self.trigger,

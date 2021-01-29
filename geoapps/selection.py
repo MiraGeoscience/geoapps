@@ -26,7 +26,7 @@ class ObjectDataSelection(BaseApplication):
         super().__init__(**kwargs)
 
         self.update_data_list(None)
-        self._widget = VBox([self.objects, self.data])
+        self._main = VBox([self.objects, self.data])
 
     @property
     def add_groups(self):
@@ -146,13 +146,6 @@ class ObjectDataSelection(BaseApplication):
             self._data = Dropdown(description="Data: ", options=options)
 
     @property
-    def widget(self):
-        """
-        :obj:`ipywidgets.VBox`: Application layout
-        """
-        return self._widget
-
-    @property
     def workspace(self):
         """
         Target geoh5py workspace
@@ -183,11 +176,18 @@ class ObjectDataSelection(BaseApplication):
             for entity in self._workspace.get_entity(self.objects.value):
                 if isinstance(entity, ObjectBase):
                     obj = entity
-            if obj.get_data(self.data.value):
-                data = obj.get_data(self.data.value)[0]
-                return obj, data
+
+            if isinstance(self.data, Dropdown):
+                values = [self.data.value]
             else:
-                return obj, None
+                values = self.data.value
+
+            data = []
+            for value in values:
+                if obj.get_data(value):
+                    data += obj.get_data(value)
+
+            return obj, data
         else:
             return None, None
 
@@ -277,7 +277,7 @@ class LineOptions(ObjectDataSelection):
         self.update_data_list(None)
         self.update_line_list(None)
 
-        self._widget = VBox([self._data, self.lines])
+        self._main = VBox([self._data, self.lines])
         self._data.description = "Lines field"
 
     @property
@@ -327,7 +327,7 @@ class TopographyOptions(ObjectDataSelection):
 
         self.objects.value = utils.find_value(self.objects.options, self.find_label)
         self.option_list = {
-            "Object": self.widget,
+            "Object": self.main,
             "Relative to Sensor": self.offset,
             "Constant": self.constant,
             "None": widgets.Label("No topography"),
@@ -341,7 +341,7 @@ class TopographyOptions(ObjectDataSelection):
             self.update_options()
 
         self.options.observe(update_options)
-        self._widget = VBox([self.options, self.option_list[self.options.value]])
+        self._main = VBox([self.options, self.option_list[self.options.value]])
 
     @property
     def panel(self):
@@ -360,7 +360,7 @@ class TopographyOptions(ObjectDataSelection):
         return self._options
 
     def update_options(self):
-        self._widget.children = [
+        self._main.children = [
             self.options,
             self.option_list[self.options.value],
         ]

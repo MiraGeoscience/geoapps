@@ -155,7 +155,7 @@ class PlotSelection2D(ObjectDataSelection):
                 ),
             ]
         )
-        self._widget = VBox([self.widget, self.window_selection])
+        self._main = VBox([self.main, self.window_selection])
 
         if "window" in kwargs.keys():
             self.refresh.value = False
@@ -213,13 +213,6 @@ class PlotSelection2D(ObjectDataSelection):
         :obj:`ipywidgets.FloatText`: Minimum data separation (m)
         """
         return self._resolution
-
-    @property
-    def widget(self):
-        """
-        :obj:`ipywidgets.VBox`: Application layout
-        """
-        return self._widget
 
     @property
     def width(self):
