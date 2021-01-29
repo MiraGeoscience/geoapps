@@ -21,6 +21,14 @@ along with open-source code from the Python ecosystem.
 The Latest
 ^^^^^^^^^^
 
+Release 0.2.10
+""""""""""""""
+
+(January 19th, 2021)
+
+- Hot fix for broken dependencies (thanks Joel)
+
+
 Release 0.2.9
 """""""""""""
 
