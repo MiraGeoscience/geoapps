@@ -29,7 +29,7 @@ class BaseApplication:
         self._file_browser = FileChooser()
         self._ga_group_name = Text(
             value="",
-            description="Output Name:",
+            description="Name:",
             continuous_update=False,
             style={"description_width": "initial"},
         )
@@ -175,6 +175,7 @@ class BaseApplication:
         else:
             self.live_link_panel.children = [self.live_link]
 
+    @property
     def main(self):
         """
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
