@@ -3,6 +3,7 @@ from .plotting import (
     format_axis,
     plot_plan_data_selection,
     plot_profile_data_selection,
+    plotly_3D_surface,
 )
 from .scatter import ScatterPlots
 from .slice import PlotSelection2D

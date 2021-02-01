@@ -25,6 +25,7 @@ Object Creation
     :reversed:
 
     applications/contouring
+    applications/create_surface
 
 
 Data Analysis
@@ -47,3 +48,8 @@ Plotting
     :name: plotting
     :glob:
     :reversed:
+
+
+.. figure:: applications/images/model_surface.png
+    :align: center
+    :width: 0
