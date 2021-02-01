@@ -2,6 +2,7 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 from copy import copy
+import plotly.graph_objects as go
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 from geoapps.utils import (
@@ -322,6 +323,31 @@ def plot_profile_data_selection(
                 )
 
     return ax, threshold
+
+
+def plotly_3D_surface(surface, figure=None, data=[], colorscale="viridis"):
+    """
+    Create a plotly.graph_objects.Mesh3D figure.
+    """
+    assert isinstance(surface, Surface), f"Input surface must be of type {Surface}"
+
+    if figure is None:
+        figure = go.FigureWidget()
+
+    figure.add_trace(go.Mesh3d())
+    figure.data[-1].x = surface.vertices[:, 0]
+    figure.data[-1].y = surface.vertices[:, 1]
+    figure.data[-1].z = surface.vertices[:, 2]
+    figure.data[-1].i = surface.cells[:, 0]
+    figure.data[-1].j = surface.cells[:, 1]
+    figure.data[-1].k = surface.cells[:, 2]
+    figure.data[-1].colorscale = colorscale
+    figure.update_layout(scene_aspectmode="data")
+
+    if len(data) > 0:
+        figure.data[-1].intensity = data[0]
+
+    return figure
 
 
 # def plot_em_data_widget(h5file):

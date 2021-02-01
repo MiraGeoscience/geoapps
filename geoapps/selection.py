@@ -187,6 +187,12 @@ class ObjectDataSelection(BaseApplication):
                 if obj.get_data(value):
                     data += obj.get_data(value)
 
+                elif any([pg.name == value for pg in obj.property_groups]):
+                    data += [
+                        self.workspace.get_entity(prop)[0]
+                        for prop in obj.get_property_group(value).properties
+                    ]
+
             return obj, data
         else:
             return None, None
@@ -226,8 +232,14 @@ class ObjectDataSelection(BaseApplication):
                     + ["Z"]
                 )
 
+            value = self.data.value
             self.data.options = options
-            if self.find_label:
+
+            if self.select_multiple and any([val in options for val in value]):
+                self.data.value = [val for val in value if val in options]
+            elif value in options:
+                self.data.value = value
+            elif self.find_label:
                 self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
             self.data.options = []

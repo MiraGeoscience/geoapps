@@ -18,7 +18,7 @@ from geoh5py.io import H5Writer
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree, Delaunay
 from geoapps.selection import ObjectDataSelection, TopographyOptions
-from geoapps.plotting import PlotSelection2D
+from geoapps.plotting import PlotSelection2D, plotly_3D_surface
 
 
 class Surface2D(ObjectDataSelection):
@@ -34,7 +34,7 @@ class Surface2D(ObjectDataSelection):
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "CDI_VTEM_model",
         "data": ["COND"],
-        "max_distance": 100,
+        "max_distance": 250,
         "elevations": {"data": "ELEV"},
         "lines": {"data": "Line"},
     }
@@ -55,10 +55,8 @@ class Surface2D(ObjectDataSelection):
             description="Surface Type:",
             style={"description_width": "initial"},
         )
-        self._max_distance = FloatText(
-            value=50, description="Max Triangulation Distance (m):",
-        )
-        self._export_as = Text("CDI_", description="Name: ")
+        self._max_distance = FloatText(description="Max Triangulation Distance (m):",)
+        self._export_as = Text("CDI_", description="Surface:")
         self._convert = ToggleButton(description="Convert >>", button_style="success")
 
         super().__init__(**kwargs)
@@ -108,7 +106,8 @@ class Surface2D(ObjectDataSelection):
         if not self.workspace.get_entity(self.objects.value):
             return
 
-        obj = self.workspace.get_entity(self.objects.value)[0]
+        obj, data_list = self.get_selected_entities()
+        _, elevations = self.elevations.get_selected_entities()
 
         if hasattr(obj, "centroids"):
             locations = obj.centroids
@@ -175,19 +174,15 @@ class Surface2D(ObjectDataSelection):
                 X, Y, Z, M, L = [], [], [], [], []
                 # Stack the z-coordinates and model
                 nZ = 0
-                for ind, z_prop in enumerate(
-                    obj.get_property_group(self.elevations.data.value).properties,
-                ):
-                    data = self.workspace.get_entity(z_prop)[0]
+
+                for ind, elev in enumerate(elevations):
+                    # data = self.workspace.get_entity(z_prop)[0]
                     nZ += 1
-                    z_vals = data.values[line_ind]
+                    z_vals = elev.values[line_ind]
 
                     m_vals = []
-                    for m in self.data.value:
-                        prop = obj.get_property_group(m).properties[ind]
-                        m_vals.append(
-                            self.workspace.get_entity(prop)[0].values[line_ind]
-                        )
+                    for m in data_list:
+                        m_vals.append(m.values[line_ind])
 
                     m_vals = np.vstack(m_vals).T
                     keep = (
@@ -216,7 +211,7 @@ class Surface2D(ObjectDataSelection):
 
                     L.append(
                         np.ones_like(z_vals[order][keep])
-                        * -int(re.findall(r"\d+", data.name)[-1])
+                        * -int(re.findall(r"\d+", elev.name)[-1])
                     )
                     M.append(m_vals[order, :][keep, :])
 
@@ -264,8 +259,8 @@ class Surface2D(ObjectDataSelection):
 
         else:
 
-            if obj.get_data(self.elevations.data.value):
-                z_values = obj.get_data(self.elevations.data.value)[0].values
+            if elevations:  # Assumes non-property_group selection
+                z_values = elevations[0].values
                 ind = (z_values > 1e-38) & (z_values < 2e-38) == False
                 locations = np.c_[locations[ind, :2], z_values[ind]]
             else:
@@ -298,31 +293,39 @@ class Surface2D(ObjectDataSelection):
             model_vertices = np.c_[tri2D.points, locations[:, 2]]
             model_cells = tri2D.simplices
             model = []
-            for name in self.data.value:
-                if obj.get_data(name):
-                    model += [obj.get_data(name)[0].values[ind]]
+            for data_obj in data_list:
+                model += [data_obj.values[ind]]
 
-            model = np.vstack(model).T
+            if len(model) > 0:
+                model = np.vstack(model).T
 
-        surface = Surface.create(
-            self.workspace,
-            name=self.export_as.value,
-            vertices=np.vstack(model_vertices),
-            cells=np.vstack(model_cells),
-            parent=self.ga_group,
-        )
+        if len(model_cells) > 0:
+            self.surface = Surface.create(
+                self.workspace,
+                name=self.export_as.value,
+                vertices=np.vstack(model_vertices),
+                cells=np.vstack(model_cells),
+                parent=self.ga_group,
+            )
+        else:
+            print(
+                "No triangulation found to export. Increase the max triangulation distance?"
+            )
+            return
 
         if self.type.value == "Sections":
-            surface.add_data(
+            self.surface.add_data(
                 {"Line": {"values": np.hstack(line_ids)},}
             )
 
-        models = np.vstack(model)
-        for ind, field in enumerate(self.data.value):
+        self.models = []
+        if len(model) > 0:
+            self.models = np.vstack(model).T
+            for ind, field in enumerate(self.data.value):
 
-            surface.add_data(
-                {field: {"values": models[:, ind]},}
-            )
+                self.surface.add_data(
+                    {field: {"values": self.models[ind, :]},}
+                )
 
         if self.live_link.value:
             self.live_link_output(self.ga_group)
@@ -333,7 +336,7 @@ class Surface2D(ObjectDataSelection):
         if self.type.value == "Horizon":
             self.lines.data.disabled = True
             self.elevations.add_groups = False
-            self.add_groups = False
+            self.add_groups = True
         else:
             self.lines.data.disabled = False
             self.add_groups = "only"

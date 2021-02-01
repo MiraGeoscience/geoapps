@@ -18,10 +18,8 @@ class Calculator(ObjectDataSelection):
     def __init__(self, **kwargs):
 
         kwargs = self.apply_defaults(**kwargs)
-
         self.var = {}
         self.select_multiple = True
-        self.plot_result = False
         self._channel = Text(description="Name: ")
         self._equation = Textarea(layout=Layout(width="75%"))
         self._use = Button(description=">> Add Variable >>")
