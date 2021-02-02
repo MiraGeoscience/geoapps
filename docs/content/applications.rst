@@ -49,6 +49,15 @@ Plotting
     :glob:
     :reversed:
 
+    applications/map_view_selection
+
+
+Need help? Contact us at support@mirageoscience.com
+
+
+.. figure:: applications/images/contours_thumbnail.png
+    :align: center
+    :width: 0
 
 .. figure:: applications/images/model_surface.png
     :align: center
