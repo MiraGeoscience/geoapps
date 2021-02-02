@@ -24,9 +24,9 @@ class ObjectDataSelection(BaseApplication):
         self._select_multiple = False
 
         super().__init__(**kwargs)
-
+        self.data_panel = VBox([self.objects, self.data])
         self.update_data_list(None)
-        self._main = VBox([self.objects, self.data])
+        self._main = self.data_panel
 
     @property
     def add_groups(self):

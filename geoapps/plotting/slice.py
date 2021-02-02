@@ -57,7 +57,9 @@ class PlotSelection2D(ObjectDataSelection):
             value="", description="Contours", disabled=False, continuous_update=False,
         )
         self._data_count = Label("Data Count: 0", tooltip="Keep <1500 for speed")
-        self._resolution = FloatText(description="Grid Resolution (m)",)
+        self._resolution = FloatText(
+            description="Grid Resolution (m)", style={"description_width": "initial"}
+        )
         self._width = FloatSlider(
             min=0,
             max=100,
@@ -87,39 +89,13 @@ class PlotSelection2D(ObjectDataSelection):
 
         self.highlight_selection = None
 
-        def plot_selection(
-            data_name,
-            resolution,
-            center_x,
-            center_y,
-            width,
-            height,
-            azimuth,
-            zoom_extent,
-            contours,
-            refresh,
-        ):
-
-            self.plot_selection(
-                data_name,
-                resolution,
-                center_x,
-                center_y,
-                width,
-                height,
-                azimuth,
-                zoom_extent,
-                contours,
-                refresh,
-            )
-
         super().__init__(**self.apply_defaults(**kwargs))
 
         self.objects.observe(set_bounding_box, names="value")
         self.set_bounding_box()
 
         self.window_plot = widgets.interactive_output(
-            plot_selection,
+            self.plot_selection,
             {
                 "data_name": self.data,
                 "resolution": self.resolution,
