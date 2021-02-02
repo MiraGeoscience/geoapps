@@ -181,8 +181,11 @@ class Surface2D(ObjectDataSelection):
                     z_vals = elev.values[line_ind]
 
                     m_vals = []
-                    for m in data_list:
-                        m_vals.append(m.values[line_ind])
+                    for m in self.data.value:
+                        prop = obj.get_property_group(m).properties[ind]
+                        m_vals.append(
+                            self.workspace.get_entity(prop)[0].values[line_ind]
+                        )
 
                     m_vals = np.vstack(m_vals).T
                     keep = (
