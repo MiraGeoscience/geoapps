@@ -1,7 +1,8 @@
 from os import path, mkdir
 import re
+import osr
 import discretize
-from ipywidgets import Dropdown, Text, FloatText, RadioButtons
+from ipywidgets import Dropdown, Text, FloatText, RadioButtons, Textarea, Layout
 import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree
@@ -29,7 +30,7 @@ class Export(ObjectDataSelection):
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "Gravity_Magnetics_drape60m",
         "data": ["Airborne_Gxx"],
-        "epsg_code": "26914",
+        "epsg_code": "EPSG:26914",
         "file_type": "geotiff",
         "data_type": "RGB",
     }
@@ -42,11 +43,24 @@ class Export(ObjectDataSelection):
             description="Export type",
         )
         self._data_type = RadioButtons(options=["float", "RGB",], description="Type:")
-        self._no_data_value = FloatText(description="no-data-value", value=-99999,)
-        self._epsg_code = Text(description="EPSG code:", indent=False, disabled=False)
-        self._export_as = Text(description="Save as:", indent=False, disabled=False,)
+        self._no_data_value = FloatText(
+            description="No-Data-Value",
+            value=-99999,
+            style={"description_width": "initial"},
+        )
+        self._epsg_code = Text(
+            description="Projection:", indent=False, continuous_update=False
+        )
+        self._export_as = Text(
+            description="Save as:", indent=False, continuous_update=False
+        )
+        self._wkt_code = Textarea(
+            description="WKT:", continuous_update=False, layout=Layout(width="75%")
+        )
+        self.epsg_code.observe(self.set_wkt, names="value")
+        self.wkt_code.observe(self.set_authority_code, names="value")
 
-        self.type_widget = HBox([self.file_type])
+        self.type_widget = VBox([self.file_type])
 
         def update_options(_):
             self.update_options()
@@ -70,11 +84,18 @@ class Export(ObjectDataSelection):
                 self.project_panel,
                 HBox([self.main, self.no_data_value]),
                 self.type_widget,
+                self.no_data_value,
                 self.export_as,
                 self.trigger,
                 self.export_directory,
             ]
         )
+
+    @property
+    def wkt_code(self):
+        if getattr(self, "_wkt_code", None) is None:
+            self._wkt_code = Textarea(description="wkt")
+        return self._wkt_code
 
     @property
     def file_type(self):
@@ -208,7 +229,7 @@ class Export(ObjectDataSelection):
                         file_name=path.join(
                             self.export_directory.selected_path, out_name
                         ),
-                        epsg=self.epsg_code.value,
+                        wkt_code=self.wkt_code.value,
                     )
                     print(
                         f"Object saved to {path.join(self.export_directory.selected_path, out_name) + '.shp'}"
@@ -218,7 +239,7 @@ class Export(ObjectDataSelection):
                 export_curve_2_shapefile(
                     entity,
                     file_name=path.join(self.export_directory.selected_path, out_name),
-                    epsg=self.epsg_code.value,
+                    wkt_code=self.wkt_code.value,
                 )
                 print(
                     f"Object saved to {path.join(self.export_directory.selected_path, out_name) + '.shp'}"
@@ -236,7 +257,7 @@ class Export(ObjectDataSelection):
                     export_grid_2_geotiff(
                         entity.get_data(key)[0],
                         name,
-                        self.epsg_code.value,
+                        wkt_code=self.wkt_code.value,
                         data_type=self.data_type.value,
                     )
 
@@ -328,14 +349,35 @@ class Export(ObjectDataSelection):
                             values,
                         )
 
+    def set_wkt(self, _):
+        datasetSRS = osr.SpatialReference()
+        datasetSRS.SetFromUserInput(self.epsg_code.value.upper())
+
+        self.wkt_code.unobserve_all("value")
+        self.wkt_code.value = datasetSRS.ExportToWkt()
+        self.wkt_code.observe(self.set_authority_code, names="value")
+
+    def set_authority_code(self, _):
+        self.epsg_code.unobserve_all("value")
+        code = re.findall(r'AUTHORITY\["(\D+","\d+)"\]', self.wkt_code.value)
+        if code:
+            self.epsg_code.value = code[-1].replace('","', ":")
+        else:
+            self.epsg_code.value = ""
+        self.epsg_code.observe(self.set_wkt, names="value")
+
     def update_options(self):
 
         if self.file_type.value in ["ESRI shapefile"]:
-            self.type_widget.children = [self.file_type, self.epsg_code]
+            self.type_widget.children = [
+                self.file_type,
+                VBox([self.epsg_code, self.wkt_code]),
+            ]
         elif self.file_type.value in ["geotiff"]:
             self.type_widget.children = [
                 self.file_type,
-                VBox([self.epsg_code, self.data_type]),
+                VBox([VBox([self.epsg_code, self.wkt_code])]),
+                self.data_type,
             ]
         else:
             self.type_widget.children = [self.file_type]
