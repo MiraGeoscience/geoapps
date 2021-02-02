@@ -12,8 +12,9 @@ Base Applications
     :glob:
     :reversed:
 
-    applications/base_application
+    applications/view_selection
     applications/object_data_selection
+    applications/base_application
 
 
 Object Creation
@@ -38,18 +39,6 @@ Data Analysis
     :reversed:
 
     applications/calculator
-
-
-
-Plotting
---------
-
-.. nbgallery::
-    :name: plotting
-    :glob:
-    :reversed:
-
-    applications/map_view_selection
 
 
 Need help? Contact us at support@mirageoscience.com
