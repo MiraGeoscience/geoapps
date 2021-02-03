@@ -76,8 +76,8 @@ def plot_plan_data_selection(entity, data, **kwargs):
     else:
         return axis, out, indices, line_selection, contour_set
 
-    for collection in axis.collections:
-        collection.remove()
+    # for collection in axis.collections:
+    #     collection.remove()
 
     locations = entity.vertices
     if "resolution" not in kwargs.keys():
@@ -196,11 +196,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
         x = X.ravel()[ind]
         y = Y.ravel()[ind]
         if ind.sum() > 0:
-            format_labels(x, y, axis)
+            format_labels(x, y, axis, **kwargs)
             axis.set_xlim([x.min(), x.max()])
             axis.set_ylim([y.min(), y.max()])
     elif np.any(x) and np.any(y):
-        format_labels(x, y, axis)
+        format_labels(x, y, axis, **kwargs)
         axis.set_xlim([x.min(), x.max()])
         axis.set_ylim([y.min(), y.max()])
 

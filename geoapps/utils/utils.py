@@ -1273,7 +1273,7 @@ def get_blob_indices(index, shape, model, threshold, blob_indices=[]):
     return blob_indices
 
 
-def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
+def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kwargs):
     if labels is None:
         axs.set_ylabel("Northing (m)")
         axs.set_xlabel("Easting (m)")

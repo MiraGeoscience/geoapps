@@ -29,7 +29,7 @@ Object Creation
     applications/create_surface
 
 
-Data Analysis
+Editing Tools
 -------------
 
 
@@ -39,6 +39,7 @@ Data Analysis
     :reversed:
 
     applications/calculator
+    applications/coordinate_transformation
 
 
 Need help? Contact us at support@mirageoscience.com
@@ -49,5 +50,13 @@ Need help? Contact us at support@mirageoscience.com
     :width: 0
 
 .. figure:: applications/images/model_surface.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/coordinate_transform_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/calculator_thumbnail.png
     :align: center
     :width: 0

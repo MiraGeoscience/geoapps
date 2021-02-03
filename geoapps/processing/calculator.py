@@ -141,4 +141,5 @@ class Calculator(ObjectDataSelection):
         self.data.value = choice
 
         if self.plot_result:
-            plot_plan_data_selection(obj, data)
+            out = plot_plan_data_selection(obj, data)
+            self.figure = out[0].figure
