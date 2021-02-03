@@ -1,7 +1,7 @@
 python:
    setup_py_install: true
 conda:
-    file: environment.yml
+    file: docs/environment.yml
 sphinx:
   builder: html
   configuration: conf.py
