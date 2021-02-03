@@ -7,13 +7,14 @@ from geoh5py.data import FloatData
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from geoapps.base import BaseApplication
-
+import matplotlib.pyplot as plt
 from fiona.transform import transform
 import gdal
 from geoapps.utils import (
     export_grid_2_geotiff,
     geotiff_2_grid,
 )
+from geoapps.plotting import plot_plan_data_selection
 
 
 class CoordinateTransformation(BaseApplication):
@@ -24,9 +25,9 @@ class CoordinateTransformation(BaseApplication):
     defaults = {
         "ga_group_name": "CoordinateTransformation",
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": ["Gravity_Magnetics_drape60m"],
+        "objects": ["Gravity_Magnetics_drape60m", "Data_TEM_pseudo3D"],
         "code_in": "EPSG:26914",
-        "code_out": "EPSG:26913",
+        "code_out": "EPSG:4326",
     }
 
     def __init__(self, **kwargs):
@@ -40,13 +41,15 @@ class CoordinateTransformation(BaseApplication):
 
         super().__init__(**kwargs)
 
+        self.input_projection = HBox([self.code_in, self.wkt_in])
+        self.output_projection = HBox([self.code_out, self.wkt_out])
         self._main = VBox(
             [
                 self.project_panel,
                 self.objects,
-                HBox([self.code_in, self.wkt_in]),
-                HBox([self.code_out, self.wkt_out]),
-                self.trigger_panel,
+                self.input_projection,
+                self.output_projection,
+                self.output_panel,
             ]
         )
 
@@ -60,6 +63,12 @@ class CoordinateTransformation(BaseApplication):
         Run the coordinate transformation
         """
         if self.wkt_in.value != "" and self.wkt_out.value != "":
+
+            if self.plot_result:
+                self.figure = plt.figure(figsize=(12, 8))
+                ax1 = plt.subplot(1, 2, 1)
+                ax2 = plt.subplot(1, 2, 2)
+
             for name in self.objects.value:
                 obj = self.workspace.get_entity(name)[0]
                 temp_work = Workspace(self.workspace.name + "temp")
@@ -85,7 +94,7 @@ class CoordinateTransformation(BaseApplication):
                             )
 
                             if count == 0:
-                                grid2d = geotiff_2_grid(
+                                new_obj = geotiff_2_grid(
                                     temp_work,
                                     temp_file_out,
                                     grid_name=obj.name
@@ -93,7 +102,7 @@ class CoordinateTransformation(BaseApplication):
                                 )
                             else:
                                 _ = geotiff_2_grid(
-                                    temp_work, temp_file_out, grid_object=grid2d
+                                    temp_work, temp_file_out, grid_object=new_obj
                                 )
 
                             del grid
@@ -101,7 +110,7 @@ class CoordinateTransformation(BaseApplication):
                             os.remove(temp_file_out)
                             count += 1
 
-                    grid2d.copy(parent=self.ga_group)
+                    new_obj.copy(parent=self.ga_group)
                     os.remove(temp_work.h5file)
 
                 else:
@@ -122,6 +131,17 @@ class CoordinateTransformation(BaseApplication):
                     new_obj = obj.copy(parent=self.ga_group, copy_children=True)
                     new_obj.vertices = numpy.c_[x2, y2, obj.vertices[:, 2]]
                     new_obj.name = new_obj.name + self.code_out.value.replace(":", "_")
+
+                if self.plot_result:
+                    plot_plan_data_selection(obj, obj.children[0], axis=ax1)
+                    if '"Longitude",EAST' in self.wkt_in.value:
+                        ax1.set_xlabel("Longitude")
+                        ax1.set_ylabel("Latitude")
+
+                    plot_plan_data_selection(new_obj, new_obj.children[0], axis=ax2)
+                    if '"Longitude",EAST' in self.wkt_out.value:
+                        ax2.set_xlabel("Longitude")
+                        ax2.set_ylabel("Latitude")
 
             if self.live_link.value:
                 self.live_link_output(self.ga_group)

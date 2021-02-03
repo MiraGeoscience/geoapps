@@ -26,6 +26,7 @@ class BaseApplication:
         self.plot_result = False
         self._h5file = None
         self._workspace = None
+        self.figure = None
         self._file_browser = FileChooser()
         self._ga_group_name = Text(
             value="",
