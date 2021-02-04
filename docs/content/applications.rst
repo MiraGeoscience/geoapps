@@ -47,6 +47,11 @@ Advanced Processing
 Need help? Contact us at support@mirageoscience.com
 
 
+
+.. figure:: applications/images/object_selection_thumbnail.png
+    :align: center
+    :width: 0
+
 .. figure:: applications/images/contours_thumbnail.png
     :align: center
     :width: 0
