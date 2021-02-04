@@ -40,12 +40,18 @@ Advanced Processing
     :glob:
     :reversed:
 
+    applications/edge_detection
 
 
 
 
 Need help? Contact us at support@mirageoscience.com
 
+
+
+.. figure:: applications/images/edge_detection_thumbnail.png
+    :align: center
+    :width: 0
 
 
 .. figure:: applications/images/object_selection_thumbnail.png
