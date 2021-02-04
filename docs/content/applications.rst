@@ -17,29 +17,31 @@ Base Applications
     applications/base_application
 
 
-Object Creation
----------------
+Object/Data Utilities
+---------------------
 
 .. nbgallery::
     :name: object_creation
     :glob:
     :reversed:
 
+    applications/calculator
     applications/contouring
     applications/create_surface
+    applications/coordinate_transformation
+    applications/data_interpolation
 
 
-Editing Tools
--------------
-
+Advanced Processing
+-------------------
 
 .. nbgallery::
     :name: data_manipulation
     :glob:
     :reversed:
 
-    applications/calculator
-    applications/coordinate_transformation
+
+
 
 
 Need help? Contact us at support@mirageoscience.com
@@ -58,5 +60,9 @@ Need help? Contact us at support@mirageoscience.com
     :width: 0
 
 .. figure:: applications/images/calculator_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/data_interp_thumbnail.png
     :align: center
     :width: 0
