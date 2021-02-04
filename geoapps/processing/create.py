@@ -18,7 +18,7 @@ from geoh5py.io import H5Writer
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree, Delaunay
 from geoapps.selection import ObjectDataSelection, TopographyOptions
-from geoapps.plotting import PlotSelection2D, plotly_3D_surface
+from geoapps.plotting import PlotSelection2D
 
 
 class Surface2D(ObjectDataSelection):
