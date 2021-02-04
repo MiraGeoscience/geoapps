@@ -153,7 +153,7 @@ class Surface2D(ObjectDataSelection):
             model_vertices = []
             model_cells = []
             model_count = 0
-            model = []
+            self.models = []
             line_ids = []
             for line in lines:
 
@@ -229,7 +229,7 @@ class Surface2D(ObjectDataSelection):
                 Z = np.hstack(Z)
                 L = np.hstack(L)
 
-                model.append(np.vstack(M))
+                self.models.append(np.vstack(M))
                 line_ids.append(np.ones_like(Z.ravel()) * line)
 
                 if np.std(y_loc) > np.std(x_loc):
@@ -259,6 +259,8 @@ class Surface2D(ObjectDataSelection):
                 model_cells.append(tri2D.simplices + model_count)
 
                 model_count += tri2D.points.shape[0]
+
+            self.models = list(np.vstack(self.models).T)
 
         else:
 
@@ -295,12 +297,9 @@ class Surface2D(ObjectDataSelection):
 
             model_vertices = np.c_[tri2D.points, locations[:, 2]]
             model_cells = tri2D.simplices
-            model = []
+            self.models = []
             for data_obj in data_list:
-                model += [data_obj.values[ind]]
-
-            if len(model) > 0:
-                model = np.vstack(model).T
+                self.models += [data_obj.values[ind]]
 
         if len(model_cells) > 0:
             self.surface = Surface.create(
@@ -321,13 +320,11 @@ class Surface2D(ObjectDataSelection):
                 {"Line": {"values": np.hstack(line_ids)},}
             )
 
-        self.models = []
-        if len(model) > 0:
-            self.models = np.vstack(model).T
+        if len(self.models) > 0:
             for ind, field in enumerate(self.data.value):
 
                 self.surface.add_data(
-                    {field: {"values": self.models[ind, :]},}
+                    {field: {"values": self.models[ind]},}
                 )
 
         if self.live_link.value:

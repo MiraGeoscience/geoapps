@@ -54,6 +54,7 @@ nbsphinx_prolog = r"""
 nbsphinx_thumbnails = {
     "content/applications/calculator": "_images/calculator_thumbnail.png",
     "content/applications/create_surface": "_images/model_surface.png",
+    "content/applications/object_data_selection": "_images/object_selection_thumbnail.png",
     "content/applications/view_selection": "_images/plot_selection.png",
     "content/applications/contouring": "_images/contours_thumbnail.png",
     "content/applications/coordinate_transformation": "_images/coordinate_transform_thumbnail.png",

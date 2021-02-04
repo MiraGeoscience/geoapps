@@ -4,6 +4,7 @@ import numpy as np
 from copy import copy
 import plotly.graph_objects as go
 from geoh5py.objects import Curve, Grid2D, Points, Surface, BlockModel
+from geoh5py.data import Data
 
 from geoapps.utils import (
     filter_xy,
@@ -325,7 +326,15 @@ def plot_profile_data_selection(
     return ax, threshold
 
 
-def plotly_scatter(points, figure=None, data=[], colorscale="Portland", **kwargs):
+def plotly_scatter(
+    points,
+    figure=None,
+    color=None,
+    size=None,
+    marker_scale=10.0,
+    colorscale="Portland",
+    **kwargs,
+):
     """
     Create a plotly.graph_objects.Mesh3D figure.
     """
@@ -343,21 +352,30 @@ def plotly_scatter(points, figure=None, data=[], colorscale="Portland", **kwargs
     figure.data[-1].mode = "markers"
     figure.data[-1].marker = {"colorscale": colorscale}
 
-    figure.update_layout(scene_aspectmode="data")
-
     for key, value in kwargs.items():
         if hasattr(figure.data[-1], key):
             setattr(figure.data[-1], key, value)
         elif hasattr(figure.data[-1].marker, key):
             setattr(figure.data[-1].marker, key, value)
 
-    if len(data) > 0:
-        figure.data[-1].marker.color = data[0]
+    if color is not None:
+        color = check_data_type(color)
+        figure.data[-1].marker.color = color
+
+    if size is not None:
+        size = normalize(check_data_type(size))
+        figure.data[-1].marker.size = size * marker_scale
+    else:
+        figure.data[-1].marker.size = marker_scale
+
+    figure.update_layout(scene_aspectmode="data")
 
     return figure
 
 
-def plotly_surface(surface, figure=None, data=[], colorscale="Portland", **kwargs):
+def plotly_surface(
+    surface, figure=None, intensity=None, colorscale="Portland", **kwargs
+):
     """
     Create a plotly.graph_objects.Mesh3D figure.
     """
@@ -374,14 +392,16 @@ def plotly_surface(surface, figure=None, data=[], colorscale="Portland", **kwarg
     figure.data[-1].j = surface.cells[:, 1]
     figure.data[-1].k = surface.cells[:, 2]
     figure.data[-1].colorscale = colorscale
-    figure.update_layout(scene_aspectmode="data")
 
     for key, value in kwargs.items():
         if hasattr(figure.data[-1], key):
             setattr(figure.data[-1], key, value)
 
-    if len(data) > 0:
-        figure.data[-1].intensity = data[0]
+    if intensity is not None:
+        intensity = check_data_type(intensity)
+        figure.data[-1].intensity = intensity
+
+    figure.update_layout(scene_aspectmode="data")
 
     return figure
 
@@ -389,7 +409,7 @@ def plotly_surface(surface, figure=None, data=[], colorscale="Portland", **kwarg
 def plotly_block_model(
     block_model,
     figure=None,
-    data=[],
+    value=None,
     x_slice=[],
     y_slice=[],
     z_slice=[],
@@ -429,15 +449,31 @@ def plotly_block_model(
     figure.data[-1].caps = dict(x_show=False, y_show=False, z_show=False)
     figure.data[-1].colorscale = colorscale
 
-    for key, value in kwargs.items():
+    for key, vals in kwargs.items():
         if hasattr(figure.data[-1], key):
-            setattr(figure.data[-1], key, value)
+            setattr(figure.data[-1], key, vals)
+
+    if value is not None:
+        value = check_data_type(value)
+        figure.data[-1].value = value
 
     figure.update_layout(scene_aspectmode="data")
-    if len(data) > 0:
-        figure.data[-1].value = data[0]
 
     return figure
+
+
+def check_data_type(data):
+    """
+    Take data as a list or geoh5py.data.Data type and return an array.
+    """
+    if isinstance(data, list):
+        data = data[0]
+
+    if isinstance(data, Data):
+        data = data.values
+
+    assert isinstance(data, np.ndarray), "Values must be of type numpy.ndarray"
+    return data
 
 
 # def plot_em_data_widget(h5file):
