@@ -446,13 +446,13 @@ class InversionOptions(BaseApplication):
         self.inversion_options = {
             "output name": self._output_name,
             "uncertainties": self._uncert_mode,
-            "starting model": self._starting_model.widget,
-            "background susceptibility": self._susceptibility_model.widget,
+            "starting model": self._starting_model.main,
+            "background susceptibility": self._susceptibility_model.main,
             "regularization": VBox(
-                [self._reference_model.widget, self._alphas, self._norms]
+                [self._reference_model.main, self._alphas, self._norms]
             ),
             "upper-lower bounds": VBox([self._upper_bound, self._lower_bound]),
-            "mesh": self.mesh.widget,
+            "mesh": self.mesh.main,
             "ignore values": VBox([self._ignore_values, self._air_values]),
             "optimization": self._optimization,
         }
@@ -823,9 +823,9 @@ class InversionApp(PlotSelection2D):
 
         # SPATIAL PARAMETERS DROPDOWN
         self.spatial_options = {
-            "Topography": self.topography.widget,
-            "Sensor": self.sensor.widget,
-            "Line ID": self.lines.widget,
+            "Topography": self.topography.main,
+            "Sensor": self.sensor.main,
+            "Line ID": self.lines.main,
         }
         self.spatial_choices = widgets.Dropdown(
             options=list(self.spatial_options.keys()),
@@ -870,7 +870,7 @@ class InversionApp(PlotSelection2D):
                         self.spatial_panel,
                     ]
                 ),
-                self.inversion_parameters.widget,
+                self.inversion_parameters.main,
                 self.forward_only,
                 self.export_directory,
                 self.write,
@@ -1011,9 +1011,7 @@ class InversionApp(PlotSelection2D):
 
             # Switch mesh options
             self.inversion_parameters._mesh = self.mesh_octree
-            self.inversion_parameters.inversion_options[
-                "mesh"
-            ] = self.mesh_octree.widget
+            self.inversion_parameters.inversion_options["mesh"] = self.mesh_octree.main
 
             self.inversion_parameters.reference_model.options.options = [
                 "None",
@@ -1077,7 +1075,7 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.max_iterations.value = 10
             # Switch mesh options
             self.inversion_parameters._mesh = self.mesh_1D
-            self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.widget
+            self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.main
             flag = "EM1D"
 
         self.inversion_parameters.reference_model.value.description = inversion_defaults()[
@@ -1151,7 +1149,7 @@ class InversionApp(PlotSelection2D):
 
             channel_options.channel_selection.observe(channel_setter, names="value")
 
-            data_channel_options[key] = channel_options.widget
+            data_channel_options[key] = channel_options.main
 
             if self.system.value not in ["Magnetics", "Gravity"]:
                 data_channel_options[key].children[1].value = channel

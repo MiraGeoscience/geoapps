@@ -452,14 +452,14 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         if survey_type.value == "Magnetics":
             survey_type_panel.children = [
                 survey_type,
-                object_selection.widget,
+                object_selection.main,
                 components_panel,
                 inducing_field,
             ]
         else:
             survey_type_panel.children = [
                 survey_type,
-                object_selection.widget,
+                object_selection.main,
                 components_panel,
             ]
 
@@ -472,7 +472,7 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         value=inducing_field, description="Inducing Field [Amp, Inc, Dec]",
     )
     survey_type_panel = widgets.VBox(
-        [survey_type, object_selection.widget, components_panel, inducing_field]
+        [survey_type, object_selection.main, components_panel, inducing_field]
     )
     survey_type.observe(update_survey_type)
 
