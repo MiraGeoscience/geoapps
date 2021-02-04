@@ -131,7 +131,7 @@ class EdgeDetectionApp(PlotSelection2D):
                                 self.window_size,
                                 self.compute,
                                 self.export_as,
-                                self.trigger_panel,
+                                self.output_panel,
                             ],
                             layout=Layout(width="50%"),
                         ),
@@ -230,7 +230,7 @@ class EdgeDetectionApp(PlotSelection2D):
             x = grid.centroids[:, 0].reshape(grid.shape, order="F")
             y = grid.centroids[:, 1].reshape(grid.shape, order="F")
             z = grid.centroids[:, 2].reshape(grid.shape, order="F")
-            grid_data = data.values.reshape(grid.shape, order="F")
+            grid_data = data[0].values.reshape(grid.shape, order="F")
             indices = self.indices
             ind_x, ind_y = (
                 np.any(indices, axis=1),
