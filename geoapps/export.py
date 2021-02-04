@@ -59,8 +59,8 @@ class Export(ObjectDataSelection):
         )
         self.epsg_code.observe(self.set_wkt, names="value")
         self.wkt_code.observe(self.set_authority_code, names="value")
-
         self.type_widget = VBox([self.file_type])
+        self.projection_panel = VBox([self.epsg_code, self.wkt_code])
 
         def update_options(_):
             self.update_options()
@@ -369,14 +369,11 @@ class Export(ObjectDataSelection):
     def update_options(self):
 
         if self.file_type.value in ["ESRI shapefile"]:
-            self.type_widget.children = [
-                self.file_type,
-                VBox([self.epsg_code, self.wkt_code]),
-            ]
+            self.type_widget.children = [self.file_type, self.projection_panel]
         elif self.file_type.value in ["geotiff"]:
             self.type_widget.children = [
                 self.file_type,
-                VBox([VBox([self.epsg_code, self.wkt_code])]),
+                self.projection_panel,
                 self.data_type,
             ]
         else:

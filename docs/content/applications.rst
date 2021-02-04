@@ -4,15 +4,15 @@ Applications
 Gallery of applications currently available
 
 
-Base Applications
------------------
+Workspace
+---------
 
 .. nbgallery::
     :name: base_applications
     :glob:
     :reversed:
 
-    applications/view_selection
+    applications/export
     applications/object_data_selection
     applications/base_application
 
@@ -32,8 +32,8 @@ Object/Data Utilities
     applications/data_interpolation
 
 
-Advanced Processing
--------------------
+Processing
+----------
 
 .. nbgallery::
     :name: data_manipulation
@@ -43,13 +43,25 @@ Advanced Processing
     applications/edge_detection
 
 
+Visualization
+-------------
+
+.. nbgallery::
+    :name: visualization
+    :glob:
+    :reversed:
+
+    applications/view_selection
 
 
 Need help? Contact us at support@mirageoscience.com
 
 
-
 .. figure:: applications/images/edge_detection_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/export_thumbnail.png
     :align: center
     :width: 0
 
