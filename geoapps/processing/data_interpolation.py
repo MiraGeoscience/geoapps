@@ -547,7 +547,7 @@ class DataInterpolation(ObjectDataSelection):
             self.xy_extent.value
         ):
 
-            for entity in self._workspace.get_entity(self.xy_extent.objects.value):
+            for entity in self._workspace.get_entity(self.xy_extent.value):
                 if isinstance(entity, ObjectBase):
                     xy_ref = entity
             if hasattr(xy_ref, "centroids"):
