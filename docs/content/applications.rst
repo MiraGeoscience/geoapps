@@ -41,17 +41,24 @@ Processing
     :reversed:
 
     applications/edge_detection
+    applications/scatter
 
 
 Visualization
 -------------
 
 .. nbgallery::
-    :name: visualization
+    :name: data_viz
     :glob:
     :reversed:
 
     applications/view_selection
+
+
+
+
+
+
 
 
 Need help? Contact us at support@mirageoscience.com
