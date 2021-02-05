@@ -41,7 +41,7 @@ Processing
     :reversed:
 
     applications/edge_detection
-    applications/scatter
+
 
 
 Visualization
@@ -52,6 +52,7 @@ Visualization
     :glob:
     :reversed:
 
+    applications/scatter
     applications/view_selection
 
 
