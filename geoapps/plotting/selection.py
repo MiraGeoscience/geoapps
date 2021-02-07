@@ -33,7 +33,6 @@ class PlotSelection2D(ObjectDataSelection):
         self.axis = None
         self.indices = None
         self.collections = []
-
         self._azimuth = FloatSlider(
             min=-90,
             max=90,
@@ -242,10 +241,13 @@ class PlotSelection2D(ObjectDataSelection):
             return
         data_obj = None
 
-        if self.select_multiple and data_name:
-            data_channel = data_name[0]
+        if hasattr(self, "plotting_data"):
+            data_channel = self.plotting_data
         else:
-            data_channel = data_name
+            if self.select_multiple and data_name:
+                data_channel = data_name[0]
+            else:
+                data_channel = data_name
 
         if entity.get_data(data_channel):
             data_obj = entity.get_data(data_channel)[0]

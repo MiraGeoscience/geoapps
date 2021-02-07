@@ -41,6 +41,7 @@ Processing
     :reversed:
 
     applications/edge_detection
+    applications/geophysical_inversion
 
 
 
@@ -95,5 +96,9 @@ Need help? Contact us at support@mirageoscience.com
     :width: 0
 
 .. figure:: applications/images/data_interp_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/inversion_thumbnail.png
     :align: center
     :width: 0

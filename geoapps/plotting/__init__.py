@@ -8,4 +8,4 @@ from .plotting import (
     plotly_scatter,
 )
 from .scatter import ScatterPlots
-from .slice import PlotSelection2D
+from .selection import PlotSelection2D
