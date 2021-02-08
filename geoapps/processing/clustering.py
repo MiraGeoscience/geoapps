@@ -91,17 +91,12 @@ class Clustering(ScatterPlots):
 
         super().__init__(**kwargs)
 
-        self.plotting_options_panel = VBox(
-            [
-                self.plotting_options,
-                HBox(
-                    [
-                        Label("Downsampling:", style={"description_width": "initial"}),
-                        self.downsampling,
-                    ]
-                ),
-            ]
-        )
+        # self.plotting_options = VBox(
+        #     [
+        #         self.plotting_options,
+        #
+        #     ]
+        # )
         self.ga_group_name.description = "Name"
         self.ga_group_name.value = "MyCluster"
         self.plotting_options.observe(self.show_trigger, names="value")
@@ -123,36 +118,34 @@ class Clustering(ScatterPlots):
 
         self.color.observe(self.check_color, names="value")
 
-        self._groups_options = Dropdown(
-            description="Group", options=np.arange(self.n_clusters.max)
+        self._clusters_options = Dropdown(
+            description="Cluster", options=np.arange(self.n_clusters.max)
         )
-        self.groups_panel = VBox([self.color_pickers[0]])
-        self.groups_options.observe(self.groups_panel_change, names="value")
+        self.clusters_panel = VBox([self.clusters_options, self.color_pickers[0]])
+        self.clusters_options.observe(self.clusters_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
 
         self.update_choices(None)
         self.run_clustering(None)
+        self.make_heatmap(None)
+        self.make_box_plot(None)
+        self.make_inertia_plot(None)
+        self.make_hist_plot(None)
 
         self.trigger.on_click(self.save_cluster)
         self._main = VBox(
             [
                 self.project_panel,
-                HBox(
+                VBox(
                     [
-                        VBox(
-                            [
-                                self.objects,
-                                self.data,
-                                self.n_clusters,
-                                self.refresh_clusters,
-                                self.groups_options,
-                                self.groups_panel,
-                            ],
-                            layout=Layout(width="50%"),
-                        ),
-                        self.input_box,
+                        self.objects,
+                        self.data,
+                        self.downsampling,
+                        HBox([self.n_clusters, VBox([self.clusters_panel,])],),
                     ]
                 ),
+                self.refresh_clusters,
+                self.input_box,
                 self.output_panel,
             ]
         )
@@ -163,9 +156,9 @@ class Clustering(ScatterPlots):
         return self._channels_plot_options
 
     @property
-    def groups_options(self):
+    def clusters_options(self):
         """ipywidgets.Dropdown()"""
-        return self._groups_options
+        return self._clusters_options
 
     @property
     def mapping(self):
@@ -192,9 +185,10 @@ class Clustering(ScatterPlots):
         """ipywidgets.ToggleButtons()"""
         return self._plotting_options
 
-    def groups_panel_change(self, _):
-        self.groups_panel.children = [
-            self.color_pickers[self.groups_options.value],
+    def clusters_panel_change(self, _):
+        self.clusters_panel.children = [
+            self.clusters_options,
+            self.color_pickers[self.clusters_options.value],
         ]
 
     def show_trigger(self, _):
@@ -203,40 +197,40 @@ class Clustering(ScatterPlots):
         """
         if self.plotting_options.value == "Statistics":
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.stats_table,
             ]
         elif self.plotting_options.value == "Confusion Matrix":
             self.make_heatmap(None)
-            self.input_box.children = [self.plotting_options_panel, self.heatmap_fig]
+            self.input_box.children = [self.plotting_options, self.heatmap_fig]
         elif self.plotting_options.value == "Crossplot":
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.axes_options,
-                self.crossplot_fig,
+                self.figure,
             ]
         elif self.plotting_options.value == "Histogram":
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.histogram_panel,
             ]
             self.make_hist_plot(None)
         elif self.plotting_options.value == "Boxplot":
             self.make_box_plot(None)
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.boxplot_panel,
             ]
         elif self.plotting_options.value == "Inertia":
             self.make_inertia_plot(None)
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.inertia_plot,
             ]
 
         else:
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
             ]
 
     def check_color(self, _):
@@ -344,10 +338,7 @@ class Clustering(ScatterPlots):
         """
         Generate an inertia plot
         """
-        if (
-            self.plotting_options.value == "Inertia"
-            and self.n_clusters.value in self.clusters.keys()
-        ):
+        if self.n_clusters.value in self.clusters.keys():
             ind = np.sort(list(self.clusters.keys()))
             inertias = [self.clusters[ii].inertia_ for ii in ind]
             clusters = ind
@@ -379,8 +370,7 @@ class Clustering(ScatterPlots):
         Generate an histogram plot for the selected data channel.
         """
         if (
-            self.plotting_options.value == "Histogram"
-            and self.channels_plot_options.value in self.scalings.keys()
+            self.channels_plot_options.value in self.scalings.keys()
             and self.channels_plot_options.value in self.lower_bounds.keys()
             and self.channels_plot_options.value in self.upper_bounds.keys()
             and getattr(self, "dataframe", None) is not None
@@ -409,8 +399,7 @@ class Clustering(ScatterPlots):
         Generate a box plot for each cluster.
         """
         if (
-            self.plotting_options.value == "Boxplot"
-            and getattr(self, "dataframe", None) is not None
+            getattr(self, "dataframe", None) is not None
             and "kmeans" in self.data_channels.keys()
         ):
             field = self.channels_plot_options.value
@@ -448,14 +437,19 @@ class Clustering(ScatterPlots):
                 ]
 
             self.box_plots[field].update_layout(
-                {"xaxis": {"title": "Cluster #"}, "yaxis": {"title": field}}
+                {
+                    "xaxis": {"title": "Cluster #"},
+                    "yaxis": {"title": field},
+                    "height": 600,
+                    "width": 600,
+                }
             )
 
     def make_stats_table(self, channels, show):
         """
         Generate a table of statistics using pandas
         """
-        if show == "Statistics" and getattr(self, "dataframe", None) is not None:
+        if getattr(self, "dataframe", None) is not None:
             display(
                 self.dataframe.describe(percentiles=None, include=None, exclude=None)
             )
@@ -464,10 +458,7 @@ class Clustering(ScatterPlots):
         """
         Generate a consfusion matrix
         """
-        if (
-            self.plotting_options.value == "Confusion Matrix"
-            and getattr(self, "dataframe", None) is not None
-        ):
+        if getattr(self, "dataframe", None) is not None:
             dataframe = self.dataframe.copy()
             corrs = dataframe.corr()
 

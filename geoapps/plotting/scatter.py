@@ -55,7 +55,7 @@ class ScatterPlots(ObjectDataSelection):
             self.set_channel_bounds(caller["owner"].name)
 
         self._downsampling = IntSlider(
-            description="Population",
+            description="Population Downsampling:",
             min=1,
             style={"description_width": "initial"},
             continuous_update=False,
@@ -177,7 +177,7 @@ class ScatterPlots(ObjectDataSelection):
             layout=Layout(width="300px"),
         )
         self.axes_pannels.observe(axes_pannels_trigger, names="value")
-        self.axes_options = HBox([self.axes_pannels, self._x_panel])
+        self.axes_options = VBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
         self.data.observe(self.update_choices, names="value")
         self.objects.observe(self.update_objects, names="value")
@@ -237,7 +237,7 @@ class ScatterPlots(ObjectDataSelection):
                 [
                     self.project_panel,
                     HBox([self.objects, self.data]),
-                    HBox([Label("Downsampling:"), self.downsampling]),
+                    self.downsampling,
                     self.axes_options,
                     self.trigger,
                 ]

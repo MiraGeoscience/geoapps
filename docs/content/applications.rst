@@ -42,6 +42,7 @@ Processing
 
     applications/edge_detection
     applications/geophysical_inversion
+    applications/clustering
 
 
 
@@ -100,5 +101,9 @@ Need help? Contact us at support@mirageoscience.com
     :width: 0
 
 .. figure:: applications/images/inversion_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/cluster_thumbnail.png
     :align: center
     :width: 0
