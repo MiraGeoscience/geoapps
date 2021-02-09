@@ -57,7 +57,7 @@ class PeakFinder(ObjectDataSelection):
         "doi": {"data": "Z"},
         "doi_percent": 60,
         "doi_revert": True,
-        "center": 3750,
+        "center": 4050,
         "width": 1000,
         "smoothing": 6,
         "tem_checkbox": True,
@@ -67,8 +67,7 @@ class PeakFinder(ObjectDataSelection):
         "ga_group_name": "PeakFinder",
     }
 
-    def __init__(self, static=False, **kwargs):
-        self.static = static
+    def __init__(self, **kwargs):
 
         kwargs = self.apply_defaults(**kwargs)
 
@@ -76,7 +75,7 @@ class PeakFinder(ObjectDataSelection):
             self.client = get_client()
         except ValueError:
             self.client = Client()
-
+        self.decay_figure = None
         self.all_anomalies = []
         self.borehole_trace = None
         self.data_channels = {}
@@ -100,6 +99,7 @@ class PeakFinder(ObjectDataSelection):
         self.system_panel = VBox([self.system_panel_option])
         self.groups_setter.observe(self.groups_trigger)
         self.groups_widget = VBox([self.groups_setter])
+        self.groups_panel = VBox([self.group_list, self.channels, self.group_color])
         self.decay_panel = VBox([self.show_decay])
         self.previous_line = self.lines.lines.value
         self.objects.description = "Survey"
@@ -111,12 +111,6 @@ class PeakFinder(ObjectDataSelection):
         self.scale_panel = VBox([self.scale_button])
         self.scale_button.observe(self.scale_update)
         self.channel_selection.observe(self.channel_panel_update, names="value")
-        self.channel_panel = VBox(
-            [
-                self.channel_selection,
-                # self.data_channel_options[self.channel_selection.value],
-            ]
-        )
         self.channels.observe(self.edit_group, names="value")
         self.group_list.observe(self.highlight_selection, names="value")
         self.highlight_selection(None)
@@ -211,6 +205,14 @@ class PeakFinder(ObjectDataSelection):
         if "doi" in kwargs.keys():
             self.doi_selection.__populate__(**kwargs["doi"])
 
+        self.channel_panel = VBox(
+            [
+                self.channel_selection,
+                self.data_channel_options[self.channel_selection.value],
+            ]
+        )
+        self.system_options = VBox([self.system, self.channel_panel,])
+
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export Peaks"
         self.trigger_panel = VBox(
@@ -220,7 +222,20 @@ class PeakFinder(ObjectDataSelection):
             ]
         )
         self.ga_group_name.description = "Save As"
-
+        self.visual_parameters = VBox(
+            [self.center, self.width, self.x_label, self.scale_panel, self.markers,]
+        )
+        self.detection_parameters = VBox(
+            [
+                self.smoothing,
+                self.min_amplitude,
+                self.min_value,
+                self.min_width,
+                self.max_migration,
+                self.min_channels,
+                self.residual,
+            ]
+        )
         self._main = VBox(
             [
                 self.project_panel,
@@ -228,7 +243,7 @@ class PeakFinder(ObjectDataSelection):
                     [
                         VBox([self.main, self.flip_sign], layout=Layout(width="50%"),),
                         Box(
-                            children=[self.lines.widget],
+                            children=[self.lines.main],
                             layout=Layout(
                                 display="flex",
                                 flex_flow="row",
@@ -244,27 +259,12 @@ class PeakFinder(ObjectDataSelection):
                 HBox(
                     [
                         VBox(
-                            [
-                                Label("Detection Parameters"),
-                                self.smoothing,
-                                self.min_amplitude,
-                                self.min_value,
-                                self.min_width,
-                                self.max_migration,
-                                self.min_channels,
-                                self.residual,
-                            ],
+                            [Label("Visual Parameters"), self.visual_parameters],
                             layout=Layout(width="50%"),
                         ),
                         VBox(
-                            [
-                                Label("Visual Parameters"),
-                                self.center,
-                                self.width,
-                                self.x_label,
-                                self.scale_panel,
-                                self.markers,
-                            ]
+                            [Label("Detection Parameters"), self.detection_parameters],
+                            layout=Layout(width="50%"),
                         ),
                     ]
                 ),
@@ -432,7 +432,7 @@ class PeakFinder(ObjectDataSelection):
         """
         if getattr(self, "_flip_sign", None) is None:
             self._flip_sign = ToggleButton(
-                description="Invert data (-1)", button_style="warning"
+                description="Flip Y (-1x)", button_style="warning"
             )
 
         return self._flip_sign
@@ -691,6 +691,7 @@ class PeakFinder(ObjectDataSelection):
         if getattr(self, "_scale_button", None) is None:
             self._scale_button = ToggleButtons(
                 options=["linear", "symlog",],
+                value="symlog",
                 description="Y-axis scaling",
                 orientation="vertical",
             )
@@ -1056,11 +1057,7 @@ class PeakFinder(ObjectDataSelection):
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
         if self.system_panel_option.value:
-            self.system_panel.children = [
-                self.system_panel_option,
-                self.system,
-                self.channel_panel,
-            ]
+            self.system_panel.children = [self.system_panel_option, self.system_options]
         else:
             self.system_panel.children = [self.system_panel_option]
 
@@ -1108,12 +1105,7 @@ class PeakFinder(ObjectDataSelection):
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
         if self.groups_setter.value:
-            self.groups_widget.children = [
-                self.groups_setter,
-                self.group_list,
-                self.channels,
-                self.group_color,
-            ]
+            self.groups_widget.children = [self.groups_setter, self.groups_panel]
         else:
             self.groups_widget.children = [self.groups_setter]
 
@@ -1501,7 +1493,7 @@ class PeakFinder(ObjectDataSelection):
         locs = self.lines.profile.locations_resampled
         for cc, channel in enumerate(self.active_channels):
             if axs is None:
-                plt.figure(figsize=(12, 6))
+                self.figure = plt.figure(figsize=(12, 6))
                 axs = plt.subplot()
 
             self.lines.profile.values = channel["values"][self.survey.line_indices]
@@ -1662,7 +1654,7 @@ class PeakFinder(ObjectDataSelection):
                 delta_x = np.abs(
                     center - self.lines.profile.locations_resampled[anomaly["peak"][0]]
                 )
-                if delta_x < dist:
+                if delta_x < dist and anomaly["linear_fit"] is not None:
                     dist = delta_x
                     group = anomaly
 
@@ -1674,12 +1666,11 @@ class PeakFinder(ObjectDataSelection):
                     for ii, channel in enumerate(self.active_channels)
                     if ii in list(group["channels"])
                 ]
-
             if any(times):
                 times = np.hstack(times)
 
                 if axs is None:
-                    plt.figure(figsize=(8, 8))
+                    self.decay_figure = plt.figure(figsize=(8, 8))
                     axs = plt.subplot()
 
                 y = np.exp(times * group["linear_fit"][1] + group["linear_fit"][0])
@@ -1689,7 +1680,7 @@ class PeakFinder(ObjectDataSelection):
                 axs.text(
                     np.mean(times),
                     np.mean(y),
-                    f"Tau: {np.abs(group['linear_fit'][0] ** -1.):.2e}",
+                    f"Tau: {np.abs(group['linear_fit'][1] ** -1.)*1e+3:.2e} msec",
                     color="k",
                 )
                 #                 plt.yscale('symlog', linthreshy=scale_value)
@@ -1697,8 +1688,10 @@ class PeakFinder(ObjectDataSelection):
                 axs.scatter(
                     times,
                     group["peak_values"],
+                    s=100,
                     color=self.time_groups[group["time_group"]]["color"],
                     marker="^",
+                    edgecolors="k",
                 )
                 axs.grid(True)
 
@@ -2224,7 +2217,7 @@ class PeakFinder(ObjectDataSelection):
         if self.show_borehole.value:
             self.borehole_panel.children = [
                 self.show_borehole,
-                self.boreholes.widget,
+                self.boreholes.main,
                 self.slice_width,
                 self.boreholes_size,
             ]

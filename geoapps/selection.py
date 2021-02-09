@@ -321,8 +321,8 @@ class LineOptions(ObjectDataSelection):
 
     def update_line_list(self, _):
         _, data = self.get_selected_entities()
-        if data is not None and getattr(data, "values", None) is not None:
-            self.lines.options = [""] + np.unique(data.values).tolist()
+        if data and getattr(data[0], "values", None) is not None:
+            self.lines.options = [""] + np.unique(data[0].values).tolist()
 
 
 class TopographyOptions(ObjectDataSelection):

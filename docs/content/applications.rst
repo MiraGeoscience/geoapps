@@ -43,6 +43,7 @@ Processing
     applications/edge_detection
     applications/geophysical_inversion
     applications/clustering
+    applications/peak_finder
 
 
 
@@ -105,5 +106,9 @@ Need help? Contact us at support@mirageoscience.com
     :width: 0
 
 .. figure:: applications/images/cluster_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/peak_finder_thumbnail.png
     :align: center
     :width: 0
