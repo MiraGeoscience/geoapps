@@ -103,8 +103,8 @@ class PeakFinder(ObjectDataSelection):
         self.decay_panel = VBox([self.show_decay])
         self.previous_line = self.lines.lines.value
         self.objects.description = "Survey"
-        self.boreholes.objects.description = "Borehole"
-        self.boreholes.data.description = "Log"
+        self.boreholes.objects.description = "Points"
+        self.boreholes.data.description = "Values"
         self.model_selection.objects.description = "Surface:"
         self.model_selection.data.description = "Model"
         self.doi_selection.data.description = "DOI Layer"
@@ -236,6 +236,25 @@ class PeakFinder(ObjectDataSelection):
                 self.residual,
             ]
         )
+        self.model_parameters = VBox(
+            [
+                self.model_selection.objects,
+                self.model_selection.data,
+                self.model_log,
+                self.model_min,
+                self.model_max,
+                self.color_maps,
+                self.reverse_cmap,
+                self.opacity,
+            ],
+        )
+        self.doi_parameters = VBox(
+            [self.doi_selection.data, self.doi_percent, self.doi_revert,]
+        )
+        self.scatter_parameters = VBox(
+            [self.boreholes.main, self.slice_width, self.boreholes_size,]
+        )
+        self.output_panel = VBox([self.run_all, self.trigger_panel,])
         self._main = VBox(
             [
                 self.project_panel,
@@ -269,8 +288,7 @@ class PeakFinder(ObjectDataSelection):
                     ]
                 ),
                 self.model_panel,
-                self.run_all,
-                self.trigger_panel,
+                self.output_panel,
             ]
         )
 
@@ -723,9 +741,7 @@ class PeakFinder(ObjectDataSelection):
         :obj:`ipywidgets.ToggleButton`: Display the borehole panel
         """
         if getattr(self, "_show_borehole", None) is None:
-            self._show_borehole = ToggleButton(
-                description="Show Boreholes", value=False,
-            )
+            self._show_borehole = ToggleButton(description="Show Scatter", value=False,)
 
         return self._show_borehole
 
@@ -1860,8 +1876,6 @@ class PeakFinder(ObjectDataSelection):
             else:
                 self.model_figure.data[3].visible = False
 
-            self.model_figure.show()
-
     def scale_update(self, _):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
@@ -2155,26 +2169,8 @@ class PeakFinder(ObjectDataSelection):
         if self.show_model.value:
             self.model_panel.children = [
                 self.show_model,
-                HBox(
-                    [
-                        VBox(
-                            [
-                                self.model_selection.objects,
-                                self.model_selection.data,
-                                self.model_log,
-                                self.model_min,
-                                self.model_max,
-                                self.color_maps,
-                                self.reverse_cmap,
-                                self.opacity,
-                                self.doi_panel,
-                                self.borehole_panel,
-                            ],
-                            layout=Layout(width="50%"),
-                        ),
-                        self.model_figure,
-                    ]
-                ),
+                self.model_figure,
+                HBox([self.model_parameters, self.doi_panel, self.borehole_panel]),
             ]
             self.show_model.description = "Hide model"
             self.plot_trigger.value = False
@@ -2199,12 +2195,7 @@ class PeakFinder(ObjectDataSelection):
         Observer of :obj:`geoapps.processing.PeakFinder.`: Add the DOI options
         """
         if self.show_doi.value:
-            self.doi_panel.children = [
-                self.show_doi,
-                self.doi_selection.data,
-                self.doi_percent,
-                self.doi_revert,
-            ]
+            self.doi_panel.children = [self.show_doi, self.doi_parameters]
             self.show_doi.description = "Hide DOI"
         else:
             self.doi_panel.children = [self.show_doi]
@@ -2215,16 +2206,11 @@ class PeakFinder(ObjectDataSelection):
         Observer of :obj:`geoapps.processing.PeakFinder.`: Add the DOI options
         """
         if self.show_borehole.value:
-            self.borehole_panel.children = [
-                self.show_borehole,
-                self.boreholes.main,
-                self.slice_width,
-                self.boreholes_size,
-            ]
-            self.show_borehole.description = "Hide Boreholes"
+            self.borehole_panel.children = [self.show_borehole, self.scatter_parameters]
+            self.show_borehole.description = "Hide Scatter"
         else:
             self.borehole_panel.children = [self.show_borehole]
-            self.show_borehole.description = "Show Boreholes"
+            self.show_borehole.description = "Show Scatter"
 
         return
 
