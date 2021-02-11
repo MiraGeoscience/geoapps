@@ -1,0 +1,32 @@
+name: geoapps
+
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - git
+  - pip
+  - simpeg=0.13.1
+  - discretize=0.5.1
+  - matplotlib
+  - ipywidgets
+  - ipykernel
+  - geopandas
+  - scikit-image
+  - scikit-learn
+  - h5py
+  - zarr
+  - fsspec
+  - xarray
+  - pip:
+    - empymod
+    - geoh5py
+    - geoapps
+    - numpydoc
+    - sphinx_issues
+    - nbsphinx
+    - jupyter_sphinx
+    - plotly==4.9.0
+    - ipyfilechooser
+    - ezdxf
