@@ -30,12 +30,12 @@ class DataInterpolation(ObjectDataSelection):
         "core_cell_size": "50, 50, 50",
         "depth_core": 500,
         "expansion_fact": 1.05,
-        "max_distance": 1e3,
+        "max_distance": 2e3,
         "max_depth": 1e3,
         "method": "Inverse Distance",
         "new_grid": "InterpGrid",
         "no_data_value": 1e-8,
-        "out_mode": "TO Object",
+        "out_mode": "To Object",
         "out_object": "O2O_Interp_25m",
         "padding_distance": "0, 0, 0, 0, 0, 0",
         "skew_angle": 0,
@@ -64,7 +64,9 @@ class DataInterpolation(ObjectDataSelection):
         self._skew_factor = FloatText(description="Factor (>0)",)
         self._space = RadioButtons(options=["Linear", "Log"])
         self._xy_extent = Dropdown(description="Object hull",)
-        self._xy_reference = Dropdown(description="Lateral Extent",)
+        self._xy_reference = Dropdown(
+            description="Lateral Extent", style={"description_width": "initial"}
+        )
 
         def object_pick(_):
             self.object_pick()
@@ -75,7 +77,7 @@ class DataInterpolation(ObjectDataSelection):
             [Label("Skew parameters"), self.skew_angle, self.skew_factor]
         )
         self.method_panel = VBox([self.method])
-        self.out_panel = VBox([self.out_mode, self.out_object])
+        self.destination_panel = VBox([self.out_mode, self.out_object])
         self.new_grid_panel = VBox(
             [
                 self.new_grid,
@@ -121,26 +123,26 @@ class DataInterpolation(ObjectDataSelection):
         self.parameters = {
             "Method": self.method_panel,
             "Scaling": self.space,
-            "Horizontal Extent": VBox([self.xy_extent, self.max_distance]),
-            "Vertical Extent": VBox([self.topography.widget, self.max_depth]),
+            "Horizontal Extent": VBox([self.max_distance, self.xy_extent,]),
+            "Vertical Extent": VBox([self.topography.main, self.max_depth]),
             "No-data-value": self.no_data_value,
         }
 
         self.parameter_panel = HBox([self.parameter_choices, self.method_panel])
-
+        self.ga_group_name.description = "Output Label:"
+        self.ga_group_name.value = "_Interp"
         self.parameter_choices.observe(self.parameter_change)
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
                 HBox(
                     [
-                        VBox([Label("Source"), self.widget]),
-                        VBox([Label("Destination"), self.out_panel]),
+                        VBox([Label("Source"), self.main]),
+                        VBox([Label("Destination"), self.destination_panel]),
                     ]
                 ),
                 self.parameter_panel,
-                self.trigger,
-                self.live_link_panel,
+                self.output_panel,
             ]
         )
 
@@ -264,10 +266,6 @@ class DataInterpolation(ObjectDataSelection):
         return self._xy_reference
 
     @property
-    def widget(self):
-        return self._widget
-
-    @property
     def workspace(self):
         """
         Target geoh5py workspace
@@ -329,9 +327,9 @@ class DataInterpolation(ObjectDataSelection):
 
     def out_update(self, _):
         if self.out_mode.value == "To Object":
-            self.out_panel.children = [self.out_mode, self.out_object]
+            self.destination_panel.children = [self.out_mode, self.out_object]
         else:
-            self.out_panel.children = [self.out_mode, self.new_grid_panel]
+            self.destination_panel.children = [self.out_mode, self.new_grid_panel]
 
     def interpolate_call(self):
 
@@ -353,12 +351,12 @@ class DataInterpolation(ObjectDataSelection):
 
             for entity in self._workspace.get_entity(self.out_object.value):
                 if isinstance(entity, ObjectBase):
-                    object_to = entity
+                    self.object_out = entity
 
-            if hasattr(object_to, "centroids"):
-                xyz_out = object_to.centroids.copy()
-            elif hasattr(object_to, "vertices"):
-                xyz_out = object_to.vertices.copy()
+            if hasattr(self.object_out, "centroids"):
+                xyz_out = self.object_out.centroids.copy()
+            elif hasattr(self.object_out, "vertices"):
+                xyz_out = self.object_out.vertices.copy()
 
         else:
 
@@ -399,7 +397,7 @@ class DataInterpolation(ObjectDataSelection):
                 depth_core=depth_core,
                 expansion_factor=self.expansion_fact.value,
             )
-            object_to = BlockModel.create(
+            self.object_out = BlockModel.create(
                 self.workspace,
                 origin=[mesh.x0[0], mesh.x0[1], xyz_ref[:, 2].max()],
                 u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
@@ -410,14 +408,14 @@ class DataInterpolation(ObjectDataSelection):
 
             # Try to recenter on nearest
             # Find nearest cells
-            rad, ind = tree.query(object_to.centroids)
+            rad, ind = tree.query(self.object_out.centroids)
             ind_nn = np.argmin(rad)
 
-            d_xyz = object_to.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
+            d_xyz = self.object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
 
-            object_to.origin = np.r_[object_to.origin.tolist()] - d_xyz
+            self.object_out.origin = np.r_[self.object_out.origin.tolist()] - d_xyz
 
-            xyz_out = object_to.centroids.copy()
+            xyz_out = self.object_out.centroids.copy()
 
         values, sign, dtype = {}, {}, {}
         for field in self.data.value:
@@ -504,10 +502,10 @@ class DataInterpolation(ObjectDataSelection):
                         np.abs(xyz_out[:, 2] - xyz[ind, 2]) > self.max_depth.value
                     ] = self.no_data_value.value
 
-        if hasattr(object_to, "centroids"):
-            xyz_out = object_to.centroids
-        elif hasattr(object_to, "vertices"):
-            xyz_out = object_to.vertices
+        if hasattr(self.object_out, "centroids"):
+            xyz_out = self.object_out.centroids
+        elif hasattr(self.object_out, "vertices"):
+            xyz_out = self.object_out.vertices
 
         if self.topography.options.value == "Object" and self.workspace.get_entity(
             self.topography.objects.value
@@ -572,10 +570,12 @@ class DataInterpolation(ObjectDataSelection):
                 primitive = "float"
                 vals = values_interp[key].astype(dtype[field])
 
-            object_to.add_data({key + "_interp": {"values": vals, "type": primitive}})
+            self.object_out.add_data(
+                {key + self.ga_group_name.value: {"values": vals, "type": primitive}}
+            )
 
         if self.live_link.value:
-            self.live_link_output(object_to)
+            self.live_link_output(self.object_out)
 
         self.workspace.finalize()
 

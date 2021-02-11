@@ -16,7 +16,7 @@ from IPython.display import display
 import plotly.graph_objects as go
 import numpy as np
 from geoapps.plotting import ScatterPlots
-from geoapps.utils import random_sampling, hex_to_rgb
+from geoapps.utils import random_sampling, hex_to_rgb, colors
 from sklearn.cluster import KMeans
 from scipy.spatial import cKDTree
 import pandas as pd
@@ -91,17 +91,12 @@ class Clustering(ScatterPlots):
 
         super().__init__(**kwargs)
 
-        self.plotting_options_panel = VBox(
-            [
-                self.plotting_options,
-                HBox(
-                    [
-                        Label("Downsampling:", style={"description_width": "initial"}),
-                        self.downsampling,
-                    ]
-                ),
-            ]
-        )
+        # self.plotting_options = VBox(
+        #     [
+        #         self.plotting_options,
+        #
+        #     ]
+        # )
         self.ga_group_name.description = "Name"
         self.ga_group_name.value = "MyCluster"
         self.plotting_options.observe(self.show_trigger, names="value")
@@ -123,37 +118,35 @@ class Clustering(ScatterPlots):
 
         self.color.observe(self.check_color, names="value")
 
-        self._groups_options = Dropdown(
-            description="Group", options=np.arange(self.n_clusters.max)
+        self._clusters_options = Dropdown(
+            description="Cluster", options=np.arange(self.n_clusters.max)
         )
-        self.groups_panel = VBox([self.color_pickers[0]])
-        self.groups_options.observe(self.groups_panel_change, names="value")
+        self.clusters_panel = VBox([self.clusters_options, self.color_pickers[0]])
+        self.clusters_options.observe(self.clusters_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
 
         self.update_choices(None)
         self.run_clustering(None)
+        self.make_heatmap(None)
+        self.make_box_plot(None)
+        self.make_inertia_plot(None)
+        self.make_hist_plot(None)
 
         self.trigger.on_click(self.save_cluster)
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
-                HBox(
+                VBox(
                     [
-                        VBox(
-                            [
-                                self.objects,
-                                self.data,
-                                self.n_clusters,
-                                self.refresh_clusters,
-                                self.groups_options,
-                                self.groups_panel,
-                            ],
-                            layout=Layout(width="50%"),
-                        ),
-                        self.input_box,
+                        self.objects,
+                        self.data,
+                        self.downsampling,
+                        HBox([self.n_clusters, VBox([self.clusters_panel,])],),
                     ]
                 ),
-                self.trigger_panel,
+                self.refresh_clusters,
+                self.input_box,
+                self.output_panel,
             ]
         )
 
@@ -163,9 +156,9 @@ class Clustering(ScatterPlots):
         return self._channels_plot_options
 
     @property
-    def groups_options(self):
+    def clusters_options(self):
         """ipywidgets.Dropdown()"""
-        return self._groups_options
+        return self._clusters_options
 
     @property
     def mapping(self):
@@ -192,9 +185,10 @@ class Clustering(ScatterPlots):
         """ipywidgets.ToggleButtons()"""
         return self._plotting_options
 
-    def groups_panel_change(self, _):
-        self.groups_panel.children = [
-            self.color_pickers[self.groups_options.value],
+    def clusters_panel_change(self, _):
+        self.clusters_panel.children = [
+            self.clusters_options,
+            self.color_pickers[self.clusters_options.value],
         ]
 
     def show_trigger(self, _):
@@ -203,40 +197,40 @@ class Clustering(ScatterPlots):
         """
         if self.plotting_options.value == "Statistics":
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.stats_table,
             ]
         elif self.plotting_options.value == "Confusion Matrix":
             self.make_heatmap(None)
-            self.input_box.children = [self.plotting_options_panel, self.heatmap_fig]
+            self.input_box.children = [self.plotting_options, self.heatmap_fig]
         elif self.plotting_options.value == "Crossplot":
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.axes_options,
-                self.crossplot_fig,
+                self.figure,
             ]
         elif self.plotting_options.value == "Histogram":
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.histogram_panel,
             ]
             self.make_hist_plot(None)
         elif self.plotting_options.value == "Boxplot":
             self.make_box_plot(None)
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.boxplot_panel,
             ]
         elif self.plotting_options.value == "Inertia":
             self.make_inertia_plot(None)
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.inertia_plot,
             ]
 
         else:
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
             ]
 
     def check_color(self, _):
@@ -344,10 +338,7 @@ class Clustering(ScatterPlots):
         """
         Generate an inertia plot
         """
-        if (
-            self.plotting_options.value == "Inertia"
-            and self.n_clusters.value in self.clusters.keys()
-        ):
+        if self.n_clusters.value in self.clusters.keys():
             ind = np.sort(list(self.clusters.keys()))
             inertias = [self.clusters[ii].inertia_ for ii in ind]
             clusters = ind
@@ -379,8 +370,7 @@ class Clustering(ScatterPlots):
         Generate an histogram plot for the selected data channel.
         """
         if (
-            self.plotting_options.value == "Histogram"
-            and self.channels_plot_options.value in self.scalings.keys()
+            self.channels_plot_options.value in self.scalings.keys()
             and self.channels_plot_options.value in self.lower_bounds.keys()
             and self.channels_plot_options.value in self.upper_bounds.keys()
             and getattr(self, "dataframe", None) is not None
@@ -409,8 +399,7 @@ class Clustering(ScatterPlots):
         Generate a box plot for each cluster.
         """
         if (
-            self.plotting_options.value == "Boxplot"
-            and getattr(self, "dataframe", None) is not None
+            getattr(self, "dataframe", None) is not None
             and "kmeans" in self.data_channels.keys()
         ):
             field = self.channels_plot_options.value
@@ -448,14 +437,19 @@ class Clustering(ScatterPlots):
                 ]
 
             self.box_plots[field].update_layout(
-                {"xaxis": {"title": "Cluster #"}, "yaxis": {"title": field}}
+                {
+                    "xaxis": {"title": "Cluster #"},
+                    "yaxis": {"title": field},
+                    "height": 600,
+                    "width": 600,
+                }
             )
 
     def make_stats_table(self, channels, show):
         """
         Generate a table of statistics using pandas
         """
-        if show == "Statistics" and getattr(self, "dataframe", None) is not None:
+        if getattr(self, "dataframe", None) is not None:
             display(
                 self.dataframe.describe(percentiles=None, include=None, exclude=None)
             )
@@ -464,10 +458,7 @@ class Clustering(ScatterPlots):
         """
         Generate a consfusion matrix
         """
-        if (
-            self.plotting_options.value == "Confusion Matrix"
-            and getattr(self, "dataframe", None) is not None
-        ):
+        if getattr(self, "dataframe", None) is not None:
             dataframe = self.dataframe.copy()
             corrs = dataframe.corr()
 
@@ -546,8 +537,6 @@ class Clustering(ScatterPlots):
                 ],
                 yaxis={"autorange": "reversed"},
             )
-            #             self.heatmap_fig.update_yaxes()
-            # self.heatmap_fig.show()
 
     def save_cluster(self, _):
         """
@@ -594,14 +583,10 @@ class Clustering(ScatterPlots):
                 group_map, color_map = {}, []
                 for ii in range(self.n_clusters.value):
                     colorpicker = self.color_pickers[ii]
-
                     color = colorpicker.value.lstrip("#")
-
-                    # group_map, color_map = {}, []
-                    # for ind, group in self.time_groups.items():
                     group_map[ii + 1] = f"Cluster_{ii}"
                     color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
-                #
+
                 color_map = np.core.records.fromarrays(
                     np.vstack(color_map).T,
                     names=["Value", "Red", "Green", "Blue", "Alpha"],
@@ -736,111 +721,3 @@ class Clustering(ScatterPlots):
 
         self.update_axes(refresh_plot=refresh_plot)
         self.show_trigger(None)
-
-
-colors = [
-    "#000000",
-    "#FFFF00",
-    "#1CE6FF",
-    "#FF34FF",
-    "#FF4A46",
-    "#008941",
-    "#006FA6",
-    "#A30059",
-    "#FFDBE5",
-    "#7A4900",
-    "#0000A6",
-    "#63FFAC",
-    "#B79762",
-    "#004D43",
-    "#8FB0FF",
-    "#997D87",
-    "#5A0007",
-    "#809693",
-    "#FEFFE6",
-    "#1B4400",
-    "#4FC601",
-    "#3B5DFF",
-    "#4A3B53",
-    "#FF2F80",
-    "#61615A",
-    "#BA0900",
-    "#6B7900",
-    "#00C2A0",
-    "#FFAA92",
-    "#FF90C9",
-    "#B903AA",
-    "#D16100",
-    "#DDEFFF",
-    "#000035",
-    "#7B4F4B",
-    "#A1C299",
-    "#300018",
-    "#0AA6D8",
-    "#013349",
-    "#00846F",
-    "#372101",
-    "#FFB500",
-    "#C2FFED",
-    "#A079BF",
-    "#CC0744",
-    "#C0B9B2",
-    "#C2FF99",
-    "#001E09",
-    "#00489C",
-    "#6F0062",
-    "#0CBD66",
-    "#EEC3FF",
-    "#456D75",
-    "#B77B68",
-    "#7A87A1",
-    "#788D66",
-    "#885578",
-    "#FAD09F",
-    "#FF8A9A",
-    "#D157A0",
-    "#BEC459",
-    "#456648",
-    "#0086ED",
-    "#886F4C",
-    "#34362D",
-    "#B4A8BD",
-    "#00A6AA",
-    "#452C2C",
-    "#636375",
-    "#A3C8C9",
-    "#FF913F",
-    "#938A81",
-    "#575329",
-    "#00FECF",
-    "#B05B6F",
-    "#8CD0FF",
-    "#3B9700",
-    "#04F757",
-    "#C8A1A1",
-    "#1E6E00",
-    "#7900D7",
-    "#A77500",
-    "#6367A9",
-    "#A05837",
-    "#6B002C",
-    "#772600",
-    "#D790FF",
-    "#9B9700",
-    "#549E79",
-    "#FFF69F",
-    "#201625",
-    "#72418F",
-    "#BC23FF",
-    "#99ADC0",
-    "#3A2465",
-    "#922329",
-    "#5B4534",
-    "#FDE8DC",
-    "#404E55",
-    "#0089A3",
-    "#CB7E98",
-    "#A4E804",
-    "#324E72",
-    "#6A3A4C",
-]

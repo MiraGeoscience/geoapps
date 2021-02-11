@@ -63,7 +63,7 @@ def get_surface_parts(surface):
     return parts
 
 
-def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
+def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="float"):
     """
         Source:
 
@@ -143,13 +143,12 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
         )
     )
 
-    datasetSRS = osr.SpatialReference()
-
     try:
-        datasetSRS.ImportFromEPSG(int(epsg_code))
+        dataset.SetProjection(wkt_code)
     except ValueError:
-        print(f"A valid EPSG# is required. Provided {epsg_code}")
-    dataset.SetProjection(datasetSRS.ExportToWkt())
+        print(
+            f"A valid well-known-text (wkt) code is required. Provided {wkt_code} not understood"
+        )
 
     if num_bands == 1:
         dataset.GetRasterBand(1).WriteArray(array)
@@ -197,25 +196,8 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
     return grid_object
 
 
-def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
+def export_curve_2_shapefile(curve, attribute=None, wkt_code=None, file_name=None):
     attribute_vals = None
-
-    if epsg is not None and epsg.isdigit():
-        crs = from_epsg(int(epsg))
-
-        wkt = urllib.request.urlopen(
-            "http://spatialreference.org/ref/epsg/{}/prettywkt/".format(str(int(epsg)))
-        )
-        # remove spaces between characters
-        remove_spaces = wkt.read().replace(b" ", b"")
-        # create the .prj file
-        prj = open(file_name + ".prj", "w")
-
-        epsg = remove_spaces.replace(b"\n", b"")
-        prj.write(epsg.decode("utf-8"))
-        prj.close()
-    else:
-        crs = None
 
     if attribute is not None and curve.get_data(attribute):
         attribute_vals = curve.get_data(attribute)[0].values
@@ -239,7 +221,11 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
         schema["properties"] = {"id": "int"}
 
     with fiona.open(
-        file_name + ".shp", "w", driver="ESRI Shapefile", schema=schema, crs=crs
+        file_name + ".shp",
+        "w",
+        driver="ESRI Shapefile",
+        schema=schema,
+        crs_wkt=wkt_code,
     ) as c:
 
         # If there are multiple geometries, put the "for" loop here
@@ -1287,7 +1273,7 @@ def get_blob_indices(index, shape, model, threshold, blob_indices=[]):
     return blob_indices
 
 
-def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
+def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kwargs):
     if labels is None:
         axs.set_ylabel("Northing (m)")
         axs.set_xlabel("Easting (m)")
@@ -1373,3 +1359,110 @@ def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
 #     tree = np.spatial.cKDTree(self.centroids)
 #     indices = tree.query()
 #
+
+colors = [
+    "#000000",
+    "#FFFF00",
+    "#1CE6FF",
+    "#FF34FF",
+    "#FF4A46",
+    "#008941",
+    "#006FA6",
+    "#A30059",
+    "#FFDBE5",
+    "#7A4900",
+    "#0000A6",
+    "#63FFAC",
+    "#B79762",
+    "#004D43",
+    "#8FB0FF",
+    "#997D87",
+    "#5A0007",
+    "#809693",
+    "#FEFFE6",
+    "#1B4400",
+    "#4FC601",
+    "#3B5DFF",
+    "#4A3B53",
+    "#FF2F80",
+    "#61615A",
+    "#BA0900",
+    "#6B7900",
+    "#00C2A0",
+    "#FFAA92",
+    "#FF90C9",
+    "#B903AA",
+    "#D16100",
+    "#DDEFFF",
+    "#000035",
+    "#7B4F4B",
+    "#A1C299",
+    "#300018",
+    "#0AA6D8",
+    "#013349",
+    "#00846F",
+    "#372101",
+    "#FFB500",
+    "#C2FFED",
+    "#A079BF",
+    "#CC0744",
+    "#C0B9B2",
+    "#C2FF99",
+    "#001E09",
+    "#00489C",
+    "#6F0062",
+    "#0CBD66",
+    "#EEC3FF",
+    "#456D75",
+    "#B77B68",
+    "#7A87A1",
+    "#788D66",
+    "#885578",
+    "#FAD09F",
+    "#FF8A9A",
+    "#D157A0",
+    "#BEC459",
+    "#456648",
+    "#0086ED",
+    "#886F4C",
+    "#34362D",
+    "#B4A8BD",
+    "#00A6AA",
+    "#452C2C",
+    "#636375",
+    "#A3C8C9",
+    "#FF913F",
+    "#938A81",
+    "#575329",
+    "#00FECF",
+    "#B05B6F",
+    "#8CD0FF",
+    "#3B9700",
+    "#04F757",
+    "#C8A1A1",
+    "#1E6E00",
+    "#7900D7",
+    "#A77500",
+    "#6367A9",
+    "#A05837",
+    "#6B002C",
+    "#772600",
+    "#D790FF",
+    "#9B9700",
+    "#549E79",
+    "#FFF69F",
+    "#201625",
+    "#72418F",
+    "#BC23FF",
+    "#99ADC0",
+    "#3A2465",
+    "#922329",
+    "#5B4534",
+    "#FDE8DC",
+    "#404E55",
+    "#0089A3",
+    "#CB7E98",
+    "#A4E804",
+    "#324E72",
+    "#6A3A4C",
+]

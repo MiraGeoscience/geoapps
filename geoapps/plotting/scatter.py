@@ -55,7 +55,7 @@ class ScatterPlots(ObjectDataSelection):
             self.set_channel_bounds(caller["owner"].name)
 
         self._downsampling = IntSlider(
-            description="Population",
+            description="Population Downsampling:",
             min=1,
             style={"description_width": "initial"},
             continuous_update=False,
@@ -177,19 +177,15 @@ class ScatterPlots(ObjectDataSelection):
             layout=Layout(width="300px"),
         )
         self.axes_pannels.observe(axes_pannels_trigger, names="value")
-        self.axes_options = HBox([self.axes_pannels, self._x_panel])
+        self.axes_options = VBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
-
-        if not self.static:
-            self.crossplot_fig = go.FigureWidget()
-        else:
-            self.crossplot_fig = None
-
         self.data.observe(self.update_choices, names="value")
         self.objects.observe(self.update_objects, names="value")
         self.downsampling.observe(self.update_downsampling, names="value")
 
         super().__init__(**self.apply_defaults(**kwargs))
+
+        self.figure = go.FigureWidget()
 
         self.crossplot = interactive_output(
             self.plot_selection,
@@ -237,24 +233,24 @@ class ScatterPlots(ObjectDataSelection):
         self.trigger.description = "Save HTML"
 
         if self.static:
-            self._widget = VBox(
+            self._main = VBox(
                 [
                     self.project_panel,
                     HBox([self.objects, self.data]),
-                    HBox([Label("Downsampling:"), self.downsampling]),
+                    self.downsampling,
                     self.axes_options,
                     self.trigger,
                 ]
             )
         else:
-            self._widget = VBox(
+            self._main = VBox(
                 [
                     self.project_panel,
                     HBox([self.objects, self.data]),
                     VBox([Label("Downsampling"), self.downsampling]),
                     self.axes_options,
                     self.trigger,
-                    self.crossplot_fig,
+                    self.figure,
                 ]
             )
 
@@ -671,7 +667,7 @@ class ScatterPlots(ObjectDataSelection):
                     z_axis = z_axis[self.indices]
 
             if np.sum([axis is not None for axis in [x_axis, y_axis, z_axis]]) < 2:
-                self.crossplot_fig.data = []
+                self.figure.data = []
                 return
 
             if x_axis is not None:
@@ -766,16 +762,12 @@ class ScatterPlots(ObjectDataSelection):
                     },
                 }
 
-            if self.static:
-                self.crossplot_fig = go.FigureWidget([plot], layout=layout)
-            else:
-                self.crossplot_fig.data = []
-                self.crossplot_fig.add_trace(plot)
-                self.crossplot_fig.update_layout(layout)
-                self.crossplot_fig.show()
+            self.figure.data = []
+            self.figure.add_trace(plot)
+            self.figure.update_layout(layout)
+
         else:
-            if not self.static:
-                self.crossplot_fig.data = []
+            self.figure.data = []
 
     def update_axes(self, refresh_plot=True):
         self.refresh_trigger.value = False
@@ -851,7 +843,7 @@ class ScatterPlots(ObjectDataSelection):
         self.update_downsampling(None, refresh_plot=False)
 
     def write_html(self):
-        self.crossplot_fig.write_html(
+        self.figure.write_html(
             os.path.join(
                 os.path.abspath(os.path.dirname(self.h5file)), "Crossplot.html"
             )
