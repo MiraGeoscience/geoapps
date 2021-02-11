@@ -1,0 +1,49 @@
+
+default_language_version:
+    python: python3
+
+fail_fast: false
+repos:
+-   repo: https://github.com/psf/black
+    rev: 19.10b0
+    hooks:
+    -   id: black
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v2.3.0
+    hooks:
+    -   id: pyupgrade
+        args: [--py36-plus]
+# -   repo: https://github.com/codespell-project/codespell
+#     rev: v1.16.0
+#     hooks:
+#     -   id: codespell
+#         exclude: \.ipynb$
+#         exclude: geoapps/functions/simpegPF/
+#         exclude: geoapps/functions/simpegEM1D/
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.5.0
+    hooks:
+    -   id: trailing-whitespace
+        exclude: \.mdj$
+    -   id: check-toml
+#    -   id: check-added-large-files # crashing on some configuration. To be investigated
+    -   id: check-case-conflict
+    -   id: check-merge-conflict
+    -   id: debug-statements
+    -   id: detect-private-key
+    -   id: end-of-file-fixer
+        exclude: \.mdj$
+    -   id: mixed-line-ending
+    -   id: name-tests-test
+# -   repo: local
+#     hooks:
+#     -   id: rstcheck
+#         name: rstcheck
+#         entry: rstcheck
+#         files: '.rst'
+#         language: python
+#         additional_dependencies: [rstcheck, sphinx]
+-   repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.5.1
+    hooks:
+    -   id: rst-backticks
