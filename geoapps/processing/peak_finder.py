@@ -2211,7 +2211,6 @@ class PeakFinder(ObjectDataSelection):
         else:
             self.borehole_panel.children = [self.show_borehole]
             self.show_borehole.description = "Show Scatter"
-
         return
 
     # def tem_checkbox_click(self, _):
