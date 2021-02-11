@@ -440,9 +440,9 @@ class GlobalEM1DProblem(Problem.BaseProblem):
             W = Utils.speye(J_matrix.shape[0])
 
         J_matrix = W * J_matrix
-        JtJ_diag = (J_matrix.T * J_matrix).diagonal()
-        JtJ_diag /= JtJ_diag.max()
-        JtJ_diag += threshold
+        JtJ_diag = Utils.mkvc(np.sum(J_matrix.power(2.0), axis=0))
+        # JtJ_diag /= JtJ_diag.max()
+        # JtJ_diag += threshold
         return JtJ_diag
 
     @property
