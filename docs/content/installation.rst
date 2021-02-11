@@ -8,9 +8,6 @@ Whether you are developer or an end-user, this page will help you get started wi
 Installation
 ------------
 
-Recommended
-^^^^^^^^^^^
-
 - Make sure that you have `Anaconda 3.6 <https://www.anaconda.com/download/>`_ or higher installed.
 
 	.. figure:: ../images/Anaconda_Install.png
@@ -36,18 +33,38 @@ Recommended
 .. note:: The assumption is made here that Anaconda has been installed in the default directory
 
           %USERPROFILE%/AppData/Local/Continuum/anaconda3
-	  
-	  or 
-	  
+
+	  or
+
 	  %USERPROFILE%/anaconda3
 
           If this is not the case, users will need to manually edit ``Install_Update.bat``
           in order to point to the Anaconda directory.
 
-From PyPI
-^^^^^^^^^
 
-The **geoapps** can be installed directly from PyPI without its dependencies::
+Running the applications
+------------------------
+At this point, you will have all required packages to run the applications:
+
+- Run ``Start_Applications.bat``
+
+	.. figure:: ../images/run_applications.png
+	    :align: center
+	    :width: 50%
+
+You should see the index page displayed in your default browser.
+
+	.. figure:: ../images/index_page.png
+	    :align: center
+	    :width: 100%
+
+.. note:: Applications run best with either Chrome or Firefox.
+
+
+From PyPI
+---------
+
+The **geoapps** can also be installed directly from PyPI without its dependencies::
 
     $ pip install geoapps
 
@@ -67,21 +84,3 @@ To work with **geoapps** source code in development, install from GitHub::
 	.. figure:: ../images/download.png
 	    :align: center
 	    :width: 200
-
-Running the applications
-------------------------
-At this point, you will have all required packages to run the applications:
-
-- Run ``Start_Applications.bat``
-
-	.. figure:: ../images/run_applications.png
-	    :align: center
-	    :width: 50%
-
-You should see the index page displayed in your default browser.
-
-	.. figure:: ../images/index_page.png
-	    :align: center
-	    :width: 100%
-
-.. note:: Applications run best with either Chrome or Firefox.
