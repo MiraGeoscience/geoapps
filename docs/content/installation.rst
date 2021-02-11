@@ -14,7 +14,7 @@ Installation
 	    :align: center
 	    :width: 200
 
-- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_ **geoapps** directory.
+- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
 
 - Extract the package to your drive (SSD if available).
 
