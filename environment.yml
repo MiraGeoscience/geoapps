@@ -19,6 +19,7 @@ dependencies:
   - zarr
   - fsspec
   - xarray
+  - dask
   - pip:
     - empymod
     - geoh5py
