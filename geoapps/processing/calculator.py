@@ -82,9 +82,9 @@ class Calculator(ObjectDataSelection):
         self._workspace = workspace
         self._h5file = workspace.h5file
         self.update_objects_list()
-        self.store._workspace = self.workspace
-        self.store.objects = self.objects
-        self.store.update_data_list(None)
+        # self.store._workspace = self.workspace
+        # self.store.objects = self.objects
+        # self.store.update_data_list(None)
 
     def click_use(self, _):
         """

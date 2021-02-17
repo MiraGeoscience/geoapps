@@ -667,7 +667,12 @@ def block_model_2_tensor(block_model, models=[]):
     from discretize import TensorMesh
 
     tensor = TensorMesh(
-        [block_model.u_cells, block_model.v_cells, block_model.z_cells], x0="CC0"
+        [
+            np.abs(block_model.u_cells),
+            np.abs(block_model.v_cells),
+            np.abs(block_model.z_cells),
+        ],
+        x0="CC0",
     )
 
     tensor.x0 = [
