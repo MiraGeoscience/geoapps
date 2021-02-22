@@ -2,10 +2,12 @@ name: Python Master Workflow
 on:
   push:
     branches:
-      - master
+      - develop
+      - main
   pull_request:
     branches:
-      - master
+      - develop
+      - main
 jobs:
   codecov:
     name: Codecov Workflow
@@ -16,9 +18,9 @@ jobs:
         shell: bash
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Set up Python
-        uses: actions/setup-python@master
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
           python-version: 3.8
       - name: Install dependencies
@@ -40,9 +42,9 @@ jobs:
   black:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: 3.7
       - name: Install Black
