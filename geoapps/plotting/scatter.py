@@ -66,9 +66,9 @@ class ScatterPlots(ObjectDataSelection):
         self._x.name = "x"
         self._x_active = Checkbox(description="Active", value=True, indent=False)
         self._x_log = Checkbox(description="Log10", value=False, indent=False,)
-        self._x_thresh = FloatText(description="Threshold", value=1e-1, indent=False,)
-        self._x_min = FloatText(description="Min", indent=False,)
-        self._x_max = FloatText(description="Max", indent=False,)
+        self._x_thresh = FloatText(description="Threshold", value=1e-1)
+        self._x_min = FloatText(description="Min")
+        self._x_max = FloatText(description="Max")
         self._x_panel = VBox(
             [
                 self._x_active,
@@ -83,9 +83,9 @@ class ScatterPlots(ObjectDataSelection):
         self._y.name = "y"
         self._y_active = Checkbox(description="Active", value=True, indent=False,)
         self._y_log = Checkbox(description="Log10", value=False, indent=False)
-        self._y_thresh = FloatText(description="Threshold", value=1e-1, indent=False,)
-        self._y_min = FloatText(description="Min", indent=False,)
-        self._y_max = FloatText(description="Max", indent=False,)
+        self._y_thresh = FloatText(description="Threshold", value=1e-1)
+        self._y_min = FloatText(description="Min")
+        self._y_max = FloatText(description="Max")
         self._y_panel = VBox(
             [
                 self._y_active,
@@ -100,9 +100,9 @@ class ScatterPlots(ObjectDataSelection):
         self._z.name = "z"
         self._z_active = Checkbox(description="Active", value=False, indent=False,)
         self._z_log = Checkbox(description="Log10", value=False, indent=False,)
-        self._z_thresh = FloatText(description="Threshold", value=1e-1, indent=False,)
-        self._z_min = FloatText(description="Min", indent=False,)
-        self._z_max = FloatText(description="Max", indent=False,)
+        self._z_thresh = FloatText(description="Threshold", value=1e-1)
+        self._z_min = FloatText(description="Min")
+        self._z_max = FloatText(description="Max")
         self._z_panel = VBox(
             [
                 self._z_active,
@@ -116,17 +116,15 @@ class ScatterPlots(ObjectDataSelection):
         self._color.observe(channel_bounds_setter, names="value")
         self._color.name = "color"
         self._color_log = Checkbox(description="Log10", value=False, indent=False,)
-        self._color_thresh = FloatText(
-            description="Threshold", value=1e-1, indent=False,
-        )
+        self._color_thresh = FloatText(description="Threshold", value=1e-1)
         self._color_active = Checkbox(description="Active", value=False, indent=False,)
         self._color_maps = Dropdown(
             description="Colormaps",
             options=px.colors.named_colorscales(),
             value="viridis",
         )
-        self._color_min = FloatText(description="Min", indent=False,)
-        self._color_max = FloatText(description="Max", indent=False,)
+        self._color_min = FloatText(description="Min")
+        self._color_max = FloatText(description="Max")
         self._color_panel = VBox(
             [
                 self._color_active,
@@ -142,14 +140,12 @@ class ScatterPlots(ObjectDataSelection):
         self._size.name = "size"
         self._size_active = Checkbox(description="Active", value=False, indent=False,)
         self._size_log = Checkbox(description="Log10", value=False, indent=False,)
-        self._size_thresh = FloatText(
-            description="Threshold", value=1e-1, indent=False,
-        )
+        self._size_thresh = FloatText(description="Threshold", value=1e-1)
         self._size_markers = IntSlider(
             min=1, max=100, value=20, description="Marker size", continuous_update=False
         )
-        self._size_min = FloatText(description="Min", indent=False,)
-        self._size_max = FloatText(description="Max", indent=False,)
+        self._size_min = FloatText(description="Min")
+        self._size_max = FloatText(description="Max")
         self._size_panel = VBox(
             [
                 self._size_active,

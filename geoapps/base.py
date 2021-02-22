@@ -38,16 +38,9 @@ class BaseApplication:
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
         self._copy_trigger = Button(
-            description="Create copy:",
-            value=True,
-            indent=False,
-            style={"description_width": "initial"},
+            description="Create copy:", style={"description_width": "initial"},
         )
-
-        def create_copy(_):
-            self.create_copy()
-
-        self._copy_trigger.on_click(create_copy)
+        self._copy_trigger.on_click(self.create_copy)
         self.project_panel = VBox(
             [
                 Label("Workspace", style={"description_width": "initial"}),
@@ -65,7 +58,6 @@ class BaseApplication:
         self.live_link_panel = VBox([self.live_link])
         self._refresh = ToggleButton(value=False)
         self._trigger = Button(
-            value=False,
             description="Compute",
             button_style="danger",
             tooltip="Run computation",
@@ -300,7 +292,7 @@ class BaseApplication:
         self._workspace = workspace
         self._h5file = workspace.h5file
 
-    def create_copy(self):
+    def create_copy(self, _):
         if self.h5file is not None:
             value = working_copy(self.h5file)
             self.h5file = value
@@ -314,9 +306,7 @@ def update_apps():
     Special widget to update geoapps
     """
 
-    trigger = Button(
-        value=False, description="Update All", button_style="danger", icon="check",
-    )
+    trigger = Button(description="Update All", button_style="danger", icon="check",)
 
     def run_update(_):
 

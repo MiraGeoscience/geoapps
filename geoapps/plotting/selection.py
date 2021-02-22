@@ -37,17 +37,17 @@ class PlotSelection2D(ObjectDataSelection):
             min=-90,
             max=90,
             value=0,
-            steps=5,
+            step=5,
             description="Azimuth",
             continuous_update=False,
         )
         self._center_x = FloatSlider(
-            min=-100, max=100, steps=10, description="Easting", continuous_update=False,
+            min=-100, max=100, step=10, description="Easting", continuous_update=False,
         )
         self._center_y = FloatSlider(
             min=-100,
             max=100,
-            steps=10,
+            step=10,
             description="Northing",
             continuous_update=False,
             orientation="vertical",
@@ -55,14 +55,14 @@ class PlotSelection2D(ObjectDataSelection):
         self._contours = widgets.Text(
             value="", description="Contours", disabled=False, continuous_update=False,
         )
-        self._data_count = Label("Data Count: 0", tooltip="Keep <1500 for speed")
+        self._data_count = Label("Data Count: 0")
         self._resolution = FloatText(
             description="Grid Resolution (m)", style={"description_width": "initial"}
         )
         self._width = FloatSlider(
             min=0,
             max=100,
-            steps=10,
+            step=10,
             value=1000,
             description="Width",
             continuous_update=False,
@@ -70,7 +70,7 @@ class PlotSelection2D(ObjectDataSelection):
         self._height = FloatSlider(
             min=0,
             max=100,
-            steps=10,
+            step=10,
             value=1000,
             description="Height",
             continuous_update=False,
