@@ -7,6 +7,7 @@ import scipy as sp
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Surface
 from geoh5py.workspace import Workspace
+from geoh5py.data import ReferencedData
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
@@ -190,7 +191,7 @@ def inversion(input_file):
     hz_min, expansion, n_cells = input_param["mesh 1D"]
     ignore_values = input_param["ignore_values"]
     max_iteration = input_param["max_iterations"]
-    resolution = np.float(input_param["resolution"])
+    resolution = float(input_param["resolution"])
 
     if "window" in input_param.keys():
         window = input_param["window"]
@@ -309,9 +310,17 @@ def inversion(input_file):
 
         for key, values in selection.items():
 
+            line_data = entity.get_data(key)[0]
+            if isinstance(line_data, ReferencedData):
+                values = [
+                    key
+                    for key, value in line_data.value_map.map.items()
+                    if value in values
+                ]
+
             for line in values:
 
-                line_ind = np.where(entity.get_data(key)[0].values == np.float(line))[0]
+                line_ind = np.where(line_data.values == line)[0]
 
                 if len(line_ind) < 2:
                     continue
@@ -460,11 +469,15 @@ def inversion(input_file):
     pred_cells = []
     for key, values in selection.items():
 
+        line_data = entity.get_data(key)[0]
+        if isinstance(line_data, ReferencedData):
+            values = [
+                key for key, value in line_data.value_map.map.items() if value in values
+            ]
+
         for line in values:
 
-            line_ind = np.where(
-                entity.get_data(key)[0].values[win_ind] == np.float(line)
-            )[0]
+            line_ind = np.where(line_data.values[win_ind] == float(line))[0]
 
             n_sounding = len(line_ind)
             if n_sounding < 2:
@@ -522,9 +535,9 @@ def inversion(input_file):
             model_ordering.append(temp[:, order].T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_cells.append(tri2D.simplices + model_count)
-            model_line_ids.append(np.ones_like(np.ravel(X)) * np.float(line))
+            model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
 
-            line_ids.append(np.ones_like(order) * np.float(line))
+            line_ids.append(np.ones_like(order) * float(line))
             data_ordering.append(order + pred_count)
 
             pred_vertices.append(xyz[order, :])
@@ -661,11 +674,11 @@ def inversion(input_file):
 
     if len(ignore_values) > 0:
         if "<" in ignore_values:
-            uncert[dobs <= np.float(ignore_values.split("<")[1])] = np.inf
+            uncert[dobs <= float(ignore_values.split("<")[1])] = np.inf
         elif ">" in ignore_values:
-            uncert[dobs >= np.float(ignore_values.split(">")[1])] = np.inf
+            uncert[dobs >= float(ignore_values.split(">")[1])] = np.inf
         else:
-            uncert[dobs == np.float(ignore_values)] = np.inf
+            uncert[dobs == float(ignore_values)] = np.inf
 
     uncert[(dobs > 1e-38) * (dobs < 2e-38)] = np.inf
 
@@ -963,16 +976,16 @@ def inversion(input_file):
         #     if "<" in ignore_values:
         #         uncert[
         #             data_mapping * dobs / normalization
-        #             <= np.float(ignore_values.split("<")[1])
+        #             <= float(ignore_values.split("<")[1])
         #         ] = np.inf
         #     elif ">" in ignore_values:
         #         uncert[
         #             data_mapping * dobs / normalization
-        #             >= np.float(ignore_values.split(">")[1])
+        #             >= float(ignore_values.split(">")[1])
         #         ] = np.inf
         #     else:
         #         uncert[
-        #             data_mapping * dobs / normalization == np.float(ignore_values)
+        #             data_mapping * dobs / normalization == float(ignore_values)
         #         ] = np.inf
 
     mesh_reg = get_2d_mesh(n_sounding, hz)

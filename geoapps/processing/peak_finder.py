@@ -8,6 +8,7 @@ import dask
 import matplotlib.pyplot as plt
 from geoh5py.workspace import Workspace
 from geoh5py.objects import Points, Curve, Surface
+from geoh5py.data import ReferencedData
 from ipywidgets import (
     Button,
     Dropdown,
@@ -1012,8 +1013,9 @@ class PeakFinder(ObjectDataSelection):
             self._survey = self.workspace.get_entity(self.objects.value)[0]
             self.update_data_list(None)
             not_tem = True
-
+            self.active_channels = []
             if self.tem_checkbox.value:
+                not_tem = False
                 for aem_system, specs in self.em_system_specs.items():
                     if any(
                         [
@@ -1023,12 +1025,12 @@ class PeakFinder(ObjectDataSelection):
                     ):
                         if aem_system in self.system.options:
                             self.system.value = aem_system
-                            not_tem = False
+                            # not_tem = False
                             break
 
-            self.tem_checkbox.unobserve(self.objects_change, names="value")
-            self.tem_checkbox.value = not_tem is False
-            self.tem_checkbox.observe(self.objects_change, names="value")
+            # self.tem_checkbox.unobserve(self.objects_change, names="value")
+            # self.tem_checkbox.value = not_tem is False
+            # self.tem_checkbox.observe(self.objects_change, names="value")
 
             if not_tem:
                 self.tem_box.children = [self.tem_checkbox]
@@ -1512,6 +1514,9 @@ class PeakFinder(ObjectDataSelection):
                 self.figure = plt.figure(figsize=(12, 6))
                 axs = plt.subplot()
 
+            if len(self.survey.line_indices) < 2:
+                return
+
             self.lines.profile.values = channel["values"][self.survey.line_indices]
             values = self.lines.profile.values_resampled
             y_min = np.min([values[sub_ind].min(), y_min])
@@ -1660,7 +1665,11 @@ class PeakFinder(ObjectDataSelection):
         if self.pause_plot_refresh:
             return
 
-        if self.plot_trigger.value and hasattr(self.lines, "profile"):
+        if (
+            self.plot_trigger.value
+            and hasattr(self.lines, "profile")
+            and self.tem_checkbox.value
+        ):
 
             center = self.center.value
             # Loop through groups and find nearest to cursor
@@ -1907,7 +1916,7 @@ class PeakFinder(ObjectDataSelection):
         if line_indices is None:
             return
         self.survey.line_indices = line_indices
-        self.lines.anomalies, self.lines.profile = self.client.compute(
+        result = self.client.compute(
             find_anomalies(
                 self.survey.vertices,
                 line_indices,
@@ -1926,6 +1935,12 @@ class PeakFinder(ObjectDataSelection):
                 return_profile=True,
             )
         ).result()
+
+        if len(result) > 0:
+            self.lines.anomalies, self.lines.profile = result
+        else:
+            return
+
         self.pause_plot_refresh = True
 
         if self.previous_line != self.lines.lines.value:
@@ -1959,9 +1974,19 @@ class PeakFinder(ObjectDataSelection):
         """
         Find the vertices for a given line ID
         """
-        indices = np.where(
-            np.asarray(self.survey.get_data(self.lines.data.value)[0].values) == line_id
-        )[0]
+        line_data = self.survey.get_data(self.lines.data.value)[0]
+
+        if isinstance(line_data, ReferencedData):
+            line_id = [
+                key
+                for key, value in line_data.value_map.map.items()
+                if value == line_id
+            ]
+
+            if line_id:
+                line_id = line_id[0]
+
+        indices = np.where(np.asarray(line_data.values) == line_id)[0]
 
         if len(indices) == 0:
             return
@@ -2269,6 +2294,9 @@ def find_anomalies(
         locations[line_indices], None, smoothing=smoothing, residual=use_residual
     )
     locs = profile.locations_resampled
+
+    if locs is None:
+        return {}
     # normalization = self.em_system_specs[self.system.value]["normalization"]
     xy = np.c_[profile.interp_x(locs), profile.interp_y(locs)]
     angles = np.arctan2(xy[1:, 1] - xy[:-1, 1], xy[1:, 0] - xy[:-1, 0])
