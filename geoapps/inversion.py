@@ -676,7 +676,7 @@ class InversionApp(PlotSelection2D):
 
         kwargs = self.apply_defaults(**kwargs)
         self.em_system_specs = geophysical_systems.parameters()
-        self._data_count = (Label("Data Count: 0", tooltip="Keep <1500 for speed"),)
+        self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
             value=False,
             description="Forward only",
@@ -938,7 +938,7 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.ignore_values.value = "-99999"
             self.inversion_parameters.air_values.disabled = False
             self.inversion_parameters.air_values.value = 0
-            self.inversion_parameters.max_iterations.value = 25
+            # self.inversion_parameters.max_iterations.value = 25
 
         else:
             tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
@@ -984,7 +984,7 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.ignore_values.value = "<0"
             self.inversion_parameters.air_values.disabled = True
             self.inversion_parameters.air_values.value = 1e-8
-            self.inversion_parameters.max_iterations.value = 10
+            # self.inversion_parameters.max_iterations.value = 10
             # Switch mesh options
             self.inversion_parameters._mesh = self.mesh_1D
             self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.main
