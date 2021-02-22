@@ -479,6 +479,10 @@ class signal_processing_1d:
         sort = np.argsort(locations)
         start = locations[sort[0]] * 1.0
         end = locations[sort[-1]] * 1.0
+
+        if (start == end) or np.isnan(self.hx):
+            return
+
         self._locations_resampled = np.arange(start, end, self.hx)
         self.locations_resampled
 
