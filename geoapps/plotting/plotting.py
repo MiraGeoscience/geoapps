@@ -4,7 +4,7 @@ import numpy as np
 from copy import copy
 import plotly.graph_objects as go
 from geoh5py.objects import Curve, Grid2D, Points, Surface, BlockModel
-from geoh5py.data import Data
+from geoh5py.data import Data, ReferencedData
 
 from geoapps.utils import (
     filter_xy,
@@ -220,8 +220,16 @@ def plot_plan_data_selection(entity, data, **kwargs):
             if not np.any(entity.get_data(key)):
                 continue
 
+            line_data = entity.get_data(key)[0]
+            if isinstance(line_data, ReferencedData):
+                values = [
+                    key
+                    for key, value in line_data.value_map.map.items()
+                    if value in values
+                ]
+
             for line in values:
-                ind = np.where(entity.get_data(key)[0].values == line)[0]
+                ind = np.where(line_data.values == line)[0]
                 x, y, values = (
                     locations[ind, 0],
                     locations[ind, 1],

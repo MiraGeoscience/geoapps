@@ -3,7 +3,7 @@ import ipywidgets as widgets
 from ipywidgets import Dropdown, SelectMultiple, VBox, FloatText
 from geoh5py.workspace import Workspace
 from geoh5py.objects.object_base import ObjectBase
-from geoh5py.data import FloatData, IntegerData
+from geoh5py.data import FloatData, IntegerData, ReferencedData
 from geoapps.base import BaseApplication
 from geoapps import utils
 
@@ -322,7 +322,10 @@ class LineOptions(ObjectDataSelection):
     def update_line_list(self, _):
         _, data = self.get_selected_entities()
         if data and getattr(data[0], "values", None) is not None:
-            self.lines.options = [""] + np.unique(data[0].values).tolist()
+            if isinstance(data[0], ReferencedData):
+                self.lines.options = [""] + list(data[0].value_map.map.values())
+            else:
+                self.lines.options = [""] + np.unique(data[0].values).tolist()
 
 
 class TopographyOptions(ObjectDataSelection):
