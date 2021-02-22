@@ -231,7 +231,7 @@ class PlotSelection2D(ObjectDataSelection):
                     else:
                         cntrs += [np.arange(param[0], param[1], param[2])]
                 else:
-                    cntrs += [np.float(val)]
+                    cntrs += [float(val)]
             contours = np.unique(np.sort(np.hstack(cntrs)))
         else:
             contours = None
