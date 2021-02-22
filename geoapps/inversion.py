@@ -577,9 +577,9 @@ def get_inversion_output(h5file, group_name):
                 out["iteration"] += [np.int(comment["Author"].split("_")[1])]
                 out["time"] += [comment["Date"]]
                 values = json.loads(comment["Text"])
-                out["phi_d"] += [np.float(values["phi_d"])]
-                out["phi_m"] += [np.float(values["phi_m"])]
-                out["beta"] += [np.float(values["beta"])]
+                out["phi_d"] += [float(values["phi_d"])]
+                out["phi_m"] += [float(values["phi_m"])]
+                out["beta"] += [float(values["beta"])]
 
         if len(out["iteration"]) > 0:
             out["iteration"] = np.hstack(out["iteration"])

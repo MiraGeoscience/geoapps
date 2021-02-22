@@ -972,7 +972,7 @@ def string_2_list(string):
     """
     Convert a list of numbers separated by comma to a list of floats
     """
-    return [np.float(val) for val in string.split(",") if len(val) > 0]
+    return [float(val) for val in string.split(",") if len(val) > 0]
 
 
 class RectangularBlock:
