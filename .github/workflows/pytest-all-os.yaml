@@ -1,4 +1,4 @@
-name: pytest on multiple OS
+name: pytest on Unix OS
 
 on:
   push:
@@ -11,11 +11,8 @@ jobs:
     name: pytest
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
       fail-fast: false
-    defaults:
-      run:
-        shell: bash
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -34,15 +31,8 @@ jobs:
       - name: Install dependencies
         run: |
           conda env update --file environment.yml --name base
-      - name: Install pytest
+      - name: pytest
         run: |
           conda install pytest
           conda install pytest-cov
-      - name: pytest
-        run: pytest --cov=geoapps --cov-report=xml --cov-branch
-      - name: Codecov
-        if: success() && matrix.os == 'windows-latest'
-        uses: codecov/codecov-action@v1
-        with:
-          name: GitHub
-          token: ${{ secrets.CODECOV_TOKEN }}
+          pytest --cov=geoapps --cov-report=xml --cov-branch

@@ -1,13 +1,15 @@
 name: pytest on Windows
 
-on: pull_request
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - main
 
 jobs:
   pytest:
     name: pytest
-    defaults:
-      run:
-        shell: bash
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
@@ -19,19 +21,15 @@ jobs:
         id: full-python-version
         shell: bash
         run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
-      - name: Add conda to system path
+      - name: Install dependencies with conda
         run: |
-          # $CONDA is an environment variable pointing to the root of the miniconda directory
-          echo $CONDA/bin >> $GITHUB_PATH
-      - name: Install dependencies
-        run: |
-          conda env update --file environment.yml --name base
-      - name: Install pytest
-        run: |
-          conda install pytest
-          conda install pytest-cov
+          C:\Miniconda\condabin\conda.bat env update --file environment.yml --name base
+          C:\Miniconda\condabin\conda.bat init powershell
       - name: pytest
-        run: pytest --cov=geoapps --cov-report=xml --cov-branch
+        run: |
+          C:\Miniconda\condabin\conda.bat activate base
+          C:\Miniconda\condabin\conda.bat install pytest
+          pytest --cov=geoapps --cov-report=xml --cov-branch
       - name: Codecov
         if: success()
         uses: codecov/codecov-action@v1
