@@ -1,0 +1,43 @@
+name: static analysis
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  pre-commit:
+    name: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python version
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: set PY_HASH
+      run: echo "PY_HASH=$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')" >> $GITHUB_ENV
+    - name: Cache pre-commit tools
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pre-commit
+        key: precommit-${{ env.PY_HASH }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          precommit-${{ env.PY_HASH }}-
+          precommit-
+    - uses: pre-commit/action@v2.0.0
+    - name: Git show refs
+      run: git show-ref
+    - name: Run pre-commit hooks on modified files
+      if: github.event_name == 'pull_request'
+      run: >-
+        git diff --name-only refs/remotes/origin/${{github.base_ref}}... |
+        xargs pre-commit run --hook-stage push --files
+    - name: Run pre-commit hooks on all files
+      if: github.event_name == 'push'
+      run: pre-commit run --hook-stage push --all-files

@@ -1,0 +1,38 @@
+name: pytest on Windows
+
+on: pull_request
+
+jobs:
+  pytest:
+    name: pytest
+    defaults:
+      run:
+        shell: bash
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Get full Python version
+        id: full-python-version
+        shell: bash
+        run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
+      - name: Install dependencies
+        run: |
+          conda install --yes --quiet numpy scipy matplotlib ipython h5py
+          conda install --yes -c conda-forge simpeg=0.13.1 geopandas scikit-learn
+          pip install -r requirements_dev.txt
+      - name: Install pytest
+        run: |
+          pip install pytest
+          pip install pytest-cov
+      - name: pytest
+        run: pytest --cov=geoapps --cov-report=xml --cov-branch
+      - name: Codecov
+        if: success()
+        uses: codecov/codecov-action@v1
+        with:
+          name: GitHub
+          token: ${{ secrets.CODECOV_TOKEN }}
