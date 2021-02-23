@@ -1,22 +1,22 @@
+import gc
 import os
-from sklearn.neighbors import KernelDensity
-import gdal
+
 import dask
 import dask.array as da
-from dask.diagnostics import ProgressBar
+import fiona
+import gdal
 import numpy as np
 import osr
 import pandas as pd
-import gc
-from geoh5py.objects import BlockModel, Grid2D, Octree
-from geoh5py.data import FloatData
-from geoh5py.workspace import Workspace
-from scipy.spatial import cKDTree
-from scipy.interpolate import interp1d
-import urllib
-from shapely.geometry import mapping, LineString
-import fiona
+from dask.diagnostics import ProgressBar
 from fiona.crs import from_epsg
+from geoh5py.data import FloatData
+from geoh5py.objects import BlockModel, Grid2D, Octree
+from geoh5py.workspace import Workspace
+from scipy.interpolate import interp1d
+from scipy.spatial import cKDTree
+from shapely.geometry import LineString, mapping
+from sklearn.neighbors import KernelDensity
 
 
 def find_value(labels, strings, default=None):
@@ -65,11 +65,11 @@ def get_surface_parts(surface):
 
 def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="float"):
     """
-        Source:
+    Source:
 
-            Cameron Cooke: http://cgcooke.github.io/GDAL/
+        Cameron Cooke: http://cgcooke.github.io/GDAL/
 
-        Modified: 2020-04-28
+    Modified: 2020-04-28
     """
 
     grid2d = data_object.parent
@@ -125,7 +125,11 @@ def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="floa
         array = values.reshape(grid2d.shape, order="F").T
 
     dataset = driver.Create(
-        file_name, grid2d.shape[0], grid2d.shape[1], num_bands, encode_type,
+        file_name,
+        grid2d.shape[0],
+        grid2d.shape[1],
+        num_bands,
+        encode_type,
     )
 
     # Get rotation
@@ -161,8 +165,8 @@ def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="floa
 
 def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_name=None):
     """
-        Load a geotiff and return
-        a Grid2D with values
+    Load a geotiff and return
+    a Grid2D with values
     """
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)
@@ -456,7 +460,7 @@ class signal_processing_1d:
     @property
     def n_padding(self):
         """
-            Number of padding cells added for the FFT
+        Number of padding cells added for the FFT
         """
         if getattr(self, "_n_padding", None) is None:
             self._n_padding = int(np.floor(len(self.values_resampled)))
@@ -885,7 +889,11 @@ def data_2_zarr(h5file, entity_name, downsampling=1, fields=[], zarr_file="data.
     with ProgressBar():
         print("Saving G to zarr: " + zarr_file)
         data_mat = da.to_zarr(
-            stack, zarr_file, compute=True, return_stored=True, overwrite=True,
+            stack,
+            zarr_file,
+            compute=True,
+            return_stored=True,
+            overwrite=True,
         )
 
     return data_mat
@@ -893,13 +901,13 @@ def data_2_zarr(h5file, entity_name, downsampling=1, fields=[], zarr_file="data.
 
 def rotate_vertices(xyz, center, phi, theta):
     """
-      Rotate scatter points in column format around a center location
+    Rotate scatter points in column format around a center location
 
-      INPUT
-      :param: xyz nDx3 matrix
-      :param: center xyz location of rotation
-      :param: theta angle rotation around z-axis
-      :param: phi angle rotation around x-axis
+    INPUT
+    :param: xyz nDx3 matrix
+    :param: center xyz location of rotation
+    :param: theta angle rotation around z-axis
+    :param: phi angle rotation around x-axis
 
     """
     xyz -= np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
@@ -973,12 +981,12 @@ def string_2_list(string):
 
 class RectangularBlock:
     """
-        Define a rotated rectangular block in 3D space
+    Define a rotated rectangular block in 3D space
 
-        :param
-            - length, width, depth: width, length and height of prism
-            - center : center of prism in horizontal plane
-            - dip, azimuth : dip and azimuth of prism
+    :param
+        - length, width, depth: width, length and height of prism
+        - center : center of prism in horizontal plane
+        - dip, azimuth : dip and azimuth of prism
     """
 
     def __init__(self, **kwargs):
@@ -1138,7 +1146,9 @@ def raw_moment(data, i_order, j_order):
     return (data * x_indicies ** i_order * y_indices ** j_order).sum()
 
 
-def random_sampling(values, size, method="hist", n_bins=100, bandwidth=0.2, rtol=1e-4):
+def random_sampling(
+    values, size, method="histogram", n_bins=100, bandwidth=0.2, rtol=1e-4
+):
     """
     Perform a random sampling of the rows of the input array based on
     the distribution of the columns values.

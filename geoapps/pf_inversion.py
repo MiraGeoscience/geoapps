@@ -16,18 +16,19 @@ See README for description of options
 """
 import json
 import multiprocessing
-from multiprocessing.pool import ThreadPool
 import os
 import sys
+from multiprocessing.pool import ThreadPool
+
 import dask
 import numpy as np
 from discretize.utils import meshutils
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Grid2D, Octree, Points, BlockModel
+from geoh5py.objects import BlockModel, Grid2D, Octree, Points
 from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
 from scipy.spatial import Delaunay, cKDTree
-from geoapps.utils import filter_xy, block_model_2_tensor, octree_2_treemesh
+
 from geoapps.simpegPF import (
     PF,
     DataMisfit,
@@ -41,6 +42,7 @@ from geoapps.simpegPF import (
     Utils,
 )
 from geoapps.simpegPF.Utils import matutils, mkvc
+from geoapps.utils import block_model_2_tensor, filter_xy, octree_2_treemesh
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
@@ -326,7 +328,10 @@ def inversion(input_file):
             vertices = entity.vertices
 
         window_ind = filter_xy(
-            vertices[:, 0], vertices[:, 1], resolution, window=window,
+            vertices[:, 0],
+            vertices[:, 1],
+            resolution,
+            window=window,
         )
 
         if window is not None:
@@ -491,7 +496,10 @@ def inversion(input_file):
                     topo_window = window.copy()
                     topo_window["size"] = [ll * 2 for ll in window["size"]]
                     ind = filter_xy(
-                        topo[:, 0], topo[:, 1], resolution / 2, window=topo_window,
+                        topo[:, 0],
+                        topo[:, 1],
+                        resolution / 2,
+                        window=topo_window,
                     )
                     xy_rot = rotate_xy(
                         topo[ind, :2], window["center"], window["azimuth"]
@@ -1108,7 +1116,7 @@ def inversion(input_file):
     if (inversion_style == "homogeneous_units") and not vector_property:
         units = np.unique(mstart).tolist()
 
-        # Build list of indecies for the geounits
+        # Build list of indices for the geounits
         index = []
         for unit in units:
             index.append(mstart == unit)
@@ -1143,10 +1151,10 @@ def inversion(input_file):
 
     def create_local_problem(local_mesh, local_survey, global_weights, ind):
         """
-            CreateLocalProb(rxLoc, global_weights, lims, ind)
+        CreateLocalProb(rxLoc, global_weights, lims, ind)
 
-            Generate a problem, calculate/store sensitivities for
-            given data points
+        Generate a problem, calculate/store sensitivities for
+        given data points
         """
 
         # Need to find a way to compute sensitivities only for intersecting cells
