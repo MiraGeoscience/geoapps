@@ -2,12 +2,14 @@
 default_language_version:
     python: python3
 exclude: (docs/(conf.py|_ext/)|(^geoapps/simpeg(PF|EM1D)/))
+default_stages: [commit,push]
 fail_fast: false
 repos:
 -   repo: https://github.com/psf/black
     rev: 20.8b1
     hooks:
     -   id: black
+        stages: [push]
 -   repo: https://github.com/pre-commit/mirrors-isort
     rev: v5.6.4
     hooks:
@@ -40,6 +42,7 @@ repos:
 -   repo: local
     hooks:
     -   id: check-copyright
+        stages: [push]
         name: Check copyright
         entry: python devtools/check-copyright.py
         language: python
@@ -55,12 +58,14 @@ repos:
     rev: v3.3.0
     hooks:
     -   id: trailing-whitespace
+        stages: [push]
         exclude: \.mdj$
     -   id: check-toml
 #    -   id: check-added-large-files # crashing on some configuration. To be investigated
     -   id: check-case-conflict
     -   id: check-merge-conflict
     -   id: debug-statements
+        stages: [push]
     -   id: detect-private-key
     -   id: end-of-file-fixer
         exclude: \.mdj$
