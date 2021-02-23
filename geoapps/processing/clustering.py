@@ -1,25 +1,26 @@
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from IPython.display import display
 from ipywidgets import (
     Button,
     Checkbox,
-    VBox,
-    HBox,
-    interactive_output,
     ColorPicker,
     Dropdown,
-    ToggleButtons,
-    Layout,
-    IntSlider,
     FloatText,
+    HBox,
+    IntSlider,
     Label,
+    Layout,
+    ToggleButtons,
+    VBox,
+    interactive_output,
 )
-from IPython.display import display
-import plotly.graph_objects as go
-import numpy as np
-from geoapps.plotting import ScatterPlots
-from geoapps.utils import random_sampling, hex_to_rgb, colors
-from sklearn.cluster import KMeans
 from scipy.spatial import cKDTree
-import pandas as pd
+from sklearn.cluster import KMeans
+
+from geoapps.plotting import ScatterPlots
+from geoapps.utils import colors, hex_to_rgb, random_sampling
 
 
 class Clustering(ScatterPlots):
@@ -86,7 +87,10 @@ class Clustering(ScatterPlots):
         self.boxplot_panel = VBox([self.channels_plot_options])
         self.stats_table = interactive_output(
             self.make_stats_table,
-            {"channels": self.data, "show": self.plotting_options,},
+            {
+                "channels": self.data,
+                "show": self.plotting_options,
+            },
         )
 
         super().__init__(**kwargs)
@@ -107,7 +111,9 @@ class Clustering(ScatterPlots):
 
         for ii in range(self.n_clusters.max):
             self.color_pickers[ii] = ColorPicker(
-                concise=False, description=("Color"), value=colors[ii],
+                concise=False,
+                description=("Color"),
+                value=colors[ii],
             )
             self.color_pickers[ii].uid = ii
             self.color_pickers[ii].observe(self.update_colormap, names="value")
@@ -141,7 +147,16 @@ class Clustering(ScatterPlots):
                         self.objects,
                         self.data,
                         self.downsampling,
-                        HBox([self.n_clusters, VBox([self.clusters_panel,])],),
+                        HBox(
+                            [
+                                self.n_clusters,
+                                VBox(
+                                    [
+                                        self.clusters_panel,
+                                    ]
+                                ),
+                            ],
+                        ),
                     ]
                 ),
                 self.refresh_clusters,
@@ -691,10 +706,13 @@ class Clustering(ScatterPlots):
                 np.min([self.downsampling.value, len(active_set)]),
                 bandwidth=2.0,
                 rtol=1e0,
-                method="hist",
+                method="histogram",
             )
             self._indices = active_set[samples]
-            self.dataframe = pd.DataFrame(values[self.indices, :], columns=fields,)
+            self.dataframe = pd.DataFrame(
+                values[self.indices, :],
+                columns=fields,
+            )
             tree = cKDTree(self.dataframe.values)
             inactive_set = np.ones(self.n_values, dtype="bool")
             inactive_set[self.indices] = False

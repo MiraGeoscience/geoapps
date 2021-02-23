@@ -1,9 +1,8 @@
-from geoapps.processing import ContourValues
-
-from geoapps.plotting import ScatterPlots
-from geoapps.inversion import InversionApp
-from geoapps.processing import PeakFinder
 from dask.distributed import Client
+
+from geoapps.inversion import InversionApp
+from geoapps.plotting import ScatterPlots
+from geoapps.processing import ContourValues, PeakFinder
 
 
 def run():

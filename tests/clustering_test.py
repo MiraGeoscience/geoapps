@@ -1,8 +1,5 @@
-import tempfile
-from pathlib import Path
-import pytest
-
 import numpy as np
+import pytest
 
 
 def test_clustering():

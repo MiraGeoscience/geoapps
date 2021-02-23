@@ -19,6 +19,7 @@ from SimPEG import (
     Optimization,
     Utils,
 )
+
 from .simpegEM1D import (
     GlobalEM1DProblemFD,
     GlobalEM1DProblemTD,
@@ -27,12 +28,12 @@ from .simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from .utils import filter_xy, rotate_xy, geophysical_systems, running_mean
+from .utils import filter_xy, geophysical_systems, rotate_xy, running_mean
 
 
 class SaveIterationsGeoH5(Directives.InversionDirective):
     """
-        Saves inversion results to a geoh5 file
+    Saves inversion results to a geoh5 file
     """
 
     # Initialize the output dict
@@ -169,9 +170,7 @@ class SaveIterationsGeoH5(Directives.InversionDirective):
 
 
 def inversion(input_file):
-    """
-
-    """
+    """"""
     with open(input_file) as f:
         input_param = json.load(f)
 
@@ -255,7 +254,12 @@ def inversion(input_file):
     else:
         vertices = entity.vertices
 
-    win_ind = filter_xy(vertices[:, 0], vertices[:, 1], resolution, window=window,)
+    win_ind = filter_xy(
+        vertices[:, 0],
+        vertices[:, 1],
+        resolution,
+        window=window,
+    )
     locations = vertices.copy()
 
     def get_topography(locations):
@@ -293,7 +297,10 @@ def inversion(input_file):
                     topo_window = window.copy()
                     topo_window["size"] = [ll * 2 for ll in window["size"]]
                     ind = filter_xy(
-                        topo[:, 0], topo[:, 1], resolution, window=topo_window,
+                        topo[:, 0],
+                        topo[:, 1],
+                        resolution,
+                        window=topo_window,
                     )
 
                     topo = topo[ind, :]
@@ -854,7 +861,11 @@ def inversion(input_file):
         # mapping is required ... for IRLS
         regmap = Maps.IdentityMap(mesh_reg)
         reg_sigma = LateralConstraint(
-            mesh_reg, mapping=regmap, alpha_s=1.0, alpha_x=1.0, alpha_y=1.0,
+            mesh_reg,
+            mapping=regmap,
+            alpha_s=1.0,
+            alpha_x=1.0,
+            alpha_y=1.0,
         )
 
         min_distance = None

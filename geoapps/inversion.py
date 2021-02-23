@@ -1,6 +1,7 @@
 import json
-import os
 import multiprocessing
+import os
+
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,23 +9,23 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
+    Checkbox,
     Dropdown,
+    FloatText,
     HBox,
+    IntText,
     Label,
     Layout,
     Text,
-    VBox,
-    Checkbox,
-    FloatText,
     ToggleButton,
-    IntText,
+    VBox,
     Widget,
 )
 
 from geoapps.base import BaseApplication
 from geoapps.plotting import PlotSelection2D
+from geoapps.selection import LineOptions, ObjectDataSelection, TopographyOptions
 from geoapps.utils import find_value, geophysical_systems, string_2_list
-from geoapps.selection import ObjectDataSelection, LineOptions, TopographyOptions
 
 
 class ChannelOptions:
@@ -34,7 +35,11 @@ class ChannelOptions:
 
     def __init__(self, key, description, **kwargs):
 
-        self._active = Checkbox(value=False, indent=True, description="Active",)
+        self._active = Checkbox(
+            value=False,
+            indent=True,
+            description="Active",
+        )
         self._label = widgets.Text(description=description)
         self._channel_selection = Dropdown(description="Channel <=> Data:")
         self._channel_selection.header = key
@@ -94,12 +99,17 @@ class SensorOptions(ObjectDataSelection):
     def __init__(self, **kwargs):
 
         self._offset = Text(description="(dx, dy, dz) (+ve up)", value="0, 0, 0")
-        self._constant = FloatText(description="Constant elevation (m)",)
+        self._constant = FloatText(
+            description="Constant elevation (m)",
+        )
         if "offset" in kwargs.keys():
             self._offset.value = kwargs["value"]
 
         self._options = widgets.RadioButtons(
-            options=["sensor location + (dx, dy, dz)", "topo + radar + (dx, dy, dz)",],
+            options=[
+                "sensor location + (dx, dy, dz)",
+                "topo + radar + (dx, dy, dz)",
+            ],
             description="Define by:",
         )
 
@@ -137,20 +147,28 @@ class MeshOctreeOptions:
 
     def __init__(self, **kwargs):
         self._core_cell_size = widgets.Text(
-            value="25, 25, 25", description="Smallest cells",
+            value="25, 25, 25",
+            description="Smallest cells",
         )
         self._octree_levels_topo = widgets.Text(
-            value="0, 0, 0, 2", description="Layers below topo",
+            value="0, 0, 0, 2",
+            description="Layers below topo",
         )
         self._octree_levels_obs = widgets.Text(
-            value="5, 5, 5, 5", description="Layers below data",
+            value="5, 5, 5, 5",
+            description="Layers below data",
         )
-        self._depth_core = FloatText(value=500, description="Minimum depth (m)",)
+        self._depth_core = FloatText(
+            value=500,
+            description="Minimum depth (m)",
+        )
         self._padding_distance = widgets.Text(
-            value="0, 0, 0, 0, 0, 0", description="Padding [W,E,N,S,D,U] (m)",
+            value="0, 0, 0, 0, 0, 0",
+            description="Padding [W,E,N,S,D,U] (m)",
         )
         self._max_distance = FloatText(
-            value=1000, description="Max triangulation length",
+            value=1000,
+            description="Max triangulation length",
         )
         self._main = widgets.VBox(
             [
@@ -210,9 +228,18 @@ class Mesh1DOptions:
     """
 
     def __init__(self, **kwargs):
-        self._hz_expansion = FloatText(value=1.05, description="Expansion factor:",)
-        self._hz_min = FloatText(value=10.0, description="Smallest cell (m):",)
-        self._n_cells = FloatText(value=25.0, description="Number of cells:",)
+        self._hz_expansion = FloatText(
+            value=1.05,
+            description="Expansion factor:",
+        )
+        self._hz_min = FloatText(
+            value=10.0,
+            description="Smallest cell (m):",
+        )
+        self._n_cells = FloatText(
+            value=25.0,
+            description="Number of cells:",
+        )
         self.cell_count = Label(f"Max depth: {self.count_cells():.2f} m")
         self.n_cells.observe(self.update_hz_count)
         self.hz_expansion.observe(self.update_hz_count)
@@ -248,23 +275,17 @@ class Mesh1DOptions:
 
     @property
     def hz_expansion(self):
-        """
-
-        """
+        """"""
         return self._hz_expansion
 
     @property
     def hz_min(self):
-        """
-
-        """
+        """"""
         return self._hz_min
 
     @property
     def n_cells(self):
-        """
-
-        """
+        """"""
         return self._n_cells
 
     @property
@@ -281,7 +302,9 @@ class ModelOptions(ObjectDataSelection):
         self._units = "Units"
         self._object_types = (BlockModel, Octree, Surface)
         self._options = widgets.RadioButtons(
-            options=["Model", "Value"], value="Value", disabled=False,
+            options=["Model", "Value"],
+            value="Value",
+            disabled=False,
         )
         self._options.observe(self.update_panel, names="value")
         self.objects.description = "Object"
@@ -352,8 +375,14 @@ class InversionOptions(BaseApplication):
             value="User input (%|data| + floor)",
             disabled=False,
         )
-        self._lower_bound = widgets.Text(value=None, description="Lower bound value",)
-        self._upper_bound = widgets.Text(value=None, description="Upper bound value",)
+        self._lower_bound = widgets.Text(
+            value=None,
+            description="Lower bound value",
+        )
+        self._upper_bound = widgets.Text(
+            value=None,
+            description="Upper bound value",
+        )
         self._ignore_values = widgets.Text(
             value="<0",
             tooltip="Dummy value",
@@ -402,7 +431,8 @@ class InversionOptions(BaseApplication):
         ]
         self.reference_model.options.observe(self.update_ref)
         self._alphas = widgets.Text(
-            value="1, 1, 1, 1", description="Scaling alpha_(s, x, y, z)",
+            value="1, 1, 1, 1",
+            description="Scaling alpha_(s, x, y, z)",
         )
         self._norms = widgets.Text(
             value="2, 2, 2, 2",
@@ -593,9 +623,7 @@ def get_inversion_output(h5file, group_name):
 
 
 def plot_convergence_curve(h5file):
-    """
-
-    """
+    """"""
     workspace = Workspace(h5file)
     names = [
         group.name
@@ -603,7 +631,9 @@ def plot_convergence_curve(h5file):
         if isinstance(group, ContainerGroup)
     ]
     objects = widgets.Dropdown(
-        options=names, value=names[0], description="Inversion Group:",
+        options=names,
+        value=names[0],
+        description="Inversion Group:",
     )
 
     def plot_curve(objects):
@@ -795,44 +825,32 @@ class InversionApp(PlotSelection2D):
 
     @property
     def data_count(self):
-        """
-
-        """
+        """"""
         return self._data_count
 
     @property
     def forward_only(self):
-        """
-
-        """
+        """"""
         return self._forward_only
 
     @property
     def inducing_field(self):
-        """
-
-        """
+        """"""
         return self._inducing_field
 
     @property
     def run(self):
-        """
-
-        """
+        """"""
         return self._run
 
     @property
     def starting_channel(self):
-        """
-
-        """
+        """"""
         return self._starting_channel
 
     @property
     def system(self):
-        """
-
-        """
+        """"""
         return self._system
 
     @property
@@ -872,15 +890,11 @@ class InversionApp(PlotSelection2D):
 
     @property
     def write(self):
-        """
-
-        """
+        """"""
         return self._write
 
     def run_trigger(self, _):
-        """
-
-        """
+        """"""
         if self.run.value:
             if self.system.value in ["Gravity", "Magnetics"]:
                 os.system(
@@ -990,22 +1004,18 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.main
             flag = "EM1D"
 
-        self.inversion_parameters.reference_model.value.description = inversion_defaults()[
-            "units"
-        ][
-            flag
-        ]
+        self.inversion_parameters.reference_model.value.description = (
+            inversion_defaults()["units"][flag]
+        )
         self.inversion_parameters.reference_model.value.value = inversion_defaults()[
             "reference_value"
         ][flag]
         self.inversion_parameters.reference_model.description.value = (
             "Reference " + inversion_defaults()["property"][flag]
         )
-        self.inversion_parameters.starting_model.value.description = inversion_defaults()[
-            "units"
-        ][
-            flag
-        ]
+        self.inversion_parameters.starting_model.value.description = (
+            inversion_defaults()["units"][flag]
+        )
         self.inversion_parameters.starting_model.value.value = inversion_defaults()[
             "starting_value"
         ][flag]
