@@ -27,15 +27,17 @@ jobs:
         id: full-python-version
         shell: bash
         run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
+      - name: Add conda to system path
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
       - name: Install dependencies
         run: |
-          conda install --yes --quiet numpy scipy matplotlib ipython h5py
-          conda install --yes -c conda-forge simpeg=0.13.1 geopandas scikit-learn
-          pip install -r requirements_dev.txt
+          conda env update --file environment.yml --name base
       - name: Install pytest
         run: |
-          pip install pytest
-          pip install pytest-cov
+          conda install pytest
+          conda install pytest-cov
       - name: pytest
         run: pytest --cov=geoapps --cov-report=xml --cov-branch
       - name: Codecov
