@@ -33,6 +33,5 @@ jobs:
           conda env update --file environment.yml --name base
       - name: pytest
         run: |
-          conda install pytest
-          conda install pytest-cov
+          conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
