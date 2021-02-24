@@ -28,7 +28,7 @@ jobs:
       - name: pytest
         run: |
           C:\Miniconda\condabin\conda.bat activate base
-          C:\Miniconda\condabin\conda.bat install pytest
+          C:\Miniconda\condabin\conda.bat install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
       - name: Codecov
         if: success()
