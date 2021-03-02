@@ -34,3 +34,11 @@ Current sponsors:
 - [Rio Tinto](https://www.riotinto.com/en)
 - [Teck](https://www.teck.com/)
 - [Vale](http://www.vale.com/canada/EN/Pages/default.aspx)
+
+License
+-------
+
+**geoapps** is distributed under the terms and conditions of the [MIT License](LICENSE).
+
+
+*Copyright (c) 2021 Mira Geoscience Ltd.*

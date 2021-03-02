@@ -1,13 +1,20 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import json
 import multiprocessing
 import sys
 
 import numpy as np
 import scipy as sp
+from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Surface
 from geoh5py.workspace import Workspace
-from geoh5py.data import ReferencedData
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
@@ -20,6 +27,7 @@ from SimPEG import (
     Optimization,
     Utils,
 )
+
 from .simpegEM1D import (
     GlobalEM1DProblemFD,
     GlobalEM1DProblemTD,
@@ -28,12 +36,12 @@ from .simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from .utils import filter_xy, rotate_xy, geophysical_systems, running_mean
+from .utils import filter_xy, geophysical_systems, rotate_xy, running_mean
 
 
 class SaveIterationsGeoH5(Directives.InversionDirective):
     """
-        Saves inversion results to a geoh5 file
+    Saves inversion results to a geoh5 file
     """
 
     # Initialize the output dict
@@ -170,9 +178,7 @@ class SaveIterationsGeoH5(Directives.InversionDirective):
 
 
 def inversion(input_file):
-    """
-
-    """
+    """"""
     with open(input_file) as f:
         input_param = json.load(f)
 
@@ -256,7 +262,12 @@ def inversion(input_file):
     else:
         vertices = entity.vertices
 
-    win_ind = filter_xy(vertices[:, 0], vertices[:, 1], resolution, window=window,)
+    win_ind = filter_xy(
+        vertices[:, 0],
+        vertices[:, 1],
+        resolution,
+        window=window,
+    )
     locations = vertices.copy()
 
     def get_topography(locations):
@@ -294,7 +305,10 @@ def inversion(input_file):
                     topo_window = window.copy()
                     topo_window["size"] = [ll * 2 for ll in window["size"]]
                     ind = filter_xy(
-                        topo[:, 0], topo[:, 1], resolution, window=topo_window,
+                        topo[:, 0],
+                        topo[:, 1],
+                        resolution,
+                        window=topo_window,
                     )
 
                     topo = topo[ind, :]
@@ -867,7 +881,11 @@ def inversion(input_file):
         # mapping is required ... for IRLS
         regmap = Maps.IdentityMap(mesh_reg)
         reg_sigma = LateralConstraint(
-            mesh_reg, mapping=regmap, alpha_s=1.0, alpha_x=1.0, alpha_y=1.0,
+            mesh_reg,
+            mapping=regmap,
+            alpha_s=1.0,
+            alpha_x=1.0,
+            alpha_y=1.0,
         )
 
         min_distance = None

@@ -1,17 +1,20 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
+from copy import copy
+
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
-from copy import copy
 import plotly.graph_objects as go
-from geoh5py.objects import Curve, Grid2D, Points, Surface, BlockModel
 from geoh5py.data import Data, ReferencedData
+from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 
-from geoapps.utils import (
-    filter_xy,
-    format_labels,
-    symlog,
-    inv_symlog,
-)
+from geoapps.utils import filter_xy, format_labels, inv_symlog, symlog
 
 
 def normalize(values):
@@ -115,7 +118,9 @@ def plot_plan_data_selection(entity, data, **kwargs):
         map_vals = new_cmap["Value"].copy()
         cmap = colors.ListedColormap(
             np.c_[
-                new_cmap["Red"] / 255, new_cmap["Green"] / 255, new_cmap["Blue"] / 255,
+                new_cmap["Red"] / 255,
+                new_cmap["Green"] / 255,
+                new_cmap["Blue"] / 255,
             ]
         )
         color_norm = colors.BoundaryNorm(map_vals, cmap.N)
@@ -157,7 +162,12 @@ def plot_plan_data_selection(entity, data, **kwargs):
     else:
         x, y = entity.vertices[:, 0], entity.vertices[:, 1]
         if indices is None:
-            indices = filter_xy(x, y, resolution, window=window,)
+            indices = filter_xy(
+                x,
+                y,
+                resolution,
+                window=window,
+            )
         X, Y = x[indices], y[indices]
 
         if data == "Z":
@@ -274,7 +284,11 @@ def plot_profile_data_selection(
                 continue
 
             if resolution is not None:
-                dwn_ind = filter_xy(locations[ind, 0], locations[ind, 1], resolution,)
+                dwn_ind = filter_xy(
+                    locations[ind, 0],
+                    locations[ind, 1],
+                    resolution,
+                )
 
                 ind = ind[dwn_ind]
 
