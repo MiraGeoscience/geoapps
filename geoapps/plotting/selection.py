@@ -1,20 +1,21 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import re
+
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.objects import Curve, Grid2D, Points, Surface
-from ipywidgets import (
-    FloatSlider,
-    FloatText,
-    VBox,
-    HBox,
-    ToggleButton,
-    Label,
-    Layout,
-)
-from geoapps.utils import rotate_xy
-from geoapps.selection import ObjectDataSelection
+from ipywidgets import FloatSlider, FloatText, HBox, Label, Layout, ToggleButton, VBox
+
 from geoapps.plotting import plot_plan_data_selection
+from geoapps.selection import ObjectDataSelection
+from geoapps.utils import rotate_xy
 
 
 class PlotSelection2D(ObjectDataSelection):
@@ -42,7 +43,11 @@ class PlotSelection2D(ObjectDataSelection):
             continuous_update=False,
         )
         self._center_x = FloatSlider(
-            min=-100, max=100, steps=10, description="Easting", continuous_update=False,
+            min=-100,
+            max=100,
+            steps=10,
+            description="Easting",
+            continuous_update=False,
         )
         self._center_y = FloatSlider(
             min=-100,
@@ -53,7 +58,10 @@ class PlotSelection2D(ObjectDataSelection):
             orientation="vertical",
         )
         self._contours = widgets.Text(
-            value="", description="Contours", disabled=False, continuous_update=False,
+            value="",
+            description="Contours",
+            disabled=False,
+            continuous_update=False,
         )
         self._data_count = Label("Data Count: 0", tooltip="Keep <1500 for speed")
         self._resolution = FloatText(
