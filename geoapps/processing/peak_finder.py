@@ -1,43 +1,52 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import re
-import numpy as np
-from scipy.spatial import cKDTree
-import plotly.graph_objects as go
-import plotly.express as px
-from dask.distributed import Client, get_client
+
 import dask
 import matplotlib.pyplot as plt
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from dask.distributed import Client, get_client
+from geoh5py.objects import Curve, Points, Surface
 from geoh5py.workspace import Workspace
-from geoh5py.objects import Points, Curve, Surface
 from ipywidgets import (
+    Box,
     Button,
-    Dropdown,
-    ColorPicker,
-    SelectMultiple,
-    Text,
-    IntSlider,
     Checkbox,
+    ColorPicker,
+    Dropdown,
+    FloatLogSlider,
     FloatSlider,
     FloatText,
-    VBox,
     HBox,
-    Box,
-    ToggleButton,
-    ToggleButtons,
-    interactive_output,
-    FloatLogSlider,
+    IntSlider,
     Label,
     Layout,
+    SelectMultiple,
+    Text,
+    ToggleButton,
+    ToggleButtons,
+    VBox,
+    interactive_output,
 )
+from scipy.spatial import cKDTree
+
+from geoapps.selection import LineOptions, ObjectDataSelection
 from geoapps.utils import (
+    colors,
     find_value,
     geophysical_systems,
-    signal_processing_1d,
+    hex_to_rgb,
     rotate_azimuth_dip,
     running_mean,
-    hex_to_rgb,
-    colors,
+    signal_processing_1d,
 )
-from geoapps.selection import ObjectDataSelection, LineOptions
 
 
 class PeakFinder(ObjectDataSelection):
@@ -211,7 +220,12 @@ class PeakFinder(ObjectDataSelection):
                 self.data_channel_options[self.channel_selection.value],
             ]
         )
-        self.system_options = VBox([self.system, self.channel_panel,])
+        self.system_options = VBox(
+            [
+                self.system,
+                self.channel_panel,
+            ]
+        )
 
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export Peaks"
@@ -223,7 +237,13 @@ class PeakFinder(ObjectDataSelection):
         )
         self.ga_group_name.description = "Save As"
         self.visual_parameters = VBox(
-            [self.center, self.width, self.x_label, self.scale_panel, self.markers,]
+            [
+                self.center,
+                self.width,
+                self.x_label,
+                self.scale_panel,
+                self.markers,
+            ]
         )
         self.detection_parameters = VBox(
             [
@@ -249,18 +269,34 @@ class PeakFinder(ObjectDataSelection):
             ],
         )
         self.doi_parameters = VBox(
-            [self.doi_selection.data, self.doi_percent, self.doi_revert,]
+            [
+                self.doi_selection.data,
+                self.doi_percent,
+                self.doi_revert,
+            ]
         )
         self.scatter_parameters = VBox(
-            [self.boreholes.main, self.slice_width, self.boreholes_size,]
+            [
+                self.boreholes.main,
+                self.slice_width,
+                self.boreholes_size,
+            ]
         )
-        self.output_panel = VBox([self.run_all, self.trigger_panel,])
+        self.output_panel = VBox(
+            [
+                self.run_all,
+                self.trigger_panel,
+            ]
+        )
         self._main = VBox(
             [
                 self.project_panel,
                 HBox(
                     [
-                        VBox([self.main, self.flip_sign], layout=Layout(width="50%"),),
+                        VBox(
+                            [self.main, self.flip_sign],
+                            layout=Layout(width="50%"),
+                        ),
                         Box(
                             children=[self.lines.main],
                             layout=Layout(
@@ -708,7 +744,10 @@ class PeakFinder(ObjectDataSelection):
         """
         if getattr(self, "_scale_button", None) is None:
             self._scale_button = ToggleButtons(
-                options=["linear", "symlog",],
+                options=[
+                    "linear",
+                    "symlog",
+                ],
                 value="symlog",
                 description="Y-axis scaling",
                 orientation="vertical",
@@ -741,7 +780,10 @@ class PeakFinder(ObjectDataSelection):
         :obj:`ipywidgets.ToggleButton`: Display the borehole panel
         """
         if getattr(self, "_show_borehole", None) is None:
-            self._show_borehole = ToggleButton(description="Show Scatter", value=False,)
+            self._show_borehole = ToggleButton(
+                description="Show Scatter",
+                value=False,
+            )
 
         return self._show_borehole
 
@@ -761,7 +803,10 @@ class PeakFinder(ObjectDataSelection):
         :obj:`ipywidgets.ToggleButton`: Display the doi options panel
         """
         if getattr(self, "_show_doi", None) is None:
-            self._show_doi = ToggleButton(description="Show DOI", value=False,)
+            self._show_doi = ToggleButton(
+                description="Show DOI",
+                value=False,
+            )
 
         return self._show_doi
 
@@ -771,7 +816,10 @@ class PeakFinder(ObjectDataSelection):
         :obj:`ipywidgets.ToggleButton`: Display the model plot options panel
         """
         if getattr(self, "_show_model", None) is None:
-            self._show_model = ToggleButton(description="Show model", value=False,)
+            self._show_model = ToggleButton(
+                description="Show model",
+                value=False,
+            )
 
         return self._show_model
 
@@ -1498,7 +1546,10 @@ class PeakFinder(ObjectDataSelection):
 
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
-            [(center - width / 2.0), (center + width / 2.0),],
+            [
+                (center - width / 2.0),
+                (center + width / 2.0),
+            ],
         )
         sub_ind = np.arange(lims[0], lims[1])
         y_min, y_max = np.inf, -np.inf
@@ -1691,7 +1742,11 @@ class PeakFinder(ObjectDataSelection):
 
                 y = np.exp(times * group["linear_fit"][1] + group["linear_fit"][0])
                 axs.plot(
-                    times, y, "--", linewidth=2, color="k",
+                    times,
+                    y,
+                    "--",
+                    linewidth=2,
+                    color="k",
                 )
                 axs.text(
                     np.mean(times),

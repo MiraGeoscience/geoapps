@@ -1,9 +1,15 @@
-from geoapps.processing import ContourValues
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
 
-from geoapps.plotting import ScatterPlots
-from geoapps.inversion import InversionApp
-from geoapps.processing import PeakFinder
 from dask.distributed import Client
+
+from geoapps.inversion import InversionApp
+from geoapps.plotting import ScatterPlots
+from geoapps.processing import ContourValues, PeakFinder
 
 
 def run():
