@@ -1,10 +1,19 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import re
+
 import numpy
-from geoh5py.workspace import Workspace
 from geoh5py.groups import RootGroup
-from ipywidgets.widgets import HBox, Layout, VBox, Text, Textarea, Button
-from geoapps.selection import ObjectDataSelection
+from geoh5py.workspace import Workspace
+from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
+
 from geoapps.plotting import plot_plan_data_selection
+from geoapps.selection import ObjectDataSelection
 
 
 class Calculator(ObjectDataSelection):
@@ -35,7 +44,10 @@ class Calculator(ObjectDataSelection):
             [
                 self.project_panel,
                 self.data_panel,
-                VBox([self.equation], layout=Layout(width="100%"),),
+                VBox(
+                    [self.equation],
+                    layout=Layout(width="100%"),
+                ),
                 self.output_panel,
             ]
         )

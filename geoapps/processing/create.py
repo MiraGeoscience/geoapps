@@ -1,24 +1,33 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import re
+
+import numpy as np
+from geoh5py.io import H5Writer
+from geoh5py.objects import Curve, Points, Surface
+from geoh5py.workspace import Workspace
 from ipywidgets import (
+    Checkbox,
     FloatText,
     HBox,
     Label,
+    Layout,
     RadioButtons,
     Text,
     ToggleButton,
     VBox,
-    Layout,
-    Checkbox,
     interactive_output,
 )
-import numpy as np
-from geoh5py.objects import Surface, Curve, Points
-from geoh5py.workspace import Workspace
-from geoh5py.io import H5Writer
 from scipy.interpolate import LinearNDInterpolator
-from scipy.spatial import cKDTree, Delaunay
-from geoapps.selection import ObjectDataSelection, TopographyOptions
+from scipy.spatial import Delaunay, cKDTree
+
 from geoapps.plotting import PlotSelection2D
+from geoapps.selection import ObjectDataSelection, TopographyOptions
 
 
 class Surface2D(ObjectDataSelection):
@@ -55,7 +64,9 @@ class Surface2D(ObjectDataSelection):
             description="Surface Type:",
             style={"description_width": "initial"},
         )
-        self._max_distance = FloatText(description="Max Triangulation Distance (m):",)
+        self._max_distance = FloatText(
+            description="Max Triangulation Distance (m):",
+        )
         self._export_as = Text("CDI_", description="Surface:")
         self._convert = ToggleButton(description="Convert >>", button_style="success")
 
@@ -317,14 +328,18 @@ class Surface2D(ObjectDataSelection):
 
         if self.type.value == "Sections":
             self.surface.add_data(
-                {"Line": {"values": np.hstack(line_ids)},}
+                {
+                    "Line": {"values": np.hstack(line_ids)},
+                }
             )
 
         if len(self.models) > 0:
             for ind, field in enumerate(self.data.value):
 
                 self.surface.add_data(
-                    {field: {"values": self.models[ind]},}
+                    {
+                        field: {"values": self.models[ind]},
+                    }
                 )
 
         if self.live_link.value:
@@ -356,7 +371,11 @@ class Surface2D(ObjectDataSelection):
             self.depth_panel.children = [
                 self.z_option,
                 VBox(
-                    [self.elevations.data, Label("Topography"), self.topography.main,]
+                    [
+                        self.elevations.data,
+                        Label("Topography"),
+                        self.topography.main,
+                    ]
                 ),
             ]
         else:
@@ -366,14 +385,14 @@ class Surface2D(ObjectDataSelection):
     @property
     def lines(self):
         """
-            Line field options
+        Line field options
         """
         return self._lines
 
     @property
     def elevations(self):
         """
-            ObjectDataSelection()
+        ObjectDataSelection()
         """
         return self._elevations
 
@@ -387,42 +406,42 @@ class Surface2D(ObjectDataSelection):
     @property
     def z_option(self):
         """
-            ipywidgets.RadioButtons()
+        ipywidgets.RadioButtons()
         """
         return self._z_option
 
     @property
     def max_distance(self):
         """
-            ipywidgets.FloatText()
+        ipywidgets.FloatText()
         """
         return self._max_distance
 
     @property
     def export_as(self):
         """
-            ipywidgets.Text()
+        ipywidgets.Text()
         """
         return self._export_as
 
     @property
     def convert(self):
         """
-            ipywidgets.ToggleButton()
+        ipywidgets.ToggleButton()
         """
         return self._convert
 
     @property
     def topography(self):
         """
-            TopographyOptions()
+        TopographyOptions()
         """
         return self._topography
 
     @property
     def type(self):
         """
-             ipywidgets.RadioButton()
+        ipywidgets.RadioButton()
         """
         return self._type
 
@@ -483,7 +502,12 @@ class ContourValues(PlotSelection2D):
 
         super().__init__(**kwargs)
 
-        out = interactive_output(self.compute_plot, {"contour_values": self.contours,})
+        out = interactive_output(
+            self.compute_plot,
+            {
+                "contour_values": self.contours,
+            },
+        )
 
         # self.export_as.observe(save_selection, names="value")
         self.data_panel = VBox([self.objects, self.data])
@@ -619,7 +643,8 @@ class ContourValues(PlotSelection2D):
                         vertices = np.c_[vertices, z_interp(vertices)]
                     else:
                         vertices = np.c_[
-                            vertices, np.ones(vertices.shape[0]) * entity.origin["z"],
+                            vertices,
+                            np.ones(vertices.shape[0]) * entity.origin["z"],
                         ]
 
                 curves = [

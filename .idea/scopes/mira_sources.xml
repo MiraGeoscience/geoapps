@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="mira_sources" pattern="(file[geoapps]:tests//*||file[geoapps]:geoapps//*||file[geoapps]:devtools//*)&amp;&amp;!file[geoapps]:geoapps/simpegEM1D//*&amp;&amp;!file[geoapps]:geoapps/simpegPF//*" />
+</component>

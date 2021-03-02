@@ -1,13 +1,22 @@
-from os import path, mkdir
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import re
-import osr
+from os import mkdir, path
+
 import discretize
-from ipywidgets import Dropdown, Text, FloatText, RadioButtons, Textarea, Layout
 import matplotlib.pyplot as plt
 import numpy as np
+import osr
 from geoh5py.objects import BlockModel, Curve, Octree
 from geoh5py.workspace import Workspace
+from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
 from ipywidgets.widgets import HBox, VBox
+
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
 from geoapps.utils import (
@@ -42,7 +51,13 @@ class Export(ObjectDataSelection):
             value="csv",
             description="Export type",
         )
-        self._data_type = RadioButtons(options=["float", "RGB",], description="Type:")
+        self._data_type = RadioButtons(
+            options=[
+                "float",
+                "RGB",
+            ],
+            description="Type:",
+        )
         self._no_data_value = FloatText(
             description="No-Data-Value",
             value=-99999,
@@ -117,7 +132,11 @@ class Export(ObjectDataSelection):
         """
         if getattr(self, "_data_type", None) is None:
             self._data_type = RadioButtons(
-                options=["float", "RGB",], description="Type:"
+                options=[
+                    "float",
+                    "RGB",
+                ],
+                description="Type:",
             )
 
         return self._data_type
@@ -128,7 +147,10 @@ class Export(ObjectDataSelection):
         ipywidgets.FloatText()
         """
         if getattr(self, "_no_data_value", None) is None:
-            self._no_data_value = FloatText(description="no-data-value", value=-99999,)
+            self._no_data_value = FloatText(
+                description="no-data-value",
+                value=-99999,
+            )
         return self._no_data_value
 
     @property
