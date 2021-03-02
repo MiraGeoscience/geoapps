@@ -1,11 +1,19 @@
-import numpy as np
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import ipywidgets as widgets
-from ipywidgets import Dropdown, SelectMultiple, VBox, FloatText
-from geoh5py.workspace import Workspace
-from geoh5py.objects.object_base import ObjectBase
+import numpy as np
 from geoh5py.data import FloatData, IntegerData
-from geoapps.base import BaseApplication
+from geoh5py.objects.object_base import ObjectBase
+from geoh5py.workspace import Workspace
+from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
+
 from geoapps import utils
+from geoapps.base import BaseApplication
 
 
 class ObjectDataSelection(BaseApplication):
@@ -47,9 +55,13 @@ class ObjectDataSelection(BaseApplication):
         """
         if getattr(self, "_data", None) is None:
             if self.select_multiple:
-                self._data = SelectMultiple(description="Data: ",)
+                self._data = SelectMultiple(
+                    description="Data: ",
+                )
             else:
-                self._data = Dropdown(description="Data: ",)
+                self._data = Dropdown(
+                    description="Data: ",
+                )
         return self._data
 
     @data.setter
@@ -299,9 +311,13 @@ class LineOptions(ObjectDataSelection):
         """
         if getattr(self, "_lines", None) is None:
             if self.multiple_lines:
-                self._lines = widgets.SelectMultiple(description="Select lines:",)
+                self._lines = widgets.SelectMultiple(
+                    description="Select lines:",
+                )
             else:
-                self._lines = widgets.Dropdown(description="Select line:",)
+                self._lines = widgets.Dropdown(
+                    description="Select line:",
+                )
 
         return self._lines
 
@@ -333,7 +349,9 @@ class TopographyOptions(ObjectDataSelection):
     def __init__(self, **kwargs):
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
         self._offset = FloatText(description="Vertical offset (+ve up)")
-        self._constant = FloatText(description="Elevation (m)",)
+        self._constant = FloatText(
+            description="Elevation (m)",
+        )
 
         super().__init__(**kwargs)
 

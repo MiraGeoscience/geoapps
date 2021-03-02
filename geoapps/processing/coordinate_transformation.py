@@ -1,26 +1,30 @@
-import re
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import os
-import osr
-from ipywidgets import SelectMultiple, VBox, HBox, Text, Textarea, Layout
+import re
+
+import gdal
+import matplotlib.pyplot as plt
 import numpy
+import osr
+from fiona.transform import transform
 from geoh5py.data import FloatData
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
+from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
+
 from geoapps.base import BaseApplication
-import matplotlib.pyplot as plt
-from fiona.transform import transform
-import gdal
-from geoapps.utils import (
-    export_grid_2_geotiff,
-    geotiff_2_grid,
-)
 from geoapps.plotting import plot_plan_data_selection
+from geoapps.utils import export_grid_2_geotiff, geotiff_2_grid
 
 
 class CoordinateTransformation(BaseApplication):
-    """
-
-    """
+    """"""
 
     defaults = {
         "ga_group_name": "CoordinateTransformation",
@@ -90,7 +94,9 @@ class CoordinateTransformation(BaseApplication):
                             )
                             grid = gdal.Open(temp_file)
                             gdal.Warp(
-                                temp_file_out, grid, dstSRS=self.wkt_out.value,
+                                temp_file_out,
+                                grid,
+                                dstSRS=self.wkt_out.value,
                             )
 
                             if count == 0:
@@ -123,7 +129,12 @@ class CoordinateTransformation(BaseApplication):
                     if self.code_in.value == "EPSG:4326":
                         x, y = y, x
 
-                    x2, y2 = transform(self.wkt_in.value, self.wkt_out.value, x, y,)
+                    x2, y2 = transform(
+                        self.wkt_in.value,
+                        self.wkt_out.value,
+                        x,
+                        y,
+                    )
 
                     if self.code_out.value == "EPSG:4326":
                         x2, y2 = y2, x2

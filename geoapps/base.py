@@ -1,13 +1,21 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import time
 import urllib.request
 import zipfile
-from os import mkdir, listdir, path, remove, system
-from shutil import copyfile, copy, rmtree, move
-import time
-from ipywidgets import Checkbox, Text, VBox, HBox, Label, ToggleButton, Widget, Button
-from geoh5py.workspace import Workspace
+from os import listdir, mkdir, path, remove, system
+from shutil import copy, copyfile, move, rmtree
+
 from geoh5py.groups import ContainerGroup
+from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
+from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
+
 import geoapps
 
 
@@ -51,7 +59,12 @@ class BaseApplication:
         self.project_panel = VBox(
             [
                 Label("Workspace", style={"description_width": "initial"}),
-                HBox([self._file_browser, self._copy_trigger,]),
+                HBox(
+                    [
+                        self._file_browser,
+                        self._copy_trigger,
+                    ]
+                ),
             ]
         )
         self._live_link = Checkbox(
@@ -249,7 +262,8 @@ class BaseApplication:
         self._h5file = value
 
         self._file_browser.reset(
-            path=path.abspath(path.dirname(value)), filename=path.basename(value),
+            path=path.abspath(path.dirname(value)),
+            filename=path.basename(value),
         )
         self._file_browser._apply_selection()
         self.workspace = Workspace(self._h5file)
@@ -315,7 +329,10 @@ def update_apps():
     """
 
     trigger = Button(
-        value=False, description="Update All", button_style="danger", icon="check",
+        value=False,
+        description="Update All",
+        button_style="danger",
+        icon="check",
     )
 
     def run_update(_):

@@ -1,19 +1,27 @@
-import numpy as np
-from scipy.spatial import cKDTree
-from scipy.interpolate import LinearNDInterpolator
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import discretize
+import numpy as np
 from geoh5py.objects import BlockModel, ObjectBase
 from geoh5py.workspace import Workspace
 from ipywidgets import (
     Dropdown,
-    Text,
     FloatText,
-    VBox,
     HBox,
-    ToggleButton,
     Label,
     RadioButtons,
+    Text,
+    ToggleButton,
+    VBox,
 )
+from scipy.interpolate import LinearNDInterpolator
+from scipy.spatial import cKDTree
+
 from geoapps.selection import ObjectDataSelection, TopographyOptions
 
 
@@ -49,21 +57,45 @@ class DataInterpolation(ObjectDataSelection):
         if use_defaults:
             kwargs = self.apply_defaults(**kwargs)
 
-        self._core_cell_size = Text(description="Smallest cells",)
-        self._depth_core = FloatText(description="Core depth (m)",)
-        self._expansion_fact = FloatText(description="Expansion factor",)
-        self._max_distance = FloatText(description="Maximum distance (m)",)
-        self._max_depth = FloatText(description="Maximum depth (m)",)
-        self._method = RadioButtons(options=["Nearest", "Linear", "Inverse Distance"],)
-        self._new_grid = Text(description="Name",)
+        self._core_cell_size = Text(
+            description="Smallest cells",
+        )
+        self._depth_core = FloatText(
+            description="Core depth (m)",
+        )
+        self._expansion_fact = FloatText(
+            description="Expansion factor",
+        )
+        self._max_distance = FloatText(
+            description="Maximum distance (m)",
+        )
+        self._max_depth = FloatText(
+            description="Maximum depth (m)",
+        )
+        self._method = RadioButtons(
+            options=["Nearest", "Linear", "Inverse Distance"],
+        )
+        self._new_grid = Text(
+            description="Name",
+        )
         self._no_data_value = FloatText()
-        self._out_mode = RadioButtons(options=["To Object", "Create 3D Grid"],)
+        self._out_mode = RadioButtons(
+            options=["To Object", "Create 3D Grid"],
+        )
         self._out_object = Dropdown()
-        self._padding_distance = Text(description="Pad Distance (W, E, N, S, D, U)",)
-        self._skew_angle = FloatText(description="Azimuth (d.dd)",)
-        self._skew_factor = FloatText(description="Factor (>0)",)
+        self._padding_distance = Text(
+            description="Pad Distance (W, E, N, S, D, U)",
+        )
+        self._skew_angle = FloatText(
+            description="Azimuth (d.dd)",
+        )
+        self._skew_factor = FloatText(
+            description="Factor (>0)",
+        )
         self._space = RadioButtons(options=["Linear", "Log"])
-        self._xy_extent = Dropdown(description="Object hull",)
+        self._xy_extent = Dropdown(
+            description="Object hull",
+        )
         self._xy_reference = Dropdown(
             description="Lateral Extent", style={"description_width": "initial"}
         )
@@ -123,7 +155,12 @@ class DataInterpolation(ObjectDataSelection):
         self.parameters = {
             "Method": self.method_panel,
             "Scaling": self.space,
-            "Horizontal Extent": VBox([self.max_distance, self.xy_extent,]),
+            "Horizontal Extent": VBox(
+                [
+                    self.max_distance,
+                    self.xy_extent,
+                ]
+            ),
             "Vertical Extent": VBox([self.topography.main, self.max_depth]),
             "No-data-value": self.no_data_value,
         }
