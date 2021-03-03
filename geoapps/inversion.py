@@ -674,14 +674,20 @@ def inversion_defaults():
     Get defaults for gravity, magnetics and EM1D inversions
     """
     defaults = {
-        "units": {"Gravity": "g/cc", "Magnetics": "SI", "EM1D": "S/m"},
+        "units": {"Gravity": "g/cc", "MVI": "SI", "Magnetics": "SI", "EM1D": "S/m"},
         "property": {
             "Gravity": "density",
-            "Magnetics": "effective susceptibility",
+            "MVI": "effective susceptibility",
+            "Magnetics": "susceptibility",
             "EM1D": "conductivity",
         },
-        "reference_value": {"Gravity": 0.0, "Magnetics": 0.0, "EM1D": 1e-3},
-        "starting_value": {"Gravity": 1e-4, "Magnetics": 1e-4, "EM1D": 1e-3},
+        "reference_value": {"Gravity": 0.0, "MVI": 0.0, "Magnetics": 0.0, "EM1D": 1e-3},
+        "starting_value": {
+            "Gravity": 1e-4,
+            "MVI": 1e-4,
+            "Magnetics": 1e-4,
+            "EM1D": 1e-3,
+        },
     }
 
     return defaults
@@ -727,7 +733,7 @@ class InversionApp(PlotSelection2D):
         )
         self._starting_channel = (IntText(value=None, description="Starting Channel"),)
         self._system = Dropdown(
-            options=["Magnetics", "Gravity"] + list(self.em_system_specs.keys()),
+            options=["MVI", "Magnetics", "Gravity"] + list(self.em_system_specs.keys()),
             description="Survey Type: ",
         )
         self._write = ToggleButton(
@@ -903,7 +909,7 @@ class InversionApp(PlotSelection2D):
     def run_trigger(self, _):
         """"""
         if self.run.value:
-            if self.system.value in ["Gravity", "Magnetics"]:
+            if self.system.value in ["Gravity", "MVI", "Magnetics"]:
                 os.system(
                     "start cmd.exe @cmd /k "
                     + 'python -m geoapps.pf_inversion "'
@@ -922,9 +928,9 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        if self.system.value in ["Magnetics", "Gravity"]:
+        if self.system.value in ["MVI", "Magnetics", "Gravity"]:
             start_channel = 0
-            if self.system.value == "Magnetics":
+            if self.system.value in ["MVI", "Magnetics"]:
                 data_type_list = ["tmi", "bxx", "bxy", "bxz", "byy", "byz", "bzz"]
                 labels = ["tmi", "bxx", "bxy", "bxz", "byy", "byz", "bzz"]
 
@@ -1040,11 +1046,11 @@ class InversionApp(PlotSelection2D):
             entity = self.workspace.get_entity(self.objects.value)[0]
             if channel.value is None or not entity.get_data(channel.value):
                 data_widget.children[0].value = False
-                if self.system.value in ["Magnetics", "Gravity"]:
+                if self.system.value in ["MVI", "Magnetics", "Gravity"]:
                     data_widget.children[3].value = "0, 1"
             else:
                 data_widget.children[0].value = True
-                if self.system.value in ["Magnetics", "Gravity"]:
+                if self.system.value in ["MVI", "Magnetics", "Gravity"]:
                     values = entity.get_data(channel.value)[0].values
                     if values is not None and isinstance(values[0], float):
                         data_widget.children[
@@ -1080,7 +1086,7 @@ class InversionApp(PlotSelection2D):
 
             data_channel_options[key] = channel_options.main
 
-            if self.system.value not in ["Magnetics", "Gravity"]:
+            if self.system.value not in ["MVI", "Magnetics", "Gravity"]:
                 data_channel_options[key].children[1].value = channel
             else:
                 data_channel_options[key].children[1].layout.visibility = "hidden"
@@ -1098,7 +1104,7 @@ class InversionApp(PlotSelection2D):
         self.update_component_panel(None)
 
         if (
-            self.system.value not in ["Magnetics", "Gravity"]
+            self.system.value not in ["MVI", "Magnetics", "Gravity"]
             and self.em_system_specs[self.system.value]["type"] == "frequency"
         ):
             self.inversion_parameters.option_choices.options = list(
@@ -1114,7 +1120,7 @@ class InversionApp(PlotSelection2D):
         self.write.button_style = "warning"
         self.run.button_style = "danger"
 
-        if self.system.value == "Magnetics":
+        if self.system.value in ["MVI", "Magnetics"]:
             self.survey_type_panel.children = [self.system, self.inducing_field]
         else:
             self.survey_type_panel.children = [self.system]
@@ -1250,10 +1256,10 @@ class InversionApp(PlotSelection2D):
             "workspace": os.path.abspath(self.h5file),
             "save_to_geoh5": os.path.abspath(self.h5file),
         }
-        if self.system.value in ["Gravity", "Magnetics"]:
+        if self.system.value in ["Gravity", "MVI", "Magnetics"]:
             input_dict["inversion_type"] = self.system.value.lower()
 
-            if input_dict["inversion_type"] == "magnetics":
+            if input_dict["inversion_type"] in ["mvi", "magnetics"]:
                 input_dict["inducing_field_aid"] = string_2_list(
                     self.inducing_field.value
                 )
@@ -1398,12 +1404,12 @@ class InversionApp(PlotSelection2D):
                     data_widget.children[4].value
                 )
 
-                if self.system.value not in ["Gravity", "Magnetics"]:
+                if self.system.value not in ["Gravity", "MVI", "Magnetics"]:
                     channel_param[key]["value"] = string_2_list(
                         data_widget.children[1].value
                     )
                 if (
-                    self.system.value in ["Gravity", "Magnetics"]
+                    self.system.value in ["Gravity", "MVI", "Magnetics"]
                     and self.azimuth.value != 0
                     and key not in ["tmi", "gz"]
                 ):
