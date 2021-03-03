@@ -222,13 +222,13 @@ def inversion(input_file):
 
     assert "inversion_type" in list(
         input_dict.keys()
-    ), "Require 'inversion_type' to be set: 'gravity', 'mag', 'mvi', or 'magnetics'"
+    ), "Require 'inversion_type' to be set: 'gravity', 'magnetics', 'mvi', or 'mvic'"
     assert input_dict["inversion_type"] in [
         "gravity",
-        "mag",
-        "mvi",
         "magnetics",
-    ], "'inversion_type' must be one of: 'gravity', 'mag', 'mvi', or 'magnetics'"
+        "mvi",
+        "mvic",
+    ], "'inversion_type' must be one of: 'gravity', 'magnetics', 'mvi', or 'mvic'"
 
     if "inversion_style" in list(input_dict.keys()):
         inversion_style = input_dict["inversion_style"]
@@ -754,7 +754,7 @@ def inversion(input_file):
     else:
         output_tile_files = False
 
-    if input_dict["inversion_type"] in ["mvi", "magnetics", "mvic"]:
+    if "mvi" in input_dict["inversion_type"]:
         vector_property = True
         n_blocks = 3
         if len(model_norms) == 4:
@@ -804,7 +804,7 @@ def inversion(input_file):
             local_survey.std = survey.std[data_ind]
             local_survey.ind = np.where(ind_t)[0]
 
-        elif input_dict["inversion_type"] in ["mag", "mvi", "magnetics"]:
+        elif input_dict["inversion_type"] in ["magnetics", "mvi", "mvic"]:
             rxLoc_t = PF.BaseMag.RxObs(rxLoc[ind_t, :])
             srcField = PF.BaseMag.SrcField([rxLoc_t], param=survey.srcField.param)
             local_survey = PF.BaseMag.LinearSurvey(
@@ -1170,7 +1170,7 @@ def inversion(input_file):
         activeCells_t = np.ones(local_mesh.nC, dtype="bool")
 
         # Create reduced identity map
-        if input_dict["inversion_type"] in ["mvi", "magnetics"]:
+        if "mvi" in input_dict["inversion_type"]:
             nBlock = 3
         else:
             nBlock = 1
@@ -1196,7 +1196,7 @@ def inversion(input_file):
                 chunk_by_rows=chunk_by_rows,
             )
 
-        elif input_dict["inversion_type"] == "mag":
+        elif input_dict["inversion_type"] == "magnetics":
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
@@ -1211,7 +1211,7 @@ def inversion(input_file):
                 chunk_by_rows=chunk_by_rows,
             )
 
-        elif input_dict["inversion_type"] in ["mvi", "magnetics"]:
+        elif "mvi" in input_dict["inversion_type"]:
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
