@@ -320,15 +320,11 @@ def inversion(input_file):
             ignore_values = input_dict["ignore_values"]
             if len(ignore_values) > 0:
                 if "<" in ignore_values:
-                    uncertainties[
-                        data <= np.float(ignore_values.split("<")[1])
-                    ] = np.inf
+                    uncertainties[data <= float(ignore_values.split("<")[1])] = np.inf
                 elif ">" in ignore_values:
-                    uncertainties[
-                        data >= np.float(ignore_values.split(">")[1])
-                    ] = np.inf
+                    uncertainties[data >= float(ignore_values.split(">")[1])] = np.inf
                 else:
-                    uncertainties[data == np.float(ignore_values)] = np.inf
+                    uncertainties[data == float(ignore_values)] = np.inf
 
         if isinstance(entity, Grid2D):
             vertices = entity.centroids
@@ -1417,10 +1413,9 @@ def inversion(input_file):
     # Add a list of directives to the inversion
     directiveList = []
 
-    if vector_property:
+    if vector_property and input_dict["inversion_type"] == "mvi":
         directiveList.append(
             Directives.VectorInversion(
-                inversion_type=input_dict["inversion_type"],
                 chifact_target=target_chi * 2,
             )
         )
