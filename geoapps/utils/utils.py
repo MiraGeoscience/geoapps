@@ -11,15 +11,13 @@ import os
 import dask
 import dask.array as da
 import fiona
-import gdal
 import numpy as np
-import osr
 import pandas as pd
 from dask.diagnostics import ProgressBar
-from fiona.crs import from_epsg
 from geoh5py.data import FloatData
 from geoh5py.objects import BlockModel, Grid2D, Octree
 from geoh5py.workspace import Workspace
+from osgeo import gdal
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 from shapely.geometry import LineString, mapping
