@@ -118,7 +118,7 @@ class PeakFinder(ObjectDataSelection):
         self.model_selection.objects.description = "Surface:"
         self.model_selection.data.description = "Model"
         self.doi_selection.data.description = "DOI Layer"
-        self.scale_panel = VBox([self.scale_button])
+        self.scale_panel = VBox([self.scale_button, self.scale_value])
         self.scale_button.observe(self.scale_update)
         self.channel_selection.observe(self.channel_panel_update, names="value")
         self.channels.observe(self.edit_group, names="value")
@@ -2229,6 +2229,7 @@ class PeakFinder(ObjectDataSelection):
 
         self.active_channels = [{"name": c} for c in channels]
         d_min, d_max = np.inf, -np.inf
+        thresh_value = np.inf
         for channel in self.active_channels:
             if self.tem_checkbox.value:
                 gate = int(re.findall(r"\d+", channel["name"])[-1])
@@ -2241,13 +2242,17 @@ class PeakFinder(ObjectDataSelection):
             channel["values"] = (-1.0) ** self.flip_sign.value * self.data_channels[
                 channel["name"]
             ].values.copy()
+            thresh_value = np.min(
+                [thresh_value, np.percentile(np.abs(channel["values"]), 1)]
+            )
             d_min = np.min([d_min, channel["values"].min()])
             d_max = np.max([d_max, channel["values"].max()])
 
         if d_max > -np.inf:
             self.plot_trigger.value = False
             self.min_value.value = d_min
-        # self.set_default_groups(self.channels.options)
+            self.scale_value.value = thresh_value
+            # self.set_default_groups(self.channels.options)
 
     def show_model_trigger(self, _):
         """
