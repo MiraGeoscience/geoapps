@@ -1011,6 +1011,7 @@ def inversion(input_file):
         else:
             rotation = 0
             dxy = [0, 0]
+            xy_rot = rxLoc[:, :3]
 
         point_object = Points.create(
             workspace, name=f"Predicted", vertices=xy_rot, parent=out_group
