@@ -218,7 +218,7 @@ class PeakFinder(ObjectDataSelection):
         self.channel_panel = VBox(
             [
                 self.channel_selection,
-                self.data_channel_options[self.channel_selection.value],
+                # self.data_channel_options[self.channel_selection.value],
             ]
         )
         self.system_options = VBox(
@@ -1013,10 +1013,13 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.channel_selection`: Change data channel panel
         """
-        self.channel_panel.children = [
-            self.channel_selection,
-            self.data_channel_options[self.channel_selection.value],
-        ]
+        try:
+            self.channel_panel.children = [
+                self.channel_selection,
+                self.data_channel_options[self.channel_selection.value],
+            ]
+        except KeyError:
+            self.channel_panel.children = [self.channel_selection]
 
     def set_data(self, _):
         """
@@ -1711,8 +1714,6 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
-        axs = None
-
         if self.pause_plot_refresh:
             return
 
@@ -1745,10 +1746,13 @@ class PeakFinder(ObjectDataSelection):
             if any(times):
                 times = np.hstack(times)
 
-                if axs is None:
+                if self.decay_figure is None:
                     self.decay_figure = plt.figure(figsize=(8, 8))
-                    axs = plt.subplot()
 
+                else:
+                    plt.figure(self.decay_figure.number)
+
+                axs = plt.subplot()
                 y = np.exp(times * group["linear_fit"][1] + group["linear_fit"][0])
                 axs.plot(
                     times,
@@ -2228,9 +2232,12 @@ class PeakFinder(ObjectDataSelection):
         for channel in self.active_channels:
             if self.tem_checkbox.value:
                 gate = int(re.findall(r"\d+", channel["name"])[-1])
-                channel["time"] = (
-                    self.data_channel_options[f"[{gate}]"].children[1].value
-                )
+                try:
+                    channel["time"] = (
+                        self.data_channel_options[f"[{gate}]"].children[1].value
+                    )
+                except KeyError:
+                    continue
             channel["values"] = (-1.0) ** self.flip_sign.value * self.data_channels[
                 channel["name"]
             ].values.copy()
@@ -2350,6 +2357,9 @@ def find_anomalies(
     )
     locs = profile.locations_resampled
 
+    if data_normalization == "ppm":
+        data_normalization = [1e-6]
+
     if locs is None:
         return {}
     # normalization = self.em_system_specs[self.system.value]["normalization"]
@@ -2370,8 +2380,8 @@ def find_anomalies(
         "time_group": [],
     }
     for cc, channel in enumerate(channels):
-        # if channel not in list(self.channel_to_gate.keys()):
-        #     continue
+        if "values" not in list(channel.keys()):
+            continue
         values = channel["values"][line_indices].copy()
         profile.values = values
         values = profile.values_resampled
