@@ -334,7 +334,7 @@ def inversion(input_file):
 
             for line in values:
 
-                line_ind = np.where(line_data.values == line)[0]
+                line_ind = np.where(entity.get_data(key)[0].values == float(line))[0]
 
                 if len(line_ind) < 2:
                     continue
@@ -491,7 +491,9 @@ def inversion(input_file):
 
         for line in values:
 
-            line_ind = np.where(line_data.values[win_ind] == float(line))[0]
+            line_ind = np.where(entity.get_data(key)[0].values[win_ind] == float(line))[
+                0
+            ]
 
             n_sounding = len(line_ind)
             if n_sounding < 2:
