@@ -11,11 +11,11 @@ from os import mkdir, path
 import discretize
 import matplotlib.pyplot as plt
 import numpy as np
-import osr
 from geoh5py.objects import BlockModel, Curve, Octree
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
 from ipywidgets.widgets import HBox, VBox
+from osgeo import osr
 
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
