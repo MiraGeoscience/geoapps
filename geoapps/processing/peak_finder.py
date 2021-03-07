@@ -765,7 +765,7 @@ class PeakFinder(ObjectDataSelection):
             self._scale_value = FloatLogSlider(
                 min=-18,
                 max=10,
-                step=0.5,
+                step=0.1,
                 base=10,
                 value=1e-2,
                 description="Linear threshold",
@@ -2205,7 +2205,8 @@ class PeakFinder(ObjectDataSelection):
 
                 except IndexError:
                     print(
-                        "Could not find a time channel for the given list of time channels"
+                        "Could not find a time channel for the given list of time channels."
+                        + "Switching to non-tem mode"
                     )
                     self.tem_checkbox.value = False
 
@@ -2231,19 +2232,21 @@ class PeakFinder(ObjectDataSelection):
         d_min, d_max = np.inf, -np.inf
         thresh_value = np.inf
         for channel in self.active_channels:
-            if self.tem_checkbox.value:
-                gate = int(re.findall(r"\d+", channel["name"])[-1])
-                try:
+
+            try:
+                if self.tem_checkbox.value:
+                    gate = int(re.findall(r"\d+", channel["name"])[-1])
                     channel["time"] = (
                         self.data_channel_options[f"[{gate}]"].children[1].value
                     )
-                except KeyError:
-                    continue
-            channel["values"] = (-1.0) ** self.flip_sign.value * self.data_channels[
-                channel["name"]
-            ].values.copy()
+                channel["values"] = (-1.0) ** self.flip_sign.value * self.data_channels[
+                    channel["name"]
+                ].values.copy()
+
+            except KeyError:
+                continue
             thresh_value = np.min(
-                [thresh_value, np.percentile(np.abs(channel["values"]), 1)]
+                [thresh_value, np.percentile(np.abs(channel["values"]), 95)]
             )
             d_min = np.min([d_min, channel["values"].min()])
             d_max = np.max([d_max, channel["values"].max()])
@@ -2515,7 +2518,7 @@ def find_anomalies(
             if all([(gate in in_gate) for gate in group["label"]])
         ]
 
-        if any(time_group):
+        if len(time_group) > 0:
             time_group = np.max(time_group)
         else:
             continue
@@ -2541,7 +2544,7 @@ def find_anomalies(
         inflx_dwn = anomalies["inflx_dwn"][near]
         inflx_up = anomalies["inflx_up"][near]
         cox_sort = np.argsort(locs[cox])
-        azimuth_near = azimuth[near]
+        azimuth_near = azimuth[cox]
         dip_direction = azimuth[cox[0]]
 
         if cox_sort[-1] < cox_sort[0]:
@@ -2551,7 +2554,9 @@ def find_anomalies(
         skew = (locs[cox][cox_sort[0]] - locs[inflx_up][cox_sort]) / (
             locs[inflx_dwn][cox_sort] - locs[cox][cox_sort[0]]
         )
-        skew[azimuth_near > 180] = 1.0 / (skew[azimuth_near > 180] + 1e-2)
+        skew[azimuth_near[cox_sort] > 180] = 1.0 / (
+            skew[azimuth_near[cox_sort] > 180] + 1e-2
+        )
 
         # Change skew factor from [-100, 1]
         flip_skew = skew < 1
