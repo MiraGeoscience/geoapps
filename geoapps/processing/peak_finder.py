@@ -97,7 +97,6 @@ class PeakFinder(ObjectDataSelection):
         self._survey = None
         self._time_groups = None
         self.objects.observe(self.objects_change, names="value")
-        # self.objects.observe(self.update_data_list, names="value")
         self.model_panel = VBox([self.show_model])
         self.show_model.observe(self.show_model_trigger, names="value")
         self.doi_panel = VBox([self.show_doi])
@@ -218,7 +217,6 @@ class PeakFinder(ObjectDataSelection):
         self.channel_panel = VBox(
             [
                 self.channel_selection,
-                # self.data_channel_options[self.channel_selection.value],
             ]
         )
         self.system_options = VBox(
@@ -1025,7 +1023,7 @@ class PeakFinder(ObjectDataSelection):
         if getattr(self, "survey", None) is not None:
             self.pause_plot_refresh = True
             groups = [p_g.name for p_g in self.survey.property_groups]
-            channels = []  # list(self.data.value)
+            channels = []
 
             # Add all selected data channels | groups once
             for channel in self.data.value:
@@ -1075,10 +1073,6 @@ class PeakFinder(ObjectDataSelection):
                             self.system.value = aem_system
                             # not_tem = False
                             break
-
-            # self.tem_checkbox.unobserve(self.objects_change, names="value")
-            # self.tem_checkbox.value = not_tem is False
-            # self.tem_checkbox.observe(self.objects_change, names="value")
 
             if not_tem:
                 self.tem_box.children = [self.tem_checkbox]
@@ -1231,8 +1225,6 @@ class PeakFinder(ObjectDataSelection):
         self.trigger.button_style = "success"
         self.run_all.description = "Process All Lines"
 
-        # Re-assign groups
-
     def regroup(self):
         group_id = -1
         for group in self.lines.anomalies:
@@ -1252,7 +1244,6 @@ class PeakFinder(ObjectDataSelection):
             if match:
                 continue
             group_id += 1
-            # Passed through
             self.time_groups[group_id] = {}
             self.time_groups[group_id]["channels"] = labels
             self.time_groups[group_id]["name"] = "-".join(labels)
@@ -1264,7 +1255,6 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
-        # for group in self.group_list.value:
         if not self.all_anomalies:
             return
 
@@ -1658,7 +1648,6 @@ class PeakFinder(ObjectDataSelection):
         ]
         axs.set_xlim(x_lims)
         axs.set_ylim([np.max([y_min, min_value]), y_max])
-        # axs.set_title(f"Line: {ind}")
         axs.set_ylabel("Data")
 
         axs.scatter(center, (y_min + y_max) / 2, s=100, c="k", marker="d")
@@ -1764,8 +1753,6 @@ class PeakFinder(ObjectDataSelection):
                     f"Tau: {np.abs(group['linear_fit'][1] ** -1.)*1e+3:.2e} msec",
                     color="k",
                 )
-                #                 plt.yscale('symlog', linthreshy=scale_value)
-                #                 axs.set_aspect('equal')
                 axs.scatter(
                     times,
                     group["peak_values"],
@@ -1899,7 +1886,6 @@ class PeakFinder(ObjectDataSelection):
                     [1, "rgb(0,0,0)"],
                 ]
                 self.model_figure.data[1].showscale = False
-            # else:
 
             simplices = self.lines.model_cells.reshape((-1, 3))
 
@@ -2202,8 +2188,8 @@ class PeakFinder(ObjectDataSelection):
 
                 except IndexError:
                     print(
-                        "Could not find a time channel for the given list of time channels.",
-                        "Switching to non-tem mode",
+                        "Could not find a time channel for the given list of time channels."
+                        "Switching to non-tem mode"
                     )
                     self.tem_checkbox.value = False
 
@@ -2304,25 +2290,6 @@ class PeakFinder(ObjectDataSelection):
             self.show_borehole.description = "Show Scatter"
         return
 
-    # def tem_checkbox_click(self, _):
-    #     """
-    #     Observer of :obj:`geoapps.processing.PeakFinder.`:
-    #     """
-    #     if self.tem_checkbox.value:
-    #         self.tem_box.children = [
-    #             self.tem_checkbox,
-    #             self.system_panel,
-    #             self.groups_widget,
-    #             self.decay_panel,
-    #         ]
-    #         self.max_migration.disabled = False
-    #         self.min_channels.disabled = False
-    #     else:
-    #         self.tem_box.children = [self.tem_checkbox]
-    #         self.max_migration.disabled = True
-    #         self.min_channels.disabled = True
-    #     self.set_data(None)
-
 
 @dask.delayed
 def find_anomalies(
@@ -2366,7 +2333,7 @@ def find_anomalies(
 
     if locs is None:
         return {}
-    # normalization = self.em_system_specs[self.system.value]["normalization"]
+
     xy = np.c_[profile.interp_x(locs), profile.interp_y(locs)]
     angles = np.arctan2(xy[1:, 1] - xy[:-1, 1], xy[1:, 0] - xy[:-1, 0])
     angles = np.r_[angles[0], angles].tolist()
@@ -2532,9 +2499,6 @@ def find_anomalies(
 
         anomalies["group"][near] = group_id
 
-        #
-        # if len(in_gate) > 0 and len(time_group) > 0:
-
         gates = anomalies["channel"][near]
         cox = anomalies["peak"][near]
         inflx_dwn = anomalies["inflx_dwn"][near]
@@ -2638,8 +2602,6 @@ def find_anomalies(
 
         groups += [group]
 
-    # if minimal_output and len(groups["cox"])>0:
-    #     groups["cox"] = np.vstack(groups["cox"]).reshape((-1, 3))
     if return_profile:
         return groups, profile
     else:
