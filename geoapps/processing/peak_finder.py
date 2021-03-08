@@ -751,7 +751,6 @@ class PeakFinder(ObjectDataSelection):
                 ],
                 value="symlog",
                 description="Y-axis scaling",
-                orientation="vertical",
             )
 
         return self._scale_button
@@ -855,7 +854,6 @@ class PeakFinder(ObjectDataSelection):
                 value=0,
                 description="Smoothing",
                 continuous_update=False,
-                tooltip="Running mean width",
             )
 
         return self._smoothing
@@ -1004,7 +1002,6 @@ class PeakFinder(ObjectDataSelection):
                 options=["Distance", "Easting", "Northing"],
                 value="Distance",
                 description="X-axis label:",
-                orientation="horizontal",
             )
 
         return self._x_label
