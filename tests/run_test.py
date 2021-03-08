@@ -5,9 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from shutil import copyfile
 
 import pytest
+import requests
 
 from geoapps.export import Export
 from geoapps.inversion import InversionApp
@@ -22,11 +22,15 @@ from geoapps.processing import (
     Surface2D,
 )
 
-project = "Project_work.geoh5"
+project = "FlinFlon.geoh5"
 
 
 def test_calculator():
-    copyfile(r"..\assets\FlinFlon.geoh5", project)
+    url = "https://github.com/MiraGeoscience/geoapps/raw/main/assets/FlinFlon.geoh5"
+
+    r = requests.get(url)
+    open(project, "wb").write(r.content)
+
     app = Calculator(h5file=project)
     app.trigger.click()
 
@@ -68,7 +72,7 @@ def test_export():
 
 def test_inversion():
     app = InversionApp(
-        h5file=project,
+        h5file="FlinFlon.geoh5",
         inversion_parameters={"max_iterations": 1},
     )
     app.write.value = True

@@ -30,4 +30,5 @@ dependencies:
     - jupyter_sphinx
     - plotly==4.9.0
     - ipyfilechooser
+    - requests
     - ezdxf
