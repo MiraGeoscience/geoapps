@@ -1,4 +1,5 @@
-set PATH=%PATH%;%USERPROFILE%\AppData\Local\Continuum\anaconda3\Scripts;%USERPROFILE%\anaconda3\Scripts;C:\ProgramData\anaconda3\Scripts
+set PATH=%PATH%;%USERPROFILE%\anaconda3\Scripts;%USERPROFILE%\anaconda3\Library\bin;%USERPROFILE%\anaconda3\envs;
+set PYTHONPATH=%PYTHONPATH%;%CD%
 call activate.bat
 call activate geoapps
 cd geoapps/applications
