@@ -2202,8 +2202,8 @@ class PeakFinder(ObjectDataSelection):
 
                 except IndexError:
                     print(
-                        "Could not find a time channel for the given list of time channels."
-                        + "Switching to non-tem mode"
+                        "Could not find a time channel for the given list of time channels.",
+                        "Switching to non-tem mode",
                     )
                     self.tem_checkbox.value = False
 
@@ -2252,7 +2252,6 @@ class PeakFinder(ObjectDataSelection):
             self.plot_trigger.value = False
             self.min_value.value = d_min
             self.scale_value.value = thresh_value
-            # self.set_default_groups(self.channels.options)
 
     def show_model_trigger(self, _):
         """
