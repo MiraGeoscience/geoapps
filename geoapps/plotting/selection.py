@@ -45,7 +45,7 @@ class PlotSelection2D(ObjectDataSelection):
         self._center_x = FloatSlider(
             min=-100,
             max=100,
-            steps=10,
+            step=10,
             description="Easting",
             continuous_update=False,
         )
@@ -87,7 +87,6 @@ class PlotSelection2D(ObjectDataSelection):
         self._zoom_extent = ToggleButton(
             value=True,
             description="Zoom on selection",
-            tooltip="Keep plot extent on selection",
             icon="check",
         )
 

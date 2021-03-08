@@ -392,7 +392,6 @@ class InversionOptions(BaseApplication):
         )
         self._ignore_values = widgets.Text(
             value="<0",
-            tooltip="Dummy value",
             description="Data (i.e. <0 = no negatives)",
         )
         self._air_values = widgets.FloatText(
@@ -723,7 +722,6 @@ class InversionApp(PlotSelection2D):
         self._forward_only = Checkbox(
             value=False,
             description="Forward only",
-            tooltip="Forward response of reference model",
         )
         self._inducing_field = widgets.Text(
             description="Inducing Field [Amp, Inc, Dec]",
@@ -740,7 +738,6 @@ class InversionApp(PlotSelection2D):
             value=False,
             description="Write input",
             button_style="warning",
-            tooltip="Write json input file",
             icon="check",
         )
         self.data_channel_choices = widgets.Dropdown()

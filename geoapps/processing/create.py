@@ -494,7 +494,7 @@ class ContourValues(PlotSelection2D):
         self._contours = Text(
             value="", description="Contours", disabled=False, continuous_update=False
         )
-        self._export_as = Text(value="Contours", indent=False)
+        self._export_as = Text(value="Contours")
 
         self._z_value = Checkbox(
             value=False, indent=False, description="Assign Z from values"

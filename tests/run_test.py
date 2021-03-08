@@ -72,7 +72,7 @@ def test_export():
 
 def test_inversion():
     app = InversionApp(
-        h5file="FlinFlon.geoh5",
+        h5file=project,
         inversion_parameters={"max_iterations": 1},
     )
     app.write.value = True

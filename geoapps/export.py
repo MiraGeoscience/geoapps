@@ -61,14 +61,9 @@ class Export(ObjectDataSelection):
         self._no_data_value = FloatText(
             description="No-Data-Value",
             value=-99999,
-            style={"description_width": "initial"},
         )
-        self._epsg_code = Text(
-            description="Projection:", indent=False, continuous_update=False
-        )
-        self._export_as = Text(
-            description="Save as:", indent=False, continuous_update=False
-        )
+        self._epsg_code = Text(description="Projection:", continuous_update=False)
+        self._export_as = Text(description="Save as:", continuous_update=False)
         self._wkt_code = Textarea(
             description="WKT:", continuous_update=False, layout=Layout(width="75%")
         )
@@ -159,9 +154,7 @@ class Export(ObjectDataSelection):
         ipywidgets.Text()
         """
         if getattr(self, "_epsg_code", None) is None:
-            self._epsg_code = Text(
-                description="EPSG code:", indent=False, disabled=False
-            )
+            self._epsg_code = Text(description="EPSG code:", disabled=False)
         return self._epsg_code
 
     @property
@@ -173,7 +166,6 @@ class Export(ObjectDataSelection):
             self._export_as = Text(
                 value=self.objects.value,
                 description="Save as:",
-                indent=False,
                 disabled=False,
             )
         return self._export_as
