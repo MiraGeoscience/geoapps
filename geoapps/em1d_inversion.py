@@ -1,9 +1,17 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import json
 import multiprocessing
 import sys
 
 import numpy as np
 import scipy as sp
+from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Surface
 from geoh5py.workspace import Workspace
@@ -19,6 +27,7 @@ from SimPEG import (
     Optimization,
     Utils,
 )
+
 from .simpegEM1D import (
     GlobalEM1DProblemFD,
     GlobalEM1DProblemTD,
@@ -27,12 +36,12 @@ from .simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from .utils import filter_xy, rotate_xy, geophysical_systems
+from .utils import filter_xy, geophysical_systems, rotate_xy, running_mean
 
 
 class SaveIterationsGeoH5(Directives.InversionDirective):
     """
-        Saves inversion results to a geoh5 file
+    Saves inversion results to a geoh5 file
     """
 
     # Initialize the output dict
@@ -169,9 +178,7 @@ class SaveIterationsGeoH5(Directives.InversionDirective):
 
 
 def inversion(input_file):
-    """
-
-    """
+    """"""
     with open(input_file) as f:
         input_param = json.load(f)
 
@@ -189,8 +196,66 @@ def inversion(input_file):
     selection = input_param["lines"]
     hz_min, expansion, n_cells = input_param["mesh 1D"]
     ignore_values = input_param["ignore_values"]
-    max_iteration = input_param["max_iterations"]
-    resolution = np.float(input_param["resolution"])
+    resolution = float(input_param["resolution"])
+
+    if "initial_beta_ratio" in list(input_param.keys()):
+        initial_beta_ratio = input_param["initial_beta_ratio"]
+    else:
+        initial_beta_ratio = 1e2
+
+    if "initial_beta" in list(input_param.keys()):
+        initial_beta = input_param["initial_beta"]
+    else:
+        initial_beta = None
+
+    if "model_norms" in list(input_param.keys()):
+        model_norms = input_param["model_norms"]
+    else:
+        model_norms = [2, 2, 2, 2]
+
+    model_norms = np.c_[model_norms].T
+
+    if "alphas" in list(input_param.keys()):
+        alphas = input_param["alphas"]
+        if len(alphas) == 4:
+            alphas = alphas * 3
+        else:
+            assert len(alphas) == 12, "Alphas require list of 4 or 12 values"
+    else:
+        alphas = [
+            1,
+            1,
+            1,
+        ]
+
+    if "max_iterations" in list(input_param.keys()):
+
+        max_iterations = input_param["max_iterations"]
+        assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
+    else:
+        if np.all(np.r_[model_norms] == 2):
+            # Cartesian or not sparse
+            max_iterations = 10
+        else:
+            # Spherical or sparse
+            max_iterations = 40
+
+    if "max_cg_iterations" in list(input_param.keys()):
+        max_cg_iterations = input_param["max_cg_iterations"]
+    else:
+        max_cg_iterations = 30
+
+    if "tol_cg" in list(input_param.keys()):
+        tol_cg = input_param["tol_cg"]
+    else:
+        tol_cg = 1e-4
+
+    if "max_global_iterations" in list(input_param.keys()):
+        max_global_iterations = input_param["max_global_iterations"]
+        assert max_global_iterations >= 0, "Max IRLS iterations must be >= 0"
+    else:
+        # Spherical or sparse
+        max_global_iterations = 100
 
     if "window" in input_param.keys():
         window = input_param["window"]
@@ -199,12 +264,6 @@ def inversion(input_file):
     else:
         window = None
 
-    if "model_norms" in list(input_param.keys()):
-        model_norms = input_param["model_norms"]
-    else:
-        model_norms = [2, 2, 2, 2]
-
-    model_norms = np.c_[model_norms].T
     if "max_irls_iterations" in list(input_param.keys()):
 
         max_irls_iterations = input_param["max_irls_iterations"]
@@ -255,11 +314,15 @@ def inversion(input_file):
     else:
         vertices = entity.vertices
 
-    win_ind = filter_xy(vertices[:, 0], vertices[:, 1], resolution, window=window,)
+    win_ind = filter_xy(
+        vertices[:, 0],
+        vertices[:, 1],
+        resolution,
+        window=window,
+    )
+    locations = vertices.copy()
 
-    locations = vertices[win_ind, :]
-
-    def get_topography():
+    def get_topography(locations):
         topo = None
         if "topography" in list(input_param.keys()):
             topo = locations.copy()
@@ -294,7 +357,10 @@ def inversion(input_file):
                     topo_window = window.copy()
                     topo_window["size"] = [ll * 2 for ll in window["size"]]
                     ind = filter_xy(
-                        topo[:, 0], topo[:, 1], resolution, window=topo_window,
+                        topo[:, 0],
+                        topo[:, 1],
+                        resolution,
+                        window=topo_window,
                     )
 
                     topo = topo[ind, :]
@@ -310,11 +376,17 @@ def inversion(input_file):
 
         for key, values in selection.items():
 
+            line_data = entity.get_data(key)[0]
+            if isinstance(line_data, ReferencedData):
+                values = [
+                    key
+                    for key, value in line_data.value_map.map.items()
+                    if value in values
+                ]
+
             for line in values:
 
-                line_ind = np.where(
-                    entity.get_data(key)[0].values[win_ind] == np.float(line)
-                )[0]
+                line_ind = np.where(entity.get_data(key)[0].values == float(line))[0]
 
                 if len(line_ind) < 2:
                     continue
@@ -324,9 +396,15 @@ def inversion(input_file):
                 # Compute the orientation between each station
                 angles = np.arctan2(xyz[1:, 1] - xyz[:-1, 1], xyz[1:, 0] - xyz[:-1, 0])
                 angles = np.r_[angles[0], angles].tolist()
-                dxy = np.zeros_like(xyz)
-                for ind, angle in enumerate(angles):
-                    dxy[ind, :] = rotate_xy(offsets, [0, 0], np.rad2deg(angle))
+                angles = running_mean(angles, width=5)
+                # dxy = np.zeros_like(xyz)
+
+                # for ind, angle in enumerate(angles):
+                #     dxy[ind, :] = rotate_xy(offsets, [0, 0], np.rad2deg(angle))
+
+                dxy = np.vstack(
+                    [rotate_xy(offsets, [0, 0], np.rad2deg(angle)) for angle in angles]
+                )
 
                 # Move the stations
                 locations[line_ind, 0] += dxy[:, 0]
@@ -344,10 +422,12 @@ def inversion(input_file):
 
             locations = offset_receivers_xy(locations, bird_offset)
             locations[:, 2] += bird_offset[0, 2]
-            dem = get_topography()
+
+            locations = locations[win_ind, :]
+            dem = get_topography(locations)
 
         else:
-            dem = get_topography()
+            dem = get_topography(locations[win_ind, :])
             F = LinearNDInterpolator(dem[:, :2], dem[:, 2])
 
             if "constant_drape" in list(input_param["receivers_offset"].keys()):
@@ -360,7 +440,7 @@ def inversion(input_file):
                     input_param["receivers_offset"]["radar_drape"][:3]
                 ).reshape((-1, 3))
 
-            locations = offset_receivers_xy(locations, bird_offset)
+            locations = offset_receivers_xy(locations, bird_offset)[win_ind, :]
             z_topo = F(locations[:, :2])
             if np.any(np.isnan(z_topo)):
                 tree = cKDTree(dem[:, :2])
@@ -378,7 +458,8 @@ def inversion(input_file):
                 locations[:, 2] += z_channel[win_ind]
 
     else:
-        dem = get_topography()
+        locations = locations[win_ind, :]
+        dem = get_topography(locations)
 
     F = LinearNDInterpolator(dem[:, :2], dem[:, 2])
     z_topo = F(locations[:, :2])
@@ -454,11 +535,17 @@ def inversion(input_file):
     pred_cells = []
     for key, values in selection.items():
 
+        line_data = entity.get_data(key)[0]
+        if isinstance(line_data, ReferencedData):
+            values = [
+                key for key, value in line_data.value_map.map.items() if value in values
+            ]
+
         for line in values:
 
-            line_ind = np.where(
-                entity.get_data(key)[0].values[win_ind] == np.float(line)
-            )[0]
+            line_ind = np.where(entity.get_data(key)[0].values[win_ind] == float(line))[
+                0
+            ]
 
             n_sounding = len(line_ind)
             if n_sounding < 2:
@@ -516,9 +603,9 @@ def inversion(input_file):
             model_ordering.append(temp[:, order].T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_cells.append(tri2D.simplices + model_count)
-            model_line_ids.append(np.ones_like(np.ravel(X)) * np.float(line))
+            model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
 
-            line_ids.append(np.ones_like(order) * np.float(line))
+            line_ids.append(np.ones_like(order) * float(line))
             data_ordering.append(order + pred_count)
 
             pred_vertices.append(xyz[order, :])
@@ -655,11 +742,11 @@ def inversion(input_file):
 
     if len(ignore_values) > 0:
         if "<" in ignore_values:
-            uncert[dobs <= np.float(ignore_values.split("<")[1])] = np.inf
+            uncert[dobs <= float(ignore_values.split("<")[1])] = np.inf
         elif ">" in ignore_values:
-            uncert[dobs >= np.float(ignore_values.split(">")[1])] = np.inf
+            uncert[dobs >= float(ignore_values.split(">")[1])] = np.inf
         else:
-            uncert[dobs == np.float(ignore_values)] = np.inf
+            uncert[dobs == float(ignore_values)] = np.inf
 
     uncert[(dobs > 1e-38) * (dobs < 2e-38)] = np.inf
 
@@ -796,7 +883,7 @@ def inversion(input_file):
                 Solver=PardisoSolver,
             )
         else:
-            time_index = np.arange(3)
+            time_index = np.arange(6)
             dobs_reduced = get_data_time_index(
                 survey.dobs, n_sounding, time, time_index
             )
@@ -848,7 +935,11 @@ def inversion(input_file):
         # mapping is required ... for IRLS
         regmap = Maps.IdentityMap(mesh_reg)
         reg_sigma = LateralConstraint(
-            mesh_reg, mapping=regmap, alpha_s=1.0, alpha_x=1.0, alpha_y=1.0,
+            mesh_reg,
+            mapping=regmap,
+            alpha_s=alphas[0],
+            alpha_x=alphas[1],
+            alpha_y=alphas[2],
         )
 
         min_distance = None
@@ -862,29 +953,36 @@ def inversion(input_file):
             minimum_distance=min_distance,
         )
 
-        IRLS = Directives.Update_IRLS(
-            maxIRLSiter=0,
-            minGNiter=1,
-            fix_Jmatrix=True,
-            betaSearch=False,
-            chifact_start=chi_target,
-            chifact_target=chi_target,
-        )
-
         opt = Optimization.ProjectedGNCG(
-            maxIter=max_iteration,
+            maxIter=10,
             lower=np.log(lower_bound),
             upper=np.log(upper_bound),
             maxIterLS=20,
-            maxIterCG=30,
-            tolCG=1e-5,
+            maxIterCG=max_cg_iterations,
+            tolCG=tol_cg,
         )
-        invProb_HS = InvProblem.BaseInvProblem(dmisfit, reg_sigma, opt)
-        betaest = Directives.BetaEstimate_ByEig(beta0_ratio=10.0)
-        update_Jacobi = Directives.UpdatePreconditioner()
-        inv = Inversion.BaseInversion(
-            invProb_HS, directiveList=[betaest, IRLS, update_Jacobi]
+        invProb_HS = InvProblem.BaseInvProblem(
+            dmisfit, reg_sigma, opt, beta=initial_beta
         )
+
+        directiveList = []
+        if initial_beta is None:
+            directiveList.append(
+                Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
+            )
+
+        directiveList.append(
+            Directives.Update_IRLS(
+                maxIRLSiter=0,
+                minGNiter=1,
+                fix_Jmatrix=True,
+                betaSearch=False,
+                chifact_start=chi_target,
+                chifact_target=chi_target,
+            )
+        )
+        directiveList.append(Directives.UpdatePreconditioner())
+        inv = Inversion.BaseInversion(invProb_HS, directiveList=directiveList)
 
         opt.LSshorten = 0.5
         opt.remember("xc")
@@ -957,16 +1055,16 @@ def inversion(input_file):
         #     if "<" in ignore_values:
         #         uncert[
         #             data_mapping * dobs / normalization
-        #             <= np.float(ignore_values.split("<")[1])
+        #             <= float(ignore_values.split("<")[1])
         #         ] = np.inf
         #     elif ">" in ignore_values:
         #         uncert[
         #             data_mapping * dobs / normalization
-        #             >= np.float(ignore_values.split(">")[1])
+        #             >= float(ignore_values.split(">")[1])
         #         ] = np.inf
         #     else:
         #         uncert[
-        #             data_mapping * dobs / normalization == np.float(ignore_values)
+        #             data_mapping * dobs / normalization == float(ignore_values)
         #         ] = np.inf
 
     mesh_reg = get_2d_mesh(n_sounding, hz)
@@ -976,9 +1074,9 @@ def inversion(input_file):
     reg = LateralConstraint(
         mesh_reg,
         mapping=Maps.IdentityMap(nP=mesh_reg.nC),
-        alpha_s=1.0,
-        alpha_x=1.0,
-        alpha_y=1.0,
+        alpha_s=alphas[0],
+        alpha_x=alphas[1],
+        alpha_y=alphas[2],
         gradientType="total",
     )
     reg.norms = model_norms
@@ -1001,46 +1099,60 @@ def inversion(input_file):
     )
 
     opt = Optimization.ProjectedGNCG(
-        maxIter=max_iteration,
+        maxIter=max_iterations,
         lower=np.log(lower_bound),
         upper=np.log(upper_bound),
         maxIterLS=20,
-        maxIterCG=50,
-        tolCG=1e-5,
+        maxIterCG=max_cg_iterations,
+        tolCG=tol_cg,
     )
 
-    invProb = InvProblem.BaseInvProblem(dmisfit, reg, opt)
+    invProb = InvProblem.BaseInvProblem(dmisfit, reg, opt, beta=initial_beta)
 
     # Directives
-    update_Jacobi = Directives.UpdatePreconditioner()
-    sensW = Directives.UpdateSensitivityWeights()
-    saveModel = SaveIterationsGeoH5(
-        h5_object=surface, sorting=model_ordering, mapping=mapping, attribute="model"
+    directiveList = []
+
+    directiveList.append(Directives.UpdateSensitivityWeights())
+    directiveList.append(
+        Directives.Update_IRLS(
+            maxIRLSiter=max_irls_iterations,
+            minGNiter=1,
+            betaSearch=False,
+            beta_tol=0.25,
+            chifact_start=chi_target,
+            chifact_target=chi_target,
+            prctile=50,
+        )
     )
 
-    savePred = SaveIterationsGeoH5(
-        h5_object=curve,
-        sorting=data_ordering,
-        mapping=data_mapping,
-        attribute="predicted",
-        channels=channels,
-        save_objective_function=True,
-    )
+    if initial_beta is None:
+        directiveList.append(
+            Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
+        )
 
-    IRLS = Directives.Update_IRLS(
-        maxIRLSiter=max_irls_iterations,
-        minGNiter=1,
-        betaSearch=False,
-        beta_tol=0.25,
-        chifact_start=chi_target,
-        chifact_target=chi_target,
-        prctile=50,
-    )
+    directiveList.append(Directives.UpdatePreconditioner())
 
-    betaest = Directives.BetaEstimate_ByEig(beta0_ratio=10.0)
+    directiveList.append(
+        SaveIterationsGeoH5(
+            h5_object=surface,
+            sorting=model_ordering,
+            mapping=mapping,
+            attribute="model",
+        )
+    )
+    directiveList.append(
+        SaveIterationsGeoH5(
+            h5_object=curve,
+            sorting=data_ordering,
+            mapping=data_mapping,
+            attribute="predicted",
+            channels=channels,
+            save_objective_function=True,
+        )
+    )
     inv = Inversion.BaseInversion(
         invProb,
-        directiveList=[saveModel, savePred, sensW, IRLS, update_Jacobi, betaest],
+        directiveList=directiveList,
     )
 
     prob.counter = opt.counter = Utils.Counter()
@@ -1051,8 +1163,8 @@ def inversion(input_file):
     for ind, channel in enumerate(channels):
         if channel in list(input_param["data"]["channels"].keys()):
             res = (
-                dobs[ind::block][data_ordering]
-                - invProb.dpred[ind::block][data_ordering]
+                invProb.dpred[ind::block][data_ordering]
+                - dobs[ind::block][data_ordering]
             )
 
             d = curve.add_data(

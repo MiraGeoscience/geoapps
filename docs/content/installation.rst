@@ -8,16 +8,13 @@ Whether you are developer or an end-user, this page will help you get started wi
 Installation
 ------------
 
-Recommended
-^^^^^^^^^^^
-
 - Make sure that you have `Anaconda 3.6 <https://www.anaconda.com/download/>`_ or higher installed.
 
 	.. figure:: ../images/Anaconda_Install.png
 	    :align: center
 	    :width: 200
 
-- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_ **geoapps** directory.
+- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
 
 - Extract the package to your drive (SSD if available).
 
@@ -33,21 +30,45 @@ Recommended
 	    :width: 50%
 
 
-.. note:: The assumption is made here that Anaconda has been installed in the default directory
+.. attention:: The assumption is made that Anaconda has been installed in the default directory:
+        ``%USERPROFILE%\anaconda3``
 
-          %USERPROFILE%/AppData/Local/Continuum/anaconda3
-	  
-	  or 
-	  
-	  %USERPROFILE%/anaconda3
+        .. figure:: ../images/Install_start_bat.png
+            :align: center
+            :width: 100%
 
-          If this is not the case, users will need to manually edit ``Install_Update.bat``
-          in order to point to the Anaconda directory.
+      If this is not the case, users will need to edit the ``Install_Update.bat`` and
+      ``Start_applications.bat`` files in order to point to the Anaconda directory. Common alternatives are:
+
+        - ``%USERPROFILE%\AppData\Local\Continuum\anaconda3``
+        - ``C:\ProgramData\anaconda3``
+
+
+
+
+Running the applications
+------------------------
+At this point, you will have all required packages to run the applications:
+
+- Run ``Start_Applications.bat``
+
+	.. figure:: ../images/run_applications.png
+	    :align: center
+	    :width: 50%
+
+You should see the index page displayed in your default browser.
+
+	.. figure:: ../images/index_page.png
+	    :align: center
+	    :width: 100%
+
+.. note:: Applications run best with either Chrome or Firefox.
+
 
 From PyPI
-^^^^^^^^^
+---------
 
-The **geoapps** can be installed directly from PyPI without its dependencies::
+The **geoapps** can also be installed directly from PyPI without its dependencies::
 
     $ pip install geoapps
 
@@ -67,21 +88,3 @@ To work with **geoapps** source code in development, install from GitHub::
 	.. figure:: ../images/download.png
 	    :align: center
 	    :width: 200
-
-Running the applications
-------------------------
-At this point, you will have all required packages to run the applications:
-
-- Run ``Start_Applications.bat``
-
-	.. figure:: ../images/run_applications.png
-	    :align: center
-	    :width: 50%
-
-You should see the index page displayed in your default browser.
-
-	.. figure:: ../images/index_page.png
-	    :align: center
-	    :width: 100%
-
-.. note:: Applications run best with either Chrome or Firefox.

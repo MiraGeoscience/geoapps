@@ -1,23 +1,28 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
+import gc
 import os
-from sklearn.neighbors import KernelDensity
-from skimage.measure import marching_cubes
-import gdal
+
 import dask
 import dask.array as da
-from dask.diagnostics import ProgressBar
-import numpy as np
-import osr
-import pandas as pd
-import gc
-from geoh5py.objects import BlockModel, Grid2D, Octree
-from geoh5py.data import FloatData
-from geoh5py.workspace import Workspace
-from scipy.spatial import cKDTree
-from scipy.interpolate import interp1d
-import urllib
-from shapely.geometry import mapping, LineString
 import fiona
-from fiona.crs import from_epsg
+import numpy as np
+import pandas as pd
+from dask.diagnostics import ProgressBar
+from geoh5py.data import FloatData
+from geoh5py.objects import BlockModel, Grid2D, Octree
+from geoh5py.workspace import Workspace
+from osgeo import gdal
+from scipy.interpolate import interp1d
+from scipy.spatial import cKDTree
+from shapely.geometry import LineString, mapping
+from skimage.measure import marching_cubes
+from sklearn.neighbors import KernelDensity
 
 
 def find_value(labels, strings, default=None):
@@ -64,13 +69,13 @@ def get_surface_parts(surface):
     return parts
 
 
-def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
+def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="float"):
     """
-        Source:
+    Source:
 
-            Cameron Cooke: http://cgcooke.github.io/GDAL/
+        Cameron Cooke: http://cgcooke.github.io/GDAL/
 
-        Modified: 2020-04-28
+    Modified: 2020-04-28
     """
 
     grid2d = data_object.parent
@@ -126,7 +131,11 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
         array = values.reshape(grid2d.shape, order="F").T
 
     dataset = driver.Create(
-        file_name, grid2d.shape[0], grid2d.shape[1], num_bands, encode_type,
+        file_name,
+        grid2d.shape[0],
+        grid2d.shape[1],
+        num_bands,
+        encode_type,
     )
 
     # Get rotation
@@ -144,13 +153,12 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
         )
     )
 
-    datasetSRS = osr.SpatialReference()
-
     try:
-        datasetSRS.ImportFromEPSG(int(epsg_code))
+        dataset.SetProjection(wkt_code)
     except ValueError:
-        print(f"A valid EPSG# is required. Provided {epsg_code}")
-    dataset.SetProjection(datasetSRS.ExportToWkt())
+        print(
+            f"A valid well-known-text (wkt) code is required. Provided {wkt_code} not understood"
+        )
 
     if num_bands == 1:
         dataset.GetRasterBand(1).WriteArray(array)
@@ -163,8 +171,8 @@ def export_grid_2_geotiff(data_object, file_name, epsg_code, data_type="float"):
 
 def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_name=None):
     """
-        Load a geotiff and return
-        a Grid2D with values
+    Load a geotiff and return
+    a Grid2D with values
     """
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)
@@ -198,25 +206,8 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
     return grid_object
 
 
-def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
+def export_curve_2_shapefile(curve, attribute=None, wkt_code=None, file_name=None):
     attribute_vals = None
-
-    if epsg is not None and epsg.isdigit():
-        crs = from_epsg(int(epsg))
-
-        wkt = urllib.request.urlopen(
-            "http://spatialreference.org/ref/epsg/{}/prettywkt/".format(str(int(epsg)))
-        )
-        # remove spaces between characters
-        remove_spaces = wkt.read().replace(b" ", b"")
-        # create the .prj file
-        prj = open(file_name + ".prj", "w")
-
-        epsg = remove_spaces.replace(b"\n", b"")
-        prj.write(epsg.decode("utf-8"))
-        prj.close()
-    else:
-        crs = None
 
     if attribute is not None and curve.get_data(attribute):
         attribute_vals = curve.get_data(attribute)[0].values
@@ -240,7 +231,11 @@ def export_curve_2_shapefile(curve, attribute=None, epsg=None, file_name=None):
         schema["properties"] = {"id": "int"}
 
     with fiona.open(
-        file_name + ".shp", "w", driver="ESRI Shapefile", schema=schema, crs=crs
+        file_name + ".shp",
+        "w",
+        driver="ESRI Shapefile",
+        schema=schema,
+        crs_wkt=wkt_code,
     ) as c:
 
         # If there are multiple geometries, put the "for" loop here
@@ -471,7 +466,7 @@ class signal_processing_1d:
     @property
     def n_padding(self):
         """
-            Number of padding cells added for the FFT
+        Number of padding cells added for the FFT
         """
         if getattr(self, "_n_padding", None) is None:
             self._n_padding = int(np.floor(len(self.values_resampled)))
@@ -494,6 +489,10 @@ class signal_processing_1d:
         sort = np.argsort(locations)
         start = locations[sort[0]] * 1.0
         end = locations[sort[-1]] * 1.0
+
+        if (start == end) or np.isnan(self.hx):
+            return
+
         self._locations_resampled = np.arange(start, end, self.hx)
         self.locations_resampled
 
@@ -682,7 +681,12 @@ def block_model_2_tensor(block_model, models=[]):
     from discretize import TensorMesh
 
     tensor = TensorMesh(
-        [block_model.u_cells, block_model.v_cells, block_model.z_cells], x0="CC0"
+        [
+            np.abs(block_model.u_cells),
+            np.abs(block_model.v_cells),
+            np.abs(block_model.z_cells),
+        ],
+        x0="CC0",
     )
 
     tensor.x0 = [
@@ -895,7 +899,11 @@ def data_2_zarr(h5file, entity_name, downsampling=1, fields=[], zarr_file="data.
     with ProgressBar():
         print("Saving G to zarr: " + zarr_file)
         data_mat = da.to_zarr(
-            stack, zarr_file, compute=True, return_stored=True, overwrite=True,
+            stack,
+            zarr_file,
+            compute=True,
+            return_stored=True,
+            overwrite=True,
         )
 
     return data_mat
@@ -903,13 +911,13 @@ def data_2_zarr(h5file, entity_name, downsampling=1, fields=[], zarr_file="data.
 
 def rotate_vertices(xyz, center, phi, theta):
     """
-      Rotate scatter points in column format around a center location
+    Rotate scatter points in column format around a center location
 
-      INPUT
-      :param: xyz nDx3 matrix
-      :param: center xyz location of rotation
-      :param: theta angle rotation around z-axis
-      :param: phi angle rotation around x-axis
+    INPUT
+    :param: xyz nDx3 matrix
+    :param: center xyz location of rotation
+    :param: theta angle rotation around z-axis
+    :param: phi angle rotation around x-axis
 
     """
     xyz -= np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
@@ -978,17 +986,17 @@ def string_2_list(string):
     """
     Convert a list of numbers separated by comma to a list of floats
     """
-    return [np.float(val) for val in string.split(",") if len(val) > 0]
+    return [float(val) for val in string.split(",") if len(val) > 0]
 
 
 class RectangularBlock:
     """
-        Define a rotated rectangular block in 3D space
+    Define a rotated rectangular block in 3D space
 
-        :param
-            - length, width, depth: width, length and height of prism
-            - center : center of prism in horizontal plane
-            - dip, azimuth : dip and azimuth of prism
+    :param
+        - length, width, depth: width, length and height of prism
+        - center : center of prism in horizontal plane
+        - dip, azimuth : dip and azimuth of prism
     """
 
     def __init__(self, **kwargs):
@@ -1119,6 +1127,14 @@ class RectangularBlock:
         return self._vertices
 
 
+def hex_to_rgb(hex):
+    """
+    Convert hex color code to RGB
+    """
+    code = hex.lstrip("#")
+    return [int(code[i : i + 2], 16) for i in (0, 2, 4)]
+
+
 def symlog(values, threshold):
     """
     Convert values to log with linear threshold near zero
@@ -1140,7 +1156,9 @@ def raw_moment(data, i_order, j_order):
     return (data * x_indicies ** i_order * y_indices ** j_order).sum()
 
 
-def random_sampling(values, size, method="hist", n_bins=100, bandwidth=0.2, rtol=1e-4):
+def random_sampling(
+    values, size, method="histogram", n_bins=100, bandwidth=0.2, rtol=1e-4
+):
     """
     Perform a random sampling of the rows of the input array based on
     the distribution of the columns values.
@@ -1198,30 +1216,30 @@ def moments_cov(data):
     return [x_centroid, y_centroid], cov
 
 
-def principal_moment(m, winSize):
-    """
-    Function to compute the center and principal axes of an anomaly
-    """
-    center, cov = moments_cov(m)
-
-    if not np.any(np.isnan(cov)):
-
-        evals, evecs = np.linalg.eig(cov)
-
-        center_x = int(x) - winSize + center[0]
-
-        center_y = int(z) - winSize + center[1]
-
-        ind = np.argmax(np.abs(evals))
-
-        # Flip the vector if opposite to previous
-        vec_new = evecs[ind]
-        vec_new[1] *= -1
-        sign = np.sign(np.dot(vec, vec_new))
-        if sign == 0:
-            sign = -1
-        vec = sign * vec_new.copy()
-        val = evals[ind]
+# def principal_moment(m, winSize):
+#     """
+#     Function to compute the center and principal axes of an anomaly
+#     """
+#     center, cov = moments_cov(m)
+#
+#     if not np.any(np.isnan(cov)):
+#
+#         evals, evecs = np.linalg.eig(cov)
+#
+#         center_x = int(x) - winSize + center[0]
+#
+#         center_y = int(z) - winSize + center[1]
+#
+#         ind = np.argmax(np.abs(evals))
+#
+#         # Flip the vector if opposite to previous
+#         vec_new = evecs[ind]
+#         vec_new[1] *= -1
+#         sign = np.sign(np.dot(vec, vec_new))
+#         if sign == 0:
+#             sign = -1
+#         vec = sign * vec_new.copy()
+#         val = evals[ind]
 
 
 def ij_2_ind(coordinates, shape):
@@ -1280,7 +1298,7 @@ def get_blob_indices(index, shape, model, threshold, blob_indices=[]):
     return blob_indices
 
 
-def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
+def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kwargs):
     if labels is None:
         axs.set_ylabel("Northing (m)")
         axs.set_xlabel("Easting (m)")
@@ -1301,7 +1319,10 @@ def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
 
 
 def iso_surface(
-    locations, values, levels, resolution=100,
+    locations,
+    values,
+    levels,
+    resolution=100,
 ):
     """
     Generate 3D iso surface from x, y, z locations and values.
@@ -1419,3 +1440,110 @@ def iso_surface(
 #     tree = np.spatial.cKDTree(self.centroids)
 #     indices = tree.query()
 #
+
+colors = [
+    "#000000",
+    "#FFFF00",
+    "#1CE6FF",
+    "#FF34FF",
+    "#FF4A46",
+    "#008941",
+    "#006FA6",
+    "#A30059",
+    "#FFDBE5",
+    "#7A4900",
+    "#0000A6",
+    "#63FFAC",
+    "#B79762",
+    "#004D43",
+    "#8FB0FF",
+    "#997D87",
+    "#5A0007",
+    "#809693",
+    "#FEFFE6",
+    "#1B4400",
+    "#4FC601",
+    "#3B5DFF",
+    "#4A3B53",
+    "#FF2F80",
+    "#61615A",
+    "#BA0900",
+    "#6B7900",
+    "#00C2A0",
+    "#FFAA92",
+    "#FF90C9",
+    "#B903AA",
+    "#D16100",
+    "#DDEFFF",
+    "#000035",
+    "#7B4F4B",
+    "#A1C299",
+    "#300018",
+    "#0AA6D8",
+    "#013349",
+    "#00846F",
+    "#372101",
+    "#FFB500",
+    "#C2FFED",
+    "#A079BF",
+    "#CC0744",
+    "#C0B9B2",
+    "#C2FF99",
+    "#001E09",
+    "#00489C",
+    "#6F0062",
+    "#0CBD66",
+    "#EEC3FF",
+    "#456D75",
+    "#B77B68",
+    "#7A87A1",
+    "#788D66",
+    "#885578",
+    "#FAD09F",
+    "#FF8A9A",
+    "#D157A0",
+    "#BEC459",
+    "#456648",
+    "#0086ED",
+    "#886F4C",
+    "#34362D",
+    "#B4A8BD",
+    "#00A6AA",
+    "#452C2C",
+    "#636375",
+    "#A3C8C9",
+    "#FF913F",
+    "#938A81",
+    "#575329",
+    "#00FECF",
+    "#B05B6F",
+    "#8CD0FF",
+    "#3B9700",
+    "#04F757",
+    "#C8A1A1",
+    "#1E6E00",
+    "#7900D7",
+    "#A77500",
+    "#6367A9",
+    "#A05837",
+    "#6B002C",
+    "#772600",
+    "#D790FF",
+    "#9B9700",
+    "#549E79",
+    "#FFF69F",
+    "#201625",
+    "#72418F",
+    "#BC23FF",
+    "#99ADC0",
+    "#3A2465",
+    "#922329",
+    "#5B4534",
+    "#FDE8DC",
+    "#404E55",
+    "#0089A3",
+    "#CB7E98",
+    "#A4E804",
+    "#324E72",
+    "#6A3A4C",
+]

@@ -1,15 +1,20 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
+from copy import copy
+
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
-from copy import copy
-from geoh5py.objects import Curve, Grid2D, Points, Surface
+import plotly.graph_objects as go
+from geoh5py.data import Data, ReferencedData
+from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 
-from geoapps.utils import (
-    filter_xy,
-    format_labels,
-    symlog,
-    inv_symlog,
-)
+from geoapps.utils import filter_xy, format_labels, inv_symlog, symlog
 
 
 def normalize(values):
@@ -75,8 +80,8 @@ def plot_plan_data_selection(entity, data, **kwargs):
     else:
         return axis, out, indices, line_selection, contour_set
 
-    for collection in axis.collections:
-        collection.remove()
+    # for collection in axis.collections:
+    #     collection.remove()
 
     locations = entity.vertices
     if "resolution" not in kwargs.keys():
@@ -92,7 +97,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
     if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
         data.values[0], str
     ):
-        values = data.values.copy()
+        values = np.asarray(data.values, dtype=float).copy()
         values[(values > 1e-18) * (values < 2e-18)] = np.nan
         values[values == -99999] = np.nan
 
@@ -113,7 +118,9 @@ def plot_plan_data_selection(entity, data, **kwargs):
         map_vals = new_cmap["Value"].copy()
         cmap = colors.ListedColormap(
             np.c_[
-                new_cmap["Red"] / 255, new_cmap["Green"] / 255, new_cmap["Blue"] / 255,
+                new_cmap["Red"] / 255,
+                new_cmap["Green"] / 255,
+                new_cmap["Blue"] / 255,
             ]
         )
         color_norm = colors.BoundaryNorm(map_vals, cmap.N)
@@ -134,7 +141,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
         Y = y[ind_x, :][:, ind_y]
 
         if values is not None:
-            values = values.reshape(entity.shape, order="F")
+            values = np.asarray(values.reshape(entity.shape, order="F"), dtype=float)
             values[indices == False] = np.nan
             values = values[ind_x, :][:, ind_y]
 
@@ -155,7 +162,12 @@ def plot_plan_data_selection(entity, data, **kwargs):
     else:
         x, y = entity.vertices[:, 0], entity.vertices[:, 1]
         if indices is None:
-            indices = filter_xy(x, y, resolution, window=window,)
+            indices = filter_xy(
+                x,
+                y,
+                resolution,
+                window=window,
+            )
         X, Y = x[indices], y[indices]
 
         if data == "Z":
@@ -195,11 +207,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
         x = X.ravel()[ind]
         y = Y.ravel()[ind]
         if ind.sum() > 0:
-            format_labels(x, y, axis)
+            format_labels(x, y, axis, **kwargs)
             axis.set_xlim([x.min(), x.max()])
             axis.set_ylim([y.min(), y.max()])
     elif np.any(x) and np.any(y):
-        format_labels(x, y, axis)
+        format_labels(x, y, axis, **kwargs)
         axis.set_xlim([x.min(), x.max()])
         axis.set_ylim([y.min(), y.max()])
 
@@ -218,8 +230,16 @@ def plot_plan_data_selection(entity, data, **kwargs):
             if not np.any(entity.get_data(key)):
                 continue
 
+            line_data = entity.get_data(key)[0]
+            if isinstance(line_data, ReferencedData):
+                values = [
+                    key
+                    for key, value in line_data.value_map.map.items()
+                    if value in values
+                ]
+
             for line in values:
-                ind = np.where(entity.get_data(key)[0].values == line)[0]
+                ind = np.where(line_data.values == line)[0]
                 x, y, values = (
                     locations[ind, 0],
                     locations[ind, 1],
@@ -264,7 +284,11 @@ def plot_profile_data_selection(
                 continue
 
             if resolution is not None:
-                dwn_ind = filter_xy(locations[ind, 0], locations[ind, 1], resolution,)
+                dwn_ind = filter_xy(
+                    locations[ind, 0],
+                    locations[ind, 1],
+                    resolution,
+                )
 
                 ind = ind[dwn_ind]
 
@@ -322,6 +346,156 @@ def plot_profile_data_selection(
                 )
 
     return ax, threshold
+
+
+def plotly_scatter(
+    points,
+    figure=None,
+    color=None,
+    size=None,
+    marker_scale=10.0,
+    colorscale="Portland",
+    **kwargs,
+):
+    """
+    Create a plotly.graph_objects.Mesh3D figure.
+    """
+    assert (
+        getattr(points, "vertices", None) is not None
+    ), f"Input object must have vertices"
+
+    if figure is None:
+        figure = go.FigureWidget()
+
+    figure.add_trace(go.Scatter3d())
+    figure.data[-1].x = points.vertices[:, 0]
+    figure.data[-1].y = points.vertices[:, 1]
+    figure.data[-1].z = points.vertices[:, 2]
+    figure.data[-1].mode = "markers"
+    figure.data[-1].marker = {"colorscale": colorscale}
+
+    for key, value in kwargs.items():
+        if hasattr(figure.data[-1], key):
+            setattr(figure.data[-1], key, value)
+        elif hasattr(figure.data[-1].marker, key):
+            setattr(figure.data[-1].marker, key, value)
+
+    if color is not None:
+        color = check_data_type(color)
+        figure.data[-1].marker.color = color
+
+    if size is not None:
+        size = normalize(check_data_type(size))
+        figure.data[-1].marker.size = size * marker_scale
+    else:
+        figure.data[-1].marker.size = marker_scale
+
+    figure.update_layout(scene_aspectmode="data")
+
+    return figure
+
+
+def plotly_surface(
+    surface, figure=None, intensity=None, colorscale="Portland", **kwargs
+):
+    """
+    Create a plotly.graph_objects.Mesh3D figure.
+    """
+    assert isinstance(surface, Surface), f"Input surface must be of type {Surface}"
+
+    if figure is None:
+        figure = go.FigureWidget()
+
+    figure.add_trace(go.Mesh3d())
+    figure.data[-1].x = surface.vertices[:, 0]
+    figure.data[-1].y = surface.vertices[:, 1]
+    figure.data[-1].z = surface.vertices[:, 2]
+    figure.data[-1].i = surface.cells[:, 0]
+    figure.data[-1].j = surface.cells[:, 1]
+    figure.data[-1].k = surface.cells[:, 2]
+    figure.data[-1].colorscale = colorscale
+
+    for key, value in kwargs.items():
+        if hasattr(figure.data[-1], key):
+            setattr(figure.data[-1], key, value)
+
+    if intensity is not None:
+        intensity = check_data_type(intensity)
+        figure.data[-1].intensity = intensity
+
+    figure.update_layout(scene_aspectmode="data")
+
+    return figure
+
+
+def plotly_block_model(
+    block_model,
+    figure=None,
+    value=None,
+    x_slice=[],
+    y_slice=[],
+    z_slice=[],
+    colorscale="Portland",
+    **kwargs,
+):
+    """
+    Create a plotly.graph_objects.Mesh3D figure.
+    """
+    assert isinstance(
+        block_model, BlockModel
+    ), f"Input block_model must be of type {Surface}"
+
+    if figure is None:
+        figure = go.FigureWidget()
+
+    if not x_slice:
+        x_slice = [block_model.centroids[:, 0].mean()]
+
+    if not y_slice:
+        y_slice = [block_model.centroids[:, 1].mean()]
+
+    if not z_slice:
+        z_slice = [block_model.centroids[:, 2].mean()]
+
+    figure.add_trace(go.Volume())
+    figure.data[-1].x = block_model.centroids[:, 0]
+    figure.data[-1].y = block_model.centroids[:, 1]
+    figure.data[-1].z = block_model.centroids[:, 2]
+
+    figure.data[-1].opacity = 1.0
+    figure.data[-1].slices = {
+        "x": dict(show=True, locations=x_slice),
+        "y": dict(show=True, locations=y_slice),
+        "z": dict(show=True, locations=z_slice),
+    }
+    figure.data[-1].caps = dict(x_show=False, y_show=False, z_show=False)
+    figure.data[-1].colorscale = colorscale
+
+    for key, vals in kwargs.items():
+        if hasattr(figure.data[-1], key):
+            setattr(figure.data[-1], key, vals)
+
+    if value is not None:
+        value = check_data_type(value)
+        figure.data[-1].value = value
+
+    figure.update_layout(scene_aspectmode="data")
+
+    return figure
+
+
+def check_data_type(data):
+    """
+    Take data as a list or geoh5py.data.Data type and return an array.
+    """
+    if isinstance(data, list):
+        data = data[0]
+
+    if isinstance(data, Data):
+        data = data.values
+
+    assert isinstance(data, np.ndarray), "Values must be of type numpy.ndarray"
+    return data
 
 
 # def plot_em_data_widget(h5file):

@@ -1,0 +1,19 @@
+name: geoapps
+
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - ipywidgets
+  - ipykernel
+  - pip:
+    - geoh5py
+    - geoapps
+    - numpydoc
+    - sphinx_issues
+    - nbsphinx
+    - sphinx-gallery
+    - jupyter_sphinx
+    - plotly==4.9.0
+    - ipyfilechooser

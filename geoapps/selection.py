@@ -1,10 +1,19 @@
-import numpy as np
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import ipywidgets as widgets
-from ipywidgets import Dropdown, SelectMultiple, VBox, FloatText
+import numpy as np
+from geoh5py.data import FloatData, IntegerData, ReferencedData
+from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
-from geoh5py.objects import object_base
-from geoapps.base import BaseApplication
+from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
+
 from geoapps import utils
+from geoapps.base import BaseApplication
 
 
 class ObjectDataSelection(BaseApplication):
@@ -23,9 +32,9 @@ class ObjectDataSelection(BaseApplication):
         self._select_multiple = False
 
         super().__init__(**kwargs)
-
+        self.data_panel = VBox([self.objects, self.data])
         self.update_data_list(None)
-        self._widget = VBox([self.objects, self.data])
+        self._main = self.data_panel
 
     @property
     def add_groups(self):
@@ -46,9 +55,13 @@ class ObjectDataSelection(BaseApplication):
         """
         if getattr(self, "_data", None) is None:
             if self.select_multiple:
-                self._data = SelectMultiple(description="Data: ",)
+                self._data = SelectMultiple(
+                    description="Data: ",
+                )
             else:
-                self._data = Dropdown(description="Data: ",)
+                self._data = Dropdown(
+                    description="Data: ",
+                )
         return self._data
 
     @data.setter
@@ -64,7 +77,7 @@ class ObjectDataSelection(BaseApplication):
         Object selector
         """
         if getattr(self, "_objects", None) is None:
-            self.objects = Dropdown(description="Object:",)
+            self.objects = Dropdown(description="Object:", options=[""])
 
         return self._objects
 
@@ -91,8 +104,8 @@ class ObjectDataSelection(BaseApplication):
 
         for entity_type in entity_types:
             assert issubclass(
-                entity_type, object_base.ObjectBase
-            ), f"Provided object_types must be instances of {object_base.ObjectBase}"
+                entity_type, ObjectBase
+            ), f"Provided object_types must be instances of {ObjectBase}"
 
         self._object_types = tuple(entity_types)
 
@@ -145,13 +158,6 @@ class ObjectDataSelection(BaseApplication):
             self._data = Dropdown(description="Data: ", options=options)
 
     @property
-    def widget(self):
-        """
-        :obj:`ipywidgets.VBox`: Application layout
-        """
-        return self._widget
-
-    @property
     def workspace(self):
         """
         Target geoh5py workspace
@@ -179,12 +185,27 @@ class ObjectDataSelection(BaseApplication):
         if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
             self.objects.value
         ):
-            obj = self._workspace.get_entity(self.objects.value)[0]
-            if obj.get_data(self.data.value):
-                data = obj.get_data(self.data.value)[0]
-                return obj, data
+            for entity in self._workspace.get_entity(self.objects.value):
+                if isinstance(entity, ObjectBase):
+                    obj = entity
+
+            if isinstance(self.data, Dropdown):
+                values = [self.data.value]
             else:
-                return obj, None
+                values = self.data.value
+
+            data = []
+            for value in values:
+                if obj.get_data(value):
+                    data += obj.get_data(value)
+
+                elif any([pg.name == value for pg in obj.property_groups]):
+                    data += [
+                        self.workspace.get_entity(prop)[0]
+                        for prop in obj.get_property_group(value).properties
+                    ]
+
+            return obj, data
         else:
             return None, None
 
@@ -194,7 +215,9 @@ class ObjectDataSelection(BaseApplication):
             self.objects.value
         ):
 
-            obj = self._workspace.get_entity(self.objects.value)[0]
+            for entity in self._workspace.get_entity(self.objects.value):
+                if isinstance(entity, ObjectBase):
+                    obj = entity
 
             if getattr(obj, "get_data_list", None) is None:
                 return
@@ -209,19 +232,26 @@ class ObjectDataSelection(BaseApplication):
                 )
 
             if self.add_groups != "only":
+                data_list = obj.get_data_list()
                 options = (
                     options
                     + ["--- Channels ---"]
                     + [
-                        name
-                        for name in obj.get_data_list()
-                        if name != "Visual Parameters"
+                        obj.get_data(uid)[0].name
+                        for uid in data_list
+                        if isinstance(obj.get_data(uid)[0], (IntegerData, FloatData))
                     ]
                     + ["Z"]
                 )
 
+            value = self.data.value
             self.data.options = options
-            if self.find_label:
+
+            if self.select_multiple and any([val in options for val in value]):
+                self.data.value = [val for val in value if val in options]
+            elif value in options:
+                self.data.value = value
+            elif self.find_label:
                 self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
             self.data.options = []
@@ -264,11 +294,14 @@ class LineOptions(ObjectDataSelection):
 
         super().__init__(**kwargs)
 
+        if "objects" in kwargs.keys() and isinstance(kwargs["objects"], Dropdown):
+            self._objects.observe(self.update_data_list, names="value")
+
         self._data.observe(self.update_line_list, names="value")
         self.update_data_list(None)
         self.update_line_list(None)
 
-        self._widget = VBox([self._data, self.lines])
+        self._main = VBox([self._data, self.lines])
         self._data.description = "Lines field"
 
     @property
@@ -278,9 +311,13 @@ class LineOptions(ObjectDataSelection):
         """
         if getattr(self, "_lines", None) is None:
             if self.multiple_lines:
-                self._lines = widgets.SelectMultiple(description="Select lines:",)
+                self._lines = widgets.SelectMultiple(
+                    description="Select lines:",
+                )
             else:
-                self._lines = widgets.Dropdown(description="Select line:",)
+                self._lines = widgets.Dropdown(
+                    description="Select line:",
+                )
 
         return self._lines
 
@@ -300,8 +337,11 @@ class LineOptions(ObjectDataSelection):
 
     def update_line_list(self, _):
         _, data = self.get_selected_entities()
-        if data is not None and getattr(data, "values", None) is not None:
-            self.lines.options = [""] + np.unique(data.values).tolist()
+        if data and getattr(data[0], "values", None) is not None:
+            if isinstance(data[0], ReferencedData):
+                self.lines.options = [""] + list(data[0].value_map.map.values())
+            else:
+                self.lines.options = [""] + np.unique(data[0].values).tolist()
 
 
 class TopographyOptions(ObjectDataSelection):
@@ -312,13 +352,15 @@ class TopographyOptions(ObjectDataSelection):
     def __init__(self, **kwargs):
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
         self._offset = FloatText(description="Vertical offset (+ve up)")
-        self._constant = FloatText(description="Elevation (m)",)
+        self._constant = FloatText(
+            description="Elevation (m)",
+        )
 
         super().__init__(**kwargs)
 
         self.objects.value = utils.find_value(self.objects.options, self.find_label)
         self.option_list = {
-            "Object": self.widget,
+            "Object": self.main,
             "Relative to Sensor": self.offset,
             "Constant": self.constant,
             "None": widgets.Label("No topography"),
@@ -332,7 +374,7 @@ class TopographyOptions(ObjectDataSelection):
             self.update_options()
 
         self.options.observe(update_options)
-        self._widget = VBox([self.options, self.option_list[self.options.value]])
+        self._main = VBox([self.options, self.option_list[self.options.value]])
 
     @property
     def panel(self):
@@ -351,7 +393,7 @@ class TopographyOptions(ObjectDataSelection):
         return self._options
 
     def update_options(self):
-        self._widget.children = [
+        self._main.children = [
             self.options,
             self.option_list[self.options.value],
         ]

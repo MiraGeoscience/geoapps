@@ -14,7 +14,7 @@ along with open-source code from the Python ecosystem.
 Links
 -----
 
-- [Download the latest](https://github.com/MiraGeoscience/geoapps/archive/develop.zip)
+- [Download the latest](https://github.com/MiraGeoscience/geoapps/archive/main.zip)
 - [Getting started](https://geoapps.readthedocs.io/en/latest/content/installation.html#installation)
 - [Documentation](https://geoapps.readthedocs.io/en/latest/index.html)
 - [Available on PyPI](https://pypi.org/project/geoapps/)
@@ -34,3 +34,11 @@ Current sponsors:
 - [Rio Tinto](https://www.riotinto.com/en)
 - [Teck](https://www.teck.com/)
 - [Vale](http://www.vale.com/canada/EN/Pages/default.aspx)
+
+License
+-------
+
+**geoapps** is distributed under the terms and conditions of the [MIT License](LICENSE).
+
+
+*Copyright (c) 2021 Mira Geoscience Ltd.*

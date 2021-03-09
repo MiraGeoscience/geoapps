@@ -1,52 +1,58 @@
-import re
-import os
-import time
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
 
-from ipywidgets import SelectMultiple, VBox, IntText, ToggleButton
+import os
+import re
+
 import matplotlib.pyplot as plt
 import numpy
+from fiona.transform import transform
 from geoh5py.data import FloatData
-from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
+from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
+from osgeo import gdal, osr
 
-from geoapps.utils import format_labels
 from geoapps.base import BaseApplication
-
-from fiona.transform import transform
-import gdal
 from geoapps.plotting import plot_plan_data_selection
-from geoapps.utils import (
-    export_grid_2_geotiff,
-    geotiff_2_grid,
-)
+from geoapps.utils import export_grid_2_geotiff, geotiff_2_grid
 
 
 class CoordinateTransformation(BaseApplication):
-    """
-
-    """
+    """"""
 
     defaults = {
         "ga_group_name": "CoordinateTransformation",
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": ["Gravity_Magnetics_drape60m"],
-        "epsg_in": 26914,
-        "epsg_out": 26913,
+        "objects": ["Gravity_Magnetics_drape60m", "Data_TEM_pseudo3D"],
+        "code_in": "EPSG:26914",
+        "code_out": "EPSG:4326",
     }
 
     def __init__(self, **kwargs):
 
         kwargs = self.apply_defaults(**kwargs)
+
+        self.code_out.observe(self.set_wkt_out, names="value")
+        self.code_in.observe(self.set_wkt_in, names="value")
+        self.wkt_in.observe(self.set_authority_in, names="value")
+        self.wkt_out.observe(self.set_authority_out, names="value")
+
         super().__init__(**kwargs)
 
-        self._widget = VBox(
+        self.input_projection = HBox([self.code_in, self.wkt_in])
+        self.output_projection = HBox([self.code_out, self.wkt_out])
+        self._main = VBox(
             [
                 self.project_panel,
                 self.objects,
-                self.epsg_in,
-                self.epsg_out,
-                self.trigger_panel,
+                self.input_projection,
+                self.output_projection,
+                self.output_panel,
             ]
         )
 
@@ -59,14 +65,22 @@ class CoordinateTransformation(BaseApplication):
         """
         Run the coordinate transformation
         """
-        if self.epsg_in.value != 0 and self.epsg_out.value != 0:
+        if self.wkt_in.value != "" and self.wkt_out.value != "":
+
+            if self.plot_result:
+                self.figure = plt.figure(figsize=(12, 8))
+                ax1 = plt.subplot(1, 2, 1)
+                ax2 = plt.subplot(1, 2, 2)
+
             for name in self.objects.value:
                 obj = self.workspace.get_entity(name)[0]
                 temp_work = Workspace(self.workspace.name + "temp")
                 count = 0
                 if isinstance(obj, Grid2D):
                     for child in obj.children:
-                        temp_file = child.name + f"_{self.epsg_in.value}.tif"
+                        temp_file = (
+                            child.name + f"_{self.code_in.value.replace(':', '_')}.tif"
+                        )
                         temp_file_out = child.name + ".tif"
 
                         if isinstance(child, FloatData):
@@ -74,25 +88,26 @@ class CoordinateTransformation(BaseApplication):
                             export_grid_2_geotiff(
                                 child,
                                 temp_file,
-                                f"{self.epsg_in.value}",
+                                wkt_code=self.wkt_in.value,
                                 data_type="float",
                             )
                             grid = gdal.Open(temp_file)
                             gdal.Warp(
                                 temp_file_out,
                                 grid,
-                                dstSRS=f"EPSG:{self.epsg_out.value}",
+                                dstSRS=self.wkt_out.value,
                             )
 
                             if count == 0:
-                                grid2d = geotiff_2_grid(
+                                new_obj = geotiff_2_grid(
                                     temp_work,
                                     temp_file_out,
-                                    grid_name=obj.name + f"_EPSG{self.epsg_out.value}",
+                                    grid_name=obj.name
+                                    + self.code_out.value.replace(":", "_"),
                                 )
                             else:
                                 _ = geotiff_2_grid(
-                                    temp_work, temp_file_out, grid_object=grid2d
+                                    temp_work, temp_file_out, grid_object=new_obj
                                 )
 
                             del grid
@@ -100,7 +115,7 @@ class CoordinateTransformation(BaseApplication):
                             os.remove(temp_file_out)
                             count += 1
 
-                    grid2d.copy(parent=self.ga_group)
+                    new_obj.copy(parent=self.ga_group)
                     os.remove(temp_work.h5file)
 
                 else:
@@ -110,22 +125,33 @@ class CoordinateTransformation(BaseApplication):
 
                     x, y = obj.vertices[:, 0].tolist(), obj.vertices[:, 1].tolist()
 
-                    if self.epsg_in.value == 4326:
+                    if self.code_in.value == "EPSG:4326":
                         x, y = y, x
 
                     x2, y2 = transform(
-                        f"EPSG:{self.epsg_in.value}",
-                        f"EPSG:{self.epsg_out.value}",
+                        self.wkt_in.value,
+                        self.wkt_out.value,
                         x,
                         y,
                     )
 
-                    if self.epsg_out.value == 4326:
+                    if self.code_out.value == "EPSG:4326":
                         x2, y2 = y2, x2
 
                     new_obj = obj.copy(parent=self.ga_group, copy_children=True)
                     new_obj.vertices = numpy.c_[x2, y2, obj.vertices[:, 2]]
-                    new_obj.name = new_obj.name + f"_EPSG{self.epsg_out.value}"
+                    new_obj.name = new_obj.name + self.code_out.value.replace(":", "_")
+
+                if self.plot_result:
+                    plot_plan_data_selection(obj, obj.children[0], axis=ax1)
+                    if '"Longitude",EAST' in self.wkt_in.value:
+                        ax1.set_xlabel("Longitude")
+                        ax1.set_ylabel("Latitude")
+
+                    plot_plan_data_selection(new_obj, new_obj.children[0], axis=ax2)
+                    if '"Longitude",EAST' in self.wkt_out.value:
+                        ax2.set_xlabel("Longitude")
+                        ax2.set_ylabel("Latitude")
 
             if self.live_link.value:
                 self.live_link_output(self.ga_group)
@@ -144,27 +170,32 @@ class CoordinateTransformation(BaseApplication):
         return self._objects
 
     @property
-    def epsg_in(self):
-        if getattr(self, "_epsg_in", None) is None:
-            self._epsg_in = IntText(
-                description="EPSG # in:", disabled=False, continuous_update=False
+    def code_in(self):
+        if getattr(self, "_code_in", None) is None:
+            self._code_in = Text(
+                description="Input Projection:", continuous_update=False
             )
-        return self._epsg_in
+        return self._code_in
 
     @property
-    def epsg_out(self):
-        if getattr(self, "_epsg_out", None) is None:
-            self._epsg_out = IntText(
-                description="EPSG # out:", disabled=False, continuous_update=False
+    def code_out(self):
+        if getattr(self, "_code_out", None) is None:
+            self._code_out = Text(
+                description="Output Projection:", continuous_update=False
             )
-        return self._epsg_out
+        return self._code_out
 
     @property
-    def widget(self):
-        """
-        :obj:`ipywidgets.VBox`: Pre-defined application layout
-        """
-        return self._widget
+    def wkt_in(self):
+        if getattr(self, "_wkt_in", None) is None:
+            self._wkt_in = Textarea(description="<=> WKT", layout=Layout(width="50%"))
+        return self._wkt_in
+
+    @property
+    def wkt_out(self):
+        if getattr(self, "_wkt_out", None) is None:
+            self._wkt_out = Textarea(description="<=> WKT", layout=Layout(width="50%"))
+        return self._wkt_out
 
     @property
     def workspace(self):
@@ -193,3 +224,38 @@ class CoordinateTransformation(BaseApplication):
                 for obj in self._workspace.all_objects()
                 if isinstance(obj, self.object_types)
             ]
+
+    def set_wkt_in(self, _):
+        datasetSRS = osr.SpatialReference()
+        datasetSRS.SetFromUserInput(self.code_in.value.upper())
+
+        self.wkt_in.unobserve_all("value")
+        self.wkt_in.value = datasetSRS.ExportToWkt()
+        self.wkt_in.observe(self.set_authority_in, names="value")
+
+    def set_authority_in(self, _):
+        self.code_in.unobserve_all("value")
+
+        code = re.findall(r'AUTHORITY\["(\D+","\d+)"\]', self.wkt_in.value)
+        if code:
+            self.code_in.value = code[-1].replace('","', ":")
+        else:
+            self.code_in.value = ""
+        self.code_in.observe(self.set_wkt_in, names="value")
+
+    def set_wkt_out(self, _):
+        datasetSRS = osr.SpatialReference()
+        datasetSRS.SetFromUserInput(self.code_out.value.upper())
+
+        self.wkt_out.unobserve_all("value")
+        self.wkt_out.value = datasetSRS.ExportToWkt()
+        self.wkt_out.observe(self.set_authority_out, names="value")
+
+    def set_authority_out(self, _):
+        self.code_out.unobserve_all("value")
+        code = re.findall(r'AUTHORITY\["(\D+","\d+)"\]', self.wkt_out.value)
+        if code:
+            self.code_out.value = code[-1].replace('","', ":")
+        else:
+            self.code_out.value = ""
+        self.code_out.observe(self.set_wkt_out, names="value")

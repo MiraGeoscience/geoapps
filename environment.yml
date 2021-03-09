@@ -8,23 +8,26 @@ dependencies:
   - git
   - pip
   - simpeg=0.13.1
-  - matplotlib
-  - ipywidgets
-  - ipykernel
-  - geopandas
-  - scikit-image
-  - scikit-learn
+  - discretize=0.5.1
+  - matplotlib=3.2.1
+  - ipywidgets=7.6.3
+  - ipykernel=5.5.0
+  - geopandas=0.9.0
+  - scikit-image=0.18.1
+  - scikit-learn=0.24.1
   - h5py
-  - zarr
-  - fsspec
-  - xarray
+  - zarr=2.6.1
+  - fsspec=0.8.7
+  - xarray=0.17.0
+  - dask=2021.03.0
   - pip:
-    - empymod
+    - empymod==2.0.5
     - geoh5py
-    - geoapps
     - numpydoc
     - sphinx_issues
     - nbsphinx
     - jupyter_sphinx
     - plotly==4.9.0
-    - ipyfilechooser
+    - ipyfilechooser==0.4.2
+    - requests==2.25.1
+    - ezdxf==0.15.2
