@@ -7,6 +7,7 @@
 
 import gc
 import os
+import re
 
 import dask
 import dask.array as da
@@ -255,6 +256,69 @@ def export_curve_2_shapefile(curve, attribute=None, wkt_code=None, file_name=Non
                 # geometry of of the original polygon shapefile
                 res["geometry"] = mapping(pline)
                 c.write(res)
+
+
+def weighted_average(
+    xyz_in,
+    xyz_out,
+    values,
+    n=8,
+    threshold=1e-1,
+    return_indices=False,
+    max_distance=np.inf,
+):
+    """
+    Perform a inverse distance weighted averaging of values.
+
+    Parameters
+    ----------
+    xyz_in: numpy.ndarray shape(*, 3)
+        Input coordinate locations
+
+    xyz_out: numpy.ndarray shape(*, 3)
+        Output coordinate locations
+
+    values: list of numpy.ndarray
+        Values to be averaged from the input to output locations
+
+    max_distance: flat, default=numpy.inf
+        Maximum averaging distance, beyond which values are assigned nan
+
+    n: int, default=8
+        Number of nearest neighbours used in the weighted average
+
+    threshold: float, default=1e-1
+        Small value added to the radial distance to avoid zero division.
+        The value can also be used to smooth the interpolation.
+
+    return_indices: bool, default=False
+        Return the indices of the nearest neighbours from the input locations.
+
+    """
+    assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
+    print([vals for vals in values])
+    assert all(
+        [vals.shape[0] == xyz_in.shape[0] for vals in values]
+    ), "Input 'values' must have the same shape as input 'locations'"
+
+    tree = cKDTree(xyz_in)
+    rad, ind = tree.query(xyz_out, n)
+    rad[rad > max_distance] = np.nan
+    out = []
+    for value in values:
+        values_interp = np.zeros(xyz_out.shape[0])
+        weight = np.zeros(xyz_out.shape[0])
+
+        for ii in range(n):
+            values_interp += value[ind[:, ii]] / (rad[:, ii] + threshold)
+            weight += 1.0 / (rad[:, ii] + threshold)
+
+        out += [values_interp / weight]
+
+    if return_indices:
+        return out, ind
+
+    return out
 
 
 def filter_xy(x, y, distance, window=None):
@@ -1318,49 +1382,130 @@ def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kw
     axs.set_aspect(aspect)
 
 
+def input_string_2_float(input_string):
+    """
+    Function to input interval and value as string to a list of floats.
+
+    Parameter
+    ---------
+    input_string: str
+        Input string value of type `val1:val2:ii, val3, val4`
+
+
+    Return
+    ------
+    list of floats
+        Corresponding list of values in float format
+
+    """
+    if input_string != "":
+        vals = re.split(",", input_string)
+        cntrs = []
+        for val in vals:
+            if ":" in val:
+                param = np.asarray(re.split(":", val), dtype="int")
+                if len(param) == 2:
+                    cntrs += [np.arange(param[0], param[1])]
+                else:
+                    cntrs += [np.arange(param[0], param[1], param[2])]
+            else:
+                cntrs += [float(val)]
+        return np.unique(np.sort(np.hstack(cntrs)))
+
+    return None
+
+
 def iso_surface(
-    locations,
+    entity,
     values,
     levels,
     resolution=100,
+    max_distance=np.inf,
 ):
     """
-    Generate 3D iso surface from x, y, z locations and values.
+    Generate 3D iso surface from an entity vertices or centroids and values.
 
     Parameters
     ----------
-    locations
-        N x 3 array of floats of values positions
-    values
-        Array of floats
-    levels
+    entity: geoh5py.objects
+        Any entity with 'vertices' or 'centroids' attribute.
+
+    values: numpy.ndarray
+        Array of values to create iso-surfaces from.
+
+    levels: list of floats
         List of iso values
-    resolution
-        Grid size used to generate the iso surface
+
+    max_distance: float, default=numpy.inf
+        Maximum distance from input data to generate iso surface.
+        Only used for input entities other than BlockModel.
+
+    resolution: int, default=100
+        Grid size used to generate the iso surface.
+        Only used for input entities other than BlockModel.
 
     Returns
     -------
     surfaces: list
         List of surfaces (one per levels) defined by
-        vertices and faces.
+        vertices and cell indices.
+        [(vertices, cells)_level_1, ..., (vertices, cells)_level_n]
     """
-    grid = []
-    for ii in range(3):
-        grid += [
-            np.arange(
-                locations[:, ii].min(), locations[:, ii].max() + resolution, resolution
-            )
+    if getattr(entity, "vertices", None) is not None:
+        locations = entity.vertices
+    elif getattr(entity, "centroids", None) is not None:
+        locations = entity.centroids
+    else:
+        print("Input 'entity' must have 'vertices' or centroids'")
+        return None
+
+    if isinstance(entity, BlockModel):
+        values = values.reshape(
+            (entity.shape[2], entity.shape[0], entity.shape[1]), order="F"
+        ).transpose((1, 2, 0))
+        grid = [
+            entity.u_cell_delimiters,
+            entity.v_cell_delimiters,
+            entity.z_cell_delimiters,
         ]
 
-    y, x, z = np.meshgrid(grid[1], grid[0], grid[2])
+    else:
+        grid = []
+        for ii in range(3):
+            grid += [
+                np.arange(
+                    locations[:, ii].min(),
+                    locations[:, ii].max() + resolution,
+                    resolution,
+                )
+            ]
 
-    tree = cKDTree(locations)
-    _, ind = tree.query(np.c_[x.flatten(), y.flatten(), z.flatten()])
-    values = values[ind].reshape(x.shape)
+        y, x, z = np.meshgrid(grid[1], grid[0], grid[2])
+        values = weighted_average(
+            locations,
+            np.c_[x.flatten(), y.flatten(), z.flatten()],
+            [values],
+            threshold=1e-1,
+            n=8,
+            max_distance=max_distance,
+        )
+        values = values[0].reshape(x.shape)
 
     surfaces = []
     for level in levels:
         verts, faces, _, _ = marching_cubes(values, level=level)
+
+        # Remove all vertices and cells with nan
+        nan_verts = np.any(np.isnan(verts), axis=1)
+        rem_cells = np.any(nan_verts[faces], axis=1)
+
+        active = np.arange(nan_verts.shape[0])
+        active[nan_verts] = nan_verts.shape[0]
+        _, inv_map = np.unique(active, return_inverse=True)
+
+        verts = verts[nan_verts == False, :]
+        faces = faces[rem_cells == False, :]
+        faces = inv_map[faces]
 
         vertices = []
         for ii in range(3):
@@ -1369,7 +1514,14 @@ def iso_surface(
             )
             vertices += [F(verts[:, ii])]
 
-        surfaces += [[np.vstack(vertices).T, faces]]
+        if isinstance(entity, BlockModel):
+            vertices = rotate_xy(np.vstack(vertices).T, [0, 0, 0], entity.rotation)
+            vertices[:, 0] += entity.origin["x"]
+            vertices[:, 1] += entity.origin["y"]
+            vertices[:, 2] += entity.origin["z"]
+            vertices = vertices.T
+
+        surfaces += [[np.vstack(vertices).T, faces.astype("uint32")]]
 
     return surfaces
 
