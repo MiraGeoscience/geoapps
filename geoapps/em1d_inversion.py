@@ -196,8 +196,66 @@ def inversion(input_file):
     selection = input_param["lines"]
     hz_min, expansion, n_cells = input_param["mesh 1D"]
     ignore_values = input_param["ignore_values"]
-    max_iteration = input_param["max_iterations"]
     resolution = float(input_param["resolution"])
+
+    if "initial_beta_ratio" in list(input_param.keys()):
+        initial_beta_ratio = input_param["initial_beta_ratio"]
+    else:
+        initial_beta_ratio = 1e2
+
+    if "initial_beta" in list(input_param.keys()):
+        initial_beta = input_param["initial_beta"]
+    else:
+        initial_beta = None
+
+    if "model_norms" in list(input_param.keys()):
+        model_norms = input_param["model_norms"]
+    else:
+        model_norms = [2, 2, 2, 2]
+
+    model_norms = np.c_[model_norms].T
+
+    if "alphas" in list(input_param.keys()):
+        alphas = input_param["alphas"]
+        if len(alphas) == 4:
+            alphas = alphas * 3
+        else:
+            assert len(alphas) == 12, "Alphas require list of 4 or 12 values"
+    else:
+        alphas = [
+            1,
+            1,
+            1,
+        ]
+
+    if "max_iterations" in list(input_param.keys()):
+
+        max_iterations = input_param["max_iterations"]
+        assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
+    else:
+        if np.all(np.r_[model_norms] == 2):
+            # Cartesian or not sparse
+            max_iterations = 10
+        else:
+            # Spherical or sparse
+            max_iterations = 40
+
+    if "max_cg_iterations" in list(input_param.keys()):
+        max_cg_iterations = input_param["max_cg_iterations"]
+    else:
+        max_cg_iterations = 30
+
+    if "tol_cg" in list(input_param.keys()):
+        tol_cg = input_param["tol_cg"]
+    else:
+        tol_cg = 1e-4
+
+    if "max_global_iterations" in list(input_param.keys()):
+        max_global_iterations = input_param["max_global_iterations"]
+        assert max_global_iterations >= 0, "Max IRLS iterations must be >= 0"
+    else:
+        # Spherical or sparse
+        max_global_iterations = 100
 
     if "window" in input_param.keys():
         window = input_param["window"]
@@ -206,12 +264,6 @@ def inversion(input_file):
     else:
         window = None
 
-    if "model_norms" in list(input_param.keys()):
-        model_norms = input_param["model_norms"]
-    else:
-        model_norms = [2, 2, 2, 2]
-
-    model_norms = np.c_[model_norms].T
     if "max_irls_iterations" in list(input_param.keys()):
 
         max_irls_iterations = input_param["max_irls_iterations"]
@@ -885,9 +937,9 @@ def inversion(input_file):
         reg_sigma = LateralConstraint(
             mesh_reg,
             mapping=regmap,
-            alpha_s=1.0,
-            alpha_x=1.0,
-            alpha_y=1.0,
+            alpha_s=alphas[0],
+            alpha_x=alphas[1],
+            alpha_y=alphas[2],
         )
 
         min_distance = None
@@ -901,29 +953,36 @@ def inversion(input_file):
             minimum_distance=min_distance,
         )
 
-        IRLS = Directives.Update_IRLS(
-            maxIRLSiter=0,
-            minGNiter=1,
-            fix_Jmatrix=True,
-            betaSearch=False,
-            chifact_start=chi_target,
-            chifact_target=chi_target,
-        )
-
         opt = Optimization.ProjectedGNCG(
-            maxIter=max_iteration,
+            maxIter=10,
             lower=np.log(lower_bound),
             upper=np.log(upper_bound),
             maxIterLS=20,
-            maxIterCG=30,
-            tolCG=1e-5,
+            maxIterCG=max_cg_iterations,
+            tolCG=tol_cg,
         )
-        invProb_HS = InvProblem.BaseInvProblem(dmisfit, reg_sigma, opt)
-        betaest = Directives.BetaEstimate_ByEig(beta0_ratio=10.0)
-        update_Jacobi = Directives.UpdatePreconditioner()
-        inv = Inversion.BaseInversion(
-            invProb_HS, directiveList=[betaest, IRLS, update_Jacobi]
+        invProb_HS = InvProblem.BaseInvProblem(
+            dmisfit, reg_sigma, opt, beta=initial_beta
         )
+
+        directiveList = []
+        if initial_beta is None:
+            directiveList.append(
+                Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
+            )
+
+        directiveList.append(
+            Directives.Update_IRLS(
+                maxIRLSiter=0,
+                minGNiter=1,
+                fix_Jmatrix=True,
+                betaSearch=False,
+                chifact_start=chi_target,
+                chifact_target=chi_target,
+            )
+        )
+        directiveList.append(Directives.UpdatePreconditioner())
+        inv = Inversion.BaseInversion(invProb_HS, directiveList=directiveList)
 
         opt.LSshorten = 0.5
         opt.remember("xc")
@@ -1015,9 +1074,9 @@ def inversion(input_file):
     reg = LateralConstraint(
         mesh_reg,
         mapping=Maps.IdentityMap(nP=mesh_reg.nC),
-        alpha_s=1.0,
-        alpha_x=1.0,
-        alpha_y=1.0,
+        alpha_s=alphas[0],
+        alpha_x=alphas[1],
+        alpha_y=alphas[2],
         gradientType="total",
     )
     reg.norms = model_norms
@@ -1040,46 +1099,60 @@ def inversion(input_file):
     )
 
     opt = Optimization.ProjectedGNCG(
-        maxIter=max_iteration,
+        maxIter=max_iterations,
         lower=np.log(lower_bound),
         upper=np.log(upper_bound),
         maxIterLS=20,
-        maxIterCG=50,
-        tolCG=1e-5,
+        maxIterCG=max_cg_iterations,
+        tolCG=tol_cg,
     )
 
-    invProb = InvProblem.BaseInvProblem(dmisfit, reg, opt)
+    invProb = InvProblem.BaseInvProblem(dmisfit, reg, opt, beta=initial_beta)
 
     # Directives
-    update_Jacobi = Directives.UpdatePreconditioner()
-    sensW = Directives.UpdateSensitivityWeights()
-    saveModel = SaveIterationsGeoH5(
-        h5_object=surface, sorting=model_ordering, mapping=mapping, attribute="model"
+    directiveList = []
+
+    directiveList.append(Directives.UpdateSensitivityWeights())
+    directiveList.append(
+        Directives.Update_IRLS(
+            maxIRLSiter=max_irls_iterations,
+            minGNiter=1,
+            betaSearch=False,
+            beta_tol=0.25,
+            chifact_start=chi_target,
+            chifact_target=chi_target,
+            prctile=50,
+        )
     )
 
-    savePred = SaveIterationsGeoH5(
-        h5_object=curve,
-        sorting=data_ordering,
-        mapping=data_mapping,
-        attribute="predicted",
-        channels=channels,
-        save_objective_function=True,
-    )
+    if initial_beta is None:
+        directiveList.append(
+            Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
+        )
 
-    IRLS = Directives.Update_IRLS(
-        maxIRLSiter=max_irls_iterations,
-        minGNiter=1,
-        betaSearch=False,
-        beta_tol=0.25,
-        chifact_start=chi_target,
-        chifact_target=chi_target,
-        prctile=50,
-    )
+    directiveList.append(Directives.UpdatePreconditioner())
 
-    betaest = Directives.BetaEstimate_ByEig(beta0_ratio=10.0)
+    directiveList.append(
+        SaveIterationsGeoH5(
+            h5_object=surface,
+            sorting=model_ordering,
+            mapping=mapping,
+            attribute="model",
+        )
+    )
+    directiveList.append(
+        SaveIterationsGeoH5(
+            h5_object=curve,
+            sorting=data_ordering,
+            mapping=data_mapping,
+            attribute="predicted",
+            channels=channels,
+            save_objective_function=True,
+        )
+    )
     inv = Inversion.BaseInversion(
         invProb,
-        directiveList=[saveModel, savePred, sensW, IRLS, update_Jacobi, betaest],
+        directiveList=directiveList,
     )
 
     prob.counter = opt.counter = Utils.Counter()
