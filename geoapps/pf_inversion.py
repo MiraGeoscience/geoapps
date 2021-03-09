@@ -1,3 +1,10 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 """
 Created on Wed May  9 13:20:56 2018
 
@@ -14,21 +21,22 @@ See README for description of options
 
 
 """
+
 import json
 import multiprocessing
-from multiprocessing.pool import ThreadPool
 import os
 import sys
+from multiprocessing.pool import ThreadPool
 
 import dask
 import numpy as np
 from discretize.utils import meshutils
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Grid2D, Octree, Points
+from geoh5py.objects import BlockModel, Grid2D, Octree, Points
 from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
 from scipy.spatial import Delaunay, cKDTree
-from geoapps.utils import filter_xy
+
 from geoapps.simpegPF import (
     PF,
     DataMisfit,
@@ -42,6 +50,7 @@ from geoapps.simpegPF import (
     Utils,
 )
 from geoapps.simpegPF.Utils import matutils, mkvc
+from geoapps.utils import block_model_2_tensor, filter_xy, octree_2_treemesh
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
@@ -213,13 +222,13 @@ def inversion(input_file):
 
     assert "inversion_type" in list(
         input_dict.keys()
-    ), "Require 'inversion_type' to be set: 'gravity', 'mag', 'mvi', or 'magnetics'"
+    ), "Require 'inversion_type' to be set: 'gravity', 'magnetics', 'mvi', or 'mvic'"
     assert input_dict["inversion_type"] in [
         "gravity",
-        "mag",
-        "mvi",
         "magnetics",
-    ], "'inversion_type' must be one of: 'gravity', 'mag', 'mvi', or 'magnetics'"
+        "mvi",
+        "mvic",
+    ], "'inversion_type' must be one of: 'gravity', 'magnetics', 'mvi', or 'mvic'"
 
     if "inversion_style" in list(input_dict.keys()):
         inversion_style = input_dict["inversion_style"]
@@ -311,15 +320,11 @@ def inversion(input_file):
             ignore_values = input_dict["ignore_values"]
             if len(ignore_values) > 0:
                 if "<" in ignore_values:
-                    uncertainties[
-                        data <= np.float(ignore_values.split("<")[1])
-                    ] = np.inf
+                    uncertainties[data <= float(ignore_values.split("<")[1])] = np.inf
                 elif ">" in ignore_values:
-                    uncertainties[
-                        data >= np.float(ignore_values.split(">")[1])
-                    ] = np.inf
+                    uncertainties[data >= float(ignore_values.split(">")[1])] = np.inf
                 else:
-                    uncertainties[data == np.float(ignore_values)] = np.inf
+                    uncertainties[data == float(ignore_values)] = np.inf
 
         if isinstance(entity, Grid2D):
             vertices = entity.centroids
@@ -327,7 +332,10 @@ def inversion(input_file):
             vertices = entity.vertices
 
         window_ind = filter_xy(
-            vertices[:, 0], vertices[:, 1], resolution, window=window,
+            vertices[:, 0],
+            vertices[:, 1],
+            resolution,
+            window=window,
         )
 
         if window is not None:
@@ -492,7 +500,10 @@ def inversion(input_file):
                     topo_window = window.copy()
                     topo_window["size"] = [ll * 2 for ll in window["size"]]
                     ind = filter_xy(
-                        topo[:, 0], topo[:, 1], resolution / 2, window=topo_window,
+                        topo[:, 0],
+                        topo[:, 1],
+                        resolution / 2,
+                        window=topo_window,
                     )
                     xy_rot = rotate_xy(
                         topo[ind, :2], window["center"], window["azimuth"]
@@ -665,7 +676,16 @@ def inversion(input_file):
     if "starting_model" in list(input_dict.keys()):
         if "model" in list(input_dict["starting_model"].keys()):
             starting_model = input_dict["starting_model"]["model"]
+            input_mesh = workspace.get_entity(list(starting_model.keys())[0])[0]
 
+            if isinstance(input_mesh, BlockModel):
+
+                input_mesh, _ = block_model_2_tensor(input_mesh)
+            else:
+                input_mesh = octree_2_treemesh(input_mesh)
+
+            input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2] + 1300]
+            print("converting", input_mesh.x0)
         else:
             starting_model = np.r_[input_dict["starting_model"]["value"]]
             assert (
@@ -730,7 +750,7 @@ def inversion(input_file):
     else:
         output_tile_files = False
 
-    if input_dict["inversion_type"] in ["mvi", "magnetics", "mvic"]:
+    if "mvi" in input_dict["inversion_type"]:
         vector_property = True
         n_blocks = 3
         if len(model_norms) == 4:
@@ -780,7 +800,7 @@ def inversion(input_file):
             local_survey.std = survey.std[data_ind]
             local_survey.ind = np.where(ind_t)[0]
 
-        elif input_dict["inversion_type"] in ["mag", "mvi", "magnetics"]:
+        elif input_dict["inversion_type"] in ["magnetics", "mvi", "mvic"]:
             rxLoc_t = PF.BaseMag.RxObs(rxLoc[ind_t, :])
             srcField = PF.BaseMag.SrcField([rxLoc_t], param=survey.srcField.param)
             local_survey = PF.BaseMag.LinearSurvey(
@@ -991,6 +1011,7 @@ def inversion(input_file):
         else:
             rotation = 0
             dxy = [0, 0]
+            xy_rot = rxLoc[:, :3]
 
         point_object = Points.create(
             workspace, name=f"Predicted", vertices=xy_rot, parent=out_group
@@ -1100,7 +1121,7 @@ def inversion(input_file):
     if (inversion_style == "homogeneous_units") and not vector_property:
         units = np.unique(mstart).tolist()
 
-        # Build list of indecies for the geounits
+        # Build list of indices for the geounits
         index = []
         for unit in units:
             index.append(mstart == unit)
@@ -1135,17 +1156,17 @@ def inversion(input_file):
 
     def create_local_problem(local_mesh, local_survey, global_weights, ind):
         """
-            CreateLocalProb(rxLoc, global_weights, lims, ind)
+        CreateLocalProb(rxLoc, global_weights, lims, ind)
 
-            Generate a problem, calculate/store sensitivities for
-            given data points
+        Generate a problem, calculate/store sensitivities for
+        given data points
         """
 
         # Need to find a way to compute sensitivities only for intersecting cells
         activeCells_t = np.ones(local_mesh.nC, dtype="bool")
 
         # Create reduced identity map
-        if input_dict["inversion_type"] in ["mvi", "magnetics"]:
+        if "mvi" in input_dict["inversion_type"]:
             nBlock = 3
         else:
             nBlock = 1
@@ -1171,7 +1192,7 @@ def inversion(input_file):
                 chunk_by_rows=chunk_by_rows,
             )
 
-        elif input_dict["inversion_type"] == "mag":
+        elif input_dict["inversion_type"] == "magnetics":
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
@@ -1186,7 +1207,7 @@ def inversion(input_file):
                 chunk_by_rows=chunk_by_rows,
             )
 
-        elif input_dict["inversion_type"] in ["mvi", "magnetics"]:
+        elif "mvi" in input_dict["inversion_type"]:
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
@@ -1253,16 +1274,28 @@ def inversion(input_file):
             Utils.io_utils.writeUBCmagneticsObservations(
                 outDir + "/Obs.mag", survey, dpred
             )
-        mesh_object.add_data(
-            {
-                "Starting_model": {
-                    "values": np.linalg.norm(
-                        (activeCellsMap * model_map * mstart).reshape((3, -1)), axis=0
-                    )[mesh._ubc_order],
-                    "association": "CELL",
+            mesh_object.add_data(
+                {
+                    "Starting_model": {
+                        "values": np.linalg.norm(
+                            (activeCellsMap * model_map * mstart).reshape((3, -1)),
+                            axis=0,
+                        )[mesh._ubc_order],
+                        "association": "CELL",
+                    }
                 }
-            }
-        )
+            )
+        else:
+            mesh_object.add_data(
+                {
+                    "Starting_model": {
+                        "values": (activeCellsMap * model_map * mstart)[
+                            mesh._ubc_order
+                        ],
+                        "association": "CELL",
+                    }
+                }
+            )
         return None
 
     # Global sensitivity weights (linear)
@@ -1380,10 +1413,9 @@ def inversion(input_file):
     # Add a list of directives to the inversion
     directiveList = []
 
-    if vector_property:
+    if vector_property and input_dict["inversion_type"] == "mvi":
         directiveList.append(
             Directives.VectorInversion(
-                inversion_type=input_dict["inversion_type"],
                 chifact_target=target_chi * 2,
             )
         )

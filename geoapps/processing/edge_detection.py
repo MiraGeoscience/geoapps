@@ -1,22 +1,30 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import numpy as np
-from matplotlib import collections
-from geoh5py.workspace import Workspace
 from geoh5py.io import H5Writer
-from geoh5py.objects import Grid2D, Curve
-from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line
+from geoh5py.objects import Curve, Grid2D
+from geoh5py.workspace import Workspace
 from ipywidgets import (
     FloatSlider,
     HBox,
     IntSlider,
     Layout,
-    ToggleButton,
     Text,
+    ToggleButton,
     VBox,
     interactive_output,
 )
-from geoapps.utils import filter_xy
+from matplotlib import collections
+from skimage.feature import canny
+from skimage.transform import probabilistic_hough_line
+
 from geoapps.plotting import PlotSelection2D
+from geoapps.utils import filter_xy
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -44,7 +52,9 @@ class EdgeDetectionApp(PlotSelection2D):
         "resolution": 50,
         "sigma": 0.5,
         "compute": True,
-        "window": {"azimuth": -20,},
+        "window": {
+            "azimuth": -20,
+        },
         "ga_group_name": "Edges",
     }
     object_types = (Grid2D,)
@@ -58,7 +68,11 @@ class EdgeDetectionApp(PlotSelection2D):
             tooltip="Description",
             icon="check",
         )
-        self._export_as = Text(value="Edges", description="Save as:", disabled=False,)
+        self._export_as = Text(
+            value="Edges",
+            description="Save as:",
+            disabled=False,
+        )
         self._line_length = IntSlider(
             min=1,
             max=100,
@@ -100,7 +114,10 @@ class EdgeDetectionApp(PlotSelection2D):
         )
         super().__init__(**kwargs)
 
-        out = interactive_output(self.compute_trigger, {"compute": self.compute},)
+        out = interactive_output(
+            self.compute_trigger,
+            {"compute": self.compute},
+        )
 
         def save_trigger(_):
             self.save_trigger()
@@ -116,12 +133,12 @@ class EdgeDetectionApp(PlotSelection2D):
         self.data.observe(update_name, names="value")
         self.update_name()
 
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
                 HBox(
                     [
-                        VBox([self.widget]),
+                        self.main,
                         VBox(
                             [
                                 self.sigma,
@@ -131,7 +148,7 @@ class EdgeDetectionApp(PlotSelection2D):
                                 self.window_size,
                                 self.compute,
                                 self.export_as,
-                                self.trigger_panel,
+                                self.output_panel,
                             ],
                             layout=Layout(width="50%"),
                         ),
@@ -175,13 +192,6 @@ class EdgeDetectionApp(PlotSelection2D):
     def window_size(self):
         """IntSlider"""
         return self._window_size
-
-    @property
-    def widget(self):
-        """
-        :obj:`ipywidgets.VBox`: Pre-defined application layout
-        """
-        return self._widget
 
     def save_trigger(self):
         entity, _ = self.get_selected_entities()
@@ -237,7 +247,7 @@ class EdgeDetectionApp(PlotSelection2D):
             x = grid.centroids[:, 0].reshape(grid.shape, order="F")
             y = grid.centroids[:, 1].reshape(grid.shape, order="F")
             z = grid.centroids[:, 2].reshape(grid.shape, order="F")
-            grid_data = data.values.reshape(grid.shape, order="F")
+            grid_data = data[0].values.reshape(grid.shape, order="F")
             indices = self.indices
             ind_x, ind_y = (
                 np.any(indices, axis=1),
@@ -326,8 +336,14 @@ class EdgeDetectionApp(PlotSelection2D):
             xy[1::2, 1],
             self.resolution.value,
             window={
-                "center": [self.center_x.value, self.center_y.value,],
-                "size": [self.width.value, self.height.value,],
+                "center": [
+                    self.center_x.value,
+                    self.center_y.value,
+                ],
+                "size": [
+                    self.width.value,
+                    self.height.value,
+                ],
                 "azimuth": self.azimuth.value,
             },
         )
@@ -336,14 +352,21 @@ class EdgeDetectionApp(PlotSelection2D):
             xy[::2, 1],
             self.resolution.value,
             window={
-                "center": [self.center_x.value, self.center_y.value,],
-                "size": [self.width.value, self.height.value,],
+                "center": [
+                    self.center_x.value,
+                    self.center_y.value,
+                ],
+                "size": [
+                    self.width.value,
+                    self.height.value,
+                ],
                 "azimuth": self.azimuth.value,
             },
         )
 
         indices = np.kron(
-            np.any(np.c_[indices_1, indices_2], axis=1), np.ones(2),
+            np.any(np.c_[indices_1, indices_2], axis=1),
+            np.ones(2),
         ).astype(bool)
 
         xy = self.objects.lines[indices, :2]

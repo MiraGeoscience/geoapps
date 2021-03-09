@@ -1,25 +1,33 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from IPython.display import display
 from ipywidgets import (
     Button,
     Checkbox,
-    VBox,
-    HBox,
-    interactive_output,
     ColorPicker,
     Dropdown,
-    ToggleButtons,
-    Layout,
-    IntSlider,
     FloatText,
+    HBox,
+    IntSlider,
     Label,
+    Layout,
+    ToggleButtons,
+    VBox,
+    interactive_output,
 )
-from IPython.display import display
-import plotly.graph_objects as go
-import numpy as np
-from geoapps.plotting import ScatterPlots
-from geoapps.utils import random_sampling
-from sklearn.cluster import KMeans
 from scipy.spatial import cKDTree
-import pandas as pd
+from sklearn.cluster import KMeans
+
+from geoapps.plotting import ScatterPlots
+from geoapps.utils import colors, hex_to_rgb, random_sampling
 
 
 class Clustering(ScatterPlots):
@@ -86,22 +94,20 @@ class Clustering(ScatterPlots):
         self.boxplot_panel = VBox([self.channels_plot_options])
         self.stats_table = interactive_output(
             self.make_stats_table,
-            {"channels": self.data, "show": self.plotting_options,},
+            {
+                "channels": self.data,
+                "show": self.plotting_options,
+            },
         )
 
         super().__init__(**kwargs)
 
-        self.plotting_options_panel = VBox(
-            [
-                self.plotting_options,
-                HBox(
-                    [
-                        Label("Downsampling:", style={"description_width": "initial"}),
-                        self.downsampling,
-                    ]
-                ),
-            ]
-        )
+        # self.plotting_options = VBox(
+        #     [
+        #         self.plotting_options,
+        #
+        #     ]
+        # )
         self.ga_group_name.description = "Name"
         self.ga_group_name.value = "MyCluster"
         self.plotting_options.observe(self.show_trigger, names="value")
@@ -110,12 +116,11 @@ class Clustering(ScatterPlots):
         self.channels_plot_options.observe(self.make_box_plot, names="value")
         self.trigger.description = "Run Clustering"
 
-        r = lambda: np.random.randint(0, 255)
         for ii in range(self.n_clusters.max):
             self.color_pickers[ii] = ColorPicker(
                 concise=False,
                 description=("Color"),
-                value=f"#{r():02X}{r():02X}{r():02X}",
+                value=colors[ii],
             )
             self.color_pickers[ii].uid = ii
             self.color_pickers[ii].observe(self.update_colormap, names="value")
@@ -126,37 +131,44 @@ class Clustering(ScatterPlots):
 
         self.color.observe(self.check_color, names="value")
 
-        self._groups_options = Dropdown(
-            description="Group", options=np.arange(self.n_clusters.max)
+        self._clusters_options = Dropdown(
+            description="Cluster", options=np.arange(self.n_clusters.max)
         )
-        self.groups_panel = VBox([self.color_pickers[0]])
-        self.groups_options.observe(self.groups_panel_change, names="value")
+        self.clusters_panel = VBox([self.clusters_options, self.color_pickers[0]])
+        self.clusters_options.observe(self.clusters_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
 
         self.update_choices(None)
         self.run_clustering(None)
+        self.make_heatmap(None)
+        self.make_box_plot(None)
+        self.make_inertia_plot(None)
+        self.make_hist_plot(None)
 
         self.trigger.on_click(self.save_cluster)
-        self._widget = VBox(
+        self._main = VBox(
             [
                 self.project_panel,
-                HBox(
+                VBox(
                     [
-                        VBox(
+                        self.objects,
+                        self.data,
+                        self.downsampling,
+                        HBox(
                             [
-                                self.objects,
-                                self.data,
                                 self.n_clusters,
-                                self.refresh_clusters,
-                                self.groups_options,
-                                self.groups_panel,
+                                VBox(
+                                    [
+                                        self.clusters_panel,
+                                    ]
+                                ),
                             ],
-                            layout=Layout(width="50%"),
                         ),
-                        self.input_box,
                     ]
                 ),
-                self.trigger_panel,
+                self.refresh_clusters,
+                self.input_box,
+                self.output_panel,
             ]
         )
 
@@ -166,9 +178,9 @@ class Clustering(ScatterPlots):
         return self._channels_plot_options
 
     @property
-    def groups_options(self):
+    def clusters_options(self):
         """ipywidgets.Dropdown()"""
-        return self._groups_options
+        return self._clusters_options
 
     @property
     def mapping(self):
@@ -195,9 +207,10 @@ class Clustering(ScatterPlots):
         """ipywidgets.ToggleButtons()"""
         return self._plotting_options
 
-    def groups_panel_change(self, _):
-        self.groups_panel.children = [
-            self.color_pickers[self.groups_options.value],
+    def clusters_panel_change(self, _):
+        self.clusters_panel.children = [
+            self.clusters_options,
+            self.color_pickers[self.clusters_options.value],
         ]
 
     def show_trigger(self, _):
@@ -206,40 +219,40 @@ class Clustering(ScatterPlots):
         """
         if self.plotting_options.value == "Statistics":
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.stats_table,
             ]
         elif self.plotting_options.value == "Confusion Matrix":
             self.make_heatmap(None)
-            self.input_box.children = [self.plotting_options_panel, self.heatmap_fig]
+            self.input_box.children = [self.plotting_options, self.heatmap_fig]
         elif self.plotting_options.value == "Crossplot":
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.axes_options,
-                self.crossplot_fig,
+                self.figure,
             ]
         elif self.plotting_options.value == "Histogram":
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.histogram_panel,
             ]
             self.make_hist_plot(None)
         elif self.plotting_options.value == "Boxplot":
             self.make_box_plot(None)
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.boxplot_panel,
             ]
         elif self.plotting_options.value == "Inertia":
             self.make_inertia_plot(None)
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
                 self.inertia_plot,
             ]
 
         else:
             self.input_box.children = [
-                self.plotting_options_panel,
+                self.plotting_options,
             ]
 
     def check_color(self, _):
@@ -295,13 +308,18 @@ class Clustering(ScatterPlots):
         self.channels_plot_options.value = None
         self._mapping = None
         self._indices = None
-        self.downsampling.max = self.n_values
-        self.downsampling.value = np.min([5000, self.n_values])
+
+        if self.n_values is not None:
+            self.downsampling.max = self.n_values
+            self.downsampling.value = np.min([5000, self.n_values])
 
     def run_clustering(self, _):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
+        if self.dataframe is None:
+            return
+
         self.trigger.description = "Running ..."
         self.refresh_trigger.value = False
 
@@ -314,7 +332,7 @@ class Clustering(ScatterPlots):
             nns = ~np.isnan(vals)
             vals[nns] = (
                 (vals[nns] - min(vals[nns]))
-                / (max(vals[nns]) - min(vals[nns]))
+                / (max(vals[nns]) - min(vals[nns]) + 1e-32)
                 * self.scalings[field].value
             )
             values += [vals]
@@ -342,10 +360,7 @@ class Clustering(ScatterPlots):
         """
         Generate an inertia plot
         """
-        if (
-            self.plotting_options.value == "Inertia"
-            and self.n_clusters.value in self.clusters.keys()
-        ):
+        if self.n_clusters.value in self.clusters.keys():
             ind = np.sort(list(self.clusters.keys()))
             inertias = [self.clusters[ii].inertia_ for ii in ind]
             clusters = ind
@@ -377,8 +392,7 @@ class Clustering(ScatterPlots):
         Generate an histogram plot for the selected data channel.
         """
         if (
-            self.plotting_options.value == "Histogram"
-            and self.channels_plot_options.value in self.scalings.keys()
+            self.channels_plot_options.value in self.scalings.keys()
             and self.channels_plot_options.value in self.lower_bounds.keys()
             and self.channels_plot_options.value in self.upper_bounds.keys()
             and getattr(self, "dataframe", None) is not None
@@ -407,8 +421,7 @@ class Clustering(ScatterPlots):
         Generate a box plot for each cluster.
         """
         if (
-            self.plotting_options.value == "Boxplot"
-            and getattr(self, "dataframe", None) is not None
+            getattr(self, "dataframe", None) is not None
             and "kmeans" in self.data_channels.keys()
         ):
             field = self.channels_plot_options.value
@@ -446,14 +459,19 @@ class Clustering(ScatterPlots):
                 ]
 
             self.box_plots[field].update_layout(
-                {"xaxis": {"title": "Cluster #"}, "yaxis": {"title": field}}
+                {
+                    "xaxis": {"title": "Cluster #"},
+                    "yaxis": {"title": field},
+                    "height": 600,
+                    "width": 600,
+                }
             )
 
     def make_stats_table(self, channels, show):
         """
         Generate a table of statistics using pandas
         """
-        if show == "Statistics" and getattr(self, "dataframe", None) is not None:
+        if getattr(self, "dataframe", None) is not None:
             display(
                 self.dataframe.describe(percentiles=None, include=None, exclude=None)
             )
@@ -462,10 +480,7 @@ class Clustering(ScatterPlots):
         """
         Generate a consfusion matrix
         """
-        if (
-            self.plotting_options.value == "Confusion Matrix"
-            and getattr(self, "dataframe", None) is not None
-        ):
+        if getattr(self, "dataframe", None) is not None:
             dataframe = self.dataframe.copy()
             corrs = dataframe.corr()
 
@@ -544,8 +559,6 @@ class Clustering(ScatterPlots):
                 ],
                 yaxis={"autorange": "reversed"},
             )
-            #             self.heatmap_fig.update_yaxes()
-            # self.heatmap_fig.show()
 
     def save_cluster(self, _):
         """
@@ -554,13 +567,65 @@ class Clustering(ScatterPlots):
         if "kmeans" in self.data_channels.keys():
             obj, _ = self.get_selected_entities()
 
+            # Create reference values and color_map
+            group_map, color_map = {}, []
+            cluster_values = self.data_channels["kmeans"] + 1
+            cluster_values[self._inactive_set] = 0
+            for ii in range(self.n_clusters.value):
+                colorpicker = self.color_pickers[ii]
+
+                color = colorpicker.value.lstrip("#")
+
+                # group_map, color_map = {}, []
+                # for ind, group in self.time_groups.items():
+                group_map[ii + 1] = f"Cluster_{ii}"
+                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+
+            color_map = np.core.records.fromarrays(
+                np.vstack(color_map).T,
+                names=["Value", "Red", "Green", "Blue", "Alpha"],
+            )
+
             if self.ga_group_name.value in obj.get_data_list():
                 data = obj.get_data(self.ga_group_name.value)[0]
-                data.values = self.data_channels["kmeans"]
+                data.entity_type.value_map = group_map
+
+                if data.entity_type.color_map is None:
+                    data.entity_type.color_map = {
+                        "name": "Cluster Groups",
+                        "values": color_map,
+                    }
+                else:
+                    data.entity_type.color_map.values = color_map
+                data.values = cluster_values
+
             else:
-                obj.add_data(
-                    {self.ga_group_name.value: {"values": self.data_channels["kmeans"]}}
+
+                # Create reference values and color_map
+                group_map, color_map = {}, []
+                for ii in range(self.n_clusters.value):
+                    colorpicker = self.color_pickers[ii]
+                    color = colorpicker.value.lstrip("#")
+                    group_map[ii + 1] = f"Cluster_{ii}"
+                    color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+
+                color_map = np.core.records.fromarrays(
+                    np.vstack(color_map).T,
+                    names=["Value", "Red", "Green", "Blue", "Alpha"],
                 )
+                cluster_groups = obj.add_data(
+                    {
+                        self.ga_group_name.value: {
+                            "type": "referenced",
+                            "values": cluster_values,
+                            "value_map": group_map,
+                        }
+                    }
+                )
+                cluster_groups.entity_type.color_map = {
+                    "name": "Cluster Groups",
+                    "values": color_map,
+                }
 
             if self.live_link.value:
                 self.live_link_output(obj)
@@ -631,33 +696,53 @@ class Clustering(ScatterPlots):
                     | (vals > self.upper_bounds[field].value)
                 ] = np.nan
 
+                vals[(vals > 1e-38) * (vals < 2e-38)] = np.nan
                 values += [vals]
 
             values = np.vstack(values).T
-            self._indices = random_sampling(
-                values, self.downsampling.value, bandwidth=2.0, rtol=1e0, method="hist",
+
+            active_set = np.where(np.all(~np.isnan(values), axis=1))[0]
+
+            if len(active_set) == 0:
+                print("No rows were found without no-data-values. Check input field")
+                self.dataframe = None
+                return
+
+            samples = random_sampling(
+                values[active_set, :],
+                np.min([self.downsampling.value, len(active_set)]),
+                bandwidth=2.0,
+                rtol=1e0,
+                method="histogram",
             )
-
-            self.dataframe = pd.DataFrame(values[self.indices, :], columns=fields,)
-
+            self._indices = active_set[samples]
+            self.dataframe = pd.DataFrame(
+                values[self.indices, :],
+                columns=fields,
+            )
             tree = cKDTree(self.dataframe.values)
-            out_group = np.ones(self.n_values, dtype="bool")
-            out_group[self.indices] = False
+            inactive_set = np.ones(self.n_values, dtype="bool")
+            inactive_set[self.indices] = False
+            out_values = values[inactive_set, :]
+            for ii in range(values.shape[1]):
+                out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
+                    values[self.indices, ii]
+                )
 
-            out_values = values[out_group, :]
-            out_values[np.isnan(out_values)] = 0
             _, ind_out = tree.query(out_values)
             del tree
 
             self._mapping = np.empty(self.n_values, dtype="int")
-            self._mapping[out_group] = ind_out
+            self._mapping[inactive_set] = ind_out
             self._mapping[self.indices] = np.arange(self.indices.shape[0])
+            self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
             self.channels_plot_options.options = fields
 
         else:
             self.dataframe = None
             self.dataframe_scaled = None
             self._mapping = None
+            self._inactive_set = None
 
         self.update_axes(refresh_plot=refresh_plot)
         self.show_trigger(None)

@@ -1,12 +1,19 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 from . import (
-    simpegEM1D,
-    simpegPF,
-    selection,
-    utils,
-    processing,
-    simulation,
     export,
     plotting,
+    processing,
+    selection,
+    simpegEM1D,
+    simpegPF,
+    simulation,
+    utils,
 )
 
-__version__ = "0.2.5"
+__version__ = "0.3.1"

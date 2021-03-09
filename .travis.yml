@@ -1,0 +1,65 @@
+language: python
+
+python:
+  - 3.6
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - libblas-dev
+    - liblapack-dev
+
+env:
+  global:
+    - DEPLOY_DIR=tests/docs
+    - MASTER_BRANCH=master
+    - PYPI_PY=3.6  # deploy to pypi from python 3.6
+
+  matrix:
+    - TEST_DIR=tests
+
+
+# Setup anaconda
+before_install:
+# Install packages
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b -p $HOME/miniconda
+  - export PATH=/home/travis/anaconda/bin:/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda
+
+install:
+  - conda install --quiet --yes pip python=$TRAVIS_PYTHON_VERSION numpy h5py;
+  - pip install -r requirements_dev.txt
+  - python setup.py install
+
+# Run test
+script:
+  - nosetests $TEST_DIR --with-cov --cov geoapps --cov-config .coveragerc -v -s;
+
+
+# Calculate coverage
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
+  # early exit if not on a deplotment branch
+  - if ! [ "$TRAVIS_BRANCH" = "$MASTER_BRANCH" -o "$TRAVIS_TAG" = "true" ]; then
+      echo "Not deploying (because this is not a deployment branch)" ;
+      exit 0 ;
+    fi
+  - if ! [ "$TEST_DIR" = "$DEPLOY_DIR" ]; then
+      echo "Not deploying (because this is not a deployment directory)" ;
+      exit 0 ;
+    fi
+  - if ! [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+      echo "Not deploying (because this is a pull request)" ;
+      exit 0 ;
+    fi
+
+  #deploy to pypi
+  - if [ "$TRAVIS_TAG" = "true" ]; then
+      mv credentials/.pypirc ~/.pypirc ;
+      python setup.py sdist bdist_wheel --universal upload;
+    fi

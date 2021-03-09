@@ -1,6 +1,15 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 from . import geophysical_systems
 from .utils import (
+    RectangularBlock,
     block_model_2_tensor,
+    colors,
     data_2_zarr,
     export_curve_2_shapefile,
     export_grid_2_geotiff,
@@ -8,18 +17,18 @@ from .utils import (
     find_value,
     format_labels,
     geotiff_2_grid,
+    hex_to_rgb,
     inv_symlog,
     object_2_dataframe,
     octree_2_treemesh,
-    RectangularBlock,
+    random_sampling,
+    rotate_azimuth_dip,
     rotate_vertices,
     rotate_xy,
-    rotate_azimuth_dip,
     running_mean,
     signal_processing_1d,
     string_2_list,
     symlog,
     tensor_2_block_model,
     treemesh_2_octree,
-    random_sampling,
 )

@@ -1,22 +1,31 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import os
+
 import numpy as np
-import plotly.graph_objects as go
 import plotly.express as px
+import plotly.graph_objects as go
 from ipywidgets import (
-    Dropdown,
     Checkbox,
-    IntSlider,
+    Dropdown,
     FloatText,
-    VBox,
     HBox,
-    ToggleButton,
-    interactive_output,
-    Layout,
+    IntSlider,
     Label,
+    Layout,
+    ToggleButton,
+    VBox,
+    interactive_output,
 )
-from geoapps.utils import symlog, random_sampling
+
+from geoapps.plotting import format_axis, normalize
 from geoapps.selection import ObjectDataSelection
-from geoapps.plotting import normalize, format_axis
+from geoapps.utils import random_sampling, symlog
 
 
 class ScatterPlots(ObjectDataSelection):
@@ -55,7 +64,7 @@ class ScatterPlots(ObjectDataSelection):
             self.set_channel_bounds(caller["owner"].name)
 
         self._downsampling = IntSlider(
-            description="Population",
+            description="Population Downsampling:",
             min=1,
             style={"description_width": "initial"},
             continuous_update=False,
@@ -65,10 +74,21 @@ class ScatterPlots(ObjectDataSelection):
         self._x.observe(channel_bounds_setter, names="value")
         self._x.name = "x"
         self._x_active = Checkbox(description="Active", value=True, indent=False)
-        self._x_log = Checkbox(description="Log10", value=False, indent=False,)
-        self._x_thresh = FloatText(description="Threshold", value=1e-1, indent=False,)
-        self._x_min = FloatText(description="Min", indent=False,)
-        self._x_max = FloatText(description="Max", indent=False,)
+        self._x_log = Checkbox(
+            description="Log10",
+            value=False,
+            indent=False,
+        )
+        self._x_thresh = FloatText(
+            description="Threshold",
+            value=1e-1,
+        )
+        self._x_min = FloatText(
+            description="Min",
+        )
+        self._x_max = FloatText(
+            description="Max",
+        )
         self._x_panel = VBox(
             [
                 self._x_active,
@@ -81,11 +101,22 @@ class ScatterPlots(ObjectDataSelection):
         self._y = Dropdown(description="Data:")
         self._y.observe(channel_bounds_setter, names="value")
         self._y.name = "y"
-        self._y_active = Checkbox(description="Active", value=True, indent=False,)
+        self._y_active = Checkbox(
+            description="Active",
+            value=True,
+            indent=False,
+        )
         self._y_log = Checkbox(description="Log10", value=False, indent=False)
-        self._y_thresh = FloatText(description="Threshold", value=1e-1, indent=False,)
-        self._y_min = FloatText(description="Min", indent=False,)
-        self._y_max = FloatText(description="Max", indent=False,)
+        self._y_thresh = FloatText(
+            description="Threshold",
+            value=1e-1,
+        )
+        self._y_min = FloatText(
+            description="Min",
+        )
+        self._y_max = FloatText(
+            description="Max",
+        )
         self._y_panel = VBox(
             [
                 self._y_active,
@@ -98,11 +129,26 @@ class ScatterPlots(ObjectDataSelection):
         self._z = Dropdown(description="Data:")
         self._z.observe(channel_bounds_setter, names="value")
         self._z.name = "z"
-        self._z_active = Checkbox(description="Active", value=False, indent=False,)
-        self._z_log = Checkbox(description="Log10", value=False, indent=False,)
-        self._z_thresh = FloatText(description="Threshold", value=1e-1, indent=False,)
-        self._z_min = FloatText(description="Min", indent=False,)
-        self._z_max = FloatText(description="Max", indent=False,)
+        self._z_active = Checkbox(
+            description="Active",
+            value=False,
+            indent=False,
+        )
+        self._z_log = Checkbox(
+            description="Log10",
+            value=False,
+            indent=False,
+        )
+        self._z_thresh = FloatText(
+            description="Threshold",
+            value=1e-1,
+        )
+        self._z_min = FloatText(
+            description="Min",
+        )
+        self._z_max = FloatText(
+            description="Max",
+        )
         self._z_panel = VBox(
             [
                 self._z_active,
@@ -111,22 +157,34 @@ class ScatterPlots(ObjectDataSelection):
                 HBox([self._z_min, self._z_max]),
             ]
         )
-
         self._color = Dropdown(description="Data:")
         self._color.observe(channel_bounds_setter, names="value")
         self._color.name = "color"
-        self._color_log = Checkbox(description="Log10", value=False, indent=False,)
-        self._color_thresh = FloatText(
-            description="Threshold", value=1e-1, indent=False,
+        self._color_log = Checkbox(
+            description="Log10",
+            value=False,
+            indent=False,
         )
-        self._color_active = Checkbox(description="Active", value=False, indent=False,)
+        self._color_thresh = FloatText(
+            description="Threshold",
+            value=1e-1,
+        )
+        self._color_active = Checkbox(
+            description="Active",
+            value=False,
+            indent=False,
+        )
         self._color_maps = Dropdown(
             description="Colormaps",
             options=px.colors.named_colorscales(),
             value="viridis",
         )
-        self._color_min = FloatText(description="Min", indent=False,)
-        self._color_max = FloatText(description="Max", indent=False,)
+        self._color_min = FloatText(
+            description="Min",
+        )
+        self._color_max = FloatText(
+            description="Max",
+        )
         self._color_panel = VBox(
             [
                 self._color_active,
@@ -140,16 +198,30 @@ class ScatterPlots(ObjectDataSelection):
         self._size = Dropdown(description="Data:")
         self._size.observe(channel_bounds_setter, names="value")
         self._size.name = "size"
-        self._size_active = Checkbox(description="Active", value=False, indent=False,)
-        self._size_log = Checkbox(description="Log10", value=False, indent=False,)
+        self._size_active = Checkbox(
+            description="Active",
+            value=False,
+            indent=False,
+        )
+        self._size_log = Checkbox(
+            description="Log10",
+            value=False,
+            indent=False,
+        )
         self._size_thresh = FloatText(
-            description="Threshold", value=1e-1, indent=False,
+            description="Threshold",
+            value=1e-1,
         )
         self._size_markers = IntSlider(
             min=1, max=100, value=20, description="Marker size", continuous_update=False
         )
-        self._size_min = FloatText(description="Min", indent=False,)
-        self._size_max = FloatText(description="Max", indent=False,)
+        self._size_min = FloatText(
+            description="Min",
+        )
+        self._size_max = FloatText(
+            description="Max",
+        )
+
         self._size_panel = VBox(
             [
                 self._size_active,
@@ -159,7 +231,6 @@ class ScatterPlots(ObjectDataSelection):
                 HBox([self._size_min, self._size_max]),
             ]
         )
-
         self._refresh_trigger = ToggleButton(description="Refresh Plot", value=False)
 
         # Wrap all axis panels into dropdown
@@ -177,21 +248,16 @@ class ScatterPlots(ObjectDataSelection):
             options=["X-axis", "Y-axis", "Z-axis", "Color", "Size"],
             layout=Layout(width="300px"),
         )
-
         self.axes_pannels.observe(axes_pannels_trigger, names="value")
-        self.axes_options = HBox([self.axes_pannels, self._x_panel])
+        self.axes_options = VBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
-
-        if not self.static:
-            self.crossplot_fig = go.FigureWidget()
-        else:
-            self.crossplot_fig = None
-
         self.data.observe(self.update_choices, names="value")
         self.objects.observe(self.update_objects, names="value")
         self.downsampling.observe(self.update_downsampling, names="value")
 
         super().__init__(**self.apply_defaults(**kwargs))
+
+        self.figure = go.FigureWidget()
 
         self.crossplot = interactive_output(
             self.plot_selection,
@@ -239,24 +305,24 @@ class ScatterPlots(ObjectDataSelection):
         self.trigger.description = "Save HTML"
 
         if self.static:
-            self._widget = VBox(
+            self._main = VBox(
                 [
                     self.project_panel,
                     HBox([self.objects, self.data]),
-                    HBox([Label("Downsampling:"), self.downsampling]),
+                    self.downsampling,
                     self.axes_options,
                     self.trigger,
                 ]
             )
         else:
-            self._widget = VBox(
+            self._main = VBox(
                 [
                     self.project_panel,
                     HBox([self.objects, self.data]),
                     VBox([Label("Downsampling"), self.downsampling]),
                     self.axes_options,
                     self.trigger,
-                    self.crossplot_fig,
+                    self.figure,
                 ]
             )
 
@@ -347,9 +413,7 @@ class ScatterPlots(ObjectDataSelection):
 
     @property
     def refresh_trigger(self):
-        """
-
-        """
+        """"""
         return self._refresh_trigger
 
     @property
@@ -542,7 +606,7 @@ class ScatterPlots(ObjectDataSelection):
         if channel not in self.data_channels.keys():
 
             if obj.get_data(channel):
-                values = obj.get_data(channel)[0].values.copy()
+                values = np.asarray(obj.get_data(channel)[0].values, dtype=float).copy()
                 values[(values > 1e-38) * (values < 2e-38)] = np.nan
             elif channel == "Z":
                 # Check number of points
@@ -612,7 +676,11 @@ class ScatterPlots(ObjectDataSelection):
         refresh_trigger,
     ):
 
-        if not self.refresh_trigger.value or not self.refresh.value:
+        if (
+            not self.refresh_trigger.value
+            or not self.refresh.value
+            or self.indices is None
+        ):
             return None
 
         if (
@@ -669,7 +737,7 @@ class ScatterPlots(ObjectDataSelection):
                     z_axis = z_axis[self.indices]
 
             if np.sum([axis is not None for axis in [x_axis, y_axis, z_axis]]) < 2:
-                self.crossplot_fig.data = []
+                self.figure.data = []
                 return
 
             if x_axis is not None:
@@ -764,16 +832,12 @@ class ScatterPlots(ObjectDataSelection):
                     },
                 }
 
-            if self.static:
-                self.crossplot_fig = go.FigureWidget([plot], layout=layout)
-            else:
-                self.crossplot_fig.data = []
-                self.crossplot_fig.add_trace(plot)
-                self.crossplot_fig.update_layout(layout)
-                self.crossplot_fig.show()
+            self.figure.data = []
+            self.figure.add_trace(plot)
+            self.figure.update_layout(layout)
+
         else:
-            if not self.static:
-                self.crossplot_fig.data = []
+            self.figure.data = []
 
     def update_axes(self, refresh_plot=True):
         self.refresh_trigger.value = False
@@ -823,7 +887,7 @@ class ScatterPlots(ObjectDataSelection):
         for axis in [self.x, self.y, self.z]:
             vals = self.get_channel(axis.value)
             if vals is not None:
-                values.append(vals)
+                values.append(np.asarray(vals, dtype=float))
 
         if len(values) < 2:
             return
@@ -837,7 +901,11 @@ class ScatterPlots(ObjectDataSelection):
         )[:, None]
         values[nans] = np.nan
         self._indices = random_sampling(
-            values.T, self.downsampling.value, bandwidth=2.0, rtol=1e0, method="hist",
+            values.T,
+            self.downsampling.value,
+            bandwidth=2.0,
+            rtol=1e0,
+            method="histogram",
         )
         self.refresh_trigger.value = refresh_plot
 
@@ -849,7 +917,7 @@ class ScatterPlots(ObjectDataSelection):
         self.update_downsampling(None, refresh_plot=False)
 
     def write_html(self):
-        self.crossplot_fig.write_html(
+        self.figure.write_html(
             os.path.join(
                 os.path.abspath(os.path.dirname(self.h5file)), "Crossplot.html"
             )

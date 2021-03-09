@@ -1,3 +1,10 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import discretize
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
@@ -236,9 +243,15 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
 
     block_add.observe(block_add_update)
 
-    block_list = widgets.Dropdown(options=[],)
+    block_list = widgets.Dropdown(
+        options=[],
+    )
 
-    block_panel = widgets.VBox([block_list,])
+    block_panel = widgets.VBox(
+        [
+            block_list,
+        ]
+    )
 
     def block_param_update(_):
         if block_list.value is not None:
@@ -262,13 +275,22 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         },
     )
 
-    sim_name = widgets.Text(value="Simulation_", description="Name:", disabled=False,)
-
-    core_cell_size = widgets.Text(
-        value="100, 100, 100", description="Model discretization (m)", disabled=False,
+    sim_name = widgets.Text(
+        value="Simulation_",
+        description="Name:",
+        disabled=False,
     )
 
-    topography = widgets.Dropdown(options=[None] + names, description="Topography",)
+    core_cell_size = widgets.Text(
+        value="100, 100, 100",
+        description="Model discretization (m)",
+        disabled=False,
+    )
+
+    topography = widgets.Dropdown(
+        options=[None] + names,
+        description="Topography",
+    )
 
     # Pre-build a list of blocks
     export_ga = widgets.ToggleButton(
@@ -452,27 +474,30 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         if survey_type.value == "Magnetics":
             survey_type_panel.children = [
                 survey_type,
-                object_selection.widget,
+                object_selection.main,
                 components_panel,
                 inducing_field,
             ]
         else:
             survey_type_panel.children = [
                 survey_type,
-                object_selection.widget,
+                object_selection.main,
                 components_panel,
             ]
 
         update_data_options("")
 
     survey_type = widgets.Dropdown(
-        options=["Magnetics", "Gravity"], value="Magnetics", description="Survey Type:",
+        options=["Magnetics", "Gravity"],
+        value="Magnetics",
+        description="Survey Type:",
     )
     inducing_field = widgets.Text(
-        value=inducing_field, description="Inducing Field [Amp, Inc, Dec]",
+        value=inducing_field,
+        description="Inducing Field [Amp, Inc, Dec]",
     )
     survey_type_panel = widgets.VBox(
-        [survey_type, object_selection.widget, components_panel, inducing_field]
+        [survey_type, object_selection.main, components_panel, inducing_field]
     )
     survey_type.observe(update_survey_type)
 
@@ -547,7 +572,13 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
             ),
             widgets.HBox(
                 [
-                    widgets.VBox([azimuth, dip, interactive_plot,]),
+                    widgets.VBox(
+                        [
+                            azimuth,
+                            dip,
+                            interactive_plot,
+                        ]
+                    ),
                     widgets.interactive_output(
                         plot_simulation, {"plot": plot_now, "run": forward}
                     ),

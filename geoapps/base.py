@@ -1,13 +1,21 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 import time
 import urllib.request
 import zipfile
-from os import mkdir, listdir, path, remove, system
-from shutil import copyfile, copy, rmtree, move
-import time
-from ipywidgets import Checkbox, Text, VBox, HBox, Label, ToggleButton, Widget, Button
-from geoh5py.workspace import Workspace
+from os import listdir, mkdir, path, remove, system
+from shutil import copy, copyfile, move, rmtree
+
 from geoh5py.groups import ContainerGroup
+from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
+from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
+
 import geoapps
 
 
@@ -23,72 +31,73 @@ class BaseApplication:
     def __init__(self, **kwargs):
 
         kwargs = self.apply_defaults(**kwargs)
-
+        self.plot_result = False
         self._h5file = None
         self._workspace = None
+        self.figure = None
         self._file_browser = FileChooser()
-
         self._ga_group_name = Text(
-            value="", description="To Group", continuous_update=False
+            value="",
+            description="Group:",
+            continuous_update=False,
+            style={"description_width": "initial"},
         )
         self._ga_group = None
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
-
         self._copy_trigger = Button(
             description="Create copy:",
-            value=True,
-            indent=False,
             style={"description_width": "initial"},
         )
-
-        def create_copy(_):
-            self.create_copy()
-
-        self._copy_trigger.on_click(create_copy)
-
-        self.project_panel = HBox(
+        self._copy_trigger.on_click(self.create_copy)
+        self.project_panel = VBox(
             [
                 Label("Workspace", style={"description_width": "initial"}),
-                self._file_browser,
-                self._copy_trigger,
+                HBox(
+                    [
+                        self._file_browser,
+                        self._copy_trigger,
+                    ]
+                ),
             ]
         )
-
         self._live_link = Checkbox(
             description="GA Pro - Live link",
             value=False,
             indent=False,
             style={"description_width": "initial"},
         )
-
-        def live_link_choice(_):
-            self.live_link_choice()
-
-        self._live_link.observe(live_link_choice)
-
+        self._live_link.observe(self.live_link_choice)
         self._export_directory = FileChooser(show_only_dirs=True)
-
         self.live_link_panel = VBox([self.live_link])
         self._refresh = ToggleButton(value=False)
         self._trigger = Button(
-            value=False,
             description="Compute",
             button_style="danger",
             tooltip="Run computation",
             icon="check",
         )
 
-        self.trigger_panel = VBox(
+        self.output_panel = VBox(
             [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
         )
-
+        self.monitoring_panel = VBox(
+            [
+                Label("Monitoring folder", style={"description_width": "initial"}),
+                self.export_directory,
+            ]
+        )
         self.__populate__(**kwargs)
 
         def ga_group_name_update(_):
             self.ga_group_name_update()
 
         self.ga_group_name.observe(ga_group_name_update)
+
+        self._main = VBox([self.project_panel, self.output_panel])
+
+    def __call__(self):
+        return self._main
 
     def __populate__(self, **kwargs):
         for key, value in kwargs.items():
@@ -114,7 +123,7 @@ class BaseApplication:
         """
         Add defaults to the kwargs
         """
-        for key, value in self.defaults.items():
+        for key, value in self.defaults.copy().items():
             if key in kwargs.keys():
                 continue
             else:
@@ -155,7 +164,7 @@ class BaseApplication:
             path.join(self.export_directory.selected_path, temp_geoh5),
         )
 
-    def live_link_choice(self):
+    def live_link_choice(self, _):
         """
         Enable the monitoring folder
         """
@@ -169,16 +178,16 @@ class BaseApplication:
                 self.export_directory._set_form_values(live_path, "")
                 self.export_directory._apply_selection()
 
-            self.live_link_panel.children = [
-                self.live_link,
-                Label("Monitoring folder", style={"description_width": "initial"}),
-                self.export_directory,
-            ]
+            self.live_link_panel.children = [self.live_link, self.monitoring_panel]
         else:
             self.live_link_panel.children = [self.live_link]
 
-    def widget(self):
-        ...
+    @property
+    def main(self):
+        """
+        :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
+        """
+        return self._main
 
     @property
     def copy_trigger(self):
@@ -246,7 +255,8 @@ class BaseApplication:
         self._h5file = value
 
         self._file_browser.reset(
-            path=path.abspath(path.dirname(value)), filename=path.basename(value),
+            path=path.abspath(path.dirname(value)),
+            filename=path.basename(value),
         )
         self._file_browser._apply_selection()
         self.workspace = Workspace(self._h5file)
@@ -280,10 +290,6 @@ class BaseApplication:
         return self._trigger
 
     @property
-    def widget(self):
-        ...
-
-    @property
     def workspace(self):
         """
         Target geoh5py workspace
@@ -301,7 +307,7 @@ class BaseApplication:
         self._workspace = workspace
         self._h5file = workspace.h5file
 
-    def create_copy(self):
+    def create_copy(self, _):
         if self.h5file is not None:
             value = working_copy(self.h5file)
             self.h5file = value
@@ -316,7 +322,10 @@ def update_apps():
     """
 
     trigger = Button(
-        value=False, description="Update All", button_style="danger", icon="check",
+        value=False,
+        description="Update All",
+        button_style="danger",
+        icon="check",
     )
 
     def run_update(_):
