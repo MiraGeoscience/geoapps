@@ -13,6 +13,7 @@ Workspace
     :reversed:
 
     applications/export
+    applications/view_selection
     applications/object_data_selection
     applications/base_application
 
@@ -57,7 +58,6 @@ Visualization
     :reversed:
 
     applications/scatter
-    applications/view_selection
 
 
 
