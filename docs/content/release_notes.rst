@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+Release 0.3.1 - 2021/02/22
+--------------------------
+
+(Hot fix)
+
+- Fix numpy warnings for deprecated conversion to numpy.float
+- Add checks for selection of a zero length line in Peak Finder.
+- Allow line selection based on ReferencedData.
+- Add base run test for all apps
+
+
 Release 0.3.0 - 2021/02/11
 --------------------------
 
