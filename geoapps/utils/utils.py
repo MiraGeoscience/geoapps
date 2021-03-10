@@ -296,7 +296,7 @@ def weighted_average(
 
     """
     assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
-    print([vals for vals in values])
+
     assert all(
         [vals.shape[0] == xyz_in.shape[0] for vals in values]
     ), "Input 'values' must have the same shape as input 'locations'"
@@ -1403,11 +1403,11 @@ def input_string_2_float(input_string):
         cntrs = []
         for val in vals:
             if ":" in val:
-                param = np.asarray(re.split(":", val), dtype="int")
+                param = np.asarray(re.split(":", val), dtype="float")
                 if len(param) == 2:
-                    cntrs += [np.arange(param[0], param[1])]
+                    cntrs += [np.arange(param[0], param[1] + 1)]
                 else:
-                    cntrs += [np.arange(param[0], param[1], param[2])]
+                    cntrs += [np.arange(param[0], param[1] + param[2], param[2])]
             else:
                 cntrs += [float(val)]
         return np.unique(np.sort(np.hstack(cntrs)))
@@ -1493,35 +1493,40 @@ def iso_surface(
 
     surfaces = []
     for level in levels:
-        verts, faces, _, _ = marching_cubes(values, level=level)
+        try:
+            verts, faces, _, _ = marching_cubes(values, level=level)
 
-        # Remove all vertices and cells with nan
-        nan_verts = np.any(np.isnan(verts), axis=1)
-        rem_cells = np.any(nan_verts[faces], axis=1)
+            # Remove all vertices and cells with nan
+            nan_verts = np.any(np.isnan(verts), axis=1)
+            rem_cells = np.any(nan_verts[faces], axis=1)
 
-        active = np.arange(nan_verts.shape[0])
-        active[nan_verts] = nan_verts.shape[0]
-        _, inv_map = np.unique(active, return_inverse=True)
+            active = np.arange(nan_verts.shape[0])
+            active[nan_verts] = nan_verts.shape[0]
+            _, inv_map = np.unique(active, return_inverse=True)
 
-        verts = verts[nan_verts == False, :]
-        faces = faces[rem_cells == False, :]
-        faces = inv_map[faces]
+            verts = verts[nan_verts == False, :]
+            faces = faces[rem_cells == False, :]
+            faces = inv_map[faces].astype("uint32")
 
-        vertices = []
-        for ii in range(3):
-            F = interp1d(
-                np.arange(grid[ii].shape[0]), grid[ii], fill_value="extrapolate"
-            )
-            vertices += [F(verts[:, ii])]
+            vertices = []
+            for ii in range(3):
+                F = interp1d(
+                    np.arange(grid[ii].shape[0]), grid[ii], fill_value="extrapolate"
+                )
+                vertices += [F(verts[:, ii])]
 
-        if isinstance(entity, BlockModel):
-            vertices = rotate_xy(np.vstack(vertices).T, [0, 0, 0], entity.rotation)
-            vertices[:, 0] += entity.origin["x"]
-            vertices[:, 1] += entity.origin["y"]
-            vertices[:, 2] += entity.origin["z"]
-            vertices = vertices.T
+            if isinstance(entity, BlockModel):
+                vertices = rotate_xy(np.vstack(vertices).T, [0, 0, 0], entity.rotation)
+                vertices[:, 0] += entity.origin["x"]
+                vertices[:, 1] += entity.origin["y"]
+                vertices[:, 2] += entity.origin["z"]
 
-        surfaces += [[np.vstack(vertices).T, faces.astype("uint32")]]
+            else:
+                vertices = np.vstack(vertices).T
+        except RuntimeError:
+            vertices, faces = [], []
+
+        surfaces += [[vertices, faces]]
 
     return surfaces
 
