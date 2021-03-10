@@ -2188,8 +2188,8 @@ class PeakFinder(ObjectDataSelection):
 
                 except IndexError:
                     print(
-                        "Could not find a time channel for the given list of time channels."
-                        "Switching to non-tem mode"
+                        "Could not find a time channel for the given list of time channels. "
+                        "Switching to non-tem mode."
                     )
                     self.tem_checkbox.value = False
 
