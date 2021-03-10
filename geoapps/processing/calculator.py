@@ -21,7 +21,7 @@ class Calculator(ObjectDataSelection):
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "geochem",
         "data": ["Al2O3", "CaO"],
-        "equation": "{NewChannel} = {Al2O3} + numpy.cos({CaO} / numpy.max({CaO}) * numpy.pi)",
+        "equation": "{NewChannel} = {Al2O3} + numpy.cos({CaO} / 30.0 * numpy.pi)",
     }
 
     def __init__(self, **kwargs):
