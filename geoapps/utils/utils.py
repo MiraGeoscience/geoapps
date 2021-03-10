@@ -201,6 +201,8 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
 
     assert isinstance(grid_object, Grid2D), "Parent object must be a Grid2D"
 
+    # Replace 0 to nan
+    temp[temp == 0] = np.nan
     grid_object.add_data({file_name: {"values": temp.ravel()}})
 
     del tiff_object
