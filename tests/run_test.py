@@ -18,6 +18,7 @@ from geoapps.processing import (
     CoordinateTransformation,
     DataInterpolation,
     EdgeDetectionApp,
+    IsoSurface,
     PeakFinder,
     Surface2D,
 )
@@ -82,4 +83,9 @@ def test_inversion():
 def test_peak_finder():
     app = PeakFinder(h5file=project)
     app.run_all.click()
+    app.trigger.click()
+
+
+def test_peak_finder():
+    app = IsoSurface(h5file=project)
     app.trigger.click()
