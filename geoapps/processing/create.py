@@ -693,11 +693,11 @@ class IsoSurface(ObjectDataSelection):
         "add_groups": False,
         "select_multiple": False,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Inversion_VTEM_model",
+        "objects": "Inversion_VTEM_Model",
         "data": "Iteration_7_model",
         "max_distance": 500,
         "resolution": 50,
-        "contours": "0.004:0.006:0.001, 0.0025",
+        "contours": "0.005: 0.02: 0.005, 0.0025",
     }
 
     def __init__(self, **kwargs):
@@ -711,7 +711,7 @@ class IsoSurface(ObjectDataSelection):
             description="Base grid resolution (m):",
         )
         self._contours = Text(
-            value="", description="Contours", disabled=False, continuous_update=False
+            value="", description="Iso-values", disabled=False, continuous_update=False
         )
         self._export_as = Text("Iso_", description="Surface:")
 
@@ -723,6 +723,8 @@ class IsoSurface(ObjectDataSelection):
         self.data.description = "Value fields: "
         self.data_panel = self.main
         self.trigger.on_click(self.compute_trigger)
+
+        self.output_panel = VBox([self.export_as, self.output_panel])
         self._main = HBox(
             [
                 VBox(
@@ -733,7 +735,6 @@ class IsoSurface(ObjectDataSelection):
                         self.max_distance,
                         self.resolution,
                         Label("Output"),
-                        self.export_as,
                         self.output_panel,
                     ]
                 )
@@ -748,6 +749,7 @@ class IsoSurface(ObjectDataSelection):
         obj, data_list = self.get_selected_entities()
 
         levels = input_string_2_float(self.contours.value)
+
         if levels is None:
             return
 
@@ -759,15 +761,19 @@ class IsoSurface(ObjectDataSelection):
             max_distance=self.max_distance.value,
         )
 
+        result = []
         for ii, (surface, level) in enumerate(zip(surfaces, levels)):
-            Surface.create(
-                self.workspace,
-                name=self.export_as.value + f"_{level}",
-                vertices=surface[0],
-                cells=surface[1],
-                parent=self.ga_group,
-            )
-
+            if len(surface[0]) > 0 and len(surface[1]) > 0:
+                result += [
+                    Surface.create(
+                        self.workspace,
+                        name=self.export_as.value + f"_{level}",
+                        vertices=surface[0],
+                        cells=surface[1],
+                        parent=self.ga_group,
+                    )
+                ]
+        self.result = result
         if self.live_link.value:
             self.live_link_output(self.ga_group)
 
@@ -836,4 +842,3 @@ class IsoSurface(ObjectDataSelection):
 
         # Refresh the list of objects
         self.update_objects_list()
-        self.topography.workspace = workspace
