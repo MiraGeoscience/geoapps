@@ -23,6 +23,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.selection import ObjectDataSelection, TopographyOptions
+from geoapps.utils import weighted_average
 
 
 class DataInterpolation(ObjectDataSelection):
@@ -493,18 +494,17 @@ class DataInterpolation(ObjectDataSelection):
             xyz_out[:, :2] = np.dot(rotation, xyz_out[:, :2].T).T
             xyz_out[:, 1] *= self.skew_factor.value
 
-            # Find nearest cells
-            rad, ind = tree.query(xyz_out, 8)
+            vals, ind = weighted_average(
+                xyz,
+                xyz_out,
+                list(values.values()),
+                threshold=1e-1,
+                n=8,
+                return_indices=True,
+            )
 
-            for key, value in values.items():
-                values_interp[key] = np.zeros(xyz_out.shape[0])
-                weight = np.zeros(xyz_out.shape[0])
-
-                for ii in range(8):
-                    values_interp[key] += value[ind[:, ii]] / (rad[:, ii] + 1e-1)
-                    weight += 1.0 / (rad[:, ii] + 1e-1)
-
-                values_interp[key] /= weight
+            for key, val in enumerate(values, vals):
+                values_interp[key] = val
                 sign[key] = sign[key][ind[:, 0]]
 
         else:

@@ -18,7 +18,9 @@ from .utils import (
     format_labels,
     geotiff_2_grid,
     hex_to_rgb,
+    input_string_2_float,
     inv_symlog,
+    iso_surface,
     object_2_dataframe,
     octree_2_treemesh,
     random_sampling,
@@ -31,4 +33,5 @@ from .utils import (
     symlog,
     tensor_2_block_model,
     treemesh_2_octree,
+    weighted_average,
 )

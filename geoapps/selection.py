@@ -214,7 +214,6 @@ class ObjectDataSelection(BaseApplication):
         if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
             self.objects.value
         ):
-
             for entity in self._workspace.get_entity(self.objects.value):
                 if isinstance(entity, ObjectBase):
                     obj = entity

@@ -5,7 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import re
 
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
@@ -15,7 +14,7 @@ from ipywidgets import FloatSlider, FloatText, HBox, Label, Layout, ToggleButton
 
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils import rotate_xy
+from geoapps.utils import input_string_2_float, rotate_xy
 
 
 class PlotSelection2D(ObjectDataSelection):
@@ -227,21 +226,7 @@ class PlotSelection2D(ObjectDataSelection):
             return
 
         # Parse the contours string
-        if contours != "":
-            vals = re.split(",", contours)
-            cntrs = []
-            for val in vals:
-                if ":" in val:
-                    param = np.asarray(re.split(":", val), dtype="int")
-                    if len(param) == 2:
-                        cntrs += [np.arange(param[0], param[1])]
-                    else:
-                        cntrs += [np.arange(param[0], param[1], param[2])]
-                else:
-                    cntrs += [float(val)]
-            contours = np.unique(np.sort(np.hstack(cntrs)))
-        else:
-            contours = None
+        contours = input_string_2_float(contours)
 
         entity, _ = self.get_selected_entities()
         if entity is None:

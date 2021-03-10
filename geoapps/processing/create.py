@@ -28,6 +28,7 @@ from scipy.spatial import Delaunay, cKDTree
 
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import ObjectDataSelection, TopographyOptions
+from geoapps.utils import input_string_2_float, iso_surface
 
 
 class Surface2D(ObjectDataSelection):
@@ -680,3 +681,159 @@ class ContourValues(PlotSelection2D):
                 if self.live_link.value:
                     self.live_link_output(self.ga_group)
                 self.workspace.finalize()
+
+
+class IsoSurface(ObjectDataSelection):
+    """
+    Application for the conversion of conductivity/depth curves to
+    a pseudo 3D conductivity model on surface.
+    """
+
+    defaults = {
+        "add_groups": False,
+        "select_multiple": False,
+        "h5file": "../../assets/FlinFlon.geoh5",
+        "objects": "Inversion_VTEM_model",
+        "data": "Iteration_7_model",
+        "max_distance": 500,
+        "resolution": 50,
+        "contours": "0.004:0.006:0.001, 0.0025",
+    }
+
+    def __init__(self, **kwargs):
+        kwargs = self.apply_defaults(**kwargs)
+
+        self._topography = TopographyOptions()
+        self._max_distance = FloatText(
+            description="Max Interpolation Distance (m):",
+        )
+        self._resolution = FloatText(
+            description="Base grid resolution (m):",
+        )
+        self._contours = Text(
+            value="", description="Contours", disabled=False, continuous_update=False
+        )
+        self._export_as = Text("Iso_", description="Surface:")
+
+        super().__init__(**kwargs)
+
+        self.ga_group_name.value = "ISO"
+        self.data.observe(self.data_change, names="value")
+        self.data_change(None)
+        self.data.description = "Value fields: "
+        self.data_panel = self.main
+        self.trigger.on_click(self.compute_trigger)
+        self._main = HBox(
+            [
+                VBox(
+                    [
+                        self.project_panel,
+                        self.data_panel,
+                        self._contours,
+                        self.max_distance,
+                        self.resolution,
+                        Label("Output"),
+                        self.export_as,
+                        self.output_panel,
+                    ]
+                )
+            ]
+        )
+
+    def compute_trigger(self, _):
+
+        if not self.workspace.get_entity(self.objects.value):
+            return
+
+        obj, data_list = self.get_selected_entities()
+
+        levels = input_string_2_float(self.contours.value)
+        if levels is None:
+            return
+
+        surfaces = iso_surface(
+            obj,
+            data_list[0].values,
+            levels,
+            resolution=self.resolution.value,
+            max_distance=self.max_distance.value,
+        )
+
+        for ii, (surface, level) in enumerate(zip(surfaces, levels)):
+            Surface.create(
+                self.workspace,
+                name=self.export_as.value + f"_{level}",
+                vertices=surface[0],
+                cells=surface[1],
+                parent=self.ga_group,
+            )
+
+        if self.live_link.value:
+            self.live_link_output(self.ga_group)
+
+        self.workspace.finalize()
+
+    def data_change(self, _):
+
+        if self.data.value:
+            self.export_as.value = "Iso_" + self.data.value
+
+    @property
+    def convert(self):
+        """
+        ipywidgets.ToggleButton()
+        """
+        return self._convert
+
+    @property
+    def contours(self):
+        """
+        :obj:`ipywidgets.Text`: String defining sets of contours.
+        Contours can be defined over an interval `50:200:10` and/or at a fix value `215`.
+        Any combination of the above can be used:
+        50:200:10, 215 => Contours between values 50 and 200 every 10, with a contour at 215.
+        """
+        return self._contours
+
+    @property
+    def export_as(self):
+        """
+        ipywidgets.Text()
+        """
+        return self._export_as
+
+    @property
+    def max_distance(self):
+        """
+        ipywidgets.FloatText()
+        """
+        return self._max_distance
+
+    @property
+    def resolution(self):
+        """
+        ipywidgets.FloatText()
+        """
+        return self._resolution
+
+    @property
+    def workspace(self):
+        """
+        Target geoh5py workspace
+        """
+        if (
+            getattr(self, "_workspace", None) is None
+            and getattr(self, "_h5file", None) is not None
+        ):
+            self.workspace = Workspace(self.h5file)
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, workspace):
+        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        self._workspace = workspace
+        self._h5file = workspace.h5file
+
+        # Refresh the list of objects
+        self.update_objects_list()
+        self.topography.workspace = workspace
