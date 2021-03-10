@@ -111,8 +111,12 @@ class CoordinateTransformation(BaseApplication):
                                 )
 
                             del grid
-                            os.remove(temp_file)
-                            os.remove(temp_file_out)
+                            if os.path.exists(temp_file):
+                                os.remove(temp_file)
+
+                            if os.path.exists(temp_file_out):
+                                os.remove(temp_file_out)
+
                             count += 1
 
                     new_obj.copy(parent=self.ga_group)
@@ -134,9 +138,6 @@ class CoordinateTransformation(BaseApplication):
                         x,
                         y,
                     )
-
-                    if self.code_out.value == "EPSG:4326":
-                        x2, y2 = y2, x2
 
                     new_obj = obj.copy(parent=self.ga_group, copy_children=True)
                     new_obj.vertices = numpy.c_[x2, y2, obj.vertices[:, 2]]
