@@ -392,7 +392,6 @@ class InversionOptions(BaseApplication):
         )
         self._ignore_values = widgets.Text(
             value="<0",
-            tooltip="Dummy value",
             description="Data (i.e. <0 = no negatives)",
         )
         self._air_values = widgets.FloatText(
@@ -614,9 +613,9 @@ def get_inversion_output(h5file, group_name):
                 out["iteration"] += [np.int(comment["Author"].split("_")[1])]
                 out["time"] += [comment["Date"]]
                 values = json.loads(comment["Text"])
-                out["phi_d"] += [np.float(values["phi_d"])]
-                out["phi_m"] += [np.float(values["phi_m"])]
-                out["beta"] += [np.float(values["beta"])]
+                out["phi_d"] += [float(values["phi_d"])]
+                out["phi_m"] += [float(values["phi_m"])]
+                out["beta"] += [float(values["beta"])]
 
         if len(out["iteration"]) > 0:
             out["iteration"] = np.hstack(out["iteration"])
@@ -719,11 +718,10 @@ class InversionApp(PlotSelection2D):
 
         kwargs = self.apply_defaults(**kwargs)
         self.em_system_specs = geophysical_systems.parameters()
-        self._data_count = (Label("Data Count: 0", tooltip="Keep <1500 for speed"),)
+        self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
             value=False,
             description="Forward only",
-            tooltip="Forward response of reference model",
         )
         self._inducing_field = widgets.Text(
             description="Inducing Field [Amp, Inc, Dec]",
@@ -740,7 +738,6 @@ class InversionApp(PlotSelection2D):
             value=False,
             description="Write input",
             button_style="warning",
-            tooltip="Write json input file",
             icon="check",
         )
         self.data_channel_choices = widgets.Dropdown()
@@ -965,7 +962,6 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.ignore_values.value = "-99999"
             self.inversion_parameters.air_values.disabled = False
             self.inversion_parameters.air_values.value = 0
-            self.inversion_parameters.max_iterations.value = 25
 
         else:
             tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
@@ -1011,7 +1007,7 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.ignore_values.value = "<0"
             self.inversion_parameters.air_values.disabled = True
             self.inversion_parameters.air_values.value = 1e-8
-            self.inversion_parameters.max_iterations.value = 10
+
             # Switch mesh options
             self.inversion_parameters._mesh = self.mesh_1D
             self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.main

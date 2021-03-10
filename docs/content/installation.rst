@@ -30,16 +30,20 @@ Installation
 	    :width: 50%
 
 
-.. note:: The assumption is made here that Anaconda has been installed in the default directory
+.. attention:: The assumption is made that Anaconda has been installed in the default directory:
+        ``%USERPROFILE%\anaconda3``
 
-          %USERPROFILE%/AppData/Local/Continuum/anaconda3
+        .. figure:: ../images/Install_start_bat.png
+            :align: center
+            :width: 100%
 
-	  or
+      If this is not the case, users will need to edit the ``Install_Update.bat`` and
+      ``Start_applications.bat`` files in order to point to the Anaconda directory. Common alternatives are:
 
-	  %USERPROFILE%/anaconda3
+        - ``%USERPROFILE%\AppData\Local\Continuum\anaconda3``
+        - ``C:\ProgramData\anaconda3``
 
-          If this is not the case, users will need to manually edit ``Install_Update.bat``
-          in order to point to the Anaconda directory.
+
 
 
 Running the applications

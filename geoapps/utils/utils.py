@@ -11,15 +11,13 @@ import os
 import dask
 import dask.array as da
 import fiona
-import gdal
 import numpy as np
-import osr
 import pandas as pd
 from dask.diagnostics import ProgressBar
-from fiona.crs import from_epsg
 from geoh5py.data import FloatData
 from geoh5py.objects import BlockModel, Grid2D, Octree
 from geoh5py.workspace import Workspace
+from osgeo import gdal
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 from shapely.geometry import LineString, mapping
@@ -490,6 +488,10 @@ class signal_processing_1d:
         sort = np.argsort(locations)
         start = locations[sort[0]] * 1.0
         end = locations[sort[-1]] * 1.0
+
+        if (start == end) or np.isnan(self.hx):
+            return
+
         self._locations_resampled = np.arange(start, end, self.hx)
         self.locations_resampled
 
@@ -983,7 +985,7 @@ def string_2_list(string):
     """
     Convert a list of numbers separated by comma to a list of floats
     """
-    return [np.float(val) for val in string.split(",") if len(val) > 0]
+    return [float(val) for val in string.split(",") if len(val) > 0]
 
 
 class RectangularBlock:

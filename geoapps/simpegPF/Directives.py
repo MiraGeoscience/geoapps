@@ -1209,7 +1209,7 @@ class Update_IRLS(InversionDirective):
                 self.opt.iter -= 1
                 return
 
-        elif np.all([self.mode == 1, self.opt.iter % self.coolingRate == 0]):
+        elif np.all([self.mode == 1, (self.opt.iter % self.coolingRate) == 0]):
 
             self.invProb.beta = self.invProb.beta / self.coolingFactor
 

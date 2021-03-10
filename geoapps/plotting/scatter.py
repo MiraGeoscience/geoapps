@@ -82,15 +82,12 @@ class ScatterPlots(ObjectDataSelection):
         self._x_thresh = FloatText(
             description="Threshold",
             value=1e-1,
-            indent=False,
         )
         self._x_min = FloatText(
             description="Min",
-            indent=False,
         )
         self._x_max = FloatText(
             description="Max",
-            indent=False,
         )
         self._x_panel = VBox(
             [
@@ -113,15 +110,12 @@ class ScatterPlots(ObjectDataSelection):
         self._y_thresh = FloatText(
             description="Threshold",
             value=1e-1,
-            indent=False,
         )
         self._y_min = FloatText(
             description="Min",
-            indent=False,
         )
         self._y_max = FloatText(
             description="Max",
-            indent=False,
         )
         self._y_panel = VBox(
             [
@@ -148,15 +142,12 @@ class ScatterPlots(ObjectDataSelection):
         self._z_thresh = FloatText(
             description="Threshold",
             value=1e-1,
-            indent=False,
         )
         self._z_min = FloatText(
             description="Min",
-            indent=False,
         )
         self._z_max = FloatText(
             description="Max",
-            indent=False,
         )
         self._z_panel = VBox(
             [
@@ -166,7 +157,6 @@ class ScatterPlots(ObjectDataSelection):
                 HBox([self._z_min, self._z_max]),
             ]
         )
-
         self._color = Dropdown(description="Data:")
         self._color.observe(channel_bounds_setter, names="value")
         self._color.name = "color"
@@ -178,7 +168,6 @@ class ScatterPlots(ObjectDataSelection):
         self._color_thresh = FloatText(
             description="Threshold",
             value=1e-1,
-            indent=False,
         )
         self._color_active = Checkbox(
             description="Active",
@@ -192,11 +181,9 @@ class ScatterPlots(ObjectDataSelection):
         )
         self._color_min = FloatText(
             description="Min",
-            indent=False,
         )
         self._color_max = FloatText(
             description="Max",
-            indent=False,
         )
         self._color_panel = VBox(
             [
@@ -224,19 +211,17 @@ class ScatterPlots(ObjectDataSelection):
         self._size_thresh = FloatText(
             description="Threshold",
             value=1e-1,
-            indent=False,
         )
         self._size_markers = IntSlider(
             min=1, max=100, value=20, description="Marker size", continuous_update=False
         )
         self._size_min = FloatText(
             description="Min",
-            indent=False,
         )
         self._size_max = FloatText(
             description="Max",
-            indent=False,
         )
+
         self._size_panel = VBox(
             [
                 self._size_active,
