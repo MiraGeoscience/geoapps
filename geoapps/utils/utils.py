@@ -1282,32 +1282,6 @@ def moments_cov(data):
     return [x_centroid, y_centroid], cov
 
 
-# def principal_moment(m, winSize):
-#     """
-#     Function to compute the center and principal axes of an anomaly
-#     """
-#     center, cov = moments_cov(m)
-#
-#     if not np.any(np.isnan(cov)):
-#
-#         evals, evecs = np.linalg.eig(cov)
-#
-#         center_x = int(x) - winSize + center[0]
-#
-#         center_y = int(z) - winSize + center[1]
-#
-#         ind = np.argmax(np.abs(evals))
-#
-#         # Flip the vector if opposite to previous
-#         vec_new = evecs[ind]
-#         vec_new[1] *= -1
-#         sign = np.sign(np.dot(vec, vec_new))
-#         if sign == 0:
-#             sign = -1
-#         vec = sign * vec_new.copy()
-#         val = evals[ind]
-
-
 def ij_2_ind(coordinates, shape):
     """
     Return the index of ij coordinates
