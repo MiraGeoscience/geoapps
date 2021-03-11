@@ -1365,7 +1365,7 @@ def input_string_2_float(input_string):
     Parameter
     ---------
     input_string: str
-        Input string value of type `val1:val2:ii, val3, val4`
+        Input string value of type `val1:val2:ii` and/or a list of values `val3, val4`
 
 
     Return
@@ -1422,7 +1422,7 @@ def iso_surface(
 
     Returns
     -------
-    surfaces: list
+    surfaces: list of numpy.ndarrays
         List of surfaces (one per levels) defined by
         vertices and cell indices.
         [(vertices, cells)_level_1, ..., (vertices, cells)_level_n]
