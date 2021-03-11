@@ -836,7 +836,7 @@ class IsoSurface(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(workspace, Workspace), f"workspace must be of class {Workspace}"
         self._workspace = workspace
         self._h5file = workspace.h5file
 
