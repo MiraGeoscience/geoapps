@@ -494,6 +494,8 @@ class DataInterpolation(ObjectDataSelection):
             xyz_out[:, :2] = np.dot(rotation, xyz_out[:, :2].T).T
             xyz_out[:, 1] *= self.skew_factor.value
 
+            rad, ind = tree.query(xyz_out)
+
             vals, ind = weighted_average(
                 xyz,
                 xyz_out,
@@ -503,14 +505,15 @@ class DataInterpolation(ObjectDataSelection):
                 return_indices=True,
             )
 
-            for key, val in enumerate(values, vals):
+            for key, val in zip(list(values.keys()), vals):
                 values_interp[key] = val
                 sign[key] = sign[key][ind[:, 0]]
 
         else:
+            rad, ind = tree.query(xyz_out)
             # Find nearest cells
             for key, value in values.items():
-                rad, ind = tree.query(xyz_out)
+
                 values_interp[key] = value[ind]
                 sign[key] = sign[key][ind]
 
@@ -522,7 +525,7 @@ class DataInterpolation(ObjectDataSelection):
 
             if self.method.value == "Inverse Distance":
                 values_interp[key][
-                    rad[:, 0] > self.max_distance.value
+                    rad > self.max_distance.value
                 ] = self.no_data_value.value
                 if self.max_depth.value is not None:
                     values_interp[key][
