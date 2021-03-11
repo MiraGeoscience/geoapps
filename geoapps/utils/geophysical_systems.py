@@ -3552,7 +3552,7 @@ def parameters():
             ],
             "tx_offsets": [[0, 0, 0]],
             "bird_offset": [0, 0, 0],
-            "normalization": [3.1416, 1e-12, 4.5e-3],
+            "normalization": [3.1416, 1e-12],
             "tx_specs": {"type": "CircularLoop", "a": 1.0, "I": 1.0},
             "data_type": "dBzdt",
         },

@@ -52,8 +52,10 @@ nbsphinx_prolog = r"""
 """
 
 nbsphinx_thumbnails = {
+    "content/applications/base_application": "_images/base_thumbnail.png",
     "content/applications/calculator": "_images/calculator_thumbnail.png",
     "content/applications/create_surface": "_images/model_surface.png",
+    "content/applications/create_isosurface": "_images/iso_surface.png",
     "content/applications/object_data_selection": "_images/object_selection_thumbnail.png",
     "content/applications/view_selection": "_images/plot_selection.png",
     "content/applications/edge_detection": "_images/edge_detection_thumbnail.png",
@@ -89,9 +91,9 @@ master_doc = "index"
 project = "geoapps"
 
 # The short X.Y version.
-version = "0.3.1"
+version = "0.4.0"
 # The full version, including alpha/beta/rc tags.
-release = "0.3.1"
+release = "0.4.0"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

@@ -7,6 +7,7 @@
 
 import gc
 import os
+import re
 
 import dask
 import dask.array as da
@@ -21,6 +22,7 @@ from osgeo import gdal
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 from shapely.geometry import LineString, mapping
+from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
 
@@ -199,6 +201,8 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
 
     assert isinstance(grid_object, Grid2D), "Parent object must be a Grid2D"
 
+    # Replace 0 to nan
+    temp[temp == 0] = np.nan
     grid_object.add_data({file_name: {"values": temp.ravel()}})
 
     del tiff_object
@@ -254,6 +258,69 @@ def export_curve_2_shapefile(curve, attribute=None, wkt_code=None, file_name=Non
                 # geometry of of the original polygon shapefile
                 res["geometry"] = mapping(pline)
                 c.write(res)
+
+
+def weighted_average(
+    xyz_in,
+    xyz_out,
+    values,
+    n=8,
+    threshold=1e-1,
+    return_indices=False,
+    max_distance=np.inf,
+):
+    """
+    Perform a inverse distance weighted averaging of values.
+
+    Parameters
+    ----------
+    xyz_in: numpy.ndarray shape(*, 3)
+        Input coordinate locations
+
+    xyz_out: numpy.ndarray shape(*, 3)
+        Output coordinate locations
+
+    values: list of numpy.ndarray
+        Values to be averaged from the input to output locations
+
+    max_distance: flat, default=numpy.inf
+        Maximum averaging distance, beyond which values are assigned nan
+
+    n: int, default=8
+        Number of nearest neighbours used in the weighted average
+
+    threshold: float, default=1e-1
+        Small value added to the radial distance to avoid zero division.
+        The value can also be used to smooth the interpolation.
+
+    return_indices: bool, default=False
+        Return the indices of the nearest neighbours from the input locations.
+
+    """
+    assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
+
+    assert all(
+        [vals.shape[0] == xyz_in.shape[0] for vals in values]
+    ), "Input 'values' must have the same shape as input 'locations'"
+
+    tree = cKDTree(xyz_in)
+    rad, ind = tree.query(xyz_out, n)
+    rad[rad > max_distance] = np.nan
+    out = []
+    for value in values:
+        values_interp = np.zeros(xyz_out.shape[0])
+        weight = np.zeros(xyz_out.shape[0])
+
+        for ii in range(n):
+            values_interp += value[ind[:, ii]] / (rad[:, ii] + threshold)
+            weight += 1.0 / (rad[:, ii] + threshold)
+
+        out += [values_interp / weight]
+
+    if return_indices:
+        return out, ind
+
+    return out
 
 
 def filter_xy(x, y, distance, window=None):
@@ -1215,32 +1282,6 @@ def moments_cov(data):
     return [x_centroid, y_centroid], cov
 
 
-def principal_moment(m, winSize):
-    """
-    Function to compute the center and principal axes of an anomaly
-    """
-    center, cov = moments_cov(m)
-
-    if not np.any(np.isnan(cov)):
-
-        evals, evecs = np.linalg.eig(cov)
-
-        center_x = int(x) - winSize + center[0]
-
-        center_y = int(z) - winSize + center[1]
-
-        ind = np.argmax(np.abs(evals))
-
-        # Flip the vector if opposite to previous
-        vec_new = evecs[ind]
-        vec_new[1] *= -1
-        sign = np.sign(np.dot(vec, vec_new))
-        if sign == 0:
-            sign = -1
-        vec = sign * vec_new.copy()
-        val = evals[ind]
-
-
 def ij_2_ind(coordinates, shape):
     """
     Return the index of ij coordinates
@@ -1315,6 +1356,155 @@ def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kw
     axs.set_xticklabels([tick_format % x for x in xticks.tolist()], va="center")
     axs.autoscale(tight=True)
     axs.set_aspect(aspect)
+
+
+def input_string_2_float(input_string):
+    """
+    Function to input interval and value as string to a list of floats.
+
+    Parameter
+    ---------
+    input_string: str
+        Input string value of type `val1:val2:ii` and/or a list of values `val3, val4`
+
+
+    Return
+    ------
+    list of floats
+        Corresponding list of values in float format
+
+    """
+    if input_string != "":
+        vals = re.split(",", input_string)
+        cntrs = []
+        for val in vals:
+            if ":" in val:
+                param = np.asarray(re.split(":", val), dtype="float")
+                if len(param) == 2:
+                    cntrs += [np.arange(param[0], param[1] + 1)]
+                else:
+                    cntrs += [np.arange(param[0], param[1] + param[2], param[2])]
+            else:
+                cntrs += [float(val)]
+        return np.unique(np.sort(np.hstack(cntrs)))
+
+    return None
+
+
+def iso_surface(
+    entity,
+    values,
+    levels,
+    resolution=100,
+    max_distance=np.inf,
+):
+    """
+    Generate 3D iso surface from an entity vertices or centroids and values.
+
+    Parameters
+    ----------
+    entity: geoh5py.objects
+        Any entity with 'vertices' or 'centroids' attribute.
+
+    values: numpy.ndarray
+        Array of values to create iso-surfaces from.
+
+    levels: list of floats
+        List of iso values
+
+    max_distance: float, default=numpy.inf
+        Maximum distance from input data to generate iso surface.
+        Only used for input entities other than BlockModel.
+
+    resolution: int, default=100
+        Grid size used to generate the iso surface.
+        Only used for input entities other than BlockModel.
+
+    Returns
+    -------
+    surfaces: list of numpy.ndarrays
+        List of surfaces (one per levels) defined by
+        vertices and cell indices.
+        [(vertices, cells)_level_1, ..., (vertices, cells)_level_n]
+    """
+    if getattr(entity, "vertices", None) is not None:
+        locations = entity.vertices
+    elif getattr(entity, "centroids", None) is not None:
+        locations = entity.centroids
+    else:
+        print("Input 'entity' must have 'vertices' or 'centroids'.")
+        return None
+
+    if isinstance(entity, BlockModel):
+        values = values.reshape(
+            (entity.shape[2], entity.shape[0], entity.shape[1]), order="F"
+        ).transpose((1, 2, 0))
+        grid = [
+            entity.u_cell_delimiters,
+            entity.v_cell_delimiters,
+            entity.z_cell_delimiters,
+        ]
+
+    else:
+        grid = []
+        for ii in range(3):
+            grid += [
+                np.arange(
+                    locations[:, ii].min(),
+                    locations[:, ii].max() + resolution,
+                    resolution,
+                )
+            ]
+
+        y, x, z = np.meshgrid(grid[1], grid[0], grid[2])
+        values = weighted_average(
+            locations,
+            np.c_[x.flatten(), y.flatten(), z.flatten()],
+            [values],
+            threshold=1e-1,
+            n=8,
+            max_distance=max_distance,
+        )
+        values = values[0].reshape(x.shape)
+
+    surfaces = []
+    for level in levels:
+        try:
+            verts, faces, _, _ = marching_cubes(values, level=level)
+
+            # Remove all vertices and cells with nan
+            nan_verts = np.any(np.isnan(verts), axis=1)
+            rem_cells = np.any(nan_verts[faces], axis=1)
+
+            active = np.arange(nan_verts.shape[0])
+            active[nan_verts] = nan_verts.shape[0]
+            _, inv_map = np.unique(active, return_inverse=True)
+
+            verts = verts[nan_verts == False, :]
+            faces = faces[rem_cells == False, :]
+            faces = inv_map[faces].astype("uint32")
+
+            vertices = []
+            for ii in range(3):
+                F = interp1d(
+                    np.arange(grid[ii].shape[0]), grid[ii], fill_value="extrapolate"
+                )
+                vertices += [F(verts[:, ii])]
+
+            if isinstance(entity, BlockModel):
+                vertices = rotate_xy(np.vstack(vertices).T, [0, 0, 0], entity.rotation)
+                vertices[:, 0] += entity.origin["x"]
+                vertices[:, 1] += entity.origin["y"]
+                vertices[:, 2] += entity.origin["z"]
+
+            else:
+                vertices = np.vstack(vertices).T
+        except RuntimeError:
+            vertices, faces = [], []
+
+        surfaces += [[vertices, faces]]
+
+    return surfaces
 
 
 # def refine_cells(self, indices):

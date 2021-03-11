@@ -13,6 +13,7 @@ Workspace
     :reversed:
 
     applications/export
+    applications/view_selection
     applications/object_data_selection
     applications/base_application
 
@@ -28,6 +29,7 @@ Object/Data Utilities
     applications/calculator
     applications/contouring
     applications/create_surface
+    applications/create_isosurface
     applications/coordinate_transformation
     applications/data_interpolation
 
@@ -56,7 +58,6 @@ Visualization
     :reversed:
 
     applications/scatter
-    applications/view_selection
 
 
 
@@ -110,5 +111,14 @@ Need help? Contact us at support@mirageoscience.com
     :width: 0
 
 .. figure:: applications/images/peak_finder_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/iso_surface.png
+    :align: center
+    :width: 0
+
+
+.. figure:: applications/images/base_thumbnail.png
     :align: center
     :width: 0
