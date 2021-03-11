@@ -1458,7 +1458,7 @@ def iso_surface(
     elif getattr(entity, "centroids", None) is not None:
         locations = entity.centroids
     else:
-        print("Input 'entity' must have 'vertices' or centroids'")
+        print("Input 'entity' must have 'vertices' or 'centroids'.")
         return None
 
     if isinstance(entity, BlockModel):
