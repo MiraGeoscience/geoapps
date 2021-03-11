@@ -1,14 +1,29 @@
 Release Notes
 =============
 
-Release 0.3.1 - 2021/02/22
+Release 0.4.0 - 2021/03/10
 --------------------------
 
-(Hot fix)
+**New Application** - Isosurface
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+New application for the creation of 3D isosurface values around any type of object.
+
+
+Dependencies
+^^^^^^^^^^^^
+
+In order to protect the applications from breaking between releases, we will now fix the version
+of most third-party packages. Users will be notified if an update of the requirements is needed.
+
+
+Application Updates
+^^^^^^^^^^^^^^^^^^^
 
 - Fix numpy warnings for deprecated conversion to numpy.float
-- Add checks for selection of a zero length line in Peak Finder.
-- Allow line selection based on ReferencedData.
+- Fix issues with gdal and osr imports
+- Stability updates to the Peak Finder app.
+- Data selection by line ID now accepts ReferencedData type.
 - Add base run test for all apps
 
 
