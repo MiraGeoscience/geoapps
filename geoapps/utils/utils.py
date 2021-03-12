@@ -12,11 +12,12 @@ import re
 import dask
 import dask.array as da
 import fiona
+import geoh5py
 import numpy as np
 import pandas as pd
 from dask.diagnostics import ProgressBar
 from geoh5py.data import FloatData
-from geoh5py.objects import BlockModel, Grid2D, Octree
+from geoh5py.objects import BlockModel, Grid2D, Octree, Surface
 from geoh5py.workspace import Workspace
 from osgeo import gdal
 from scipy.interpolate import interp1d
@@ -26,10 +27,21 @@ from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
 
-def find_value(labels, strings, default=None):
+def find_value(labels: list, keywords: list, default=None) -> list:
+    """
+    Find matching keywords within a list of labels.
+
+    :param labels: List of labels that may contain the keywords.
+    :param keywords:  List of keywords to search for
+    :param default: default=None
+        Default value be returned if none of the keywords are found.
+
+    :return matching_labels: list
+        List of labels containing any of the keywords.
+    """
     value = None
     for name in labels:
-        for string in strings:
+        for string in keywords:
             if isinstance(string, str) and (
                 (string.lower() in name.lower()) or (name.lower() in string.lower())
             ):
@@ -39,14 +51,14 @@ def find_value(labels, strings, default=None):
     return value
 
 
-def get_surface_parts(surface):
+def get_surface_parts(surface: Surface) -> np.ndarray:
     """
     Find the connected cells from a surface
 
-    :param :obj:`geoh5yp.objects.surface`: Input surface with cells
+    :param surface: Input surface with cells property
 
-    :return: parts, numpy.array of int
-        Array of parts id for each of the surface vertices
+    :return parts: shape(*, 3)
+        Array of parts for each of the surface vertices
     """
     cell_sorted = np.sort(surface.cells, axis=1)
     cell_sorted = cell_sorted[np.argsort(cell_sorted[:, 0]), :]
@@ -70,20 +82,33 @@ def get_surface_parts(surface):
     return parts
 
 
-def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="float"):
+def export_grid_2_geotiff(
+    data: FloatData, file_name: str, wkt_code: str = None, data_type: str = "float"
+):
     """
-    Source:
+    Write a geotiff from float data taken from a Grid2D object.
+
+    :param data: FloatData object with Grid2D parent.
+    :param file_name: Output file name *.tiff
+    :param wkt_code: default=None
+        Well-Known-Text string used to assign a projection.
+    :param data_type: default='float'
+        Type of data written to the geotiff.
+        'float': Single band tiff with data values
+        'RGB': Three bands tiff with the colormap values
+
+    Original Source:
 
         Cameron Cooke: http://cgcooke.github.io/GDAL/
 
     Modified: 2020-04-28
     """
 
-    grid2d = data_object.parent
+    grid2d = data.parent
 
     assert isinstance(grid2d, Grid2D), f"The parent object must be a Grid2D entity."
 
-    values = data_object.values.copy()
+    values = data.values.copy()
     values[(values > 1e-38) * (values < 2e-38)] = -99999
 
     # TODO Re-sample the grid if rotated
@@ -95,8 +120,8 @@ def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="floa
     if data_type == "RGB":
         encode_type = gdal.GDT_Byte
         num_bands = 3
-        if data_object.entity_type.color_map is not None:
-            cmap = data_object.entity_type.color_map.values
+        if data.entity_type.color_map is not None:
+            cmap = data.entity_type.color_map.values
             red = interp1d(
                 cmap["Value"], cmap["Red"], bounds_error=False, fill_value="extrapolate"
             )(values)
