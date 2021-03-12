@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 from dask.diagnostics import ProgressBar
 from geoh5py.data import FloatData
+from geoh5py.groups import Group
 from geoh5py.objects import BlockModel, Grid2D, Octree, Surface
 from geoh5py.workspace import Workspace
 from osgeo import gdal
@@ -32,12 +33,10 @@ def find_value(labels: list, keywords: list, default=None) -> list:
     Find matching keywords within a list of labels.
 
     :param labels: List of labels that may contain the keywords.
-    :param keywords:  List of keywords to search for
-    :param default: default=None
-        Default value be returned if none of the keywords are found.
+    :param keywords: List of keywords to search for.
+    :param default: Default value be returned if none of the keywords are found.
 
-    :return matching_labels: list
-        List of labels containing any of the keywords.
+    :return matching_labels: List of labels containing any of the keywords.
     """
     value = None
     for name in labels:
@@ -53,12 +52,12 @@ def find_value(labels: list, keywords: list, default=None) -> list:
 
 def get_surface_parts(surface: Surface) -> np.ndarray:
     """
-    Find the connected cells from a surface
+    Find the connected cells from a surface.
 
-    :param surface: Input surface with cells property
+    :param surface: Input surface with cells property.
 
     :return parts: shape(*, 3)
-        Array of parts for each of the surface vertices
+        Array of parts for each of the surface vertices.
     """
     cell_sorted = np.sort(surface.cells, axis=1)
     cell_sorted = cell_sorted[np.argsort(cell_sorted[:, 0]), :]
@@ -86,16 +85,15 @@ def export_grid_2_geotiff(
     data: FloatData, file_name: str, wkt_code: str = None, data_type: str = "float"
 ):
     """
-    Write a geotiff from float data taken from a Grid2D object.
+    Write a geotiff from float data stored on a Grid2D object.
 
     :param data: FloatData object with Grid2D parent.
-    :param file_name: Output file name *.tiff
-    :param wkt_code: default=None
-        Well-Known-Text string used to assign a projection.
-    :param data_type: default='float'
+    :param file_name: Output file name *.tiff.
+    :param wkt_code: Well-Known-Text string used to assign a projection.
+    :param data_type:
         Type of data written to the geotiff.
-        'float': Single band tiff with data values
-        'RGB': Three bands tiff with the colormap values
+        'float': Single band tiff with data values.
+        'RGB': Three bands tiff with the colormap values.
 
     Original Source:
 
@@ -195,21 +193,34 @@ def export_grid_2_geotiff(
     dataset.FlushCache()  # Write to disk.
 
 
-def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_name=None):
+def geotiff_2_grid(
+    workspace: Workspace,
+    file_name: str,
+    grid: Grid2D = None,
+    grid_name: str = None,
+    parent: Group = None,
+) -> Grid2D:
     """
-    Load a geotiff and return
-    a Grid2D with values
+    Load a geotiff from file.
+
+    :param workspace: Workspace to load the data into.
+    :param file_name: Input file name with path.
+    :param grid: Existing Grid2D object to load the data into. A new object is created by default.
+    :param grid_name: Name of the new Grid2D object. Defaults to the file name.
+    :param parent: Group entity to store the new Grid2D object into.
+
+     :return grid: Grid2D object with values stored.
     """
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)
     temp = band.ReadAsArray()
 
     file_name = os.path.basename(file_name).split(".")[0]
-    if grid_object is None:
+    if grid is None:
         if grid_name is None:
             grid_name = file_name
 
-        grid_object = Grid2D.create(
+        grid = Grid2D.create(
             workspace,
             name=grid_name,
             origin=[
@@ -224,17 +235,27 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
             parent=parent,
         )
 
-    assert isinstance(grid_object, Grid2D), "Parent object must be a Grid2D"
+    assert isinstance(grid, Grid2D), "Parent object must be a Grid2D"
 
     # Replace 0 to nan
     temp[temp == 0] = np.nan
-    grid_object.add_data({file_name: {"values": temp.ravel()}})
+    grid.add_data({file_name: {"values": temp.ravel()}})
 
     del tiff_object
-    return grid_object
+    return grid
 
 
-def export_curve_2_shapefile(curve, attribute=None, wkt_code=None, file_name=None):
+def export_curve_2_shapefile(
+    curve, attribute: geoh5py.data.Data = None, wkt_code: str = None, file_name=None
+):
+    """
+    Export a Curve object to *.shp
+
+    :param curve: Input Curve object to be exported.
+    :param attribute: Data values exported on the Curve parts.
+    :param wkt_code: Well-Known-Text string used to assign a projection.
+    :param file_name: Specify the path and name of the *.shp. Defaults to the current directory and `curve.name`.
+    """
     attribute_vals = None
 
     if attribute is not None and curve.get_data(attribute):
@@ -286,41 +307,27 @@ def export_curve_2_shapefile(curve, attribute=None, wkt_code=None, file_name=Non
 
 
 def weighted_average(
-    xyz_in,
-    xyz_out,
-    values,
-    n=8,
-    threshold=1e-1,
-    return_indices=False,
-    max_distance=np.inf,
-):
+    xyz_in: np.ndarray,
+    xyz_out: np.ndarray,
+    values: list,
+    max_distance: float = np.inf,
+    n: int = 8,
+    return_indices: bool = False,
+    threshold: float = 1e-1,
+) -> list:
     """
-    Perform a inverse distance weighted averaging of values.
+    Perform a inverse distance weighted averaging on a list of values.
 
-    Parameters
-    ----------
-    xyz_in: numpy.ndarray shape(*, 3)
-        Input coordinate locations
-
-    xyz_out: numpy.ndarray shape(*, 3)
-        Output coordinate locations
-
-    values: list of numpy.ndarray
-        Values to be averaged from the input to output locations
-
-    max_distance: flat, default=numpy.inf
-        Maximum averaging distance, beyond which values are assigned nan
-
-    n: int, default=8
-        Number of nearest neighbours used in the weighted average
-
-    threshold: float, default=1e-1
-        Small value added to the radial distance to avoid zero division.
+    :param xyz_in: shape(*, 3) Input coordinate locations.
+    :param xyz_out: shape(*, 3) Output coordinate locations.
+    :param values: Values to be averaged from the input to output locations.
+    :param max_distance: Maximum averaging distance, beyond which values are assigned nan.
+    :param n: Number of nearest neighbours used in the weighted average.
+    :param return_indices: If True, return the indices of the nearest neighbours from the input locations.
+    :param threshold: Small value added to the radial distance to avoid zero division.
         The value can also be used to smooth the interpolation.
 
-    return_indices: bool, default=False
-        Return the indices of the nearest neighbours from the input locations.
-
+    :return avg_values: List of values averaged to the output coordinates
     """
     assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
 
@@ -331,7 +338,7 @@ def weighted_average(
     tree = cKDTree(xyz_in)
     rad, ind = tree.query(xyz_out, n)
     rad[rad > max_distance] = np.nan
-    out = []
+    avg_values = []
     for value in values:
         values_interp = np.zeros(xyz_out.shape[0])
         weight = np.zeros(xyz_out.shape[0])
@@ -340,12 +347,12 @@ def weighted_average(
             values_interp += value[ind[:, ii]] / (rad[:, ii] + threshold)
             weight += 1.0 / (rad[:, ii] + threshold)
 
-        out += [values_interp / weight]
+        avg_values += [values_interp / weight]
 
     if return_indices:
-        return out, ind
+        return avg_values, ind
 
-    return out
+    return avg_values
 
 
 def filter_xy(x, y, distance, window=None):
