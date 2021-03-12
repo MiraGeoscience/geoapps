@@ -355,27 +355,24 @@ def weighted_average(
     return avg_values
 
 
-def filter_xy(x, y, distance, window=None):
+def filter_xy(
+    x: np.array, y: np.array, distance: float, window: dict = None
+) -> np.array:
     """
-    Function to down-sample xy locations based on minimum distance.
+    Function to extract and down-sample xy locations based on minimum distance and window parameters.
 
-    :param x: numpy.array of float
-        Grid coordinate along the x-axis
-    :param y: numpy.array of float
-        Grid coordinate along the y-axis
-    :param distance: float
-        Minimum distance between neighbours
-    :param window: dict
-        Window parameters describing a domain of interest. Must contain the following
-        keys:
+    :param x: Easting coordinates
+    :param y: Northing coordinates
+    :param distance: Minimum distance between neighbours
+    :param window: Window parameters describing a domain of interest.
+        Must contain the following keys and values:
         window = {
-            "center": [X, Y],
-            "size": [width, height],
-            "azimuth": degree_from North
+            "center": [X: float, Y: float],
+            "size": [width: float, height: float],
+            "azimuth": float
         }
 
-    :return: numpy.array of bool shape(x)
-        Logical array of indices
+    :return selection: Array of 'bool' of shape(x)
     """
     mask = np.ones_like(x, dtype="bool")
     if window is not None:
@@ -427,7 +424,14 @@ def filter_xy(x, y, distance, window=None):
     return filter_xy * mask
 
 
-def rotate_xy(xyz, center, angle):
+def rotate_xy(xyz: np.ndarray, center: list, angle: float):
+    """
+    Perform a counterclockwise rotation on the XY plane about a center point.
+
+    :param xyz: shape(*, 3) Input coordinates
+    :param center: len(2) Coordinates for the center of rotation.
+    :param  angle: Angle of rotation in degree
+    """
     R = np.r_[
         np.c_[np.cos(np.pi * angle / 180), -np.sin(np.pi * angle / 180)],
         np.c_[np.sin(np.pi * angle / 180), np.cos(np.pi * angle / 180)],
