@@ -446,19 +446,17 @@ def rotate_xy(xyz: np.ndarray, center: list, angle: float):
     return np.c_[xy_rot[:, 0] + center[0], xy_rot[:, 1] + center[1], locs[:, 2:]]
 
 
-def running_mean(values, width=1, method="centered"):
+def running_mean(
+    values: np.array, width: int = 1, method: str = "centered"
+) -> np.array:
     """
     Compute a running mean of an array over a defined width.
 
-    :param values: array of floats
-        Input values to compute the running mean over
-    :param width: int
-        Number of neighboring values to be used
-    :param method: str
-        Choice between 'forward', 'backward' and ['centered'] averaging.
+    :param values: Input values to compute the running mean over
+    :param width: Number of neighboring values to be used
+    :param method: Choice between 'forward', 'backward' and ['centered'] averaging.
 
-    :return mean_values: array of floats
-        Array of shape(values, )
+    :return mean_values: Averaged array values of shape(values, )
     """
     # Averaging vector (1/N)
     weights = np.r_[np.zeros(width + 1), np.ones_like(values)]
