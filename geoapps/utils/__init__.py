@@ -7,6 +7,7 @@
 
 from . import geophysical_systems
 from .utils import (
+    LineDataDerivatives,
     RectangularBlock,
     block_model_2_tensor,
     colors,
@@ -28,7 +29,6 @@ from .utils import (
     rotate_vertices,
     rotate_xy,
     running_mean,
-    signal_processing_1d,
     string_2_list,
     symlog,
     tensor_2_block_model,

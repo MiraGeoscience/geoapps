@@ -487,81 +487,91 @@ def running_mean(
     return mean
 
 
-class signal_processing_1d:
+class LineDataDerivatives:
     """
-    Compute the derivatives of values in Fourier Domain
+    Compute and store the derivatives of inline data values. The values are re-sampled at a constant
+    interval, padded then transformed to the Fourier domain using the :obj:`numpy.fft` package.
+
+    :param locations: An array of data locations, either as distance along line or 3D coordinates.
+        For 3D coordinates, the locations are automatically converted and sorted as distance from the origin.
+    :param values: Data values used to compute derivatives over, shape(locations.shape[0],).
+    :param interpolation: Type on interpolation accepted by the :obj:`scipy.interpolate.interp1d` routine
+        for the resampling of the input values at a regular interval.
+    :param n_padding: Number of padding values used in the FFT. By default, the entire array is used as
+        padding.
+    :param residual: Use the residual between the values and the running mean to compute derivatives.
+    :param sampling: Sampling interval length (m) used in the FFT. Defaults to the mean data separation.
+    :param smoothing: Number of neighbours used by the :obj:`geoapps.utils.running_mean` routine.
     """
 
-    def __init__(self, locs, values, **kwargs):
-        self._interpolation = "linear"
-        self._smoothing = 0
-        self._residual = False
+    def __init__(
+        self,
+        locations: np.ndarray = None,
+        values: np.array = None,
+        interpolation: str = "linear",
+        smoothing: int = 0,
+        residual: bool = False,
+        sampling: float = None,
+        **kwargs,
+    ):
         self._locations_resampled = None
         self._values_padded = None
         self._fft = None
+        self.x_locations = None
+        self.y_locations = None
+        self.z_locations = None
+        self.locations = locations
+        self.values = values
+        self._interpolation = interpolation
+        self._smoothing = smoothing
+        self._residual = residual
+        self._sampling = sampling
 
-        if np.std(locs[:, 1]) > np.std(locs[:, 0]):
-            start = np.argmin(locs[:, 1])
-            self.sorting = np.argsort(locs[:, 1])
-        else:
-            start = np.argmin(locs[:, 0])
-            self.sorting = np.argsort(locs[:, 0])
-
-        self.x_locs = locs[self.sorting, 0]
-        self.y_locs = locs[self.sorting, 1]
-
-        if locs.shape[1] == 3:
-            self.z_locs = locs[self.sorting, 2]
-
-        dist_line = np.linalg.norm(
-            np.c_[
-                locs[start, 0] - locs[self.sorting, 0],
-                locs[start, 1] - locs[self.sorting, 1],
-            ],
-            axis=1,
-        )
-
-        self.locations = dist_line
-
-        if values is not None:
-            self._values = values[self.sorting]
+        # if values is not None:
+        #     self._values = values[self.sorting]
 
         for key, value in kwargs.items():
             if getattr(self, key, None) is not None:
                 setattr(self, key, value)
 
-    def interp_x(self, x):
-
-        if getattr(self, "Fx", None) is None:
+    def interp_x(self, distance):
+        """
+        Get the x-coordinate from the inline distance.
+        """
+        if getattr(self, "Fx", None) is None and self.x_locations is not None:
             self.Fx = interp1d(
                 self.locations,
-                self.x_locs,
+                self.x_locations,
                 bounds_error=False,
                 fill_value="extrapolate",
             )
-        return self.Fx(x)
+        return self.Fx(distance)
 
-    def interp_y(self, y):
-
-        if getattr(self, "Fy", None) is None:
+    def interp_y(self, distance):
+        """
+        Get the y-coordinate from the inline distance.
+        """
+        if getattr(self, "Fy", None) is None and self.y_locations is not None:
             self.Fy = interp1d(
                 self.locations,
-                self.y_locs,
+                self.y_locations,
                 bounds_error=False,
                 fill_value="extrapolate",
             )
-        return self.Fy(y)
+        return self.Fy(distance)
 
-    def interp_z(self, z):
-
-        if getattr(self, "Fz", None) is None:
+    def interp_z(self, distance):
+        """
+        Get the z-coordinate from the inline distance.
+        """
+        if getattr(self, "Fz", None) is None and self.z_locations is not None:
             self.Fz = interp1d(
                 self.locations,
-                self.z_locs,
+                self.z_locations,
                 bounds_error=False,
                 fill_value="extrapolate",
             )
-        return self.Fz(z)
+        return self.Fz(distance)
 
     @property
     def n_padding(self):
@@ -576,25 +586,56 @@ class signal_processing_1d:
     @property
     def locations(self):
         """
-        Position of values
+        Position of values along line.
         """
         return self._locations
 
     @locations.setter
     def locations(self, locations):
-
-        self._locations = locations
+        self._locations = None
+        self.x_locations = None
+        self.y_locations = None
+        self.z_locations = None
+        self.sorting = None
         self.values_resampled = None
+        self._locations_resampled = None
 
-        sort = np.argsort(locations)
-        start = locations[sort[0]] * 1.0
-        end = locations[sort[-1]] * 1.0
+        if locations is not None:
+            if locations.ndim > 1:
+                if np.std(locations[:, 1]) > np.std(locations[:, 0]):
+                    start = np.argmin(locations[:, 1])
+                    self.sorting = np.argsort(locations[:, 1])
+                else:
+                    start = np.argmin(locations[:, 0])
+                    self.sorting = np.argsort(locations[:, 0])
 
-        if (start == end) or np.isnan(self.hx):
-            return
+                self.x_locations = locations[self.sorting, 0]
+                self.y_locations = locations[self.sorting, 1]
 
-        self._locations_resampled = np.arange(start, end, self.hx)
-        self.locations_resampled
+                if locations.shape[1] == 3:
+                    self.z_locations = locations[self.sorting, 2]
+
+                distances = np.linalg.norm(
+                    np.c_[
+                        locations[start, 0] - locations[self.sorting, 0],
+                        locations[start, 1] - locations[self.sorting, 1],
+                    ],
+                    axis=1,
+                )
+
+            else:
+                self.x_locations = locations
+                self.sorting = np.argsort(locations[:, 1])
+                distances = locations[self.sorting]
+
+            self._locations = distances
+
+            if (self._locations[0] == self._locations[-1]) or np.isnan(self.sampling):
+                return
+
+            self._locations_resampled = np.arange(
+                self._locations[0], self._locations[-1], self.sampling
+            )
 
     @property
     def locations_resampled(self):
@@ -606,23 +647,25 @@ class signal_processing_1d:
     @property
     def values(self):
         """
-        Real values of the vector
+        Original values sorted along line.
         """
         return self._values
 
     @values.setter
     def values(self, values):
         self.values_resampled = None
-        self._values = values[self.sorting]
+        self._values = None
+        if (values is not None) and (self.sorting is not None):
+            self._values = values[self.sorting]
 
     @property
-    def hx(self):
+    def sampling(self):
         """
-        Discrete interval length
+        Discrete interval length (m)
         """
-        if getattr(self, "_hx", None) is None:
-            self._hx = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
-        return self._hx
+        if getattr(self, "_sampling", None) is None:
+            self._sampling = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
+        return self._sampling
 
     @property
     def values_resampled(self):
@@ -677,7 +720,7 @@ class signal_processing_1d:
     @property
     def interpolation(self):
         """
-        Method of interpolation
+        Method of interpolation: ['linear'], 'nearest', 'slinear', 'quadratic' or 'cubic'
         """
         return self._interpolation
 
@@ -689,7 +732,7 @@ class signal_processing_1d:
     @property
     def fft(self):
         """
-        Fourier domain of values_padded
+        Fourier domain coefficients calculated from 'values_padded'
         """
         if getattr(self, "_fft", None) is None:
             self._fft = np.fft.fft(self.values_padded)
@@ -702,7 +745,7 @@ class signal_processing_1d:
         """
         if getattr(self, "_fftfreq", None) is None:
             nx = len(self.values_padded)
-            self._fftfreq = 2.0 * np.pi * np.fft.fftfreq(nx, self.hx)
+            self._fftfreq = 2.0 * np.pi * np.fft.fftfreq(nx, self.sampling)
         return self._fftfreq
 
     @property
@@ -736,9 +779,9 @@ class signal_processing_1d:
             self._smoothing = value
             self.values_resampled = None
 
-    def derivative(self, order=1):
+    def derivative(self, order=1) -> np.ndarray:
         """
-        Compute the derivative
+        Compute and return the first order derivative.
         """
         fft_deriv = (self.fftfreq * 1j) ** order * self.fft.copy()
         deriv_padded = np.fft.ifft(fft_deriv)
