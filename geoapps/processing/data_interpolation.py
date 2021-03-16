@@ -418,7 +418,9 @@ class DataInterpolation(ObjectDataSelection):
 
             # Use discretize to build a tensor mesh
             delta_z = xyz_ref[:, 2].max() - xyz_ref[:, 2]
-            xyz_ref = xyz_ref[delta_z < self.depth_core.value, :]
+            xyz_ref[delta_z > self.depth_core.value, 2] = (
+                xyz_ref[:, 2].max() - self.depth_core.value
+            )
             depth_core = (
                 self.depth_core.value
                 - (xyz_ref[:, 2].max() - xyz_ref[:, 2].min())
