@@ -135,7 +135,7 @@ class DataInterpolation(ObjectDataSelection):
         self.trigger.description = "Interpolate"
         self._topography = TopographyOptions()
         self.topography.offset.disabled = True
-        self.topography.options.options = ["Object", "Constant", "None"]
+        self.topography.options.options = ["None", "Object", "Constant"]
 
         if getattr(self, "_workspace", None) is not None:
             self.topography.workspace = self._workspace
@@ -382,6 +382,9 @@ class DataInterpolation(ObjectDataSelection):
         else:
             return
 
+        if len(self.data.value) == 0:
+            print("No data selected")
+            return
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
@@ -457,6 +460,8 @@ class DataInterpolation(ObjectDataSelection):
 
             xyz_out = self.object_out.centroids.copy()
 
+        xyz_out_orig = xyz_out.copy()
+
         values, sign, dtype = {}, {}, {}
         for field in self.data.value:
             model_in = object_from.get_data(field)[0]
@@ -470,6 +475,7 @@ class DataInterpolation(ObjectDataSelection):
                 sign[field] = np.ones_like(values[field])
 
         values_interp = {}
+        rad, ind = tree.query(xyz_out)
         if self.method.value == "Linear":
 
             for key, value in values.items():
@@ -479,26 +485,18 @@ class DataInterpolation(ObjectDataSelection):
         elif self.method.value == "Inverse Distance":
 
             angle = np.deg2rad((450.0 - np.asarray(self.skew_angle.value)) % 360.0)
-
             rotation = np.r_[
                 np.c_[np.cos(angle), np.sin(angle)],
                 np.c_[-np.sin(angle), np.cos(angle)],
             ]
-
             center = np.mean(xyz, axis=0).reshape((3, 1))
             xyz -= np.kron(center, np.ones(xyz.shape[0])).T
             xyz[:, :2] = np.dot(rotation, xyz[:, :2].T).T
             xyz[:, 1] *= self.skew_factor.value
-
-            tree = cKDTree(xyz)
-
             xyz_out -= np.kron(center, np.ones(xyz_out.shape[0])).T
             xyz_out[:, :2] = np.dot(rotation, xyz_out[:, :2].T).T
             xyz_out[:, 1] *= self.skew_factor.value
-
-            rad, ind = tree.query(xyz_out)
-
-            vals, ind = weighted_average(
+            vals, ind_inv = weighted_average(
                 xyz,
                 xyz_out,
                 list(values.values()),
@@ -509,10 +507,9 @@ class DataInterpolation(ObjectDataSelection):
 
             for key, val in zip(list(values.keys()), vals):
                 values_interp[key] = val
-                sign[key] = sign[key][ind[:, 0]]
+                sign[key] = sign[key][ind_inv[:, 0]]
 
         else:
-            rad, ind = tree.query(xyz_out)
             # Find nearest cells
             for key, value in values.items():
 
@@ -524,31 +521,15 @@ class DataInterpolation(ObjectDataSelection):
                 values_interp[key] = sign[key] * np.exp(values_interp[key])
 
             values_interp[key][np.isnan(values_interp[key])] = self.no_data_value.value
+            values_interp[key][rad > self.max_distance.value] = self.no_data_value.value
 
-            if self.method.value == "Inverse Distance":
-                values_interp[key][
-                    rad > self.max_distance.value
-                ] = self.no_data_value.value
-                if self.max_depth.value is not None:
-                    values_interp[key][
-                        np.abs(xyz_out[:, 2] - xyz[ind[:, 0], 2]) > self.max_depth.value
-                    ] = self.no_data_value.value
+        # if hasattr(self.object_out, "centroids"):
+        #     xyz_out = self.object_out.centroids
+        # elif hasattr(self.object_out, "vertices"):
+        #     xyz_out = self.object_out.vertices
 
-            else:
-                values_interp[key][
-                    rad > self.max_distance.value
-                ] = self.no_data_value.value
-
-                if self.max_depth.value is not None:
-                    values_interp[key][
-                        np.abs(xyz_out[:, 2] - xyz[ind, 2]) > self.max_depth.value
-                    ] = self.no_data_value.value
-
-        if hasattr(self.object_out, "centroids"):
-            xyz_out = self.object_out.centroids
-        elif hasattr(self.object_out, "vertices"):
-            xyz_out = self.object_out.vertices
-
+        top = np.zeros(xyz_out.shape[0], dtype="bool")
+        bottom = np.zeros(xyz_out.shape[0], dtype="bool")
         if self.topography.options.value == "Object" and self.workspace.get_entity(
             self.topography.objects.value
         ):
@@ -566,24 +547,32 @@ class DataInterpolation(ObjectDataSelection):
                 topo[:, 2] = topo_obj.get_data(self.topography.data.value)[0].values
 
             lin_interp = LinearNDInterpolator(topo[:, :2], topo[:, 2])
-            z_interp = lin_interp(xyz_out[:, :2])
+            z_interp = lin_interp(xyz_out_orig[:, :2])
 
             ind_nan = np.isnan(z_interp)
             if any(ind_nan):
                 tree = cKDTree(topo[:, :2])
-                _, ind = tree.query(xyz_out[ind_nan, :2])
+                _, ind = tree.query(xyz_out_orig[ind_nan, :2])
                 z_interp[ind_nan] = topo[ind, 2]
 
-            for key in values_interp.keys():
-                values_interp[key][xyz_out[:, 2] > z_interp] = self.no_data_value.value
+            top = xyz_out_orig[:, 2] > z_interp
+            if self.max_depth.value is not None:
+                bottom = np.abs(xyz_out_orig[:, 2] - z_interp) > self.max_depth.value
+
         elif (
             self.topography.options.value == "Constant"
             and self.topography.constant.value is not None
         ):
-            for key in values_interp.keys():
-                values_interp[key][
-                    xyz_out[:, 2] > self.topography.constant.value
-                ] = self.no_data_value.value
+            top = xyz_out_orig[:, 2] > self.topography.constant.value
+            if self.max_depth.value is not None:
+                bottom = (
+                    np.abs(xyz_out_orig[:, 2] - self.topography.constant.value)
+                    > self.max_depth.value
+                )
+
+        for key in values_interp.keys():
+            values_interp[key][top] = self.no_data_value.value
+            values_interp[key][bottom] = self.no_data_value.value
 
         if self.xy_extent.value is not None and self.workspace.get_entity(
             self.xy_extent.value
@@ -598,7 +587,7 @@ class DataInterpolation(ObjectDataSelection):
                 xy_ref = xy_ref.vertices
 
             tree = cKDTree(xy_ref[:, :2])
-            rad, _ = tree.query(xyz_out[:, :2])
+            rad, _ = tree.query(xyz_out_orig[:, :2])
             for key in values_interp.keys():
                 values_interp[key][
                     rad > self.max_distance.value
