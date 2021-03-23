@@ -1,6 +1,12 @@
 name: pytest on Unix OS
 
 on:
+  pull_request:
+    branches:
+      - main
+  pull_request_target:
+    branches:
+      - main
   push:
     branches:
       - develop
