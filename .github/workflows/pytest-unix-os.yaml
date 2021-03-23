@@ -4,13 +4,22 @@ on:
   pull_request:
     branches:
       - main
+      - release/**
+      - feature/**
+      - hotfix/**
   pull_request_target:
     branches:
       - main
+      - release/**
+      - feature/**
+      - hotfix/**
   push:
     branches:
       - develop
       - main
+      - release/**
+      - feature/**
+      - hotfix/**
 
 jobs:
   pytest:
