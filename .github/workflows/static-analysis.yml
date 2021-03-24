@@ -8,13 +8,6 @@ on:
       - release/**
       - feature/**
       - hotfix/**
-  pull_request_target:
-    branches:
-      - develop
-      - main
-      - release/**
-      - feature/**
-      - hotfix/**
   push:
     branches:
       - develop
