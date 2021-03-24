@@ -45,8 +45,9 @@ jobs:
           echo $CONDA/bin >> $GITHUB_PATH
       - name: Install dependencies
         run: |
-          conda env update --file environment.yml --name base
+          conda env create -f environment.yml
       - name: pytest
         run: |
+          conda activate geoapps
           conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
