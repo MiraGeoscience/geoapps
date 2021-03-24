@@ -1,37 +1,57 @@
 name: pytest on Unix OS
 
 on:
+  pull_request:
+    branches:
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
+  pull_request_target:
+    branches:
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
   push:
     branches:
       - develop
       - main
+      - release/**
+      - feature/**
+      - hotfix/**
 
 jobs:
   pytest:
     name: pytest
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-      fail-fast: false
+        python_ver: [3.7, 3.8]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          # Increase this value to reset cache if environment.yml has not changed
+          CACHE_NUMBER: 0
         with:
-          python-version: 3.7
-      - name: Get full Python version
-        id: full-python-version
-        shell: bash
-        run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
-      - name: Add conda to system path
-        run: |
-          # $CONDA is an environment variable pointing to the root of the miniconda directory
-          echo $CONDA/bin >> $GITHUB_PATH
-      - name: Install dependencies
-        run: |
-          conda env update --file environment.yml --name base
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
+      - name: Setup conda env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: geoapps
+          python-version: ${{ matrix.python_ver }}
+          channel-priority: strict
+          environment-file: environment.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: pytest
+        shell: bash -l {0}
         run: |
+          conda activate geoapps
           conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
