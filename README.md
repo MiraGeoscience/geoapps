@@ -3,6 +3,8 @@ Welcome to **geoapps** - Open-source applications in geosciences
 
 <img align="right" width="50%" src="https://github.com/MiraGeoscience/geoapps/raw/develop/docs/images/index_page.png">
 
+Branch with a dummy change for testing PR actions.
+
 In short
 --------
 
