@@ -31,21 +31,23 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
         with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{hashFiles('environment.yml') }}
+      - name: Setup conda env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: geoapps
           python-version: 3.7
-      - name: Get full Python version
-        id: full-python-version
-        shell: bash
-        run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
-      - name: Add conda to system path
-        run: |
-          # $CONDA is an environment variable pointing to the root of the miniconda directory
-          echo $CONDA/bin >> $GITHUB_PATH
-      - name: Install dependencies
-        run: |
-          conda env create -f environment.yml
+          channel-priority: strict
+          environment-file: environment.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: pytest
         run: |
           conda activate geoapps
