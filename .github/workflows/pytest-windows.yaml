@@ -14,6 +14,9 @@ on:
 jobs:
   pytest:
     name: pytest
+    defaults:
+      run:
+        shell: pwsh
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
