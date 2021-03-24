@@ -26,6 +26,10 @@ from geoapps.processing import (
 project = "FlinFlon.geoh5"
 
 
+def test_smoke():
+    pass
+
+
 def test_calculator():
     url = "https://github.com/MiraGeoscience/geoapps/raw/main/assets/FlinFlon.geoh5"
 
