@@ -37,6 +37,7 @@ from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
 from scipy.spatial import Delaunay, cKDTree
 
+from geoapps.io import InputFile
 from geoapps.simpegPF import (
     PF,
     DataMisfit,
@@ -197,39 +198,6 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
     return mesh_object
 
 
-class InputFile:
-    def __init__(self, filename):
-        self._filename = filename
-        self._accepted_file_extensions = ["json"]
-
-    @property
-    def filename(self):
-        return self._filename
-
-    @filename.setter
-    def filename(self, f):
-        if f.split(".")[-1] not in self._accepted_file_extensions:
-            raise Exception("Input file must have '.json' extension.")
-
-    def create_work_path(self):
-        """ Creates absolute path to input file. """
-        dsep = os.path.sep
-        workDir = dsep.join(os.path.dirname(os.path.abspath(self.filename)).split(dsep))
-        if len(workDir) > 0:
-            workDir += dsep
-        else:
-            workDir = os.getcwd() + dsep
-
-        return workDir
-
-    def load(self):
-        """ Loads input file contents to dictionary. """
-        with open(self.filename) as f:
-            input_dict = json.load(f)
-
-        return input_dict
-
-
 def start_inversion(input_file):
     """ Starts inversion with parameters defined in input file. """
     inversion(input_file)
@@ -238,7 +206,8 @@ def start_inversion(input_file):
 def inversion(input_file):
 
     workDir = input_file.create_work_path()
-    input_dict = input_file.load()
+    input_file.load()
+    input_dict = input_file.data
 
     # Read json file and overwrite defaults
     assert "inversion_type" in list(
