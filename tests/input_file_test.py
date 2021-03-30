@@ -14,8 +14,8 @@ from geoapps.io import InputFile
 
 
 def test_create_work_path():
-    input_file = InputFile("../assets/test.json")
-    wpath = input_file.create_work_path()
+    inputfile = InputFile("../assets/test.json")
+    wpath = inputfile.create_work_path()
     assert wpath == os.path.abspath("../assets") + os.path.sep
 
 
@@ -24,12 +24,32 @@ def test_load(tmp_path):
     input_dict = {"inversion_type": "mvi"}
     with open(fname, "w") as outfile:
         json.dump(input_dict, outfile)
-    input_file = InputFile(fname)
-    input_file.load()
-    assert list(input_file.data.keys())[0] == "inversion_type"
-    assert list(input_file.data.values())[0] == "mvi"
+    inputfile = InputFile(fname)
+    inputfile.load()
+    assert list(inputfile.data.keys())[0] == "inversion_type"
+    assert list(inputfile.data.values())[0] == "mvi"
 
 
-def test_filename_extension():
+def test_filepath_extension():
     with pytest.raises(IOError):
         InputFile("test.yaml")
+
+
+def test_check_parameter_validity(tmp_path):
+    fname = os.path.join(tmp_path, "test.json")
+    input_dict = {"inversion_method": "mvi"}
+    with open(fname, "w") as outfile:
+        json.dump(input_dict, outfile)
+    inputfile = InputFile(fname)
+    with pytest.raises(ValueError):
+        inputfile.load()
+
+
+def test_check_required_parameters(tmp_path):
+    fname = os.path.join(tmp_path, "test.json")
+    input_dict = {"inversion_style": "voxel"}
+    with open(fname, "w") as outfile:
+        json.dump(input_dict, outfile)
+    inputfile = InputFile(fname)
+    with pytest.raises(ValueError):
+        inputfile.load()

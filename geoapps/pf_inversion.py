@@ -37,7 +37,7 @@ from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
 from scipy.spatial import Delaunay, cKDTree
 
-from geoapps.io import InputFile
+from geoapps.io import InputFile, Params
 from geoapps.simpegPF import (
     PF,
     DataMisfit,
@@ -198,27 +198,29 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
     return mesh_object
 
 
-def start_inversion(input_file):
+def start_inversion(inputfile):
     """ Starts inversion with parameters defined in input file. """
-    inversion(input_file)
+    inversion(inputfile)
 
 
-def inversion(input_file):
+def inversion(inputfile):
 
-    workDir = input_file.create_work_path()
-    input_file.load()
-    input_dict = input_file.data
+    workDir = inputfile.workpath
+    input_dict = inputfile.data
+
+    params = Params(inputfile)
 
     # Read json file and overwrite defaults
-    assert "inversion_type" in list(
-        input_dict.keys()
-    ), "Require 'inversion_type' to be set: 'gravity', 'magnetics', 'mvi', or 'mvic'"
-    assert input_dict["inversion_type"] in [
-        "gravity",
-        "magnetics",
-        "mvi",
-        "mvic",
-    ], "'inversion_type' must be one of: 'gravity', 'magnetics', 'mvi', or 'mvic'"
+
+    # assert "inversion_type" in list(
+    #     input_dict.keys()
+    # ), "Require 'inversion_type' to be set: 'gravity', 'magnetics', 'mvi', or 'mvic'"
+    # assert input_dict["inversion_type"] in [
+    #     "gravity",
+    #     "magnetics",
+    #     "mvi",
+    #     "mvic",
+    # ], "'inversion_type' must be one of: 'gravity', 'magnetics', 'mvi', or 'mvic'"
 
     if "inversion_style" in list(input_dict.keys()):
         inversion_style = input_dict["inversion_style"]
@@ -339,7 +341,7 @@ def inversion(input_file):
         else:
             xyz_loc = vertices[window_ind, :]
 
-        if "gravity" in input_dict["inversion_type"]:
+        if "gravity" in params.itype:
             receivers = PF.BaseGrav.RxObs(xyz_loc)
             source = PF.BaseGrav.SrcField([receivers])
             survey = PF.BaseGrav.LinearSurvey(source)
@@ -742,7 +744,7 @@ def inversion(input_file):
     else:
         output_tile_files = False
 
-    if "mvi" in input_dict["inversion_type"]:
+    if "mvi" in params.itype:
         vector_property = True
         n_blocks = 3
         if len(model_norms) == 4:
@@ -782,7 +784,7 @@ def inversion(input_file):
         """
         data_ind = np.kron(ind_t, np.ones(len(survey.components))).astype("bool")
         # Create new survey
-        if input_dict["inversion_type"] == "gravity":
+        if params.itype == "gravity":
             rxLoc_t = PF.BaseGrav.RxObs(rxLoc[ind_t, :])
             srcField = PF.BaseGrav.SrcField([rxLoc_t])
             local_survey = PF.BaseGrav.LinearSurvey(
@@ -792,7 +794,7 @@ def inversion(input_file):
             local_survey.std = survey.std[data_ind]
             local_survey.ind = np.where(ind_t)[0]
 
-        elif input_dict["inversion_type"] in ["magnetics", "mvi", "mvic"]:
+        elif params.itype in ["magnetics", "mvi", "mvic"]:
             rxLoc_t = PF.BaseMag.RxObs(rxLoc[ind_t, :])
             srcField = PF.BaseMag.SrcField([rxLoc_t], param=survey.srcField.param)
             local_survey = PF.BaseMag.LinearSurvey(
@@ -1158,7 +1160,7 @@ def inversion(input_file):
         activeCells_t = np.ones(local_mesh.nC, dtype="bool")
 
         # Create reduced identity map
-        if "mvi" in input_dict["inversion_type"]:
+        if "mvi" in params.itype:
             nBlock = 3
         else:
             nBlock = 1
@@ -1169,7 +1171,7 @@ def inversion(input_file):
 
         activeCells_t = tile_map.activeLocal
 
-        if input_dict["inversion_type"] == "gravity":
+        if params.itype == "gravity":
             prob = PF.Gravity.GravityIntegral(
                 local_mesh,
                 rhoMap=tile_map * model_map,
@@ -1184,7 +1186,7 @@ def inversion(input_file):
                 chunk_by_rows=chunk_by_rows,
             )
 
-        elif input_dict["inversion_type"] == "magnetics":
+        elif params.itype == "magnetics":
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
@@ -1199,7 +1201,7 @@ def inversion(input_file):
                 chunk_by_rows=chunk_by_rows,
             )
 
-        elif "mvi" in input_dict["inversion_type"]:
+        elif "mvi" in params.itype:
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
@@ -1262,7 +1264,7 @@ def inversion(input_file):
 
             point_object.add_data({"Forward_" + comp: {"values": val[sorting]}})
 
-        if "mvi" in input_dict["inversion_type"]:
+        if "mvi" in params.itype:
             Utils.io_utils.writeUBCmagneticsObservations(
                 outDir + "/Obs.mag", survey, dpred
             )
@@ -1405,7 +1407,7 @@ def inversion(input_file):
     # Add a list of directives to the inversion
     directiveList = []
 
-    if vector_property and input_dict["inversion_type"] == "mvi":
+    if vector_property and params.itype == "mvi":
         directiveList.append(
             Directives.VectorInversion(
                 chifact_target=target_chi * 2,
@@ -1491,7 +1493,7 @@ def inversion(input_file):
     #     Directives.SaveUBCModelEveryIteration(
     #         mapping=activeCellsMap * model_map,
     #         mesh=mesh,
-    #         fileName=outDir + input_dict["inversion_type"],
+    #         fileName=outDir + params.itype,
     #         vector=input_dict["inversion_type"][0:3] == 'mvi'
     #     )
     # )
@@ -1553,6 +1555,6 @@ def inversion(input_file):
 
 if __name__ == "__main__":
 
-    filename = sys.argv[1]
-    input_file = InputFile(filename)
-    start_inversion(input_file)
+    filepath = sys.argv[1]
+    inputfile = InputFile(filepath)
+    start_inversion(inputfile)
