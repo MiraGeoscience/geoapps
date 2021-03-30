@@ -495,9 +495,10 @@ class LineDataDerivatives:
     :param locations: An array of data locations, either as distance along line or 3D coordinates.
         For 3D coordinates, the locations are automatically converted and sorted as distance from the origin.
     :param values: Data values used to compute derivatives over, shape(locations.shape[0],).
-    :param interpolation: Type on interpolation accepted by the :obj:`scipy.interpolate.interp1d` routine
-        for the resampling of the input values at a regular interval.
-    :param n_padding: Number of padding values used in the FFT. By default, the entire array is used as
+    :param epsilon: Adjustable constant used in :obj:`scipy.interpolate.Rbf`. Defaults to 20x the average sampling
+    :param interpolation: Type on interpolation accepted by the :obj:`scipy.interpolate.Rbf` routine:
+        'multiquadric', 'inverse', 'gaussian', 'linear', 'cubic', 'quintic', 'thin_plate'
+    :param sampling_width: Number of padding values used in the FFT. By default, the entire array is used as
         padding.
     :param residual: Use the residual between the values and the running mean to compute derivatives.
     :param sampling: Sampling interval length (m) used in the FFT. Defaults to the mean data separation.
@@ -508,15 +509,15 @@ class LineDataDerivatives:
         self,
         locations: np.ndarray = None,
         values: np.array = None,
-        interpolation: str = "linear",
+        epsilon: float = None,
+        interpolation: str = "gaussian",
         smoothing: int = 0,
         residual: bool = False,
         sampling: float = None,
         **kwargs,
     ):
         self._locations_resampled = None
-        self._values_padded = None
-        self._fft = None
+        self._epsilon = epsilon
         self.x_locations = None
         self.y_locations = None
         self.z_locations = None
@@ -574,14 +575,25 @@ class LineDataDerivatives:
         return self.Fz(distance)
 
     @property
-    def n_padding(self):
+    def epsilon(self):
+        """
+        Adjustable constant used by :obj:`scipy.interpolate.Rbf`
+        """
+        if getattr(self, "_epsilon", None) is None:
+            width = self.locations[-1] - self.locations[0]
+            self._epsilon = width / 5.0
+
+        return self._epsilon
+
+    @property
+    def sampling_width(self):
         """
         Number of padding cells added for the FFT
         """
-        if getattr(self, "_n_padding", None) is None:
-            self._n_padding = int(np.floor(len(self.values_resampled)))
+        if getattr(self, "_sampling_width", None) is None:
+            self._sampling_width = int(np.floor(len(self.values_resampled)))
 
-        return self._n_padding
+        return self._sampling_width
 
     @property
     def locations(self):
@@ -625,17 +637,23 @@ class LineDataDerivatives:
 
             else:
                 self.x_locations = locations
-                self.sorting = np.argsort(locations[:, 1])
+                self.sorting = np.argsort(locations)
                 distances = locations[self.sorting]
 
             self._locations = distances
 
-            if (self._locations[0] == self._locations[-1]) or np.isnan(self.sampling):
+            if self._locations[0] == self._locations[-1]:
                 return
 
-            self._locations_resampled = np.arange(
-                self._locations[0], self._locations[-1], self.sampling
+            width = self._locations[-1] - self._locations[0]
+            dx = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
+            self._sampling_width = np.ceil(
+                (self._locations[-1] - self._locations[0]) / dx
+            ).astype(int)
+            self._locations_resampled = np.linspace(
+                self._locations[0], self._locations[-1], self.sampling_width
             )
+            # self._locations_resampled = self._locations_padded[self.sampling_width: -self.sampling_width]
 
     @property
     def locations_resampled(self):
@@ -664,7 +682,9 @@ class LineDataDerivatives:
         Discrete interval length (m)
         """
         if getattr(self, "_sampling", None) is None:
-            self._sampling = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
+            self._sampling = np.mean(
+                np.abs(self.locations_resampled[1:] - self.locations_resampled[:-1])
+            )
         return self._sampling
 
     @property
@@ -673,8 +693,9 @@ class LineDataDerivatives:
         Values re-sampled on a regular interval
         """
         if getattr(self, "_values_resampled", None) is None:
-            F = interp1d(self.locations, self.values, kind=self.interpolation)
-            self._values_resampled = F(self.locations_resampled)
+            # self._values_resampled = self.values_padded[self.sampling_width: -self.sampling_width]
+            F = interp1d(self.locations, self.values, fill_value="extrapolate")
+            self._values_resampled = F(self._locations_resampled)
             self._values_resampled_raw = self._values_resampled.copy()
             if self._smoothing > 0:
                 mean_values = running_mean(
@@ -692,30 +713,6 @@ class LineDataDerivatives:
     def values_resampled(self, values):
         self._values_resampled = values
         self._values_resampled_raw = None
-        self._values_padded = None
-        self._fft = None
-
-    @property
-    def values_padded(self):
-        """
-        Values padded with cosin tapper
-        """
-        if getattr(self, "_values_padded", None) is None:
-            values_padded = np.r_[
-                self.values_resampled[: self.n_padding][::-1],
-                self.values_resampled,
-                self.values_resampled[-self.n_padding :][::-1],
-            ]
-
-            tapper = -np.cos(np.pi * (np.arange(self.n_padding)) / self.n_padding)
-            tapper = (
-                np.r_[tapper, np.ones_like(self.locations_resampled), tapper[::-1]]
-                / 2.0
-                + 0.5
-            )
-            self._values_padded = tapper * values_padded
-
-        return self._values_padded
 
     @property
     def interpolation(self):
@@ -728,25 +725,6 @@ class LineDataDerivatives:
     def interpolation(self, method):
         methods = ["linear", "nearest", "slinear", "quadratic", "cubic"]
         assert method in methods, f"Method on interpolation must be one of {methods}"
-
-    @property
-    def fft(self):
-        """
-        Fourier domain coefficients calculated from 'values_padded'
-        """
-        if getattr(self, "_fft", None) is None:
-            self._fft = np.fft.fft(self.values_padded)
-        return self._fft
-
-    @property
-    def fftfreq(self):
-        """
-        Wavenumber of the values FFT
-        """
-        if getattr(self, "_fftfreq", None) is None:
-            nx = len(self.values_padded)
-            self._fftfreq = 2.0 * np.pi * np.fft.fftfreq(nx, self.sampling)
-        return self._fftfreq
 
     @property
     def residual(self):
@@ -783,9 +761,12 @@ class LineDataDerivatives:
         """
         Compute and return the first order derivative.
         """
-        fft_deriv = (self.fftfreq * 1j) ** order * self.fft.copy()
-        deriv_padded = np.fft.ifft(fft_deriv)
-        return np.real(deriv_padded[self.n_padding : -self.n_padding])
+        deriv = self.values_resampled
+        for ii in range(order):
+            deriv = (deriv[1:] - deriv[:-1]) / self.sampling
+            deriv = np.r_[2 * deriv[0] - deriv[1], deriv]
+
+        return deriv
 
 
 def tensor_2_block_model(workspace, mesh, name=None, parent=None, data={}):
@@ -837,6 +818,18 @@ def block_model_2_tensor(block_model, models=[]):
         block_model.origin["y"] + block_model.v_cells[block_model.v_cells < 0].sum(),
         block_model.origin["z"] + block_model.z_cells[block_model.z_cells < 0].sum(),
     ]
+
+    print(
+        tensor.x0,
+        [
+            block_model.origin["x"]
+            + block_model.u_cells[block_model.u_cells < 0].sum(),
+            block_model.origin["y"]
+            + block_model.v_cells[block_model.v_cells < 0].sum(),
+            block_model.origin["z"]
+            + block_model.z_cells[block_model.z_cells < 0].sum(),
+        ],
+    )
     out = []
     for model in models:
         values = model.copy().reshape((tensor.nCz, tensor.nCx, tensor.nCy), order="F")
@@ -859,10 +852,12 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
     indArr = indArr[ubc_order] - 1
     levels = levels[ubc_order]
 
+    origin = treemesh.x0.copy()
+    origin[2] += treemesh.h[2].size * treemesh.h[2][0]
     mesh_object = Octree.create(
         workspace,
         name=f"Mesh",
-        origin=treemesh.x0,
+        origin=origin,
         u_count=treemesh.h[0].size,
         v_count=treemesh.h[1].size,
         w_count=treemesh.h[2].size,
@@ -1583,73 +1578,6 @@ def iso_surface(
 
     return surfaces
 
-
-# def refine_cells(self, indices):
-#     """
-#
-#     Parameters
-#     ----------
-#     indices: int
-#         Index of cell to be divided in octree
-#
-#     """
-#     octree_cells = self.octree_cells.copy()
-#
-#     mask = np.ones(self.n_cells, dtype=bool)
-#     mask[indices] = 0
-#
-#     new_cells = np.array([], dtype=self.octree_cells.dtype)
-#
-#     copy_val = []
-#     for ind in indices:
-#
-#         level = int(octree_cells[ind][3] / 2)
-#
-#         if level < 1:
-#             continue
-#
-#         # Brake into 8 cells
-#         for k in range(2):
-#             for j in range(2):
-#                 for i in range(2):
-#
-#                     new_cell = np.array(
-#                         (
-#                             octree_cells[ind][0] + i * level,
-#                             octree_cells[ind][1] + j * level,
-#                             octree_cells[ind][2] + k * level,
-#                             level,
-#                         ),
-#                         dtype=octree_cells.dtype,
-#                     )
-#                     new_cells = np.hstack([new_cells, new_cell])
-#
-#         copy_val.append(np.ones(8) * ind)
-#
-#     ind_data = np.hstack(
-#         [np.arange(self.n_cells)[mask], np.hstack(copy_val)]
-#     ).astype(int)
-#     self._octree_cells = np.hstack([octree_cells[mask], new_cells])
-#     self.entity_type.workspace.sort_children_data(self, ind_data)
-
-# def refine_xyz(self, locations, levels):
-#     """
-#     Parameters
-#     ----------
-#     locations: np.ndarray or list of floats
-#         List of locations (x, y, z) to refine the octree
-#     levels: array or list of int
-#         List of octree level for each location
-#     """
-#
-#     if isinstance(locations, np.ndarray):
-#         locations = locations.tolist()
-#     if isinstance(levels, np.ndarray):
-#         levels = levels.tolist()
-#
-#     tree = np.spatial.cKDTree(self.centroids)
-#     indices = tree.query()
-#
 
 colors = [
     "#000000",
