@@ -27,18 +27,18 @@ jobs:
         uses: actions/cache@v2
         env:
           # Increase this value to reset cache if environment.yml has not changed
-          CACHE_NUMBER: 2
+          CACHE_NUMBER: 1
         with:
           path: ~/conda_pkgs_dir
           key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('conda-win-64.lock') }}
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
       - name: Setup conda env
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: geoapps
           python-version: ${{ matrix.python_ver }}
           channel-priority: strict
-          environment-file: conda-win-64.lock
+          environment-file: environment.yml
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: pytest
         run: |
