@@ -57,9 +57,12 @@ class InputFile:
 
     def _validate_required_parameters(self):
         """ Ensures that all required input file keys are present."""
+        missing = []
         for param in self._required_parameters:
             if param not in self.data.keys():
-                raise ValueError(f"Missing a required parameter: '{param}'.")
+                missing.append(param)
+        if missing:
+            raise ValueError(f"Missing required parameter(s): {*missing,}.")
 
 
 class Params:
@@ -100,8 +103,8 @@ class Params:
         vpvals = self._valid_parameter_values[param]
         nvals = len(vpvals)
         if nvals > 1:
-            msg = f"Invalid {param} value. Must be one of: {vpvals}"
-        else:
-            msg = f"Invalid {param} value.  Must be: {vpvals}"
+            msg = f"Invalid {param} value. Must be one of: {*vpvals,}"
+        elif nvals == 1:
+            msg = f"Invalid {param} value.  Must be: {vpvals[0]}"
         if val not in vpvals:
             raise ValueError(msg)
