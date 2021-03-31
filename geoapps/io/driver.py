@@ -22,7 +22,6 @@ class InputFile:
         self.workpath = self.create_work_path()
         self.data = None
         self.itype = None
-        self.load()
 
     @property
     def filepath(self):
@@ -60,7 +59,7 @@ class InputFile:
         """ Ensures that all required input file keys are present."""
         for param in self._required_parameters:
             if param not in self.data.keys():
-                raise ValueError(f"Missing a required parameter: {param}.")
+                raise ValueError(f"Missing a required parameter: '{param}'.")
 
 
 class Params:

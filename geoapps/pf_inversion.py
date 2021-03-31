@@ -206,6 +206,7 @@ def start_inversion(inputfile):
 def inversion(inputfile):
 
     workDir = inputfile.workpath
+    inputfile.load()
     input_dict = inputfile.data
 
     params = Params(inputfile)
