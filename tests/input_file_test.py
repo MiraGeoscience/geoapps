@@ -14,14 +14,15 @@ from geoapps.io import InputFile
 
 
 def test_create_work_path():
-    inputfile = InputFile("../assets/test.json")
+    fname = "../assets/test.json"
+    inputfile = InputFile(fname)
     wpath = inputfile.create_work_path()
     assert wpath == os.path.abspath("../assets") + os.path.sep
 
 
 def test_load(tmp_path):
     fname = os.path.join(tmp_path, "test.json")
-    input_dict = {"inversion_type": "mvi"}
+    input_dict = {"inversion_type": "mvi", "core_cell_size": 2}
     with open(fname, "w") as outfile:
         json.dump(input_dict, outfile)
     inputfile = InputFile(fname)
