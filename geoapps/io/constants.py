@@ -44,4 +44,5 @@ valid_parameters = [
 valid_parameter_values = {
     "inversion_type": ["gravity", "magnetics", "mvi", "mvic"],
     "inversion_style": ["voxel"],
+    "forward_only": [True, False],
 }

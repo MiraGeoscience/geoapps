@@ -210,6 +210,7 @@ def inversion(inputfile):
     input_dict = inputfile.data
 
     params = Params(inputfile)
+    outDir = params.result_folder
 
     # Read json file and overwrite defaults
 
@@ -223,25 +224,25 @@ def inversion(inputfile):
     #     "mvic",
     # ], "'inversion_type' must be one of: 'gravity', 'magnetics', 'mvi', or 'mvic'"
 
-    if "inversion_style" in list(input_dict.keys()):
-        inversion_style = input_dict["inversion_style"]
-    else:
-        inversion_style = "voxel"
+    # if "inversion_style" in list(input_dict.keys()):
+    #     inversion_style = input_dict["inversion_style"]
+    # else:
+    #     inversion_style = "voxel"
 
-    if "forward_only" in list(input_dict.keys()):
-        forward_only = True
-    else:
-        forward_only = False
+    # if "forward_only" in list(input_dict.keys()):
+    #     forward_only = True
+    # else:
+    #     forward_only = False
 
-    if "result_folder" in list(input_dict.keys()):
-        root = os.path.commonprefix([input_dict["result_folder"], workDir])
-        outDir = (
-            workDir + os.path.relpath(input_dict["result_folder"], root) + os.path.sep
-        )
-    else:
-        outDir = workDir + os.path.sep + "SimPEG_PFInversion" + os.path.sep
-    os.system("mkdir " + '"' + outDir + '"')
-    # extra quotes included in case path contains spaces
+    # if "result_folder" in list(input_dict.keys()):
+    #     root = os.path.commonprefix([input_dict["result_folder"], workDir])
+    #     outDir = (
+    #         workDir + os.path.relpath(input_dict["result_folder"], root) + os.path.sep
+    #     )
+    # else:
+    #     outDir = workDir + os.path.sep + "SimPEG_PFInversion" + os.path.sep
+    # os.system("mkdir " + '"' + outDir + '"')
+    # # extra quotes included in case path contains spaces
 
     ###############################################################################
     # Deal with the data
@@ -664,7 +665,7 @@ def inversion(inputfile):
             reference_model = [0.0]
     else:
         assert (
-            forward_only == False
+            params.forward_only == False
         ), "A reference model/value must be provided for forward modeling"
         reference_model = [0.0]
 
@@ -1113,7 +1114,7 @@ def inversion(inputfile):
         mstart = mstart[activeCells]
 
     # Homogeneous inversion only coded for scalar values for now
-    if (inversion_style == "homogeneous_units") and not vector_property:
+    if (params.inversion_style == "homogeneous_units") and not vector_property:
         units = np.unique(mstart).tolist()
 
         # Build list of indices for the geounits
@@ -1180,7 +1181,7 @@ def inversion(inputfile):
                 parallelized=parallelized,
                 Jpath=outDir + "Tile" + str(ind) + ".zarr",
                 maxRAM=max_ram,
-                forwardOnly=forward_only,
+                forwardOnly=params.forward_only,
                 n_cpu=n_cpu,
                 verbose=False,
                 max_chunk_size=max_chunk_size,
@@ -1195,7 +1196,7 @@ def inversion(inputfile):
                 parallelized=parallelized,
                 Jpath=outDir + "Tile" + str(ind) + ".zarr",
                 maxRAM=max_ram,
-                forwardOnly=forward_only,
+                forwardOnly=params.forward_only,
                 n_cpu=n_cpu,
                 verbose=False,
                 max_chunk_size=max_chunk_size,
@@ -1210,7 +1211,7 @@ def inversion(inputfile):
                 parallelized=parallelized,
                 Jpath=outDir + "Tile" + str(ind) + ".zarr",
                 maxRAM=max_ram,
-                forwardOnly=forward_only,
+                forwardOnly=params.forward_only,
                 modelType="vector",
                 n_cpu=n_cpu,
                 verbose=False,
@@ -1220,7 +1221,7 @@ def inversion(inputfile):
 
         local_survey.pair(prob)
 
-        if forward_only:
+        if params.forward_only:
             return local_survey.dpred(mstart)
 
         # Data misfit function
@@ -1241,7 +1242,7 @@ def inversion(inputfile):
 
     for ind, (local_mesh, local_survey) in enumerate(zip(local_meshes, local_surveys)):
 
-        if forward_only:
+        if params.forward_only:
             dpred.append(
                 create_local_problem(local_mesh, local_survey, global_weights, ind)
             )
@@ -1258,7 +1259,7 @@ def inversion(inputfile):
             else:
                 global_misfit += local_misfit
 
-    if forward_only:
+    if params.forward_only:
         dpred = np.hstack(dpred)
         for ind, (comp, norm) in enumerate(zip(survey.components, normalization)):
             val = norm * dpred[ind :: len(survey.components)]
@@ -1508,7 +1509,7 @@ def inversion(inputfile):
     # SimPEG reports half phi_d, so we scale to match
     print(
         "Start Inversion: "
-        + inversion_style
+        + params.inversion_style
         + "\nTarget Misfit: %.2e (%.0f data with chifact = %g) / 2"
         % (0.5 * target_chi * len(survey.std), len(survey.std), target_chi)
     )
