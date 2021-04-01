@@ -6,9 +6,13 @@
 #  (see LICENSE file at the root of this source code package).
 
 import json
-import os
 
 from .constants import valid_parameter_values, valid_parameters
+from .utils import (
+    create_default_output_path,
+    create_relative_output_path,
+    create_work_path,
+)
 
 
 class InputFile:
@@ -19,7 +23,7 @@ class InputFile:
 
     def __init__(self, filepath):
         self.filepath = filepath
-        self.workpath = self.create_work_path()
+        self.workpath = create_work_path(filepath)
         self.data = None
         self.itype = None
 
@@ -33,13 +37,6 @@ class InputFile:
             raise OSError("Input file must have '.json' extension.")
         else:
             self._filepath = f
-
-    def create_work_path(self):
-        """ Creates absolute path to input file. """
-        dsep = os.path.sep
-        workpath = os.path.dirname(os.path.abspath(self.filepath)) + dsep
-
-        return workpath
 
     def load(self):
         """ Loads input file contents to dictionary. """
@@ -73,30 +70,59 @@ class Params:
         self.itype = inputfile.itype
         self.workpath = inputfile.workpath
         self._inversion_style = "voxel"
-        self._load_params_from_input_file(inputfile)
+        self._forward_only = False
+        self._result_folder = create_default_output_path(inputfile.filepath)
+        self._init_params(inputfile)
 
     @property
     def itype(self):
         return self._itype
-
-    @property
-    def inversion_style(self):
-        return self._inversion_style
 
     @itype.setter
     def itype(self, val):
         self._validate_parameter_value("inversion_type", val)
         self._itype = val
 
+    @property
+    def inversion_style(self):
+        return self._inversion_style
+
     @inversion_style.setter
     def inversion_style(self, val):
         self._validate_parameter_value("inversion_style", val)
         self._inversion_style = val
 
-    def _load_params_from_input_file(self, inputfile):
-        """ Overrides default parameter values input file values. """
-        if "inversion_style" in inputfile.data.keys():
-            self.inversion_style = inputfile.data["inversion_style"]
+    @property
+    def forward_only(self):
+        return self._forward_only
+
+    @forward_only.setter
+    def forward_only(self, val):
+        self._validate_parameter_value("forward_only", val)
+        self._forward_only = val
+
+    @property
+    def result_folder(self):
+        return self._result_folder
+
+    @result_folder.setter
+    def result_folder(self, val):
+        self._validate_parameter_value("result_folder", val)
+        self._result_folder = val
+
+    def _override_default(self, param, value):
+        """ Override parameter default value. """
+        self.__setattr__(param, value)
+
+    def _init_params(self, inputfile):
+        """ Overrides default parameter values with input file values. """
+        for param, val in inputfile.data.items():
+            if param == "result_folder":
+                self.result_folder = create_relative_output_path(
+                    inputfile.workpath, val
+                )
+            else:
+                self._override_default(param, val)
 
     def _validate_parameter_value(self, param, val):
         """ Validates parameter values against accepted values. """

@@ -10,7 +10,8 @@ import os
 
 import pytest
 
-from geoapps.io import InputFile, Params
+from geoapps.io import InputFile
+from geoapps.io.utils import create_work_path
 
 ######### Convenience functions ##########
 
@@ -21,36 +22,6 @@ tmpfile = lambda path: os.path.join(path, "test.json")
 def tmp_input_file(filepath, input_dict):
     with open(filepath, "w") as outfile:
         json.dump(input_dict, outfile)
-
-
-def default_test_generator(tmp_path, default_value):
-    filepath = tmpfile(tmp_path)
-    tmp_input_file(filepath, input_dict)
-    inputfile = InputFile(filepath)
-    inputfile.load()
-    params = Params(inputfile)
-
-    def default_test():
-        assert params.inversion_style == default_value
-
-    return default_test
-
-
-def param_test_generator(tmp_path, param, invalid_value, valid_value):
-    idict = input_dict.copy()
-    idict[param] = invalid_value
-    filepath = tmpfile(tmp_path)
-    tmp_input_file(filepath, idict)
-    inputfile = InputFile(filepath)
-    inputfile.load()
-    with pytest.raises(ValueError) as excinfo:
-        params = Params(inputfile)
-    msg = f"Invalid {param} value.  Must be: {valid_value}"
-
-    def param_test():
-        assert str(excinfo.value) == msg
-
-    return param_test
 
 
 ########### tests ###############
@@ -65,8 +36,7 @@ def test_filepath_extension():
 
 def test_create_work_path():
     fname = "../assets/test.json"
-    inputfile = InputFile(fname)
-    wpath = inputfile.create_work_path()
+    wpath = create_work_path(fname)
     assert wpath == os.path.abspath("../assets") + os.path.sep
 
 
@@ -104,16 +74,3 @@ def test_validate_required_parameters(tmp_path):
         inputfile.load()
     msg = f"Missing required parameter(s): ('inversion_type', 'core_cell_size')."
     assert str(excinfo.value) == msg
-
-
-def test_default_inversion_style(tmp_path):
-    dtest = default_test_generator(tmp_path, "voxel")
-    dtest()
-
-
-def test_validate_inversion_style(tmp_path):
-    param = "inversion_style"
-    i_value = "parametric"
-    v_value = "voxel"
-    ptest = param_test_generator(tmp_path, param, i_value, v_value)
-    ptest()
