@@ -3048,8 +3048,8 @@ def parameters():
             ],
             "tx_offsets": [[0, 0, 0]],
             "bird_offset": [-25, 0, -34],
-            "normalization": [3.1416, 1e-12],
-            "tx_specs": {"type": "CircularLoop", "a": 1.0, "I": 1.0},
+            "normalization": [531, 1e-12],
+            "tx_specs": {"type": "CircularLoop", "a": 13.0, "I": 1.0},
             "data_type": "dBzdt",
         },
         "VTEM Max": {
@@ -3317,8 +3317,8 @@ def parameters():
             ],
             "tx_offsets": [[0, 0, 0]],
             "bird_offset": [-27, 0, -44],
-            "normalization": [3.1416, 1e-12],
-            "tx_specs": {"type": "CircularLoop", "a": 1.0, "I": 1.0},
+            "normalization": [531, 1e-12],
+            "tx_specs": {"type": "CircularLoop", "a": 13.0, "I": 1.0},
             "data_type": "dBzdt",
         },
         "Xcite": {
