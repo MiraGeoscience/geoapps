@@ -5,8 +5,7 @@ channels:
   - defaults
 dependencies:
   - python=3.7
-  - git
-  - pip
+  - pip=21.0.1
   - simpeg=0.13.1
   - discretize=0.5.1
   - matplotlib=3.2.1
