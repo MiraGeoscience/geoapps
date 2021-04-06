@@ -56,6 +56,7 @@ valid_parameter_types = {
     "forward_only": [bool],
     "result_folder": [str],
     "inducing_field_aid": [int, float],
+    "resolution": [int, float],
 }
 
 valid_parameter_shapes = {"inducing_field_aid": (3,)}
