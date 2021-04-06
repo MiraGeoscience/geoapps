@@ -59,6 +59,14 @@ class Params:
         self.result_folder = os.path.join(workpath, "SimPEG_PFInversion")
         self.inducing_field_aid = None
         self.resolution = 0
+        self.window = None
+        self.workspace = None
+        self.data_format = None
+        self.data_name = None
+        self.data_channels = None
+        self.ignore_values = None
+        self.detrend = None
+        self.data_file = None
 
     @classmethod
     def from_ifile(cls, ifile):
@@ -149,6 +157,113 @@ class Params:
         self.validator.validate("resolution", val)
         self._resolution = val
 
+    @property
+    def window(self):
+        return self._window
+
+    @window.setter
+    def window(self, val):
+        if val is None:
+            self._window = val
+            return
+        self.validator.validate("window", val)
+        if "center" not in val.keys():
+            val["center"] = [val["center_x"], val["center_y"]]
+        if "size" not in val.keys():
+            val["size"] = [val["width"], val["height"]]
+        self._window = val
+
+    @property
+    def data_format(self):
+        return self._data_format
+
+    @data_format.setter
+    def data_format(self, val):
+        if val is None:
+            self._data_format = val
+            return
+        self.validator.validate("data_format", val)
+        self._data_format = val
+
+    @property
+    def data_name(self):
+        return self._data_name
+
+    @data_name.setter
+    def data_name(self, val):
+        if val is None:
+            self._data_name = val
+            return
+        self.validator.validate("data_name", val)
+        self._data_name = val
+
+    @property
+    def data_channels(self):
+        return self._data_channels
+
+    @data_channels.setter
+    def data_channels(self, val):
+        if val is None:
+            self._data_channels = val
+            return
+        self.validator.validate("data_channels", val)
+        # for v in val.keys():
+        #     valid_keys = ["tmi"]
+        #     if v not in valid_keys:
+        #         raise ValueError(f"Invalid key {v}. Must be one of {*valid_keys,}")
+        self._data_channels = val
+
+    @property
+    def workspace(self):
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, val):
+        if val is None:
+            self._workspace = val
+            return
+        self.validator.validate("workspace", val)
+        self._workspace = val
+
+    @property
+    def ignore_values(self):
+        return self._ignore_values
+
+    @ignore_values.setter
+    def ignore_values(self, val):
+        if val is None:
+            self._ignore_values = val
+            return
+        self.validator.validate("ignore_values", val)
+        self._ignore_values = val
+
+    @property
+    def detrend(self):
+        return self._detrend
+
+    @detrend.setter
+    def detrend(self, val):
+        if val is None:
+            self._detrend = val
+            return
+        self.validator.validate("detrend", val)
+        for v in val.values():
+            if v not in [0, 1, 2]:
+                raise ValueError("Detrend order must be 0, 1, or 2.")
+        self._detrend = val
+
+    @property
+    def data_file(self):
+        return self._data_file
+
+    @data_file.setter
+    def data_file(self, val):
+        if val is None:
+            self._data_file = val
+            return
+        self.validator.validate("data_file", val)
+        self._data_file = val
+
     def _override_default(self, param, value):
         """ Override parameter default value. """
         self.__setattr__(param, value)
@@ -159,5 +274,10 @@ class Params:
             if param == "result_folder":
                 op = create_relative_output_path(inputfile.workpath, value)
                 self._override_default(param, op)
+            elif param == "data":
+                self._override_default("data_format", value["type"])
+                self._override_default("data_name", value["name"])
+                if "channels" in value.keys():
+                    self._override_default("data_channels", value["channels"])
             else:
                 self._override_default(param, value)

@@ -6,6 +6,9 @@
 #  (see LICENSE file at the root of this source code package).
 
 valid_parameters = [
+    "data_format",
+    "data_name",
+    "data_channels",
     "out_group",
     "workspace",
     "save_to_geoh5",
@@ -39,6 +42,8 @@ valid_parameters = [
     "receivers_offset",
     "topography",
     "result_folder",
+    "detrend",
+    "data_file",
 ]
 
 required_parameters = ["inversion_type", "core_cell_size"]
@@ -46,6 +51,7 @@ required_parameters = ["inversion_type", "core_cell_size"]
 valid_parameter_values = {
     "inversion_type": ["gravity", "magnetics", "mvi", "mvic"],
     "inversion_style": ["voxel"],
+    "data_format": ["ubc_grav", "ubc_mag", "GA_object"],
 }
 
 valid_parameter_types = {
@@ -57,6 +63,19 @@ valid_parameter_types = {
     "result_folder": [str],
     "inducing_field_aid": [int, float],
     "resolution": [int, float],
+    "window": [dict],
+    "workspace": [str],
+    "data_format": [str],
+    "data_name": [str],
+    "data_channels": [dict],
+    "ignore_values": [str],
+    "detrend": [dict],
+    "data_file": [str],
 }
 
 valid_parameter_shapes = {"inducing_field_aid": (3,)}
+
+valid_parameter_keys = {
+    "window": ["center_x", "center_y", "width", "height", "azimuth"],
+    "data_channels": ["tmi"],
+}

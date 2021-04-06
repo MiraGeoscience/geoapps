@@ -13,6 +13,7 @@ import pytest
 
 from geoapps.io import InputFile, Params
 from geoapps.io.constants import (
+    valid_parameter_keys,
     valid_parameter_shapes,
     valid_parameter_types,
     valid_parameter_values,
@@ -43,7 +44,7 @@ def default_test_generator(tmp_path, param, default_value):
     assert params.__getattribute__(param) == default_value
 
 
-def param_test_generator(tmp_path, param, invalid_value, validation_type, validations):
+def param_test_generator(tmp_path, param, invalid_value, validation_type):
     idict = input_dict.copy()
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
@@ -102,8 +103,7 @@ def test_override_default():
 
 def test_validate_inversion_type(tmp_path):
     param = "inversion_type"
-    vpvals = valid_parameter_values[param]
-    param_test_generator(tmp_path, param, "em", "value", vpvals)
+    param_test_generator(tmp_path, param, "em", "value")
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, {"core_cell_size": 2})
     with pytest.raises(ValueError) as excinfo:
@@ -113,8 +113,7 @@ def test_validate_inversion_type(tmp_path):
 
 def test_validate_core_cell_size(tmp_path):
     param = "core_cell_size"
-    vptypes = valid_parameter_types[param]
-    param_test_generator(tmp_path, param, "nope", "type", vptypes)
+    param_test_generator(tmp_path, param, "nope", "type")
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, {"inversion_type": "mvi"})
     with pytest.raises(ValueError) as excinfo:
@@ -124,32 +123,27 @@ def test_validate_core_cell_size(tmp_path):
 
 def test_validate_inversion_style(tmp_path):
     param = "inversion_style"
-    vpvals = valid_parameter_values[param]
-    param_test_generator(tmp_path, param, "parametric", "value", vpvals)
+    param_test_generator(tmp_path, param, "parametric", "value")
     default_test_generator(tmp_path, param, "voxel")
 
 
 def test_validate_forward_only(tmp_path):
     param = "forward_only"
-    vptypes = valid_parameter_types[param]
-    param_test_generator(tmp_path, param, "true", "type", vptypes)
+    param_test_generator(tmp_path, param, "true", "type")
     default_test_generator(tmp_path, param, False)
 
 
 def test_validate_result_folder(tmp_path):
     param = "result_folder"
-    vptypes = valid_parameter_types[param]
-    param_test_generator(tmp_path, param, True, "type", vptypes)
+    param_test_generator(tmp_path, param, True, "type")
     path = os.path.join(tmp_path, "SimPEG_PFInversion") + os.path.sep
     default_test_generator(tmp_path, param, path)
 
 
 def test_validate_inducing_field_aid(tmp_path):
     param = "inducing_field_aid"
-    vptypes = valid_parameter_types[param]
-    vpshapes = valid_parameter_shapes[param]
-    param_test_generator(tmp_path, param, "nope", "type", vptypes)
-    param_test_generator(tmp_path, param, [1.0, 2.0], "shape", vpshapes)
+    param_test_generator(tmp_path, param, "nope", "type")
+    param_test_generator(tmp_path, param, [1.0, 2.0], "shape")
     params = Params("mvi", 2)
     params.inducing_field_aid = [1.0, 2.0, 3.0]
     assert type(params.inducing_field_aid) == np.ndarray
@@ -159,8 +153,96 @@ def test_validate_inducing_field_aid(tmp_path):
     default_test_generator(tmp_path, param, None)
 
 
-def test_default_resolution(tmp_path):
+def test_validate_resolution(tmp_path):
     param = "resolution"
-    vptypes = valid_parameter_types[param]
-    param_test_generator(tmp_path, param, "nope", "type", vptypes)
+    param_test_generator(tmp_path, param, "nope", "type")
     default_test_generator(tmp_path, param, 0)
+
+
+def test_validate_window(tmp_path):
+    param = "window"
+    test_dict = {"center_x": 2, "center_y": 2, "width": 2, "height": 2}
+    param_test_generator(tmp_path, param, 1, "type")
+    param_test_generator(tmp_path, param, test_dict, "keys")
+    default_test_generator(tmp_path, param, None)
+    params = Params("mvi", 2)
+    test_dict["azimuth"] = 2
+    params.window = test_dict
+    assert params.window["center"] == [2, 2]
+    assert params.window["size"] == [2, 2]
+
+
+def test_validate_workspace(tmp_path):
+    param = "workspace"
+    param_test_generator(tmp_path, param, 12234, "type")
+    default_test_generator(tmp_path, param, None)
+    idict = input_dict.copy()
+    idict["data"] = {"type": "GA_object", "name": "test"}
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "data type 'GA_object'." in str(excinfo.value)
+
+
+def test_validate_data(tmp_path):
+    idict = input_dict.copy()
+    idict["data"] = {"type": "GA_object"}
+    idict["workspace"] = "."
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "Data 'type' and 'name'" in str(excinfo.value)
+
+
+def test_validate_data_format(tmp_path):
+    param = "data_format"
+    param_test_generator(tmp_path, param, "blah", "value")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_data_name(tmp_path):
+    param = "data_name"
+    param_test_generator(tmp_path, param, 1234, "type")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_data_channels(tmp_path):
+    param = "data_channels"
+    test_dict = {"voltage": "yadda"}
+    param_test_generator(tmp_path, param, 1, "type")
+    param_test_generator(tmp_path, param, test_dict, "keys")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_ignore_values(tmp_path):
+    param = "ignore_values"
+    param_test_generator(tmp_path, param, 1234, "type")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_detrend(tmp_path):
+    param = "detrend"
+    param_test_generator(tmp_path, param, 1, "type")
+    default_test_generator(tmp_path, param, None)
+    idict = input_dict.copy()
+    idict["detrend"] = {"corners": 3}
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "Detrend order must be 0," in str(excinfo.value)
+
+
+def test_validate_data_file(tmp_path):
+    param = "data_file"
+    param_test_generator(tmp_path, param, 1234, "type")
+    default_test_generator(tmp_path, param, None)
+    idict = input_dict.copy()
+    idict["data"] = {"type": "ubc_mag", "name": "test"}
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "for data types 'ubc_grav' and" in str(excinfo.value)

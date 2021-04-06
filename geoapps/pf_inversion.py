@@ -207,7 +207,7 @@ def inversion(inputfile):
 
     inputfile.load()
     input_dict = inputfile.data
-    params = Params.from_input_file(inputfile)
+    params = Params.from_ifile(inputfile)
 
     # Read json file and overwrite defaults
 
@@ -253,47 +253,47 @@ def inversion(inputfile):
     # else:
     #     inducing_field = None
 
-    if "resolution" in input_dict.keys():
-        resolution = input_dict["resolution"]
-    else:
-        resolution = 0
+    # if "resolution" in input_dict.keys():
+    #     resolution = input_dict["resolution"]
+    # else:
+    #     resolution = 0
 
-    if "window" in input_dict.keys():
-        window = input_dict["window"]
-        window["center"] = [window["center_x"], window["center_y"]]
-        window["size"] = [window["width"], window["height"]]
-    else:
-        window = None
+    # if "window" in input_dict.keys():
+    #     window = input_dict["window"]
+    #     window["center"] = [window["center_x"], window["center_y"]]
+    #     window["size"] = [window["width"], window["height"]]
+    # else:
+    #     window = None
 
-    if input_dict["data"]["type"] in ["ubc_grav"]:
+    if params.data_format == "ubc_grav":
 
         survey = Utils.io_utils.readUBCgravityObservations(
-            params.workpath + input_dict["data"]["name"]
+            params.workpath + params.data_name
         )
 
-    elif input_dict["data"]["type"] in ["ubc_mag"]:
+    elif params.data_format == "ubc_mag":
 
         survey, H0 = Utils.io_utils.readUBCmagneticsObservations(
-            params.workpath + input_dict["data"]["name"]
+            params.workpath + params.data_name
         )
         survey.components = ["tmi"]
 
-    elif input_dict["data"]["type"] in ["GA_object"]:
+    elif params.data_format == "GA_object":
 
-        workspace = Workspace(input_dict["workspace"])
+        workspace = Workspace(params.workspace)
 
-        if workspace.get_entity(input_dict["data"]["name"]):
-            entity = workspace.get_entity(input_dict["data"]["name"])[0]
+        if workspace.get_entity(params.data_name):
+            entity = workspace.get_entity(params.data_name)[0]
         else:
             assert False, (
-                f"Entity {input_dict['data']['name']} could not be found in "
+                f"Entity {params.data_name} could not be found in "
                 f"Workspace {workspace.h5file}"
             )
 
         data = []
         uncertainties = []
         components = []
-        for channel, props in input_dict["data"]["channels"].items():
+        for channel, props in params.data_channels.items():
             if entity.get_data(props["name"]):
                 data.append(entity.get_data(props["name"])[0].values)
             else:
@@ -309,15 +309,15 @@ def inversion(inputfile):
         data = np.vstack(data).T
         uncertainties = np.vstack(uncertainties).T
 
-        if "ignore_values" in input_dict.keys():
-            ignore_values = input_dict["ignore_values"]
-            if len(ignore_values) > 0:
-                if "<" in ignore_values:
-                    uncertainties[data <= float(ignore_values.split("<")[1])] = np.inf
-                elif ">" in ignore_values:
-                    uncertainties[data >= float(ignore_values.split(">")[1])] = np.inf
+        if params.ignore_values is not None:
+            igvals = params.ignore_values
+            if len(igvals) > 0:
+                if "<" in igvals:
+                    uncertainties[data <= float(igvals.split("<")[1])] = np.inf
+                elif ">" in igvals:
+                    uncertainties[data >= float(igvals.split(">")[1])] = np.inf
                 else:
-                    uncertainties[data == float(ignore_values)] = np.inf
+                    uncertainties[data == float(igvals)] = np.inf
 
         if isinstance(entity, Grid2D):
             vertices = entity.centroids
@@ -327,13 +327,15 @@ def inversion(inputfile):
         window_ind = filter_xy(
             vertices[:, 0],
             vertices[:, 1],
-            resolution,
-            window=window,
+            params.resolution,
+            window=params.window,
         )
 
-        if window is not None:
+        if params.window is not None:
             xy_rot = rotate_xy(
-                vertices[window_ind, :2], window["center"], window["azimuth"]
+                vertices[window_ind, :2],
+                params.window["center"],
+                params.window["azimuth"],
             )
 
             xyz_loc = np.c_[xy_rot, vertices[window_ind, 2]]
@@ -345,8 +347,8 @@ def inversion(inputfile):
             source = PF.BaseGrav.SrcField([receivers])
             survey = PF.BaseGrav.LinearSurvey(source)
         else:
-            if window is not None:
-                params.inducing_field_aid[2] -= window["azimuth"]
+            if params.window is not None:
+                params.inducing_field_aid[2] -= params.window["azimuth"]
             receivers = PF.BaseMag.RxObs(xyz_loc)
             source = PF.BaseMag.SrcField([receivers], param=params.inducing_field_aid)
             survey = PF.BaseMag.LinearSurvey(source)
@@ -377,51 +379,46 @@ def inversion(inputfile):
     #     survey.dobs -= np.median(survey.dobs)
 
     # 0-level the data if required, data_trend = 0 level
-    if "detrend" in list(input_dict.keys()):
+    if params.detrend is not None:
 
-        for key, value in input_dict["detrend"].items():
-            assert key in ["all", "corners"], "detrend key must be 'all' or 'corners'"
-            assert value in [0, 1, 2], "detrend_order must be 0, 1, or 2"
+        for method, order in params.detrend.items():
 
-            method = key
-            order = value
-
-        data_trend, _ = matutils.calculate_2D_trend(
-            survey.rxLoc, survey.dobs, order, method
-        )
-
-        survey.dobs -= data_trend
-
-        if survey.std is None and "new_uncert" in list(input_dict.keys()):
-            # In case uncertainty hasn't yet been set (e.g., geosoft grids)
-            survey.std = np.ones(survey.dobs.shape)
-
-        if input_dict["data"]["type"] in ["ubc_mag"]:
-            Utils.io_utils.writeUBCmagneticsObservations(
-                os.path.splitext(params.result_folder + input_dict["data_file"])[0]
-                + "_trend.mag",
-                survey,
-                data_trend,
+            data_trend, _ = matutils.calculate_2D_trend(
+                survey.rxLoc, survey.dobs, order, method
             )
-            Utils.io_utils.writeUBCmagneticsObservations(
-                os.path.splitext(params.result_folder + input_dict["data_file"])[0]
-                + "_detrend.mag",
-                survey,
-                survey.dobs,
-            )
-        elif input_dict["data"]["type"] in ["ubc_grav"]:
-            Utils.io_utils.writeUBCgravityObservations(
-                os.path.splitext(params.result_folder + input_dict["data_file"])[0]
-                + "_trend.grv",
-                survey,
-                data_trend,
-            )
-            Utils.io_utils.writeUBCgravityObservations(
-                os.path.splitext(params.result_folder + input_dict["data_file"])[0]
-                + "_detrend.grv",
-                survey,
-                survey.dobs,
-            )
+
+            survey.dobs -= data_trend
+
+            if survey.std is None and "new_uncert" in list(input_dict.keys()):
+                # In case uncertainty hasn't yet been set (e.g., geosoft grids)
+                survey.std = np.ones(survey.dobs.shape)
+
+            if params.data_format == "ubc_mag":
+                Utils.io_utils.writeUBCmagneticsObservations(
+                    os.path.splitext(params.result_folder + params.data_file)[0]
+                    + "_trend.mag",
+                    survey,
+                    data_trend,
+                )
+                Utils.io_utils.writeUBCmagneticsObservations(
+                    os.path.splitext(params.result_folder + params.data_file)[0]
+                    + "_detrend.mag",
+                    survey,
+                    survey.dobs,
+                )
+            elif params.data_format in ["ubc_grav"]:
+                Utils.io_utils.writeUBCgravityObservations(
+                    os.path.splitext(params.result_folder + params.data_file)[0]
+                    + "_trend.grv",
+                    survey,
+                    data_trend,
+                )
+                Utils.io_utils.writeUBCgravityObservations(
+                    os.path.splitext(params.result_folder + params.data_file)[0]
+                    + "_detrend.grv",
+                    survey,
+                    survey.dobs,
+                )
     else:
         data_trend = 0.0
 
@@ -477,7 +474,7 @@ def inversion(inputfile):
                         skip_header=1,
                     )
                 elif "GA_object" in list(input_dict["topography"].keys()):
-                    workspace = Workspace(input_dict["workspace"])
+                    workspace = Workspace(params.workspace)
                     topo_entity = workspace.get_entity(
                         input_dict["topography"]["GA_object"]["name"]
                     )[0]
@@ -493,18 +490,18 @@ def inversion(inputfile):
                         )[0]
                         topo[:, 2] = data.values
 
-                if window is not None:
+                if params.window is not None:
 
-                    topo_window = window.copy()
-                    topo_window["size"] = [ll * 2 for ll in window["size"]]
+                    topo_window = params.window.copy()
+                    topo_window["size"] = [ll * 2 for ll in params.window["size"]]
                     ind = filter_xy(
                         topo[:, 0],
                         topo[:, 1],
-                        resolution / 2,
+                        params.resolution / 2,
                         window=topo_window,
                     )
                     xy_rot = rotate_xy(
-                        topo[ind, :2], window["center"], window["azimuth"]
+                        topo[ind, :2], params.window["center"], params.window["azimuth"]
                     )
                     topo = np.c_[xy_rot, topo[ind, 2]]
 
@@ -944,9 +941,9 @@ def inversion(inputfile):
             depth_core=depth_core,
         )
 
-        # if window is not None:
+        # if params.window is not None:
         #     xy_rot = rotate_xy(
-        #         vertices[ind, :2], window['center'], window['azimuth']
+        #         vertices[ind, :2], params.window['center'], params.window['azimuth']
         #     )
         #     xyz_loc = np.c_[xy_rot, vertices[ind, 2]]
         if shift_mesh_z0 is not None:
@@ -995,13 +992,17 @@ def inversion(inputfile):
 
         out_group.add_comment(json.dumps(input_dict, indent=4).strip(), author="input")
 
-        if window is not None:
-            xy_rot = rotate_xy(rxLoc[:, :2], window["center"], -window["azimuth"])
+        if params.window is not None:
+            xy_rot = rotate_xy(
+                rxLoc[:, :2], params.window["center"], -params.window["azimuth"]
+            )
             xy_rot = np.c_[xy_rot, rxLoc[:, 2]]
-            rotation = -window["azimuth"]
+            rotation = -params.window["azimuth"]
 
             origin_rot = rotate_xy(
-                mesh.x0[:2].reshape((1, 2)), window["center"], -window["azimuth"]
+                mesh.x0[:2].reshape((1, 2)),
+                params.window["center"],
+                -params.window["azimuth"],
             )
 
             dxy = (origin_rot - mesh.x0[:2]).ravel()
@@ -1047,8 +1048,10 @@ def inversion(inputfile):
             else:
                 xyz_cc = input_mesh.vertices[active, :]
 
-            if window is not None:
-                xyz_cc = rotate_xy(xyz_cc, window["center"], window["azimuth"])
+            if params.window is not None:
+                xyz_cc = rotate_xy(
+                    xyz_cc, params.window["center"], params.window["azimuth"]
+                )
 
             input_tree = cKDTree(xyz_cc)
 
