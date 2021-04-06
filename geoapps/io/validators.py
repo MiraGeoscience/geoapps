@@ -9,6 +9,7 @@ import numpy as np
 
 from .constants import (
     required_parameters,
+    valid_parameter_keys,
     valid_parameter_shapes,
     valid_parameter_types,
     valid_parameter_values,
@@ -31,8 +32,24 @@ class InputValidator:
         self._input = val
 
     def validate_input(self, input):
-        """ Validates input params and contents/type/shape of values. """
+        """ Validates input params and contents/type/shape/keys of values. """
         self._validate_required_parameters(input)
+        if "data" in input.keys():
+            require_keys = "type" not in input["data"].keys()
+            require_keys |= "name" not in input["data"].keys()
+            if require_keys:
+                raise ValueError("Data 'type' and 'name' must not be empty.")
+            if input["data"]["type"] == "GA_object":
+                if "workspace" not in input.keys():
+                    msg = "Input file must contain a 'workspace' path"
+                    msg += "for data type 'GA_object'."
+                    raise ValueError(msg)
+            if input["data"]["type"] in ["ubc_grav", "ubc_mag"]:
+                if "data_file" not in input.keys():
+                    msg = "Input file must contain an 'input_file' path"
+                    msg += " for data types 'ubc_grav' and 'ubc_mag'."
+                    raise ValueError(msg)
+
         for k, v in input.items():
             self.validate(k, v)
 
@@ -48,6 +65,7 @@ class InputValidator:
         checkval = True if param in valid_parameter_values else False
         checktype = True if param in valid_parameter_types else False
         checkshape = True if param in valid_parameter_shapes else False
+        checkkeys = True if param in valid_parameter_keys else False
 
         if param not in valid_parameters:
             msg = f"Encountered an invalid input parameter: {param}."
@@ -58,6 +76,8 @@ class InputValidator:
             self._validate_parameter_type(param, value)
         if checkshape:
             self._validate_parameter_shape(param, value)
+        if checkkeys:
+            self._validate_parameter_keys(param, value)
 
     def _validate_parameter_val(self, param, value):
         """ Raise ValueError if parameter value is invalid.  """
@@ -87,10 +107,20 @@ class InputValidator:
         if np.array(value).shape != vpshape:
             raise ValueError(msg)
 
+    def _validate_parameter_keys(self, param, value):
+        """ Raise ValueError if dict type parameter has invalid keys. """
+        vpkeys = valid_parameter_keys[param]
+        msg = self._param_validation_msg(param, "keys", vpkeys)
+
+        if not all(k in value.keys() for k in vpkeys):
+            raise ValueError(msg)
+
     def _param_validation_msg(self, param, validation_type, validations):
         """ Generate ValueError message for parameter validation. """
 
-        if validation_type == "shape":
+        if validation_type == "keys":
+            msg = f"Invalid {param} {validation_type}. Must be: {*validations,}."
+        elif validation_type == "shape":
             msg = f"Invalid {param} {validation_type}. Must be: {validations}."
         else:
             if self._isiterable(validations):
@@ -110,7 +140,8 @@ class InputValidator:
             raise ValueError(f"Missing required parameter(s): {*missing,}.")
 
     def _isiterable(self, v):
-        if (hasattr(v, "__iter__")) & (not isinstance(v, str)):
+        only_array_like = (not isinstance(v, str)) & (not isinstance(v, dict))
+        if (hasattr(v, "__iter__")) & only_array_like:
             return True if len(v) > 1 else False
         else:
             return False
