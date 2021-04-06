@@ -58,17 +58,24 @@ class Params:
         self.forward_only = False
         self.result_folder = os.path.join(workpath, "SimPEG_PFInversion")
         self.inducing_field_aid = None
+        self.resolution = 0
 
     @classmethod
-    def from_input_file(cls, ifile):
+    def from_ifile(cls, ifile):
         """ Construct Params object from InputFile instance. """
-
         if not ifile.isloaded:
             ifile.load()
         inversion_type = ifile.data["inversion_type"]
         core_cell_size = ifile.data["core_cell_size"]
         p = cls(inversion_type, core_cell_size, ifile.workpath)
         p._init_params(ifile)
+        return p
+
+    @classmethod
+    def from_path(cls, filepath):
+        """ Construct Params object from .json input file path. """
+        ifile = InputFile(filepath)
+        p = cls.from_ifile(ifile)
         return p
 
     @property
@@ -132,6 +139,15 @@ class Params:
         if val[0] <= 0:
             raise ValueError("inducing_field_aid[0] must be greater than 0.")
         self._inducing_field_aid = np.array(val)
+
+    @property
+    def resolution(self):
+        return self._resolution
+
+    @resolution.setter
+    def resolution(self, val):
+        self.validator.validate("resolution", val)
+        self._resolution = val
 
     def _override_default(self, param, value):
         """ Override parameter default value. """

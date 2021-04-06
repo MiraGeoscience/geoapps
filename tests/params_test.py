@@ -38,9 +38,7 @@ def tmp_input_file(filepath, input_dict):
 def default_test_generator(tmp_path, param, default_value):
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, input_dict)
-    inputfile = InputFile(filepath)
-    inputfile.load()
-    params = Params.from_input_file(inputfile)
+    params = Params.from_path(filepath)
 
     assert params.__getattribute__(param) == default_value
 
@@ -49,9 +47,7 @@ def param_test_generator(tmp_path, param, invalid_value, validation_type, valida
     idict = input_dict.copy()
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
-    inputfile = InputFile(filepath)
-    inputfile.load()
-    params = Params.from_input_file(inputfile)
+    params = Params.from_path(filepath)
     with pytest.raises(ValueError) as excinfo:
         params.__setattr__(param, invalid_value)
     assert validation_type in str(excinfo.value)
@@ -83,45 +79,69 @@ def test_create_work_path():
     assert wp == os.path.abspath(".") + os.path.sep
 
 
+def test_params_constructors(tmp_path):
+    idict = input_dict.copy()
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    params = Params.from_path(filepath)
+    assert params.inversion_type == "mvi"
+    assert params.core_cell_size == 2
+    assert params.inversion_style == "voxel"
+    inputfile = InputFile(filepath)
+    params = Params.from_ifile(inputfile)
+    assert params.inversion_type == "mvi"
+    assert params.core_cell_size == 2
+    assert params.inversion_style == "voxel"
+
+
 def test_override_default():
     params = Params("mvi", 2)
     params._override_default("forward_only", True)
     assert params.forward_only == True
 
 
-def test_default_inversion_style(tmp_path):
-    default_test_generator(tmp_path, "inversion_style", "voxel")
+def test_validate_inversion_type(tmp_path):
+    param = "inversion_type"
+    vpvals = valid_parameter_values[param]
+    param_test_generator(tmp_path, param, "em", "value", vpvals)
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, {"core_cell_size": 2})
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "parameter(s): ('inversion_type',)." in str(excinfo.value)
+
+
+def test_validate_core_cell_size(tmp_path):
+    param = "core_cell_size"
+    vptypes = valid_parameter_types[param]
+    param_test_generator(tmp_path, param, "nope", "type", vptypes)
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, {"inversion_type": "mvi"})
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "parameter(s): ('core_cell_size',)." in str(excinfo.value)
 
 
 def test_validate_inversion_style(tmp_path):
     param = "inversion_style"
     vpvals = valid_parameter_values[param]
     param_test_generator(tmp_path, param, "parametric", "value", vpvals)
-
-
-def test_default_forward_only(tmp_path):
-    default_test_generator(tmp_path, "forward_only", False)
+    default_test_generator(tmp_path, param, "voxel")
 
 
 def test_validate_forward_only(tmp_path):
     param = "forward_only"
     vptypes = valid_parameter_types[param]
     param_test_generator(tmp_path, param, "true", "type", vptypes)
-
-
-def test_default_result_folder(tmp_path):
-    path = os.path.join(tmp_path, "SimPEG_PFInversion") + os.path.sep
-    default_test_generator(tmp_path, "result_folder", path)
+    default_test_generator(tmp_path, param, False)
 
 
 def test_validate_result_folder(tmp_path):
     param = "result_folder"
     vptypes = valid_parameter_types[param]
     param_test_generator(tmp_path, param, True, "type", vptypes)
-
-
-def test_default_inducing_field_aid(tmp_path):
-    default_test_generator(tmp_path, "inducing_field_aid", None)
+    path = os.path.join(tmp_path, "SimPEG_PFInversion") + os.path.sep
+    default_test_generator(tmp_path, param, path)
 
 
 def test_validate_inducing_field_aid(tmp_path):
@@ -136,3 +156,11 @@ def test_validate_inducing_field_aid(tmp_path):
     with pytest.raises(ValueError) as excinfo:
         params.inducing_field_aid = [0, 1, 2]
     assert "greater than 0." in str(excinfo.value)
+    default_test_generator(tmp_path, param, None)
+
+
+def test_default_resolution(tmp_path):
+    param = "resolution"
+    vptypes = valid_parameter_types[param]
+    param_test_generator(tmp_path, param, "nope", "type", vptypes)
+    default_test_generator(tmp_path, param, 0)
