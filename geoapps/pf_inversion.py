@@ -205,12 +205,9 @@ def start_inversion(inputfile):
 
 def inversion(inputfile):
 
-    workDir = inputfile.workpath
     inputfile.load()
     input_dict = inputfile.data
-
-    params = Params(inputfile)
-    outDir = params.result_folder
+    params = Params.from_input_file(inputfile)
 
     # Read json file and overwrite defaults
 
@@ -246,15 +243,15 @@ def inversion(inputfile):
 
     ###############################################################################
     # Deal with the data
-    if "inducing_field_aid" in list(input_dict.keys()):
-        inducing_field = np.asarray(input_dict["inducing_field_aid"])
-
-        assert (
-            len(inducing_field) == 3 and inducing_field[0] > 0
-        ), "Inducing field must include H, INCL, DECL"
-
-    else:
-        inducing_field = None
+    # if "inducing_field_aid" in list(input_dict.keys()):
+    #     inducing_field = np.asarray(input_dict["inducing_field_aid"])
+    #
+    #     assert (
+    #         len(inducing_field) == 3 and inducing_field[0] > 0
+    #     ), "Inducing field must include H, INCL, DECL"
+    #
+    # else:
+    #     inducing_field = None
 
     if "resolution" in input_dict.keys():
         resolution = input_dict["resolution"]
@@ -271,13 +268,13 @@ def inversion(inputfile):
     if input_dict["data"]["type"] in ["ubc_grav"]:
 
         survey = Utils.io_utils.readUBCgravityObservations(
-            workDir + input_dict["data"]["name"]
+            params.workpath + input_dict["data"]["name"]
         )
 
     elif input_dict["data"]["type"] in ["ubc_mag"]:
 
         survey, H0 = Utils.io_utils.readUBCmagneticsObservations(
-            workDir + input_dict["data"]["name"]
+            params.workpath + input_dict["data"]["name"]
         )
         survey.components = ["tmi"]
 
@@ -343,15 +340,15 @@ def inversion(inputfile):
         else:
             xyz_loc = vertices[window_ind, :]
 
-        if "gravity" in params.itype:
+        if "gravity" in params.inversion_type:
             receivers = PF.BaseGrav.RxObs(xyz_loc)
             source = PF.BaseGrav.SrcField([receivers])
             survey = PF.BaseGrav.LinearSurvey(source)
         else:
             if window is not None:
-                inducing_field[2] -= window["azimuth"]
+                params.inducing_field_aid[2] -= window["azimuth"]
             receivers = PF.BaseMag.RxObs(xyz_loc)
-            source = PF.BaseMag.SrcField([receivers], param=inducing_field)
+            source = PF.BaseMag.SrcField([receivers], param=params.inducing_field_aid)
             survey = PF.BaseMag.LinearSurvey(source)
 
         survey.dobs = data[window_ind, :].ravel()
@@ -401,23 +398,27 @@ def inversion(inputfile):
 
         if input_dict["data"]["type"] in ["ubc_mag"]:
             Utils.io_utils.writeUBCmagneticsObservations(
-                os.path.splitext(outDir + input_dict["data_file"])[0] + "_trend.mag",
+                os.path.splitext(params.result_folder + input_dict["data_file"])[0]
+                + "_trend.mag",
                 survey,
                 data_trend,
             )
             Utils.io_utils.writeUBCmagneticsObservations(
-                os.path.splitext(outDir + input_dict["data_file"])[0] + "_detrend.mag",
+                os.path.splitext(params.result_folder + input_dict["data_file"])[0]
+                + "_detrend.mag",
                 survey,
                 survey.dobs,
             )
         elif input_dict["data"]["type"] in ["ubc_grav"]:
             Utils.io_utils.writeUBCgravityObservations(
-                os.path.splitext(outDir + input_dict["data_file"])[0] + "_trend.grv",
+                os.path.splitext(params.result_folder + input_dict["data_file"])[0]
+                + "_trend.grv",
                 survey,
                 data_trend,
             )
             Utils.io_utils.writeUBCgravityObservations(
-                os.path.splitext(outDir + input_dict["data_file"])[0] + "_detrend.grv",
+                os.path.splitext(params.result_folder + input_dict["data_file"])[0]
+                + "_detrend.grv",
                 survey,
                 survey.dobs,
             )
@@ -472,7 +473,8 @@ def inversion(inputfile):
             else:
                 if "file" in input_dict["topography"].keys():
                     topo = np.genfromtxt(
-                        workDir + input_dict["topography"]["file"], skip_header=1
+                        params.workpath + input_dict["topography"]["file"],
+                        skip_header=1,
                     )
                 elif "GA_object" in list(input_dict["topography"].keys()):
                     workspace = Workspace(input_dict["workspace"])
@@ -746,7 +748,7 @@ def inversion(inputfile):
     else:
         output_tile_files = False
 
-    if "mvi" in params.itype:
+    if "mvi" in params.inversion_type:
         vector_property = True
         n_blocks = 3
         if len(model_norms) == 4:
@@ -786,7 +788,7 @@ def inversion(inputfile):
         """
         data_ind = np.kron(ind_t, np.ones(len(survey.components))).astype("bool")
         # Create new survey
-        if params.itype == "gravity":
+        if params.inversion_type == "gravity":
             rxLoc_t = PF.BaseGrav.RxObs(rxLoc[ind_t, :])
             srcField = PF.BaseGrav.SrcField([rxLoc_t])
             local_survey = PF.BaseGrav.LinearSurvey(
@@ -796,7 +798,7 @@ def inversion(inputfile):
             local_survey.std = survey.std[data_ind]
             local_survey.ind = np.where(ind_t)[0]
 
-        elif params.itype in ["magnetics", "mvi", "mvic"]:
+        elif params.inversion_type in ["magnetics", "mvi", "mvic"]:
             rxLoc_t = PF.BaseMag.RxObs(rxLoc[ind_t, :])
             srcField = PF.BaseMag.SrcField([rxLoc_t], param=survey.srcField.param)
             local_survey = PF.BaseMag.LinearSurvey(
@@ -970,8 +972,8 @@ def inversion(inputfile):
     if isinstance(mesh, Mesh.TreeMesh):
         Mesh.TreeMesh.writeUBC(
             mesh,
-            outDir + "OctreeMeshGlobal.msh",
-            models={outDir + "ActiveSurface.act": activeCells},
+            params.result_folder + "OctreeMeshGlobal.msh",
+            models={params.result_folder + "ActiveSurface.act": activeCells},
         )
     else:
         mesh.writeModelUBC("ActiveSurface.act", activeCells)
@@ -1162,7 +1164,7 @@ def inversion(inputfile):
         activeCells_t = np.ones(local_mesh.nC, dtype="bool")
 
         # Create reduced identity map
-        if "mvi" in params.itype:
+        if "mvi" in params.inversion_type:
             nBlock = 3
         else:
             nBlock = 1
@@ -1173,13 +1175,13 @@ def inversion(inputfile):
 
         activeCells_t = tile_map.activeLocal
 
-        if params.itype == "gravity":
+        if params.inversion_type == "gravity":
             prob = PF.Gravity.GravityIntegral(
                 local_mesh,
                 rhoMap=tile_map * model_map,
                 actInd=activeCells_t,
                 parallelized=parallelized,
-                Jpath=outDir + "Tile" + str(ind) + ".zarr",
+                Jpath=params.result_folder + "Tile" + str(ind) + ".zarr",
                 maxRAM=max_ram,
                 forwardOnly=params.forward_only,
                 n_cpu=n_cpu,
@@ -1188,13 +1190,13 @@ def inversion(inputfile):
                 chunk_by_rows=chunk_by_rows,
             )
 
-        elif params.itype == "magnetics":
+        elif params.inversion_type == "magnetics":
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
                 actInd=activeCells_t,
                 parallelized=parallelized,
-                Jpath=outDir + "Tile" + str(ind) + ".zarr",
+                Jpath=params.result_folder + "Tile" + str(ind) + ".zarr",
                 maxRAM=max_ram,
                 forwardOnly=params.forward_only,
                 n_cpu=n_cpu,
@@ -1203,13 +1205,13 @@ def inversion(inputfile):
                 chunk_by_rows=chunk_by_rows,
             )
 
-        elif "mvi" in params.itype:
+        elif "mvi" in params.inversion_type:
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
                 actInd=activeCells_t,
                 parallelized=parallelized,
-                Jpath=outDir + "Tile" + str(ind) + ".zarr",
+                Jpath=params.result_folder + "Tile" + str(ind) + ".zarr",
                 maxRAM=max_ram,
                 forwardOnly=params.forward_only,
                 modelType="vector",
@@ -1266,9 +1268,9 @@ def inversion(inputfile):
 
             point_object.add_data({"Forward_" + comp: {"values": val[sorting]}})
 
-        if "mvi" in params.itype:
+        if "mvi" in params.inversion_type:
             Utils.io_utils.writeUBCmagneticsObservations(
-                outDir + "/Obs.mag", survey, dpred
+                params.result_folder + "/Obs.mag", survey, dpred
             )
             mesh_object.add_data(
                 {
@@ -1313,9 +1315,10 @@ def inversion(inputfile):
     elif isinstance(mesh, Mesh.TreeMesh):
         Mesh.TreeMesh.writeUBC(
             mesh,
-            outDir + "OctreeMeshGlobal.msh",
+            params,
+            result_folder + "OctreeMeshGlobal.msh",
             models={
-                outDir
+                params.result_folder
                 + "SensWeights.mod": (activeCellsMap * model_map * global_weights)[
                     : mesh.nC
                 ]
@@ -1409,7 +1412,7 @@ def inversion(inputfile):
     # Add a list of directives to the inversion
     directiveList = []
 
-    if vector_property and params.itype == "mvi":
+    if vector_property and params.inversion_type == "mvi":
         directiveList.append(
             Directives.VectorInversion(
                 chifact_target=target_chi * 2,
@@ -1495,12 +1498,12 @@ def inversion(inputfile):
     #     Directives.SaveUBCModelEveryIteration(
     #         mapping=activeCellsMap * model_map,
     #         mesh=mesh,
-    #         fileName=outDir + params.itype,
-    #         vector=input_dict["inversion_type"][0:3] == 'mvi'
+    #         fileName=params.result_folder + params.inversion_type,
+    #         vector=params.inversion_type[0:3] == 'mvi'
     #     )
     # )
     # save_output = Directives.SaveOutputEveryIteration()
-    # save_output.fileName = workDir + "Output"
+    # save_output.fileName = params.workpath + "Output"
     # directiveList.append(save_output)
 
     # Put all the parts together

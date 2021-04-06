@@ -13,7 +13,7 @@ import pytest
 from geoapps.io import InputFile
 from geoapps.io.utils import create_work_path
 
-######### Convenience functions ##########
+######################  Setup  ###########################
 
 input_dict = {"inversion_type": "mvi", "core_cell_size": 2}
 tmpfile = lambda path: os.path.join(path, "test.json")
@@ -24,7 +24,7 @@ def tmp_input_file(filepath, input_dict):
         json.dump(input_dict, outfile)
 
 
-########### tests ###############
+######################  Tests  ###########################
 
 
 def test_filepath_extension():
