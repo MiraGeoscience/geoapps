@@ -6,26 +6,28 @@
 #  (see LICENSE file at the root of this source code package).
 
 import json
+import os
 
-from .constants import valid_parameter_values, valid_parameters
+import numpy as np
+
 from .utils import (
     create_default_output_path,
     create_relative_output_path,
     create_work_path,
 )
+from .validators import InputValidator
 
 
 class InputFile:
 
-    _valid_parameters = valid_parameters
-    _required_parameters = ["inversion_type", "core_cell_size"]
     _valid_extensions = ["json"]
 
     def __init__(self, filepath):
         self.filepath = filepath
         self.workpath = create_work_path(filepath)
         self.data = None
-        self.itype = None
+        self.validator = None
+        self.isloaded = False
 
     @property
     def filepath(self):
@@ -42,46 +44,50 @@ class InputFile:
         """ Loads input file contents to dictionary. """
         with open(self.filepath) as f:
             self.data = json.load(f)
-            self._validate_required_parameters()
-            self._validate_parameters()
-            self.itype = self.data["inversion_type"]
-
-    def _validate_parameters(self):
-        """ Ensures that all the input files keys are accepted strings."""
-        for k in self.data.keys():
-            if k not in self._valid_parameters:
-                raise ValueError(f"Encountered an invalid input parameter: {k}.")
-
-    def _validate_required_parameters(self):
-        """ Ensures that all required input file keys are present."""
-        missing = []
-        for param in self._required_parameters:
-            if param not in self.data.keys():
-                missing.append(param)
-        if missing:
-            raise ValueError(f"Missing required parameter(s): {*missing,}.")
+            self.validator = InputValidator(self.data)
+        self.isloaded = True
 
 
 class Params:
+    def __init__(self, inversion_type, core_cell_size, workpath=os.path.abspath(".")):
+        self.validator = InputValidator()
+        self.inversion_type = inversion_type
+        self.core_cell_size = core_cell_size
+        self.workpath = workpath
+        self.inversion_style = "voxel"
+        self.forward_only = False
+        self.result_folder = os.path.join(workpath, "SimPEG_PFInversion")
+        self.inducing_field_aid = None
 
-    _valid_parameter_values = valid_parameter_values
+    @classmethod
+    def from_input_file(cls, ifile):
+        """ Construct Params object from InputFile instance. """
 
-    def __init__(self, inputfile):
-        self.itype = inputfile.itype
-        self.workpath = inputfile.workpath
-        self._inversion_style = "voxel"
-        self._forward_only = False
-        self._result_folder = create_default_output_path(inputfile.filepath)
-        self._init_params(inputfile)
+        if not ifile.isloaded:
+            ifile.load()
+        inversion_type = ifile.data["inversion_type"]
+        core_cell_size = ifile.data["core_cell_size"]
+        p = cls(inversion_type, core_cell_size, ifile.workpath)
+        p._init_params(ifile)
+        return p
 
     @property
-    def itype(self):
-        return self._itype
+    def inversion_type(self):
+        return self._inversion_type
 
-    @itype.setter
-    def itype(self, val):
-        self._validate_parameter_value("inversion_type", val)
-        self._itype = val
+    @inversion_type.setter
+    def inversion_type(self, val):
+        self.validator.validate("inversion_type", val)
+        self._inversion_type = val
+
+    @property
+    def core_cell_size(self):
+        return self._core_cell_size
+
+    @core_cell_size.setter
+    def core_cell_size(self, val):
+        self.validator.validate("core_cell_size", val)
+        self._core_cell_size = val
 
     @property
     def inversion_style(self):
@@ -89,7 +95,7 @@ class Params:
 
     @inversion_style.setter
     def inversion_style(self, val):
-        self._validate_parameter_value("inversion_style", val)
+        self.validator.validate("inversion_style", val)
         self._inversion_style = val
 
     @property
@@ -98,7 +104,7 @@ class Params:
 
     @forward_only.setter
     def forward_only(self, val):
-        self._validate_parameter_value("forward_only", val)
+        self.validator.validate("forward_only", val)
         self._forward_only = val
 
     @property
@@ -107,8 +113,25 @@ class Params:
 
     @result_folder.setter
     def result_folder(self, val):
-        self._validate_parameter_value("result_folder", val)
+        self.validator.validate("result_folder", val)
+        sep = os.path.sep
+        if val.split(sep)[-1]:
+            val += sep
         self._result_folder = val
+
+    @property
+    def inducing_field_aid(self):
+        return self._inducing_field_aid
+
+    @inducing_field_aid.setter
+    def inducing_field_aid(self, val):
+        if val is None:
+            self._inducing_field_aid = val
+            return
+        self.validator.validate("inducing_field_aid", val)
+        if val[0] <= 0:
+            raise ValueError("inducing_field_aid[0] must be greater than 0.")
+        self._inducing_field_aid = np.array(val)
 
     def _override_default(self, param, value):
         """ Override parameter default value. """
@@ -116,21 +139,9 @@ class Params:
 
     def _init_params(self, inputfile):
         """ Overrides default parameter values with input file values. """
-        for param, val in inputfile.data.items():
+        for param, value in inputfile.data.items():
             if param == "result_folder":
-                self.result_folder = create_relative_output_path(
-                    inputfile.workpath, val
-                )
+                op = create_relative_output_path(inputfile.workpath, value)
+                self._override_default(param, op)
             else:
-                self._override_default(param, val)
-
-    def _validate_parameter_value(self, param, val):
-        """ Validates parameter values against accepted values. """
-        vpvals = self._valid_parameter_values[param]
-        nvals = len(vpvals)
-        if nvals > 1:
-            msg = f"Invalid {param} value. Must be one of: {*vpvals,}"
-        elif nvals == 1:
-            msg = f"Invalid {param} value.  Must be: {vpvals[0]}"
-        if val not in vpvals:
-            raise ValueError(msg)
+                self._override_default(param, value)
