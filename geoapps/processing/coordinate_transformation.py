@@ -107,7 +107,7 @@ class CoordinateTransformation(BaseApplication):
                                 )
                             else:
                                 _ = geotiff_2_grid(
-                                    temp_work, temp_file_out, grid_object=new_obj
+                                    temp_work, temp_file_out, grid=new_obj
                                 )
 
                             del grid

@@ -30,7 +30,6 @@ from ipywidgets import (
     Label,
     Layout,
     SelectMultiple,
-    Text,
     ToggleButton,
     ToggleButtons,
     VBox,
@@ -40,13 +39,13 @@ from scipy.spatial import cKDTree
 
 from geoapps.selection import LineOptions, ObjectDataSelection
 from geoapps.utils import (
+    LineDataDerivatives,
     colors,
     find_value,
     geophysical_systems,
     hex_to_rgb,
     rotate_azimuth_dip,
     running_mean,
-    signal_processing_1d,
 )
 
 
@@ -2323,8 +2322,8 @@ def find_anomalies(
 
     :return: list of dict
     """
-    profile = signal_processing_1d(
-        locations[line_indices], None, smoothing=smoothing, residual=use_residual
+    profile = LineDataDerivatives(
+        locations=locations[line_indices], smoothing=smoothing, residual=use_residual
     )
     locs = profile.locations_resampled
 
@@ -2411,7 +2410,7 @@ def find_anomalies(
                 / (np.abs(np.min([values[start], values[end]])) + 2e-32)
             ) * 100.0
             delta_x = locs[end] - locs[start]
-            amplitude = np.sum(np.abs(values[start:end])) * profile.hx
+            amplitude = np.sum(np.abs(values[start:end])) * profile.sampling
             if (delta_amp > min_amplitude) & (delta_x > min_width):
                 anomalies["channel"] += [cc]
                 anomalies["start"] += [start]
