@@ -389,10 +389,6 @@ def inversion(inputfile):
 
             survey.dobs -= data_trend
 
-            if survey.std is None and "new_uncert" in list(input_dict.keys()):
-                # In case uncertainty hasn't yet been set (e.g., geosoft grids)
-                survey.std = np.ones(survey.dobs.shape)
-
             if params.data_format == "ubc_mag":
                 Utils.io_utils.writeUBCmagneticsObservations(
                     os.path.splitext(params.result_folder + params.data_file)[0]
@@ -422,17 +418,13 @@ def inversion(inputfile):
     else:
         data_trend = 0.0
 
-    # Update the specified data uncertainty
-    if "new_uncert" in list(input_dict.keys()) and input_dict["data_type"] in [
-        "ubc_mag",
-        "ubc_grav",
-    ]:
-        new_uncert = input_dict["new_uncert"]
-        if new_uncert:
-            assert len(new_uncert) == 2 and all(
-                np.asarray(new_uncert) >= 0
-            ), "New uncertainty requires pct fraction (0-1) and floor."
-            survey.std = np.maximum(abs(new_uncert[0] * survey.dobs), new_uncert[1])
+        # Update the specified data uncertainty
+        dopts = ["ubc_mag", "ubc_grav"]
+    if (params.new_uncert is not None) & (params.data_format in dopts):
+        if params.new_uncert:
+            perc = params.new_uncert[0]
+            floor = params.new_uncert[1]
+            survey.std = np.maximum(abs(perc * survey.dobs), floor)
 
     if survey.std is None:
         survey.std = survey.dobs * 0 + 1  # Default
@@ -441,42 +433,42 @@ def inversion(inputfile):
 
     ###############################################################################
     # Manage other inputs
-    if "input_mesh_file" in list(input_dict.keys()):
-        workspace = Workspace(input_dict["save_to_geoh5"])
-        input_mesh = workspace.get_entity(input_dict["input_mesh_file"])[0]
+    if params.input_mesh is not None:
+        workspace = Workspace(params.save_to_geoh5)
+        input_mesh = workspace.get_entity(params.input_mesh_file)[0]
     else:
         input_mesh = None
 
-    if "inversion_mesh_type" in list(input_dict.keys()):
-        # Determine if the mesh is tensor or tree
-        inversion_mesh_type = input_dict["inversion_mesh_type"]
-    else:
-        inversion_mesh_type = "TREE"
+    # if "inversion_mesh_type" in list(input_dict.keys()):
+    #     # Determine if the mesh is tensor or tree
+    #     inversion_mesh_type = input_dict["inversion_mesh_type"]
+    # else:
+    #     inversion_mesh_type = "TREE"
 
-    if "shift_mesh_z0" in list(input_dict.keys()):
-        shift_mesh_z0 = input_dict["shift_mesh_z0"]
-    else:
-        shift_mesh_z0 = None
+    # if "shift_mesh_z0" in list(input_dict.keys()):
+    #     shift_mesh_z0 = input_dict["shift_mesh_z0"]
+    # else:
+    #     shift_mesh_z0 = None
 
     def get_topography():
         topo = None
 
-        if "topography" in list(input_dict.keys()):
+        if params.topography is not None:
             topo = survey.rxLoc.copy()
-            if "drapped" in input_dict["topography"].keys():
-                topo[:, 2] += input_dict["topography"]["drapped"]
-            elif "constant" in input_dict["topography"].keys():
-                topo[:, 2] = input_dict["topography"]["constant"]
+            if "draped" in params.topography.keys():
+                topo[:, 2] += params.topography["draped"]
+            elif "constant" in params.topography.keys():
+                topo[:, 2] = params.topography["constant"]
             else:
-                if "file" in input_dict["topography"].keys():
+                if "file" in params.topography.keys():
                     topo = np.genfromtxt(
-                        params.workpath + input_dict["topography"]["file"],
+                        params.workpath + params.topography["file"],
                         skip_header=1,
                     )
-                elif "GA_object" in list(input_dict["topography"].keys()):
+                elif "GA_object" in params.topography.keys():
                     workspace = Workspace(params.workspace)
                     topo_entity = workspace.get_entity(
-                        input_dict["topography"]["GA_object"]["name"]
+                        params.topography["GA_object"]["name"]
                     )[0]
 
                     if isinstance(topo_entity, Grid2D):
@@ -484,9 +476,9 @@ def inversion(inputfile):
                     else:
                         topo = topo_entity.vertices
 
-                    if input_dict["topography"]["GA_object"]["data"] != "Z":
+                    if params.topography["GA_object"]["data"] != "Z":
                         data = topo_entity.get_data(
-                            input_dict["topography"]["GA_object"]["data"]
+                            params.topography["GA_object"]["data"]
                         )[0]
                         topo[:, 2] = data.values
 
@@ -514,10 +506,10 @@ def inversion(inputfile):
 
     # Get data locations
     locations = survey.srcField.rxList[0].locs
-    if "receivers_offset" in list(input_dict.keys()):
+    if params.receivers_offset is not None:
 
-        if "constant" in list(input_dict["receivers_offset"].keys()):
-            bird_offset = np.asarray(input_dict["receivers_offset"]["constant"])
+        if "constant" in params.receivers_offset.keys():
+            bird_offset = np.asarray(params.receivers_offset["constant"])
 
             for ind, offset in enumerate(bird_offset):
                 locations[:, ind] += offset
@@ -531,20 +523,16 @@ def inversion(inputfile):
                 tree = cKDTree(topo[:, :2])
                 _, ind = tree.query(locations[np.isnan(z_topo), :2])
                 z_topo[np.isnan(z_topo)] = topo[ind, 2]
-            if "constant_drape" in list(input_dict["receivers_offset"].keys()):
-                bird_offset = np.asarray(
-                    input_dict["receivers_offset"]["constant_drape"]
-                )
+            if "constant_drape" in params.receivers_offset.keys():
+                bird_offset = np.asarray(params.receivers_offset["constant_drape"])
                 locations[:, 2] = z_topo
-            elif "radar_drape" in list(input_dict["receivers_offset"].keys()):
-                bird_offset = np.asarray(
-                    input_dict["receivers_offset"]["radar_drape"][:3]
-                )
+            elif "radar_drape" in params.receivers_offset.keys():
+                bird_offset = np.asarray(params.receivers_offset["radar_drape"][:3])
                 locations[:, 2] = z_topo
 
-                if entity.get_data(input_dict["receivers_offset"]["radar_drape"][3]):
+                if entity.get_data(params.receivers_offset["radar_drape"][3]):
                     z_channel = entity.get_data(
-                        input_dict["receivers_offset"]["radar_drape"][3]
+                        params.receivers_offset["radar_drape"][3]
                     )[0].values
                     locations[:, 2] += z_channel[window_ind]
 
@@ -555,45 +543,45 @@ def inversion(inputfile):
 
     topo_interp_function = NearestNDInterpolator(topo[:, :2], topo[:, 2])
 
-    if "chi_factor" in list(input_dict.keys()):
-        target_chi = input_dict["chi_factor"]
-    else:
-        target_chi = 1
+    # if "chi_factor" in list(input_dict.keys()):
+    #     target_chi = input_dict["chi_factor"]
+    # else:
+    #     target_chi = 1
 
-    if "model_norms" in list(input_dict.keys()):
-        model_norms = input_dict["model_norms"]
+    # if "model_norms" in list(input_dict.keys()):
+    #     model_norms = input_dict["model_norms"]
+    #
+    # else:
+    #     model_norms = [2, 2, 2, 2]
 
-    else:
-        model_norms = [2, 2, 2, 2]
+    # if "max_iterations" in list(input_dict.keys()):
+    #
+    #     max_iterations = input_dict["max_iterations"]
+    #     assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
+    # else:
+    #     if np.all(np.r_[params.model_norms] == 2):
+    #         # Cartesian or not sparse
+    #         max_iterations = 10
+    #     else:
+    #         # Spherical or sparse
+    #         max_iterations = 40
+    #
+    # if "max_cg_iterations" in list(input_dict.keys()):
+    #     max_cg_iterations = input_dict["max_cg_iterations"]
+    # else:
+    #     max_cg_iterations = 30
 
-    if "max_iterations" in list(input_dict.keys()):
+    # if "tol_cg" in list(input_dict.keys()):
+    #     tol_cg = input_dict["tol_cg"]
+    # else:
+    #     tol_cg = 1e-4
 
-        max_iterations = input_dict["max_iterations"]
-        assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
-    else:
-        if np.all(np.r_[model_norms] == 2):
-            # Cartesian or not sparse
-            max_iterations = 10
-        else:
-            # Spherical or sparse
-            max_iterations = 40
-
-    if "max_cg_iterations" in list(input_dict.keys()):
-        max_cg_iterations = input_dict["max_cg_iterations"]
-    else:
-        max_cg_iterations = 30
-
-    if "tol_cg" in list(input_dict.keys()):
-        tol_cg = input_dict["tol_cg"]
-    else:
-        tol_cg = 1e-4
-
-    if "max_global_iterations" in list(input_dict.keys()):
-        max_global_iterations = input_dict["max_global_iterations"]
-        assert max_global_iterations >= 0, "Max IRLS iterations must be >= 0"
-    else:
-        # Spherical or sparse
-        max_global_iterations = 100
+    # if "max_global_iterations" in list(input_dict.keys()):
+    #     max_global_iterations = input_dict["max_global_iterations"]
+    #     assert max_global_iterations >= 0, "Max IRLS iterations must be >= 0"
+    # else:
+    #     # Spherical or sparse
+    #     max_global_iterations = 100
 
     if "gradient_type" in list(input_dict.keys()):
         gradient_type = input_dict["gradient_type"]
@@ -748,8 +736,8 @@ def inversion(inputfile):
     if "mvi" in params.inversion_type:
         vector_property = True
         n_blocks = 3
-        if len(model_norms) == 4:
-            model_norms = model_norms * 3
+        if len(params.model_norms) == 4:
+            params.model_norms = params.model_norms * 3
     else:
         vector_property = False
         n_blocks = 1
@@ -810,15 +798,17 @@ def inversion(inputfile):
             topo_elevations_at_data_locs,
             core_cell_size,
             padding_distance=padding_distance,
-            mesh_type=inversion_mesh_type,
+            mesh_type=params.inversion_mesh_type,
             base_mesh=input_mesh,
             depth_core=depth_core,
         )
 
-        if shift_mesh_z0 is not None:
-            local_mesh.x0 = np.r_[local_mesh.x0[0], local_mesh.x0[1], shift_mesh_z0]
+        if params.shift_mesh_z0 is not None:
+            local_mesh.x0 = np.r_[
+                local_mesh.x0[0], local_mesh.x0[1], params.shift_mesh_z0
+            ]
 
-        if inversion_mesh_type.upper() == "TREE":
+        if params.inversion_mesh_type.upper() == "TREE":
             if topo is not None:
                 local_mesh = meshutils.refine_tree_xyz(
                     local_mesh,
@@ -871,15 +861,17 @@ def inversion(inputfile):
             topo_elevations_at_data_locs,
             core_cell_size,
             padding_distance=padding_distance,
-            mesh_type=inversion_mesh_type,
+            mesh_type=params.inversion_mesh_type,
             base_mesh=input_mesh,
             depth_core=depth_core,
         )
 
-        if shift_mesh_z0 is not None:
-            local_mesh.x0 = np.r_[local_mesh.x0[0], local_mesh.x0[1], shift_mesh_z0]
+        if params.shift_mesh_z0 is not None:
+            local_mesh.x0 = np.r_[
+                local_mesh.x0[0], local_mesh.x0[1], params.shift_mesh_z0
+            ]
 
-        if inversion_mesh_type.upper() == "TREE":
+        if params.inversion_mesh_type.upper() == "TREE":
             if topo is not None:
                 local_mesh = meshutils.refine_tree_xyz(
                     local_mesh,
@@ -929,14 +921,16 @@ def inversion(inputfile):
 
     sorting = np.argsort(np.hstack(sorting))
 
-    if (input_mesh is None) or (input_mesh._meshType != inversion_mesh_type.upper()):
+    if (params.input_mesh is None) or (
+        params.input_mesh._meshType != params.inversion_mesh_type.upper()
+    ):
 
         print("Creating Global Octree")
         mesh = meshutils.mesh_builder_xyz(
             topo_elevations_at_data_locs,
             core_cell_size,
             padding_distance=padding_distance,
-            mesh_type=inversion_mesh_type,
+            mesh_type=params.inversion_mesh_type,
             base_mesh=input_mesh,
             depth_core=depth_core,
         )
@@ -946,10 +940,10 @@ def inversion(inputfile):
         #         vertices[ind, :2], params.window['center'], params.window['azimuth']
         #     )
         #     xyz_loc = np.c_[xy_rot, vertices[ind, 2]]
-        if shift_mesh_z0 is not None:
-            mesh.x0 = np.r_[mesh.x0[0], mesh.x0[1], shift_mesh_z0]
+        if params.shift_mesh_z0 is not None:
+            mesh.x0 = np.r_[mesh.x0[0], mesh.x0[1], params.shift_mesh_z0]
 
-        if inversion_mesh_type.upper() == "TREE":
+        if params.inversion_mesh_type.upper() == "TREE":
             for local_mesh in local_meshes:
 
                 mesh.insert_cells(
@@ -1344,7 +1338,7 @@ def inversion(inputfile):
             alpha_y=alphas[2],
             alpha_z=alphas[3],
         )
-        reg.norms = np.c_[model_norms].T
+        reg.norms = np.c_[params.model_norms].T
         reg.cell_weights = global_weights
         reg.mref = mref
 
@@ -1363,7 +1357,7 @@ def inversion(inputfile):
         )
 
         reg_p.cell_weights = regularization_map.p * global_weights
-        reg_p.norms = np.c_[model_norms].T
+        reg_p.norms = np.c_[params.model_norms].T
         reg_p.mref = mref
 
         reg_s = Regularization.Sparse(
@@ -1378,7 +1372,7 @@ def inversion(inputfile):
         )
 
         reg_s.cell_weights = regularization_map.s * global_weights
-        reg_s.norms = np.c_[model_norms].T
+        reg_s.norms = np.c_[params.model_norms].T
         reg_s.mref = mref
 
         reg_t = Regularization.Sparse(
@@ -1393,7 +1387,7 @@ def inversion(inputfile):
         )
 
         reg_t.cell_weights = regularization_map.t * global_weights
-        reg_t.norms = np.c_[model_norms].T
+        reg_t.norms = np.c_[params.model_norms].T
         reg_t.mref = mref
 
         # Assemble the 3-component regularizations
@@ -1401,12 +1395,12 @@ def inversion(inputfile):
 
     # Specify how the optimization will proceed, set susceptibility bounds to inf
     opt = Optimization.ProjectedGNCG(
-        maxIter=max_iterations,
+        maxIter=params.max_iterations,
         lower=lower_bound,
         upper=upper_bound,
         maxIterLS=20,
-        maxIterCG=max_cg_iterations,
-        tolCG=tol_cg,
+        maxIterCG=params.max_cg_iterations,
+        tolCG=params.tol_cg,
         stepOffBoundsFact=1e-8,
         LSshorten=0.25,
     )
@@ -1418,7 +1412,7 @@ def inversion(inputfile):
     if vector_property and params.inversion_type == "mvi":
         directiveList.append(
             Directives.VectorInversion(
-                chifact_target=target_chi * 2,
+                chifact_target=params.chi_factor * 2,
             )
         )
 
@@ -1433,7 +1427,7 @@ def inversion(inputfile):
     directiveList.append(
         Directives.Update_IRLS(
             f_min_change=1e-4,
-            maxIRLSiter=max_iterations,
+            maxIRLSiter=params.max_iterations,
             minGNiter=1,
             beta_tol=0.5,
             prctile=prctile,
@@ -1442,7 +1436,7 @@ def inversion(inputfile):
             coolEps_q=True,
             coolEpsFact=cool_eps_fact,
             betaSearch=False,
-            chifact_target=target_chi,
+            chifact_target=params.chi_factor,
         )
     )
 
@@ -1517,7 +1511,11 @@ def inversion(inputfile):
         "Start Inversion: "
         + params.inversion_style
         + "\nTarget Misfit: %.2e (%.0f data with chifact = %g) / 2"
-        % (0.5 * target_chi * len(survey.std), len(survey.std), target_chi)
+        % (
+            0.5 * params.chi_factor * len(survey.std),
+            len(survey.std),
+            params.chi_factor,
+        )
     )
 
     # Run the inversion
@@ -1532,7 +1530,11 @@ def inversion(inputfile):
 
     print(
         "Target Misfit: %.3e (%.0f data with chifact = %g)"
-        % (0.5 * target_chi * len(survey.std), len(survey.std), target_chi)
+        % (
+            0.5 * params.chi_factor * len(survey.std),
+            len(survey.std),
+            params.chi_factor,
+        )
     )
     print(
         "Final Misfit:  %.3e"

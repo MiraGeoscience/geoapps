@@ -49,6 +49,15 @@ class InputValidator:
                     msg = "Input file must contain an 'input_file' path"
                     msg += " for data types 'ubc_grav' and 'ubc_mag'."
                     raise ValueError(msg)
+        elif "input_mesh" in input.keys():
+            if "save_to_geoh5" not in input.keys():
+                msg = "Input file must contain a 'save_to_geoh5' path if"
+                msg += " 'input_mesh' provided."
+                raise ValueError(msg)
+            if "input_mesh_file" not in input.keys():
+                msg = "Input file must contain a 'input_mesh_file' path if"
+                msg += " 'input_mesh' provided."
+                raise ValueError(msg)
 
         for k, v in input.items():
             self.validate(k, v)
@@ -91,7 +100,6 @@ class InputValidator:
         vptypes = valid_parameter_types[param]
         tnames = [t.__name__ for t in vptypes]
         msg = self._param_validation_msg(param, "type", tnames)
-
         if self._isiterable(value):
             if not all(type(v) in vptypes for v in value):
                 raise ValueError(msg)
@@ -112,14 +120,16 @@ class InputValidator:
         vpkeys = valid_parameter_keys[param]
         msg = self._param_validation_msg(param, "keys", vpkeys)
 
-        if not all(k in value.keys() for k in vpkeys):
+        if not all(k in vpkeys for k in value.keys()):
             raise ValueError(msg)
 
     def _param_validation_msg(self, param, validation_type, validations):
         """ Generate ValueError message for parameter validation. """
 
         if validation_type == "keys":
-            msg = f"Invalid {param} {validation_type}. Must be: {*validations,}."
+            msg = (
+                f"Invalid {param} {validation_type}. Must be one of : {*validations,}."
+            )
         elif validation_type == "shape":
             msg = f"Invalid {param} {validation_type}. Must be: {validations}."
         else:
@@ -142,6 +152,6 @@ class InputValidator:
     def _isiterable(self, v):
         only_array_like = (not isinstance(v, str)) & (not isinstance(v, dict))
         if (hasattr(v, "__iter__")) & only_array_like:
-            return True if len(v) > 1 else False
+            return True
         else:
             return False
