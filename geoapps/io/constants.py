@@ -25,6 +25,7 @@ valid_parameters = [
     "chi_factor",
     "max_iterations",
     "max_cg_iterations",
+    "max_global_iterations",
     "n_cpu",
     "max_ram",
     "initial_beta_ratio",
@@ -44,6 +45,13 @@ valid_parameters = [
     "result_folder",
     "detrend",
     "data_file",
+    "new_uncert",
+    "input_mesh",
+    "save_to_geoh5",
+    "input_mesh_file",
+    "inversion_mesh_type",
+    "shift_mesh_z0",
+    "receivers_offset",
 ]
 
 required_parameters = ["inversion_type", "core_cell_size"]
@@ -52,6 +60,7 @@ valid_parameter_values = {
     "inversion_type": ["gravity", "magnetics", "mvi", "mvic"],
     "inversion_style": ["voxel"],
     "data_format": ["ubc_grav", "ubc_mag", "GA_object"],
+    "inversion_mesh_type": ["TREE"],
 }
 
 valid_parameter_types = {
@@ -71,11 +80,29 @@ valid_parameter_types = {
     "ignore_values": [str],
     "detrend": [dict],
     "data_file": [str],
+    "new_uncert": [int, float],
+    "input_mesh": [str],
+    "save_to_geoh5": [str],
+    "inversion_mesh_type": [str],
+    "shift_mesh_z0": [int, float],
+    "topography": [dict],
+    "receivers_offset": [dict],
+    "chi_factor": [int, float],
+    "model_norms": [int, float],
+    "max_iterations": [int],
+    "max_cg_iterations": [int],
+    "tol_cg": [int, float],
+    "max_global_iterations": [int],
 }
 
-valid_parameter_shapes = {"inducing_field_aid": (3,)}
+valid_parameter_shapes = {
+    "inducing_field_aid": (3,),
+    "new_uncert": (2,),
+}
 
 valid_parameter_keys = {
-    "window": ["center_x", "center_y", "width", "height", "azimuth"],
+    "window": ["center_x", "center_y", "width", "height", "azimuth", "center", "size"],
     "data_channels": ["tmi"],
+    "topography": ["GA_object", "draped", "constant", "file"],
+    "receivers_offset": ["constant", "constant_drape", "radar_drape"],
 }

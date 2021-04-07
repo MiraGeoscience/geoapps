@@ -67,6 +67,19 @@ class Params:
         self.ignore_values = None
         self.detrend = None
         self.data_file = None
+        self.new_uncert = None
+        self.input_mesh = None
+        self.save_to_geoh5 = None
+        self.inversion_mesh_type = "TREE"
+        self.shift_mesh_z0 = None
+        self.topography = None
+        self.receivers_offset = None
+        self.chi_factor = 1
+        self.model_norms = [2, 2, 2, 2]
+        self.max_iterations = 10
+        self.max_cg_iterations = 30
+        self.tol_cg = 1e-4
+        self.max_global_iterations = 100
 
     @classmethod
     def from_ifile(cls, ifile):
@@ -167,6 +180,11 @@ class Params:
             self._window = val
             return
         self.validator.validate("window", val)
+        req_keys = ["center_x", "center_y", "width", "height", "azimuth"]
+        if not all(k in val.keys() for k in req_keys):
+            msg = "Input parameter 'window' dictionary must contain "
+            msg += f"all of {*req_keys,}."
+            raise ValueError(msg)
         if "center" not in val.keys():
             val["center"] = [val["center_x"], val["center_y"]]
         if "size" not in val.keys():
@@ -207,10 +225,6 @@ class Params:
             self._data_channels = val
             return
         self.validator.validate("data_channels", val)
-        # for v in val.keys():
-        #     valid_keys = ["tmi"]
-        #     if v not in valid_keys:
-        #         raise ValueError(f"Invalid key {v}. Must be one of {*valid_keys,}")
         self._data_channels = val
 
     @property
@@ -264,6 +278,142 @@ class Params:
         self.validator.validate("data_file", val)
         self._data_file = val
 
+    @property
+    def new_uncert(self):
+        return self._new_uncert
+
+    @new_uncert.setter
+    def new_uncert(self, val):
+        if val is None:
+            self._new_uncert = val
+            return
+        self.validator.validate("new_uncert", val)
+        if (val[0] < 0) | (val[0] > 1):
+            msg = "Uncertainty percent (new_uncert[0]) must be between 0 and 1."
+            raise ValueError(msg)
+        if val[1] < 0:
+            msg = "Uncertainty floor (new_uncert[1]) must be greater than 0."
+            raise ValueError(msg)
+        self._new_uncert = val
+
+    @property
+    def input_mesh(self):
+        return self._input_mesh
+
+    @input_mesh.setter
+    def input_mesh(self, val):
+        self.validator.validate("input_mesh", val)
+        self._input_mesh = val
+
+    @property
+    def save_to_geoh5(self):
+        return self._save_to_geoh5
+
+    @save_to_geoh5.setter
+    def save_to_geoh5(self, val):
+        self.validator.validate("save_to_geoh5", val)
+        self._save_to_geoh5 = val
+
+    @property
+    def inversion_mesh_type(self):
+        return self._inversion_mesh_type
+
+    @inversion_mesh_type.setter
+    def inversion_mesh_type(self, val):
+        self.validator.validate("inversion_mesh_type", val)
+        self._inversion_mesh_type = val
+
+    @property
+    def shift_mesh_z0(self):
+        return self._shift_mesh_z0
+
+    @shift_mesh_z0.setter
+    def shift_mesh_z0(self, val):
+        self.validator.validate("shift_mesh_z0", val)
+        self._shift_mesh_z0 = val
+
+    @property
+    def topography(self):
+        return self._topography
+
+    @topography.setter
+    def topography(self, val):
+        self.validator.validate("topography", val)
+        self._topography = val
+
+    @property
+    def receivers_offset(self):
+        return self._receivers_offset
+
+    @receivers_offset.setter
+    def receivers_offset(self, val):
+        self.validator.validate("receivers_offset", val)
+        self._receivers_offset = val
+
+    @property
+    def chi_factor(self):
+        return self._chi_factor
+
+    @chi_factor.setter
+    def chi_factor(self, val):
+        self.validator.validate("chi_factor", val)
+        if val <= 0:
+            raise ValueError("Invalid chi_factor. Must be between 0 and 1.")
+        self._chi_factor = val
+
+    @property
+    def model_norms(self):
+        return self._model_norms
+
+    @model_norms.setter
+    def model_norms(self, val):
+        self.validator.validate("model_norms", val)
+        if len(val) % 4 != 0:
+            raise ValueError("Invalid 'model_norms' length.  Must be a multiple of 4.")
+        self._model_norms = val
+
+    @property
+    def max_iterations(self):
+        return self._max_iterations
+
+    @max_iterations.setter
+    def max_iterations(self, val):
+        self.validator.validate("max_iterations", val)
+        if val <= 0:
+            raise ValueError("Invalid 'max_iterations' value.  Must be > 0.")
+        self._max_iterations = val
+
+    @property
+    def max_cg_iterations(self):
+        return self._max_cg_iterations
+
+    @max_cg_iterations.setter
+    def max_cg_iterations(self, val):
+        self.validator.validate("max_cg_iterations", val)
+        if val <= 0:
+            raise ValueError("Invalid 'max_cg_iterations' value.  Must be > 0.")
+        self._max_cg_iterations = val
+
+    @property
+    def tol_cg(self):
+        return self._tol_cg
+
+    @tol_cg.setter
+    def tol_cg(self, val):
+        self.validator.validate("tol_cg", val)
+        self._tol_cg = val
+
+    @property
+    def max_global_iterations(self):
+        return self._max_global_iterations
+
+    @max_global_iterations.setter
+    def max_global_iterations(self, val):
+        self.validator.validate("max_global_iterations", val)
+        if val <= 0:
+            raise ValueError("Invalid 'max_global_iterations' value.  Must be > 0.")
+        self._max_global_iterations = val
+
     def _override_default(self, param, value):
         """ Override parameter default value. """
         self.__setattr__(param, value)
@@ -279,5 +429,9 @@ class Params:
                 self._override_default("data_name", value["name"])
                 if "channels" in value.keys():
                     self._override_default("data_channels", value["channels"])
+            elif param == "model_norms":
+                if "max_iterations" not in inputfile.data.keys():
+                    if not np.all(np.r_[value] == 2):
+                        self._override_default("max_iterations", 40)
             else:
                 self._override_default(param, value)

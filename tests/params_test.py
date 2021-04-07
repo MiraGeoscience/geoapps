@@ -161,15 +161,26 @@ def test_validate_resolution(tmp_path):
 
 def test_validate_window(tmp_path):
     param = "window"
-    test_dict = {"center_x": 2, "center_y": 2, "width": 2, "height": 2}
+    test_dict = {
+        "center_x": 2,
+        "center_y": 2,
+        "width": 2,
+        "height": 2,
+        "azimuth": 2,
+        "nogood": 2,
+    }
     param_test_generator(tmp_path, param, 1, "type")
     param_test_generator(tmp_path, param, test_dict, "keys")
     default_test_generator(tmp_path, param, None)
     params = Params("mvi", 2)
-    test_dict["azimuth"] = 2
+    test_dict.pop("nogood", None)
     params.window = test_dict
     assert params.window["center"] == [2, 2]
     assert params.window["size"] == [2, 2]
+    test_dict.pop("center_x", None)
+    with pytest.raises(ValueError) as excinfo:
+        params.window = test_dict
+    assert "Input parameter 'window'" in str(excinfo.value)
 
 
 def test_validate_workspace(tmp_path):
@@ -246,3 +257,147 @@ def test_validate_data_file(tmp_path):
     with pytest.raises(ValueError) as excinfo:
         params = Params.from_path(filepath)
     assert "for data types 'ubc_grav' and" in str(excinfo.value)
+
+
+def test_validate_new_uncert(tmp_path):
+    param = "new_uncert"
+    param_test_generator(tmp_path, param, ["test", "me"], "type")
+    param_test_generator(
+        tmp_path,
+        param,
+        [
+            0.1,
+        ],
+        "shape",
+    )
+    default_test_generator(tmp_path, param, None)
+    idict = input_dict.copy()
+    idict["new_uncert"] = [12, 1e-14]
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "percent (new_uncert[0])" in str(excinfo.value)
+    idict = input_dict.copy()
+    idict["new_uncert"] = [0.1, -1e-14]
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "floor (new_uncert[1])" in str(excinfo.value)
+
+
+def test_validate_input_mesh(tmp_path):
+    param = "input_mesh"
+    param_test_generator(tmp_path, param, 1, "type")
+    default_test_generator(tmp_path, param, None)
+    idict = input_dict.copy()
+    idict["input_mesh"] = "some_path"
+    idict["input_mesh_file"] = "yet_another_path"
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "'save_to_geoh5' path if 'input_mesh'" in str(excinfo.value)
+    idict = input_dict.copy()
+    idict["input_mesh"] = "some_path"
+    idict["save_to_geoh5"] = "yet_another_path"
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "'input_mesh_file' path if 'input_mesh'" in str(excinfo.value)
+
+
+def test_validate_save_to_geoh5(tmp_path):
+    param = "save_to_geoh5"
+    param_test_generator(tmp_path, param, 1, "type")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_inversion_mesh_type(tmp_path):
+    param = "inversion_mesh_type"
+    param_test_generator(tmp_path, param, "not_valid_name", "value")
+    default_test_generator(tmp_path, param, "TREE")
+
+
+def test_validate_shift_mesh_z0(tmp_path):
+    param = "shift_mesh_z0"
+    param_test_generator(tmp_path, param, "bogus", "type")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_topography(tmp_path):
+    param = "topography"
+    param_test_generator(tmp_path, param, "bogus", "type")
+    param_test_generator(tmp_path, param, {"badkey": "na"}, "keys")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_receivers_offset(tmp_path):
+    param = "receivers_offset"
+    param_test_generator(tmp_path, param, "bogus", "type")
+    param_test_generator(tmp_path, param, {"badkey": "na"}, "keys")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_chi_factor(tmp_path):
+    param = "chi_factor"
+    param_test_generator(tmp_path, param, "bogus", "type")
+    default_test_generator(tmp_path, param, 1)
+    params = Params("mvi", 2)
+    with pytest.raises(ValueError) as excinfo:
+        params.chi_factor = 0
+    assert "chi_factor. Must be between 0 and 1." in str(excinfo.value)
+
+
+def test_validate_model_norms(tmp_path):
+    param = "model_norms"
+    param_test_generator(tmp_path, param, ["a", "b", "c", "d"], "type")
+    default_test_generator(tmp_path, param, [2, 2, 2, 2])
+    params = Params("mvi", 2)
+    with pytest.raises(ValueError) as excinfo:
+        params.model_norms = [2, 2]
+    assert "Must be a multiple of 4." in str(excinfo.value)
+    idict = input_dict.copy()
+    idict["model_norms"] = [1, 1, 1, 1]
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    params = Params.from_path(filepath)
+    assert params.max_iterations == 40
+
+
+def test_validate_max_iterations(tmp_path):
+    param = "max_iterations"
+    param_test_generator(tmp_path, param, 4.5, "type")
+    default_test_generator(tmp_path, param, 10)
+    params = Params("mvi", 2)
+    with pytest.raises(ValueError) as excinfo:
+        params.max_iterations = -10
+    assert "Must be > 0." in str(excinfo.value)
+
+
+def test_validate_max_cg_iterations(tmp_path):
+    param = "max_cg_iterations"
+    param_test_generator(tmp_path, param, 4.5, "type")
+    default_test_generator(tmp_path, param, 30)
+    params = Params("mvi", 2)
+    with pytest.raises(ValueError) as excinfo:
+        params.max_iterations = -10
+    assert "Must be > 0." in str(excinfo.value)
+
+
+def test_validate_tol_cg(tmp_path):
+    param = "tol_cg"
+    param_test_generator(tmp_path, param, "nogood", "type")
+    default_test_generator(tmp_path, param, 1e-4)
+
+
+def test_validate_max_global_iterations(tmp_path):
+    param = "max_global_iterations"
+    param_test_generator(tmp_path, param, 4.5, "type")
+    default_test_generator(tmp_path, param, 100)
+    params = Params("mvi", 2)
+    with pytest.raises(ValueError) as excinfo:
+        params.max_iterations = -10
+    assert "Must be > 0." in str(excinfo.value)
