@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_ver: [3.7, 3.8]
+        python-version: [3.7, 3.8]
     defaults:
       run:
         shell: pwsh
