@@ -206,14 +206,14 @@ def plot_plan_data_selection(entity, data, **kwargs):
         ind = ~np.isnan(values.ravel())
         x = X.ravel()[ind]
         y = Y.ravel()[ind]
-        if ind.sum() > 0:
-            format_labels(x, y, axis, **kwargs)
-            axis.set_xlim([x.min(), x.max()])
-            axis.set_ylim([y.min(), y.max()])
-    elif np.any(x) and np.any(y):
+
+    if np.any(x) and np.any(y):
+        width = x.max() - x.min()
+        height = y.max() - y.min()
+
         format_labels(x, y, axis, **kwargs)
-        axis.set_xlim([x.min(), x.max()])
-        axis.set_ylim([y.min(), y.max()])
+        axis.set_xlim([x.min() - width * 0.1, x.max() + width * 0.1])
+        axis.set_ylim([y.min() - height * 0.1, y.max() + height * 0.1])
 
     if (
         "colorbar" in kwargs.keys()
