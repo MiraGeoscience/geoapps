@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import json
+import multiprocessing
 import os
 
 import numpy as np
@@ -61,9 +62,7 @@ class Params:
         self.resolution = 0
         self.window = None
         self.workspace = None
-        self.data_format = None
-        self.data_name = None
-        self.data_channels = None
+        self.data = None
         self.ignore_values = None
         self.detrend = None
         self.data_file = None
@@ -75,11 +74,32 @@ class Params:
         self.topography = None
         self.receivers_offset = None
         self.chi_factor = 1
-        self.model_norms = [2, 2, 2, 2]
+        self.model_norms = [2] * 4
         self.max_iterations = 10
         self.max_cg_iterations = 30
         self.tol_cg = 1e-4
         self.max_global_iterations = 100
+        self.gradient_type = "total"
+        self.initial_beta = None
+        self.initial_beta_ratio = 1e2
+        self.n_cpu = multiprocessing.cpu_count() / 2
+        self.max_ram = 2
+        self.padding_distance = [[0, 0]] * 3
+        self.octree_levels_topo = [0, 1]
+        self.octree_levels_obs = [5, 5]
+        self.octree_levels_padding = [2, 2]
+        self.alphas = [1] * 12
+        self.reference_model = None
+        self.starting_model = None
+        self.lower_bound = -np.inf
+        self.upper_bound = np.inf
+        self.max_distance = np.inf
+        self.max_chunk_size = 128
+        self.chunk_by_rows = False
+        self.output_tile_files = False
+        self.no_data_value = 0
+        self.parallelized = True
+        self.out_group = None
 
     @classmethod
     def from_ifile(cls, ifile):
@@ -192,40 +212,16 @@ class Params:
         self._window = val
 
     @property
-    def data_format(self):
-        return self._data_format
+    def data(self):
+        return self._data
 
-    @data_format.setter
-    def data_format(self, val):
+    @data.setter
+    def data(self, val):
         if val is None:
-            self._data_format = val
+            self._data = val
             return
-        self.validator.validate("data_format", val)
-        self._data_format = val
-
-    @property
-    def data_name(self):
-        return self._data_name
-
-    @data_name.setter
-    def data_name(self, val):
-        if val is None:
-            self._data_name = val
-            return
-        self.validator.validate("data_name", val)
-        self._data_name = val
-
-    @property
-    def data_channels(self):
-        return self._data_channels
-
-    @data_channels.setter
-    def data_channels(self, val):
-        if val is None:
-            self._data_channels = val
-            return
-        self.validator.validate("data_channels", val)
-        self._data_channels = val
+        self.validator.validate("data", val)
+        self._data = val
 
     @property
     def workspace(self):
@@ -414,6 +410,201 @@ class Params:
             raise ValueError("Invalid 'max_global_iterations' value.  Must be > 0.")
         self._max_global_iterations = val
 
+    @property
+    def gradient_type(self):
+        return self._gradient_type
+
+    @gradient_type.setter
+    def gradient_type(self, val):
+        self.validator.validate("gradient_type", val)
+        self._gradient_type = val
+
+    @property
+    def initial_beta(self):
+        return self._initial_beta
+
+    @initial_beta.setter
+    def initial_beta(self, val):
+        self.validator.validate("initial_beta", val)
+        self._initial_beta = val
+
+    @property
+    def initial_beta_ratio(self):
+        return self._initial_beta_ratio
+
+    @initial_beta_ratio.setter
+    def initial_beta_ratio(self, val):
+        self.validator.validate("initial_beta_ratio", val)
+        self._initial_beta_ratio = val
+
+    @property
+    def n_cpu(self):
+        return self._n_cpu
+
+    @n_cpu.setter
+    def n_cpu(self, val):
+        self.validator.validate("n_cpu", val)
+        self._n_cpu = val
+
+    @property
+    def max_ram(self):
+        return self._max_ram
+
+    @max_ram.setter
+    def max_ram(self, val):
+        self.validator.validate("max_ram", val)
+        self._max_ram = val
+
+    @property
+    def padding_distance(self):
+        return self._padding_distance
+
+    @padding_distance.setter
+    def padding_distance(self, val):
+        self.validator.validate("padding_distance", val)
+        self._padding_distance = val
+
+    @property
+    def octree_levels_topo(self):
+        return self._octree_levels_topo
+
+    @octree_levels_topo.setter
+    def octree_levels_topo(self, val):
+        self.validator.validate("octree_levels_topo", val)
+        self._octree_levels_topo = val
+
+    @property
+    def octree_levels_obs(self):
+        return self._octree_levels_obs
+
+    @octree_levels_obs.setter
+    def octree_levels_obs(self, val):
+        self.validator.validate("octree_levels_obs", val)
+        self._octree_levels_obs = val
+
+    @property
+    def octree_levels_padding(self):
+        return self._octree_levels_padding
+
+    @octree_levels_padding.setter
+    def octree_levels_padding(self, val):
+        self.validator.validate("octree_levels_padding", val)
+        self._octree_levels_padding = val
+
+    @property
+    def alphas(self):
+        return self._alphas
+
+    @alphas.setter
+    def alphas(self, val):
+        self.validator.validate("alphas", val)
+        if len(val) == 4:
+            val = val * 3
+        if len(val) not in [4, 12]:
+            msg = "Input parameter 'alphas' must be a list"
+            msg += " of length 4 or 12"
+            raise ValueError(msg)
+        self._alphas = val
+
+    @property
+    def reference_model(self):
+        return self._reference_model
+
+    @reference_model.setter
+    def reference_model(self, val):
+        self.validator.validate("reference_model", val)
+        self._reference_model = val
+
+    @property
+    def starting_model(self):
+        return self._starting_model
+
+    @starting_model.setter
+    def starting_model(self, val):
+        self.validator.validate("starting_model", val)
+        self._starting_model = val
+
+    @property
+    def lower_bound(self):
+        return self._lower_bound
+
+    @lower_bound.setter
+    def lower_bound(self, val):
+        self.validator.validate("lower_bound", val)
+        self._lower_bound = val
+
+    @property
+    def upper_bound(self):
+        return self._upper_bound
+
+    @upper_bound.setter
+    def upper_bound(self, val):
+        self.validator.validate("upper_bound", val)
+        self._upper_bound = val
+
+    @property
+    def max_distance(self):
+        return self._max_distance
+
+    @max_distance.setter
+    def max_distance(self, val):
+        self.validator.validate("max_distance", val)
+        self._max_distance = val
+
+    @property
+    def max_chunk_size(self):
+        return self._max_chunk_size
+
+    @max_chunk_size.setter
+    def max_chunk_size(self, val):
+        self.validator.validate("max_chunk_size", val)
+        self._max_chunk_size = val
+
+    @property
+    def chunk_by_rows(self):
+        return self._chunk_by_rows
+
+    @chunk_by_rows.setter
+    def chunk_by_rows(self, val):
+        self.validator.validate("chunk_by_rows", val)
+        self._chunk_by_rows = val
+
+    @property
+    def output_tile_files(self):
+        return self._output_tile_files
+
+    @output_tile_files.setter
+    def output_tile_files(self, val):
+        self.validator.validate("output_tile_files", val)
+        self._output_tile_files = val
+
+    @property
+    def no_data_value(self):
+        return self._no_data_value
+
+    @no_data_value.setter
+    def no_data_value(self, val):
+        self.validator.validate("no_data_value", val)
+        self._no_data_value = val
+
+    @property
+    def parallelized(self):
+        return self._parallelized
+
+    @parallelized.setter
+    def parallelized(self, val):
+        self.validator.validate("parallelized", val)
+        self._parallelized = val
+
+    @property
+    def out_group(self):
+        return self._out_group
+
+    @out_group.setter
+    def out_group(self, val):
+        self.validator.validate("out_group", val)
+        self._out_group = val
+
     def _override_default(self, param, value):
         """ Override parameter default value. """
         self.__setattr__(param, value)
@@ -424,14 +615,11 @@ class Params:
             if param == "result_folder":
                 op = create_relative_output_path(inputfile.workpath, value)
                 self._override_default(param, op)
-            elif param == "data":
-                self._override_default("data_format", value["type"])
-                self._override_default("data_name", value["name"])
-                if "channels" in value.keys():
-                    self._override_default("data_channels", value["channels"])
             elif param == "model_norms":
                 if "max_iterations" not in inputfile.data.keys():
                     if not np.all(np.r_[value] == 2):
+                        if "max_iterations" in inputfile.data.keys():
+                            inputfile.data["max_iterations"] = 40
                         self._override_default("max_iterations", 40)
             else:
                 self._override_default(param, value)

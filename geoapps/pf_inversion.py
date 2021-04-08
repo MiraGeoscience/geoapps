@@ -23,7 +23,6 @@ See README for description of options
 """
 
 import json
-import multiprocessing
 import os
 import sys
 from multiprocessing.pool import ThreadPool
@@ -209,91 +208,35 @@ def inversion(inputfile):
     input_dict = inputfile.data
     params = Params.from_ifile(inputfile)
 
-    # Read json file and overwrite defaults
-
-    # assert "inversion_type" in list(
-    #     input_dict.keys()
-    # ), "Require 'inversion_type' to be set: 'gravity', 'magnetics', 'mvi', or 'mvic'"
-    # assert input_dict["inversion_type"] in [
-    #     "gravity",
-    #     "magnetics",
-    #     "mvi",
-    #     "mvic",
-    # ], "'inversion_type' must be one of: 'gravity', 'magnetics', 'mvi', or 'mvic'"
-
-    # if "inversion_style" in list(input_dict.keys()):
-    #     inversion_style = input_dict["inversion_style"]
-    # else:
-    #     inversion_style = "voxel"
-
-    # if "forward_only" in list(input_dict.keys()):
-    #     forward_only = True
-    # else:
-    #     forward_only = False
-
-    # if "result_folder" in list(input_dict.keys()):
-    #     root = os.path.commonprefix([input_dict["result_folder"], workDir])
-    #     outDir = (
-    #         workDir + os.path.relpath(input_dict["result_folder"], root) + os.path.sep
-    #     )
-    # else:
-    #     outDir = workDir + os.path.sep + "SimPEG_PFInversion" + os.path.sep
-    # os.system("mkdir " + '"' + outDir + '"')
-    # # extra quotes included in case path contains spaces
-
-    ###############################################################################
-    # Deal with the data
-    # if "inducing_field_aid" in list(input_dict.keys()):
-    #     inducing_field = np.asarray(input_dict["inducing_field_aid"])
-    #
-    #     assert (
-    #         len(inducing_field) == 3 and inducing_field[0] > 0
-    #     ), "Inducing field must include H, INCL, DECL"
-    #
-    # else:
-    #     inducing_field = None
-
-    # if "resolution" in input_dict.keys():
-    #     resolution = input_dict["resolution"]
-    # else:
-    #     resolution = 0
-
-    # if "window" in input_dict.keys():
-    #     window = input_dict["window"]
-    #     window["center"] = [window["center_x"], window["center_y"]]
-    #     window["size"] = [window["width"], window["height"]]
-    # else:
-    #     window = None
-
-    if params.data_format == "ubc_grav":
+    if params.data["type"] == "ubc_grav":
 
         survey = Utils.io_utils.readUBCgravityObservations(
             params.workpath + params.data_name
         )
 
-    elif params.data_format == "ubc_mag":
+    elif params.data["type"] == "ubc_mag":
 
         survey, H0 = Utils.io_utils.readUBCmagneticsObservations(
             params.workpath + params.data_name
         )
         survey.components = ["tmi"]
 
-    elif params.data_format == "GA_object":
+    elif params.data["type"] == "GA_object":
 
         workspace = Workspace(params.workspace)
 
-        if workspace.get_entity(params.data_name):
-            entity = workspace.get_entity(params.data_name)[0]
+        if workspace.get_entity(params.data["name"]):
+            entity = workspace.get_entity(params.data["name"])[0]
         else:
             assert False, (
-                f"Entity {params.data_name} could not be found in "
+                f"Entity {params.data['name']} could not be found in "
                 f"Workspace {workspace.h5file}"
             )
 
         data = []
         uncertainties = []
         components = []
-        for channel, props in params.data_channels.items():
+        for channel, props in params.data["channels"].items():
             if entity.get_data(props["name"]):
                 data.append(entity.get_data(props["name"])[0].values)
             else:
@@ -389,7 +332,7 @@ def inversion(inputfile):
 
             survey.dobs -= data_trend
 
-            if params.data_format == "ubc_mag":
+            if params.data["type"] == "ubc_mag":
                 Utils.io_utils.writeUBCmagneticsObservations(
                     os.path.splitext(params.result_folder + params.data_file)[0]
                     + "_trend.mag",
@@ -402,7 +345,7 @@ def inversion(inputfile):
                     survey,
                     survey.dobs,
                 )
-            elif params.data_format in ["ubc_grav"]:
+            elif params.data["type"] in ["ubc_grav"]:
                 Utils.io_utils.writeUBCgravityObservations(
                     os.path.splitext(params.result_folder + params.data_file)[0]
                     + "_trend.grv",
@@ -420,7 +363,7 @@ def inversion(inputfile):
 
         # Update the specified data uncertainty
         dopts = ["ubc_mag", "ubc_grav"]
-    if (params.new_uncert is not None) & (params.data_format in dopts):
+    if (params.new_uncert is not None) & (params.data["type"] in dopts):
         if params.new_uncert:
             perc = params.new_uncert[0]
             floor = params.new_uncert[1]
@@ -439,24 +382,13 @@ def inversion(inputfile):
     else:
         input_mesh = None
 
-    # if "inversion_mesh_type" in list(input_dict.keys()):
-    #     # Determine if the mesh is tensor or tree
-    #     inversion_mesh_type = input_dict["inversion_mesh_type"]
-    # else:
-    #     inversion_mesh_type = "TREE"
-
-    # if "shift_mesh_z0" in list(input_dict.keys()):
-    #     shift_mesh_z0 = input_dict["shift_mesh_z0"]
-    # else:
-    #     shift_mesh_z0 = None
-
     def get_topography():
         topo = None
 
         if params.topography is not None:
             topo = survey.rxLoc.copy()
-            if "draped" in params.topography.keys():
-                topo[:, 2] += params.topography["draped"]
+            if "drapped" in params.topography.keys():
+                topo[:, 2] += params.topography["drapped"]
             elif "constant" in params.topography.keys():
                 topo[:, 2] = params.topography["constant"]
             else:
@@ -543,112 +475,19 @@ def inversion(inputfile):
 
     topo_interp_function = NearestNDInterpolator(topo[:, :2], topo[:, 2])
 
-    # if "chi_factor" in list(input_dict.keys()):
-    #     target_chi = input_dict["chi_factor"]
-    # else:
-    #     target_chi = 1
+    if params.reference_model is not None:
+        if "model" in params.reference_model.keys():
+            reference_model = params.reference["model"]
 
-    # if "model_norms" in list(input_dict.keys()):
-    #     model_norms = input_dict["model_norms"]
-    #
-    # else:
-    #     model_norms = [2, 2, 2, 2]
+        elif "value" in params.reference_model.keys():
+            reference_model = np.r_[params.reference_model["value"]]
+            assert reference_model.shape[0] in [
+                1,
+                3,
+            ], "Start model needs to be a scalar or 3 component vector"
 
-    # if "max_iterations" in list(input_dict.keys()):
-    #
-    #     max_iterations = input_dict["max_iterations"]
-    #     assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
-    # else:
-    #     if np.all(np.r_[params.model_norms] == 2):
-    #         # Cartesian or not sparse
-    #         max_iterations = 10
-    #     else:
-    #         # Spherical or sparse
-    #         max_iterations = 40
-    #
-    # if "max_cg_iterations" in list(input_dict.keys()):
-    #     max_cg_iterations = input_dict["max_cg_iterations"]
-    # else:
-    #     max_cg_iterations = 30
-
-    # if "tol_cg" in list(input_dict.keys()):
-    #     tol_cg = input_dict["tol_cg"]
-    # else:
-    #     tol_cg = 1e-4
-
-    # if "max_global_iterations" in list(input_dict.keys()):
-    #     max_global_iterations = input_dict["max_global_iterations"]
-    #     assert max_global_iterations >= 0, "Max IRLS iterations must be >= 0"
-    # else:
-    #     # Spherical or sparse
-    #     max_global_iterations = 100
-
-    if "gradient_type" in list(input_dict.keys()):
-        gradient_type = input_dict["gradient_type"]
-    else:
-        gradient_type = "total"
-
-    if "initial_beta" in list(input_dict.keys()):
-        initial_beta = input_dict["initial_beta"]
-    else:
-        initial_beta = None
-
-    if "initial_beta_ratio" in list(input_dict.keys()):
-        initial_beta_ratio = input_dict["initial_beta_ratio"]
-    else:
-        initial_beta_ratio = 1e2
-
-    if "n_cpu" in list(input_dict.keys()):
-        n_cpu = input_dict["n_cpu"]
-    else:
-        n_cpu = multiprocessing.cpu_count() / 2
-
-    if "max_ram" in list(input_dict.keys()):
-        max_ram = input_dict["max_ram"]
-    else:
-        max_ram = 2
-
-    if "padding_distance" in list(input_dict.keys()):
-        padding_distance = input_dict["padding_distance"]
-    else:
-        padding_distance = [[0, 0], [0, 0], [0, 0]]
-
-    if "octree_levels_topo" in list(input_dict.keys()):
-        octree_levels_topo = input_dict["octree_levels_topo"]
-    else:
-        octree_levels_topo = [0, 1]
-
-    if "octree_levels_obs" in list(input_dict.keys()):
-        octree_levels_obs = input_dict["octree_levels_obs"]
-    else:
-        octree_levels_obs = [5, 5]
-
-    if "octree_levels_padding" in list(input_dict.keys()):
-        octree_levels_padding = input_dict["octree_levels_padding"]
-    else:
-        octree_levels_padding = [2, 2]
-
-    if "alphas" in list(input_dict.keys()):
-        alphas = input_dict["alphas"]
-        if len(alphas) == 4:
-            alphas = alphas * 3
-        else:
-            assert len(alphas) == 12, "Alphas require list of 4 or 12 values"
-    else:
-        alphas = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-
-    if "reference_model" in list(input_dict.keys()):
-        if "model" in list(input_dict["reference_model"].keys()):
-            reference_model = input_dict["reference_model"]["model"]
-
-        elif "value" in list(input_dict["reference_model"].keys()):
-            reference_model = np.r_[input_dict["reference_model"]["value"]]
-            assert (
-                reference_model.shape[0] == 1 or reference_model.shape[0] == 3
-            ), "Start model needs to be a scalar or 3 component vector"
-
-        elif "none" in list(input_dict["reference_model"].keys()):
-            alphas[0], alphas[4], alphas[8] = 0, 0, 0
+        elif "none" in params.reference_model.keys():
+            params.alphas[0], params.alphas[4], params.alphas[8] = 0, 0, 0
             reference_model = [0.0]
     else:
         assert (
@@ -656,9 +495,9 @@ def inversion(inputfile):
         ), "A reference model/value must be provided for forward modeling"
         reference_model = [0.0]
 
-    if "starting_model" in list(input_dict.keys()):
-        if "model" in list(input_dict["starting_model"].keys()):
-            starting_model = input_dict["starting_model"]["model"]
+    if params.starting_model is not None:
+        if "model" in params.starting_model.keys():
+            starting_model = params.starting_model["model"]
             input_mesh = workspace.get_entity(list(starting_model.keys())[0])[0]
 
             if isinstance(input_mesh, BlockModel):
@@ -670,31 +509,18 @@ def inversion(inputfile):
             input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2] + 1300]
             print("converting", input_mesh.x0)
         else:
-            starting_model = np.r_[input_dict["starting_model"]["value"]]
+            starting_model = np.r_[params.starting_model["value"]]
             assert (
                 starting_model.shape[0] == 1 or starting_model.shape[0] == 3
             ), "Start model needs to be a scalar or 3 component vector"
     else:
         starting_model = [1e-4]
 
-    if "lower_bound" in list(input_dict.keys()):
-        lower_bound = input_dict["lower_bound"][0]
-    else:
-        lower_bound = -np.inf
-
-    if "upper_bound" in list(input_dict.keys()):
-        upper_bound = input_dict["upper_bound"][0]
-    else:
-        upper_bound = np.inf
-
     # @Nick: Not sure we want to keep this, not so transparent
-    if len(octree_levels_padding) < len(octree_levels_obs):
-        octree_levels_padding += octree_levels_obs[len(octree_levels_padding) :]
-
-    if "core_cell_size" in list(input_dict.keys()):
-        core_cell_size = input_dict["core_cell_size"]
-    else:
-        assert "'core_cell_size' must be added to the inputs"
+    if len(params.octree_levels_padding) < len(params.octree_levels_obs):
+        params.octree_levels_padding += params.octree_levels_obs[
+            len(params.octree_levels_padding) :
+        ]
 
     if "depth_core" in list(input_dict.keys()):
         if "value" in list(input_dict["depth_core"].keys()):
@@ -713,26 +539,6 @@ def inversion(inputfile):
     else:
         depth_core = 0
 
-    if "max_distance" in list(input_dict.keys()):
-        max_distance = input_dict["max_distance"]
-    else:
-        max_distance = np.inf
-
-    if "max_chunk_size" in list(input_dict.keys()):
-        max_chunk_size = input_dict["max_chunk_size"]
-    else:
-        max_chunk_size = 128
-
-    if "chunk_by_rows" in list(input_dict.keys()):
-        chunk_by_rows = input_dict["chunk_by_rows"]
-    else:
-        chunk_by_rows = False
-
-    if "output_tile_files" in list(input_dict.keys()):
-        output_tile_files = input_dict["output_tile_files"]
-    else:
-        output_tile_files = False
-
     if "mvi" in params.inversion_type:
         vector_property = True
         n_blocks = 3
@@ -742,22 +548,9 @@ def inversion(inputfile):
         vector_property = False
         n_blocks = 1
 
-    if "no_data_value" in list(input_dict.keys()):
-        no_data_value = input_dict["no_data_value"]
-    else:
-        if vector_property:
-            no_data_value = 0
-        else:
-            no_data_value = 0
-
-    if "parallelized" in list(input_dict.keys()):
-        parallelized = input_dict["parallelized"]
-    else:
-        parallelized = True
-
-    if parallelized:
-        dask.config.set({"array.chunk-size": str(max_chunk_size) + "MiB"})
-        dask.config.set(scheduler="threads", pool=ThreadPool(n_cpu))
+    if params.parallelized:
+        dask.config.set({"array.chunk-size": str(params.max_chunk_size) + "MiB"})
+        dask.config.set(scheduler="threads", pool=ThreadPool(params.n_cpu))
 
     ###############################################################################
     # Processing
@@ -796,8 +589,8 @@ def inversion(inputfile):
 
         local_mesh = meshutils.mesh_builder_xyz(
             topo_elevations_at_data_locs,
-            core_cell_size,
-            padding_distance=padding_distance,
+            params.core_cell_size,
+            padding_distance=params.padding_distance,
             mesh_type=params.inversion_mesh_type,
             base_mesh=input_mesh,
             depth_core=depth_core,
@@ -814,7 +607,7 @@ def inversion(inputfile):
                     local_mesh,
                     topo,
                     method="surface",
-                    octree_levels=octree_levels_topo,
+                    octree_levels=params.octree_levels_topo,
                     finalize=False,
                 )
 
@@ -822,9 +615,9 @@ def inversion(inputfile):
                 local_mesh,
                 topo_elevations_at_data_locs[ind_t, :],
                 method="surface",
-                max_distance=max_distance,
-                octree_levels=octree_levels_obs,
-                octree_levels_padding=octree_levels_padding,
+                max_distance=params.max_distance,
+                octree_levels=params.octree_levels_obs,
+                octree_levels_padding=params.octree_levels_padding,
                 finalize=True,
             )
 
@@ -846,7 +639,7 @@ def inversion(inputfile):
     """
     used_ram = np.inf
     count = -1
-    while used_ram > max_ram:
+    while used_ram > params.max_ram:
 
         tiles, binCount, tileIDs, tile_numbers = Utils.modelutils.tileSurveyPoints(
             rxLoc, count, method="ortho"
@@ -859,8 +652,8 @@ def inversion(inputfile):
         # Create the mesh and refine the same as the global mesh
         local_mesh = meshutils.mesh_builder_xyz(
             topo_elevations_at_data_locs,
-            core_cell_size,
-            padding_distance=padding_distance,
+            params.core_cell_size,
+            padding_distance=params.padding_distance,
             mesh_type=params.inversion_mesh_type,
             base_mesh=input_mesh,
             depth_core=depth_core,
@@ -877,7 +670,7 @@ def inversion(inputfile):
                     local_mesh,
                     topo,
                     method="surface",
-                    octree_levels=octree_levels_topo,
+                    octree_levels=params.octree_levels_topo,
                     finalize=False,
                 )
 
@@ -885,9 +678,9 @@ def inversion(inputfile):
                 local_mesh,
                 topo_elevations_at_data_locs[ind_t, :],
                 method="surface",
-                max_distance=max_distance,
-                octree_levels=octree_levels_obs,
-                octree_levels_padding=octree_levels_padding,
+                max_distance=params.max_distance,
+                octree_levels=params.octree_levels_obs,
+                octree_levels_padding=params.octree_levels_padding,
                 finalize=True,
             )
 
@@ -896,7 +689,7 @@ def inversion(inputfile):
         # Calculate approximate problem size
         nDt, nCt = ind_t.sum() * 1.0 * len(survey.components), tileLayer.sum() * 1.0
 
-        nChunks = n_cpu  # Number of chunks
+        nChunks = params.n_cpu  # Number of chunks
         cSa, cSb = int(nDt / nChunks), int(nCt / nChunks)  # Chunk sizes
         used_ram = nDt * nCt * 8.0 * 1e-9
 
@@ -928,8 +721,8 @@ def inversion(inputfile):
         print("Creating Global Octree")
         mesh = meshutils.mesh_builder_xyz(
             topo_elevations_at_data_locs,
-            core_cell_size,
-            padding_distance=padding_distance,
+            params.core_cell_size,
+            padding_distance=params.padding_distance,
             mesh_type=params.inversion_mesh_type,
             base_mesh=input_mesh,
             depth_core=depth_core,
@@ -974,13 +767,13 @@ def inversion(inputfile):
 
     # Create active map to go from reduce set to full
     activeCellsMap = Maps.InjectActiveCells(
-        mesh, activeCells, no_data_value, n_blocks=n_blocks
+        mesh, activeCells, params.no_data_value, n_blocks=n_blocks
     )
 
     # Create geoh5 objects to store the results
-    if "save_to_geoh5" in list(input_dict.keys()):
+    if params.save_to_geoh5 is not None:
 
-        workspace = Workspace(input_dict["save_to_geoh5"])
+        workspace = Workspace(params.save_to_geoh5)
 
         out_group = ContainerGroup.create(workspace, name=input_dict["out_group"])
 
@@ -1028,7 +821,7 @@ def inversion(inputfile):
         # Loading a model file
         if isinstance(input_value, dict):
             print(f"In model interpolation for {input_value}")
-            workspace = Workspace(input_dict["save_to_geoh5"])
+            workspace = Workspace(params.save_to_geoh5)
             input_mesh = workspace.get_entity(list(input_value.keys())[0])[0]
 
             input_model = input_mesh.get_data(list(input_value.values())[0])[0].values
@@ -1064,7 +857,7 @@ def inversion(inputfile):
 
             if save_model:
                 val = model.copy()
-                val[activeCells == False] = no_data_value
+                val[activeCells == False] = params.no_data_value
                 mesh_object.add_data(
                     {"Reference_model": {"values": val[mesh._ubc_order]}}
                 )
@@ -1177,14 +970,14 @@ def inversion(inputfile):
                 local_mesh,
                 rhoMap=tile_map * model_map,
                 actInd=activeCells_t,
-                parallelized=parallelized,
+                parallelized=params.parallelized,
                 Jpath=params.result_folder + "Tile" + str(ind) + ".zarr",
-                maxRAM=max_ram,
+                maxRAM=params.max_ram,
                 forwardOnly=params.forward_only,
-                n_cpu=n_cpu,
+                n_cpu=params.n_cpu,
                 verbose=False,
-                max_chunk_size=max_chunk_size,
-                chunk_by_rows=chunk_by_rows,
+                max_chunk_size=params.max_chunk_size,
+                chunk_by_rows=params.chunk_by_rows,
             )
 
         elif params.inversion_type == "magnetics":
@@ -1192,14 +985,14 @@ def inversion(inputfile):
                 local_mesh,
                 chiMap=tile_map * model_map,
                 actInd=activeCells_t,
-                parallelized=parallelized,
+                parallelized=params.parallelized,
                 Jpath=params.result_folder + "Tile" + str(ind) + ".zarr",
-                maxRAM=max_ram,
+                maxRAM=params.max_ram,
                 forwardOnly=params.forward_only,
-                n_cpu=n_cpu,
+                n_cpu=params.n_cpu,
                 verbose=False,
-                max_chunk_size=max_chunk_size,
-                chunk_by_rows=chunk_by_rows,
+                max_chunk_size=params.max_chunk_size,
+                chunk_by_rows=params.chunk_by_rows,
             )
 
         elif "mvi" in params.inversion_type:
@@ -1207,15 +1000,15 @@ def inversion(inputfile):
                 local_mesh,
                 chiMap=tile_map * model_map,
                 actInd=activeCells_t,
-                parallelized=parallelized,
+                parallelized=params.parallelized,
                 Jpath=params.result_folder + "Tile" + str(ind) + ".zarr",
-                maxRAM=max_ram,
+                maxRAM=params.max_ram,
                 forwardOnly=params.forward_only,
                 modelType="vector",
-                n_cpu=n_cpu,
+                n_cpu=params.n_cpu,
                 verbose=False,
-                max_chunk_size=max_chunk_size,
-                chunk_by_rows=chunk_by_rows,
+                max_chunk_size=params.max_chunk_size,
+                chunk_by_rows=params.chunk_by_rows,
             )
 
         local_survey.pair(prob)
@@ -1297,7 +1090,7 @@ def inversion(inputfile):
     global_weights = global_weights ** 0.5
     global_weights = global_weights / np.max(global_weights)
 
-    if "save_to_geoh5" in list(input_dict.keys()):
+    if params.save_to_geoh5 is not None:
         mesh_object.add_data(
             {
                 "SensWeights": {
@@ -1332,11 +1125,11 @@ def inversion(inputfile):
             regularization_mesh,
             indActive=regularization_actv,
             mapping=regularization_map,
-            gradientType=gradient_type,
-            alpha_s=alphas[0],
-            alpha_x=alphas[1],
-            alpha_y=alphas[2],
-            alpha_z=alphas[3],
+            gradientType=params.gradient_type,
+            alpha_s=params.alphas[0],
+            alpha_x=params.alphas[1],
+            alpha_y=params.alphas[2],
+            alpha_z=params.alphas[3],
         )
         reg.norms = np.c_[params.model_norms].T
         reg.cell_weights = global_weights
@@ -1349,11 +1142,11 @@ def inversion(inputfile):
             mesh,
             indActive=activeCells,
             mapping=regularization_map.p,
-            gradientType=gradient_type,
-            alpha_s=alphas[0],
-            alpha_x=alphas[1],
-            alpha_y=alphas[2],
-            alpha_z=alphas[3],
+            gradientType=params.gradient_type,
+            alpha_s=params.alphas[0],
+            alpha_x=params.alphas[1],
+            alpha_y=params.alphas[2],
+            alpha_z=params.alphas[3],
         )
 
         reg_p.cell_weights = regularization_map.p * global_weights
@@ -1364,11 +1157,11 @@ def inversion(inputfile):
             mesh,
             indActive=activeCells,
             mapping=regularization_map.s,
-            gradientType=gradient_type,
-            alpha_s=alphas[4],
-            alpha_x=alphas[5],
-            alpha_y=alphas[6],
-            alpha_z=alphas[7],
+            gradientType=params.gradient_type,
+            alpha_s=params.alphas[4],
+            alpha_x=params.alphas[5],
+            alpha_y=params.alphas[6],
+            alpha_z=params.alphas[7],
         )
 
         reg_s.cell_weights = regularization_map.s * global_weights
@@ -1379,11 +1172,11 @@ def inversion(inputfile):
             mesh,
             indActive=activeCells,
             mapping=regularization_map.t,
-            gradientType=gradient_type,
-            alpha_s=alphas[8],
-            alpha_x=alphas[9],
-            alpha_y=alphas[10],
-            alpha_z=alphas[11],
+            gradientType=params.gradient_type,
+            alpha_s=params.alphas[8],
+            alpha_x=params.alphas[9],
+            alpha_y=params.alphas[10],
+            alpha_z=params.alphas[11],
         )
 
         reg_t.cell_weights = regularization_map.t * global_weights
@@ -1396,8 +1189,8 @@ def inversion(inputfile):
     # Specify how the optimization will proceed, set susceptibility bounds to inf
     opt = Optimization.ProjectedGNCG(
         maxIter=params.max_iterations,
-        lower=lower_bound,
-        upper=upper_bound,
+        lower=params.lower_bound,
+        upper=params.upper_bound,
         maxIterLS=20,
         maxIterCG=params.max_cg_iterations,
         tolCG=params.tol_cg,
@@ -1405,7 +1198,9 @@ def inversion(inputfile):
         LSshorten=0.25,
     )
     # Create the default L2 inverse problem from the above objects
-    invProb = InvProblem.BaseInvProblem(global_misfit, reg, opt, beta=initial_beta)
+    invProb = InvProblem.BaseInvProblem(
+        global_misfit, reg, opt, beta=params.initial_beta
+    )
     # Add a list of directives to the inversion
     directiveList = []
 
@@ -1440,15 +1235,15 @@ def inversion(inputfile):
         )
     )
 
-    if initial_beta is None:
+    if params.initial_beta is None:
         directiveList.append(
-            Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
+            Directives.BetaEstimate_ByEig(beta0_ratio=params.initial_beta_ratio)
         )
 
     directiveList.append(Directives.UpdatePreconditioner())
 
     # Save model
-    if "save_to_geoh5" in list(input_dict.keys()):
+    if params.save_to_geoh5 is not None:
 
         if vector_property:
             model_type = "mvi_model"
@@ -1462,7 +1257,7 @@ def inversion(inputfile):
                 attribute=model_type,
                 association="CELL",
                 sorting=mesh._ubc_order,
-                no_data_value=no_data_value,
+                no_data_value=params.no_data_value,
             )
         )
 
@@ -1476,7 +1271,7 @@ def inversion(inputfile):
                     association="CELL",
                     sorting=mesh._ubc_order,
                     replace_values=True,
-                    no_data_value=no_data_value,
+                    no_data_value=params.no_data_value,
                 )
             )
 
