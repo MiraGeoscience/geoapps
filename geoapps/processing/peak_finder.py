@@ -709,7 +709,7 @@ class PeakFinder(ObjectDataSelection):
         :obj:`ipywidgets.Checkbox`: Use the residual between the original and smoothed data profile
         """
         if getattr(self, "_residual", None) is None:
-            self._residual = Checkbox(description="Use residual", value=False)
+            self._residual = Checkbox(description="Show residual", value=False)
 
         return self._residual
 
@@ -1209,7 +1209,7 @@ class PeakFinder(ObjectDataSelection):
                             "normalization"
                         ],
                         smoothing=self.smoothing.value,
-                        use_residual=self.residual.value,
+                        # use_residual=self.residual.value,
                         min_amplitude=self.min_amplitude.value,
                         min_value=self.min_value.value,
                         min_width=self.min_width.value,
@@ -1629,7 +1629,7 @@ class PeakFinder(ObjectDataSelection):
                         s=100,
                     )
 
-            if not residual:
+            if residual:
                 raw = self.lines.profile._values_resampled_raw
                 axs.fill_between(
                     locs, values, raw, where=raw > values, color=[1, 0, 0, 0.5]
@@ -1967,7 +1967,7 @@ class PeakFinder(ObjectDataSelection):
                     "normalization"
                 ],
                 smoothing=self.smoothing.value,
-                use_residual=self.residual.value,
+                # use_residual=self.residual.value,
                 min_amplitude=self.min_amplitude.value,
                 min_value=self.min_value.value,
                 min_width=self.min_width.value,
@@ -2406,8 +2406,10 @@ def find_anomalies(
 
             # Check amplitude and width thresholds
             delta_amp = (
-                np.abs(values[peak] - np.min([values[start], values[end]]))
-                / (np.abs(np.min([values[start], values[end]])) + 2e-32)
+                np.abs(
+                    np.min([values[peak] - values[start], values[peak] - values[end]])
+                )
+                / (np.std(values) + 2e-32)
             ) * 100.0
             delta_x = locs[end] - locs[start]
             amplitude = np.sum(np.abs(values[start:end])) * profile.sampling
