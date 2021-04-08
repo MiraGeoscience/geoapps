@@ -58,6 +58,24 @@ class InputValidator:
                 msg = "Input file must contain a 'input_mesh_file' path if"
                 msg += " 'input_mesh' provided."
                 raise ValueError(msg)
+        elif "forward_only" in input.keys():
+            if input["forward_only"] == True:
+                if "reference model" not in input.keys():
+                    msg = "A reference model/value must be provided for "
+                    msg += "forward modeling"
+                    raise ValueError(msg)
+        elif "reference_model" in input.keys():
+            if "value" in input["reference_model"].keys():
+                v = input["reference_model"]["value"]
+                v = np.r_[v]
+                if v.shape[0] not in [1, 3]:
+                    msg = "Start model needs to be a scalar or 3 component vector"
+                    raise ValueError(msg)
+        elif "save_to_geoh5" in input.keys():
+            if "out_group" not in input.keys():
+                msg = "Input file must contain a 'out_group' string if"
+                msg += "'save_to_geoh5' provided."
+                raise ValueError(msg)
 
         for k, v in input.items():
             self.validate(k, v)
@@ -101,10 +119,11 @@ class InputValidator:
         tnames = [t.__name__ for t in vptypes]
         msg = self._param_validation_msg(param, "type", tnames)
         if self._isiterable(value):
+            value = np.array(value).flatten().tolist()
             if not all(type(v) in vptypes for v in value):
-                raise ValueError(msg)
+                raise TypeError(msg)
         elif type(value) not in vptypes:
-            raise ValueError(msg)
+            raise TypeError(msg)
 
     def _validate_parameter_shape(self, param, value):
         """ Raise ValueError if parameter shape is invalid. """

@@ -49,7 +49,8 @@ def param_test_generator(tmp_path, param, invalid_value, validation_type):
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
     params = Params.from_path(filepath)
-    with pytest.raises(ValueError) as excinfo:
+    err = TypeError if validation_type == "type" else ValueError
+    with pytest.raises(err) as excinfo:
         params.__setattr__(param, invalid_value)
     assert validation_type in str(excinfo.value)
     return params
@@ -197,6 +198,8 @@ def test_validate_workspace(tmp_path):
 
 
 def test_validate_data(tmp_path):
+    param = "data"
+    param_test_generator(tmp_path, param, 1234, "type")
     idict = input_dict.copy()
     idict["data"] = {"type": "GA_object"}
     idict["workspace"] = "."
@@ -205,26 +208,6 @@ def test_validate_data(tmp_path):
     with pytest.raises(ValueError) as excinfo:
         params = Params.from_path(filepath)
     assert "Data 'type' and 'name'" in str(excinfo.value)
-
-
-def test_validate_data_format(tmp_path):
-    param = "data_format"
-    param_test_generator(tmp_path, param, "blah", "value")
-    default_test_generator(tmp_path, param, None)
-
-
-def test_validate_data_name(tmp_path):
-    param = "data_name"
-    param_test_generator(tmp_path, param, 1234, "type")
-    default_test_generator(tmp_path, param, None)
-
-
-def test_validate_data_channels(tmp_path):
-    param = "data_channels"
-    test_dict = {"voltage": "yadda"}
-    param_test_generator(tmp_path, param, 1, "type")
-    param_test_generator(tmp_path, param, test_dict, "keys")
-    default_test_generator(tmp_path, param, None)
 
 
 def test_validate_ignore_values(tmp_path):
@@ -313,6 +296,13 @@ def test_validate_save_to_geoh5(tmp_path):
     param = "save_to_geoh5"
     param_test_generator(tmp_path, param, 1, "type")
     default_test_generator(tmp_path, param, None)
+    idict = input_dict.copy()
+    idict["save_to_geoh5"] = "some_path"
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "must contain a 'out_group'" in str(excinfo.value)
 
 
 def test_validate_inversion_mesh_type(tmp_path):
@@ -401,3 +391,137 @@ def test_validate_max_global_iterations(tmp_path):
     with pytest.raises(ValueError) as excinfo:
         params.max_iterations = -10
     assert "Must be > 0." in str(excinfo.value)
+
+
+def test_validate_gradient_type(tmp_path):
+    param = "gradient_type"
+    param_test_generator(tmp_path, param, "nogood", "value")
+    default_test_generator(tmp_path, param, "total")
+
+
+def test_validate_initial_beta(tmp_path):
+    param = "initial_beta"
+    param_test_generator(tmp_path, param, "nogood", "type")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_initial_beta_ratio(tmp_path):
+    param = "initial_beta_ratio"
+    param_test_generator(tmp_path, param, 2, "type")
+    default_test_generator(tmp_path, param, 1e2)
+
+
+def test_validate_n_cpu(tmp_path):
+    param = "n_cpu"
+    param_test_generator(tmp_path, param, "nope", "type")
+
+
+def test_validate_max_ram(tmp_path):
+    param = "max_ram"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, 2)
+
+
+def test_validate_padding_distance(tmp_path):
+    param = "padding_distance"
+    param_test_generator(tmp_path, param, "nope", "type")
+    param_test_generator(tmp_path, param, [[1.0, 2.0]], "shape")
+    default_test_generator(tmp_path, param, [[0, 0], [0, 0], [0, 0]])
+
+
+def test_validate_octree_levels_topo(tmp_path):
+    param = "octree_levels_topo"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, [0, 1])
+
+
+def test_validate_octree_levels_obs(tmp_path):
+    param = "octree_levels_obs"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, [5, 5])
+
+
+def test_validate_octree_levels_padding(tmp_path):
+    param = "octree_levels_padding"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, [2, 2])
+
+
+def test_validate_alphas(tmp_path):
+    param = "alphas"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, [1] * 12)
+    params = Params("mvi", 2)
+    params.alphas = [1] * 4
+    assert len(params.alphas) == 12
+    with pytest.raises(ValueError) as excinfo:
+        params.alphas = [1] * 5
+    assert "'alphas' must be a list of" in str(excinfo.value)
+
+
+def test_validate_reference_model(tmp_path):
+    param = "reference_model"
+    param_test_generator(tmp_path, param, "nope", "type")
+    param_test_generator(tmp_path, param, {"invalid": 23}, "keys")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_starting_model(tmp_path):
+    param = "starting_model"
+    param_test_generator(tmp_path, param, "nope", "type")
+    param_test_generator(tmp_path, param, {"invalid": 23}, "keys")
+    default_test_generator(tmp_path, param, None)
+
+
+def test_validate_lower_bound(tmp_path):
+    param = "lower_bound"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, -np.inf)
+
+
+def test_validate_upper_bound(tmp_path):
+    param = "upper_bound"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, np.inf)
+
+
+def test_validate_max_distance(tmp_path):
+    param = "max_distance"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, np.inf)
+
+
+def test_validate_max_chunk_size(tmp_path):
+    param = "max_chunk_size"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, 128)
+
+
+def test_validate_chunk_by_rows(tmp_path):
+    param = "chunk_by_rows"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, False)
+
+
+def test_validate_output_tile_files(tmp_path):
+    param = "output_tile_files"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, False)
+
+
+def test_validate_no_data_value(tmp_path):
+    param = "no_data_value"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, 0)
+
+
+def test_validate_parallelized(tmp_path):
+    param = "parallelized"
+    param_test_generator(tmp_path, param, "nope", "type")
+    default_test_generator(tmp_path, param, True)
+
+
+def test_validate_out_group(tmp_path):
+    param = "out_group"
+    param_test_generator(tmp_path, param, 2, "type")
+    default_test_generator(tmp_path, param, None)

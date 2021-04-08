@@ -6,9 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 valid_parameters = [
-    "data_format",
-    "data_name",
-    "data_channels",
+    "data",
     "out_group",
     "workspace",
     "save_to_geoh5",
@@ -19,6 +17,7 @@ valid_parameters = [
     "core_cell_size",
     "octree_levels_topo",
     "octree_levels_obs",
+    "octree_levels_padding",
     "depth_core",
     "max_distance",
     "padding_distance",
@@ -52,6 +51,17 @@ valid_parameters = [
     "inversion_mesh_type",
     "shift_mesh_z0",
     "receivers_offset",
+    "gradient_type",
+    "initial_beta",
+    "initial_beta_ratio",
+    "lower_bound",
+    "upper_bound",
+    "max_distance",
+    "max_chunk_size",
+    "chunk_by_rows",
+    "output_tile_files",
+    "no_data_value",
+    "parallelized",
 ]
 
 required_parameters = ["inversion_type", "core_cell_size"]
@@ -61,6 +71,7 @@ valid_parameter_values = {
     "inversion_style": ["voxel"],
     "data_format": ["ubc_grav", "ubc_mag", "GA_object"],
     "inversion_mesh_type": ["TREE"],
+    "gradient_type": ["total"],
 }
 
 valid_parameter_types = {
@@ -74,9 +85,7 @@ valid_parameter_types = {
     "resolution": [int, float],
     "window": [dict],
     "workspace": [str],
-    "data_format": [str],
-    "data_name": [str],
-    "data_channels": [dict],
+    "data": [dict],
     "ignore_values": [str],
     "detrend": [dict],
     "data_file": [str],
@@ -93,16 +102,43 @@ valid_parameter_types = {
     "max_cg_iterations": [int],
     "tol_cg": [int, float],
     "max_global_iterations": [int],
+    "gradient_type": [str],
+    "initial_beta": [int, float],
+    "initial_beta_ratio": [float],
+    "n_cpu": [int, float],
+    "max_ram": [int, float],
+    "padding_distance": [int, float],
+    "octree_levels_topo": [int, float],
+    "octree_levels_obs": [int, float],
+    "octree_levels_padding": [int, float],
+    "alphas": [int, float],
+    "lower_bound": [int, float],
+    "upper_bound": [int, float],
+    "max_distance": [int, float],
+    "max_chunk_size": [int, float],
+    "chunk_by_rows": [bool],
+    "output_tile_files": [bool],
+    "no_data_value": [int, float],
+    "parallelized": [bool],
+    "out_group": [str],
+    "reference_model": [dict],
+    "starting_model": [dict],
 }
 
 valid_parameter_shapes = {
     "inducing_field_aid": (3,),
     "new_uncert": (2,),
+    "padding_distance": (3, 2),
 }
 
 valid_parameter_keys = {
     "window": ["center_x", "center_y", "width", "height", "azimuth", "center", "size"],
-    "data_channels": ["tmi"],
-    "topography": ["GA_object", "draped", "constant", "file"],
+    "data": ["type", "name", "channels"],
+    "topography": ["GA_object", "drapped", "constant", "file"],
     "receivers_offset": ["constant", "constant_drape", "radar_drape"],
+    "reference_model": ["model", "value", "none"],
+    "starting_model": [
+        "model",
+        "value",
+    ],
 }
