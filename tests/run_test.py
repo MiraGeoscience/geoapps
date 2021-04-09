@@ -86,6 +86,6 @@ def test_peak_finder():
     app.trigger.click()
 
 
-def test_peak_finder():
+def test_iso_surface():
     app = IsoSurface(h5file=project)
     app.trigger.click()

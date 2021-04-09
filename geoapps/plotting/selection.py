@@ -299,22 +299,25 @@ class PlotSelection2D(ObjectDataSelection):
         else:
             return
 
+        width = lim_x[1] - lim_x[0]
+        height = lim_y[1] - lim_y[0]
+
         self.refresh.value = False
         self.center_x.min = -np.inf
-        self.center_x.max = lim_x[1]
+        self.center_x.max = lim_x[1] + width * 0.1
         self.center_x.value = np.mean(lim_x)
-        self.center_x.min = lim_x[0]
+        self.center_x.min = lim_x[0] - width * 0.1
 
         self.center_y.min = -np.inf
-        self.center_y.max = lim_y[1]
+        self.center_y.max = lim_y[1] + height * 0.1
         self.center_y.value = np.mean(lim_y)
-        self.center_y.min = lim_y[0]
+        self.center_y.min = lim_y[0] - height * 0.1
 
-        self.width.max = lim_x[1] - lim_x[0]
+        self.width.max = width * 1.2
         self.width.value = self.width.max / 2.0
         self.width.min = 0
 
-        self.height.max = lim_y[1] - lim_y[0]
+        self.height.max = height * 1.2
         self.height.min = 0
         self.height.value = self.height.max / 2.0
         self.refresh.value = True
