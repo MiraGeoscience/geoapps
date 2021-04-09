@@ -12,11 +12,13 @@ import re
 import dask
 import dask.array as da
 import fiona
+import geoh5py
 import numpy as np
 import pandas as pd
 from dask.diagnostics import ProgressBar
 from geoh5py.data import FloatData
-from geoh5py.objects import BlockModel, Grid2D, Octree
+from geoh5py.groups import Group
+from geoh5py.objects import BlockModel, Grid2D, Octree, Surface
 from geoh5py.workspace import Workspace
 from osgeo import gdal
 from scipy.interpolate import interp1d
@@ -26,10 +28,19 @@ from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
 
-def find_value(labels, strings, default=None):
+def find_value(labels: list, keywords: list, default=None) -> list:
+    """
+    Find matching keywords within a list of labels.
+
+    :param labels: List of labels that may contain the keywords.
+    :param keywords: List of keywords to search for.
+    :param default: Default value be returned if none of the keywords are found.
+
+    :return matching_labels: List of labels containing any of the keywords.
+    """
     value = None
     for name in labels:
-        for string in strings:
+        for string in keywords:
             if isinstance(string, str) and (
                 (string.lower() in name.lower()) or (name.lower() in string.lower())
             ):
@@ -39,14 +50,14 @@ def find_value(labels, strings, default=None):
     return value
 
 
-def get_surface_parts(surface):
+def get_surface_parts(surface: Surface) -> np.ndarray:
     """
-    Find the connected cells from a surface
+    Find the connected cells from a surface.
 
-    :param :obj:`geoh5yp.objects.surface`: Input surface with cells
+    :param surface: Input surface with cells property.
 
-    :return: parts, numpy.array of int
-        Array of parts id for each of the surface vertices
+    :return parts: shape(*, 3)
+        Array of parts for each of the surface vertices.
     """
     cell_sorted = np.sort(surface.cells, axis=1)
     cell_sorted = cell_sorted[np.argsort(cell_sorted[:, 0]), :]
@@ -70,20 +81,32 @@ def get_surface_parts(surface):
     return parts
 
 
-def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="float"):
+def export_grid_2_geotiff(
+    data: FloatData, file_name: str, wkt_code: str = None, data_type: str = "float"
+):
     """
-    Source:
+    Write a geotiff from float data stored on a Grid2D object.
+
+    :param data: FloatData object with Grid2D parent.
+    :param file_name: Output file name *.tiff.
+    :param wkt_code: Well-Known-Text string used to assign a projection.
+    :param data_type:
+        Type of data written to the geotiff.
+        'float': Single band tiff with data values.
+        'RGB': Three bands tiff with the colormap values.
+
+    Original Source:
 
         Cameron Cooke: http://cgcooke.github.io/GDAL/
 
     Modified: 2020-04-28
     """
 
-    grid2d = data_object.parent
+    grid2d = data.parent
 
     assert isinstance(grid2d, Grid2D), f"The parent object must be a Grid2D entity."
 
-    values = data_object.values.copy()
+    values = data.values.copy()
     values[(values > 1e-38) * (values < 2e-38)] = -99999
 
     # TODO Re-sample the grid if rotated
@@ -95,8 +118,8 @@ def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="floa
     if data_type == "RGB":
         encode_type = gdal.GDT_Byte
         num_bands = 3
-        if data_object.entity_type.color_map is not None:
-            cmap = data_object.entity_type.color_map.values
+        if data.entity_type.color_map is not None:
+            cmap = data.entity_type.color_map.values
             red = interp1d(
                 cmap["Value"], cmap["Red"], bounds_error=False, fill_value="extrapolate"
             )(values)
@@ -170,21 +193,34 @@ def export_grid_2_geotiff(data_object, file_name, wkt_code=None, data_type="floa
     dataset.FlushCache()  # Write to disk.
 
 
-def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_name=None):
+def geotiff_2_grid(
+    workspace: Workspace,
+    file_name: str,
+    grid: Grid2D = None,
+    grid_name: str = None,
+    parent: Group = None,
+) -> Grid2D:
     """
-    Load a geotiff and return
-    a Grid2D with values
+    Load a geotiff from file.
+
+    :param workspace: Workspace to load the data into.
+    :param file_name: Input file name with path.
+    :param grid: Existing Grid2D object to load the data into. A new object is created by default.
+    :param grid_name: Name of the new Grid2D object. Defaults to the file name.
+    :param parent: Group entity to store the new Grid2D object into.
+
+     :return grid: Grid2D object with values stored.
     """
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)
     temp = band.ReadAsArray()
 
     file_name = os.path.basename(file_name).split(".")[0]
-    if grid_object is None:
+    if grid is None:
         if grid_name is None:
             grid_name = file_name
 
-        grid_object = Grid2D.create(
+        grid = Grid2D.create(
             workspace,
             name=grid_name,
             origin=[
@@ -199,17 +235,27 @@ def geotiff_2_grid(workspace, file_name, parent=None, grid_object=None, grid_nam
             parent=parent,
         )
 
-    assert isinstance(grid_object, Grid2D), "Parent object must be a Grid2D"
+    assert isinstance(grid, Grid2D), "Parent object must be a Grid2D"
 
     # Replace 0 to nan
     temp[temp == 0] = np.nan
-    grid_object.add_data({file_name: {"values": temp.ravel()}})
+    grid.add_data({file_name: {"values": temp.ravel()}})
 
     del tiff_object
-    return grid_object
+    return grid
 
 
-def export_curve_2_shapefile(curve, attribute=None, wkt_code=None, file_name=None):
+def export_curve_2_shapefile(
+    curve, attribute: geoh5py.data.Data = None, wkt_code: str = None, file_name=None
+):
+    """
+    Export a Curve object to *.shp
+
+    :param curve: Input Curve object to be exported.
+    :param attribute: Data values exported on the Curve parts.
+    :param wkt_code: Well-Known-Text string used to assign a projection.
+    :param file_name: Specify the path and name of the *.shp. Defaults to the current directory and `curve.name`.
+    """
     attribute_vals = None
 
     if attribute is not None and curve.get_data(attribute):
@@ -261,41 +307,27 @@ def export_curve_2_shapefile(curve, attribute=None, wkt_code=None, file_name=Non
 
 
 def weighted_average(
-    xyz_in,
-    xyz_out,
-    values,
-    n=8,
-    threshold=1e-1,
-    return_indices=False,
-    max_distance=np.inf,
-):
+    xyz_in: np.ndarray,
+    xyz_out: np.ndarray,
+    values: list,
+    max_distance: float = np.inf,
+    n: int = 8,
+    return_indices: bool = False,
+    threshold: float = 1e-1,
+) -> list:
     """
-    Perform a inverse distance weighted averaging of values.
+    Perform a inverse distance weighted averaging on a list of values.
 
-    Parameters
-    ----------
-    xyz_in: numpy.ndarray shape(*, 3)
-        Input coordinate locations
-
-    xyz_out: numpy.ndarray shape(*, 3)
-        Output coordinate locations
-
-    values: list of numpy.ndarray
-        Values to be averaged from the input to output locations
-
-    max_distance: flat, default=numpy.inf
-        Maximum averaging distance, beyond which values are assigned nan
-
-    n: int, default=8
-        Number of nearest neighbours used in the weighted average
-
-    threshold: float, default=1e-1
-        Small value added to the radial distance to avoid zero division.
+    :param xyz_in: shape(*, 3) Input coordinate locations.
+    :param xyz_out: shape(*, 3) Output coordinate locations.
+    :param values: Values to be averaged from the input to output locations.
+    :param max_distance: Maximum averaging distance, beyond which values are assigned nan.
+    :param n: Number of nearest neighbours used in the weighted average.
+    :param return_indices: If True, return the indices of the nearest neighbours from the input locations.
+    :param threshold: Small value added to the radial distance to avoid zero division.
         The value can also be used to smooth the interpolation.
 
-    return_indices: bool, default=False
-        Return the indices of the nearest neighbours from the input locations.
-
+    :return avg_values: List of values averaged to the output coordinates
     """
     assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
 
@@ -306,7 +338,7 @@ def weighted_average(
     tree = cKDTree(xyz_in)
     rad, ind = tree.query(xyz_out, n)
     rad[rad > max_distance] = np.nan
-    out = []
+    avg_values = []
     for value in values:
         values_interp = np.zeros(xyz_out.shape[0])
         weight = np.zeros(xyz_out.shape[0])
@@ -315,35 +347,32 @@ def weighted_average(
             values_interp += value[ind[:, ii]] / (rad[:, ii] + threshold)
             weight += 1.0 / (rad[:, ii] + threshold)
 
-        out += [values_interp / weight]
+        avg_values += [values_interp / weight]
 
     if return_indices:
-        return out, ind
+        return avg_values, ind
 
-    return out
+    return avg_values
 
 
-def filter_xy(x, y, distance, window=None):
+def filter_xy(
+    x: np.array, y: np.array, distance: float, window: dict = None
+) -> np.array:
     """
-    Function to down-sample xy locations based on minimum distance.
+    Function to extract and down-sample xy locations based on minimum distance and window parameters.
 
-    :param x: numpy.array of float
-        Grid coordinate along the x-axis
-    :param y: numpy.array of float
-        Grid coordinate along the y-axis
-    :param distance: float
-        Minimum distance between neighbours
-    :param window: dict
-        Window parameters describing a domain of interest. Must contain the following
-        keys:
+    :param x: Easting coordinates
+    :param y: Northing coordinates
+    :param distance: Minimum distance between neighbours
+    :param window: Window parameters describing a domain of interest.
+        Must contain the following keys and values:
         window = {
-            "center": [X, Y],
-            "size": [width, height],
-            "azimuth": degree_from North
+            "center": [X: float, Y: float],
+            "size": [width: float, height: float],
+            "azimuth": float
         }
 
-    :return: numpy.array of bool shape(x)
-        Logical array of indices
+    :return selection: Array of 'bool' of shape(x)
     """
     mask = np.ones_like(x, dtype="bool")
     if window is not None:
@@ -395,7 +424,14 @@ def filter_xy(x, y, distance, window=None):
     return filter_xy * mask
 
 
-def rotate_xy(xyz, center, angle):
+def rotate_xy(xyz: np.ndarray, center: list, angle: float):
+    """
+    Perform a counterclockwise rotation on the XY plane about a center point.
+
+    :param xyz: shape(*, 3) Input coordinates
+    :param center: len(2) Coordinates for the center of rotation.
+    :param  angle: Angle of rotation in degree
+    """
     R = np.r_[
         np.c_[np.cos(np.pi * angle / 180), -np.sin(np.pi * angle / 180)],
         np.c_[np.sin(np.pi * angle / 180), np.cos(np.pi * angle / 180)],
@@ -410,19 +446,17 @@ def rotate_xy(xyz, center, angle):
     return np.c_[xy_rot[:, 0] + center[0], xy_rot[:, 1] + center[1], locs[:, 2:]]
 
 
-def running_mean(values, width=1, method="centered"):
+def running_mean(
+    values: np.array, width: int = 1, method: str = "centered"
+) -> np.array:
     """
     Compute a running mean of an array over a defined width.
 
-    :param values: array of floats
-        Input values to compute the running mean over
-    :param width: int
-        Number of neighboring values to be used
-    :param method: str
-        Choice between 'forward', 'backward' and ['centered'] averaging.
+    :param values: Input values to compute the running mean over
+    :param width: Number of neighboring values to be used
+    :param method: Choice between 'forward', 'backward' and ['centered'] averaging.
 
-    :return mean_values: array of floats
-        Array of shape(values, )
+    :return mean_values: Averaged array values of shape(values, )
     """
     # Averaging vector (1/N)
     weights = np.r_[np.zeros(width + 1), np.ones_like(values)]
@@ -453,114 +487,173 @@ def running_mean(values, width=1, method="centered"):
     return mean
 
 
-class signal_processing_1d:
+class LineDataDerivatives:
     """
-    Compute the derivatives of values in Fourier Domain
+    Compute and store the derivatives of inline data values. The values are re-sampled at a constant
+    interval, padded then transformed to the Fourier domain using the :obj:`numpy.fft` package.
+
+    :param locations: An array of data locations, either as distance along line or 3D coordinates.
+        For 3D coordinates, the locations are automatically converted and sorted as distance from the origin.
+    :param values: Data values used to compute derivatives over, shape(locations.shape[0],).
+    :param epsilon: Adjustable constant used in :obj:`scipy.interpolate.Rbf`. Defaults to 20x the average sampling
+    :param interpolation: Type on interpolation accepted by the :obj:`scipy.interpolate.Rbf` routine:
+        'multiquadric', 'inverse', 'gaussian', 'linear', 'cubic', 'quintic', 'thin_plate'
+    :param sampling_width: Number of padding values used in the FFT. By default, the entire array is used as
+        padding.
+    :param residual: Use the residual between the values and the running mean to compute derivatives.
+    :param sampling: Sampling interval length (m) used in the FFT. Defaults to the mean data separation.
+    :param smoothing: Number of neighbours used by the :obj:`geoapps.utils.running_mean` routine.
     """
 
-    def __init__(self, locs, values, **kwargs):
-        self._interpolation = "linear"
-        self._smoothing = 0
-        self._residual = False
+    def __init__(
+        self,
+        locations: np.ndarray = None,
+        values: np.array = None,
+        epsilon: float = None,
+        interpolation: str = "gaussian",
+        smoothing: int = 0,
+        residual: bool = False,
+        sampling: float = None,
+        **kwargs,
+    ):
         self._locations_resampled = None
-        self._values_padded = None
-        self._fft = None
+        self._epsilon = epsilon
+        self.x_locations = None
+        self.y_locations = None
+        self.z_locations = None
+        self.locations = locations
+        self.values = values
+        self._interpolation = interpolation
+        self._smoothing = smoothing
+        self._residual = residual
+        self._sampling = sampling
 
-        if np.std(locs[:, 1]) > np.std(locs[:, 0]):
-            start = np.argmin(locs[:, 1])
-            self.sorting = np.argsort(locs[:, 1])
-        else:
-            start = np.argmin(locs[:, 0])
-            self.sorting = np.argsort(locs[:, 0])
-
-        self.x_locs = locs[self.sorting, 0]
-        self.y_locs = locs[self.sorting, 1]
-
-        if locs.shape[1] == 3:
-            self.z_locs = locs[self.sorting, 2]
-
-        dist_line = np.linalg.norm(
-            np.c_[
-                locs[start, 0] - locs[self.sorting, 0],
-                locs[start, 1] - locs[self.sorting, 1],
-            ],
-            axis=1,
-        )
-
-        self.locations = dist_line
-
-        if values is not None:
-            self._values = values[self.sorting]
+        # if values is not None:
+        #     self._values = values[self.sorting]
 
         for key, value in kwargs.items():
             if getattr(self, key, None) is not None:
                 setattr(self, key, value)
 
-    def interp_x(self, x):
-
-        if getattr(self, "Fx", None) is None:
+    def interp_x(self, distance):
+        """
+        Get the x-coordinate from the inline distance.
+        """
+        if getattr(self, "Fx", None) is None and self.x_locations is not None:
             self.Fx = interp1d(
                 self.locations,
-                self.x_locs,
+                self.x_locations,
                 bounds_error=False,
                 fill_value="extrapolate",
             )
-        return self.Fx(x)
+        return self.Fx(distance)
 
-    def interp_y(self, y):
-
-        if getattr(self, "Fy", None) is None:
+    def interp_y(self, distance):
+        """
+        Get the y-coordinate from the inline distance.
+        """
+        if getattr(self, "Fy", None) is None and self.y_locations is not None:
             self.Fy = interp1d(
                 self.locations,
-                self.y_locs,
+                self.y_locations,
                 bounds_error=False,
                 fill_value="extrapolate",
             )
-        return self.Fy(y)
+        return self.Fy(distance)
 
-    def interp_z(self, z):
-
-        if getattr(self, "Fz", None) is None:
+    def interp_z(self, distance):
+        """
+        Get the z-coordinate from the inline distance.
+        """
+        if getattr(self, "Fz", None) is None and self.z_locations is not None:
             self.Fz = interp1d(
                 self.locations,
-                self.z_locs,
+                self.z_locations,
                 bounds_error=False,
                 fill_value="extrapolate",
             )
-        return self.Fz(z)
+        return self.Fz(distance)
 
     @property
-    def n_padding(self):
+    def epsilon(self):
+        """
+        Adjustable constant used by :obj:`scipy.interpolate.Rbf`
+        """
+        if getattr(self, "_epsilon", None) is None:
+            width = self.locations[-1] - self.locations[0]
+            self._epsilon = width / 5.0
+
+        return self._epsilon
+
+    @property
+    def sampling_width(self):
         """
         Number of padding cells added for the FFT
         """
-        if getattr(self, "_n_padding", None) is None:
-            self._n_padding = int(np.floor(len(self.values_resampled)))
+        if getattr(self, "_sampling_width", None) is None:
+            self._sampling_width = int(np.floor(len(self.values_resampled)))
 
-        return self._n_padding
+        return self._sampling_width
 
     @property
     def locations(self):
         """
-        Position of values
+        Position of values along line.
         """
         return self._locations
 
     @locations.setter
     def locations(self, locations):
-
-        self._locations = locations
+        self._locations = None
+        self.x_locations = None
+        self.y_locations = None
+        self.z_locations = None
+        self.sorting = None
         self.values_resampled = None
+        self._locations_resampled = None
 
-        sort = np.argsort(locations)
-        start = locations[sort[0]] * 1.0
-        end = locations[sort[-1]] * 1.0
+        if locations is not None:
+            if locations.ndim > 1:
+                if np.std(locations[:, 1]) > np.std(locations[:, 0]):
+                    start = np.argmin(locations[:, 1])
+                    self.sorting = np.argsort(locations[:, 1])
+                else:
+                    start = np.argmin(locations[:, 0])
+                    self.sorting = np.argsort(locations[:, 0])
 
-        if (start == end) or np.isnan(self.hx):
-            return
+                self.x_locations = locations[self.sorting, 0]
+                self.y_locations = locations[self.sorting, 1]
 
-        self._locations_resampled = np.arange(start, end, self.hx)
-        self.locations_resampled
+                if locations.shape[1] == 3:
+                    self.z_locations = locations[self.sorting, 2]
+
+                distances = np.linalg.norm(
+                    np.c_[
+                        locations[start, 0] - locations[self.sorting, 0],
+                        locations[start, 1] - locations[self.sorting, 1],
+                    ],
+                    axis=1,
+                )
+
+            else:
+                self.x_locations = locations
+                self.sorting = np.argsort(locations)
+                distances = locations[self.sorting]
+
+            self._locations = distances
+
+            if self._locations[0] == self._locations[-1]:
+                return
+
+            width = self._locations[-1] - self._locations[0]
+            dx = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
+            self._sampling_width = np.ceil(
+                (self._locations[-1] - self._locations[0]) / dx
+            ).astype(int)
+            self._locations_resampled = np.linspace(
+                self._locations[0], self._locations[-1], self.sampling_width
+            )
+            # self._locations_resampled = self._locations_padded[self.sampling_width: -self.sampling_width]
 
     @property
     def locations_resampled(self):
@@ -572,23 +665,27 @@ class signal_processing_1d:
     @property
     def values(self):
         """
-        Real values of the vector
+        Original values sorted along line.
         """
         return self._values
 
     @values.setter
     def values(self, values):
         self.values_resampled = None
-        self._values = values[self.sorting]
+        self._values = None
+        if (values is not None) and (self.sorting is not None):
+            self._values = values[self.sorting]
 
     @property
-    def hx(self):
+    def sampling(self):
         """
-        Discrete interval length
+        Discrete interval length (m)
         """
-        if getattr(self, "_hx", None) is None:
-            self._hx = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
-        return self._hx
+        if getattr(self, "_sampling", None) is None:
+            self._sampling = np.mean(
+                np.abs(self.locations_resampled[1:] - self.locations_resampled[:-1])
+            )
+        return self._sampling
 
     @property
     def values_resampled(self):
@@ -596,8 +693,9 @@ class signal_processing_1d:
         Values re-sampled on a regular interval
         """
         if getattr(self, "_values_resampled", None) is None:
-            F = interp1d(self.locations, self.values, kind=self.interpolation)
-            self._values_resampled = F(self.locations_resampled)
+            # self._values_resampled = self.values_padded[self.sampling_width: -self.sampling_width]
+            F = interp1d(self.locations, self.values, fill_value="extrapolate")
+            self._values_resampled = F(self._locations_resampled)
             self._values_resampled_raw = self._values_resampled.copy()
             if self._smoothing > 0:
                 mean_values = running_mean(
@@ -615,35 +713,11 @@ class signal_processing_1d:
     def values_resampled(self, values):
         self._values_resampled = values
         self._values_resampled_raw = None
-        self._values_padded = None
-        self._fft = None
-
-    @property
-    def values_padded(self):
-        """
-        Values padded with cosin tapper
-        """
-        if getattr(self, "_values_padded", None) is None:
-            values_padded = np.r_[
-                self.values_resampled[: self.n_padding][::-1],
-                self.values_resampled,
-                self.values_resampled[-self.n_padding :][::-1],
-            ]
-
-            tapper = -np.cos(np.pi * (np.arange(self.n_padding)) / self.n_padding)
-            tapper = (
-                np.r_[tapper, np.ones_like(self.locations_resampled), tapper[::-1]]
-                / 2.0
-                + 0.5
-            )
-            self._values_padded = tapper * values_padded
-
-        return self._values_padded
 
     @property
     def interpolation(self):
         """
-        Method of interpolation
+        Method of interpolation: ['linear'], 'nearest', 'slinear', 'quadratic' or 'cubic'
         """
         return self._interpolation
 
@@ -651,25 +725,6 @@ class signal_processing_1d:
     def interpolation(self, method):
         methods = ["linear", "nearest", "slinear", "quadratic", "cubic"]
         assert method in methods, f"Method on interpolation must be one of {methods}"
-
-    @property
-    def fft(self):
-        """
-        Fourier domain of values_padded
-        """
-        if getattr(self, "_fft", None) is None:
-            self._fft = np.fft.fft(self.values_padded)
-        return self._fft
-
-    @property
-    def fftfreq(self):
-        """
-        Wavenumber of the values FFT
-        """
-        if getattr(self, "_fftfreq", None) is None:
-            nx = len(self.values_padded)
-            self._fftfreq = 2.0 * np.pi * np.fft.fftfreq(nx, self.hx)
-        return self._fftfreq
 
     @property
     def residual(self):
@@ -702,13 +757,16 @@ class signal_processing_1d:
             self._smoothing = value
             self.values_resampled = None
 
-    def derivative(self, order=1):
+    def derivative(self, order=1) -> np.ndarray:
         """
-        Compute the derivative
+        Compute and return the first order derivative.
         """
-        fft_deriv = (self.fftfreq * 1j) ** order * self.fft.copy()
-        deriv_padded = np.fft.ifft(fft_deriv)
-        return np.real(deriv_padded[self.n_padding : -self.n_padding])
+        deriv = self.values_resampled
+        for ii in range(order):
+            deriv = (deriv[1:] - deriv[:-1]) / self.sampling
+            deriv = np.r_[2 * deriv[0] - deriv[1], deriv]
+
+        return deriv
 
 
 def tensor_2_block_model(workspace, mesh, name=None, parent=None, data={}):
@@ -760,6 +818,18 @@ def block_model_2_tensor(block_model, models=[]):
         block_model.origin["y"] + block_model.v_cells[block_model.v_cells < 0].sum(),
         block_model.origin["z"] + block_model.z_cells[block_model.z_cells < 0].sum(),
     ]
+
+    print(
+        tensor.x0,
+        [
+            block_model.origin["x"]
+            + block_model.u_cells[block_model.u_cells < 0].sum(),
+            block_model.origin["y"]
+            + block_model.v_cells[block_model.v_cells < 0].sum(),
+            block_model.origin["z"]
+            + block_model.z_cells[block_model.z_cells < 0].sum(),
+        ],
+    )
     out = []
     for model in models:
         values = model.copy().reshape((tensor.nCz, tensor.nCx, tensor.nCy), order="F")
@@ -782,10 +852,12 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
     indArr = indArr[ubc_order] - 1
     levels = levels[ubc_order]
 
+    origin = treemesh.x0.copy()
+    origin[2] += treemesh.h[2].size * treemesh.h[2][0]
     mesh_object = Octree.create(
         workspace,
         name=f"Mesh",
-        origin=treemesh.x0,
+        origin=origin,
         u_count=treemesh.h[0].size,
         v_count=treemesh.h[1].size,
         w_count=treemesh.h[2].size,
@@ -1506,73 +1578,6 @@ def iso_surface(
 
     return surfaces
 
-
-# def refine_cells(self, indices):
-#     """
-#
-#     Parameters
-#     ----------
-#     indices: int
-#         Index of cell to be divided in octree
-#
-#     """
-#     octree_cells = self.octree_cells.copy()
-#
-#     mask = np.ones(self.n_cells, dtype=bool)
-#     mask[indices] = 0
-#
-#     new_cells = np.array([], dtype=self.octree_cells.dtype)
-#
-#     copy_val = []
-#     for ind in indices:
-#
-#         level = int(octree_cells[ind][3] / 2)
-#
-#         if level < 1:
-#             continue
-#
-#         # Brake into 8 cells
-#         for k in range(2):
-#             for j in range(2):
-#                 for i in range(2):
-#
-#                     new_cell = np.array(
-#                         (
-#                             octree_cells[ind][0] + i * level,
-#                             octree_cells[ind][1] + j * level,
-#                             octree_cells[ind][2] + k * level,
-#                             level,
-#                         ),
-#                         dtype=octree_cells.dtype,
-#                     )
-#                     new_cells = np.hstack([new_cells, new_cell])
-#
-#         copy_val.append(np.ones(8) * ind)
-#
-#     ind_data = np.hstack(
-#         [np.arange(self.n_cells)[mask], np.hstack(copy_val)]
-#     ).astype(int)
-#     self._octree_cells = np.hstack([octree_cells[mask], new_cells])
-#     self.entity_type.workspace.sort_children_data(self, ind_data)
-
-# def refine_xyz(self, locations, levels):
-#     """
-#     Parameters
-#     ----------
-#     locations: np.ndarray or list of floats
-#         List of locations (x, y, z) to refine the octree
-#     levels: array or list of int
-#         List of octree level for each location
-#     """
-#
-#     if isinstance(locations, np.ndarray):
-#         locations = locations.tolist()
-#     if isinstance(levels, np.ndarray):
-#         levels = levels.tolist()
-#
-#     tree = np.spatial.cKDTree(self.centroids)
-#     indices = tree.query()
-#
 
 colors = [
     "#000000",
