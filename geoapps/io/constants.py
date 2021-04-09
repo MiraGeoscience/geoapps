@@ -137,8 +137,5 @@ valid_parameter_keys = {
     "topography": ["GA_object", "drapped", "constant", "file"],
     "receivers_offset": ["constant", "constant_drape", "radar_drape"],
     "reference_model": ["model", "value", "none"],
-    "starting_model": [
-        "model",
-        "value",
-    ],
+    "starting_model": ["model", "value"],
 }
