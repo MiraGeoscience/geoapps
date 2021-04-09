@@ -11,11 +11,7 @@ import os
 
 import numpy as np
 
-from .utils import (
-    create_default_output_path,
-    create_relative_output_path,
-    create_work_path,
-)
+from .utils import create_relative_output_path, create_work_path
 from .validators import InputValidator
 
 
@@ -621,5 +617,6 @@ class Params:
                         if "max_iterations" in inputfile.data.keys():
                             inputfile.data["max_iterations"] = 40
                         self._override_default("max_iterations", 40)
+                self._override_default(param, value)
             else:
                 self._override_default(param, value)

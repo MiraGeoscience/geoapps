@@ -41,7 +41,7 @@ class InputValidator:
                 raise ValueError("Data 'type' and 'name' must not be empty.")
             if input["data"]["type"] == "GA_object":
                 if "workspace" not in input.keys():
-                    msg = "Input file must contain a 'workspace' path"
+                    msg = "Input file must contain a 'workspace' path "
                     msg += "for data type 'GA_object'."
                     raise ValueError(msg)
             if input["data"]["type"] in ["ubc_grav", "ubc_mag"]:
@@ -60,7 +60,7 @@ class InputValidator:
                 raise ValueError(msg)
         elif "forward_only" in input.keys():
             if input["forward_only"] == True:
-                if "reference model" not in input.keys():
+                if "reference_model" not in input.keys():
                     msg = "A reference model/value must be provided for "
                     msg += "forward modeling"
                     raise ValueError(msg)
