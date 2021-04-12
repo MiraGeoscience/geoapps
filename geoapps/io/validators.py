@@ -18,6 +18,23 @@ from .constants import (
 
 
 class InputValidator:
+    """
+    Validations for inversion parameters.
+
+    Attributes
+    ----------
+    input : dict, optional
+        Input file contents parsed to dict
+
+    Methods
+    -------
+    validate_input(input)
+        Validates input params and contents/type/shape/keys of values.
+    validate(param value)
+        Validates parameter values, types, shapes, and keys.
+
+    """
+
     def __init__(self, input=None):
         self.input = input
 
@@ -32,7 +49,22 @@ class InputValidator:
         self._input = val
 
     def validate_input(self, input):
-        """ Validates input params and contents/type/shape/keys of values. """
+        """Validates input params and contents/type/shape/keys of values.
+
+        Calls validate method on individual key/value pairs in input, and
+        handles validations requiring knowledge of other parameters.
+
+        Parameters
+        ----------
+        input : dict
+            Input file contents parsed to dict.
+
+        Raises
+        ------
+        ValueError, TypeError whenever an input parameter fails one of it's
+        value/type/shape/key validations.
+        """
+
         self._validate_required_parameters(input)
         if "data" in input.keys():
             require_keys = "type" not in input["data"].keys()
@@ -81,7 +113,26 @@ class InputValidator:
             self.validate(k, v)
 
     def validate(self, param, value):
-        """ Validates parameter values, types, and shapes. """
+        """Validates parameter values, types, shapes, and keys.
+
+        Wraps val, type, shape, keys validate methods depending on whether
+        a validation is stored in .constants.valid_parameter_values,
+        .constants.valid_parameter_types, .constants.valid_parameter_shapes,
+        and .constants.valid_parameter_keys.
+
+        Parameters
+        ----------
+        param : str
+            Parameter for driving inversion.
+        value : anything
+            Value attached to param.
+
+        Raises
+        ------
+        ValueError, TypeError
+            Whenever an input parameter fails one of it's
+            value/type/shape/key validations.
+        """
 
         if value is None:
             if param in required_parameters:
@@ -114,7 +165,7 @@ class InputValidator:
             raise ValueError(msg)
 
     def _validate_parameter_type(self, param, value):
-        """ Raise ValueError if parameter type is invalid. """
+        """ Raise TypeError if parameter type is invalid. """
         vptypes = valid_parameter_types[param]
         tnames = [t.__name__ for t in vptypes]
         msg = self._param_validation_msg(param, "type", tnames)
@@ -143,7 +194,22 @@ class InputValidator:
             raise ValueError(msg)
 
     def _param_validation_msg(self, param, validation_type, validations):
-        """ Generate ValueError message for parameter validation. """
+        """Generate an error message for parameter validation.
+
+        Parameters
+        ----------
+        param: str
+            parameter name as stored in input file
+        validation_type: str
+            name of validation type.  One of: 'value', 'type', 'shape', 'keys'.
+        validations: any
+            valid input content.
+
+        Returns
+        -------
+        string
+            Message to be printed with the raised exception.
+        """
 
         if validation_type == "keys":
             msg = (
@@ -160,7 +226,21 @@ class InputValidator:
         return msg
 
     def _validate_required_parameters(self, input):
-        """ Ensures that all required input file keys are present."""
+        """
+        Ensures that all required input file keys are present.
+
+        Parameters
+        ----------
+        input : dict
+            Input file contents parsed to dict.
+
+        Raises
+        ------
+        ValueError
+            If a required parameter (stored ing constants.required_parameters)
+            is missing from the input file contents.
+
+        """
         missing = []
         for param in required_parameters:
             if param not in input.keys():
@@ -169,6 +249,14 @@ class InputValidator:
             raise ValueError(f"Missing required parameter(s): {*missing,}.")
 
     def _isiterable(self, v):
+        """
+        Checks if object is iterable
+
+        Returns
+        -------
+        bool
+            True if object has __iter__ attribute but is not string or dict type.
+        """
         only_array_like = (not isinstance(v, str)) & (not isinstance(v, dict))
         if (hasattr(v, "__iter__")) & only_array_like:
             return True

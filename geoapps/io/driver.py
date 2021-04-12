@@ -11,11 +11,48 @@ import os
 
 import numpy as np
 
-from .utils import create_relative_output_path, create_work_path
 from .validators import InputValidator
+
+### Utils ###
+
+
+def create_work_path(filepath):
+    """ Returns absolute path of root directory of possible relative file path. """
+    dsep = os.path.sep
+    work_path = os.path.dirname(os.path.abspath(filepath)) + dsep
+    return work_path
+
+
+def create_relative_output_path(input_file_path, result_folder_path):
+    """ Creates a relative path to result folder from common path to input file. """
+    dsep = os.path.sep
+    work_path = create_work_path(input_file_path)
+    root = os.path.commonprefix([result_folder_path, work_path])
+    output_path = work_path + os.path.relpath(result_folder_path, root) + dsep
+    return output_path
 
 
 class InputFile:
+    """
+    Handles loading input file containing inversion parameters.
+
+    Attributes
+    ----------
+    filepath : str
+        path to input file.
+    workpath : str
+        path to working directory.
+    data : dict
+        input file contents parsed to dictionary.
+    isloaded : bool
+        True if .load method called to populate the .data attribute.
+
+    Methods
+    -------
+    load()
+        Loads and validates input file contents to dictionary.
+
+    """
 
     _valid_extensions = ["json"]
 
@@ -23,7 +60,6 @@ class InputFile:
         self.filepath = filepath
         self.workpath = create_work_path(filepath)
         self.data = None
-        self.validator = None
         self.isloaded = False
 
     @property
@@ -38,15 +74,43 @@ class InputFile:
             self._filepath = f
 
     def load(self):
-        """ Loads input file contents to dictionary. """
+        """ Loads and validates input file contents to dictionary. """
         with open(self.filepath) as f:
             self.data = json.load(f)
-            self.validator = InputValidator(self.data)
+            validator = InputValidator(self.data)
         self.isloaded = True
 
 
 class Params:
+    """
+    Stores input parameters to drive an inversion.
+
+    Attributes
+    ----------
+    validator : InputValidator
+        class instance to handle parameter validation.
+    inversion_type : str
+
+    Constructors
+    -------
+    from_ifile(ifile)
+        Construct Params object from InputFile instance.
+    from_path(path)
+        Construct Params object from path to input file (wraps from_ifile constructor).
+
+    """
+
     def __init__(self, inversion_type, core_cell_size, workpath=os.path.abspath(".")):
+        """
+        Parameters
+        ----------
+        inversion_type : str
+            Type of inversion. Must be one of: 'gravity', 'magnetics', 'mvi', 'mvic'.
+        core_cell_size : int, float
+            Core cell size for base mesh.
+        workpath : str, optional
+            Path to working folder (default is current directory).
+        """
         self.validator = InputValidator()
         self.inversion_type = inversion_type
         self.core_cell_size = core_cell_size
@@ -80,6 +144,7 @@ class Params:
         self.initial_beta_ratio = 1e2
         self.n_cpu = multiprocessing.cpu_count() / 2
         self.max_ram = 2
+        self.depth_core = None
         self.padding_distance = [[0, 0]] * 3
         self.octree_levels_topo = [0, 1]
         self.octree_levels_obs = [5, 5]
@@ -99,7 +164,13 @@ class Params:
 
     @classmethod
     def from_ifile(cls, ifile):
-        """ Construct Params object from InputFile instance. """
+        """Construct Params object from InputFile instance.
+
+        Parameters
+        ----------
+        ifile : InputFile
+            class instance to handle loading input file
+        """
         if not ifile.isloaded:
             ifile.load()
         inversion_type = ifile.data["inversion_type"]
@@ -110,7 +181,13 @@ class Params:
 
     @classmethod
     def from_path(cls, filepath):
-        """ Construct Params object from .json input file path. """
+        """Construct Params object from path to input file.
+
+        Parameters
+        ----------
+        filepath : str
+            path to input file.
+        """
         ifile = InputFile(filepath)
         p = cls.from_ifile(ifile)
         return p
@@ -450,6 +527,15 @@ class Params:
     def max_ram(self, val):
         self.validator.validate("max_ram", val)
         self._max_ram = val
+
+    @property
+    def depth_core(self):
+        return self._depth_core
+
+    @depth_core.setter
+    def depth_core(self, val):
+        self.validator.validate("depth_core", val)
+        self._depth_core = val
 
     @property
     def padding_distance(self):

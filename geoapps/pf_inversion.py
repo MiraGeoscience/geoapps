@@ -522,22 +522,22 @@ def inversion(inputfile):
             len(params.octree_levels_padding) :
         ]
 
-    # if "depth_core" in list(input_dict.keys()):
-    #     if "value" in list(input_dict["depth_core"].keys()):
-    #         depth_core = input_dict["depth_core"]["value"]
-    #
-    #     elif "auto" in list(input_dict["depth_core"].keys()):
-    #         xLoc = survey.rxLoc[:, 0]
-    #         yLoc = survey.rxLoc[:, 1]
-    #         depth_core = (
-    #             np.min([(xLoc.max() - xLoc.min()), (yLoc.max() - yLoc.min())])
-    #             * input_dict["depth_core"]["auto"]
-    #         )
-    #         print("Mesh core depth = %.2f" % depth_core)
-    #     else:
-    #         depth_core = 0
-    # else:
-    #     depth_core = 0
+    if params.depth_core is not None:
+        if "value" in params.depth_core.keys():
+            depth_core = params.depth_core["value"]
+
+        elif "auto" in params.depth_core.keys():
+            xLoc = survey.rxLoc[:, 0]
+            yLoc = survey.rxLoc[:, 1]
+            depth_core = (
+                np.min([(xLoc.max() - xLoc.min()), (yLoc.max() - yLoc.min())])
+                * params.depth_core["auto"]
+            )
+            print("Mesh core depth = %.2f" % depth_core)
+        else:
+            depth_core = 0
+    else:
+        depth_core = 0
 
     if "mvi" in params.inversion_type:
         vector_property = True

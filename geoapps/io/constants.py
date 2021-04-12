@@ -107,6 +107,7 @@ valid_parameter_types = {
     "initial_beta_ratio": [float],
     "n_cpu": [int, float],
     "max_ram": [int, float],
+    "depth_core": [dict],
     "padding_distance": [int, float],
     "octree_levels_topo": [int, float],
     "octree_levels_obs": [int, float],
@@ -138,4 +139,5 @@ valid_parameter_keys = {
     "receivers_offset": ["constant", "constant_drape", "radar_drape"],
     "reference_model": ["model", "value", "none"],
     "starting_model": ["model", "value"],
+    "depth_core": ["value", "auto"],
 }
