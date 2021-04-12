@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 from geoapps.io import InputFile, Params
-from geoapps.io.driver import create_relative_output_path, create_work_path
+from geoapps.io.driver import create_relative_path, create_work_path
 
 ######################  Setup  ###########################
 
@@ -59,18 +59,18 @@ def param_test_generator(tmp_path, tparams):
 ######################  Tests  ###########################
 
 
-def test_create_relative_output_path():
-    dsep = os.path.sep
-    outpath = create_work_path("../../some/project/file")
-    path = create_relative_output_path("../assets/Inversion_.json", outpath)
-    root = os.path.abspath("..")
-    validate_path = os.path.join(root, "assets", "some", "project") + dsep
-    assert path == validate_path
-
-
 def test_create_work_path():
     wp = create_work_path("./inputfile.json")
     assert wp == os.path.abspath(".") + os.path.sep
+
+
+def test_create_relative_path():
+    dsep = os.path.sep
+    outpath = create_work_path("../../some/project/file")
+    path = create_relative_path("../assets/Inversion_.json", outpath)
+    root = os.path.abspath("..")
+    validate_path = os.path.join(root, "assets", "some", "project") + dsep
+    assert path == validate_path
 
 
 def test_params_constructors(tmp_path):

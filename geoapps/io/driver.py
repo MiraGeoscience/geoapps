@@ -8,6 +8,7 @@
 import json
 import multiprocessing
 import os
+from typing import Any
 
 import numpy as np
 
@@ -16,19 +17,19 @@ from .validators import InputValidator
 ### Utils ###
 
 
-def create_work_path(filepath):
+def create_work_path(filepath: str) -> str:
     """ Returns absolute path of root directory of possible relative file path. """
     dsep = os.path.sep
     work_path = os.path.dirname(os.path.abspath(filepath)) + dsep
     return work_path
 
 
-def create_relative_output_path(input_file_path, result_folder_path):
-    """ Creates a relative path to result folder from common path to input file. """
+def create_relative_path(filepath: str, folder: str) -> str:
+    """ Creates a relative path to folder from common path path elements in filepath. """
     dsep = os.path.sep
-    work_path = create_work_path(input_file_path)
-    root = os.path.commonprefix([result_folder_path, work_path])
-    output_path = work_path + os.path.relpath(result_folder_path, root) + dsep
+    work_path = create_work_path(filepath)
+    root = os.path.commonprefix([folder, work_path])
+    output_path = work_path + os.path.relpath(folder, root) + dsep
     return output_path
 
 
@@ -73,7 +74,7 @@ class InputFile:
         else:
             self._filepath = f
 
-    def load(self):
+    def load(self) -> None:
         """ Loads and validates input file contents to dictionary. """
         with open(self.filepath) as f:
             self.data = json.load(f)
@@ -163,7 +164,7 @@ class Params:
         self.out_group = None
 
     @classmethod
-    def from_ifile(cls, ifile):
+    def from_ifile(cls, ifile: InputFile) -> None:
         """Construct Params object from InputFile instance.
 
         Parameters
@@ -180,7 +181,7 @@ class Params:
         return p
 
     @classmethod
-    def from_path(cls, filepath):
+    def from_path(cls, filepath: str) -> None:
         """Construct Params object from path to input file.
 
         Parameters
@@ -687,15 +688,15 @@ class Params:
         self.validator.validate("out_group", val)
         self._out_group = val
 
-    def _override_default(self, param, value):
+    def _override_default(self, param: str, value: Any) -> None:
         """ Override parameter default value. """
         self.__setattr__(param, value)
 
-    def _init_params(self, inputfile):
+    def _init_params(self, inputfile: InputFile) -> None:
         """ Overrides default parameter values with input file values. """
         for param, value in inputfile.data.items():
             if param == "result_folder":
-                op = create_relative_output_path(inputfile.workpath, value)
+                op = create_relative_path(inputfile.workpath, value)
                 self._override_default(param, op)
             elif param == "model_norms":
                 if "max_iterations" not in inputfile.data.keys():

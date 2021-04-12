@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from typing import Any, Dict, Tuple
+
 import numpy as np
 
 from .constants import (
@@ -35,7 +37,7 @@ class InputValidator:
 
     """
 
-    def __init__(self, input=None):
+    def __init__(self, input: Dict[str, Any] = None):
         self.input = input
 
     @property
@@ -48,7 +50,7 @@ class InputValidator:
             self.validate_input(val)
         self._input = val
 
-    def validate_input(self, input):
+    def validate_input(self, input: Dict[str, Any]) -> None:
         """Validates input params and contents/type/shape/keys of values.
 
         Calls validate method on individual key/value pairs in input, and
@@ -112,7 +114,7 @@ class InputValidator:
         for k, v in input.items():
             self.validate(k, v)
 
-    def validate(self, param, value):
+    def validate(self, param: str, value: Any) -> None:
         """Validates parameter values, types, shapes, and keys.
 
         Wraps val, type, shape, keys validate methods depending on whether
@@ -157,14 +159,14 @@ class InputValidator:
         if checkkeys:
             self._validate_parameter_keys(param, value)
 
-    def _validate_parameter_val(self, param, value):
+    def _validate_parameter_val(self, param: str, value: Any) -> None:
         """ Raise ValueError if parameter value is invalid.  """
         vpvals = valid_parameter_values[param]
         if value not in vpvals:
             msg = self._param_validation_msg(param, "value", vpvals)
             raise ValueError(msg)
 
-    def _validate_parameter_type(self, param, value):
+    def _validate_parameter_type(self, param: str, value: type) -> None:
         """ Raise TypeError if parameter type is invalid. """
         vptypes = valid_parameter_types[param]
         tnames = [t.__name__ for t in vptypes]
@@ -176,7 +178,7 @@ class InputValidator:
         elif type(value) not in vptypes:
             raise TypeError(msg)
 
-    def _validate_parameter_shape(self, param, value):
+    def _validate_parameter_shape(self, param: str, value: Tuple[int]) -> None:
         """ Raise ValueError if parameter shape is invalid. """
         vpshape = valid_parameter_shapes[param]
         snames = [s.__str__() for s in vpshape]
@@ -185,7 +187,7 @@ class InputValidator:
         if np.array(value).shape != vpshape:
             raise ValueError(msg)
 
-    def _validate_parameter_keys(self, param, value):
+    def _validate_parameter_keys(self, param: str, value: str) -> None:
         """ Raise ValueError if dict type parameter has invalid keys. """
         vpkeys = valid_parameter_keys[param]
         msg = self._param_validation_msg(param, "keys", vpkeys)
@@ -193,7 +195,9 @@ class InputValidator:
         if not all(k in vpkeys for k in value.keys()):
             raise ValueError(msg)
 
-    def _param_validation_msg(self, param, validation_type, validations):
+    def _param_validation_msg(
+        self, param: str, validation_type: str, validations: Any
+    ) -> str:
         """Generate an error message for parameter validation.
 
         Parameters
@@ -225,7 +229,7 @@ class InputValidator:
 
         return msg
 
-    def _validate_required_parameters(self, input):
+    def _validate_required_parameters(self, input: Dict[str, Any]) -> None:
         """
         Ensures that all required input file keys are present.
 
@@ -248,7 +252,7 @@ class InputValidator:
         if missing:
             raise ValueError(f"Missing required parameter(s): {*missing,}.")
 
-    def _isiterable(self, v):
+    def _isiterable(self, v: Any) -> bool:
         """
         Checks if object is iterable
 
