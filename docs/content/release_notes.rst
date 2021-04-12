@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+Release 0.4.1 - 2021/04/07
+--------------------------
+
+- Add unit tests on utils
+- Hot fixes for docs
+
+
 Release 0.4.0 - 2021/03/10
 --------------------------
 
