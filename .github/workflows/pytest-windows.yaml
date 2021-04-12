@@ -6,32 +6,46 @@ on:
     branches:
       - develop
       - main
+      - release/**
+      - feature/**
+      - hotfix/**
 
 jobs:
   pytest:
     name: pytest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8]
+    defaults:
+      run:
+        shell: pwsh
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          # Increase this value to reset cache if environment.yml has not changed
+          CACHE_NUMBER: 3
         with:
-          python-version: 3.7
-      - name: Get full Python version
-        id: full-python-version
-        shell: bash
-        run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
-      - name: Install dependencies with conda
-        run: |
-          C:\Miniconda\condabin\conda.bat env update --file environment.yml --name base
-          C:\Miniconda\condabin\conda.bat init powershell
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
+      - name: Setup conda env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: geoapps
+          python-version: ${{ matrix.python_ver }}
+          channel-priority: strict
+          environment-file: environment.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: pytest
         run: |
-          C:\Miniconda\condabin\conda.bat activate base
-          C:\Miniconda\condabin\conda.bat install pytest pytest-cov
+          conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
       - name: Codecov
-        if: success()
+        if: github.repository == 'mirageosience/geoapps' && success() && matrix.python_ver == '3.7'
         uses: codecov/codecov-action@v1
         with:
           name: GitHub
