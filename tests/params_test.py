@@ -12,17 +12,7 @@ import numpy as np
 import pytest
 
 from geoapps.io import InputFile, Params
-from geoapps.io.constants import (
-    valid_parameter_keys,
-    valid_parameter_shapes,
-    valid_parameter_types,
-    valid_parameter_values,
-)
-from geoapps.io.utils import (
-    create_default_output_path,
-    create_relative_output_path,
-    create_work_path,
-)
+from geoapps.io.driver import create_relative_output_path, create_work_path
 
 ######################  Setup  ###########################
 
@@ -75,14 +65,6 @@ def test_create_relative_output_path():
     path = create_relative_output_path("../assets/Inversion_.json", outpath)
     root = os.path.abspath("..")
     validate_path = os.path.join(root, "assets", "some", "project") + dsep
-    assert path == validate_path
-
-
-def test_create_default_output_path():
-    dsep = os.path.sep
-    path = create_default_output_path("../assets/Inversion_.json")
-    root = os.path.abspath("..")
-    validate_path = os.path.join(root, "assets", "SimPEG_PFInversion") + dsep
     assert path == validate_path
 
 
@@ -590,6 +572,17 @@ def test_validate_max_ram(tmp_path):
     default_test_generator(tmp_path, param, 2)
     ### test ordinary behaviour ###
     tparams = {param: 16}
+    param_test_generator(tmp_path, tparams)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "nope", "type")
+
+
+def test_validate_depth_core(tmp_path):
+    param = "depth_core"
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, None)
+    ### test ordinary behaviour ###
+    tparams = {param: {"value": 2}}
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "nope", "type")
