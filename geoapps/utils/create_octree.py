@@ -10,13 +10,12 @@ import sys
 from discretize.utils import meshutils
 from geoh5py.workspace import Workspace
 
-from geoapps.base import load_json_params
-from geoapps.utils.utils import treemesh_2_octree
+from geoapps.utils.utils import load_json_params, treemesh_2_octree
 
 
 def create_octree(**kwargs):
     """
-    Create an octree mesh from kwargs
+    Create an octree mesh from input values
     """
     workspace = Workspace(kwargs["h5file"])
 
@@ -30,6 +29,8 @@ def create_octree(**kwargs):
         [kwargs["horizontal_padding"], kwargs["horizontal_padding"]],
         [kwargs["vertical_padding"], kwargs["vertical_padding"]],
     ]
+
+    print("Setting the mesh extent")
     treemesh = meshutils.mesh_builder_xyz(
         obj[0].vertices,
         [kwargs["u_cell_size"], kwargs["v_cell_size"], kwargs["w_cell_size"]],
@@ -40,7 +41,7 @@ def create_octree(**kwargs):
 
     labels = ["A", "B"]
     for label in labels:
-
+        print(f"Applying refinement {label}")
         entity = workspace.get_entity(kwargs[f"refinement_{label}"])
         if any(entity):
             treemesh = meshutils.refine_tree_xyz(
@@ -57,11 +58,12 @@ def create_octree(**kwargs):
             )
 
     treemesh.finalize()
-    treemesh_2_octree(workspace, treemesh, name=kwargs[f"ga_group_name"])
+    octree = treemesh_2_octree(workspace, treemesh, name=kwargs[f"ga_group_name"])
+    print("Done")
+    return octree
 
 
 if __name__ == "__main__":
 
     input_params = load_json_params(sys.argv[1])
-    print(input_params)
     create_octree(**input_params)

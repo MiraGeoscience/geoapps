@@ -8,14 +8,11 @@
 import os
 import re
 
-from discretize.utils import meshutils
 from geoh5py.objects import Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, HBox, IntText, Label, Text, VBox
+from ipywidgets import Dropdown, FloatText, HBox, IntText, Label, VBox
 
-from geoapps.base import load_json_params
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils.utils import string_2_list, treemesh_2_octree
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -324,7 +321,7 @@ class OctreeMesh(ObjectDataSelection):
                 "label": "#Cells @ 4 x core",
                 "value": 2,
             },
-            "126-method_A": {
+            "12-method_A": {
                 "choiceList": ["surface", "radial"],
                 "enabled": True,
                 "group": "Refinement A",

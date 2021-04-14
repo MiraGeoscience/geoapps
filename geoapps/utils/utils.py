@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import gc
+import json
 import os
 import re
 
@@ -1577,6 +1578,21 @@ def iso_surface(
         surfaces += [[vertices, faces]]
 
     return surfaces
+
+
+def load_json_params(file: str):
+    """
+    Read input parameters from json
+    """
+    with open(file) as f:
+        input_dict = json.load(f)
+
+    params = {}
+    for key, param in input_dict.items():
+        if isinstance(param, dict):
+            params[re.split("-", key)[1]] = param["value"]
+
+    return params
 
 
 colors = [
