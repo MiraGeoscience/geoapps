@@ -8,32 +8,15 @@
 import json
 import re
 import time
-import urllib.request
-import zipfile
-from os import listdir, mkdir, path, remove, system
-from shutil import copy, copyfile, move, rmtree
+from os import mkdir, path
+from shutil import copyfile, move
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
 
-import geoapps
-
-
-def load_json_params(file: str):
-    """
-    Read input parameters from json
-    """
-    with open(file) as f:
-        input_dict = json.load(f)
-
-    params = {}
-    for key, param in input_dict.items():
-        if isinstance(param, dict):
-            params[re.split("-", key)[1]] = param["value"]
-
-    return params
+from geoapps.utils.utils import load_json_params
 
 
 class BaseApplication:
@@ -390,55 +373,6 @@ class BaseApplication:
 
     def ga_group_name_update(self):
         self._ga_group = None
-
-
-def update_apps():
-    """
-    Special widget to update geoapps
-    """
-
-    trigger = Button(
-        value=False,
-        description="Update All",
-        button_style="danger",
-        icon="check",
-    )
-
-    def run_update(_):
-
-        url = "https://github.com/MiraGeoscience/geoapps/archive/develop.zip"
-        urllib.request.urlretrieve(url, "develop.zip")
-        with zipfile.ZipFile("./develop.zip") as zf:
-            zf.extractall("./")
-
-        temp_dir = "./geoapps-develop/geoapps/applications"
-        for file in listdir(temp_dir):
-            if path.isfile(file):
-                copy(path.join(temp_dir, file), file)
-
-        copy(path.join("geoapps-develop", "environment.yml"), "environment.yml")
-        system(r"start cmd.exe @cmd /k ..\..\Install_or_Update.bat")
-
-        rmtree("./geoapps-develop")
-        remove("./develop.zip")
-        remove("./environment.yml")
-
-        print(
-            f"You have been updated to version {geoapps.__version__}. You are good to go..."
-        )
-        # else:
-        #     print(
-        #         f"Current version {geoapps.__version__} is the latest. You are good to go..."
-        #     )
-
-    trigger.on_click(run_update)
-
-    return VBox(
-        [
-            Label("Warning! Local changes to the notebooks will be lost on update."),
-            trigger,
-        ]
-    )
 
 
 def working_copy(h5file):
