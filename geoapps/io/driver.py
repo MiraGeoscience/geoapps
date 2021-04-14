@@ -12,6 +12,7 @@ from typing import Any
 
 import numpy as np
 
+from .constants import validations
 from .validators import InputValidator
 
 ### Utils ###
@@ -39,14 +40,10 @@ class InputFile:
 
     Attributes
     ----------
-    filepath : str
-        path to input file.
-    workpath : str
-        path to working directory.
-    data : dict
-        input file contents parsed to dictionary.
-    isloaded : bool
-        True if .load method called to populate the .data attribute.
+    filepath : path to input file.
+    workpath : path to working directory.
+    data : input file contents parsed to dictionary.
+    isloaded : True if load() method called to populate the 'data' attribute.
 
     Methods
     -------
@@ -93,7 +90,7 @@ class Params:
     inversion_type : str
 
     Constructors
-    -------
+    ------------
     from_ifile(ifile)
         Construct Params object from InputFile instance.
     from_path(path)
@@ -101,7 +98,7 @@ class Params:
 
     """
 
-    def __init__(self, inversion_type, core_cell_size, workpath=os.path.abspath(".")):
+    def __init__(self, inversion_type: str, workpath: str = os.path.abspath(".")):
         """
         Parameters
         ----------
@@ -114,7 +111,7 @@ class Params:
         """
         self.validator = InputValidator()
         self.inversion_type = inversion_type
-        self.core_cell_size = core_cell_size
+        self.core_cell_size = None
         self.workpath = workpath
         self.inversion_style = "voxel"
         self.forward_only = False
@@ -175,8 +172,7 @@ class Params:
         if not ifile.isloaded:
             ifile.load()
         inversion_type = ifile.data["inversion_type"]
-        core_cell_size = ifile.data["core_cell_size"]
-        p = cls(inversion_type, core_cell_size, ifile.workpath)
+        p = cls(inversion_type, ifile.workpath)
         p._init_params(ifile)
         return p
 
@@ -199,7 +195,8 @@ class Params:
 
     @inversion_type.setter
     def inversion_type(self, val):
-        self.validator.validate("inversion_type", val)
+        p = "inversion_type"
+        self.validator.validate(p, val, validations[p])
         self._inversion_type = val
 
     @property
@@ -208,7 +205,8 @@ class Params:
 
     @core_cell_size.setter
     def core_cell_size(self, val):
-        self.validator.validate("core_cell_size", val)
+        p = "core_cell_size"
+        self.validator.validate(p, val, validations[p])
         self._core_cell_size = val
 
     @property
@@ -217,7 +215,8 @@ class Params:
 
     @inversion_style.setter
     def inversion_style(self, val):
-        self.validator.validate("inversion_style", val)
+        p = "inversion_style"
+        self.validator.validate(p, val, validations[p])
         self._inversion_style = val
 
     @property
@@ -226,7 +225,8 @@ class Params:
 
     @forward_only.setter
     def forward_only(self, val):
-        self.validator.validate("forward_only", val)
+        p = "forward_only"
+        self.validator.validate(p, val, validations[p])
         self._forward_only = val
 
     @property
@@ -235,7 +235,8 @@ class Params:
 
     @result_folder.setter
     def result_folder(self, val):
-        self.validator.validate("result_folder", val)
+        p = "result_folder"
+        self.validator.validate(p, val, validations[p])
         sep = os.path.sep
         if val.split(sep)[-1]:
             val += sep
@@ -250,7 +251,8 @@ class Params:
         if val is None:
             self._inducing_field_aid = val
             return
-        self.validator.validate("inducing_field_aid", val)
+        p = "inducing_field_aid"
+        self.validator.validate(p, val, validations[p])
         if val[0] <= 0:
             raise ValueError("inducing_field_aid[0] must be greater than 0.")
         self._inducing_field_aid = np.array(val)
@@ -261,7 +263,8 @@ class Params:
 
     @resolution.setter
     def resolution(self, val):
-        self.validator.validate("resolution", val)
+        p = "resolution"
+        self.validator.validate(p, val, validations[p])
         self._resolution = val
 
     @property
@@ -273,7 +276,8 @@ class Params:
         if val is None:
             self._window = val
             return
-        self.validator.validate("window", val)
+        p = "window"
+        self.validator.validate(p, val, validations[p])
         req_keys = ["center_x", "center_y", "width", "height", "azimuth"]
         if not all(k in val.keys() for k in req_keys):
             msg = "Input parameter 'window' dictionary must contain "
@@ -294,7 +298,8 @@ class Params:
         if val is None:
             self._data = val
             return
-        self.validator.validate("data", val)
+        p = "data"
+        self.validator.validate(p, val, validations[p])
         self._data = val
 
     @property
@@ -306,7 +311,8 @@ class Params:
         if val is None:
             self._workspace = val
             return
-        self.validator.validate("workspace", val)
+        p = "workspace"
+        self.validator.validate(p, val, validations[p])
         self._workspace = val
 
     @property
@@ -318,7 +324,8 @@ class Params:
         if val is None:
             self._ignore_values = val
             return
-        self.validator.validate("ignore_values", val)
+        p = "ignore_values"
+        self.validator.validate(p, val, validations[p])
         self._ignore_values = val
 
     @property
@@ -330,7 +337,8 @@ class Params:
         if val is None:
             self._detrend = val
             return
-        self.validator.validate("detrend", val)
+        p = "detrend"
+        self.validator.validate(p, val, validations[p])
         for v in val.values():
             if v not in [0, 1, 2]:
                 raise ValueError("Detrend order must be 0, 1, or 2.")
@@ -345,7 +353,8 @@ class Params:
         if val is None:
             self._data_file = val
             return
-        self.validator.validate("data_file", val)
+        p = "data_file"
+        self.validator.validate(p, val, validations[p])
         self._data_file = val
 
     @property
@@ -357,7 +366,8 @@ class Params:
         if val is None:
             self._new_uncert = val
             return
-        self.validator.validate("new_uncert", val)
+        p = "new_uncert"
+        self.validator.validate(p, val, validations[p])
         if (val[0] < 0) | (val[0] > 1):
             msg = "Uncertainty percent (new_uncert[0]) must be between 0 and 1."
             raise ValueError(msg)
@@ -372,7 +382,8 @@ class Params:
 
     @input_mesh.setter
     def input_mesh(self, val):
-        self.validator.validate("input_mesh", val)
+        p = "input_mesh"
+        self.validator.validate(p, val, validations[p])
         self._input_mesh = val
 
     @property
@@ -381,7 +392,8 @@ class Params:
 
     @save_to_geoh5.setter
     def save_to_geoh5(self, val):
-        self.validator.validate("save_to_geoh5", val)
+        p = "save_to_geoh5"
+        self.validator.validate(p, val, validations[p])
         self._save_to_geoh5 = val
 
     @property
@@ -390,7 +402,8 @@ class Params:
 
     @inversion_mesh_type.setter
     def inversion_mesh_type(self, val):
-        self.validator.validate("inversion_mesh_type", val)
+        p = "inversion_mesh_type"
+        self.validator.validate(p, val, validations[p])
         self._inversion_mesh_type = val
 
     @property
@@ -399,7 +412,8 @@ class Params:
 
     @shift_mesh_z0.setter
     def shift_mesh_z0(self, val):
-        self.validator.validate("shift_mesh_z0", val)
+        p = "shift_mesh_z0"
+        self.validator.validate(p, val, validations[p])
         self._shift_mesh_z0 = val
 
     @property
@@ -408,7 +422,8 @@ class Params:
 
     @topography.setter
     def topography(self, val):
-        self.validator.validate("topography", val)
+        p = "topography"
+        self.validator.validate(p, val, validations[p])
         self._topography = val
 
     @property
@@ -417,7 +432,8 @@ class Params:
 
     @receivers_offset.setter
     def receivers_offset(self, val):
-        self.validator.validate("receivers_offset", val)
+        p = "receivers_offset"
+        self.validator.validate(p, val, validations[p])
         self._receivers_offset = val
 
     @property
@@ -426,7 +442,8 @@ class Params:
 
     @chi_factor.setter
     def chi_factor(self, val):
-        self.validator.validate("chi_factor", val)
+        p = "chi_factor"
+        self.validator.validate(p, val, validations[p])
         if val <= 0:
             raise ValueError("Invalid chi_factor. Must be between 0 and 1.")
         self._chi_factor = val
@@ -437,7 +454,8 @@ class Params:
 
     @model_norms.setter
     def model_norms(self, val):
-        self.validator.validate("model_norms", val)
+        p = "model_norms"
+        self.validator.validate(p, val, validations[p])
         if len(val) % 4 != 0:
             raise ValueError("Invalid 'model_norms' length.  Must be a multiple of 4.")
         self._model_norms = val
@@ -448,7 +466,8 @@ class Params:
 
     @max_iterations.setter
     def max_iterations(self, val):
-        self.validator.validate("max_iterations", val)
+        p = "max_iterations"
+        self.validator.validate(p, val, validations[p])
         if val <= 0:
             raise ValueError("Invalid 'max_iterations' value.  Must be > 0.")
         self._max_iterations = val
@@ -459,7 +478,8 @@ class Params:
 
     @max_cg_iterations.setter
     def max_cg_iterations(self, val):
-        self.validator.validate("max_cg_iterations", val)
+        p = "max_cg_iterations"
+        self.validator.validate(p, val, validations[p])
         if val <= 0:
             raise ValueError("Invalid 'max_cg_iterations' value.  Must be > 0.")
         self._max_cg_iterations = val
@@ -470,7 +490,8 @@ class Params:
 
     @tol_cg.setter
     def tol_cg(self, val):
-        self.validator.validate("tol_cg", val)
+        p = "tol_cg"
+        self.validator.validate(p, val, validations[p])
         self._tol_cg = val
 
     @property
@@ -479,7 +500,8 @@ class Params:
 
     @max_global_iterations.setter
     def max_global_iterations(self, val):
-        self.validator.validate("max_global_iterations", val)
+        p = "max_global_iterations"
+        self.validator.validate(p, val, validations[p])
         if val <= 0:
             raise ValueError("Invalid 'max_global_iterations' value.  Must be > 0.")
         self._max_global_iterations = val
@@ -490,7 +512,8 @@ class Params:
 
     @gradient_type.setter
     def gradient_type(self, val):
-        self.validator.validate("gradient_type", val)
+        p = "gradient_type"
+        self.validator.validate(p, val, validations[p])
         self._gradient_type = val
 
     @property
@@ -499,7 +522,8 @@ class Params:
 
     @initial_beta.setter
     def initial_beta(self, val):
-        self.validator.validate("initial_beta", val)
+        p = "initial_beta"
+        self.validator.validate(p, val, validations[p])
         self._initial_beta = val
 
     @property
@@ -508,7 +532,8 @@ class Params:
 
     @initial_beta_ratio.setter
     def initial_beta_ratio(self, val):
-        self.validator.validate("initial_beta_ratio", val)
+        p = "initial_beta_ratio"
+        self.validator.validate(p, val, validations[p])
         self._initial_beta_ratio = val
 
     @property
@@ -517,7 +542,8 @@ class Params:
 
     @n_cpu.setter
     def n_cpu(self, val):
-        self.validator.validate("n_cpu", val)
+        p = "n_cpu"
+        self.validator.validate(p, val, validations[p])
         self._n_cpu = val
 
     @property
@@ -526,7 +552,8 @@ class Params:
 
     @max_ram.setter
     def max_ram(self, val):
-        self.validator.validate("max_ram", val)
+        p = "max_ram"
+        self.validator.validate(p, val, validations[p])
         self._max_ram = val
 
     @property
@@ -535,7 +562,8 @@ class Params:
 
     @depth_core.setter
     def depth_core(self, val):
-        self.validator.validate("depth_core", val)
+        p = "depth_core"
+        self.validator.validate(p, val, validations[p])
         self._depth_core = val
 
     @property
@@ -544,7 +572,8 @@ class Params:
 
     @padding_distance.setter
     def padding_distance(self, val):
-        self.validator.validate("padding_distance", val)
+        p = "padding_distance"
+        self.validator.validate(p, val, validations[p])
         self._padding_distance = val
 
     @property
@@ -553,7 +582,8 @@ class Params:
 
     @octree_levels_topo.setter
     def octree_levels_topo(self, val):
-        self.validator.validate("octree_levels_topo", val)
+        p = "octree_levels_topo"
+        self.validator.validate(p, val, validations[p])
         self._octree_levels_topo = val
 
     @property
@@ -562,7 +592,8 @@ class Params:
 
     @octree_levels_obs.setter
     def octree_levels_obs(self, val):
-        self.validator.validate("octree_levels_obs", val)
+        p = "octree_levels_obs"
+        self.validator.validate(p, val, validations[p])
         self._octree_levels_obs = val
 
     @property
@@ -571,7 +602,8 @@ class Params:
 
     @octree_levels_padding.setter
     def octree_levels_padding(self, val):
-        self.validator.validate("octree_levels_padding", val)
+        p = "octree_levels_padding"
+        self.validator.validate(p, val, validations[p])
         self._octree_levels_padding = val
 
     @property
@@ -580,7 +612,8 @@ class Params:
 
     @alphas.setter
     def alphas(self, val):
-        self.validator.validate("alphas", val)
+        p = "alphas"
+        self.validator.validate(p, val, validations[p])
         if len(val) == 4:
             val = val * 3
         if len(val) not in [4, 12]:
@@ -595,7 +628,8 @@ class Params:
 
     @reference_model.setter
     def reference_model(self, val):
-        self.validator.validate("reference_model", val)
+        p = "reference_model"
+        self.validator.validate(p, val, validations[p])
         self._reference_model = val
 
     @property
@@ -604,7 +638,8 @@ class Params:
 
     @starting_model.setter
     def starting_model(self, val):
-        self.validator.validate("starting_model", val)
+        p = "starting_model"
+        self.validator.validate(p, val, validations[p])
         self._starting_model = val
 
     @property
@@ -613,7 +648,8 @@ class Params:
 
     @lower_bound.setter
     def lower_bound(self, val):
-        self.validator.validate("lower_bound", val)
+        p = "lower_bound"
+        self.validator.validate(p, val, validations[p])
         self._lower_bound = val
 
     @property
@@ -622,7 +658,8 @@ class Params:
 
     @upper_bound.setter
     def upper_bound(self, val):
-        self.validator.validate("upper_bound", val)
+        p = "upper_bound"
+        self.validator.validate(p, val, validations[p])
         self._upper_bound = val
 
     @property
@@ -631,7 +668,8 @@ class Params:
 
     @max_distance.setter
     def max_distance(self, val):
-        self.validator.validate("max_distance", val)
+        p = "max_distance"
+        self.validator.validate(p, val, validations[p])
         self._max_distance = val
 
     @property
@@ -640,7 +678,8 @@ class Params:
 
     @max_chunk_size.setter
     def max_chunk_size(self, val):
-        self.validator.validate("max_chunk_size", val)
+        p = "max_chunk_size"
+        self.validator.validate(p, val, validations[p])
         self._max_chunk_size = val
 
     @property
@@ -649,7 +688,8 @@ class Params:
 
     @chunk_by_rows.setter
     def chunk_by_rows(self, val):
-        self.validator.validate("chunk_by_rows", val)
+        p = "chunk_by_rows"
+        self.validator.validate(p, val, validations[p])
         self._chunk_by_rows = val
 
     @property
@@ -658,7 +698,8 @@ class Params:
 
     @output_tile_files.setter
     def output_tile_files(self, val):
-        self.validator.validate("output_tile_files", val)
+        p = "output_tile_files"
+        self.validator.validate(p, val, validations[p])
         self._output_tile_files = val
 
     @property
@@ -667,7 +708,8 @@ class Params:
 
     @no_data_value.setter
     def no_data_value(self, val):
-        self.validator.validate("no_data_value", val)
+        p = "no_data_value"
+        self.validator.validate(p, val, validations[p])
         self._no_data_value = val
 
     @property
@@ -676,7 +718,8 @@ class Params:
 
     @parallelized.setter
     def parallelized(self, val):
-        self.validator.validate("parallelized", val)
+        p = "parallelized"
+        self.validator.validate(p, val, validations[p])
         self._parallelized = val
 
     @property
@@ -685,7 +728,8 @@ class Params:
 
     @out_group.setter
     def out_group(self, val):
-        self.validator.validate("out_group", val)
+        p = "out_group"
+        self.validator.validate(p, val, validations[p])
         self._out_group = val
 
     def _override_default(self, param: str, value: Any) -> None:

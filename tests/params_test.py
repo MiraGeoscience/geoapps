@@ -39,7 +39,12 @@ def catch_invalid_generator(tmp_path, param, invalid_value, validation_type):
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
     params = Params.from_path(filepath)
-    err = TypeError if validation_type == "type" else ValueError
+    if validation_type == "type":
+        err = TypeError
+    elif validation_type in ["keys", "requirement"]:
+        err = KeyError
+    else:
+        err = ValueError
     with pytest.raises(err) as excinfo:
         params.__setattr__(param, invalid_value)
     assert validation_type in str(excinfo.value)
@@ -89,7 +94,7 @@ def test_params_constructors(tmp_path):
 
 
 def test_override_default():
-    params = Params("mvi", 2)
+    params = Params("mvi")
     params._override_default("forward_only", True)
     assert params.forward_only == True
 
@@ -114,9 +119,6 @@ def test_validate_core_cell_size(tmp_path):
     catch_invalid_generator(tmp_path, param, "nope", "type")
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, {"inversion_type": "mvi"})
-    with pytest.raises(ValueError) as excinfo:
-        params = Params.from_path(filepath)
-    assert "parameter(s): ('core_cell_size',)." in str(excinfo.value)
 
 
 def test_validate_inversion_style(tmp_path):
@@ -139,6 +141,13 @@ def test_validate_forward_only(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "true", "type")
+    idict = input_dict.copy()
+    idict["forward_only"] = True
+    filepath = tmpfile(tmp_path)
+    tmp_input_file(filepath, idict)
+    with pytest.raises(KeyError) as excinfo:
+        params = Params.from_path(filepath)
+    assert f"forward_only requirement." in str(excinfo.value)
 
 
 def test_validate_result_folder(tmp_path):
@@ -171,12 +180,14 @@ def test_validate_inducing_field_aid(tmp_path):
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "nope", "type")
     catch_invalid_generator(tmp_path, param, [1.0, 2.0], "shape")
-    params = Params("mvi", 2)
+    params = Params("mvi")
     with pytest.raises(ValueError) as excinfo:
         params.inducing_field_aid = [0, 1, 2]
     assert "greater than 0." in str(excinfo.value)
 
 
+#
+#
 def test_validate_resolution(tmp_path):
     param = "resolution"
     ### test default behaviour ###
@@ -208,7 +219,7 @@ def test_validate_window(tmp_path):
     catch_invalid_generator(tmp_path, param, test_dict, "keys")
     test_dict.pop("nogood", None)
     test_dict.pop("center_x", None)
-    params = Params("mvi", 2)
+    params = Params("mvi")
     with pytest.raises(ValueError) as excinfo:
         params.window = test_dict
     assert "Input parameter 'window'" in str(excinfo.value)
@@ -227,9 +238,9 @@ def test_validate_workspace(tmp_path):
     idict["data"] = {"type": "GA_object", "name": "test"}
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(KeyError) as excinfo:
         params = Params.from_path(filepath)
-    assert "data type 'GA_object'." in str(excinfo.value)
+    assert f"Input file must contain 'workspace'" in str(excinfo.value)
 
 
 def test_validate_data(tmp_path):
@@ -247,17 +258,25 @@ def test_validate_data(tmp_path):
     idict["workspace"] = "."
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(KeyError) as excinfo:
         params = Params.from_path(filepath)
     assert "Data 'type' and 'name'" in str(excinfo.value)
     idict["data"]["name"] = "Nicole"
     idict.pop("workspace", None)
     tmp_input_file(filepath, idict)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(KeyError) as excinfo:
         params = Params.from_path(filepath)
-    assert "'workspace' path for data" in str(excinfo.value)
+    assert "Input file must contain 'workspace' if 'type'" in str(excinfo.value)
+    idict = input_dict.copy()
+    idict["data"] = {"type": "ubc_grav", "name": "Norman"}
+    tmp_input_file(filepath, idict)
+    with pytest.raises(KeyError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "Input file must contain 'data_file' if 'type'" in str(excinfo.value)
 
 
+#
+#
 def test_validate_ignore_values(tmp_path):
     param = "ignore_values"
     ### test default behaviour ###
@@ -269,6 +288,8 @@ def test_validate_ignore_values(tmp_path):
     catch_invalid_generator(tmp_path, param, 1234, "type")
 
 
+#
+#
 def test_validate_detrend(tmp_path):
     param = "detrend"
     ### test default behaviour ###
@@ -287,6 +308,8 @@ def test_validate_detrend(tmp_path):
     assert "Detrend order must be 0," in str(excinfo.value)
 
 
+#
+#
 def test_validate_data_file(tmp_path):
     param = "data_file"
     ### test default behaviour ###
@@ -296,13 +319,6 @@ def test_validate_data_file(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, 1234, "type")
-    idict = input_dict.copy()
-    idict["data"] = {"type": "ubc_mag", "name": "test"}
-    filepath = tmpfile(tmp_path)
-    tmp_input_file(filepath, idict)
-    with pytest.raises(ValueError) as excinfo:
-        params = Params.from_path(filepath)
-    assert "for data types 'ubc_grav' and" in str(excinfo.value)
 
 
 def test_validate_new_uncert(tmp_path):
@@ -338,6 +354,8 @@ def test_validate_new_uncert(tmp_path):
     assert "floor (new_uncert[1])" in str(excinfo.value)
 
 
+#
+#
 def test_validate_input_mesh(tmp_path):
     param = "input_mesh"
     ### test default behaviour ###
@@ -346,6 +364,7 @@ def test_validate_input_mesh(tmp_path):
     tparams = {param: "some_path"}
     tparams.update({"save_to_geoh5": "another_path"})
     tparams.update({"input_mesh_file": "yet_another_path"})
+    tparams.update({"out_group": "some_path"})
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, 1, "type")
@@ -354,19 +373,22 @@ def test_validate_input_mesh(tmp_path):
     idict["input_mesh_file"] = "yet_another_path"
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(KeyError) as excinfo:
         params = Params.from_path(filepath)
-    assert "'save_to_geoh5' path if 'input_mesh'" in str(excinfo.value)
+    assert "'save_to_geoh5' if 'input_mesh'" in str(excinfo.value)
     idict = input_dict.copy()
     idict["input_mesh"] = "some_path"
     idict["save_to_geoh5"] = "yet_another_path"
+    idict["out_group"] = "some_str"
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(KeyError) as excinfo:
         params = Params.from_path(filepath)
-    assert "'input_mesh_file' path if 'input_mesh'" in str(excinfo.value)
+    assert "'input_mesh_file' if 'input_mesh'" in str(excinfo.value)
 
 
+#
+#
 def test_validate_save_to_geoh5(tmp_path):
     param = "save_to_geoh5"
     ### test default behaviour ###
@@ -381,11 +403,13 @@ def test_validate_save_to_geoh5(tmp_path):
     idict["save_to_geoh5"] = "some_path"
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(KeyError) as excinfo:
         params = Params.from_path(filepath)
-    assert "must contain a 'out_group'" in str(excinfo.value)
+    assert "must contain 'out_group'" in str(excinfo.value)
 
 
+#
+#
 def test_validate_inversion_mesh_type(tmp_path):
     param = "inversion_mesh_type"
     ### test default behaviour ###
@@ -441,7 +465,7 @@ def test_validate_chi_factor(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "bogus", "type")
-    params = Params("mvi", 2)
+    params = Params("mvi")
     with pytest.raises(ValueError) as excinfo:
         params.chi_factor = 0
     assert "chi_factor. Must be between 0 and 1." in str(excinfo.value)
@@ -462,7 +486,7 @@ def test_validate_model_norms(tmp_path):
     assert params.max_iterations == 40
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, ["a", "b", "c", "d"], "type")
-    params = Params("mvi", 2)
+    params = Params("mvi")
     with pytest.raises(ValueError) as excinfo:
         params.model_norms = [2, 2]
     assert "Must be a multiple of 4." in str(excinfo.value)
@@ -476,8 +500,8 @@ def test_validate_max_iterations(tmp_path):
     tparams = {param: 15}
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, 4.5, "type")
-    params = Params("mvi", 2)
+    catch_invalid_generator(tmp_path, param, "nope", "type")
+    params = Params("mvi")
     with pytest.raises(ValueError) as excinfo:
         params.max_iterations = -10
     assert "Must be > 0." in str(excinfo.value)
@@ -491,8 +515,8 @@ def test_validate_max_cg_iterations(tmp_path):
     tparams = {param: 15}
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, 4.5, "type")
-    params = Params("mvi", 2)
+    catch_invalid_generator(tmp_path, param, "nope", "type")
+    params = Params("mvi")
     with pytest.raises(ValueError) as excinfo:
         params.max_iterations = -10
     assert "Must be > 0." in str(excinfo.value)
@@ -509,6 +533,8 @@ def test_validate_tol_cg(tmp_path):
     catch_invalid_generator(tmp_path, param, "nogood", "type")
 
 
+#
+#
 def test_validate_max_global_iterations(tmp_path):
     param = "max_global_iterations"
     ### test default behaviour ###
@@ -517,8 +543,8 @@ def test_validate_max_global_iterations(tmp_path):
     tparams = {param: 40}
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, 4.5, "type")
-    params = Params("mvi", 2)
+    catch_invalid_generator(tmp_path, param, "nope", "type")
+    params = Params("mvi")
     with pytest.raises(ValueError) as excinfo:
         params.max_iterations = -10
     assert "Must be > 0." in str(excinfo.value)
@@ -566,6 +592,8 @@ def test_validate_n_cpu(tmp_path):
     catch_invalid_generator(tmp_path, param, "nope", "type")
 
 
+#
+#
 def test_validate_max_ram(tmp_path):
     param = "max_ram"
     ### test default behaviour ###
@@ -642,7 +670,7 @@ def test_validate_alphas(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "nope", "type")
-    params = Params("mvi", 2)
+    params = Params("mvi")
     params.alphas = [1] * 4
     assert len(params.alphas) == 12
     with pytest.raises(ValueError) as excinfo:

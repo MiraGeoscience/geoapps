@@ -5,139 +5,252 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-valid_parameters = [
-    "data",
-    "out_group",
-    "workspace",
-    "save_to_geoh5",
-    "inversion_type",
-    "inversion_style",
-    "forward_only",
-    "inducing_field_aid",
-    "core_cell_size",
-    "octree_levels_topo",
-    "octree_levels_obs",
-    "octree_levels_padding",
-    "depth_core",
-    "max_distance",
-    "padding_distance",
-    "chi_factor",
-    "max_iterations",
-    "max_cg_iterations",
-    "max_global_iterations",
-    "n_cpu",
-    "max_ram",
-    "initial_beta_ratio",
-    "tol_cg",
-    "ignore_values",
-    "no_data_value",
-    "resolution",
-    "window",
-    "alphas",
-    "reference_model",
-    "starting_model",
-    "model_norms",
-    "data",
-    "uncertainty_mode",
-    "receivers_offset",
-    "topography",
-    "result_folder",
-    "detrend",
-    "data_file",
-    "new_uncert",
-    "input_mesh",
-    "save_to_geoh5",
-    "input_mesh_file",
-    "inversion_mesh_type",
-    "shift_mesh_z0",
-    "receivers_offset",
-    "gradient_type",
-    "initial_beta",
-    "initial_beta_ratio",
-    "lower_bound",
-    "upper_bound",
-    "max_distance",
-    "max_chunk_size",
-    "chunk_by_rows",
-    "output_tile_files",
-    "no_data_value",
-    "parallelized",
-]
 
-required_parameters = ["inversion_type", "core_cell_size"]
+required_parameters = ["inversion_type"]
 
-valid_parameter_values = {
-    "inversion_type": ["gravity", "magnetics", "mvi", "mvic"],
-    "inversion_style": ["voxel"],
-    "data_format": ["ubc_grav", "ubc_mag", "GA_object"],
-    "inversion_mesh_type": ["TREE"],
-    "gradient_type": ["total"],
-}
-
-valid_parameter_types = {
-    "inversion_type": [str],
-    "core_cell_size": [int, float],
-    "workpath": [str],
-    "inversion_style": [str],
-    "forward_only": [bool],
-    "result_folder": [str],
-    "inducing_field_aid": [int, float],
-    "resolution": [int, float],
-    "window": [dict],
-    "workspace": [str],
-    "data": [dict],
-    "ignore_values": [str],
-    "detrend": [dict],
-    "data_file": [str],
-    "new_uncert": [int, float],
-    "input_mesh": [str],
-    "save_to_geoh5": [str],
-    "inversion_mesh_type": [str],
-    "shift_mesh_z0": [int, float],
-    "topography": [dict],
-    "receivers_offset": [dict],
-    "chi_factor": [int, float],
-    "model_norms": [int, float],
-    "max_iterations": [int],
-    "max_cg_iterations": [int],
-    "tol_cg": [int, float],
-    "max_global_iterations": [int],
-    "gradient_type": [str],
-    "initial_beta": [int, float],
-    "initial_beta_ratio": [float],
-    "n_cpu": [int, float],
-    "max_ram": [int, float],
-    "depth_core": [dict],
-    "padding_distance": [int, float],
-    "octree_levels_topo": [int, float],
-    "octree_levels_obs": [int, float],
-    "octree_levels_padding": [int, float],
-    "alphas": [int, float],
-    "lower_bound": [int, float],
-    "upper_bound": [int, float],
-    "max_distance": [int, float],
-    "max_chunk_size": [int, float],
-    "chunk_by_rows": [bool],
-    "output_tile_files": [bool],
-    "no_data_value": [int, float],
-    "parallelized": [bool],
-    "out_group": [str],
-    "reference_model": [dict],
-    "starting_model": [dict],
-}
-
-valid_parameter_shapes = {
-    "inducing_field_aid": (3,),
-    "new_uncert": (2,),
-    "padding_distance": (3, 2),
-}
-
-valid_parameter_keys = {
-    "window": ["center_x", "center_y", "width", "height", "azimuth", "center", "size"],
-    "data": ["type", "name", "channels"],
-    "topography": ["GA_object", "drapped", "constant", "file"],
-    "receivers_offset": ["constant", "constant_drape", "radar_drape"],
-    "reference_model": ["model", "value", "none"],
-    "starting_model": ["model", "value"],
-    "depth_core": ["value", "auto"],
+validations = {
+    "inversion_type": {
+        "values": ["gravity", "magnetics", "mvi", "mvic"],
+        "types": [str],
+    },
+    "core_cell_size": {
+        "types": [int, float],
+    },
+    "data": {
+        "types": [dict],
+        "type": {
+            "values": ["GA_object", "ubc_grav", "ubc_mag"],
+            "types": [str],
+            "reqs": [
+                ("GA_object", "workspace"),
+                ("ubc_grav", "data_file"),
+                ("ubc_mag", "data_file"),
+            ],
+        },
+        "name": {
+            "types": [str],
+        },
+        "channels": {
+            "types": [dict],
+            "tmi": {
+                "types": [dict],
+                "name": {
+                    "types": [str],
+                },
+                "uncertainties": {
+                    "types": [int, float],
+                    "shape": (2,),
+                },
+                "offsets": {
+                    "types": [int, float],
+                    "shape": (3,),
+                },
+            },
+        },
+    },
+    "out_group": {
+        "types": [str],
+    },
+    "workspace": {
+        "types": [str],
+    },
+    "save_to_geoh5": {
+        "types": [str],
+    },
+    "inversion_style": {
+        "values": ["voxel"],
+        "types": [str],
+    },
+    "forward_only": {"types": [bool], "reqs": [(True, "reference_model")]},
+    "inducing_field_aid": {
+        "types": [int, float],
+        "shapes": (3,),
+    },
+    "octree_levels_topo": {
+        "types": [int, float],
+    },
+    "octree_levels_obs": {
+        "types": [int, float],
+    },
+    "octree_levels_padding": {
+        "types": [int, float],
+    },
+    "depth_core": {
+        "types": [dict],
+        "value": {
+            "types": [int, float],
+        },
+    },
+    "max_distance": {
+        "types": [int, float],
+    },
+    "padding_distance": {
+        "types": [int, float],
+        "shapes": (3, 2),
+    },
+    "chi_factor": {
+        "types": [int, float],
+    },
+    "max_iterations": {
+        "types": [int, float],
+    },
+    "max_cg_iterations": {
+        "types": [int, float],
+    },
+    "max_global_iterations": {
+        "types": [int, float],
+    },
+    "n_cpu": {
+        "types": [int, float],
+    },
+    "max_ram": {
+        "types": [int, float],
+    },
+    "initial_beta": {
+        "types": [int, float],
+    },
+    "initial_beta_ratio": {
+        "types": [float],
+    },
+    "tol_cg": {
+        "types": [int, float],
+    },
+    "ignore_values": {
+        "types": [str],
+    },
+    "no_data_value": {
+        "types": [int, float],
+    },
+    "resolution": {
+        "types": [int, float],
+    },
+    "window": {
+        "types": [dict],
+        "center_x": {
+            "types": [int, float],
+        },
+        "center_y": {
+            "types": [int, float],
+        },
+        "width": {
+            "types": [int, float],
+        },
+        "height": {
+            "types": [int, float],
+        },
+        "azimuth": {
+            "types": [int, float],
+        },
+        "center": {
+            "types": [int, float],
+        },
+        "size": {
+            "types": [int, float],
+        },
+    },
+    "alphas": {
+        "types": [int, float],
+    },
+    "reference_model": {
+        "types": [dict],
+        "value": {
+            "types": [int, float],
+        },
+        "model": {"types": [str]},
+        "none": {},
+    },
+    "starting_model": {
+        "types": [dict],
+        "value": {
+            "types": [int, float],
+        },
+        "model": {
+            "types": [str],
+        },
+    },
+    "model_norms": {
+        "types": [int, float],
+    },
+    "topography": {
+        "types": [dict],
+        "GA_object": {
+            "types": [dict],
+            "name": {
+                "types": [str],
+            },
+            "data": {
+                "types": [str],
+            },
+        },
+        "constant": {
+            "types": [int, float],
+        },
+        "drapped": {
+            "types": [int, float],
+        },
+        "file": {
+            "types": [str],
+        },
+    },
+    "result_folder": {
+        "types": [str],
+    },
+    "detrend": {
+        "types": [dict],
+        "all": {
+            "types": [int, float],
+        },
+        "corners": {
+            "types": [int, float],
+        },
+    },
+    "data_file": {
+        "types": [str],
+    },
+    "new_uncert": {"types": [int, float], "shapes": (2,)},
+    "input_mesh": {"types": [str], "reqs": [("save_to_geoh5",), ("input_mesh_file",)]},
+    "save_to_geoh5": {
+        "types": [str],
+        "reqs": [
+            ("out_group",),
+        ],
+    },
+    "input_mesh_file": {
+        "type": [str],
+    },
+    "inversion_mesh_type": {"values": ["TREE"], "types": [str]},
+    "shift_mesh_z0": {"types": [int, float]},
+    "receivers_offset": {
+        "types": [dict],
+        "constant": {
+            "types": [int, float],
+        },
+        "constant_drape": {
+            "types": [int, float],
+        },
+        "radar_drape": {
+            "types": [int, float, str],
+            "shapes": (4,),
+        },
+    },
+    "gradient_type": {"values": ["total", "components"], "types": [str]},
+    "lower_bound": {
+        "types": [int, float],
+    },
+    "upper_bound": {
+        "types": [int, float],
+    },
+    "max_chunk_size": {
+        "types": [int, float],
+    },
+    "chunk_by_rows": {
+        "types": [bool],
+    },
+    "output_tile_files": {
+        "types": [bool],
+    },
+    "parallelized": {
+        "types": [bool],
+    },
+    "uncertainty_mode": {"types": [str]},
 }
