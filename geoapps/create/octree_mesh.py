@@ -383,4 +383,5 @@ class OctreeMesh(ObjectDataSelection):
             "executable": (
                 "start cmd.exe @cmd /k " + 'python -m geoapps.utils.create_octree "'
             ),
+            "monitoring_directory": "../../assets/Temp",
         }
