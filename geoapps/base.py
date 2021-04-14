@@ -36,7 +36,7 @@ class BaseApplication:
         self._workspace = None
         self._working_directory = None
         self._working_file = None
-
+        self._monitoring_directory = None
         self.figure = None
         self._file_browser = FileChooser()
         self._ga_group_name = Text(
@@ -72,6 +72,7 @@ class BaseApplication:
         )
         self._live_link.observe(self.live_link_choice)
         self._export_directory = FileChooser(show_only_dirs=True)
+        self._export_directory._select.on_click(self.export_browser_change)
         self.live_link_panel = VBox([self.live_link])
         self._refresh = ToggleButton(value=False)
         self._trigger = Button(
@@ -146,6 +147,13 @@ class BaseApplication:
             elif extension == ".geoh5":
                 self.h5file = self.file_browser.selected
 
+    def export_browser_change(self, _):
+        """
+        Change the target h5file
+        """
+        if not self.export_directory._select.disabled:
+            self._monitoring_directory = self.export_directory.selected
+
     def live_link_output(self, entity, data={}):
         """
         Create a temporary geoh5 file in the monitoring folder and export entity for update.
@@ -178,13 +186,9 @@ class BaseApplication:
         """
         if self.live_link.value:
 
-            if self.h5file is not None:
+            if (self.h5file is not None) and (self.monitoring_directory is None):
                 live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
-                if not path.exists(live_path):
-                    mkdir(live_path)
-
-                self.export_directory._set_form_values(live_path, "")
-                self.export_directory._apply_selection()
+                self.monitoring_directory = live_path
 
             self.live_link_panel.children = [self.live_link, self.monitoring_panel]
         else:
@@ -196,6 +200,29 @@ class BaseApplication:
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
         """
         return self._main
+
+    @property
+    def monitoring_directory(self):
+        """
+        Set the monitoring directory for live link
+        """
+
+        if getattr(self, "_monitoring_directory", None) is None:
+            self._monitoring_directory = self.export_directory.selected_path
+
+        return self._monitoring_directory
+
+    @monitoring_directory.setter
+    def monitoring_directory(self, live_path: str):
+
+        if not path.exists(live_path):
+            mkdir(live_path)
+
+        live_path = path.abspath(live_path)
+        self.export_directory._set_form_values(live_path, "")
+        self.export_directory._apply_selection()
+
+        self._monitoring_directory = live_path
 
     @property
     def copy_trigger(self):
