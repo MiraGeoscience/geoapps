@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import json
+import re
 import time
 import urllib.request
 import zipfile
@@ -17,6 +19,21 @@ from ipyfilechooser import FileChooser
 from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
 
 import geoapps
+
+
+def load_json_params(file: str):
+    """
+    Read input parameters from json
+    """
+    with open(file) as f:
+        input_dict = json.load(f)
+
+    params = {}
+    for key, param in input_dict.items():
+        if isinstance(param, dict):
+            params[re.split("-", key)[1]] = param["value"]
+
+    return params
 
 
 class BaseApplication:
@@ -34,6 +51,9 @@ class BaseApplication:
         self.plot_result = False
         self._h5file = None
         self._workspace = None
+        self._working_directory = None
+        self._working_file = None
+
         self.figure = None
         self._file_browser = FileChooser()
         self._ga_group_name = Text(
@@ -124,9 +144,7 @@ class BaseApplication:
         Add defaults to the kwargs
         """
         for key, value in self.defaults.copy().items():
-            if key in kwargs.keys():
-                continue
-            else:
+            if key not in kwargs.keys():
                 kwargs[key] = value
 
         return kwargs
@@ -136,7 +154,14 @@ class BaseApplication:
         Change the target h5file
         """
         if not self.file_browser._select.disabled:
-            self.h5file = self.file_browser.selected
+            _, extension = path.splitext(self.file_browser.selected)
+
+            if extension == ".json":
+                params = load_json_params(self.file_browser.selected)
+                self.__populate__(**params)
+
+            elif extension == ".geoh5":
+                self.h5file = self.file_browser.selected
 
     def live_link_output(self, entity, data={}):
         """
@@ -241,10 +266,12 @@ class BaseApplication:
         if getattr(self, "_h5file", None) is None:
 
             if self._workspace is not None:
-                self._h5file = self._workspace.h5file
-                return self._h5file
+                self.h5file = self._workspace.h5file
 
-            if self.file_browser.selected is not None:
+            elif self.working_file is not None and self.working_directory is not None:
+                self.h5file = path.join(self.working_directory, self.working_file)
+
+            elif self.file_browser.selected is not None:
                 h5file = self.file_browser.selected
                 self.h5file = h5file
 
@@ -252,11 +279,13 @@ class BaseApplication:
 
     @h5file.setter
     def h5file(self, value):
+        self._working_directory = None
+        self._working_file = None
         self._h5file = value
 
         self._file_browser.reset(
-            path=path.abspath(path.dirname(value)),
-            filename=path.basename(value),
+            path=self.working_directory,
+            filename=self.working_file,
         )
         self._file_browser._apply_selection()
         self.workspace = Workspace(self._h5file)
@@ -282,6 +311,29 @@ class BaseApplication:
         """
         return self._refresh
 
+    def save_json_params(self, file_name: str):
+        """"""
+        if getattr(self, "default_ui", None) is not None:
+            out_dict = self.default_ui.copy()
+
+            for arg, params in out_dict.items():
+                key = re.sub(r"\d+-", "", arg)
+                if getattr(self, key, None) is not None:
+                    value = getattr(self, key)
+                    if hasattr(value, "value"):
+                        value = value.value
+
+                    if isinstance(out_dict[arg], dict):
+                        out_dict[arg]["value"] = value
+                    else:
+                        out_dict[arg] = value
+
+            file = f"{path.join(self.working_directory, file_name)}.json"
+            with open(file, "w") as f:
+                json.dump(out_dict, f, indent=4)
+
+        return file
+
     @property
     def trigger(self):
         """
@@ -305,7 +357,31 @@ class BaseApplication:
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.h5file = workspace.h5file
+
+    @property
+    def working_directory(self):
+        """
+        Target geoh5py workspace
+        """
+        if (
+            getattr(self, "_working_directory", None) is None
+            and getattr(self, "_h5file", None) is not None
+        ):
+            self._working_directory = path.abspath(path.dirname(self.h5file))
+        return self._working_directory
+
+    @property
+    def working_file(self):
+        """
+        Target geoh5py workspace
+        """
+        if (
+            getattr(self, "_working_file", None) is None
+            and getattr(self, "_h5file", None) is not None
+        ):
+            self._working_file = path.basename(self.h5file)
+        return self._working_file
 
     def create_copy(self, _):
         if self.h5file is not None:

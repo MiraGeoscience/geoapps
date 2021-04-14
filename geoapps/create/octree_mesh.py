@@ -5,13 +5,17 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
+import re
+
 from discretize.utils import meshutils
 from geoh5py.objects import Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, HBox, Label, Text, VBox
+from ipywidgets import Dropdown, FloatText, HBox, IntText, Label, Text, VBox
 
+from geoapps.base import load_json_params
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils import string_2_list, treemesh_2_octree
+from geoapps.utils.utils import string_2_list, treemesh_2_octree
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -19,61 +23,89 @@ class OctreeMesh(ObjectDataSelection):
     Widget used for the creation of an octree meshes
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Data_FEM_pseudo3D",
-        "core_cell_size": "25, 25, 25",
-        "depth_core": 500,
-        "octree_levels_obs": "0, 0, 0, 2",
-        "padding_distance": "0, 0, 0, 0, 0, 0",
-        "refinement0": "Topography",
-        "ga_group_name": "NewOctree",
-    }
-
     def __init__(self, **kwargs):
+
+        self.defaults = {}
+        for key, params in self.default_ui.items():
+            key = re.sub(r"\d+-", "", key)
+            if isinstance(params, dict):
+                self.defaults[key] = params["value"]
+            else:
+                self.defaults[key] = params
+
         kwargs = self.apply_defaults(**kwargs)
         self.object_types = [Curve, Octree, Points, Surface]
-        self._core_cell_size = Text(
-            description="Smallest cells",
+        self._u_cell_size = FloatText(
+            description="Easting",
+        )
+        self._v_cell_size = FloatText(
+            description="Northing",
+        )
+        self._w_cell_size = FloatText(
+            description="Vertical",
         )
         self._depth_core = FloatText(
             description="Minimum depth (m)",
         )
-        self._padding_distance = Text(
-            description="Padding [W,E,N,S,D,U] (m)",
+        self._horizontal_padding = FloatText(
+            description="Horizontal (m)",
         )
-
-        self._refinement0 = Dropdown(
-            description="Object", style={"description_width": "initial"}
-        )
-        self._refinement1 = Dropdown(
-            description="Object", style={"description_width": "initial"}
-        )
-        self._refinement2 = Dropdown(
-            description="Object", style={"description_width": "initial"}
+        self._vertical_padding = FloatText(
+            description="Vertical (m)",
         )
 
         self.refinement_list = []
-        labels = ["", "B", "C"]
-        for ii in range(3):
+        labels = ["A", "B"]
+        for label in labels:
+            setattr(
+                self,
+                f"_refinement_{label}",
+                Dropdown(description="Object", style={"description_width": "initial"}),
+            )
+            setattr(
+                self,
+                f"_octree_{label}1",
+                IntText(
+                    description="Level 1",
+                ),
+            )
+            setattr(
+                self,
+                f"_octree_{label}2",
+                IntText(
+                    description="Level 2",
+                ),
+            )
+            setattr(
+                self,
+                f"_octree_{label}3",
+                IntText(
+                    description="Level 3",
+                ),
+            )
+            setattr(
+                self,
+                f"_method_{label}",
+                Dropdown(description="Type", options=["surface", "radial"]),
+            )
+            setattr(
+                self, f"_max_distance_{label}", FloatText(description="Max distance")
+            )
+
             self.refinement_list.append(
                 VBox(
                     [
-                        Label(f"Refinement {labels[ii]}:"),
-                        getattr(self, f"_refinement{ii}"),
+                        Label(f"Refinement {label}:"),
+                        getattr(self, f"_refinement_{label}"),
                         HBox(
                             [
-                                Text(
-                                    description="# Cells / Octree size",
-                                    value="2,2,2",
-                                    style={"description_width": "initial"},
-                                ),
-                                Dropdown(
-                                    description="Type", options=["Surface", "Radial"]
-                                ),
-                                FloatText(description="Max distance", value=1000),
+                                getattr(self, f"_octree_{label}1"),
+                                getattr(self, f"_octree_{label}2"),
+                                getattr(self, f"_octree_{label}3"),
                             ]
                         ),
+                        getattr(self, f"_method_{label}"),
+                        getattr(self, f"_max_distance_{label}"),
                     ]
                 )
             )
@@ -85,20 +117,21 @@ class OctreeMesh(ObjectDataSelection):
                 self.project_panel,
                 Label("Base Parameters"),
                 self._objects,
-                self._core_cell_size,
+                Label("Core cell size"),
+                HBox([self._u_cell_size, self._v_cell_size, self._w_cell_size]),
                 self._depth_core,
-                self._padding_distance,
+                Label("Padding distance"),
+                HBox([self.horizontal_padding, self.vertical_padding]),
+                Label("Refinements"),
                 self.refinement_list[0],
                 Label("Optional"),
                 self.refinement_list[1],
-                self.refinement_list[2],
                 self.output_panel,
             ]
         )
         self.objects.description = "Core hull extent:"
         self.trigger.description = "Create"
         self.ga_group_name.description = "Name:"
-
         self.trigger.on_click(self.trigger_click)
 
         for obj in self.__dict__:
@@ -106,8 +139,16 @@ class OctreeMesh(ObjectDataSelection):
                 getattr(self, obj).style = {"description_width": "initial"}
 
     @property
-    def core_cell_size(self):
-        return self._core_cell_size
+    def u_cell_size(self):
+        return self._u_cell_size
+
+    @property
+    def v_cell_size(self):
+        return self._v_cell_size
+
+    @property
+    def w_cell_size(self):
+        return self._w_cell_size
 
     @property
     def depth_core(self):
@@ -118,20 +159,60 @@ class OctreeMesh(ObjectDataSelection):
         return self._main
 
     @property
-    def padding_distance(self):
-        return self._padding_distance
+    def max_distance_A(self):
+        return self._max_distance_A
 
     @property
-    def refinement0(self):
-        return self._refinement0
+    def max_distance_B(self):
+        return self._max_distance_B
 
     @property
-    def refinement1(self):
-        return self._refinement1
+    def horizontal_padding(self):
+        return self._horizontal_padding
 
     @property
-    def refinement2(self):
-        return self._refinement2
+    def vertical_padding(self):
+        return self._vertical_padding
+
+    @property
+    def octree_A1(self):
+        return self._octree_A1
+
+    @property
+    def octree_A2(self):
+        return self._octree_A2
+
+    @property
+    def octree_A3(self):
+        return self._octree_A3
+
+    @property
+    def octree_B1(self):
+        return self._octree_B1
+
+    @property
+    def octree_B2(self):
+        return self._octree_B2
+
+    @property
+    def octree_B3(self):
+        return self._octree_B3
+
+    @property
+    def refinement_A(self):
+        return self._refinement_A
+
+    @property
+    def refinement_B(self):
+        return self._refinement_B
+
+    @property
+    def method_A(self):
+        return self._method_A
+
+    @property
+    def method_B(self):
+        return self._method_B
 
     @property
     def workspace(self):
@@ -161,33 +242,148 @@ class OctreeMesh(ObjectDataSelection):
 
     def trigger_click(self, _):
 
-        obj, _ = self.get_selected_entities()
-        p_d = string_2_list(self.padding_distance.value)
-        p_d = [
-            [p_d[0], p_d[1]],
-            [p_d[2], p_d[3]],
-            [p_d[4], p_d[5]],
-        ]
-        treemesh = meshutils.mesh_builder_xyz(
-            obj.vertices,
-            string_2_list(self.core_cell_size.value),
-            padding_distance=p_d,
-            mesh_type="tree",
-            depth_core=self.depth_core.value,
-        )
+        file = self.save_json_params(self.ga_group_name.value)
+        os.system(self.default_ui["executable"] + file)
 
-        for child in self.refinement_list:
-
-            entity = self.workspace.get_entity(child.children[1].value)
-            if any(entity):
-                treemesh = meshutils.refine_tree_xyz(
-                    treemesh,
-                    entity[0].vertices,
-                    method=child.children[2].children[1].value.lower(),
-                    octree_levels=string_2_list(child.children[2].children[0].value),
-                    max_distance=child.children[2].children[2].value,
-                    finalize=False,
-                )
-
-        treemesh.finalize()
-        treemesh_2_octree(self.workspace, treemesh, name=self.ga_group_name.value)
+    @property
+    def default_ui(self):
+        return {
+            "0-h5file": {"enabled": False, "value": "../../assets/FlinFlon.geoh5"},
+            "1-objects": {
+                "enabled": True,
+                "group": "1- Core",
+                "label": "Core hull extent",
+                "main": True,
+                "meshType": "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+                "value": "Data_FEM_pseudo3D",
+            },
+            "2-u_cell_size": {
+                "enabled": True,
+                "group": "2- Core cell size",
+                "label": "Easting (m)",
+                "main": True,
+                "value": 25,
+            },
+            "3-v_cell_size": {
+                "enabled": True,
+                "group": "2- Core cell size",
+                "label": "Northing (m)",
+                "main": True,
+                "value": 25,
+            },
+            "4-w_cell_size": {
+                "enabled": True,
+                "group": "2- Core cell size",
+                "label": "Vertical (m)",
+                "main": True,
+                "value": 25,
+            },
+            "5-horizontal_padding": {
+                "enabled": True,
+                "group": "3- Padding distance",
+                "label": "Horizontal (m)",
+                "main": True,
+                "value": 0.0,
+            },
+            "6-vertical_padding": {
+                "enabled": True,
+                "group": "3- Padding distance",
+                "label": "Vertical (m)",
+                "main": True,
+                "value": 0.0,
+            },
+            "7-depth_core": {
+                "enabled": True,
+                "group": "1- Core",
+                "label": "Minimum Depth (m)",
+                "main": True,
+                "value": 500.0,
+            },
+            "8-refinement_A": {
+                "enabled": True,
+                "group": "Refinement A",
+                "label": "Object",
+                "meshType": "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+                "value": "Data_FEM_pseudo3D",
+            },
+            "9-octree_A1": {
+                "enabled": True,
+                "group": "Refinement A",
+                "label": "#Cells @ 1 x core",
+                "value": 2,
+            },
+            "10-octree_A2": {
+                "enabled": True,
+                "group": "Refinement A",
+                "label": "#Cells @ 2 x core",
+                "value": 2,
+            },
+            "11-octree_A3": {
+                "enabled": True,
+                "group": "Refinement A",
+                "label": "#Cells @ 4 x core",
+                "value": 2,
+            },
+            "126-method_A": {
+                "choiceList": ["surface", "radial"],
+                "enabled": True,
+                "group": "Refinement A",
+                "label": "Type",
+                "value": "radial",
+            },
+            "17-max_distance_A": {
+                "enabled": True,
+                "group": "Refinement A",
+                "label": "Max Distance (m)",
+                "value": 1000.0,
+            },
+            "18-refinement_B": {
+                "enabled": True,
+                "group": "Refinement B",
+                "label": "Object",
+                "meshType": "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+                "value": "Topography",
+            },
+            "19-octree_B1": {
+                "enabled": True,
+                "group": "Refinement B",
+                "label": "#Cells @ 1 x core",
+                "value": 2,
+            },
+            "20-octree_B2": {
+                "enabled": True,
+                "group": "Refinement B",
+                "label": "#Cells @ 2 x core",
+                "value": 2,
+            },
+            "21-octree_B3": {
+                "enabled": True,
+                "group": "Refinement B",
+                "label": "#Cells @ 4 x core",
+                "value": 2,
+            },
+            "22-method_B": {
+                "choiceList": ["surface", "radial"],
+                "enabled": True,
+                "group": "Refinement B",
+                "label": "Type",
+                "value": "surface",
+            },
+            "23-max_distance_B": {
+                "enabled": True,
+                "group": "Refinement B",
+                "label": "Max Distance (m)",
+                "value": 1000.0,
+            },
+            "24-ga_group_name": {
+                "enabled": True,
+                "group": "",
+                "label": "Name:",
+                "value": "Octree_Mesh",
+            },
+            "title": "Something",
+            "working_directory": "../../assets/",
+            "executable": (
+                "start cmd.exe @cmd /k " + 'python -m geoapps.utils.create_octree "'
+            ),
+        }

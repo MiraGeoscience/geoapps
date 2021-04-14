@@ -38,7 +38,7 @@ from ipywidgets import (
 from scipy.spatial import cKDTree
 
 from geoapps.selection import LineOptions, ObjectDataSelection
-from geoapps.utils import (
+from geoapps.utils.utils import (
     LineDataDerivatives,
     colors,
     find_value,

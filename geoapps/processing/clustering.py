@@ -27,7 +27,7 @@ from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
 from geoapps.plotting import ScatterPlots
-from geoapps.utils import colors, hex_to_rgb, random_sampling
+from geoapps.utils.utils import colors, hex_to_rgb, random_sampling
 
 
 class Clustering(ScatterPlots):

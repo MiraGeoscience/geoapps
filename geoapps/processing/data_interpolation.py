@@ -23,7 +23,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils import weighted_average
+from geoapps.utils.utils import weighted_average
 
 
 class DataInterpolation(ObjectDataSelection):

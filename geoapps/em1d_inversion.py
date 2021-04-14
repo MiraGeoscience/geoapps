@@ -1111,8 +1111,8 @@ def inversion(input_file):
 
     # Directives
     directiveList = []
-
-    directiveList.append(Directives.UpdateSensitivityWeights())
+    print("NO SENSITIVITY WEIGHTS")
+    # directiveList.append(Directives.UpdateSensitivityWeights())
     directiveList.append(
         Directives.Update_IRLS(
             maxIRLSiter=max_irls_iterations,

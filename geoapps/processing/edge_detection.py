@@ -24,7 +24,7 @@ from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
 from geoapps.plotting import PlotSelection2D
-from geoapps.utils import filter_xy
+from geoapps.utils.utils import filter_xy
 
 
 class EdgeDetectionApp(PlotSelection2D):

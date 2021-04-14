@@ -19,7 +19,7 @@ from osgeo import gdal, osr
 
 from geoapps.base import BaseApplication
 from geoapps.plotting import plot_plan_data_selection
-from geoapps.utils import export_grid_2_geotiff, geotiff_2_grid
+from geoapps.utils.utils import export_grid_2_geotiff, geotiff_2_grid
 
 
 class CoordinateTransformation(BaseApplication):
