@@ -25,7 +25,7 @@ from ipywidgets import (
 
 from geoapps.plotting import format_axis, normalize
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils import random_sampling, symlog
+from geoapps.utils.utils import random_sampling, symlog
 
 
 class ScatterPlots(ObjectDataSelection):

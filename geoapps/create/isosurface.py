@@ -11,7 +11,7 @@ from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, HBox, Label, Text, VBox
 
 from geoapps.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils import (
+from geoapps.utils.utils import (
     input_string_2_float,
     iso_surface,
     string_2_list,

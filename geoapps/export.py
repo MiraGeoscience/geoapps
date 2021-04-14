@@ -19,7 +19,7 @@ from osgeo import osr
 
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils import (
+from geoapps.utils.utils import (
     export_curve_2_shapefile,
     export_grid_2_geotiff,
     object_2_dataframe,

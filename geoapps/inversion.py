@@ -32,7 +32,7 @@ from ipywidgets.widgets import (
 from geoapps.base import BaseApplication
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import LineOptions, ObjectDataSelection, TopographyOptions
-from geoapps.utils import find_value, geophysical_systems, string_2_list
+from geoapps.utils.utils import find_value, geophysical_systems, string_2_list
 
 
 class ChannelOptions:

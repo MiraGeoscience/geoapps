@@ -50,7 +50,7 @@ from geoapps.simpegPF import (
     Utils,
 )
 from geoapps.simpegPF.Utils import matutils, mkvc
-from geoapps.utils import block_model_2_tensor, filter_xy, octree_2_treemesh
+from geoapps.utils.utils import block_model_2_tensor, filter_xy, octree_2_treemesh
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
@@ -684,7 +684,7 @@ def inversion(input_file):
             else:
                 input_mesh = octree_2_treemesh(input_mesh)
 
-            input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2] + 1300]
+            # input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2]]
             print("converting", input_mesh.x0)
         else:
             starting_model = np.r_[input_dict["starting_model"]["value"]]

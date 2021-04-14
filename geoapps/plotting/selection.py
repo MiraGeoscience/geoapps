@@ -14,7 +14,7 @@ from ipywidgets import FloatSlider, FloatText, HBox, Label, Layout, ToggleButton
 
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils import input_string_2_float, rotate_xy
+from geoapps.utils.utils import input_string_2_float, rotate_xy
 
 
 class PlotSelection2D(ObjectDataSelection):
