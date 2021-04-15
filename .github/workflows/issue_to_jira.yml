@@ -11,36 +11,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Create JIRA issue
-        id: create_jira_issue
-        env:
-          jiraAuth: ${{ secrets.JIRA_BASIC_AUTH }}
-          curlData: |
-            {
-              "fields": {
-                "project": {
-                  "key": "GEOPY"
-                },
-                "summary": "${{ github.event.issue.title }}",
-                "description": "_from [GitHub issue #${{ github.event.issue.number }}|${{ github.event.issue.html_url }}]_",
-                "issuetype": {
-                  "name": "Story"
-                }
-              }
-            }
-        run: >
-          echo "$curlData" |
-          curl
-          -H "Authorization: Basic $jiraAuth"
-          -X POST
-          --data-binary @-
-          -H "Content-Type: application/json"
-          https://bugs.mirageoscience.com/rest/api/2/issue/
-          | echo "::set-output name=jira_id::$(jq -r '.key')"
+    - name: JIRA Login
+      uses: atlassian/gajira-login@v2.0.0
+      env:
+        JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+        JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+        JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+    - name: Jira Create issue
+      id: create_jira_issue
+      uses: atlassian/gajira-create@v2.0.1
+      with:
+        project: GEOPY
+        issuetype: Story
+        summary: ${{ github.event.issue.title }}
+        description: _from [GitHub issue \#${{ github.event.issue.number }}|${{ github.event.issue.html_url }}]_
+        # Additional fields in JSON format
+        fields: '{"components": ["geoapps"]}'
       - name: Post JIRA link
         uses: peter-evans/create-or-update-comment@v1
         with:
           # The number of the issue or pull request in which to create a comment.
           issue-number: ${{ github.event.issue.number }}
           # The comment body.
-          body: "Created JIRA issue ${{ steps.create_jira_issue.outputs.jira_id }}"
+          body: "JIRA issue [${{ steps.create_jira_issue.outputs.issue }}] was created."
