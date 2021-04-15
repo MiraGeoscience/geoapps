@@ -18,15 +18,7 @@ validations = {
     },
     "data": {
         "types": [dict],
-        "type": {
-            "values": ["GA_object", "ubc_grav", "ubc_mag"],
-            "types": [str],
-            "reqs": [
-                ("GA_object", "workspace"),
-                ("ubc_grav", "data_file"),
-                ("ubc_mag", "data_file"),
-            ],
-        },
+        "reqs": [("workspace",)],
         "name": {
             "types": [str],
         },

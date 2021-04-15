@@ -300,6 +300,8 @@ class Params:
             return
         p = "data"
         self.validator.validate(p, val, validations[p])
+        if "name" not in val.keys():
+            raise KeyError("Missing required key: 'name', for input parameter 'data'.")
         self._data = val
 
     @property

@@ -23,7 +23,6 @@ See README for description of options
 """
 
 import json
-import os
 import sys
 from multiprocessing.pool import ThreadPool
 
@@ -208,112 +207,91 @@ def inversion(inputfile):
     input_dict = inputfile.data
     params = Params.from_ifile(inputfile)
 
-    if params.data["type"] == "ubc_grav":
+    workspace = Workspace(params.workspace)
 
-        survey = Utils.io_utils.readUBCgravityObservations(
-            params.workpath + params.data_name
-        )
-
-    elif params.data["type"] == "ubc_mag":
-
-        survey, H0 = Utils.io_utils.readUBCmagneticsObservations(
-            params.workpath + params.data_name
-        )
-        survey.components = ["tmi"]
-
-    elif params.data["type"] == "GA_object":
-
-        workspace = Workspace(params.workspace)
-
-        if workspace.get_entity(params.data["name"]):
-            entity = workspace.get_entity(params.data["name"])[0]
-        else:
-            assert False, (
-                f"Entity {params.data['name']} could not be found in "
-                f"Workspace {workspace.h5file}"
-            )
-
-        data = []
-        uncertainties = []
-        components = []
-        for channel, props in params.data["channels"].items():
-            if entity.get_data(props["name"]):
-                data.append(entity.get_data(props["name"])[0].values)
-            else:
-                assert False, (
-                    f"Data {props['name']} could not be found associated with "
-                    f"target {entity.name} object."
-                )
-            uncertainties.append(
-                np.abs(data[-1]) * props["uncertainties"][0] + props["uncertainties"][1]
-            )
-            components += [channel.lower()]
-
-        data = np.vstack(data).T
-        uncertainties = np.vstack(uncertainties).T
-
-        if params.ignore_values is not None:
-            igvals = params.ignore_values
-            if len(igvals) > 0:
-                if "<" in igvals:
-                    uncertainties[data <= float(igvals.split("<")[1])] = np.inf
-                elif ">" in igvals:
-                    uncertainties[data >= float(igvals.split(">")[1])] = np.inf
-                else:
-                    uncertainties[data == float(igvals)] = np.inf
-
-        if isinstance(entity, Grid2D):
-            vertices = entity.centroids
-        else:
-            vertices = entity.vertices
-
-        window_ind = filter_xy(
-            vertices[:, 0],
-            vertices[:, 1],
-            params.resolution,
-            window=params.window,
-        )
-
-        if params.window is not None:
-            xy_rot = rotate_xy(
-                vertices[window_ind, :2],
-                params.window["center"],
-                params.window["azimuth"],
-            )
-
-            xyz_loc = np.c_[xy_rot, vertices[window_ind, 2]]
-        else:
-            xyz_loc = vertices[window_ind, :]
-
-        if "gravity" in params.inversion_type:
-            receivers = PF.BaseGrav.RxObs(xyz_loc)
-            source = PF.BaseGrav.SrcField([receivers])
-            survey = PF.BaseGrav.LinearSurvey(source)
-        else:
-            if params.window is not None:
-                params.inducing_field_aid[2] -= params.window["azimuth"]
-            receivers = PF.BaseMag.RxObs(xyz_loc)
-            source = PF.BaseMag.SrcField([receivers], param=params.inducing_field_aid)
-            survey = PF.BaseMag.LinearSurvey(source)
-
-        survey.dobs = data[window_ind, :].ravel()
-        survey.std = uncertainties[window_ind, :].ravel()
-        survey.components = components
-
-        normalization = []
-        for ind, comp in enumerate(survey.components):
-            if "gz" == comp:
-                print(f"Sign flip for {comp} component")
-                normalization.append(-1.0)
-                survey.dobs[ind :: len(survey.components)] *= -1
-            else:
-                normalization.append(1.0)
-
+    if workspace.get_entity(params.data["name"]):
+        entity = workspace.get_entity(params.data["name"])[0]
     else:
         assert False, (
-            "PF Inversion only implemented for data 'type'"
-            " 'ubc_grav', 'ubc_mag', 'GA_object'"
+            f"Entity {params.data['name']} could not be found in "
+            f"Workspace {workspace.h5file}"
         )
+
+    data = []
+    uncertainties = []
+    components = []
+    for channel, props in params.data["channels"].items():
+        if entity.get_data(props["name"]):
+            data.append(entity.get_data(props["name"])[0].values)
+        else:
+            assert False, (
+                f"Data {props['name']} could not be found associated with "
+                f"target {entity.name} object."
+            )
+        uncertainties.append(
+            np.abs(data[-1]) * props["uncertainties"][0] + props["uncertainties"][1]
+        )
+        components += [channel.lower()]
+
+    data = np.vstack(data).T
+    uncertainties = np.vstack(uncertainties).T
+
+    if params.ignore_values is not None:
+        igvals = params.ignore_values
+        if len(igvals) > 0:
+            if "<" in igvals:
+                uncertainties[data <= float(igvals.split("<")[1])] = np.inf
+            elif ">" in igvals:
+                uncertainties[data >= float(igvals.split(">")[1])] = np.inf
+            else:
+                uncertainties[data == float(igvals)] = np.inf
+
+    if isinstance(entity, Grid2D):
+        vertices = entity.centroids
+    else:
+        vertices = entity.vertices
+
+    window_ind = filter_xy(
+        vertices[:, 0],
+        vertices[:, 1],
+        params.resolution,
+        window=params.window,
+    )
+
+    if params.window is not None:
+        xy_rot = rotate_xy(
+            vertices[window_ind, :2],
+            params.window["center"],
+            params.window["azimuth"],
+        )
+
+        xyz_loc = np.c_[xy_rot, vertices[window_ind, 2]]
+    else:
+        xyz_loc = vertices[window_ind, :]
+
+    if "gravity" in params.inversion_type:
+        receivers = PF.BaseGrav.RxObs(xyz_loc)
+        source = PF.BaseGrav.SrcField([receivers])
+        survey = PF.BaseGrav.LinearSurvey(source)
+    else:
+        if params.window is not None:
+            params.inducing_field_aid[2] -= params.window["azimuth"]
+        receivers = PF.BaseMag.RxObs(xyz_loc)
+        source = PF.BaseMag.SrcField([receivers], param=params.inducing_field_aid)
+        survey = PF.BaseMag.LinearSurvey(source)
+
+    survey.dobs = data[window_ind, :].ravel()
+    survey.std = uncertainties[window_ind, :].ravel()
+    survey.components = components
+
+    normalization = []
+    for ind, comp in enumerate(survey.components):
+        if "gz" == comp:
+            print(f"Sign flip for {comp} component")
+            normalization.append(-1.0)
+            survey.dobs[ind :: len(survey.components)] *= -1
+        else:
+            normalization.append(1.0)
 
     # if np.median(survey.dobs) > 500 and "detrend" not in list(input_dict.keys()):
     #     print(
@@ -332,42 +310,10 @@ def inversion(inputfile):
 
             survey.dobs -= data_trend
 
-            if params.data["type"] == "ubc_mag":
-                Utils.io_utils.writeUBCmagneticsObservations(
-                    os.path.splitext(params.result_folder + params.data_file)[0]
-                    + "_trend.mag",
-                    survey,
-                    data_trend,
-                )
-                Utils.io_utils.writeUBCmagneticsObservations(
-                    os.path.splitext(params.result_folder + params.data_file)[0]
-                    + "_detrend.mag",
-                    survey,
-                    survey.dobs,
-                )
-            elif params.data["type"] in ["ubc_grav"]:
-                Utils.io_utils.writeUBCgravityObservations(
-                    os.path.splitext(params.result_folder + params.data_file)[0]
-                    + "_trend.grv",
-                    survey,
-                    data_trend,
-                )
-                Utils.io_utils.writeUBCgravityObservations(
-                    os.path.splitext(params.result_folder + params.data_file)[0]
-                    + "_detrend.grv",
-                    survey,
-                    survey.dobs,
-                )
     else:
         data_trend = 0.0
 
         # Update the specified data uncertainty
-        dopts = ["ubc_mag", "ubc_grav"]
-    if (params.new_uncert is not None) & (params.data["type"] in dopts):
-        if params.new_uncert:
-            perc = params.new_uncert[0]
-            floor = params.new_uncert[1]
-            survey.std = np.maximum(abs(perc * survey.dobs), floor)
 
     if survey.std is None:
         survey.std = survey.dobs * 0 + 1  # Default

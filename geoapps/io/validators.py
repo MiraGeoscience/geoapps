@@ -62,12 +62,7 @@ class InputValidator:
 
         self._validate_required_parameters(input)
 
-        if "data" in input.keys():
-            require_keys = "type" not in input["data"].keys()
-            require_keys |= "name" not in input["data"].keys()
-            if require_keys:
-                raise KeyError("Data 'type' and 'name' must not be empty.")
-        elif "reference_model" in input.keys():
+        if "reference_model" in input.keys():
             if "value" in input["reference_model"].keys():
                 v = input["reference_model"]["value"]
                 v = np.r_[v]
