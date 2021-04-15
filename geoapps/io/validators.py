@@ -107,7 +107,7 @@ class InputValidator:
         if isinstance(value, dict):
             for k, v in value.items():
                 if k not in validations.keys():
-                    msg = f"Invalid {param} keys: {k}. Must be one of {validations.keys()}."
+                    msg = f"Invalid {param} keys: {k}. Must be one of {*validations.keys(),}."
                     raise KeyError(msg)
                 self.validate(k, v, validations[k], input_keys)
 

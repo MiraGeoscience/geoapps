@@ -7,7 +7,7 @@
 
 import pytest
 
-from geoapps.io.validators import InputValidator
+from geoapps.io.validators import InputValidator, validations
 
 ######################  Setup  ###########################
 
@@ -27,7 +27,7 @@ def tmp_input_file(filepath, input_dict):
 
 def test_param_validation_msg():
     msg = validator._param_validation_msg("inversion_type", "value", ["mvi"])
-    assert msg == f"Invalid inversion_type value. Must be: mvi."
+    assert msg == "Invalid inversion_type value. Must be one of: ('mvi',)."
     msg = validator._param_validation_msg(
         "inversion_type", "value", ["mvi", "grav", "mag"]
     )
@@ -35,7 +35,7 @@ def test_param_validation_msg():
         msg == f"Invalid inversion_type value. Must be one of: ('mvi', 'grav', 'mag')."
     )
     msg = validator._param_validation_msg("inversion_type", "type", [str])
-    assert msg == f"Invalid inversion_type type. Must be: <class 'str'>."
+    assert msg == f"Invalid inversion_type type. Must be one of: (<class 'str'>,)."
     msg = validator._param_validation_msg("inversion_type", "type", [int, float])
     assert (
         msg
@@ -49,57 +49,14 @@ def test_param_validation_msg():
 
 def test_isiterable():
     assert validator._isiterable("test") == False
-    assert validator._isiterable(["test"]) == False
+    assert validator._isiterable(["test"]) == True
     assert validator._isiterable(["Hi", "there"]) == True
     assert validator._isiterable(1) == False
-    assert validator._isiterable([1]) == False
+    assert validator._isiterable([1]) == True
     assert validator._isiterable([1, 2]) == True
     assert validator._isiterable(1.0) == False
-    assert validator._isiterable([1.0]) == False
+    assert validator._isiterable([1.0]) == True
     assert validator._isiterable([1.0, 2.0]) == True
     assert validator._isiterable(True) == False
-    assert validator._isiterable([True]) == False
+    assert validator._isiterable([True]) == True
     assert validator._isiterable([True, True]) == True
-
-
-def test_validate_parameter_val():
-    with pytest.raises(ValueError) as excinfo:
-        validator._validate_parameter_val("inversion_type", "em")
-    assert "value" in str(excinfo.value)
-
-
-def test_validate_parameter_type():
-    with pytest.raises(ValueError) as excinfo:
-        validator._validate_parameter_type("forward_only", 1)
-    assert "type" in str(excinfo.value)
-
-
-def test_validate_parameter_shape():
-    with pytest.raises(ValueError) as excinfo:
-        validator._validate_parameter_shape("inducing_field_aid", [1.0, 2.0])
-    assert "shape" in str(excinfo.value)
-
-
-def test_validate():
-    validator.validate("inducing_field_aid", None)
-    with pytest.raises(ValueError) as excinfo:
-        validator.validate("inversion_type", None)
-    assert "Cannot be None." in str(excinfo.value)
-    with pytest.raises(ValueError) as excinfo:
-        validator.validate("inversion_type", "em")
-    assert "value" in str(excinfo.value)
-    with pytest.raises(ValueError) as excinfo:
-        validator.validate("forward_only", 1)
-    assert "type" in str(excinfo.value)
-    with pytest.raises(ValueError) as excinfo:
-        validator.validate("inducing_field_aid", [1.0, 2.0])
-    assert "shape" in str(excinfo.value)
-
-
-def test_validate_input():
-    idict = {"inversion_type": "mvi"}
-    with pytest.raises(ValueError) as excinfo:
-        validator.validate_input(idict)
-    assert "(s): ('core_cell_size',)" in str(excinfo.value)
-    idict["core_cell_size"] = 2
-    validator.validate_input(idict)
