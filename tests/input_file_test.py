@@ -11,7 +11,7 @@ import os
 import pytest
 
 from geoapps.io import InputFile
-from geoapps.io.utils import create_work_path
+from geoapps.io.driver import create_work_path
 
 ######################  Setup  ###########################
 
@@ -58,9 +58,9 @@ def test_validate_parameters(tmp_path):
     idict["inversion_method"] = "mvi"
     tmp_input_file(filepath, idict)
     inputfile = InputFile(filepath)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(KeyError) as excinfo:
         inputfile.load()
-    msg = f"Encountered an invalid input parameter: {'inversion_method'}."
+    msg = "'inversion_method is not a valid parameter name.'"
     assert str(excinfo.value) == msg
 
 
@@ -72,5 +72,5 @@ def test_validate_required_parameters(tmp_path):
     inputfile = InputFile(filepath)
     with pytest.raises(ValueError) as excinfo:
         inputfile.load()
-    msg = f"Missing required parameter(s): ('inversion_type', 'core_cell_size')."
+    msg = f"Missing required parameter(s): ('inversion_type',)."
     assert str(excinfo.value) == msg
