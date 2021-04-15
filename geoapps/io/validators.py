@@ -151,8 +151,7 @@ class InputValidator:
     ) -> None:
         """ Raise ValueError if parameter shape is invalid. """
         if np.array(value).shape != vshape:
-            snames = [s.__str__() for s in vshape]
-            msg = self._param_validation_msg(param, "shape", snames)
+            msg = self._param_validation_msg(param, "shape", vshape)
             raise ValueError(msg)
 
     def _validate_parameter_reqs(
