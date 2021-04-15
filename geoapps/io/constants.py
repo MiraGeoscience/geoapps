@@ -39,11 +39,11 @@ validations = {
                 },
                 "uncertainties": {
                     "types": [int, float],
-                    "shape": (2,),
+                    "shapes": (2,),
                 },
                 "offsets": {
                     "types": [int, float],
-                    "shape": (3,),
+                    "shapes": (3,),
                 },
             },
         },
@@ -216,7 +216,7 @@ validations = {
         ],
     },
     "input_mesh_file": {
-        "type": [str],
+        "types": [str],
     },
     "inversion_mesh_type": {"values": ["TREE"], "types": [str]},
     "shift_mesh_z0": {"types": [int, float]},

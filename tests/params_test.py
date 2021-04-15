@@ -186,8 +186,6 @@ def test_validate_inducing_field_aid(tmp_path):
     assert "greater than 0." in str(excinfo.value)
 
 
-#
-#
 def test_validate_resolution(tmp_path):
     param = "resolution"
     ### test default behaviour ###
@@ -273,10 +271,30 @@ def test_validate_data(tmp_path):
     with pytest.raises(KeyError) as excinfo:
         params = Params.from_path(filepath)
     assert "Input file must contain 'data_file' if 'type'" in str(excinfo.value)
+    idict = input_dict.copy()
+    idict["workspace"] = "some_path"
+    idict["data"] = {
+        "type": "GA_object",
+        "name": "Norman",
+    }
+    idict["data"].update({"channels": {"tmi": {"uncertainties": [1, 2, 3]}}})
+    tmp_input_file(filepath, idict)
+    with pytest.raises(ValueError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "shape" in str(excinfo.value)
+    idict = input_dict.copy()
+    idict["workspace"] = "some_path"
+    idict["data"] = {
+        "type": "GA_object",
+        "name": "Norman",
+    }
+    idict["data"].update({"channels": {"tmi": {"uncertainties": ["str"]}}})
+    tmp_input_file(filepath, idict)
+    with pytest.raises(TypeError) as excinfo:
+        params = Params.from_path(filepath)
+    assert "type" in str(excinfo.value)
 
 
-#
-#
 def test_validate_ignore_values(tmp_path):
     param = "ignore_values"
     ### test default behaviour ###
@@ -288,8 +306,6 @@ def test_validate_ignore_values(tmp_path):
     catch_invalid_generator(tmp_path, param, 1234, "type")
 
 
-#
-#
 def test_validate_detrend(tmp_path):
     param = "detrend"
     ### test default behaviour ###
@@ -308,8 +324,6 @@ def test_validate_detrend(tmp_path):
     assert "Detrend order must be 0," in str(excinfo.value)
 
 
-#
-#
 def test_validate_data_file(tmp_path):
     param = "data_file"
     ### test default behaviour ###
@@ -354,8 +368,6 @@ def test_validate_new_uncert(tmp_path):
     assert "floor (new_uncert[1])" in str(excinfo.value)
 
 
-#
-#
 def test_validate_input_mesh(tmp_path):
     param = "input_mesh"
     ### test default behaviour ###
@@ -387,8 +399,6 @@ def test_validate_input_mesh(tmp_path):
     assert "'input_mesh_file' if 'input_mesh'" in str(excinfo.value)
 
 
-#
-#
 def test_validate_save_to_geoh5(tmp_path):
     param = "save_to_geoh5"
     ### test default behaviour ###
@@ -408,8 +418,6 @@ def test_validate_save_to_geoh5(tmp_path):
     assert "must contain 'out_group'" in str(excinfo.value)
 
 
-#
-#
 def test_validate_inversion_mesh_type(tmp_path):
     param = "inversion_mesh_type"
     ### test default behaviour ###
@@ -533,8 +541,6 @@ def test_validate_tol_cg(tmp_path):
     catch_invalid_generator(tmp_path, param, "nogood", "type")
 
 
-#
-#
 def test_validate_max_global_iterations(tmp_path):
     param = "max_global_iterations"
     ### test default behaviour ###
@@ -592,8 +598,6 @@ def test_validate_n_cpu(tmp_path):
     catch_invalid_generator(tmp_path, param, "nope", "type")
 
 
-#
-#
 def test_validate_max_ram(tmp_path):
     param = "max_ram"
     ### test default behaviour ###
