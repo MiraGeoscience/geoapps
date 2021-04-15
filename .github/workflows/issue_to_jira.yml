@@ -24,13 +24,13 @@ jobs:
         project: GEOPY
         issuetype: Story
         summary: ${{ github.event.issue.title }}
-        description: _from [GitHub issue \#${{ github.event.issue.number }}|${{ github.event.issue.html_url }}]_
+        description: "_from [GitHub issue #${{ github.event.issue.number }}|${{ github.event.issue.html_url }}]_"
         # Additional fields in JSON format
         fields: '{"components": ["geoapps"]}'
-      - name: Post JIRA link
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          # The number of the issue or pull request in which to create a comment.
-          issue-number: ${{ github.event.issue.number }}
-          # The comment body.
-          body: "JIRA issue [${{ steps.create_jira_issue.outputs.issue }}] was created."
+    - name: Post JIRA link
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        # The number of the issue or pull request in which to create a comment.
+        issue-number: ${{ github.event.issue.number }}
+        # The comment body.
+        body: "JIRA issue [${{ steps.create_jira_issue.outputs.issue }}] was created."
