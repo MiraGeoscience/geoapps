@@ -233,7 +233,7 @@ def test_validate_workspace(tmp_path):
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, 12234, "type")
     idict = input_dict.copy()
-    idict["data"] = {"type": "GA_object", "name": "test"}
+    idict["data"] = {"name": "test"}
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
     with pytest.raises(KeyError) as excinfo:
@@ -246,37 +246,22 @@ def test_validate_data(tmp_path):
     ### test default behaviour ###
     default_test_generator(tmp_path, param, None)
     ### test ordinary behaviour ###
-    tparams = {param: {"type": "GA_object", "name": "Trevor"}}
+    tparams = {param: {"name": "Trevor"}}
     tparams.update({"workspace": "."})
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, 1234, "type")
     idict = input_dict.copy()
-    idict["data"] = {"type": "GA_object"}
+    idict.update({"data": {"channels": {"tmi": None}}})
     idict["workspace"] = "."
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
     with pytest.raises(KeyError) as excinfo:
         params = Params.from_path(filepath)
-    assert "Data 'type' and 'name'" in str(excinfo.value)
-    idict["data"]["name"] = "Nicole"
-    idict.pop("workspace", None)
-    tmp_input_file(filepath, idict)
-    with pytest.raises(KeyError) as excinfo:
-        params = Params.from_path(filepath)
-    assert "Input file must contain 'workspace' if 'type'" in str(excinfo.value)
-    idict = input_dict.copy()
-    idict["data"] = {"type": "ubc_grav", "name": "Norman"}
-    tmp_input_file(filepath, idict)
-    with pytest.raises(KeyError) as excinfo:
-        params = Params.from_path(filepath)
-    assert "Input file must contain 'data_file' if 'type'" in str(excinfo.value)
+    assert "'name', for input parameter 'data'" in str(excinfo.value)
     idict = input_dict.copy()
     idict["workspace"] = "some_path"
-    idict["data"] = {
-        "type": "GA_object",
-        "name": "Norman",
-    }
+    idict["data"] = {"name": "Norman"}
     idict["data"].update({"channels": {"tmi": {"uncertainties": [1, 2, 3]}}})
     tmp_input_file(filepath, idict)
     with pytest.raises(ValueError) as excinfo:
@@ -284,10 +269,7 @@ def test_validate_data(tmp_path):
     assert "shape" in str(excinfo.value)
     idict = input_dict.copy()
     idict["workspace"] = "some_path"
-    idict["data"] = {
-        "type": "GA_object",
-        "name": "Norman",
-    }
+    idict["data"] = {"name": "Norman"}
     idict["data"].update({"channels": {"tmi": {"uncertainties": ["str"]}}})
     tmp_input_file(filepath, idict)
     with pytest.raises(TypeError) as excinfo:
