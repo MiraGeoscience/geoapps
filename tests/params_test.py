@@ -17,7 +17,28 @@ from geoapps.io.driver import create_relative_path, create_work_path
 ######################  Setup  ###########################
 
 
-input_dict = {"inversion_type": "mvi", "core_cell_size": 2}
+input_dict = {
+    "inversion_type": "mvi",
+    "workspace": "Lovelace",
+    "out_group": "yep",
+    "data": {
+        "name": "Garry",
+        "channels": {
+            "tmi": {
+                "name": "Airborne_TMI",
+                "uncertainties": [0.0, 13.58],
+                "offsets": [0.0, 0.0, 0.0],
+            },
+        },
+    },
+    "mesh": "some_path",
+    "topography": {
+        "GA_object": {
+            "name": "some_other_path",
+        },
+    },
+}
+
 tmpfile = lambda path: os.path.join(path, "test.json")
 
 
@@ -51,7 +72,7 @@ def catch_invalid_generator(tmp_path, param, invalid_value, validation_type):
     return params
 
 
-def param_test_generator(tmp_path, tparams):
+def param_test_generator(tmp_path, tparams={}):
     idict = input_dict.copy()
     idict.update(tparams)
     filepath = tmpfile(tmp_path)
@@ -83,18 +104,34 @@ def test_params_constructors(tmp_path):
     filepath = tmpfile(tmp_path)
     tmp_input_file(filepath, idict)
     params = Params.from_path(filepath)
-    assert params.inversion_type == "mvi"
-    assert params.core_cell_size == 2
+    assert params.inversion_type == idict["inversion_type"]
+    assert params.workspace == idict["workspace"]
+    assert params.out_group == idict["out_group"]
+    assert params.data == idict["data"]
+    assert params.mesh == idict["mesh"]
+    assert params.topography == idict["topography"]
     assert params.inversion_style == "voxel"
     inputfile = InputFile(filepath)
     params = Params.from_ifile(inputfile)
-    assert params.inversion_type == "mvi"
-    assert params.core_cell_size == 2
+    assert params.inversion_type == idict["inversion_type"]
+    assert params.workspace == idict["workspace"]
+    assert params.out_group == idict["out_group"]
+    assert params.data == idict["data"]
+    assert params.mesh == idict["mesh"]
+    assert params.topography == idict["topography"]
+    assert params.inversion_style == "voxel"
+    params = Params(**input_dict)
+    assert params.inversion_type == idict["inversion_type"]
+    assert params.workspace == idict["workspace"]
+    assert params.out_group == idict["out_group"]
+    assert params.data == idict["data"]
+    assert params.mesh == idict["mesh"]
+    assert params.topography == idict["topography"]
     assert params.inversion_style == "voxel"
 
 
 def test_override_default():
-    params = Params("mvi")
+    params = Params(**input_dict)
     params._override_default("forward_only", True)
     assert params.forward_only == True
 
@@ -110,7 +147,7 @@ def test_validate_inversion_type(tmp_path):
     tmp_input_file(filepath, {"core_cell_size": 2})
     with pytest.raises(ValueError) as excinfo:
         params = Params.from_path(filepath)
-    assert "parameter(s): ('inversion_type',)." in str(excinfo.value)
+    assert "parameter(s): ('inversion_type', 'work" in str(excinfo.value)
 
 
 def test_validate_core_cell_size(tmp_path):
@@ -137,7 +174,7 @@ def test_validate_forward_only(tmp_path):
     ### test default behaviour ###
     default_test_generator(tmp_path, param, False)
     ### test ordinary behaviour ###
-    tparams = {param: True, "reference_model": {"model": "some_path"}}
+    tparams = {param: True, "reference_model": "some_path"}
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "true", "type")
@@ -148,22 +185,6 @@ def test_validate_forward_only(tmp_path):
     with pytest.raises(KeyError) as excinfo:
         params = Params.from_path(filepath)
     assert f"forward_only requirement." in str(excinfo.value)
-
-
-def test_validate_result_folder(tmp_path):
-    param = "result_folder"
-    ### test default behaviour ###
-    path = os.path.join(tmp_path, "SimPEG_PFInversion") + os.path.sep
-    default_test_generator(tmp_path, param, path)
-    ### test ordinary behaviour ###
-    idict = input_dict.copy()
-    idict.update({param: os.path.join(tmp_path, "some_path") + os.path.sep})
-    filepath = tmpfile(tmp_path)
-    tmp_input_file(filepath, idict)
-    params = Params.from_path(filepath)
-    assert getattr(params, param) == idict[param]
-    ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, True, "type")
 
 
 def test_validate_inducing_field_aid(tmp_path):
@@ -180,7 +201,7 @@ def test_validate_inducing_field_aid(tmp_path):
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "nope", "type")
     catch_invalid_generator(tmp_path, param, [1.0, 2.0], "shape")
-    params = Params("mvi")
+    params = Params(**input_dict)
     with pytest.raises(ValueError) as excinfo:
         params.inducing_field_aid = [0, 1, 2]
     assert "greater than 0." in str(excinfo.value)
@@ -217,7 +238,7 @@ def test_validate_window(tmp_path):
     catch_invalid_generator(tmp_path, param, test_dict, "keys")
     test_dict.pop("nogood", None)
     test_dict.pop("center_x", None)
-    params = Params("mvi")
+    params = Params(**input_dict)
     with pytest.raises(ValueError) as excinfo:
         params.window = test_dict
     assert "Input parameter 'window'" in str(excinfo.value)
@@ -225,26 +246,15 @@ def test_validate_window(tmp_path):
 
 def test_validate_workspace(tmp_path):
     param = "workspace"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, None)
     ### test ordinary behaviour ###
     tparams = {param: "some_path"}
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, 12234, "type")
-    idict = input_dict.copy()
-    idict["data"] = {"name": "test"}
-    filepath = tmpfile(tmp_path)
-    tmp_input_file(filepath, idict)
-    with pytest.raises(KeyError) as excinfo:
-        params = Params.from_path(filepath)
-    assert f"Input file must contain 'workspace'" in str(excinfo.value)
 
 
 def test_validate_data(tmp_path):
     param = "data"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, None)
     ### test ordinary behaviour ###
     tparams = {param: {"name": "Trevor"}}
     tparams.update({"workspace": "."})
@@ -306,17 +316,6 @@ def test_validate_detrend(tmp_path):
     assert "Detrend order must be 0," in str(excinfo.value)
 
 
-def test_validate_data_file(tmp_path):
-    param = "data_file"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, None)
-    ### test ordinary behaviour ###
-    tparams = {param: "some_path"}
-    param_test_generator(tmp_path, tparams)
-    ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, 1234, "type")
-
-
 def test_validate_new_uncert(tmp_path):
     param = "new_uncert"
     ### test default behaviour ###
@@ -350,39 +349,16 @@ def test_validate_new_uncert(tmp_path):
     assert "floor (new_uncert[1])" in str(excinfo.value)
 
 
-def test_validate_input_mesh(tmp_path):
-    param = "input_mesh"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, None)
+def test_validate_mesh(tmp_path):
+    param = "mesh"
     ### test ordinary behaviour ###
-    tparams = {param: "some_path"}
-    tparams.update({"save_to_geoh5": "another_path"})
-    tparams.update({"input_mesh_file": "yet_another_path"})
-    tparams.update({"out_group": "some_path"})
-    param_test_generator(tmp_path, tparams)
+    param_test_generator(tmp_path)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, 1, "type")
-    idict = input_dict.copy()
-    idict["input_mesh"] = "some_path"
-    idict["input_mesh_file"] = "yet_another_path"
-    filepath = tmpfile(tmp_path)
-    tmp_input_file(filepath, idict)
-    with pytest.raises(KeyError) as excinfo:
-        params = Params.from_path(filepath)
-    assert "'save_to_geoh5' if 'input_mesh'" in str(excinfo.value)
-    idict = input_dict.copy()
-    idict["input_mesh"] = "some_path"
-    idict["save_to_geoh5"] = "yet_another_path"
-    idict["out_group"] = "some_str"
-    filepath = tmpfile(tmp_path)
-    tmp_input_file(filepath, idict)
-    with pytest.raises(KeyError) as excinfo:
-        params = Params.from_path(filepath)
-    assert "'input_mesh_file' if 'input_mesh'" in str(excinfo.value)
 
 
-def test_validate_save_to_geoh5(tmp_path):
-    param = "save_to_geoh5"
+def test_validate_output_geoh5(tmp_path):
+    param = "output_geoh5"
     ### test default behaviour ###
     default_test_generator(tmp_path, param, None)
     ### test ordinary behaviour ###
@@ -391,41 +367,10 @@ def test_validate_save_to_geoh5(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, 1, "type")
-    idict = input_dict.copy()
-    idict["save_to_geoh5"] = "some_path"
-    filepath = tmpfile(tmp_path)
-    tmp_input_file(filepath, idict)
-    with pytest.raises(KeyError) as excinfo:
-        params = Params.from_path(filepath)
-    assert "must contain 'out_group'" in str(excinfo.value)
-
-
-def test_validate_inversion_mesh_type(tmp_path):
-    param = "inversion_mesh_type"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, "TREE")
-    ### test ordinary behaviour ###
-    tparams = {param: "TREE"}
-    param_test_generator(tmp_path, tparams)
-    ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "not_valid_name", "value")
-
-
-def test_validate_shift_mesh_z0(tmp_path):
-    param = "shift_mesh_z0"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, None)
-    ### test ordinary behaviour ###
-    tparams = {param: 20.0}
-    param_test_generator(tmp_path, tparams)
-    ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "bogus", "type")
 
 
 def test_validate_topography(tmp_path):
     param = "topography"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, None)
     ### test ordinary behaviour ###
     tparams = {param: {"constant": 0}}
     param_test_generator(tmp_path, tparams)
@@ -455,7 +400,7 @@ def test_validate_chi_factor(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "bogus", "type")
-    params = Params("mvi")
+    params = Params(**input_dict)
     with pytest.raises(ValueError) as excinfo:
         params.chi_factor = 0
     assert "chi_factor. Must be between 0 and 1." in str(excinfo.value)
@@ -476,7 +421,7 @@ def test_validate_model_norms(tmp_path):
     assert params.max_iterations == 40
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, ["a", "b", "c", "d"], "type")
-    params = Params("mvi")
+    params = Params(**input_dict)
     with pytest.raises(ValueError) as excinfo:
         params.model_norms = [2, 2]
     assert "Must be a multiple of 4." in str(excinfo.value)
@@ -491,7 +436,7 @@ def test_validate_max_iterations(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "nope", "type")
-    params = Params("mvi")
+    params = Params(**input_dict)
     with pytest.raises(ValueError) as excinfo:
         params.max_iterations = -10
     assert "Must be > 0." in str(excinfo.value)
@@ -506,7 +451,7 @@ def test_validate_max_cg_iterations(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "nope", "type")
-    params = Params("mvi")
+    params = Params(**input_dict)
     with pytest.raises(ValueError) as excinfo:
         params.max_iterations = -10
     assert "Must be > 0." in str(excinfo.value)
@@ -532,7 +477,7 @@ def test_validate_max_global_iterations(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "nope", "type")
-    params = Params("mvi")
+    params = Params(**input_dict)
     with pytest.raises(ValueError) as excinfo:
         params.max_iterations = -10
     assert "Must be > 0." in str(excinfo.value)
@@ -656,7 +601,7 @@ def test_validate_alphas(tmp_path):
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "nope", "type")
-    params = Params("mvi")
+    params = Params(**input_dict)
     params.alphas = [1] * 4
     assert len(params.alphas) == 12
     with pytest.raises(ValueError) as excinfo:
@@ -669,11 +614,12 @@ def test_validate_reference_model(tmp_path):
     ### test default behaviour ###
     default_test_generator(tmp_path, param, None)
     ### test ordinary behaviour ###
-    tparams = {param: {"model": "some_path"}}
+    tparams = {param: "some_path"}
+    param_test_generator(tmp_path, tparams)
+    tparams = {param: 2.0}
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "nope", "type")
-    catch_invalid_generator(tmp_path, param, {"invalid": 23}, "keys")
+    catch_invalid_generator(tmp_path, param, {}, "type")
 
 
 def test_validate_starting_model(tmp_path):
@@ -681,11 +627,12 @@ def test_validate_starting_model(tmp_path):
     ### test default behaviour ###
     default_test_generator(tmp_path, param, None)
     ### test ordinary behaviour ###
-    tparams = {param: {"model": "some_path"}}
+    tparams = {param: "some_path"}
+    param_test_generator(tmp_path, tparams)
+    tparams = {param: 1.0}
     param_test_generator(tmp_path, tparams)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "nope", "type")
-    catch_invalid_generator(tmp_path, param, {"invalid": 23}, "keys")
+    catch_invalid_generator(tmp_path, param, {}, "type")
 
 
 def test_validate_lower_bound(tmp_path):
@@ -778,8 +725,6 @@ def test_validate_parallelized(tmp_path):
 
 def test_validate_out_group(tmp_path):
     param = "out_group"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, None)
     ### test ordinary behaviour ###
     tparams = {param: "test"}
     param_test_generator(tmp_path, tparams)

@@ -6,13 +6,12 @@
 #  (see LICENSE file at the root of this source code package).
 
 import json
-import multiprocessing
 import os
 from typing import Any
 
 import numpy as np
 
-from .constants import validations
+from .constants import defaults, validations
 from .validators import InputValidator
 
 ### Utils ###
@@ -98,7 +97,16 @@ class Params:
 
     """
 
-    def __init__(self, inversion_type: str, workpath: str = os.path.abspath(".")):
+    def __init__(
+        self,
+        inversion_type: str,
+        workspace: str,
+        out_group: str,
+        data: dict,
+        mesh: str,
+        topography: dict,
+        workpath: str = os.path.abspath("."),
+    ):
         """
         Parameters
         ----------
@@ -111,54 +119,54 @@ class Params:
         """
         self.validator = InputValidator()
         self.inversion_type = inversion_type
-        self.core_cell_size = None
+        self.workspace = workspace
+        self.out_group = out_group
+        self.data = data
+        self.mesh = mesh
+        self.topography = topography
         self.workpath = workpath
-        self.inversion_style = "voxel"
-        self.forward_only = False
-        self.result_folder = os.path.join(workpath, "SimPEG_PFInversion")
-        self.inducing_field_aid = None
-        self.resolution = 0
-        self.window = None
-        self.workspace = None
-        self.data = None
-        self.ignore_values = None
-        self.detrend = None
-        self.data_file = None
-        self.new_uncert = None
-        self.input_mesh = None
-        self.save_to_geoh5 = None
-        self.inversion_mesh_type = "TREE"
-        self.shift_mesh_z0 = None
-        self.topography = None
-        self.receivers_offset = None
-        self.chi_factor = 1
-        self.model_norms = [2] * 4
-        self.max_iterations = 10
-        self.max_cg_iterations = 30
-        self.tol_cg = 1e-4
-        self.max_global_iterations = 100
-        self.gradient_type = "total"
-        self.initial_beta = None
-        self.initial_beta_ratio = 1e2
-        self.n_cpu = multiprocessing.cpu_count() / 2
-        self.max_ram = 2
-        self.depth_core = None
-        self.padding_distance = [[0, 0]] * 3
-        self.octree_levels_topo = [0, 1]
-        self.octree_levels_obs = [5, 5]
-        self.octree_levels_padding = [2, 2]
-        self.alphas = [1] * 12
-        self.reference_model = None
-        self.starting_model = None
-        self.lower_bound = -np.inf
-        self.upper_bound = np.inf
-        self.max_distance = np.inf
-        self.max_chunk_size = 128
-        self.chunk_by_rows = False
-        self.output_tile_files = False
-        self.no_data_value = 0
-        self.parallelized = True
-        self.out_group = None
+        self.inversion_style = defaults["inversion_style"]
+        self.forward_only = defaults["forward_only"]
+        self.inducing_field_aid = defaults["inducing_field_aid"]
+        self.resolution = defaults["resolution"]
+        self.window = defaults["window"]
+        self.ignore_values = defaults["ignore_values"]
+        self.detrend = defaults["detrend"]
+        self.new_uncert = defaults["new_uncert"]
+        self.output_geoh5 = defaults["output_geoh5"]
+        self.receivers_offset = defaults["receivers_offset"]
+        self.chi_factor = defaults["chi_factor"]
+        self.model_norms = defaults["model_norms"]
+        self.max_iterations = defaults["max_iterations"]
+        self.max_cg_iterations = defaults["max_cg_iterations"]
+        self.tol_cg = defaults["tol_cg"]
+        self.max_global_iterations = defaults["max_global_iterations"]
+        self.gradient_type = defaults["gradient_type"]
+        self.initial_beta = defaults["initial_beta"]
+        self.initial_beta_ratio = defaults["initial_beta_ratio"]
+        self.n_cpu = defaults["n_cpu"]
+        self.max_ram = defaults["max_ram"]
+        self.core_cell_size = defaults["core_cell_size"]
+        self.depth_core = defaults["depth_core"]
+        self.padding_distance = defaults["padding_distance"]
+        self.octree_levels_topo = defaults["octree_levels_topo"]
+        self.octree_levels_obs = defaults["octree_levels_obs"]
+        self.octree_levels_padding = defaults["octree_levels_padding"]
+        self.alphas = defaults["alphas"]
+        self.reference_model = defaults["reference_model"]
+        self.reference_inclination = defaults["reference_inclination"]
+        self.reference_declination = defaults["reference_declination"]
+        self.starting_model = defaults["starting_model"]
+        self.starting_inclination = defaults["starting_inclination"]
+        self.starting_declination = defaults["starting_declination"]
+        self.lower_bound = defaults["lower_bound"]
+        self.upper_bound = defaults["upper_bound"]
+        self.max_distance = defaults["max_distance"]
+        self.max_chunk_size = defaults["max_chunk_size"]
+        self.chunk_by_rows = defaults["chunk_by_rows"]
+        self.output_tile_files = defaults["output_tile_files"]
+        self.no_data_value = defaults["no_data_value"]
+        self.parallelized = defaults["parallelized"]
 
     @classmethod
     def from_ifile(cls, ifile: InputFile) -> None:
@@ -172,7 +180,14 @@ class Params:
         if not ifile.isloaded:
             ifile.load()
         inversion_type = ifile.data["inversion_type"]
-        p = cls(inversion_type, ifile.workpath)
+        workspace = ifile.data["workspace"]
+        out_group = ifile.data["out_group"]
+        data = ifile.data["data"]
+        mesh = ifile.data["mesh"]
+        topography = ifile.data["topography"]
+        p = cls(
+            inversion_type, workspace, out_group, data, mesh, topography, ifile.workpath
+        )
         p._init_params(ifile)
         return p
 
@@ -195,6 +210,9 @@ class Params:
 
     @inversion_type.setter
     def inversion_type(self, val):
+        if val is None:
+            self._inversion_type = val
+            return
         p = "inversion_type"
         self.validator.validate(p, val, validations[p])
         self._inversion_type = val
@@ -228,19 +246,6 @@ class Params:
         p = "forward_only"
         self.validator.validate(p, val, validations[p])
         self._forward_only = val
-
-    @property
-    def result_folder(self):
-        return self._result_folder
-
-    @result_folder.setter
-    def result_folder(self, val):
-        p = "result_folder"
-        self.validator.validate(p, val, validations[p])
-        sep = os.path.sep
-        if val.split(sep)[-1]:
-            val += sep
-        self._result_folder = val
 
     @property
     def inducing_field_aid(self):
@@ -318,6 +323,19 @@ class Params:
         self._workspace = val
 
     @property
+    def output_geoh5(self):
+        return self._output_geoh5
+
+    @output_geoh5.setter
+    def output_geoh5(self, val):
+        if val is None:
+            self._output_geoh5 = val
+            return
+        p = "output_geoh5"
+        self.validator.validate(p, val, validations[p])
+        self._output_geoh5 = val
+
+    @property
     def ignore_values(self):
         return self._ignore_values
 
@@ -379,14 +397,17 @@ class Params:
         self._new_uncert = val
 
     @property
-    def input_mesh(self):
-        return self._input_mesh
+    def mesh(self):
+        return self._mesh
 
-    @input_mesh.setter
-    def input_mesh(self, val):
-        p = "input_mesh"
+    @mesh.setter
+    def mesh(self, val):
+        if val is None:
+            self._mesh = val
+            return
+        p = "mesh"
         self.validator.validate(p, val, validations[p])
-        self._input_mesh = val
+        self._mesh = val
 
     @property
     def save_to_geoh5(self):
@@ -399,31 +420,14 @@ class Params:
         self._save_to_geoh5 = val
 
     @property
-    def inversion_mesh_type(self):
-        return self._inversion_mesh_type
-
-    @inversion_mesh_type.setter
-    def inversion_mesh_type(self, val):
-        p = "inversion_mesh_type"
-        self.validator.validate(p, val, validations[p])
-        self._inversion_mesh_type = val
-
-    @property
-    def shift_mesh_z0(self):
-        return self._shift_mesh_z0
-
-    @shift_mesh_z0.setter
-    def shift_mesh_z0(self, val):
-        p = "shift_mesh_z0"
-        self.validator.validate(p, val, validations[p])
-        self._shift_mesh_z0 = val
-
-    @property
     def topography(self):
         return self._topography
 
     @topography.setter
     def topography(self, val):
+        if val is None:
+            self._topography = val
+            return
         p = "topography"
         self.validator.validate(p, val, validations[p])
         self._topography = val
@@ -434,6 +438,9 @@ class Params:
 
     @receivers_offset.setter
     def receivers_offset(self, val):
+        if val is None:
+            self._receivers_offset = val
+            return
         p = "receivers_offset"
         self.validator.validate(p, val, validations[p])
         self._receivers_offset = val
@@ -524,6 +531,9 @@ class Params:
 
     @initial_beta.setter
     def initial_beta(self, val):
+        if val is None:
+            self._initial_beta = val
+            return
         p = "initial_beta"
         self.validator.validate(p, val, validations[p])
         self._initial_beta = val
@@ -544,6 +554,9 @@ class Params:
 
     @n_cpu.setter
     def n_cpu(self, val):
+        if val is None:
+            self._n_cpu = val
+            return
         p = "n_cpu"
         self.validator.validate(p, val, validations[p])
         self._n_cpu = val
@@ -564,6 +577,9 @@ class Params:
 
     @depth_core.setter
     def depth_core(self, val):
+        if val is None:
+            self._depth_core = val
+            return
         p = "depth_core"
         self.validator.validate(p, val, validations[p])
         self._depth_core = val
@@ -630,9 +646,38 @@ class Params:
 
     @reference_model.setter
     def reference_model(self, val):
+        if val is None:
+            self._reference_model = val
+            return
         p = "reference_model"
         self.validator.validate(p, val, validations[p])
         self._reference_model = val
+
+    @property
+    def reference_inclination(self):
+        return self._reference_inclination
+
+    @reference_inclination.setter
+    def reference_inclination(self, val):
+        if val is None:
+            self._reference_inclination = val
+            return
+        p = "reference_inclination"
+        self.validator.validate(p, val, validations[p])
+        self._reference_inclination = val
+
+    @property
+    def reference_declination(self):
+        return self._reference_declination
+
+    @reference_declination.setter
+    def reference_declination(self, val):
+        if val is None:
+            self._reference_declination = val
+            return
+        p = "reference_declination"
+        self.validator.validate(p, val, validations[p])
+        self._reference_declination = val
 
     @property
     def starting_model(self):
@@ -640,9 +685,38 @@ class Params:
 
     @starting_model.setter
     def starting_model(self, val):
+        if val is None:
+            self._starting_model = val
+            return
         p = "starting_model"
         self.validator.validate(p, val, validations[p])
         self._starting_model = val
+
+    @property
+    def starting_inclination(self):
+        return self._starting_inclination
+
+    @starting_inclination.setter
+    def starting_inclination(self, val):
+        if val is None:
+            self._starting_inclination = val
+            return
+        p = "starting_inclination"
+        self.validator.validate(p, val, validations[p])
+        self._starting_inclination = val
+
+    @property
+    def starting_declination(self):
+        return self._starting_declination
+
+    @starting_declination.setter
+    def starting_declination(self, val):
+        if val is None:
+            self._starting_declination = val
+            return
+        p = "starting_declination"
+        self.validator.validate(p, val, validations[p])
+        self._starting_declination = val
 
     @property
     def lower_bound(self):
@@ -730,6 +804,9 @@ class Params:
 
     @out_group.setter
     def out_group(self, val):
+        if val is None:
+            self._out_group = val
+            return
         p = "out_group"
         self.validator.validate(p, val, validations[p])
         self._out_group = val
@@ -741,10 +818,7 @@ class Params:
     def _init_params(self, inputfile: InputFile) -> None:
         """ Overrides default parameter values with input file values. """
         for param, value in inputfile.data.items():
-            if param == "result_folder":
-                op = create_relative_path(inputfile.workpath, value)
-                self._override_default(param, op)
-            elif param == "model_norms":
+            if param == "model_norms":
                 if "max_iterations" not in inputfile.data.keys():
                     if not np.all(np.r_[value] == 2):
                         if "max_iterations" in inputfile.data.keys():

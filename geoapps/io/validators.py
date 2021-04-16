@@ -62,14 +62,6 @@ class InputValidator:
 
         self._validate_required_parameters(input)
 
-        if "reference_model" in input.keys():
-            if "value" in input["reference_model"].keys():
-                v = input["reference_model"]["value"]
-                v = np.r_[v]
-                if v.shape[0] not in [1, 3]:
-                    msg = "Start model needs to be a scalar or 3 component vector"
-                    raise ValueError(msg)
-
         for k, v in input.items():
             if k not in validations.keys():
                 raise KeyError(f"{k} is not a valid parameter name.")
@@ -102,7 +94,9 @@ class InputValidator:
         if isinstance(value, dict):
             for k, v in value.items():
                 if k not in validations.keys():
-                    msg = f"Invalid {param} keys: {k}. Must be one of {*validations.keys(),}."
+                    exclusions = ["values", "types", "shapes", "reqs"]
+                    vkeys = [k for k in validations.keys() if k not in exclusions]
+                    msg = f"Invalid {param} keys: {k}. Must be one of {*vkeys,}."
                     raise KeyError(msg)
                 self.validate(k, v, validations[k], input_keys)
 
@@ -194,7 +188,7 @@ class InputValidator:
                 )
 
         else:
-            if self._isiterable(validations):
+            if self._isiterable(validations, checklen=True):
                 msg = f"Invalid {param} {validation_type}. Must be one of: {*validations,}."
             else:
                 msg = f"Invalid {param} {validation_type}. Must be: {validations[0]}."
@@ -223,17 +217,21 @@ class InputValidator:
         if missing:
             raise ValueError(f"Missing required parameter(s): {*missing,}.")
 
-    def _isiterable(self, v: Any) -> bool:
+    def _isiterable(self, v: Any, checklen: bool = False) -> bool:
         """
-        Checks if object is iterable
+        Checks if object is iterable.
+
+        Parameters
+        ----------
+        v : Object to check for iterableness.
+        checklen : Restrict objects with __iter__ method to len > 1.
 
         Returns
         -------
-        bool
-            True if object has __iter__ attribute but is not string or dict type.
+        True if object has __iter__ attribute but is not string or dict type.
         """
         only_array_like = (not isinstance(v, str)) & (not isinstance(v, dict))
         if (hasattr(v, "__iter__")) & only_array_like:
-            return True
+            return False if (checklen and (len(v) == 1)) else True
         else:
             return False

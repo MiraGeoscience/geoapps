@@ -5,16 +5,74 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import numpy as np
 
-required_parameters = ["inversion_type"]
+required_parameters = [
+    "inversion_type",
+    "workspace",
+    "out_group",
+    "data",
+    "mesh",
+    "topography",
+]
+
+
+defaults = {
+    "inversion_type": None,
+    "workspace": None,
+    "out_group": None,
+    "data": None,
+    "mesh": None,
+    "topography": None,
+    "inversion_style": "voxel",
+    "forward_only": False,
+    "inducing_field_aid": None,
+    "core_cell_size": None,
+    "octree_levels_topo": [0, 1],
+    "octree_levels_obs": [5, 5],
+    "octree_levels_padding": [2, 2],
+    "depth_core": None,
+    "max_distance": np.inf,
+    "padding_distance": [[0, 0]] * 3,
+    "chi_factor": 1,
+    "max_iterations": 10,
+    "max_cg_iterations": 30,
+    "max_global_iterations": 100,
+    "n_cpu": None,
+    "max_ram": 2,
+    "initial_beta": None,
+    "initial_beta_ratio": 1e2,
+    "tol_cg": 1e-4,
+    "ignore_values": None,
+    "no_data_value": 0,
+    "resolution": 0,
+    "window": None,
+    "alphas": [1] * 12,
+    "reference_model": None,
+    "reference_inclination": None,
+    "reference_declination": None,
+    "starting_model": None,
+    "starting_inclination": None,
+    "starting_declination": None,
+    "model_norms": [2] * 4,
+    "detrend": None,
+    "new_uncert": None,
+    "output_geoh5": None,
+    "receivers_offset": None,
+    "gradient_type": "total",
+    "lower_bound": -np.inf,
+    "upper_bound": np.inf,
+    "max_chunk_size": 128,
+    "chunk_by_rows": False,
+    "output_tile_files": False,
+    "parallelized": True,
+}
+
 
 validations = {
     "inversion_type": {
         "values": ["gravity", "magnetics", "mvi", "mvic"],
         "types": [str],
-    },
-    "core_cell_size": {
-        "types": [int, float],
     },
     "data": {
         "types": [dict],
@@ -46,9 +104,6 @@ validations = {
     "workspace": {
         "types": [str],
     },
-    "save_to_geoh5": {
-        "types": [str],
-    },
     "inversion_style": {
         "values": ["voxel"],
         "types": [str],
@@ -57,6 +112,9 @@ validations = {
     "inducing_field_aid": {
         "types": [int, float],
         "shapes": (3,),
+    },
+    "core_cell_size": {
+        "types": [int, float],
     },
     "octree_levels_topo": {
         "types": [int, float],
@@ -144,21 +202,22 @@ validations = {
         "types": [int, float],
     },
     "reference_model": {
-        "types": [dict],
-        "value": {
-            "types": [int, float],
-        },
-        "model": {"types": [str]},
-        "none": {},
+        "types": [str, int, float],
+    },
+    "reference_inclination": {
+        "types": [str, int, float],
+    },
+    "reference_declination": {
+        "types": [str, int, float],
     },
     "starting_model": {
-        "types": [dict],
-        "value": {
-            "types": [int, float],
-        },
-        "model": {
-            "types": [str],
-        },
+        "types": [str, int, float],
+    },
+    "starting_inclination": {
+        "types": [str, int, float],
+    },
+    "starting_declination": {
+        "types": [str, int, float],
     },
     "model_norms": {
         "types": [int, float],
@@ -177,15 +236,12 @@ validations = {
         "constant": {
             "types": [int, float],
         },
-        "drapped": {
+        "draped": {
             "types": [int, float],
         },
         "file": {
             "types": [str],
         },
-    },
-    "result_folder": {
-        "types": [str],
     },
     "detrend": {
         "types": [dict],
@@ -196,22 +252,13 @@ validations = {
             "types": [int, float],
         },
     },
-    "data_file": {
-        "types": [str],
-    },
     "new_uncert": {"types": [int, float], "shapes": (2,)},
-    "input_mesh": {"types": [str], "reqs": [("save_to_geoh5",), ("input_mesh_file",)]},
-    "save_to_geoh5": {
-        "types": [str],
-        "reqs": [
-            ("out_group",),
-        ],
-    },
-    "input_mesh_file": {
+    "mesh": {
         "types": [str],
     },
-    "inversion_mesh_type": {"values": ["TREE"], "types": [str]},
-    "shift_mesh_z0": {"types": [int, float]},
+    "output_geoh5": {
+        "types": [str],
+    },
     "receivers_offset": {
         "types": [dict],
         "constant": {
@@ -244,5 +291,4 @@ validations = {
     "parallelized": {
         "types": [bool],
     },
-    "uncertainty_mode": {"types": [str]},
 }
