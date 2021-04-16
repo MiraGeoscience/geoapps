@@ -46,7 +46,7 @@ jobs:
           pytest --cov=geoapps --cov-report=xml --cov-branch
       - name: Codecov
         if: github.repository == 'mirageosience/geoapps' && success() && matrix.python_ver == '3.7'
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v1.3.2
         with:
           name: GitHub
           token: ${{ secrets.CODECOV_TOKEN }}
