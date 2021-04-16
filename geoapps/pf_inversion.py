@@ -333,8 +333,8 @@ def inversion(inputfile):
 
         if params.topography is not None:
             topo = survey.rxLoc.copy()
-            if "drapped" in params.topography.keys():
-                topo[:, 2] += params.topography["drapped"]
+            if "draped" in params.topography.keys():
+                topo[:, 2] += params.topography["draped"]
             elif "constant" in params.topography.keys():
                 topo[:, 2] = params.topography["constant"]
             else:
@@ -378,7 +378,7 @@ def inversion(inputfile):
         if topo is None:
             assert topo is not None, (
                 "Topography information must be provided. "
-                "Chose from 'file', 'GA_object', 'drapped' or 'constant'"
+                "Chose from 'file', 'GA_object', 'draped' or 'constant'"
             )
         return topo
 
@@ -495,6 +495,8 @@ def inversion(inputfile):
         n_blocks = 1
 
     if params.parallelized:
+        if params.n_cpu is None:
+            params.n_cpu = multiprocessing.cpu_count() / 2
         dask.config.set({"array.chunk-size": str(params.max_chunk_size) + "MiB"})
         dask.config.set(scheduler="threads", pool=ThreadPool(params.n_cpu))
 

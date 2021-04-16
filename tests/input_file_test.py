@@ -15,7 +15,27 @@ from geoapps.io.driver import create_work_path
 
 ######################  Setup  ###########################
 
-input_dict = {"inversion_type": "mvi", "core_cell_size": 2}
+input_dict = {
+    "inversion_type": "mvi",
+    "workspace": "Lovelace",
+    "out_group": "yep",
+    "data": {
+        "name": "Garry",
+        "channels": {
+            "tmi": {
+                "name": "Airborne_TMI",
+                "uncertainties": [0.0, 13.58],
+                "offsets": [0.0, 0.0, 0.0],
+            },
+        },
+    },
+    "mesh": "some_path",
+    "topography": {
+        "GA_object": {
+            "name": "some_other_path",
+        },
+    },
+}
 tmpfile = lambda path: os.path.join(path, "test.json")
 
 
@@ -46,10 +66,11 @@ def test_load(tmp_path):
     inputfile = InputFile(filepath)
     inputfile.load()
     assert "inversion_type" in inputfile.data.keys()
-    assert "core_cell_size" in inputfile.data.keys()
-    assert "mvi" in inputfile.data.values()
-    assert 2 in inputfile.data.values()
-    assert len(inputfile.data.keys()) == 2
+    assert "workspace" in inputfile.data.keys()
+    assert "out_group" in inputfile.data.keys()
+    assert "data" in inputfile.data.keys()
+    assert "mesh" in inputfile.data.keys()
+    assert "topography" in inputfile.data.keys()
 
 
 def test_validate_parameters(tmp_path):
@@ -72,5 +93,4 @@ def test_validate_required_parameters(tmp_path):
     inputfile = InputFile(filepath)
     with pytest.raises(ValueError) as excinfo:
         inputfile.load()
-    msg = f"Missing required parameter(s): ('inversion_type',)."
-    assert str(excinfo.value) == msg
+    assert "parameter(s): ('inversion_type', 'work" in str(excinfo.value)

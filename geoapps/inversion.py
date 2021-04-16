@@ -1440,7 +1440,7 @@ class InversionApp(PlotSelection2D):
                     }
                 }
         elif self.topography.options.value == "Relative to Sensor":
-            input_dict["topography"] = {"drapped": self.topography.offset.value}
+            input_dict["topography"] = {"draped": self.topography.offset.value}
         else:
             input_dict["topography"] = {"constant": self.topography.constant.value}
 

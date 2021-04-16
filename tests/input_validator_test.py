@@ -27,7 +27,7 @@ def tmp_input_file(filepath, input_dict):
 
 def test_param_validation_msg():
     msg = validator._param_validation_msg("inversion_type", "value", ["mvi"])
-    assert msg == "Invalid inversion_type value. Must be one of: ('mvi',)."
+    assert msg == "Invalid inversion_type value. Must be: mvi."
     msg = validator._param_validation_msg(
         "inversion_type", "value", ["mvi", "grav", "mag"]
     )
@@ -35,7 +35,7 @@ def test_param_validation_msg():
         msg == f"Invalid inversion_type value. Must be one of: ('mvi', 'grav', 'mag')."
     )
     msg = validator._param_validation_msg("inversion_type", "type", [str])
-    assert msg == f"Invalid inversion_type type. Must be one of: (<class 'str'>,)."
+    assert msg == f"Invalid inversion_type type. Must be: <class 'str'>."
     msg = validator._param_validation_msg("inversion_type", "type", [int, float])
     assert (
         msg
@@ -52,11 +52,11 @@ def test_isiterable():
     assert validator._isiterable(["test"]) == True
     assert validator._isiterable(["Hi", "there"]) == True
     assert validator._isiterable(1) == False
-    assert validator._isiterable([1]) == True
+    assert validator._isiterable([1], checklen=True) == False
     assert validator._isiterable([1, 2]) == True
     assert validator._isiterable(1.0) == False
-    assert validator._isiterable([1.0]) == True
+    assert validator._isiterable([1.0], checklen=True) == False
     assert validator._isiterable([1.0, 2.0]) == True
     assert validator._isiterable(True) == False
-    assert validator._isiterable([True]) == True
+    assert validator._isiterable([True], checklen=True) == False
     assert validator._isiterable([True, True]) == True
