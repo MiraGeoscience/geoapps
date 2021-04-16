@@ -4,7 +4,7 @@
 name: Add JIRA issue summary
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened]
 
 jobs:
