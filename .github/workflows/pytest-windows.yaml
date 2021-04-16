@@ -45,7 +45,7 @@ jobs:
           conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
       - name: Codecov
-        if: github.repository == 'mirageosience/geoapps' && success() && matrix.python_ver == '3.7'
+        if: ${{ github.repository == 'MiraGeoscience/geoapps' && success() && matrix.python_ver == '3.7' }}
         uses: codecov/codecov-action@v1.3.2
         with:
           name: GitHub
