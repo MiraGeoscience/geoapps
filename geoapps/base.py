@@ -140,7 +140,9 @@ class BaseApplication:
             _, extension = path.splitext(self.file_browser.selected)
 
             if extension == ".json":
-                params = load_json_params(self.file_browser.selected)
+                # params = load_json_params(self.file_browser.selected)
+                with open(self.file_browser.selected) as f:
+                    params = json.load(f)
                 self.__populate__(**params)
 
             elif extension == ".geoh5":

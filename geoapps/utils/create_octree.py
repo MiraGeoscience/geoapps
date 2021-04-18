@@ -17,7 +17,7 @@ def create_octree(**kwargs):
     """
     Create an octree mesh from input values
     """
-    workspace = Workspace(kwargs["h5file"])
+    workspace = Workspace(kwargs["workspace_geoh5"])
 
     obj = workspace.get_entity(kwargs["objects"])
 
@@ -57,9 +57,10 @@ def create_octree(**kwargs):
                 finalize=False,
             )
 
+    print("Finalizing...")
     treemesh.finalize()
     octree = treemesh_2_octree(workspace, treemesh, name=kwargs[f"ga_group_name"])
-    print("Done")
+    print(f"Octree mesh '{octree.name}' completed and exported to {workspace.h5file}")
     return octree
 
 
