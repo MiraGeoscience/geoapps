@@ -38,11 +38,11 @@ from ipywidgets import (
 from scipy.spatial import cKDTree
 
 from geoapps.selection import LineOptions, ObjectDataSelection
+from geoapps.utils import geophysical_systems
 from geoapps.utils.utils import (
     LineDataDerivatives,
     colors,
     find_value,
-    geophysical_systems,
     hex_to_rgb,
     rotate_azimuth_dip,
     running_mean,
