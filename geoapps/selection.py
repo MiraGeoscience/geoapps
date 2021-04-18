@@ -12,8 +12,8 @@ from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
 
-from geoapps import utils
 from geoapps.base import BaseApplication
+from geoapps.utils import utils
 
 
 class ObjectDataSelection(BaseApplication):
