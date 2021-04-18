@@ -19,6 +19,7 @@ dependencies:
   - xarray=0.17.0
   - dask=2021.03.0
   - pip:
+    - subsurface
     - empymod==2.0.5
     - geoh5py==0.1.1
     - plotly==4.9.0
