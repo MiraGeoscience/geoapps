@@ -1590,7 +1590,9 @@ def load_json_params(file: str):
     params = {}
     for key, param in input_dict.items():
         if isinstance(param, dict):
-            params[re.split("-", key)[1]] = param["value"]
+            params[key] = param["value"]
+        else:
+            params[key] = param
 
     return params
 
