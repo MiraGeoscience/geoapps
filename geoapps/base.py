@@ -6,7 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 import json
-import re
 import time
 from os import mkdir, path
 from shutil import copyfile, move
@@ -35,7 +34,7 @@ class BaseApplication:
         self._h5file = None
         self._workspace = None
         self._working_directory = None
-        self._working_file = None
+        self._workspace_geoh5 = None
         self._monitoring_directory = None
         self.figure = None
         self._file_browser = FileChooser()
@@ -278,9 +277,6 @@ class BaseApplication:
             if self._workspace is not None:
                 self.h5file = self._workspace.h5file
 
-            elif self.working_file is not None and self.working_directory is not None:
-                self.h5file = path.join(self.working_directory, self.working_file)
-
             elif self.file_browser.selected is not None:
                 h5file = self.file_browser.selected
                 self.h5file = h5file
@@ -289,13 +285,11 @@ class BaseApplication:
 
     @h5file.setter
     def h5file(self, value):
-        self._working_directory = None
-        self._working_file = None
         self._h5file = value
-
+        self._workspace_geoh5 = value
         self._file_browser.reset(
             path=self.working_directory,
-            filename=self.working_file,
+            filename=path.basename(self._h5file),
         )
         self._file_browser._apply_selection()
         self.workspace = Workspace(self._h5file)
@@ -321,26 +315,22 @@ class BaseApplication:
         """
         return self._refresh
 
-    def save_json_params(self, file_name: str):
+    def save_json_params(self, file_name: str, out_dict: dict):
         """"""
-        if getattr(self, "default_ui", None) is not None:
-            out_dict = self.default_ui.copy()
+        for key, params in out_dict.items():
+            if getattr(self, key, None) is not None:
+                value = getattr(self, key)
+                if hasattr(value, "value"):
+                    value = value.value
 
-            for arg, params in out_dict.items():
-                key = re.sub(r"\d+-", "", arg)
-                if getattr(self, key, None) is not None:
-                    value = getattr(self, key)
-                    if hasattr(value, "value"):
-                        value = value.value
+                if isinstance(out_dict[key], dict):
+                    out_dict[key]["value"] = value
+                else:
+                    out_dict[key] = value
 
-                    if isinstance(out_dict[arg], dict):
-                        out_dict[arg]["value"] = value
-                    else:
-                        out_dict[arg] = value
-
-            file = f"{path.join(self.working_directory, file_name)}.json"
-            with open(file, "w") as f:
-                json.dump(out_dict, f, indent=4)
+        file = f"{path.join(self.working_directory, file_name)}.json"
+        with open(file, "w") as f:
+            json.dump(out_dict, f, indent=4)
 
         return file
 
@@ -382,16 +372,20 @@ class BaseApplication:
         return self._working_directory
 
     @property
-    def working_file(self):
+    def workspace_geoh5(self):
         """
         Target geoh5py workspace
         """
         if (
-            getattr(self, "_working_file", None) is None
+            getattr(self, "_workspace_geoh5", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self._working_file = path.basename(self.h5file)
-        return self._working_file
+            self._workspace_geoh5 = path.abspath(self.h5file)
+        return self._workspace_geoh5
+
+    @workspace_geoh5.setter
+    def workspace_geoh5(self, file_path):
+        self.h5file = path.abspath(file_path)
 
     def create_copy(self, _):
         if self.h5file is not None:
