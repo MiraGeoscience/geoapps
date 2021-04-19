@@ -196,16 +196,17 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
     return mesh_object
 
 
-def start_inversion(inputfile):
+def start_inversion(filepath):
     """ Starts inversion with parameters defined in input file. """
-    inversion(inputfile)
+    params = Params.from_path(filepath)
+    inversion(params)
 
 
-def inversion(inputfile):
+def inversion(params):
 
-    inputfile.load()
-    input_dict = inputfile.data
-    params = Params.from_ifile(inputfile)
+    ifile = InputFile("../assets/Inversion_.json")
+    ifile.load()
+    input_dict = ifile.data
 
     workspace = Workspace(params.workspace)
 
@@ -322,9 +323,11 @@ def inversion(inputfile):
 
     ###############################################################################
     # Manage other inputs
-    if params.input_mesh is not None:
-        workspace = Workspace(params.save_to_geoh5)
-        input_mesh = workspace.get_entity(params.input_mesh_file)[0]
+    if params.mesh is not None:
+        workspace = Workspace(params.workspace)
+        input_mesh = workspace.get_entity(params.mesh)[0]
+        input_mesh = octree_2_treemesh(input_mesh)
+        mesh_type = "TREE"
     else:
         input_mesh = None
 
@@ -422,43 +425,42 @@ def inversion(inputfile):
     topo_interp_function = NearestNDInterpolator(topo[:, :2], topo[:, 2])
 
     if params.reference_model is not None:
-        if "model" in params.reference_model.keys():
-            reference_model = params.reference["model"]
+        reference_model = params.reference_model
+        # if "model" in params.reference_model.keys():
+        #     reference_model = params.reference["model"]
+        #
+        # elif "value" in params.reference_model.keys():
+        #     reference_model = np.r_[params.reference_model["value"]]
+        #     assert reference_model.shape[0] in [
+        #         1,
+        #         3,
+        #     ], "Start model needs to be a scalar or 3 component vector"
 
-        elif "value" in params.reference_model.keys():
-            reference_model = np.r_[params.reference_model["value"]]
-            assert reference_model.shape[0] in [
-                1,
-                3,
-            ], "Start model needs to be a scalar or 3 component vector"
-
-        elif "none" in params.reference_model.keys():
-            params.alphas[0], params.alphas[4], params.alphas[8] = 0, 0, 0
-            reference_model = [0.0]
+        # elif "none" in params.reference_model.keys():
+        #     params.alphas[0], params.alphas[4], params.alphas[8] = 0, 0, 0
+        #     reference_model = [0.0]
     else:
-        assert (
-            params.forward_only == False
-        ), "A reference model/value must be provided for forward modeling"
         reference_model = [0.0]
 
     if params.starting_model is not None:
-        if "model" in params.starting_model.keys():
-            starting_model = params.starting_model["model"]
-            input_mesh = workspace.get_entity(list(starting_model.keys())[0])[0]
-
-            if isinstance(input_mesh, BlockModel):
-
-                input_mesh, _ = block_model_2_tensor(input_mesh)
-            else:
-                input_mesh = octree_2_treemesh(input_mesh)
-
-            input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2] + 1300]
-            print("converting", input_mesh.x0)
-        else:
-            starting_model = np.r_[params.starting_model["value"]]
-            assert (
-                starting_model.shape[0] == 1 or starting_model.shape[0] == 3
-            ), "Start model needs to be a scalar or 3 component vector"
+        starting_model = params.starting_model
+        # if "model" in params.starting_model.keys():
+        #     starting_model = params.starting_model["model"]
+        #     input_mesh = workspace.get_entity(list(starting_model.keys())[0])[0]
+        #
+        #     if isinstance(input_mesh, BlockModel):
+        #
+        #         input_mesh, _ = block_model_2_tensor(input_mesh)
+        #     else:
+        #         input_mesh = octree_2_treemesh(input_mesh)
+        #
+        #     input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2] + 1300]
+        #     print("converting", input_mesh.x0)
+        # else:
+        #     starting_model = np.r_[params.starting_model["value"]]
+        #     assert (
+        #         starting_model.shape[0] == 1 or starting_model.shape[0] == 3
+        #     ), "Start model needs to be a scalar or 3 component vector"
     else:
         starting_model = [1e-4]
 
@@ -539,17 +541,17 @@ def inversion(inputfile):
             topo_elevations_at_data_locs,
             params.core_cell_size,
             padding_distance=params.padding_distance,
-            mesh_type=params.inversion_mesh_type,
+            mesh_type=mesh_type,
             base_mesh=input_mesh,
             depth_core=depth_core,
         )
 
-        if params.shift_mesh_z0 is not None:
-            local_mesh.x0 = np.r_[
-                local_mesh.x0[0], local_mesh.x0[1], params.shift_mesh_z0
-            ]
+        # if params.shift_mesh_z0 is not None:
+        #     local_mesh.x0 = np.r_[
+        #         local_mesh.x0[0], local_mesh.x0[1], params.shift_mesh_z0
+        #     ]
 
-        if params.inversion_mesh_type.upper() == "TREE":
+        if mesh_type.upper() == "TREE":
             if topo is not None:
                 local_mesh = meshutils.refine_tree_xyz(
                     local_mesh,
@@ -602,17 +604,17 @@ def inversion(inputfile):
             topo_elevations_at_data_locs,
             params.core_cell_size,
             padding_distance=params.padding_distance,
-            mesh_type=params.inversion_mesh_type,
+            mesh_type=mesh_type,
             base_mesh=input_mesh,
             depth_core=depth_core,
         )
 
-        if params.shift_mesh_z0 is not None:
-            local_mesh.x0 = np.r_[
-                local_mesh.x0[0], local_mesh.x0[1], params.shift_mesh_z0
-            ]
+        # if params.shift_mesh_z0 is not None:
+        #     local_mesh.x0 = np.r_[
+        #         local_mesh.x0[0], local_mesh.x0[1], params.shift_mesh_z0
+        #     ]
 
-        if params.inversion_mesh_type.upper() == "TREE":
+        if mesh_type.upper() == "TREE":
             if topo is not None:
                 local_mesh = meshutils.refine_tree_xyz(
                     local_mesh,
@@ -662,16 +664,14 @@ def inversion(inputfile):
 
     sorting = np.argsort(np.hstack(sorting))
 
-    if (params.input_mesh is None) or (
-        params.input_mesh._meshType != params.inversion_mesh_type.upper()
-    ):
+    if (input_mesh is None) or (input_mesh._meshType != mesh_type.upper()):
 
         print("Creating Global Octree")
         mesh = meshutils.mesh_builder_xyz(
             topo_elevations_at_data_locs,
             params.core_cell_size,
             padding_distance=params.padding_distance,
-            mesh_type=params.inversion_mesh_type,
+            mesh_type=mesh_type,
             base_mesh=input_mesh,
             depth_core=depth_core,
         )
@@ -681,10 +681,10 @@ def inversion(inputfile):
         #         vertices[ind, :2], params.window['center'], params.window['azimuth']
         #     )
         #     xyz_loc = np.c_[xy_rot, vertices[ind, 2]]
-        if params.shift_mesh_z0 is not None:
-            mesh.x0 = np.r_[mesh.x0[0], mesh.x0[1], params.shift_mesh_z0]
+        # if params.shift_mesh_z0 is not None:
+        #     mesh.x0 = np.r_[mesh.x0[0], mesh.x0[1], params.shift_mesh_z0]
 
-        if params.inversion_mesh_type.upper() == "TREE":
+        if mesh_type.upper() == "TREE":
             for local_mesh in local_meshes:
 
                 mesh.insert_cells(
@@ -704,8 +704,8 @@ def inversion(inputfile):
     if isinstance(mesh, Mesh.TreeMesh):
         Mesh.TreeMesh.writeUBC(
             mesh,
-            params.result_folder + "OctreeMeshGlobal.msh",
-            models={params.result_folder + "ActiveSurface.act": activeCells},
+            params.workpath + "OctreeMeshGlobal.msh",
+            models={params.workpath + "ActiveSurface.act": activeCells},
         )
     else:
         mesh.writeModelUBC("ActiveSurface.act", activeCells)
@@ -719,11 +719,11 @@ def inversion(inputfile):
     )
 
     # Create geoh5 objects to store the results
-    if params.save_to_geoh5 is not None:
+    if params.output_geoh5 is not None:
 
-        workspace = Workspace(params.save_to_geoh5)
+        workspace = Workspace(params.output_geoh5)
 
-        out_group = ContainerGroup.create(workspace, name=input_dict["out_group"])
+        out_group = ContainerGroup.create(workspace, name=params.out_group)
 
         out_group.add_comment(json.dumps(input_dict, indent=4).strip(), author="input")
 
@@ -769,7 +769,7 @@ def inversion(inputfile):
         # Loading a model file
         if isinstance(input_value, dict):
             print(f"In model interpolation for {input_value}")
-            workspace = Workspace(params.save_to_geoh5)
+            workspace = Workspace(params.output_geoh5)
             input_mesh = workspace.get_entity(list(input_value.keys())[0])[0]
 
             input_model = input_mesh.get_data(list(input_value.values())[0])[0].values
@@ -919,7 +919,7 @@ def inversion(inputfile):
                 rhoMap=tile_map * model_map,
                 actInd=activeCells_t,
                 parallelized=params.parallelized,
-                Jpath=params.result_folder + "Tile" + str(ind) + ".zarr",
+                Jpath=params.workpath + "Tile" + str(ind) + ".zarr",
                 maxRAM=params.max_ram,
                 forwardOnly=params.forward_only,
                 n_cpu=params.n_cpu,
@@ -934,7 +934,7 @@ def inversion(inputfile):
                 chiMap=tile_map * model_map,
                 actInd=activeCells_t,
                 parallelized=params.parallelized,
-                Jpath=params.result_folder + "Tile" + str(ind) + ".zarr",
+                Jpath=params.workpath + "Tile" + str(ind) + ".zarr",
                 maxRAM=params.max_ram,
                 forwardOnly=params.forward_only,
                 n_cpu=params.n_cpu,
@@ -949,7 +949,7 @@ def inversion(inputfile):
                 chiMap=tile_map * model_map,
                 actInd=activeCells_t,
                 parallelized=params.parallelized,
-                Jpath=params.result_folder + "Tile" + str(ind) + ".zarr",
+                Jpath=params.workpath + "Tile" + str(ind) + ".zarr",
                 maxRAM=params.max_ram,
                 forwardOnly=params.forward_only,
                 modelType="vector",
@@ -1008,7 +1008,7 @@ def inversion(inputfile):
 
         if "mvi" in params.inversion_type:
             Utils.io_utils.writeUBCmagneticsObservations(
-                params.result_folder + "/Obs.mag", survey, dpred
+                params.workpath + "/Obs.mag", survey, dpred
             )
             mesh_object.add_data(
                 {
@@ -1038,7 +1038,7 @@ def inversion(inputfile):
     global_weights = global_weights ** 0.5
     global_weights = global_weights / np.max(global_weights)
 
-    if params.save_to_geoh5 is not None:
+    if params.output_geoh5 is not None:
         mesh_object.add_data(
             {
                 "SensWeights": {
@@ -1054,9 +1054,9 @@ def inversion(inputfile):
         Mesh.TreeMesh.writeUBC(
             mesh,
             params,
-            result_folder + "OctreeMeshGlobal.msh",
+            workpath + "OctreeMeshGlobal.msh",
             models={
-                params.result_folder
+                params.workpath
                 + "SensWeights.mod": (activeCellsMap * model_map * global_weights)[
                     : mesh.nC
                 ]
@@ -1191,7 +1191,7 @@ def inversion(inputfile):
     directiveList.append(Directives.UpdatePreconditioner())
 
     # Save model
-    if params.save_to_geoh5 is not None:
+    if params.output_geoh5 is not None:
 
         if vector_property:
             model_type = "mvi_model"
@@ -1234,17 +1234,17 @@ def inversion(inputfile):
             )
         )
 
-    # directiveList.append(
-    #     Directives.SaveUBCModelEveryIteration(
-    #         mapping=activeCellsMap * model_map,
-    #         mesh=mesh,
-    #         fileName=params.result_folder + params.inversion_type,
-    #         vector=params.inversion_type[0:3] == 'mvi'
-    #     )
-    # )
-    # save_output = Directives.SaveOutputEveryIteration()
-    # save_output.fileName = params.workpath + "Output"
-    # directiveList.append(save_output)
+    directiveList.append(
+        Directives.SaveUBCModelEveryIteration(
+            mapping=activeCellsMap * model_map,
+            mesh=mesh,
+            fileName=params.workpath + params.inversion_type,
+            vector=params.inversion_type[0:3] == "mvi",
+        )
+    )
+    save_output = Directives.SaveOutputEveryIteration()
+    save_output.fileName = params.workpath + "Output"
+    directiveList.append(save_output)
 
     # Put all the parts together
     inv = Inversion.BaseInversion(invProb, directiveList=directiveList)
