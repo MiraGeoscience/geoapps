@@ -1,0 +1,113 @@
+{
+    "inversion_type": "mvi",
+    "workspace": "C:\\Users\\Benjamin\\Documents\\Git\\geoapps\\assets\\FlinFlon.geoh5",
+    "out_group": "Inversion_",
+    "data": {
+        "name": "Gravity_Magnetics_drape60m",
+        "channels": {
+            "tmi": {
+                "name": "Airborne_TMI",
+                "uncertainties": [
+                    0.0,
+                    13.58
+                ],
+                "offsets": [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            }
+        }
+    },
+    "mesh": "Mesh",
+    "topography": {
+        "GA_object": {
+            "name": "Topography",
+            "data": "elevation"
+        }
+    },
+    "output_geoh5": "C:\\Users\\Benjamin\\Documents\\Git\\geoapps\\assets\\FlinFlon.geoh5",
+    "inducing_field_aid": [
+        60000.0,
+        79.0,
+        11.0
+    ],
+    "core_cell_size": [
+        25.0,
+        25.0,
+        25.0
+    ],
+    "octree_levels_topo": [
+        0.0,
+        0.0,
+        0.0,
+        2.0
+    ],
+    "octree_levels_obs": [
+        5.0,
+        5.0,
+        5.0,
+        5.0
+    ],
+    "depth_core": {
+        "value": 500.0
+    },
+    "max_distance": 1000.0,
+    "padding_distance": [
+        [
+            1000.0,
+            1000.0
+        ],
+        [
+            1000.0,
+            1000.0
+        ],
+        [
+            0.0,
+            0.0
+        ]
+    ],
+    "chi_factor": 1.0,
+    "max_iterations": 25,
+    "max_cg_iterations": 30,
+    "n_cpu": 4,
+    "max_ram": 2.0,
+    "initial_beta_ratio": 100.0,
+    "tol_cg": 0.001,
+    "ignore_values": "-99999",
+    "no_data_value": 0.0,
+    "resolution": 50.0,
+    "window": {
+        "center_x": 314600.0,
+        "center_y": 6072200.0,
+        "width": 1000.0,
+        "height": 1500.0,
+        "azimuth": -20.0
+    },
+    "alphas": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+    ],
+    "reference_model": [0.0],
+    "reference_inclination": [0.0],
+    "reference_declination": [0.0],
+    "starting_model": [0.0001],
+    "starting_inclination": [0.0001],
+    "starting_declination": [0.0001],
+    "model_norms": [
+        0.0,
+        2.0,
+        2.0,
+        2.0
+    ],
+    "receivers_offset": {
+        "radar_drape": [
+            0.0,
+            0.0,
+            60.0,
+            ""
+        ]
+    }
+}
