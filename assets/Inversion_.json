@@ -1,32 +1,8 @@
 {
-    "inversion_type": "mvi",
-    "workspace": "C:\\Users\\Benjamin\\Documents\\Git\\geoapps\\assets\\FlinFlon.geoh5",
     "out_group": "Inversion_",
-    "data": {
-        "name": "Gravity_Magnetics_drape60m",
-        "channels": {
-            "tmi": {
-                "name": "Airborne_TMI",
-                "uncertainties": [
-                    0.0,
-                    13.58
-                ],
-                "offsets": [
-                    0.0,
-                    0.0,
-                    0.0
-                ]
-            }
-        }
-    },
-    "mesh": "Mesh",
-    "topography": {
-        "GA_object": {
-            "name": "Topography",
-            "data": "elevation"
-        }
-    },
-    "output_geoh5": "C:\\Users\\Benjamin\\Documents\\Git\\geoapps\\assets\\FlinFlon.geoh5",
+    "workspace": "C:\\Users\\Benjamin\\Documents\\Git\\geoapps\\assets\\FlinFlon.geoh5",
+    "save_to_geoh5": "C:\\Users\\Benjamin\\Documents\\Git\\geoapps\\assets\\FlinFlon.geoh5",
+    "inversion_type": "mvi",
     "inducing_field_aid": [
         60000.0,
         79.0,
@@ -90,18 +66,37 @@
         1.0,
         1.0
     ],
-    "reference_model": [0.0],
-    "reference_inclination": [0.0],
-    "reference_declination": [0.0],
-    "starting_model": [0.0001],
-    "starting_inclination": [0.0001],
-    "starting_declination": [0.0001],
+    "reference_model": {
+        "value": 0.0
+    },
+    "starting_model": {
+        "value": 0.0001
+    },
     "model_norms": [
         0.0,
         2.0,
         2.0,
         2.0
     ],
+    "data": {
+        "type": "GA_object",
+        "name": "Gravity_Magnetics_drape60m",
+        "channels": {
+            "tmi": {
+                "name": "Airborne_TMI",
+                "uncertainties": [
+                    0.0,
+                    13.58
+                ],
+                "offsets": [
+                    0.0,
+                    0.0,
+                    0.0
+                ]
+            }
+        }
+    },
+    "uncertainty_mode": "User input (%|data| + floor)",
     "receivers_offset": {
         "radar_drape": [
             0.0,
@@ -109,5 +104,11 @@
             60.0,
             ""
         ]
+    },
+    "topography": {
+        "GA_object": {
+            "name": "Topography",
+            "data": "elevation"
+        }
     }
 }
