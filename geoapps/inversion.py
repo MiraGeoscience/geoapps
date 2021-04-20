@@ -1251,6 +1251,7 @@ class InversionApp(PlotSelection2D):
             "out_group": self.inversion_parameters.output_name.value,
             "workspace": os.path.abspath(self.h5file),
             "output_geoh5": os.path.abspath(self.h5file),
+            "mesh": "Mesh",
         }
         if self.system.value in ["Gravity", "MVI", "Magnetics"]:
             input_dict["inversion_type"] = self.system.value.lower()
@@ -1259,6 +1260,7 @@ class InversionApp(PlotSelection2D):
                 input_dict["inducing_field_aid"] = string_2_list(
                     self.inducing_field.value
                 )
+
             # Octree mesh parameters
             input_dict["core_cell_size"] = string_2_list(
                 self.mesh_octree.core_cell_size.value
@@ -1327,9 +1329,9 @@ class InversionApp(PlotSelection2D):
                 }
             }
         else:
-            input_dict["reference_model"] = {
-                ref_type: self.inversion_parameters.reference_model.value.value
-            }
+            input_dict[
+                "reference_model"
+            ] = self.inversion_parameters.reference_model.value.value
 
         start_type = self.inversion_parameters.starting_model.options.value.lower()
 
@@ -1340,9 +1342,9 @@ class InversionApp(PlotSelection2D):
                 }
             }
         else:
-            input_dict["starting_model"] = {
-                start_type: self.inversion_parameters.starting_model.value.value
-            }
+            input_dict[
+                "starting_model"
+            ] = self.inversion_parameters.starting_model.value.value
 
         if self.inversion_parameters.susceptibility_model.options.value != "None":
             susc_type = (
@@ -1378,7 +1380,6 @@ class InversionApp(PlotSelection2D):
             )
 
         input_dict["data"] = {}
-        input_dict["data"]["type"] = "GA_object"
         input_dict["data"]["name"] = self.objects.value
 
         if hasattr(self.data_channel_choices, "data_channel_options"):
@@ -1416,8 +1417,6 @@ class InversionApp(PlotSelection2D):
                     return
 
             input_dict["data"]["channels"] = channel_param
-
-        input_dict["uncertainty_mode"] = self.inversion_parameters.uncert_mode.value
 
         if self.sensor.options.value == "sensor location + (dx, dy, dz)":
             input_dict["receivers_offset"] = {
