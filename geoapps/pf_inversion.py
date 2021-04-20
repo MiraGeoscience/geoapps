@@ -1309,5 +1309,4 @@ def inversion(params):
 if __name__ == "__main__":
 
     filepath = sys.argv[1]
-    inputfile = InputFile(filepath)
-    start_inversion(inputfile)
+    start_inversion(filepath)

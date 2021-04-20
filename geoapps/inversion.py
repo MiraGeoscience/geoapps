@@ -1250,7 +1250,7 @@ class InversionApp(PlotSelection2D):
         input_dict = {
             "out_group": self.inversion_parameters.output_name.value,
             "workspace": os.path.abspath(self.h5file),
-            "save_to_geoh5": os.path.abspath(self.h5file),
+            "output_geoh5": os.path.abspath(self.h5file),
         }
         if self.system.value in ["Gravity", "MVI", "Magnetics"]:
             input_dict["inversion_type"] = self.system.value.lower()
