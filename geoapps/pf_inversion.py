@@ -265,20 +265,7 @@ def inversion(input_file):
     else:
         window = None
 
-    if input_dict["data"]["type"] in ["ubc_grav"]:
-
-        survey = Utils.io_utils.readUBCgravityObservations(
-            workDir + input_dict["data"]["name"]
-        )
-
-    elif input_dict["data"]["type"] in ["ubc_mag"]:
-
-        survey, H0 = Utils.io_utils.readUBCmagneticsObservations(
-            workDir + input_dict["data"]["name"]
-        )
-        survey.components = ["tmi"]
-
-    elif input_dict["data"]["type"] in ["GA_object"]:
+    if input_dict["data"]["name"] is not None:
 
         workspace = Workspace(input_dict["workspace"])
 
@@ -365,10 +352,7 @@ def inversion(input_file):
                 normalization.append(1.0)
 
     else:
-        assert False, (
-            "PF Inversion only implemented for data 'type'"
-            " 'ubc_grav', 'ubc_mag', 'GA_object'"
-        )
+        assert False, "No data provided. Must include 'name', and 'channels'."
 
     # if np.median(survey.dobs) > 500 and "detrend" not in list(input_dict.keys()):
     #     print(
@@ -648,18 +632,18 @@ def inversion(input_file):
         alphas = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
     if "reference_model" in list(input_dict.keys()):
-        if "model" in list(input_dict["reference_model"].keys()):
-            reference_model = input_dict["reference_model"]["model"]
+        # if "model" in list(input_dict["reference_model"].keys()):
+        #     reference_model = input_dict["reference_model"]["model"]
 
-        elif "value" in list(input_dict["reference_model"].keys()):
-            reference_model = np.r_[input_dict["reference_model"]["value"]]
+        if input_dict["reference_model"] == "none":
+            alphas[0], alphas[4], alphas[8] = 0, 0, 0
+            reference_model = [0.0]
+        else:
+            reference_model = np.r_[input_dict["reference_model"]]
             assert (
                 reference_model.shape[0] == 1 or reference_model.shape[0] == 3
             ), "Start model needs to be a scalar or 3 component vector"
 
-        elif "none" in list(input_dict["reference_model"].keys()):
-            alphas[0], alphas[4], alphas[8] = 0, 0, 0
-            reference_model = [0.0]
     else:
         assert (
             forward_only == False
@@ -667,23 +651,23 @@ def inversion(input_file):
         reference_model = [0.0]
 
     if "starting_model" in list(input_dict.keys()):
-        if "model" in list(input_dict["starting_model"].keys()):
-            starting_model = input_dict["starting_model"]["model"]
-            input_mesh = workspace.get_entity(list(starting_model.keys())[0])[0]
-
-            if isinstance(input_mesh, BlockModel):
-
-                input_mesh, _ = block_model_2_tensor(input_mesh)
-            else:
-                input_mesh = octree_2_treemesh(input_mesh)
-
-            input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2] + 1300]
-            print("converting", input_mesh.x0)
-        else:
-            starting_model = np.r_[input_dict["starting_model"]["value"]]
-            assert (
-                starting_model.shape[0] == 1 or starting_model.shape[0] == 3
-            ), "Start model needs to be a scalar or 3 component vector"
+        # if "model" in list(input_dict["starting_model"].keys()):
+        # starting_model = input_dict["starting_model"]["model"]
+        # input_mesh = workspace.get_entity(list(starting_model.keys())[0])[0]
+        #
+        # if isinstance(input_mesh, BlockModel):
+        #
+        #     input_mesh, _ = block_model_2_tensor(input_mesh)
+        # else:
+        #     input_mesh = octree_2_treemesh(input_mesh)
+        #
+        # input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2] + 1300]
+        # print("converting", input_mesh.x0)
+        # else:
+        starting_model = np.r_[input_dict["starting_model"]]
+        assert (
+            starting_model.shape[0] == 1 or starting_model.shape[0] == 3
+        ), "Start model needs to be a scalar or 3 component vector"
     else:
         starting_model = [1e-4]
 
