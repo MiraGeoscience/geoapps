@@ -11,7 +11,7 @@ from typing import Any
 
 import numpy as np
 
-from .constants import defaults, validations
+from .constants import default_ui_json, defaults, validations
 from .validators import InputValidator
 
 ### Utils ###
@@ -56,7 +56,7 @@ class InputFile:
     def __init__(self, filepath):
         self.filepath = filepath
         self.workpath = create_work_path(filepath)
-        self.data = None
+        self.data = {}
         self.isloaded = False
 
     @property
@@ -70,12 +70,111 @@ class InputFile:
         else:
             self._filepath = f
 
-    def load(self) -> None:
-        """ Loads and validates input file contents to dictionary. """
+    def write_ui_json(self):
+
+        with open(self.filepath, "w") as f:
+            json.dump(self._stringify(default_ui_json), f, indent=4)
+
+    def read_ui_json(self):
+
         with open(self.filepath) as f:
-            self.data = json.load(f)
-            validator = InputValidator(self.data)
+            data = self._numify(json.load(f))
+            self._ui_2_py(data)
+
+        # validator = InputValidator(self.data)
         self.isloaded = True
+
+    def _ui_2_py(self, d):
+        for param, fields in d.items():
+            if not isinstance(fields, dict):
+                continue
+            if "enabled" in fields.keys():
+                if fields["enabled"] == False:
+                    self.data[param] = None
+                    continue
+            if "visible" in fields.keys():
+                if fields["visible"] == False:
+                    self.data[param] = None
+                    continue
+
+            if param == "mesh":
+                self.data[param] = fields["value"]
+            else:
+                if "meshType" in fields.keys():
+                    continue
+                elif "parent" in fields.keys():
+                    if "isValue" in fields.keys():
+                        fkey = "value" if fields["isValue"] else "property"
+                    else:
+                        fkey = "value"
+
+                    self.data[param] = {d[fields["parent"]]["value"]: fields[fkey]}
+                else:
+                    self.data[param] = fields["value"]
+
+    def _stringify(self, d):
+        """ Convert inf, none, and list types to strings within a dictionary """
+
+        # map [...] to "[...]"
+        excl = ["choiceList", "meshType"]
+        l2s = lambda k, v: str(v)[1:-1] if isinstance(v, list) & (k not in excl) else v
+        n2s = lambda k, v: "" if v is None else v  # map None to ""
+
+        def i2s(k, v):  # map np.inf to "inf"
+            if not isinstance(v, (int, float)):
+                return v
+            else:
+                return str(v) if not np.isfinite(v) else v
+
+        for k, v in d.items():
+            v = self._dict_mapper(k, v, [l2s, n2s, i2s])
+            d[k] = v
+
+        return d
+
+    def _numify(self, d):
+        """ Convert inf, none and list strings to numerical types within a dictionary """
+
+        def s2l(k, v):  # map "[...]" to [...]
+            if isinstance(v, str):
+                if v in ["inf", "-inf"]:
+                    return v
+                else:
+                    try:
+                        return [float(n) for n in v.split(",")]
+                    except ValueError:
+                        return v
+            else:
+                return v
+
+        s2n = lambda k, v: None if v == "" else v  # map "" to None
+        s2i = (
+            lambda k, v: float(v) if v in ["inf", "-inf"] else v
+        )  # map "inf" to np.inf
+
+        for k, v in d.items():
+            v = self._dict_mapper(k, v, [s2l, s2n, s2i])
+            d[k] = v
+
+        return d
+
+    def _dict_mapper(self, key, val, string_funcs):
+        """ Recurses through nested dictionary and applies mapping funcs to all values """
+        if isinstance(val, dict):
+            for k, v in val.items():
+                val[k] = self._dict_mapper(k, v, string_funcs)
+            return val
+        else:
+            for f in string_funcs:
+                val = f(key, val)
+            return val
+
+    # def load(self) -> None:
+    #     """ Loads and validates input file contents to dictionary. """
+    #     with open(self.filepath) as f:
+    #         self.data = json.load(f)
+    #         validator = InputValidator(self.data)
+    #     self.isloaded = True
 
 
 class Params:
