@@ -18,6 +18,7 @@ dependencies:
   - fsspec
   - xarray
   - dask
+  - h5py=3.1.0
   - pip:
     - empymod==2.0.5
     - geoh5py==0.1.1
