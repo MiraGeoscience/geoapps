@@ -1049,10 +1049,10 @@ class InversionApp(PlotSelection2D):
                 if self.system.value in ["MVI", "Magnetics", "Gravity"]:
                     values = entity.get_data(channel.value)[0].values
                     if values is not None and values.dtype in [
-+                        np.float32,
-+                        np.float64,
-+                        np.int32,
-+                    ]:
+                        np.float32,
+                        np.float64,
+                        np.int32,
+                    ]:
                         data_widget.children[
                             3
                         ].value = f"0, {np.percentile(np.abs(values[np.abs(values) > 2e-18]), 5):.2f}"
