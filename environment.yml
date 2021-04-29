@@ -6,7 +6,7 @@ channels:
 dependencies:
   - python
   - pip
-  - simpeg
+  - simpeg=0.13.1
   - discretize
   - matplotlib
   - ipywidgets
