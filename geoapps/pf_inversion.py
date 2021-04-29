@@ -197,29 +197,50 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
     return mesh_object
 
 
-def inversion(input_file):
-    dsep = os.path.sep
-    if input_file is not None:
-        workDir = dsep.join(os.path.dirname(os.path.abspath(input_file)).split(dsep))
+class InputFile:
+    def __init__(self, filename):
+        self._filename = filename
+        self._accepted_file_extensions = ["json"]
+
+    @property
+    def filename(self):
+        return self._filename
+
+    @filename.setter
+    def filename(self, f):
+        if f.split(".")[-1] not in self._accepted_file_extensions:
+            raise Exception("Input file must have '.json' extension.")
+
+    def create_work_path(self):
+        """ Creates absolute path to input file. """
+        dsep = os.path.sep
+        workDir = dsep.join(os.path.dirname(os.path.abspath(self.filename)).split(dsep))
         if len(workDir) > 0:
             workDir += dsep
         else:
             workDir = os.getcwd() + dsep
 
-    else:
-        assert (
-            input_file is not None
-        ), "The input file is missing: 'python PFinversion.py input_file.json'"
+        return workDir
+
+    def load(self):
+        """ Loads input file contents to dictionary. """
+        with open(self.filename) as f:
+            input_dict = json.load(f)
+
+        return input_dict
+
+
+def start_inversion(input_file):
+    """ Starts inversion with parameters defined in input file. """
+    inversion(input_file)
+
+
+def inversion(input_file):
+
+    workDir = input_file.create_work_path()
+    input_dict = input_file.load()
 
     # Read json file and overwrite defaults
-    with open(input_file) as f:
-        driver = json.load(f)
-
-    input_dict = {
-        k if isinstance(k, str) else k: v if isinstance(v, str) else v
-        for k, v in driver.items()
-    }
-
     assert "inversion_type" in list(
         input_dict.keys()
     ), "Require 'inversion_type' to be set: 'gravity', 'magnetics', 'mvi', or 'mvic'"
@@ -242,9 +263,11 @@ def inversion(input_file):
 
     if "result_folder" in list(input_dict.keys()):
         root = os.path.commonprefix([input_dict["result_folder"], workDir])
-        outDir = workDir + os.path.relpath(input_dict["result_folder"], root) + dsep
+        outDir = (
+            workDir + os.path.relpath(input_dict["result_folder"], root) + os.path.sep
+        )
     else:
-        outDir = workDir + dsep + "SimPEG_PFInversion" + dsep
+        outDir = workDir + os.path.sep + "SimPEG_PFInversion" + os.path.sep
     os.system("mkdir " + '"' + outDir + '"')
     # extra quotes included in case path contains spaces
 
@@ -995,7 +1018,7 @@ def inversion(input_file):
 
         out_group = ContainerGroup.create(workspace, name=input_dict["out_group"])
 
-        out_group.add_comment(json.dumps(driver, indent=4).strip(), author="input")
+        out_group.add_comment(json.dumps(input_dict, indent=4).strip(), author="input")
 
         if window is not None:
             xy_rot = rotate_xy(rxLoc[:, :2], window["center"], -window["azimuth"])
@@ -1561,5 +1584,6 @@ def inversion(input_file):
 
 if __name__ == "__main__":
 
-    input_file = sys.argv[1]
-    inversion(input_file)
+    filename = sys.argv[1]
+    input_file = InputFile(filename)
+    start_inversion(input_file)
