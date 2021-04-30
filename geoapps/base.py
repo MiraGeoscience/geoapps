@@ -210,7 +210,7 @@ class BaseApplication:
 
             groups = [
                 group
-                for group in self.workspace.all_groups()
+                for group in self.workspace.groups
                 if group.name == self.ga_group_name.value
             ]
             if any(groups):

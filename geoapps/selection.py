@@ -264,7 +264,7 @@ class ObjectDataSelection(BaseApplication):
             if len(self.object_types) > 0:
                 options = [""] + [
                     obj.name
-                    for obj in self._workspace.all_objects()
+                    for obj in self._workspace.objects
                     if isinstance(obj, self.object_types)
                 ]
             else:

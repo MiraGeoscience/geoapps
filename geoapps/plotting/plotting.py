@@ -503,7 +503,7 @@ def check_data_type(data):
 #
 #     curves = [
 #         entity.parent.name + "." + entity.name
-#         for entity in workspace.all_objects()
+#         for entity in workspace.objects
 #         if isinstance(entity, Curve)
 #     ]
 #     names = [name for name in sorted(curves)]
