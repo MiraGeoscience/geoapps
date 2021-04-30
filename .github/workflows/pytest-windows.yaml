@@ -14,38 +14,29 @@ jobs:
   pytest:
     name: pytest
     strategy:
-      fail-fast: false
       matrix:
-        python_ver: [3.7, 3.8]
-    defaults:
-      run:
-        shell: pwsh
-    runs-on: windows-latest
+        os: [ubuntu-latest, macos-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Cache conda
-        uses: actions/cache@v4
-        env:
-          # Increase this value to reset cache if environment.yml has not changed
-          CACHE_NUMBER: 4
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
         with:
-          path: ~/conda_pkgs_dir
-          key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
-      - name: Setup conda env
-        uses: conda-incubator/setup-miniconda@v4
-        with:
-          activate-environment: geoapps
-          python-version: ${{ matrix.python_ver }}
-          channel-priority: strict
-          environment-file: environment.yml
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          python-version: 3.7
+      - name: Get full Python version
+        id: full-python-version
+        shell: bash
+        run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
+      - name: Add conda to system path
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
+      - name: Install dependencies
+        run: |
+          conda env create -f environment.yml
       - name: pytest
         run: |
+          conda activate geoapps
           conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
-      - name: Codecov
-        if: ${{ success() && matrix.python_ver == '3.7' }}
-        uses: codecov/codecov-action@v1
-        with:
-          name: GitHub
