@@ -18,7 +18,7 @@ dependencies:
   - fsspec
   - xarray
   - dask
-  - h5py=3.1.0
+  - h5py
   - gdal
   - pip:
     - empymod==2.0.5
