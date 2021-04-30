@@ -327,8 +327,8 @@ def inversion(input_file):
         topo = None
         if "topography" in list(input_param.keys()):
             topo = locations.copy()
-            if "drapped" in input_param["topography"].keys():
-                topo[:, 2] += input_param["topography"]["drapped"]
+            if "draped" in input_param["topography"].keys():
+                topo[:, 2] += input_param["topography"]["draped"]
             elif "constant" in input_param["topography"].keys():
                 topo[:, 2] = input_param["topography"]["constant"]
             else:
@@ -369,7 +369,7 @@ def inversion(input_file):
         if topo is None:
             assert topo is not None, (
                 "Topography information must be provided. "
-                "Chose from 'file', 'GA_object', 'drapped' or 'constant'"
+                "Chose from 'file', 'GA_object', 'draped' or 'constant'"
             )
         return topo
 
