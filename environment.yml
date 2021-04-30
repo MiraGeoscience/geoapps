@@ -4,14 +4,13 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python
+  - python>=3.7, <3.9
   - pip
   - simpeg=0.13.1
   - discretize
   - matplotlib
   - ipywidgets
   - ipykernel
-  - geopandas
   - scikit-image
   - scikit-learn
   - zarr
@@ -19,10 +18,11 @@ dependencies:
   - xarray
   - dask
   - gdal
+  - fiona
+  - h5py
+  - plotly
+  - empymod
+  - requests=2.25.1
   - pip:
-    - empymod==2.0.5
-    - geoh5py==0.1.1
-    - plotly==4.9.0
     - ipyfilechooser==0.4.2
-    - requests==2.25.1
-    - ezdxf==0.15.2
+    - geoh5py
