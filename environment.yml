@@ -25,4 +25,4 @@ dependencies:
   - requests=2.25.1
   - pip:
     - ipyfilechooser==0.4.2
-    - geoh5py
+    - geoh5py==0.1.2
