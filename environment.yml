@@ -17,6 +17,7 @@ dependencies:
   - fsspec
   - xarray
   - dask
+  - geopandas
   - gdal
   - fiona
   - h5py
