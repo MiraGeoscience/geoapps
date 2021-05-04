@@ -5,23 +5,26 @@ channels:
   - defaults
 dependencies:
   - python>=3.7, <3.9
-  - pip
-  - simpeg=0.13.1
-  - discretize
-  - matplotlib
-  - ipywidgets
-  - ipykernel
-  - scikit-image
-  - scikit-learn
-  - zarr
-  - fsspec
-  - xarray
-  - dask
-  - geopandas
-  - h5py
-  - plotly
-  - empymod
-  - requests=2.25.1
+  - pip>=21.1
+  - numpy>=1.20
+  - simpeg>=0.13.1
+  - discretize>=0.7.0
+  - matplotlib>=3.4
+  - ipywidgets>=7.6
+  - ipykernel>=5.5
+  - scikit-image>=0.18
+  - scikit-learn>=0.24
+  - zarr>=2.7
+  - fsspec>=2021.04
+  - xarray>=0.17
+  - dask>=2021.04
+  - geopandas>=0.9
+  - gdal>=3.2
+  - fiona>=1.8
+  - h5py>=3.2
+  - plotly>=4.14
+  - empymod>=2.0
+  - requests>=2.25
   - pip:
     - ipyfilechooser==0.4.2
     - geoh5py==0.1.2
