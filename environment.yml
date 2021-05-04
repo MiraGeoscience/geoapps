@@ -19,8 +19,6 @@ dependencies:
   - xarray
   - dask
   - geopandas
-  - gdal
-  - fiona
   - h5py
   - plotly
   - requests
