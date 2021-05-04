@@ -2,15 +2,13 @@ name: geoapps
 
 channels:
   - conda-forge
-  - defaults
-  - conda-forge/label/broken
 dependencies:
   - python
   - pip
+  - discretize
+  - simpeg=0.13
   - numpy
   - scipy
-  - simpeg
-  - discretize
   - matplotlib
   - ipywidgets
   - ipykernel
@@ -20,13 +18,12 @@ dependencies:
   - fsspec
   - xarray
   - dask
-  - geopandas
   - gdal
   - fiona
   - h5py
   - plotly
-  - empymod
   - requests
+  - empymod
   - pip:
     - ipyfilechooser
     - geoh5py
