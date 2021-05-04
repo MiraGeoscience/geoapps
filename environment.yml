@@ -2,12 +2,13 @@ name: geoapps
 
 channels:
   - conda-forge
-  - conda
   - defaults
+  - conda-forge/label/broken
 dependencies:
   - python
   - pip
   - numpy
+  - scipy
   - simpeg
   - discretize
   - matplotlib
