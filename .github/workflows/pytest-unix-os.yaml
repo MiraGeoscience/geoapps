@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         python_ver: [3.7, 3.8]
     runs-on: ${{ matrix.os }}
     steps:
