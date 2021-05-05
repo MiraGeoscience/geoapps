@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 from typing import Any, Dict, List, Tuple
+from uuid import UUID
 
 import numpy as np
 
@@ -42,6 +43,21 @@ class InputValidator:
         if val is not None:
             self.validate_input(val)
         self._input = val
+
+    def validate_uuid(self, workspace, uuid_str):
+        """ Check whether a string is a valid uuid and addresses an object in the workspace. """
+        try:
+            obj_uuid = UUID(uuid_str)
+        except ValueError:
+            raise ValueError(f"Badly formed hexadecimal UUID string: {uuid_str}")
+
+        obj = workspace.get_entity(obj_uuid)
+        if obj[0] is None:
+            raise IndexError(
+                f"UUID address {uuid_str} does not exist in the workspace."
+            )
+        else:
+            return obj_uuid
 
     def validate_input(self, input: Dict[str, Any]) -> None:
         """

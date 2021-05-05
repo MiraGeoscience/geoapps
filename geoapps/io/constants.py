@@ -9,14 +9,16 @@ import numpy as np
 
 required_parameters = [
     "inversion_type",
-    "workspace",
-    "out_group",
-    "data",
-    "mesh",
-    "topography",
 ]
+defaults = {}
 
 default_ui_json = {
+    "inversion_type": {
+        "default": "mvi",
+        "visible": False,
+        "enabled": False,
+        "value": "mvi",
+    },
     "forward_only": {
         "default": False,
         "main": True,
@@ -25,7 +27,7 @@ default_ui_json = {
         "enabled": True,
     },
     "inducing_field_strength": {
-        "association": "Vertex",
+        "association": "Cell",
         "dataType": "Float",
         "default": None,
         "min": 0.0,
@@ -39,7 +41,7 @@ default_ui_json = {
         "value": 50000.0,
     },
     "inducing_field_inclination": {
-        "association": "Vertex",
+        "association": "Cell",
         "dataType": "Float",
         "default": None,
         "min": 0.0,
@@ -49,11 +51,11 @@ default_ui_json = {
         "isValue": True,
         "label": "Inclination",
         "parent": "data_object",
-        "property": "",
+        "property": None,
         "value": 90.0,
     },
     "inducing_field_declination": {
-        "association": "Vertex",
+        "association": "Cell",
         "dataType": "Float",
         "default": None,
         "min": 0.0,
@@ -63,7 +65,7 @@ default_ui_json = {
         "isValue": True,
         "parent": "data_object",
         "label": "Declination",
-        "property": "",
+        "property": None,
         "value": 0.0,
     },
     "topography_object": {
@@ -109,8 +111,8 @@ default_ui_json = {
         ],
         "value": None,
     },
-    "data_channel": {
-        "association": "Vertex",
+    "tmi_channel": {
+        "association": "Cell",
         "dataType": "Float",
         "default": None,
         "group": "Data",
@@ -122,8 +124,8 @@ default_ui_json = {
         "parent": "data_object",
         "value": None,
     },
-    "uncertainty": {
-        "association": "Vertex",
+    "tmi_uncertainty": {
+        "association": "Cell",
         "dataType": "Float",
         "default": None,
         "group": "Data",
@@ -138,7 +140,7 @@ default_ui_json = {
         "value": 1.0,
     },
     "starting_model_object": {
-        "default": "",
+        "default": None,
         "group": "Starting Model",
         "enabled": True,
         "meshType": [
@@ -148,10 +150,10 @@ default_ui_json = {
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
         ],
         "label": "starting model object",
-        "value": "",
+        "value": None,
     },
     "starting_inclination_object": {
-        "default": "",
+        "default": None,
         "group": "Starting Model",
         "enabled": True,
         "meshType": [
@@ -161,10 +163,10 @@ default_ui_json = {
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
         ],
         "label": "starting inclination object",
-        "value": "",
+        "value": None,
     },
     "starting_declination_object": {
-        "default": "",
+        "default": None,
         "group": "Starting Model",
         "enabled": True,
         "meshType": [
@@ -174,7 +176,7 @@ default_ui_json = {
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
         ],
         "label": "starting declination object",
-        "value": "",
+        "value": None,
     },
     "starting_model": {
         "association": "Cell",
@@ -185,7 +187,7 @@ default_ui_json = {
         "isValue": False,
         "parent": "starting_model_object",
         "label": "starting model value",
-        "property": "",
+        "property": None,
         "value": 0.0,
     },
     "starting_inclination": {
@@ -197,7 +199,7 @@ default_ui_json = {
         "isValue": False,
         "parent": "starting_inclination_object",
         "label": "starting inclination value",
-        "property": "",
+        "property": None,
         "value": 0.0,
     },
     "starting_declination": {
@@ -209,11 +211,26 @@ default_ui_json = {
         "isValue": False,
         "parent": "starting_declination_object",
         "label": "starting declination value",
-        "property": "",
+        "property": None,
         "value": 0.0,
     },
+    "tile_spatial": {
+        "association": "Cell",
+        "dataType": "Float",
+        "default": 1,
+        "group": "Receivers Options",
+        "enabled": True,
+        "visible": True,
+        "dependency": "forward_only",
+        "dependencyType": "hide",
+        "isValue": True,
+        "label": "number of tiles",
+        "parent": "data_object",
+        "property": None,
+        "value": 1,
+    },
     "receivers_radar_drape": {
-        "association": "Vertex",
+        "association": "Cell",
         "dataType": "Float",
         "default": None,
         "main": True,
@@ -225,20 +242,35 @@ default_ui_json = {
         "parent": "data_object",
         "value": None,
     },
-    "receivers_offset": {
-        "default": None,
+    "receivers_offset_x": {
+        "default": 0,
         "group": "Receivers Options",
         "main": True,
-        "optional": True,
-        "enabled": False,
-        "visible": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "constant receiver offset",
+        "label": "constant receiver offset in x",
+        "value": 0,
+    },
+    "receivers_offset_y": {
+        "default": 0,
+        "group": "Receivers Options",
+        "main": True,
+        "dependency": "forward_only",
+        "dependencyType": "hide",
+        "label": "constant receiver offset in y",
+        "value": 0,
+    },
+    "receivers_offset_z": {
+        "default": 0,
+        "group": "Receivers Options",
+        "main": True,
+        "dependency": "forward_only",
+        "dependencyType": "hide",
+        "label": "constant receiver offset in z",
         "value": 0,
     },
     "gps_receivers_offset": {
-        "association": "Vertex",
+        "association": "Cell",
         "dataType": "Float",
         "default": None,
         "group": "Receivers Options",
@@ -341,16 +373,38 @@ default_ui_json = {
         "label": "build from parameters?",
         "value": False,
     },
-    "core_cell_size": {
+    "core_cell_size_x": {
         "default": None,
-        "min": 0,
+        "min": 0.0,
         "group": "Mesh",
         "enabled": True,
         "visible": False,
         "dependency": "mesh_from_params",
         "dependencyType": "show",
-        "label": "core cell size",
-        "value": 2,
+        "label": "core cell size in x",
+        "value": 2.0,
+    },
+    "core_cell_size_y": {
+        "default": None,
+        "min": 0.0,
+        "group": "Mesh",
+        "enabled": True,
+        "visible": False,
+        "dependency": "mesh_from_params",
+        "dependencyType": "show",
+        "label": "core cell size in y",
+        "value": 2.0,
+    },
+    "core_cell_size_z": {
+        "default": None,
+        "min": 0.0,
+        "group": "Mesh",
+        "enabled": True,
+        "visible": False,
+        "dependency": "mesh_from_params",
+        "dependencyType": "show",
+        "label": "core cell size in z",
+        "value": 2.0,
     },
     "octree_levels_topo": {
         "default": [0, 1],
@@ -395,7 +449,7 @@ default_ui_json = {
         "dependencyType": "show",
         "optional": True,
         "label": "depth of core refinement volume",
-        "value": 0,
+        "value": 100.0,
     },
     "max_distance": {
         "default": np.inf,
@@ -637,7 +691,7 @@ default_ui_json = {
         "value": 2.0,
     },
     "reference_model_object": {
-        "default": "",
+        "default": None,
         "group": "Models",
         "enabled": True,
         "visible": False,
@@ -650,10 +704,10 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
         ],
-        "value": "",
+        "value": None,
     },
     "reference_inclination_object": {
-        "default": "",
+        "default": None,
         "group": "Models",
         "enabled": True,
         "visible": False,
@@ -666,10 +720,11 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
         ],
-        "value": "",
+        "value": None,
     },
     "reference_declination_object": {
         "enabled": True,
+        "default": None,
         "group": "Models",
         "visible": False,
         "dependency": "forward_only",
@@ -681,7 +736,7 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
         ],
-        "value": "",
+        "value": None,
     },
     "reference_model": {
         "association": "Cell",
@@ -695,7 +750,7 @@ default_ui_json = {
         "dependencyType": "hide",
         "label": "reference model value",
         "parent": "reference_model_object",
-        "property": "",
+        "property": None,
         "value": 0.0,
     },
     "reference_inclination": {
@@ -710,7 +765,7 @@ default_ui_json = {
         "dependencyType": "hide",
         "label": "reference inclination value",
         "parent": "reference_inclination_object",
-        "property": "",
+        "property": None,
         "value": 0.0,
     },
     "reference_declination": {
@@ -725,7 +780,7 @@ default_ui_json = {
         "dependencyType": "hide",
         "label": "reference declination value",
         "parent": "reference_declination_object",
-        "property": "",
+        "property": None,
         "value": 0.0,
     },
     "gradient_type": {
@@ -781,13 +836,6 @@ default_ui_json = {
         "label": "set RAM limit",
         "value": 2,
     },
-    "inversion_type": {
-        "default": "mvi",
-        "visible": False,
-        "enabled": False,
-        "label": "inversion Type",
-        "value": "mvi",
-    },
     "workspace": {
         "default": None,
         "visible": False,
@@ -818,108 +866,108 @@ default_ui_json = {
         "label": "no data value",
         "value": 0,
     },
-    "monitoring_directory": "",
-    "workspace_geoh5": "",
-    "geoh5": "",
-}
-
-defaults = {
-    "inversion_type": None,
-    "workspace": None,
-    "out_group": None,
-    "data": None,
-    "mesh": None,
-    "topography": None,
-    "inversion_style": "voxel",
-    "forward_only": False,
-    "inducing_field_aid": None,
-    "core_cell_size": None,
-    "octree_levels_topo": [0, 1],
-    "octree_levels_obs": [5, 5],
-    "octree_levels_padding": [2, 2],
-    "depth_core": None,
-    "max_distance": np.inf,
-    "padding_distance": [[0, 0]] * 3,
-    "chi_factor": 1,
-    "max_iterations": 10,
-    "max_cg_iterations": 30,
-    "max_global_iterations": 100,
-    "n_cpu": None,
-    "max_ram": 2,
-    "initial_beta": None,
-    "initial_beta_ratio": 1e2,
-    "tol_cg": 1e-4,
-    "ignore_values": None,
-    "no_data_value": 0,
-    "resolution": 0,
-    "window": None,
-    "alphas": [1] * 12,
-    "reference_model": None,
-    "reference_inclination": None,
-    "reference_declination": None,
-    "starting_model": None,
-    "starting_inclination": None,
-    "starting_declination": None,
-    "model_norms": [2] * 4,
-    "detrend": None,
-    "new_uncert": None,
-    "output_geoh5": None,
-    "receivers_offset": None,
-    "gradient_type": "total",
-    "lower_bound": -np.inf,
-    "upper_bound": np.inf,
-    "max_chunk_size": 128,
-    "chunk_by_rows": False,
-    "output_tile_files": False,
-    "parallelized": True,
+    "monitoring_directory": None,
+    "workspace_geoh5": None,
+    "geoh5": None,
 }
 
 
 validations = {
     "inversion_type": {
+        "types": [str],
         "values": ["gravity", "magnetics", "mvi", "mvic"],
-        "types": [str],
     },
-    "data": {
-        "types": [dict],
-        "reqs": [("workspace",)],
-        "name": {
-            "types": [str],
-        },
-        "channels": {
-            "types": [dict],
-            "tmi": {
-                "types": [dict],
-                "name": {
-                    "types": [str],
-                },
-                "uncertainties": {
-                    "types": [int, float],
-                    "shapes": (2,),
-                },
-                "offsets": {
-                    "types": [int, float],
-                    "shapes": (3,),
-                },
-            },
-        },
+    "forward_only": {
+        "types": [bool],
     },
-    "out_group": {
-        "types": [str],
-    },
-    "workspace": {
-        "types": [str],
-    },
-    "inversion_style": {
-        "values": ["voxel"],
-        "types": [str],
-    },
-    "forward_only": {"types": [bool], "reqs": [(True, "reference_model")]},
-    "inducing_field_aid": {
+    "inducing_field_strength": {
         "types": [int, float],
-        "shapes": (3,),
     },
-    "core_cell_size": {
+    "inducing_field_inclination": {
+        "types": [int, float],
+    },
+    "inducing_field_declination": {
+        "types": [int, float],
+    },
+    "topography_object": {
+        "types": [str],
+    },
+    "topography": {"types": [str, int, float], "reqs": [("topography_object")]},
+    "data_object": {
+        "types": [str],
+    },
+    "tmi_channel": {"types": [str], "reqs": [("data_object")]},
+    "tmi_uncertainty": {
+        "types": [str, int, float],
+    },
+    "starting_model_object": {
+        "types": [str],
+    },
+    "starting_inclination_object": {
+        "types": [str],
+    },
+    "starting_declination_object": {
+        "types": [str],
+    },
+    "starting_model": {
+        "types": [str, int, float],
+    },
+    "starting_inclination": {
+        "types": [str, int, float],
+    },
+    "starting_declination": {
+        "types": [str, int, float],
+    },
+    "tile_spatial": {
+        "types": [str, int, float],
+    },
+    "receivers_radar_drape": {"types": [str], "reqs": [("data_object")]},
+    "receivers_offset_x": {
+        "types": [int, float],
+    },
+    "receivers_offset_y": {
+        "types": [int, float],
+    },
+    "receivers_offset_z": {
+        "types": [int, float],
+    },
+    "gps_receivers_offset": {
+        "types": [str],
+    },
+    "ignore_values": {
+        "types": [str],
+    },
+    "resolution": {
+        "types": [int, float],
+    },
+    "detrend_order": {
+        "types": [int],
+        "values": [0, 1, 2],
+    },
+    "detrend_type": {
+        "types": [str],
+        "values": ["all", "corners"],
+    },
+    "max_chunk_size": {"types": [int, float]},
+    "chunk_by_rows": {
+        "types": [bool],
+    },
+    "output_tile_files": {
+        "types": [bool],
+    },
+    "mesh": {
+        "types": [str],
+    },
+    "mesh_from_params": {
+        "types": [bool],
+    },
+    "core_cell_size_x": {
+        "types": [int, float],
+    },
+    "core_cell_size_y": {
+        "types": [int, float],
+    },
+    "core_cell_size_z": {
         "types": [int, float],
     },
     "octree_levels_topo": {
@@ -932,17 +980,42 @@ validations = {
         "types": [int, float],
     },
     "depth_core": {
-        "types": [dict],
-        "value": {
-            "types": [int, float],
-        },
+        "types": [int, float],
+        "reqs": [(True, "mesh_from_params")],
     },
     "max_distance": {
         "types": [int, float],
     },
-    "padding_distance": {
+    "padding_distance_x": {
         "types": [int, float],
-        "shapes": (3, 2),
+    },
+    "padding_distance_y": {
+        "types": [int, float],
+    },
+    "padding_distance_z": {
+        "types": [int, float],
+    },
+    "window_center_x": {
+        "types": [int, float],
+    },
+    "window_center_y": {
+        "types": [int, float],
+    },
+    "window_center_z": {
+        "types": [int, float],
+    },
+    "window_width": {
+        "types": [int, float],
+    },
+    "window_height": {
+        "types": [int, float],
+    },
+    "window_azimuth": {
+        "types": [int, float],
+    },
+    "inversion_style": {
+        "types": [str],
+        "values": ["voxel"],
     },
     "chi_factor": {
         "types": [int, float],
@@ -956,145 +1029,96 @@ validations = {
     "max_global_iterations": {
         "types": [int, float],
     },
-    "n_cpu": {
-        "types": [int, float],
-    },
-    "max_ram": {
-        "types": [int, float],
-    },
     "initial_beta": {
         "types": [int, float],
     },
     "initial_beta_ratio": {
         "types": [float],
     },
-    "tol_cg": {
+    "tol_cg": {"types": [int, float]},
+    "alpha_s": {
         "types": [int, float],
     },
-    "ignore_values": {
+    "alpha_x": {
+        "types": [int, float],
+    },
+    "alpha_y": {
+        "types": [int, float],
+    },
+    "alpha_z": {
+        "types": [int, float],
+    },
+    "smallness_norm": {
+        "types": [int, float],
+    },
+    "x_norm": {
+        "types": [int, float],
+    },
+    "y_norm": {
+        "types": [int, float],
+    },
+    "z_norm": {
+        "types": [int, float],
+    },
+    "reference_model_object": {
         "types": [str],
     },
-    "no_data_value": {
-        "types": [int, float],
+    "reference_inclination_object": {
+        "types": [str],
     },
-    "resolution": {
-        "types": [int, float],
-    },
-    "window": {
-        "types": [dict],
-        "center_x": {
-            "types": [int, float],
-        },
-        "center_y": {
-            "types": [int, float],
-        },
-        "width": {
-            "types": [int, float],
-        },
-        "height": {
-            "types": [int, float],
-        },
-        "azimuth": {
-            "types": [int, float],
-        },
-        "center": {
-            "types": [int, float],
-        },
-        "size": {
-            "types": [int, float],
-        },
-    },
-    "alphas": {
-        "types": [int, float],
+    "reference_declination_object": {
+        "types": [str],
     },
     "reference_model": {
         "types": [str, int, float],
+        "reqs": [("reference_model_object")],
     },
     "reference_inclination": {
         "types": [str, int, float],
+        "reqs": [("reference_inclination_object")],
     },
     "reference_declination": {
         "types": [str, int, float],
+        "reqs": [("reference_declination_object")],
     },
-    "starting_model": {
-        "types": [str, int, float],
-    },
-    "starting_inclination": {
-        "types": [str, int, float],
-    },
-    "starting_declination": {
-        "types": [str, int, float],
-    },
-    "model_norms": {
-        "types": [int, float],
-    },
-    "topography": {
-        "types": [dict],
-        "GA_object": {
-            "types": [dict],
-            "name": {
-                "types": [str],
-            },
-            "data": {
-                "types": [str],
-            },
-        },
-        "constant": {
-            "types": [int, float],
-        },
-        "draped": {
-            "types": [int, float],
-        },
-        "file": {
-            "types": [str],
-        },
-    },
-    "detrend": {
-        "types": [dict],
-        "all": {
-            "types": [int, float],
-        },
-        "corners": {
-            "types": [int, float],
-        },
-    },
-    "new_uncert": {"types": [int, float], "shapes": (2,)},
-    "mesh": {
+    "gradient_type": {
         "types": [str],
+        "values": ["total", "components"],
     },
-    "output_geoh5": {
-        "types": [str],
-    },
-    "receivers_offset": {
-        "types": [dict],
-        "constant": {
-            "types": [int, float],
-        },
-        "constant_drape": {
-            "types": [int, float],
-        },
-        "radar_drape": {
-            "types": [int, float, str],
-            "shapes": (4,),
-        },
-    },
-    "gradient_type": {"values": ["total", "components"], "types": [str]},
     "lower_bound": {
         "types": [int, float],
     },
     "upper_bound": {
         "types": [int, float],
     },
-    "max_chunk_size": {
-        "types": [int, float],
-    },
-    "chunk_by_rows": {
-        "types": [bool],
-    },
-    "output_tile_files": {
-        "types": [bool],
-    },
     "parallelized": {
         "types": [bool],
+    },
+    "n_cpu": {
+        "types": [int, float],
+        "reqs": [(True, "parallelized")],
+    },
+    "max_ram": {
+        "types": [int, float],
+        "reqs": [(True, "parallelized")],
+    },
+    "workspace": {
+        "types": [str],
+    },
+    "output_geoh5": {
+        "types": [str],
+    },
+    "out_group": {"types": [str]},
+    "no_data_value": {
+        "types": [int, float],
+    },
+    "monitoring_directory": {
+        "types": [str],
+    },
+    "workspace_geoh5": {
+        "types": [str],
+    },
+    "geoh5": {
+        "types": [str],
     },
 }
