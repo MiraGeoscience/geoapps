@@ -330,7 +330,7 @@ class BaseApplication:
                 else:
                     out_dict[key] = value
 
-        file = f"{path.join(self.working_directory, file_name)}.json"
+        file = f"{path.join(self.working_directory, file_name)}.ui.json"
         with open(file, "w") as f:
             json.dump(out_dict, f, indent=4)
 
