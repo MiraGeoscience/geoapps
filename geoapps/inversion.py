@@ -1250,7 +1250,7 @@ class InversionApp(PlotSelection2D):
         input_dict = {
             "out_group": self.inversion_parameters.output_name.value,
             "workspace": os.path.abspath(self.h5file),
-            "output_geoh5": os.path.abspath(self.h5file),
+            "save_to_geoh5": os.path.abspath(self.h5file),
             "mesh": "Mesh",
         }
         if self.system.value in ["Gravity", "MVI", "Magnetics"]:
@@ -1329,10 +1329,9 @@ class InversionApp(PlotSelection2D):
                 }
             }
         else:
-            input_dict[
-                "reference_model"
-            ] = self.inversion_parameters.reference_model.value.value
-
+            input_dict["reference_model"] = {
+                ref_type: self.inversion_parameters.reference_model.value.value
+            }
         start_type = self.inversion_parameters.starting_model.options.value.lower()
 
         if start_type == "model":
@@ -1342,9 +1341,9 @@ class InversionApp(PlotSelection2D):
                 }
             }
         else:
-            input_dict[
-                "starting_model"
-            ] = self.inversion_parameters.starting_model.value.value
+            input_dict["starting_model"] = {
+                start_type: self.inversion_parameters.starting_model.value.value
+            }
 
         if self.inversion_parameters.susceptibility_model.options.value != "None":
             susc_type = (
@@ -1380,6 +1379,7 @@ class InversionApp(PlotSelection2D):
             )
 
         input_dict["data"] = {}
+        input_dict["data"]["type"] = "GA_object"
         input_dict["data"]["name"] = self.objects.value
 
         if hasattr(self.data_channel_choices, "data_channel_options"):
