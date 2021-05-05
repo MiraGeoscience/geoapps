@@ -6,13 +6,16 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
+import sys
 
+from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, HBox, IntText, Label, Layout, VBox, Widget
+from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 
 from geoapps.base import BaseApplication
 from geoapps.selection import ObjectDataSelection
+from geoapps.utils.utils import load_json_params, treemesh_2_octree
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -171,8 +174,13 @@ class OctreeMesh(ObjectDataSelection):
 
     def trigger_click(self, _):
 
-        file = self.save_json_params(self.ga_group_name.value)
-        os.system(self.default_ui["executable"] + file)
+        file = self.save_json_params(self.ga_group_name.value, self.default_ui.copy())
+        os.system(
+            "start cmd.exe @cmd /k python -m "
+            + self.default_ui["run_command"]
+            + " "
+            + file
+        )
 
     def add_refinement_widget(self, params: dict):
         """
@@ -189,9 +197,7 @@ class OctreeMesh(ObjectDataSelection):
                     )
                 ]
             elif "Level" in param["label"]:
-                widget_list += [
-                    IntText(description=param["label"], value=param["value"])
-                ]
+                widget_list += [Text(description=param["label"], value=param["value"])]
             elif "Type" in param["label"]:
                 widget_list += [
                     Dropdown(
@@ -283,23 +289,11 @@ class OctreeMesh(ObjectDataSelection):
                 ],
                 "value": "Data_FEM_pseudo3D",
             },
-            "Octree Refinement A Level 1": {
+            "Octree Refinement A": {
                 "enabled": True,
                 "group": "Octree Refinement A",
-                "label": "Level 1",
-                "value": 2,
-            },
-            "Octree Refinement A Level 2": {
-                "enabled": True,
-                "group": "Octree Refinement A",
-                "label": "Level 2",
-                "value": 2,
-            },
-            "Octree Refinement A Level 3": {
-                "enabled": True,
-                "group": "Octree Refinement A",
-                "label": "Level 3",
-                "value": 2,
+                "label": "Cells/Levels",
+                "value": "4,4,4",
             },
             "Octree Refinement A Type": {
                 "choiceList": ["surface", "radial"],
@@ -325,23 +319,11 @@ class OctreeMesh(ObjectDataSelection):
                 ],
                 "value": "Topography",
             },
-            "Octree Refinement B Level 1": {
+            "Octree Refinement B": {
                 "enabled": True,
                 "group": "Octree Refinement B",
-                "label": "Level 1",
-                "value": 0,
-            },
-            "Octree Refinement B Level 2": {
-                "enabled": True,
-                "group": "Octree Refinement B",
-                "label": "Level 2",
-                "value": 0,
-            },
-            "Octree Refinement B Level 3": {
-                "enabled": True,
-                "group": "Octree Refinement B",
-                "label": "Level 3",
-                "value": 2,
+                "label": "Cells/Levels",
+                "value": "0,0,2",
             },
             "Octree Refinement B Type": {
                 "choiceList": ["surface", "radial"],
@@ -356,8 +338,63 @@ class OctreeMesh(ObjectDataSelection):
                 "label": "Max Distance (m)",
                 "value": 1000.0,
             },
-            "executable": (
-                "start cmd.exe @cmd /k " + 'python -m geoapps.utils.create_octree "'
-            ),
-            "monitoring_directory": "../../assets/Temp",
+            "run_command": ("geoapps.create.octree_mesh"),
+            "monitoring_directory": "",
         }
+
+
+def create_octree(**kwargs):
+    """
+    Create an octree mesh from input values
+    """
+    workspace = Workspace(kwargs["workspace_geoh5"])
+
+    obj = workspace.get_entity(kwargs["objects"])
+
+    if not any(obj):
+        return
+
+    p_d = [
+        [kwargs["horizontal_padding"], kwargs["horizontal_padding"]],
+        [kwargs["horizontal_padding"], kwargs["horizontal_padding"]],
+        [kwargs["vertical_padding"], kwargs["vertical_padding"]],
+    ]
+
+    print("Setting the mesh extent")
+    treemesh = mesh_builder_xyz(
+        obj[0].vertices,
+        [kwargs["u_cell_size"], kwargs["v_cell_size"], kwargs["w_cell_size"]],
+        padding_distance=p_d,
+        mesh_type="tree",
+        depth_core=kwargs["depth_core"],
+    )
+
+    labels = ["A", "B"]
+    for label in labels:
+        print(f"Applying refinement {label}")
+        entity = workspace.get_entity(kwargs[f"refinement_{label}"])
+        if any(entity):
+            treemesh = refine_tree_xyz(
+                treemesh,
+                entity[0].vertices,
+                method=kwargs[f"method_{label}"],
+                octree_levels=[
+                    kwargs[f"octree_{label}1"],
+                    kwargs[f"octree_{label}2"],
+                    kwargs[f"octree_{label}3"],
+                ],
+                max_distance=kwargs[f"max_distance_{label}"],
+                finalize=False,
+            )
+
+    print("Finalizing...")
+    treemesh.finalize()
+    octree = treemesh_2_octree(workspace, treemesh, name=kwargs[f"ga_group_name"])
+    print(f"Octree mesh '{octree.name}' completed and exported to {workspace.h5file}")
+    return octree
+
+
+if __name__ == "__main__":
+
+    input_params = load_json_params(sys.argv[1])
+    create_octree(**input_params)
