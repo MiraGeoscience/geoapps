@@ -633,9 +633,7 @@ def plot_convergence_curve(h5file):
     """"""
     workspace = Workspace(h5file)
     names = [
-        group.name
-        for group in workspace.all_groups()
-        if isinstance(group, ContainerGroup)
+        group.name for group in workspace.groups if isinstance(group, ContainerGroup)
     ]
     objects = widgets.Dropdown(
         options=names,

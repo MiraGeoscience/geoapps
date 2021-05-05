@@ -222,7 +222,7 @@ class CoordinateTransformation(BaseApplication):
 
             self.objects.options = [""] + [
                 obj.name
-                for obj in self._workspace.all_objects()
+                for obj in self._workspace.objects
                 if isinstance(obj, self.object_types)
             ]
 
