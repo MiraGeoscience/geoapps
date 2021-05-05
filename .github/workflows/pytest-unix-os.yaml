@@ -7,6 +7,12 @@ on:
       - release/**
       - feature/**
       - hotfix/**
+  pull_request_target:
+    branches:
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
   push:
     branches:
       - develop
@@ -19,10 +25,8 @@ jobs:
   pytest:
     name: pytest
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python_ver: [3.7, 3.8]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -30,7 +34,7 @@ jobs:
       - name: Set up Python 3.7
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python_ver }}
+          python-version: 3.7
       - name: Get full Python version
         id: full-python-version
         shell: bash
