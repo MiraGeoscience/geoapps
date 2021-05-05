@@ -7,6 +7,7 @@
 
 import os
 import sys
+import uuid
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, Octree, Points, Surface
@@ -101,6 +102,10 @@ class OctreeMesh(ObjectDataSelection):
                     if isinstance(getattr(self, key, None), Widget) and not isinstance(
                         value, Widget
                     ):
+                        try:
+                            value = uuid.UUID(value)
+                        except:
+                            pass
                         setattr(getattr(self, key), "value", value)
                         if hasattr(getattr(self, key), "style"):
                             getattr(self, key).style = {"description_width": "initial"}
@@ -189,11 +194,16 @@ class OctreeMesh(ObjectDataSelection):
         widget_list = [Label(params[0]["group"])]
         for param in params:
             if "Object" in param["label"]:
+                try:
+                    value = uuid.UUID(param["value"])
+                except ValueError:
+                    value = None
+
                 widget_list += [
                     Dropdown(
                         description=param["label"],
                         options=self.objects.options,
-                        value=param["value"],
+                        value=value,
                     )
                 ]
             elif "Level" in param["label"]:
@@ -228,7 +238,7 @@ class OctreeMesh(ObjectDataSelection):
                     "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
                     "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
                 ],
-                "value": "Data_FEM_pseudo3D",
+                "value": "{656acd40-25de-4865-814c-cb700f6ee51a}",
             },
             "u_cell_size": {
                 "enabled": True,
@@ -287,9 +297,9 @@ class OctreeMesh(ObjectDataSelection):
                     "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
                     "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
                 ],
-                "value": "Data_FEM_pseudo3D",
+                "value": "{656acd40-25de-4865-814c-cb700f6ee51a}",
             },
-            "Octree Refinement A": {
+            "Octree Refinement A Level": {
                 "enabled": True,
                 "group": "Octree Refinement A",
                 "label": "Cells/Levels",
@@ -317,9 +327,9 @@ class OctreeMesh(ObjectDataSelection):
                     "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
                     "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
                 ],
-                "value": "Topography",
+                "value": "",
             },
-            "Octree Refinement B": {
+            "Octree Refinement B Level": {
                 "enabled": True,
                 "group": "Octree Refinement B",
                 "label": "Cells/Levels",
@@ -372,7 +382,7 @@ def create_octree(**kwargs):
     labels = ["A", "B"]
     for label in labels:
         print(f"Applying refinement {label}")
-        entity = workspace.get_entity(kwargs[f"refinement_{label}"])
+        entity = workspace.get_entity(kwargs[f"Octree Refinement {label}"])
         if any(entity):
             treemesh = refine_tree_xyz(
                 treemesh,
