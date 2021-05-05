@@ -7,6 +7,7 @@
 
 import json
 import time
+import uuid
 from os import mkdir, path
 from shutil import copyfile, move
 
@@ -324,6 +325,8 @@ class BaseApplication:
                 value = getattr(self, key)
                 if hasattr(value, "value"):
                     value = value.value
+                    if isinstance(value, uuid.UUID):
+                        value = str(value)
 
                 if isinstance(out_dict[key], dict):
                     out_dict[key]["value"] = value
