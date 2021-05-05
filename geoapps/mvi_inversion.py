@@ -119,6 +119,7 @@ class InversionDriver:
             if mesh.rotation:
                 origin = [mesh.origin[k] for k in ["x", "y", "z"]]
                 angle = mesh.rotation[0]
+                window["azimuth"] = -angle
             else:
                 origin = window["center"]
                 angle = window["azimuth"]
@@ -132,7 +133,7 @@ class InversionDriver:
         # Define the active cell set
         self.activeCells = active_from_xyz(self.mesh, self.topo, grid_reference="N")
         self.nC = int(self.activeCells.sum())
-        print(f"In MVI {self.nC}")
+
         # construct a simpeg Survey object
         self.survey, normalization = self.get_survey(window)
 
@@ -218,7 +219,6 @@ class InversionDriver:
             sorting.append(local_survey.ind)
 
             # Create the local misfit
-            print("The meshes", local_mesh.nC, self.mesh.nC)
             activeCells_t = np.ones(local_mesh.nC, dtype="bool")
             tile_map = Maps.Tile(
                 (self.mesh, self.activeCells),
@@ -226,7 +226,7 @@ class InversionDriver:
                 nBlock=n_blocks,
             )
             activeCells_t = tile_map.activeLocal
-            print(activeCells_t.sum())
+
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
@@ -463,7 +463,7 @@ class InversionDriver:
             )
         )
 
-        if self.params.initial_beta_ratio is not None:
+        if self.params.initial_beta is None:
             directiveList.append(
                 Directives.BetaEstimate_ByEig(
                     beta0_ratio=self.params.initial_beta_ratio
@@ -733,7 +733,7 @@ class InversionDriver:
         survey.std = uncertainties[window_ind, :].ravel()
         survey.components = components
 
-        if self.params.detrend_order is not None:
+        if self.params.detrend_data:
 
             data_trend, _ = matutils.calculate_2D_trend(
                 survey.rxLoc,

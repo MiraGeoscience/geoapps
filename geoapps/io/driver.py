@@ -92,16 +92,14 @@ class InputFile:
 
     def _ui_2_py(self, d):
 
-        excl = [
-            "out_group",
-            "detrend_order",
-            "detrend_type",
-            "initial_beta",
-            "initial_beta_ratio",
-        ]
         for param, fields in d.items():
 
-            if param in ["monitoring_directory", "workspace_geoh5", "geoh5"]:
+            if param in [
+                "run_command",
+                "monitoring_directory",
+                "workspace_geoh5",
+                "geoh5",
+            ]:
                 self.data[param] = fields
 
             if param == "inversion_type":
@@ -112,17 +110,11 @@ class InputFile:
                 continue
 
             if "enabled" in fields.keys():
-                if fields["enabled"] == False:
-                    self.data[param] = (
-                        None if param in excl else default_ui_json[param]["default"]
-                    )
+                if not fields["enabled"]:
                     continue
 
             if "visible" in fields.keys():
-                if fields["visible"] == False:
-                    self.data[param] = (
-                        None if param in excl else default_ui_json[param]["default"]
-                    )
+                if not fields["visible"]:
                     continue
 
             if "isValue" in fields.keys():
@@ -264,6 +256,7 @@ class Params:
         self.gps_receivers_offset = None
         self.ignore_values = None
         self.resolution = None
+        self.detrend_data = None
         self.detrend_order = None
         self.detrend_type = None
         self.max_chunk_size = None
@@ -286,7 +279,6 @@ class Params:
         self.window_center_y = None
         self.window_width = None
         self.window_height = None
-        self.window_azimuth = None
         self.inversion_style = None
         self.chi_factor = None
         self.max_iterations = None
@@ -394,7 +386,6 @@ class Params:
             "center_y": self.window_center_y,
             "width": self.window_width,
             "height": self.window_height,
-            "azimuth": self.window_azimuth,
             "center": [self.window_center_x, self.window_center_y],
             "size": [self.window_width, self.window_height],
         }
@@ -761,6 +752,19 @@ class Params:
         self._resolution = val
 
     @property
+    def detrend_data(self):
+        return self._detrend_data
+
+    @detrend_data.setter
+    def detrend_data(self, val):
+        if val is None:
+            self._detrend_data = val
+            return
+        p = "detrend_data"
+        self.validator.validate(p, val, validations[p])
+        self._detrend_data = val
+
+    @property
     def detrend_order(self):
         return self._detrend_order
 
@@ -1045,19 +1049,6 @@ class Params:
         p = "window_height"
         self.validator.validate(p, val, validations[p])
         self._window_height = val
-
-    @property
-    def window_azimuth(self):
-        return self._window_azimuth
-
-    @window_azimuth.setter
-    def window_azimuth(self, val):
-        if val is None:
-            self._window_azimuth = val
-            return
-        p = "window_azimuth"
-        self.validator.validate(p, val, validations[p])
-        self._window_azimuth = val
 
     @property
     def inversion_style(self):
