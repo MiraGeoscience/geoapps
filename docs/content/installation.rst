@@ -8,7 +8,7 @@ Whether you are developer or an end-user, this page will help you get started wi
 Installation
 ------------
 
-- Make sure that you have `Anaconda 3.6 <https://www.anaconda.com/download/>`_ or higher installed.
+- Make sure that you have `Anaconda 3.7 <https://www.anaconda.com/download/>`_ or higher installed.
 
 	.. figure:: ../images/Anaconda_Install.png
 	    :align: center
