@@ -17,7 +17,7 @@ on:
 
 jobs:
   pytest:
-    name: pytest
+    name: pytest (Ubuntu)
     strategy:
       fail-fast: false
       matrix:
