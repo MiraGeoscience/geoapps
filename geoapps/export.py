@@ -37,7 +37,7 @@ class Export(ObjectDataSelection):
     defaults = {
         "select_multiple": True,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Gravity_Magnetics_drape60m",
+        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": ["Airborne_Gxx"],
         "epsg_code": "EPSG:26914",
         "file_type": "geotiff",

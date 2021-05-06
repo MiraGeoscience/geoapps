@@ -24,7 +24,7 @@ class PlotSelection2D(ObjectDataSelection):
 
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Gravity_Magnetics_drape60m",
+        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": "Airborne_TMI",
     }
 

@@ -29,7 +29,7 @@ class IsoSurface(ObjectDataSelection):
         "add_groups": False,
         "select_multiple": False,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Inversion_VTEM_Model",
+        "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         "data": "Iteration_7_model",
         "max_distance": 500,
         "resolution": 50,
