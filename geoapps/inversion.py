@@ -632,9 +632,7 @@ def plot_convergence_curve(h5file):
     """"""
     workspace = Workspace(h5file)
     names = [
-        group.name
-        for group in workspace.all_groups()
-        if isinstance(group, ContainerGroup)
+        group.name for group in workspace.groups if isinstance(group, ContainerGroup)
     ]
     objects = widgets.Dropdown(
         options=names,
@@ -1048,7 +1046,11 @@ class InversionApp(PlotSelection2D):
                 data_widget.children[0].value = True
                 if self.system.value in ["MVI", "Magnetics", "Gravity"]:
                     values = entity.get_data(channel.value)[0].values
-                    if values is not None and isinstance(values[0], float):
+                    if values is not None and values.dtype in [
+                        np.float32,
+                        np.float64,
+                        np.int32,
+                    ]:
                         data_widget.children[
                             3
                         ].value = f"0, {np.percentile(np.abs(values[np.abs(values) > 2e-18]), 5):.2f}"
@@ -1440,7 +1442,7 @@ class InversionApp(PlotSelection2D):
                     }
                 }
         elif self.topography.options.value == "Relative to Sensor":
-            input_dict["topography"] = {"drapped": self.topography.offset.value}
+            input_dict["topography"] = {"draped": self.topography.offset.value}
         else:
             input_dict["topography"] = {"constant": self.topography.constant.value}
 
