@@ -22,9 +22,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python_ver: [3.7, 3.8]
+        python_ver: [3.7, 3.8, 3.9]
         exclude:
-          # Conda environment fails with Python 3.8 on macOS
+          # Conda environment fails with Python <3.9 on macOS
+          - os: macos-latest
+            python_ver: 3.7
           - os: macos-latest
             python_ver: 3.8
     runs-on: ${{ matrix.os }}
