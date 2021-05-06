@@ -26,4 +26,4 @@ dependencies:
   - empymod
   - pip:
     - ipyfilechooser
-    - geoh5py
+    - geoh5py==0.1.2
