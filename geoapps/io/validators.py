@@ -135,7 +135,7 @@ class InputValidator:
     def _validate_parameter_val(self, param: str, value: Any, vvals: Any) -> None:
         """ Raise ValueError if parameter value is invalid.  """
         if value not in vvals:
-            msg = self._param_validation_msg(param, "value", vvals)
+            msg = self._param_validation_msg(param, value, "value", vvals)
             raise ValueError(msg)
 
     def _validate_parameter_type(self, param: str, value: type, vtypes: Any) -> None:
@@ -144,11 +144,11 @@ class InputValidator:
             value = np.array(value).flatten().tolist()
             if not all(type(v) in vtypes for v in value):
                 tnames = [t.__name__ for t in vtypes]
-                msg = self._param_validation_msg(param, "type", tnames)
+                msg = self._param_validation_msg(param, value, "type", tnames)
                 raise TypeError(msg)
         elif type(value) not in vtypes:
             tnames = [t.__name__ for t in vtypes]
-            msg = self._param_validation_msg(param, "type", tnames)
+            msg = self._param_validation_msg(param, value, "type", tnames)
             raise TypeError(msg)
 
     def _validate_parameter_shape(
@@ -156,7 +156,7 @@ class InputValidator:
     ) -> None:
         """ Raise ValueError if parameter shape is invalid. """
         if np.array(value).shape != vshape:
-            msg = self._param_validation_msg(param, "shape", vshape)
+            msg = self._param_validation_msg(param, value, "shape", vshape)
             raise ValueError(msg)
 
     def _validate_parameter_reqs(
@@ -165,15 +165,15 @@ class InputValidator:
         """ Raise a KeyError if parameter requirement is not met. """
         if len(vreqs) > 1:
             if (value == vreqs[0]) & (vreqs[1] not in input_keys):
-                msg = self._param_validation_msg(param, "reqs", vreqs)
+                msg = self._param_validation_msg(param, value, "reqs", vreqs)
                 raise KeyError(msg)
         else:
             if vreqs[0] not in input_keys:
-                msg = self._param_validation_msg(param, "reqs", vreqs)
+                msg = self._param_validation_msg(param, value, "reqs", vreqs)
                 raise KeyError(msg)
 
     def _param_validation_msg(
-        self, param: str, validation_type: str, validations: Any
+        self, param: str, value: Any, validation_type: str, validations: Any
     ) -> str:
         """Generate an error message for parameter validation.
 
@@ -189,7 +189,7 @@ class InputValidator:
         """
 
         if validation_type == "shape":
-            msg = f"Invalid {param} {validation_type}. Must be: {validations}."
+            msg = f"Invalid {param} {validation_type}: {value}. Must be: {validations}."
 
         elif validation_type == "reqs":
             if len(validations) > 1:
@@ -205,9 +205,12 @@ class InputValidator:
 
         else:
             if self._isiterable(validations, checklen=True):
-                msg = f"Invalid {param} {validation_type}. Must be one of: {*validations,}."
+                msg = (
+                    f"Invalid {param} {validation_type}: {value}. "
+                    f"Must be one of: {', '.join(str(k) for k in validations)}."
+                )
             else:
-                msg = f"Invalid {param} {validation_type}. Must be: {validations[0]}."
+                msg = f"Invalid {param} {validation_type}: {value}. Must be: {validations[0]}."
 
         return msg
 
