@@ -2,27 +2,28 @@ name: geoapps
 
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - python
   - pip
-  - simpeg=0.13.1
   - discretize
+  - simpeg=0.13
+  - numpy
+  - scipy
   - matplotlib
   - ipywidgets
   - ipykernel
-  - geopandas
   - scikit-image
   - scikit-learn
   - zarr
   - fsspec
   - xarray
   - dask
-  - h5py=3.1.0
+  - gdal
+  - fiona
+  - h5py
+  - plotly
+  - requests
+  - empymod
   - pip:
-    - empymod==2.0.5
-    - geoh5py==0.1.1
-    - plotly==4.9.0
-    - ipyfilechooser==0.4.2
-    - requests==2.25.1
-    - ezdxf==0.15.2
+    - ipyfilechooser
+    - geoh5py==0.1.2
