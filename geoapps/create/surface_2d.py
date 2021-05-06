@@ -28,7 +28,7 @@ class Surface2D(ObjectDataSelection):
         "select_multiple": True,
         "object_types": Curve,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "CDI_VTEM_model",
+        "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
         "data": ["COND"],
         "max_distance": 250,
         "elevations": {"data": "ELEV"},

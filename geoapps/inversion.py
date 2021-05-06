@@ -697,7 +697,7 @@ class InversionApp(PlotSelection2D):
         "add_groups": True,
         "h5file": "../../assets/FlinFlon.geoh5",
         "inducing_field": "60000, 79, 11",
-        "objects": "Gravity_Magnetics_drape60m",
+        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": ["Airborne_TMI"],
         "resolution": 50,
         "window": {
@@ -708,7 +708,10 @@ class InversionApp(PlotSelection2D):
             "azimuth": -20,
         },
         "inversion_parameters": {"norms": "0, 2, 2, 2", "max_iterations": 25},
-        "topography": {"objects": "Topography", "data": "elevation"},
+        "topography": {
+            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+            "data": "elevation",
+        },
         "sensor": {"offset": "0, 0, 60", "options": "topo + radar + (dx, dy, dz)"},
         "padding_distance": "1000, 1000, 1000, 1000, 0, 0",
     }
@@ -1326,7 +1329,9 @@ class InversionApp(PlotSelection2D):
         if ref_type == "model":
             input_dict["reference_model"] = {
                 ref_type: {
-                    self.inversion_parameters.reference_model.objects.value: self.inversion_parameters.reference_model.data.value
+                    str(
+                        self.inversion_parameters.reference_model.objects.value
+                    ): self.inversion_parameters.reference_model.data.value
                 }
             }
         else:
@@ -1339,7 +1344,9 @@ class InversionApp(PlotSelection2D):
         if start_type == "model":
             input_dict["starting_model"] = {
                 start_type: {
-                    self.inversion_parameters.starting_model.objects.value: self.inversion_parameters.starting_model.data.value
+                    str(
+                        self.inversion_parameters.starting_model.objects.value
+                    ): self.inversion_parameters.starting_model.data.value
                 }
             }
         else:
@@ -1355,7 +1362,9 @@ class InversionApp(PlotSelection2D):
             if susc_type == "model":
                 input_dict["susceptibility_model"] = {
                     susc_type: {
-                        self.inversion_parameters.susceptibility_model.objects.value: self.inversion_parameters.susceptibility_model.data.value
+                        str(
+                            self.inversion_parameters.susceptibility_model.objects.value
+                        ): self.inversion_parameters.susceptibility_model.data.value
                     }
                 }
             else:
@@ -1382,7 +1391,7 @@ class InversionApp(PlotSelection2D):
 
         input_dict["data"] = {}
         input_dict["data"]["type"] = "GA_object"
-        input_dict["data"]["name"] = self.objects.value
+        input_dict["data"]["name"] = str(self.objects.value)
 
         if hasattr(self.data_channel_choices, "data_channel_options"):
             channel_param = {}
@@ -1438,7 +1447,7 @@ class InversionApp(PlotSelection2D):
             else:
                 input_dict["topography"] = {
                     "GA_object": {
-                        "name": self.topography.objects.value,
+                        "name": str(self.topography.objects.value),
                         "data": self.topography.data.value,
                     }
                 }

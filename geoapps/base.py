@@ -110,6 +110,11 @@ class BaseApplication:
                     if isinstance(getattr(self, key, None), Widget) and not isinstance(
                         value, Widget
                     ):
+                        try:
+                            value = uuid.UUID(value)
+                        except (ValueError, AttributeError):
+                            pass
+
                         setattr(getattr(self, key), "value", value)
                         if hasattr(getattr(self, key), "style"):
                             getattr(self, key).style = {"description_width": "initial"}

@@ -34,7 +34,7 @@ class DataInterpolation(ObjectDataSelection):
     defaults = {
         "select_multiple": True,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Inversion_VTEM_Model",
+        "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         "data": ["Iteration_7_model"],
         "core_cell_size": "50, 50, 50",
         "depth_core": 500,
@@ -45,7 +45,7 @@ class DataInterpolation(ObjectDataSelection):
         "new_grid": "InterpGrid",
         "no_data_value": 1e-8,
         "out_mode": "To Object",
-        "out_object": "O2O_Interp_25m",
+        "out_object": "{7450be38-1327-4336-a9e4-5cff587b6715}",
         "padding_distance": "0, 0, 0, 0, 0, 0",
         "skew_angle": 0,
         "skew_factor": 1.0,

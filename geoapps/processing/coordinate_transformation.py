@@ -28,7 +28,10 @@ class CoordinateTransformation(BaseApplication):
     defaults = {
         "ga_group_name": "CoordinateTransformation",
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": ["Gravity_Magnetics_drape60m", "Data_TEM_pseudo3D"],
+        "objects": [
+            "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+            "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+        ],
         "code_in": "EPSG:26914",
         "code_out": "EPSG:4326",
     }
