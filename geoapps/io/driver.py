@@ -7,31 +7,16 @@
 
 import json
 import os
+from copy import deepcopy
 from uuid import UUID
 
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from .constants import default_ui_json, defaults, validations
+from .constants import default_ui_json, validations
 from .validators import InputValidator
 
 ### Utils ###
-
-
-def create_work_path(filepath: str) -> str:
-    """ Returns absolute path of root directory of possible relative file path. """
-    dsep = os.path.sep
-    work_path = os.path.dirname(os.path.abspath(filepath)) + dsep
-    return work_path
-
-
-def create_relative_path(filepath: str, folder: str) -> str:
-    """ Creates a relative path to folder from common path path elements in filepath. """
-    dsep = os.path.sep
-    work_path = create_work_path(filepath)
-    root = os.path.commonprefix([folder, work_path])
-    output_path = work_path + os.path.relpath(folder, root) + dsep
-    return output_path
 
 
 class InputFile:
@@ -54,7 +39,7 @@ class InputFile:
 
     def __init__(self, filepath):
         self.filepath = filepath
-        self.workpath = create_work_path(filepath)
+        self.workpath = os.path.dirname(os.path.abspath(filepath)) + os.path.sep
         self.data = {}
         self.associations = {}
         self.is_loaded = False
@@ -71,10 +56,32 @@ class InputFile:
         else:
             self._filepath = f
 
-    def write_ui_json(self):
+    def default(self):
+        for k, v in default_ui_json.items():
+            if isinstance(v, dict):
+                if "isValue" in v.keys():
+                    field = "value" if v["isValue"] else "property"
+                else:
+                    field = "value"
+                self.data[k] = v[field]
+            else:
+                self.data[k] = v
+
+    def write_ui_json(self, default=False):
+
+        out = deepcopy(default_ui_json)
+        if not default:
+            if self.is_loaded:
+                for k, v in self.data.items():
+                    if isinstance(out[k], dict):
+                        out[k]["value"] = v
+                    else:
+                        out[k] = v
+            else:
+                raise OSError("No data to write.")
 
         with open(self.filepath, "w") as f:
-            json.dump(self._stringify(default_ui_json), f, indent=4)
+            json.dump(self._stringify(out), f, indent=4)
 
     def read_ui_json(self, reformat=True):
 
@@ -90,39 +97,22 @@ class InputFile:
 
         self.is_loaded = True
 
-    def _ui_2_py(self, d):
+    def _ui_2_py(self, ui_dict):
 
-        for param, fields in d.items():
-
-            if param in [
-                "run_command",
-                "monitoring_directory",
-                "workspace_geoh5",
-                "geoh5",
-            ]:
-                self.data[param] = fields
-
-            if param == "inversion_type":
-                self.data[param] = fields["value"]
-                continue
-
-            if not isinstance(fields, dict):
-                continue
-
-            if "enabled" in fields.keys():
-                if not fields["enabled"]:
-                    continue
-
-            if "visible" in fields.keys():
-                if not fields["visible"]:
-                    continue
-
-            if "isValue" in fields.keys():
-                fkey = "value" if fields["isValue"] else "property"
+        for k, v in ui_dict.items():
+            if isinstance(v, dict):
+                field = "value"
+                if "isValue" in v.keys():
+                    field = "value" if v["isValue"] else "property"
+                if "enabled" in v.keys():
+                    if not v["enabled"]:
+                        field = "default"
+                if "visible" in v.keys():
+                    if not v["visible"]:
+                        field = "default"
+                self.data[k] = v[field]
             else:
-                fkey = "value"
-
-            self.data[param] = fields[fkey]
+                self.data[k] = v
 
     def _stringify(self, d):
         """ Convert inf, none, and list types to strings within a dictionary """
@@ -149,10 +139,10 @@ class InputFile:
 
         def s2l(k, v):  # map "[...]" to [...]
             if isinstance(v, str):
-                if v in ["inf", "-inf"]:
+                if v in ["inf", "-inf", ""]:
                     return v
                 try:
-                    return [float(n) for n in v.split(",")]
+                    return [float(n) for n in v.split(",") if n != ""]
                 except ValueError:
                     return v
             else:
@@ -199,13 +189,6 @@ class InputFile:
 
             else:
                 continue
-
-    # def load(self) -> None:
-    #     """ Loads and validates input file contents to dictionary. """
-    #     with open(self.filepath) as f:
-    #         self.data = json.load(f)
-    #         validator = InputValidator(self.data)
-    #     self.isloaded = True
 
 
 class Params:

@@ -765,20 +765,20 @@ default_ui_json = {
         "value": "total",
     },
     "lower_bound": {
-        "default": "-inf",
+        "default": -np.inf,
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "lower bound on model",
-        "value": "-inf",
+        "value": -np.inf,
     },
     "upper_bound": {
-        "default": "inf",
+        "default": np.inf,
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "upper bound on model",
-        "value": "inf",
+        "value": np.inf,
     },
     "parallelized": {
         "default": True,
@@ -841,8 +841,9 @@ default_ui_json = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "geoh5": None,
-    "run_command": "",
+    "run_command": None,
     "run_command_boolean": {
+        "default": False,
         "value": False,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",
@@ -911,7 +912,7 @@ validations = {
         "types": [int, float],
     },
     "gps_receivers_offset": {
-        "types": [str],
+        "types": [int, float],
     },
     "ignore_values": {
         "types": [str],
