@@ -12,7 +12,6 @@ import re
 
 import dask
 import dask.array as da
-import fiona
 import geoh5py
 import numpy as np
 import pandas as pd
@@ -21,10 +20,16 @@ from geoh5py.data import FloatData
 from geoh5py.groups import Group
 from geoh5py.objects import BlockModel, Grid2D, Octree, Surface
 from geoh5py.workspace import Workspace
-from osgeo import gdal
+
+try:
+    import fiona
+    from osgeo import gdal
+    from shapely.geometry import LineString, mapping
+except ModuleNotFoundError:
+    pass
+
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
-from shapely.geometry import LineString, mapping
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
