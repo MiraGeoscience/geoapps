@@ -17,13 +17,12 @@ on:
 
 jobs:
   pytest:
-    name: pytest
+    name: pytest (Ubuntu)
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        python_ver: [3.7, 3.8]
-    runs-on: ${{ matrix.os }}
+        python_ver: [3.7, 3.8, 3.9]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Cache conda
@@ -47,5 +46,6 @@ jobs:
         shell: bash -l {0}
         run: |
           conda activate geoapps
+          python --version
           conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
