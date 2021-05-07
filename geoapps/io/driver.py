@@ -7,30 +7,16 @@
 
 import json
 import os
-from typing import Any
+from copy import deepcopy
+from uuid import UUID
 
 import numpy as np
+from geoh5py.workspace import Workspace
 
-from .constants import defaults, validations
+from .constants import default_ui_json, validations
 from .validators import InputValidator
 
 ### Utils ###
-
-
-def create_work_path(filepath: str) -> str:
-    """ Returns absolute path of root directory of possible relative file path. """
-    dsep = os.path.sep
-    work_path = os.path.dirname(os.path.abspath(filepath)) + dsep
-    return work_path
-
-
-def create_relative_path(filepath: str, folder: str) -> str:
-    """ Creates a relative path to folder from common path path elements in filepath. """
-    dsep = os.path.sep
-    work_path = create_work_path(filepath)
-    root = os.path.commonprefix([folder, work_path])
-    output_path = work_path + os.path.relpath(folder, root) + dsep
-    return output_path
 
 
 class InputFile:
@@ -51,13 +37,13 @@ class InputFile:
 
     """
 
-    _valid_extensions = ["json"]
-
     def __init__(self, filepath):
         self.filepath = filepath
-        self.workpath = create_work_path(filepath)
-        self.data = None
-        self.isloaded = False
+        self.workpath = os.path.dirname(os.path.abspath(filepath)) + os.path.sep
+        self.data = {}
+        self.associations = {}
+        self.is_loaded = False
+        self.is_formatted = False
 
     @property
     def filepath(self):
@@ -65,17 +51,144 @@ class InputFile:
 
     @filepath.setter
     def filepath(self, f):
-        if f.split(".")[-1] not in self._valid_extensions:
-            raise OSError("Input file must have '.json' extension.")
+        if ".".join(f.split(".")[-2:]) != "ui.json":
+            raise OSError("Input file must have 'ui.json' extension.")
         else:
             self._filepath = f
 
-    def load(self) -> None:
-        """ Loads and validates input file contents to dictionary. """
+    def default(self):
+        for k, v in default_ui_json.items():
+            if isinstance(v, dict):
+                if "isValue" in v.keys():
+                    field = "value" if v["isValue"] else "property"
+                else:
+                    field = "value"
+                self.data[k] = v[field]
+            else:
+                self.data[k] = v
+
+    def write_ui_json(self, default=False):
+
+        out = deepcopy(default_ui_json)
+        if not default:
+            if self.is_loaded:
+                for k, v in self.data.items():
+                    if isinstance(out[k], dict):
+                        out[k]["value"] = v
+                    else:
+                        out[k] = v
+            else:
+                raise OSError("No data to write.")
+
+        with open(self.filepath, "w") as f:
+            json.dump(self._stringify(out), f, indent=4)
+
+    def read_ui_json(self, reformat=True):
+
         with open(self.filepath) as f:
-            self.data = json.load(f)
-            validator = InputValidator(self.data)
-        self.isloaded = True
+            data = self._numify(json.load(f))
+            self._set_associations(data)
+            if reformat:
+                self._ui_2_py(data)
+                self.is_formatted = True
+                validator = InputValidator(self.data)
+            else:
+                self.data = data
+
+        self.is_loaded = True
+
+    def _ui_2_py(self, ui_dict):
+
+        for k, v in ui_dict.items():
+            if isinstance(v, dict):
+                field = "value"
+                if "isValue" in v.keys():
+                    field = "value" if v["isValue"] else "property"
+                if "enabled" in v.keys():
+                    if not v["enabled"]:
+                        field = "default"
+                if "visible" in v.keys():
+                    if not v["visible"]:
+                        field = "default"
+                self.data[k] = v[field]
+            else:
+                self.data[k] = v
+
+    def _stringify(self, d):
+        """ Convert inf, none, and list types to strings within a dictionary """
+
+        # map [...] to "[...]"
+        excl = ["choiceList", "meshType"]
+        l2s = lambda k, v: str(v)[1:-1] if isinstance(v, list) & (k not in excl) else v
+        n2s = lambda k, v: "" if v is None else v  # map None to ""
+
+        def i2s(k, v):  # map np.inf to "inf"
+            if not isinstance(v, (int, float)):
+                return v
+            else:
+                return str(v) if not np.isfinite(v) else v
+
+        for k, v in d.items():
+            v = self._dict_mapper(k, v, [l2s, n2s, i2s])
+            d[k] = v
+
+        return d
+
+    def _numify(self, d):
+        """ Convert inf, none and list strings to numerical types within a dictionary """
+
+        def s2l(k, v):  # map "[...]" to [...]
+            if isinstance(v, str):
+                if v in ["inf", "-inf", ""]:
+                    return v
+                try:
+                    return [float(n) for n in v.split(",") if n != ""]
+                except ValueError:
+                    return v
+            else:
+                return v
+
+        s2n = lambda k, v: None if v == "" else v  # map "" to None
+        s2i = (
+            lambda k, v: float(v) if v in ["inf", "-inf"] else v
+        )  # map "inf" to np.inf
+        for k, v in d.items():
+            mappers = [s2n, s2i] if k == "ignore_values" else [s2l, s2n, s2i]
+            v = self._dict_mapper(k, v, mappers)
+            d[k] = v
+
+        return d
+
+    def _dict_mapper(self, key, val, string_funcs):
+        """ Recurses through nested dictionary and applies mapping funcs to all values """
+        if isinstance(val, dict):
+            for k, v in val.items():
+                val[k] = self._dict_mapper(k, v, string_funcs)
+            return val
+        else:
+            for f in string_funcs:
+                val = f(key, val)
+            return val
+
+    def _set_associations(self, d):
+        for k, v in d.items():
+            if isinstance(v, dict):
+                if "isValue" in v.keys():
+                    field = "value" if v["isValue"] else "property"
+                else:
+                    field = "value"
+                if "parent" in v.keys():
+                    if v["parent"] is not None:
+                        try:
+                            self.associations[k] = v["parent"]
+                            child_uuid = UUID(v[field])
+                            parent_uuid = UUID(d[v["parent"]]["value"])
+                            self.associations[child_uuid] = parent_uuid
+                        except:
+                            continue
+
+            else:
+                continue
 
 
 class Params:
@@ -97,76 +210,99 @@ class Params:
 
     """
 
-    def __init__(
-        self,
-        inversion_type: str,
-        workspace: str,
-        out_group: str,
-        data: dict,
-        mesh: str,
-        topography: dict,
-        workpath: str = os.path.abspath("."),
-    ):
-        """
-        Parameters
-        ----------
-        inversion_type : str
-            Type of inversion. Must be one of: 'gravity', 'magnetics', 'mvi', 'mvic'.
-        core_cell_size : int, float
-            Core cell size for base mesh.
-        workpath : str, optional
-            Path to working folder (default is current directory).
-        """
+    def __init__(self):
+
         self.validator = InputValidator()
-        self.inversion_type = inversion_type
-        self.workspace = workspace
-        self.out_group = out_group
-        self.data = data
-        self.mesh = mesh
-        self.topography = topography
-        self.workpath = workpath
-        self.inversion_style = defaults["inversion_style"]
-        self.forward_only = defaults["forward_only"]
-        self.inducing_field_aid = defaults["inducing_field_aid"]
-        self.resolution = defaults["resolution"]
-        self.window = defaults["window"]
-        self.ignore_values = defaults["ignore_values"]
-        self.detrend = defaults["detrend"]
-        self.new_uncert = defaults["new_uncert"]
-        self.output_geoh5 = defaults["output_geoh5"]
-        self.receivers_offset = defaults["receivers_offset"]
-        self.chi_factor = defaults["chi_factor"]
-        self.model_norms = defaults["model_norms"]
-        self.max_iterations = defaults["max_iterations"]
-        self.max_cg_iterations = defaults["max_cg_iterations"]
-        self.tol_cg = defaults["tol_cg"]
-        self.max_global_iterations = defaults["max_global_iterations"]
-        self.gradient_type = defaults["gradient_type"]
-        self.initial_beta = defaults["initial_beta"]
-        self.initial_beta_ratio = defaults["initial_beta_ratio"]
-        self.n_cpu = defaults["n_cpu"]
-        self.max_ram = defaults["max_ram"]
-        self.core_cell_size = defaults["core_cell_size"]
-        self.depth_core = defaults["depth_core"]
-        self.padding_distance = defaults["padding_distance"]
-        self.octree_levels_topo = defaults["octree_levels_topo"]
-        self.octree_levels_obs = defaults["octree_levels_obs"]
-        self.octree_levels_padding = defaults["octree_levels_padding"]
-        self.alphas = defaults["alphas"]
-        self.reference_model = defaults["reference_model"]
-        self.reference_inclination = defaults["reference_inclination"]
-        self.reference_declination = defaults["reference_declination"]
-        self.starting_model = defaults["starting_model"]
-        self.starting_inclination = defaults["starting_inclination"]
-        self.starting_declination = defaults["starting_declination"]
-        self.lower_bound = defaults["lower_bound"]
-        self.upper_bound = defaults["upper_bound"]
-        self.max_distance = defaults["max_distance"]
-        self.max_chunk_size = defaults["max_chunk_size"]
-        self.chunk_by_rows = defaults["chunk_by_rows"]
-        self.output_tile_files = defaults["output_tile_files"]
-        self.no_data_value = defaults["no_data_value"]
-        self.parallelized = defaults["parallelized"]
+        self.workpath = os.path.abspath(".")
+        self.associations = {}
+        self.inversion_type = None
+        self.forward_only = None
+        self.inducing_field_strength = None
+        self.inducing_field_inclination = None
+        self.inducing_field_declination = None
+        self.topography_object = None
+        self.topography = None
+        self.data_object = None
+        self.tmi_channel = None
+        self.tmi_uncertainty = None
+        self.starting_model_object = None
+        self.starting_inclination_object = None
+        self.starting_declination_object = None
+        self.starting_model = None
+        self.starting_inclination = None
+        self.starting_declination = None
+        self.tile_spatial = None
+        self.receivers_radar_drape = None
+        self.receivers_offset_x = None
+        self.receivers_offset_y = None
+        self.receivers_offset_z = None
+        self.gps_receivers_offset = None
+        self.ignore_values = None
+        self.resolution = None
+        self.detrend_data = None
+        self.detrend_order = None
+        self.detrend_type = None
+        self.max_chunk_size = None
+        self.chunk_by_rows = None
+        self.output_tile_files = None
+        self.mesh = None
+        self.mesh_from_params = None
+        self.core_cell_size_x = None
+        self.core_cell_size_y = None
+        self.core_cell_size_z = None
+        self.octree_levels_topo = None
+        self.octree_levels_obs = None
+        self.octree_levels_padding = None
+        self.depth_core = None
+        self.max_distance = None
+        self.padding_distance_x = None
+        self.padding_distance_y = None
+        self.padding_distance_z = None
+        self.window_center_x = None
+        self.window_center_y = None
+        self.window_width = None
+        self.window_height = None
+        self.inversion_style = None
+        self.chi_factor = None
+        self.max_iterations = None
+        self.max_cg_iterations = None
+        self.max_global_iterations = None
+        self.initial_beta = None
+        self.initial_beta_ratio = None
+        self.tol_cg = None
+        self.alpha_s = None
+        self.alpha_x = None
+        self.alpha_y = None
+        self.alpha_z = None
+        self.smallness_norm = None
+        self.x_norm = None
+        self.y_norm = None
+        self.z_norm = None
+        self.reference_model_object = None
+        self.reference_inclination_object = None
+        self.reference_declination_object = None
+        self.reference_model = None
+        self.reference_inclination = None
+        self.reference_declination = None
+        self.gradient_type = None
+        self.lower_bound = None
+        self.upper_bound = None
+        self.parallelized = None
+        self.n_cpu = None
+        self.max_ram = None
+        self.inversion_type = None
+        self.workspace = None
+        self.output_geoh5 = None
+        self.out_group = None
+        self.no_data_value = None
+
+        self._set_defaults()
+
+    def _set_defaults(self):
+        for a in self.__dict__.keys():
+            if a in ["validator", "workpath", "associations"]:
+                continue
+            self.__setattr__(a, default_ui_json[a[1:]]["default"])
 
     @classmethod
     def from_ifile(cls, ifile: InputFile) -> None:
@@ -177,18 +313,14 @@ class Params:
         ifile : InputFile
             class instance to handle loading input file
         """
-        if not ifile.isloaded:
-            ifile.load()
-        inversion_type = ifile.data["inversion_type"]
-        workspace = ifile.data["workspace"]
-        out_group = ifile.data["out_group"]
-        data = ifile.data["data"]
-        mesh = ifile.data["mesh"]
-        topography = ifile.data["topography"]
-        p = cls(
-            inversion_type, workspace, out_group, data, mesh, topography, ifile.workpath
-        )
+        if not ifile.is_loaded:
+            ifile.read_ui_json()
+
+        p = cls()
+        p.workpath = ifile.workpath
+        p.associations = ifile.associations
         p._init_params(ifile)
+
         return p
 
     @classmethod
@@ -204,6 +336,69 @@ class Params:
         p = cls.from_ifile(ifile)
         return p
 
+    def is_uuid(self, p):
+        if isinstance(p, str):
+            private_attr = self.__getattribue__("_" + p)
+            return True if isinstance(private_attr, UUID) else False
+        else:
+            pass
+
+    def parent(self, p):
+        return self.associations[p]
+
+    def active(self):
+        """ Retrieve active parameter set (value not None). """
+        return [k[1:] for k, v in self.__dict__.items() if v is not None]
+
+    def components(self):
+        """ Retrieve component names used to index channel, uncertainty data. """
+        return [k.split("_")[0] for k in self.active() if "channel" in k]
+
+    def uncertainty(self, component):
+        """ Returns uncertainty for chosen data component. """
+        return self.__getattribute__("_".join([component, "uncertainty"]))
+
+    def channel(self, component):
+        """ Returns channel uuid for chosen data component. """
+        return self.__getattribute__("_".join([component, "channel"]))
+
+    def window(self):
+        """ Returns window dictionary """
+        win = {
+            "center_x": self.window_center_x,
+            "center_y": self.window_center_y,
+            "width": self.window_width,
+            "height": self.window_height,
+            "center": [self.window_center_x, self.window_center_y],
+            "size": [self.window_width, self.window_height],
+        }
+        return win if any([v is not None for v in win.values()]) else None
+
+    def offset(self):
+        offsets = [
+            self.receivers_offset_x,
+            self.receivers_offset_y,
+            self.receivers_offset_z,
+        ]
+        is_offset = any([(k != 0) for k in offsets])
+        offsets = offsets if is_offset else None
+        return offsets, self.receivers_radar_drape
+
+    def inducing_field_aid(self):
+        return [
+            self.inducing_field_strength,
+            self.inducing_field_inclination,
+            self.inducing_field_declination,
+        ]
+
+    def model_norms(self):
+        return [
+            self.smallness_norm,
+            self.x_norm,
+            self.y_norm,
+            self.z_norm,
+        ]
+
     @property
     def inversion_type(self):
         return self._inversion_type
@@ -218,26 +413,6 @@ class Params:
         self._inversion_type = val
 
     @property
-    def core_cell_size(self):
-        return self._core_cell_size
-
-    @core_cell_size.setter
-    def core_cell_size(self, val):
-        p = "core_cell_size"
-        self.validator.validate(p, val, validations[p])
-        self._core_cell_size = val
-
-    @property
-    def inversion_style(self):
-        return self._inversion_style
-
-    @inversion_style.setter
-    def inversion_style(self, val):
-        p = "inversion_style"
-        self.validator.validate(p, val, validations[p])
-        self._inversion_style = val
-
-    @property
     def forward_only(self):
         return self._forward_only
 
@@ -248,92 +423,290 @@ class Params:
         self._forward_only = val
 
     @property
-    def inducing_field_aid(self):
-        return self._inducing_field_aid
+    def inducing_field_strength(self):
+        return self._inducing_field_strength
 
-    @inducing_field_aid.setter
-    def inducing_field_aid(self, val):
+    @inducing_field_strength.setter
+    def inducing_field_strength(self, val):
         if val is None:
-            self._inducing_field_aid = val
+            self._inducing_field_strength = val
             return
-        p = "inducing_field_aid"
+        p = "inducing_field_strength"
         self.validator.validate(p, val, validations[p])
-        if val[0] <= 0:
-            raise ValueError("inducing_field_aid[0] must be greater than 0.")
-        self._inducing_field_aid = np.array(val)
+        if val <= 0:
+            raise ValueError("inducing_field_strength must be greater than 0.")
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._inducing_field_strength = val
 
     @property
-    def resolution(self):
-        return self._resolution
+    def inducing_field_inclination(self):
+        return self._inducing_field_inclination
 
-    @resolution.setter
-    def resolution(self, val):
-        p = "resolution"
+    @inducing_field_inclination.setter
+    def inducing_field_inclination(self, val):
+        if val is None:
+            self._inducing_field_inclination = val
+            return
+        p = "inducing_field_inclination"
         self.validator.validate(p, val, validations[p])
-        self._resolution = val
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._inducing_field_inclination = val
 
     @property
-    def window(self):
-        return self._window
+    def inducing_field_declination(self):
+        return self._inducing_field_declination
 
-    @window.setter
-    def window(self, val):
+    @inducing_field_declination.setter
+    def inducing_field_declination(self, val):
         if val is None:
-            self._window = val
+            self._inducing_field_declination = val
             return
-        p = "window"
+        p = "inducing_field_declination"
         self.validator.validate(p, val, validations[p])
-        req_keys = ["center_x", "center_y", "width", "height", "azimuth"]
-        if not all(k in val.keys() for k in req_keys):
-            msg = "Input parameter 'window' dictionary must contain "
-            msg += f"all of {*req_keys,}."
-            raise ValueError(msg)
-        if "center" not in val.keys():
-            val["center"] = [val["center_x"], val["center_y"]]
-        if "size" not in val.keys():
-            val["size"] = [val["width"], val["height"]]
-        self._window = val
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._inducing_field_declination = val
 
     @property
-    def data(self):
-        return self._data
+    def topography_object(self):
+        return self._topography_object
 
-    @data.setter
-    def data(self, val):
+    @topography_object.setter
+    def topography_object(self, val):
         if val is None:
-            self._data = val
+            self._topography_object = val
             return
-        p = "data"
+        p = "topography_object"
         self.validator.validate(p, val, validations[p])
-        if "name" not in val.keys():
-            raise KeyError("Missing required key: 'name', for input parameter 'data'.")
-        self._data = val
+        self._topography_object = self.validator.validate_uuid(self.workspace, val)
 
     @property
-    def workspace(self):
-        return self._workspace
+    def topography(self):
+        return self._topography
 
-    @workspace.setter
-    def workspace(self, val):
+    @topography.setter
+    def topography(self, val):
         if val is None:
-            self._workspace = val
+            self._topography = val
             return
-        p = "workspace"
+        p = "topography"
         self.validator.validate(p, val, validations[p])
-        self._workspace = val
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._topography = val
 
     @property
-    def output_geoh5(self):
-        return self._output_geoh5
+    def data_object(self):
+        return self._data_object
 
-    @output_geoh5.setter
-    def output_geoh5(self, val):
+    @data_object.setter
+    def data_object(self, val):
         if val is None:
-            self._output_geoh5 = val
+            self._data_object = val
             return
-        p = "output_geoh5"
+        p = "data_object"
         self.validator.validate(p, val, validations[p])
-        self._output_geoh5 = val
+        self._data_object = self.validator.validate_uuid(self.workspace, val)
+
+    @property
+    def tmi_channel(self):
+        return self._tmi_channel
+
+    @tmi_channel.setter
+    def tmi_channel(self, val):
+        if val is None:
+            self._tmi_channel = val
+            return
+        p = "tmi_channel"
+        self.validator.validate(p, val, validations[p])
+        self._tmi_channel = self.validator.validate_uuid(self.workspace, val)
+
+    @property
+    def tmi_uncertainty(self):
+        return self._tmi_uncertainty
+
+    @tmi_uncertainty.setter
+    def tmi_uncertainty(self, val):
+        if val is None:
+            self._tmi_uncertainty = val
+            return
+        p = "tmi_uncertainty"
+        self.validator.validate(p, val, validations[p])
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._tmi_uncertainty = val
+
+    @property
+    def starting_model_object(self):
+        return self._starting_model_object
+
+    @starting_model_object.setter
+    def starting_model_object(self, val):
+        if val is None:
+            self._starting_model_object = val
+            return
+        p = "starting_model_object"
+        self.validator.validate(p, val, validations[p])
+        self._starting_model_object = self.validator.validate_uuid(self.workspace, val)
+
+    @property
+    def starting_inclination_object(self):
+        return self._starting_inclination_object
+
+    @starting_inclination_object.setter
+    def starting_inclination_object(self, val):
+        if val is None:
+            self._starting_inclination_object = val
+            return
+        p = "starting_inclination_object"
+        self.validator.validate(p, val, validations[p])
+        self._starting_inclination_object = self.validator.validate_uuid(
+            self.workspace, val
+        )
+
+    @property
+    def starting_declination_object(self):
+        return self._starting_declination_object
+
+    @starting_declination_object.setter
+    def starting_declination_object(self, val):
+        if val is None:
+            self._starting_declination_object = val
+            return
+        p = "starting_declination_object"
+        self.validator.validate(p, val, validations[p])
+        self._starting_declination_object = self.validator.validate_uuid(
+            self.workspace, val
+        )
+
+    @property
+    def starting_model(self):
+        return self._starting_model
+
+    @starting_model.setter
+    def starting_model(self, val):
+        if val is None:
+            self._starting_model = val
+            return
+        p = "starting_model"
+        self.validator.validate(p, val, validations[p])
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._starting_model = val
+
+    @property
+    def starting_inclination(self):
+        return self._starting_inclination
+
+    @starting_inclination.setter
+    def starting_inclination(self, val):
+        if val is None:
+            self._starting_inclination = val
+            return
+        p = "starting_inclination"
+        self.validator.validate(p, val, validations[p])
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._starting_inclination = val
+
+    @property
+    def starting_declination(self):
+        return self._starting_declination
+
+    @starting_declination.setter
+    def starting_declination(self, val):
+        if val is None:
+            self._starting_declination = val
+            return
+        p = "starting_declination"
+        self.validator.validate(p, val, validations[p])
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._starting_declination = val
+
+    @property
+    def tile_spatial(self):
+        return self._tile_spatial
+
+    @tile_spatial.setter
+    def tile_spatial(self, val):
+        if val is None:
+            self._tile_spatial = val
+            return
+        p = "tile_spatial"
+        self.validator.validate(p, val, validations[p])
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._tile_spatial = val
+
+    @property
+    def receivers_radar_drape(self):
+        return self._receivers_radar_drape
+
+    @receivers_radar_drape.setter
+    def receivers_radar_drape(self, val):
+        if val is None:
+            self._receivers_radar_drape = val
+            return
+        p = "receivers_radar_drape"
+        self.validator.validate(p, val, validations[p])
+        self._receivers_radar_drape = self.validator.validate_uuid(self.workspace, val)
+
+    @property
+    def receivers_offset_x(self):
+        return self._receivers_offset_x
+
+    @receivers_offset_x.setter
+    def receivers_offset_x(self, val):
+        if val is None:
+            self._receivers_offset_x = val
+            return
+        p = "receivers_offset_x"
+        self.validator.validate(p, val, validations[p])
+        self._receivers_offset_x = val
+
+    @property
+    def receivers_offset_y(self):
+        return self._receivers_offset_y
+
+    @receivers_offset_y.setter
+    def receivers_offset_y(self, val):
+        if val is None:
+            self._receivers_offset_y = val
+            return
+        p = "receivers_offset_y"
+        self.validator.validate(p, val, validations[p])
+        self._receivers_offset_y = val
+
+    @property
+    def receivers_offset_z(self):
+        return self._receivers_offset_z
+
+    @receivers_offset_z.setter
+    def receivers_offset_z(self, val):
+        if val is None:
+            self._receivers_offset_z = val
+            return
+        p = "receivers_offset_z"
+        self.validator.validate(p, val, validations[p])
+        self._receivers_offset_z = val
+
+    @property
+    def gps_receivers_offset(self):
+        return self._gps_receivers_offset
+
+    @gps_receivers_offset.setter
+    def gps_receivers_offset(self, val):
+        if val is None:
+            self._gps_receivers_offset = val
+            return
+        p = "gps_receivers_offset"
+        self.validator.validate(p, val, validations[p])
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._gps_receivers_offset = val
 
     @property
     def ignore_values(self):
@@ -349,52 +722,95 @@ class Params:
         self._ignore_values = val
 
     @property
-    def detrend(self):
-        return self._detrend
+    def resolution(self):
+        return self._resolution
 
-    @detrend.setter
-    def detrend(self, val):
+    @resolution.setter
+    def resolution(self, val):
         if val is None:
-            self._detrend = val
+            self._resolution = val
             return
-        p = "detrend"
+        p = "resolution"
         self.validator.validate(p, val, validations[p])
-        for v in val.values():
-            if v not in [0, 1, 2]:
-                raise ValueError("Detrend order must be 0, 1, or 2.")
-        self._detrend = val
+        self._resolution = val
 
     @property
-    def data_file(self):
-        return self._data_file
+    def detrend_data(self):
+        return self._detrend_data
 
-    @data_file.setter
-    def data_file(self, val):
+    @detrend_data.setter
+    def detrend_data(self, val):
         if val is None:
-            self._data_file = val
+            self._detrend_data = val
             return
-        p = "data_file"
+        p = "detrend_data"
         self.validator.validate(p, val, validations[p])
-        self._data_file = val
+        self._detrend_data = val
 
     @property
-    def new_uncert(self):
-        return self._new_uncert
+    def detrend_order(self):
+        return self._detrend_order
 
-    @new_uncert.setter
-    def new_uncert(self, val):
+    @detrend_order.setter
+    def detrend_order(self, val):
         if val is None:
-            self._new_uncert = val
+            self._detrend_order = val
             return
-        p = "new_uncert"
+        p = "detrend_order"
         self.validator.validate(p, val, validations[p])
-        if (val[0] < 0) | (val[0] > 1):
-            msg = "Uncertainty percent (new_uncert[0]) must be between 0 and 1."
-            raise ValueError(msg)
-        if val[1] < 0:
-            msg = "Uncertainty floor (new_uncert[1]) must be greater than 0."
-            raise ValueError(msg)
-        self._new_uncert = val
+        self._detrend_order = val
+
+    @property
+    def detrend_type(self):
+        return self._detrend_type
+
+    @detrend_type.setter
+    def detrend_type(self, val):
+        if val is None:
+            self._detrend_type = val
+            return
+        p = "detrend_type"
+        self.validator.validate(p, val, validations[p])
+        self._detrend_type = val
+
+    @property
+    def max_chunk_size(self):
+        return self._max_chunk_size
+
+    @max_chunk_size.setter
+    def max_chunk_size(self, val):
+        if val is None:
+            self._max_chunk_size = val
+            return
+        p = "max_chunk_size"
+        self.validator.validate(p, val, validations[p])
+        self._max_chunk_size = val
+
+    @property
+    def chunk_by_rows(self):
+        return self._chunk_by_rows
+
+    @chunk_by_rows.setter
+    def chunk_by_rows(self, val):
+        if val is None:
+            self._chunk_by_rows = val
+            return
+        p = "chunk_by_rows"
+        self.validator.validate(p, val, validations[p])
+        self._chunk_by_rows = val
+
+    @property
+    def output_tile_files(self):
+        return self._output_tile_files
+
+    @output_tile_files.setter
+    def output_tile_files(self, val):
+        if val is None:
+            self._output_tile_files = val
+            return
+        p = "output_tile_files"
+        self.validator.validate(p, val, validations[p])
+        self._output_tile_files = val
 
     @property
     def mesh(self):
@@ -407,43 +823,228 @@ class Params:
             return
         p = "mesh"
         self.validator.validate(p, val, validations[p])
-        self._mesh = val
+        self._mesh = self.validator.validate_uuid(self.workspace, val)
 
     @property
-    def save_to_geoh5(self):
-        return self._save_to_geoh5
+    def mesh_from_params(self):
+        return self._mesh_from_params
 
-    @save_to_geoh5.setter
-    def save_to_geoh5(self, val):
-        p = "save_to_geoh5"
-        self.validator.validate(p, val, validations[p])
-        self._save_to_geoh5 = val
-
-    @property
-    def topography(self):
-        return self._topography
-
-    @topography.setter
-    def topography(self, val):
+    @mesh_from_params.setter
+    def mesh_from_params(self, val):
         if val is None:
-            self._topography = val
+            self._mesh_from_params = val
             return
-        p = "topography"
+        p = "mesh_from_params"
         self.validator.validate(p, val, validations[p])
-        self._topography = val
+        self._mesh_from_params = val
 
     @property
-    def receivers_offset(self):
-        return self._receivers_offset
+    def core_cell_size_x(self):
+        return self._core_cell_size_x
 
-    @receivers_offset.setter
-    def receivers_offset(self, val):
+    @core_cell_size_x.setter
+    def core_cell_size_x(self, val):
         if val is None:
-            self._receivers_offset = val
+            self._core_cell_size_x = val
             return
-        p = "receivers_offset"
+        p = "core_cell_size_x"
         self.validator.validate(p, val, validations[p])
-        self._receivers_offset = val
+        self._core_cell_size_x = val
+
+    @property
+    def core_cell_size_y(self):
+        return self._core_cell_size_y
+
+    @core_cell_size_y.setter
+    def core_cell_size_y(self, val):
+        if val is None:
+            self._core_cell_size_y = val
+            return
+        p = "core_cell_size_y"
+        self.validator.validate(p, val, validations[p])
+        self._core_cell_size_y = val
+
+    @property
+    def core_cell_size_z(self):
+        return self._core_cell_size_z
+
+    @core_cell_size_z.setter
+    def core_cell_size_z(self, val):
+        if val is None:
+            self._core_cell_size_z = val
+            return
+        p = "core_cell_size_z"
+        self.validator.validate(p, val, validations[p])
+        self._core_cell_size_z = val
+
+    @property
+    def octree_levels_topo(self):
+        return self._octree_levels_topo
+
+    @octree_levels_topo.setter
+    def octree_levels_topo(self, val):
+        if val is None:
+            self._octree_levels_topo = val
+            return
+        p = "octree_levels_topo"
+        self.validator.validate(p, val, validations[p])
+        self._octree_levels_topo = val
+
+    @property
+    def octree_levels_obs(self):
+        return self._octree_levels_obs
+
+    @octree_levels_obs.setter
+    def octree_levels_obs(self, val):
+        if val is None:
+            self._octree_levels_obs = val
+            return
+        p = "octree_levels_obs"
+        self.validator.validate(p, val, validations[p])
+        self._octree_levels_obs = val
+
+    @property
+    def octree_levels_padding(self):
+        return self._octree_levels_padding
+
+    @octree_levels_padding.setter
+    def octree_levels_padding(self, val):
+        if val is None:
+            self._octree_levels_padding = val
+            return
+        p = "octree_levels_padding"
+        self.validator.validate(p, val, validations[p])
+        self._octree_levels_padding = val
+
+    @property
+    def depth_core(self):
+        return self._depth_core
+
+    @depth_core.setter
+    def depth_core(self, val):
+        if val is None:
+            self._depth_core = val
+            return
+        p = "depth_core"
+        self.validator.validate(p, val, validations[p])
+        self._depth_core = val
+
+    @property
+    def max_distance(self):
+        return self._max_distance
+
+    @max_distance.setter
+    def max_distance(self, val):
+        if val is None:
+            self._max_distance = val
+            return
+        p = "max_distance"
+        self.validator.validate(p, val, validations[p])
+        self._max_distance = val
+
+    @property
+    def padding_distance_x(self):
+        return self._padding_distance_x
+
+    @padding_distance_x.setter
+    def padding_distance_x(self, val):
+        if val is None:
+            self._padding_distance_x = val
+            return
+        p = "padding_distance_x"
+        self.validator.validate(p, val, validations[p])
+        self._padding_distance_x = val
+
+    @property
+    def padding_distance_y(self):
+        return self._padding_distance_y
+
+    @padding_distance_y.setter
+    def padding_distance_y(self, val):
+        if val is None:
+            self._padding_distance_y = val
+            return
+        p = "padding_distance_y"
+        self.validator.validate(p, val, validations[p])
+        self._padding_distance_y = val
+
+    @property
+    def padding_distance_z(self):
+        return self._padding_distance_z
+
+    @padding_distance_z.setter
+    def padding_distance_z(self, val):
+        if val is None:
+            self._padding_distance_z = val
+            return
+        p = "padding_distance_z"
+        self.validator.validate(p, val, validations[p])
+        self._padding_distance_z = val
+
+    @property
+    def window_center_x(self):
+        return self._window_center_x
+
+    @window_center_x.setter
+    def window_center_x(self, val):
+        if val is None:
+            self._window_center_x = val
+            return
+        p = "window_center_x"
+        self.validator.validate(p, val, validations[p])
+        self._window_center_x = val
+
+    @property
+    def window_center_y(self):
+        return self._window_center_y
+
+    @window_center_y.setter
+    def window_center_y(self, val):
+        if val is None:
+            self._window_center_y = val
+            return
+        p = "window_center_y"
+        self.validator.validate(p, val, validations[p])
+        self._window_center_y = val
+
+    @property
+    def window_width(self):
+        return self._window_width
+
+    @window_width.setter
+    def window_width(self, val):
+        if val is None:
+            self._window_width = val
+            return
+        p = "window_width"
+        self.validator.validate(p, val, validations[p])
+        self._window_width = val
+
+    @property
+    def window_height(self):
+        return self._window_height
+
+    @window_height.setter
+    def window_height(self, val):
+        if val is None:
+            self._window_height = val
+            return
+        p = "window_height"
+        self.validator.validate(p, val, validations[p])
+        self._window_height = val
+
+    @property
+    def inversion_style(self):
+        return self._inversion_style
+
+    @inversion_style.setter
+    def inversion_style(self, val):
+        if val is None:
+            self._inversion_style = val
+            return
+        p = "inversion_style"
+        self.validator.validate(p, val, validations[p])
+        self._inversion_style = val
 
     @property
     def chi_factor(self):
@@ -451,23 +1052,12 @@ class Params:
 
     @chi_factor.setter
     def chi_factor(self, val):
+        if val is None:
+            self._chi_factor = val
+            return
         p = "chi_factor"
         self.validator.validate(p, val, validations[p])
-        if val <= 0:
-            raise ValueError("Invalid chi_factor. Must be between 0 and 1.")
         self._chi_factor = val
-
-    @property
-    def model_norms(self):
-        return self._model_norms
-
-    @model_norms.setter
-    def model_norms(self, val):
-        p = "model_norms"
-        self.validator.validate(p, val, validations[p])
-        if len(val) % 4 != 0:
-            raise ValueError("Invalid 'model_norms' length.  Must be a multiple of 4.")
-        self._model_norms = val
 
     @property
     def max_iterations(self):
@@ -475,10 +1065,11 @@ class Params:
 
     @max_iterations.setter
     def max_iterations(self, val):
+        if val is None:
+            self._max_iterations = val
+            return
         p = "max_iterations"
         self.validator.validate(p, val, validations[p])
-        if val <= 0:
-            raise ValueError("Invalid 'max_iterations' value.  Must be > 0.")
         self._max_iterations = val
 
     @property
@@ -487,21 +1078,12 @@ class Params:
 
     @max_cg_iterations.setter
     def max_cg_iterations(self, val):
+        if val is None:
+            self._max_cg_iterations = val
+            return
         p = "max_cg_iterations"
         self.validator.validate(p, val, validations[p])
-        if val <= 0:
-            raise ValueError("Invalid 'max_cg_iterations' value.  Must be > 0.")
         self._max_cg_iterations = val
-
-    @property
-    def tol_cg(self):
-        return self._tol_cg
-
-    @tol_cg.setter
-    def tol_cg(self, val):
-        p = "tol_cg"
-        self.validator.validate(p, val, validations[p])
-        self._tol_cg = val
 
     @property
     def max_global_iterations(self):
@@ -509,21 +1091,12 @@ class Params:
 
     @max_global_iterations.setter
     def max_global_iterations(self, val):
+        if val is None:
+            self._max_global_iterations = val
+            return
         p = "max_global_iterations"
         self.validator.validate(p, val, validations[p])
-        if val <= 0:
-            raise ValueError("Invalid 'max_global_iterations' value.  Must be > 0.")
         self._max_global_iterations = val
-
-    @property
-    def gradient_type(self):
-        return self._gradient_type
-
-    @gradient_type.setter
-    def gradient_type(self, val):
-        p = "gradient_type"
-        self.validator.validate(p, val, validations[p])
-        self._gradient_type = val
 
     @property
     def initial_beta(self):
@@ -544,9 +1117,269 @@ class Params:
 
     @initial_beta_ratio.setter
     def initial_beta_ratio(self, val):
+        if val is None:
+            self._initial_beta_ratio = val
+            return
         p = "initial_beta_ratio"
         self.validator.validate(p, val, validations[p])
         self._initial_beta_ratio = val
+
+    @property
+    def tol_cg(self):
+        return self._tol_cg
+
+    @tol_cg.setter
+    def tol_cg(self, val):
+        if val is None:
+            self._tol_cg = val
+            return
+        p = "tol_cg"
+        self.validator.validate(p, val, validations[p])
+        self._tol_cg = val
+
+    @property
+    def alpha_s(self):
+        return self._alpha_s
+
+    @alpha_s.setter
+    def alpha_s(self, val):
+        if val is None:
+            self._alpha_s = val
+            return
+        p = "alpha_s"
+        self.validator.validate(p, val, validations[p])
+        self._alpha_s = val
+
+    @property
+    def alpha_x(self):
+        return self._alpha_x
+
+    @alpha_x.setter
+    def alpha_x(self, val):
+        if val is None:
+            self._alpha_x = val
+            return
+        p = "alpha_x"
+        self.validator.validate(p, val, validations[p])
+        self._alpha_x = val
+
+    @property
+    def alpha_y(self):
+        return self._alpha_y
+
+    @alpha_y.setter
+    def alpha_y(self, val):
+        if val is None:
+            self._alpha_y = val
+            return
+        p = "alpha_y"
+        self.validator.validate(p, val, validations[p])
+        self._alpha_y = val
+
+    @property
+    def alpha_z(self):
+        return self._alpha_z
+
+    @alpha_z.setter
+    def alpha_z(self, val):
+        if val is None:
+            self._alpha_z = val
+            return
+        p = "alpha_z"
+        self.validator.validate(p, val, validations[p])
+        self._alpha_z = val
+
+    @property
+    def smallness_norm(self):
+        return self._smallness_norm
+
+    @smallness_norm.setter
+    def smallness_norm(self, val):
+        if val is None:
+            self._smallness_norm = val
+            return
+        p = "smallness_norm"
+        self.validator.validate(p, val, validations[p])
+        self._smallness_norm = val
+
+    @property
+    def x_norm(self):
+        return self._x_norm
+
+    @x_norm.setter
+    def x_norm(self, val):
+        if val is None:
+            self._x_norm = val
+            return
+        p = "x_norm"
+        self.validator.validate(p, val, validations[p])
+        self._x_norm = val
+
+    @property
+    def y_norm(self):
+        return self._y_norm
+
+    @y_norm.setter
+    def y_norm(self, val):
+        if val is None:
+            self._y_norm = val
+            return
+        p = "y_norm"
+        self.validator.validate(p, val, validations[p])
+        self._y_norm = val
+
+    @property
+    def z_norm(self):
+        return self._z_norm
+
+    @z_norm.setter
+    def z_norm(self, val):
+        if val is None:
+            self._z_norm = val
+            return
+        p = "z_norm"
+        self.validator.validate(p, val, validations[p])
+        self._z_norm = val
+
+    @property
+    def reference_model_object(self):
+        return self._reference_model_object
+
+    @reference_model_object.setter
+    def reference_model_object(self, val):
+        if val is None:
+            self._reference_model_object = val
+            return
+        p = "reference_model_object"
+        self.validator.validate(p, val, validations[p])
+        self._reference_model_object = self.validator.validate_uuid(self.workspace, val)
+
+    @property
+    def reference_inclination_object(self):
+        return self._reference_inclination_object
+
+    @reference_inclination_object.setter
+    def reference_inclination_object(self, val):
+        if val is None:
+            self._reference_inclination_object = val
+            return
+        p = "reference_inclination_object"
+        self.validator.validate(p, val, validations[p])
+        self._reference_inclination_object = self.validator.validate_uuid(
+            self.workspace, val
+        )
+
+    @property
+    def reference_declination_object(self):
+        return self._reference_declination_object
+
+    @reference_declination_object.setter
+    def reference_declination_object(self, val):
+        if val is None:
+            self._reference_declination_object = val
+            return
+        p = "reference_declination_object"
+        self.validator.validate(p, val, validations[p])
+        self._reference_declination_object = self.validator.validate_uuid(
+            self.workspace, val
+        )
+
+    @property
+    def reference_model(self):
+        return self._reference_model
+
+    @reference_model.setter
+    def reference_model(self, val):
+        if val is None:
+            self._reference_model = val
+            return
+        p = "reference_model"
+        self.validator.validate(p, val, validations[p])
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._reference_model = val
+
+    @property
+    def reference_inclination(self):
+        return self._reference_inclination
+
+    @reference_inclination.setter
+    def reference_inclination(self, val):
+        if val is None:
+            self._reference_inclination = val
+            return
+        p = "reference_inclination"
+        self.validator.validate(p, val, validations[p])
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._reference_inclination = val
+
+    @property
+    def reference_declination(self):
+        return self._reference_declination
+
+    @reference_declination.setter
+    def reference_declination(self, val):
+        if val is None:
+            self._reference_declination = val
+            return
+        p = "reference_declination"
+        self.validator.validate(p, val, validations[p])
+        isstr = isinstance(val, str)
+        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
+        self._reference_declination = val
+
+    @property
+    def gradient_type(self):
+        return self._gradient_type
+
+    @gradient_type.setter
+    def gradient_type(self, val):
+        if val is None:
+            self._gradient_type = val
+            return
+        p = "gradient_type"
+        self.validator.validate(p, val, validations[p])
+        self._gradient_type = val
+
+    @property
+    def lower_bound(self):
+        return self._lower_bound
+
+    @lower_bound.setter
+    def lower_bound(self, val):
+        if val is None:
+            self._lower_bound = val
+            return
+        p = "lower_bound"
+        self.validator.validate(p, val, validations[p])
+        self._lower_bound = val
+
+    @property
+    def upper_bound(self):
+        return self._upper_bound
+
+    @upper_bound.setter
+    def upper_bound(self, val):
+        if val is None:
+            self._upper_bound = val
+            return
+        p = "upper_bound"
+        self.validator.validate(p, val, validations[p])
+        self._upper_bound = val
+
+    @property
+    def parallelized(self):
+        return self._parallelized
+
+    @parallelized.setter
+    def parallelized(self, val):
+        if val is None:
+            self._parallelized = val
+            return
+        p = "parallelized"
+        self.validator.validate(p, val, validations[p])
+        self._parallelized = val
 
     @property
     def n_cpu(self):
@@ -567,236 +1400,38 @@ class Params:
 
     @max_ram.setter
     def max_ram(self, val):
+        if val is None:
+            self._max_ram = val
+            return
         p = "max_ram"
         self.validator.validate(p, val, validations[p])
         self._max_ram = val
 
     @property
-    def depth_core(self):
-        return self._depth_core
+    def workspace(self):
+        return self._workspace
 
-    @depth_core.setter
-    def depth_core(self, val):
+    @workspace.setter
+    def workspace(self, val):
         if val is None:
-            self._depth_core = val
+            self._workspace = val
             return
-        p = "depth_core"
+        p = "workspace"
         self.validator.validate(p, val, validations[p])
-        self._depth_core = val
+        self._workspace = Workspace(val)
 
     @property
-    def padding_distance(self):
-        return self._padding_distance
+    def output_geoh5(self):
+        return self._output_geoh5
 
-    @padding_distance.setter
-    def padding_distance(self, val):
-        p = "padding_distance"
-        self.validator.validate(p, val, validations[p])
-        self._padding_distance = val
-
-    @property
-    def octree_levels_topo(self):
-        return self._octree_levels_topo
-
-    @octree_levels_topo.setter
-    def octree_levels_topo(self, val):
-        p = "octree_levels_topo"
-        self.validator.validate(p, val, validations[p])
-        self._octree_levels_topo = val
-
-    @property
-    def octree_levels_obs(self):
-        return self._octree_levels_obs
-
-    @octree_levels_obs.setter
-    def octree_levels_obs(self, val):
-        p = "octree_levels_obs"
-        self.validator.validate(p, val, validations[p])
-        self._octree_levels_obs = val
-
-    @property
-    def octree_levels_padding(self):
-        return self._octree_levels_padding
-
-    @octree_levels_padding.setter
-    def octree_levels_padding(self, val):
-        p = "octree_levels_padding"
-        self.validator.validate(p, val, validations[p])
-        self._octree_levels_padding = val
-
-    @property
-    def alphas(self):
-        return self._alphas
-
-    @alphas.setter
-    def alphas(self, val):
-        p = "alphas"
-        self.validator.validate(p, val, validations[p])
-        if len(val) == 4:
-            val = val * 3
-        if len(val) not in [4, 12]:
-            msg = "Input parameter 'alphas' must be a list"
-            msg += " of length 4 or 12"
-            raise ValueError(msg)
-        self._alphas = val
-
-    @property
-    def reference_model(self):
-        return self._reference_model
-
-    @reference_model.setter
-    def reference_model(self, val):
+    @output_geoh5.setter
+    def output_geoh5(self, val):
         if val is None:
-            self._reference_model = val
+            self._output_geoh5 = val
             return
-        p = "reference_model"
+        p = "output_geoh5"
         self.validator.validate(p, val, validations[p])
-        self._reference_model = val
-
-    @property
-    def reference_inclination(self):
-        return self._reference_inclination
-
-    @reference_inclination.setter
-    def reference_inclination(self, val):
-        if val is None:
-            self._reference_inclination = val
-            return
-        p = "reference_inclination"
-        self.validator.validate(p, val, validations[p])
-        self._reference_inclination = val
-
-    @property
-    def reference_declination(self):
-        return self._reference_declination
-
-    @reference_declination.setter
-    def reference_declination(self, val):
-        if val is None:
-            self._reference_declination = val
-            return
-        p = "reference_declination"
-        self.validator.validate(p, val, validations[p])
-        self._reference_declination = val
-
-    @property
-    def starting_model(self):
-        return self._starting_model
-
-    @starting_model.setter
-    def starting_model(self, val):
-        if val is None:
-            self._starting_model = val
-            return
-        p = "starting_model"
-        self.validator.validate(p, val, validations[p])
-        self._starting_model = val
-
-    @property
-    def starting_inclination(self):
-        return self._starting_inclination
-
-    @starting_inclination.setter
-    def starting_inclination(self, val):
-        if val is None:
-            self._starting_inclination = val
-            return
-        p = "starting_inclination"
-        self.validator.validate(p, val, validations[p])
-        self._starting_inclination = val
-
-    @property
-    def starting_declination(self):
-        return self._starting_declination
-
-    @starting_declination.setter
-    def starting_declination(self, val):
-        if val is None:
-            self._starting_declination = val
-            return
-        p = "starting_declination"
-        self.validator.validate(p, val, validations[p])
-        self._starting_declination = val
-
-    @property
-    def lower_bound(self):
-        return self._lower_bound
-
-    @lower_bound.setter
-    def lower_bound(self, val):
-        p = "lower_bound"
-        self.validator.validate(p, val, validations[p])
-        self._lower_bound = val
-
-    @property
-    def upper_bound(self):
-        return self._upper_bound
-
-    @upper_bound.setter
-    def upper_bound(self, val):
-        p = "upper_bound"
-        self.validator.validate(p, val, validations[p])
-        self._upper_bound = val
-
-    @property
-    def max_distance(self):
-        return self._max_distance
-
-    @max_distance.setter
-    def max_distance(self, val):
-        p = "max_distance"
-        self.validator.validate(p, val, validations[p])
-        self._max_distance = val
-
-    @property
-    def max_chunk_size(self):
-        return self._max_chunk_size
-
-    @max_chunk_size.setter
-    def max_chunk_size(self, val):
-        p = "max_chunk_size"
-        self.validator.validate(p, val, validations[p])
-        self._max_chunk_size = val
-
-    @property
-    def chunk_by_rows(self):
-        return self._chunk_by_rows
-
-    @chunk_by_rows.setter
-    def chunk_by_rows(self, val):
-        p = "chunk_by_rows"
-        self.validator.validate(p, val, validations[p])
-        self._chunk_by_rows = val
-
-    @property
-    def output_tile_files(self):
-        return self._output_tile_files
-
-    @output_tile_files.setter
-    def output_tile_files(self, val):
-        p = "output_tile_files"
-        self.validator.validate(p, val, validations[p])
-        self._output_tile_files = val
-
-    @property
-    def no_data_value(self):
-        return self._no_data_value
-
-    @no_data_value.setter
-    def no_data_value(self, val):
-        p = "no_data_value"
-        self.validator.validate(p, val, validations[p])
-        self._no_data_value = val
-
-    @property
-    def parallelized(self):
-        return self._parallelized
-
-    @parallelized.setter
-    def parallelized(self, val):
-        p = "parallelized"
-        self.validator.validate(p, val, validations[p])
-        self._parallelized = val
+        self._output_geoh5 = val
 
     @property
     def out_group(self):
@@ -811,19 +1446,36 @@ class Params:
         self.validator.validate(p, val, validations[p])
         self._out_group = val
 
-    def _override_default(self, param: str, value: Any) -> None:
-        """ Override parameter default value. """
-        self.__setattr__(param, value)
+    @property
+    def no_data_value(self):
+        return self._no_data_value
+
+    @no_data_value.setter
+    def no_data_value(self, val):
+        if val is None:
+            self._no_data_value = val
+            return
+        p = "no_data_value"
+        self.validator.validate(p, val, validations[p])
+        self._no_data_value = val
+
+    def default(self, param):
+        """ Return default value of parameter stored in default_ui_json. """
+        return default_ui_json[param]["default"]
 
     def _init_params(self, inputfile: InputFile) -> None:
         """ Overrides default parameter values with input file values. """
+
+        self.workspace = inputfile.data["workspace_geoh5"]
+        self.output_geoh5 = inputfile.data["geoh5"]
+        self.out_group = inputfile.data["out_group"]
         for param, value in inputfile.data.items():
-            if param == "model_norms":
-                if "max_iterations" not in inputfile.data.keys():
-                    if not np.all(np.r_[value] == 2):
-                        if "max_iterations" in inputfile.data.keys():
-                            inputfile.data["max_iterations"] = 40
-                        self._override_default("max_iterations", 40)
-                self._override_default(param, value)
+            if param in ["workspace", "output_geoh5", "out_group"]:
+                continue
+            if "norm" in param:
+                if value != 2:
+                    inputfile.data["max_iterations"] = 40
+                    self.max_iterations = 40
+                self.__setattr__(param, value)
             else:
-                self._override_default(param, value)
+                self.__setattr__(param, value)
