@@ -144,7 +144,7 @@ class Calculator(ObjectDataSelection):
         if self.live_link.value:
             while not isinstance(obj.parent, RootGroup):
                 obj = obj.parent
-            self.live_link_output(obj)
+            self.live_link_output(self.export_directory.selected_path, obj)
 
         self.workspace.finalize()
 

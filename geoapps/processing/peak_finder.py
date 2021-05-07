@@ -1476,10 +1476,10 @@ class PeakFinder(ObjectDataSelection):
                 )
 
         if self.live_link.value:
-            self.live_link_output(points)
+            self.live_link_output(self.export_directory.selected_path, points)
 
             if self.structural_markers.value:
-                self.live_link_output(curves)
+                self.live_link_output(self.export_directory.selected_path, curves)
 
         self.workspace.finalize()
 

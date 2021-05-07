@@ -219,5 +219,7 @@ class ContourValues(PlotSelection2D):
                 curve.add_data({self.contours.value: {"values": np.hstack(values)}})
 
                 if self.live_link.value:
-                    self.live_link_output(self.ga_group)
+                    self.live_link_output(
+                        self.export_directory.selected_path, self.ga_group
+                    )
                 self.workspace.finalize()

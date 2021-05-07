@@ -12,6 +12,7 @@ from os import mkdir, path
 from shutil import copyfile, move
 
 from geoh5py.groups import ContainerGroup
+from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
@@ -161,14 +162,15 @@ class BaseApplication:
         if not self.export_directory._select.disabled:
             self._monitoring_directory = self.export_directory.selected
 
-    def live_link_output(self, entity, data={}):
+    @staticmethod
+    def live_link_output(selected_path, entity: Entity, data: dict = {}):
         """
         Create a temporary geoh5 file in the monitoring folder and export entity for update.
 
-        :param :obj:`geoh5py.Entity`: Entity to be updated
-        :param data: `dict` of values to be added as data {"name": values}
+        :param entity: Entity to be updated
+        :param data: Data name and values to be added as data to the entity on export {"name": values}
         """
-        working_path = path.join(self.export_directory.selected_path, ".working")
+        working_path = path.join(selected_path, ".working")
         if not path.exists(working_path):
             mkdir(working_path)
 
@@ -184,7 +186,7 @@ class BaseApplication:
         # Move the geoh5 to monitoring folder
         move(
             path.join(working_path, temp_geoh5),
-            path.join(self.export_directory.selected_path, temp_geoh5),
+            path.join(selected_path, temp_geoh5),
         )
 
     def live_link_choice(self, _):
@@ -264,7 +266,9 @@ class BaseApplication:
                     self.workspace, name=self.ga_group_name.value
                 )
                 if self.live_link.value:
-                    self.live_link_output(self._ga_group)
+                    self.live_link_output(
+                        self.export_directory.selected_path, self._ga_group
+                    )
 
         return self._ga_group
 
@@ -274,6 +278,17 @@ class BaseApplication:
         Default group name to export to
         """
         return self._ga_group_name
+
+    @property
+    def geoh5(self):
+        """
+        Mirror of h5file
+        """
+        return self.h5file
+
+    @geoh5.setter
+    def geoh5(self, value):
+        self.h5file = value
 
     @property
     def h5file(self):
@@ -342,7 +357,7 @@ class BaseApplication:
         with open(file, "w") as f:
             json.dump(out_dict, f, indent=4)
 
-        return file
+        return out_dict
 
     @property
     def trigger(self):

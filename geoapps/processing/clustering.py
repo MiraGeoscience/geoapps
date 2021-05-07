@@ -628,7 +628,7 @@ class Clustering(ScatterPlots):
                 }
 
             if self.live_link.value:
-                self.live_link_output(obj)
+                self.live_link_output(self.export_directory.selected_path, obj)
 
             self.workspace.finalize()
 

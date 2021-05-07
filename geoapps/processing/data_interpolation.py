@@ -606,7 +606,7 @@ class DataInterpolation(ObjectDataSelection):
             )
 
         if self.live_link.value:
-            self.live_link_output(self.object_out)
+            self.live_link_output(self.export_directory.selected_path, self.object_out)
 
         self.workspace.finalize()
 
