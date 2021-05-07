@@ -12,8 +12,8 @@ from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
 
-from geoapps import utils
 from geoapps.base import BaseApplication
+from geoapps.utils import utils
 
 
 class ObjectDataSelection(BaseApplication):
@@ -262,13 +262,16 @@ class ObjectDataSelection(BaseApplication):
             value = self.objects.value
 
             if len(self.object_types) > 0:
-                options = [""] + [
-                    obj.name
-                    for obj in self._workspace.all_objects()
+                options = [["", None]] + [
+                    [obj.name, obj.uid]
+                    for obj in self._workspace.objects
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                options = [""] + list(self._workspace.list_objects_name.values())
+                options = [["", None]] + [
+                    [value, uid]
+                    for uid, value in self._workspace.list_objects_name.items()
+                ]
 
             if value in options:  # Silent update
                 self.objects.unobserve(self.update_data_list, names="value")

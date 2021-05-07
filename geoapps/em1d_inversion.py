@@ -36,7 +36,8 @@ from .simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from .utils import filter_xy, geophysical_systems, rotate_xy, running_mean
+from .utils import geophysical_systems
+from .utils.utils import filter_xy, rotate_xy, running_mean
 
 
 class SaveIterationsGeoH5(Directives.InversionDirective):
@@ -1111,8 +1112,8 @@ def inversion(input_file):
 
     # Directives
     directiveList = []
-
-    directiveList.append(Directives.UpdateSensitivityWeights())
+    print("NO SENSITIVITY WEIGHTS")
+    # directiveList.append(Directives.UpdateSensitivityWeights())
     directiveList.append(
         Directives.Update_IRLS(
             maxIRLSiter=max_irls_iterations,

@@ -9,18 +9,18 @@
 import pytest
 import requests
 
+from geoapps.create.contours import ContourValues
+from geoapps.create.isosurface import IsoSurface
+from geoapps.create.surface_2d import Surface2D
 from geoapps.export import Export
 from geoapps.inversion import InversionApp
 from geoapps.processing import (
     Calculator,
     Clustering,
-    ContourValues,
     CoordinateTransformation,
     DataInterpolation,
     EdgeDetectionApp,
-    IsoSurface,
     PeakFinder,
-    Surface2D,
 )
 
 project = "FlinFlon.geoh5"
