@@ -8,9 +8,11 @@
 import json
 import os
 from copy import deepcopy
+from uuid import uuid4
 
 import numpy as np
 import pytest
+from geoh5py.workspace import Workspace
 
 from geoapps.io import InputFile, Params
 from geoapps.io.constants import default_ui_json
@@ -18,6 +20,8 @@ from geoapps.io.constants import default_ui_json
 ######################  Setup  ###########################
 
 tmpfile = lambda path: os.path.join(path, "test.ui.json")
+wrkstr = "../assets/FlinFlon.geoh5"
+workspace = Workspace(wrkstr)
 
 
 def tmp_input_file(filepath, idict):
@@ -25,14 +29,14 @@ def tmp_input_file(filepath, idict):
         json.dump(idict, f)
 
 
-def default_test_generator(tmp_path, param, newval):
+def default_test_generator(tmp_path, param, newval, wrkstr=None):
 
     d_u_j = deepcopy(default_ui_json)
     params = Params()
     assert getattr(params, param) == d_u_j[param]["default"]
     filepath = tmpfile(tmp_path)
     ifile = InputFile(filepath)
-    ifile.write_ui_json(default=True)
+    ifile.write_ui_json(default=True, workspace=wrkstr)
     params = Params.from_path(filepath)
     assert getattr(params, param) == d_u_j[param]["default"]
     with open(filepath) as f:
@@ -60,6 +64,7 @@ def default_test_generator(tmp_path, param, newval):
 def catch_invalid_generator(tmp_path, param, invalid_value, validation_type):
 
     params = Params()
+    params.workspace = workspace
     if validation_type == "type":
         err = TypeError
     else:
@@ -67,17 +72,28 @@ def catch_invalid_generator(tmp_path, param, invalid_value, validation_type):
     with pytest.raises(err) as excinfo:
         params.__setattr__(param, invalid_value)
 
-    assert validation_type in str(excinfo.value)
-    assert invalid_value in str(excinfo.value)
+    assert str(validation_type) in str(excinfo.value)
+    assert str(invalid_value) in str(excinfo.value)
     assert param in str(excinfo.value)
 
     return params
 
 
-def param_test_generator(tmp_path, param, value):
+def catch_invalid_uuid_generator(param, invalid_uuid, no_workspace):
+    params = Params()
+    params.workspace = workspace
+    with pytest.raises(ValueError) as excinfo:
+        params.__setattr__(param, invalid_uuid)
+    assert f"UUID string: {invalid_uuid}" in str(excinfo.value)
+    with pytest.raises(IndexError) as excinfo:
+        params.__setattr__(param, no_workspace)
+    assert f"UUID address {no_workspace}" in str(excinfo.value)
+
+
+def param_test_generator(tmp_path, param, value, wrkstr=None):
     filepath = tmpfile(tmp_path)
     ifile = InputFile(filepath)
-    ifile.write_ui_json(default=True)
+    ifile.write_ui_json(default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
     ui[param]["isValue"] = True
@@ -103,591 +119,903 @@ def test_params_constructors(tmp_path):
 
 def test_validate_inversion_type(tmp_path):
     param = "inversion_type"
+    newval = "gravity"
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, "gravity")
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    param_test_generator(tmp_path, param, "gravity")
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "em", "value")
 
 
-#
-# def test_validate_core_cell_size(tmp_path):
-#     param = "core_cell_size"
-#     ### test ordinary behaviour ###
-#     param_test_generator(tmp_path, param, None)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-# def test_validate_inversion_style(tmp_path):
-#     param = "inversion_style"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, "voxel")
-#     ### test ordinary behaviour ###
-#     tparams = {param: "voxel"}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "parametric", "value")
-#
-#
-# def test_validate_forward_only(tmp_path):
-#     param = "forward_only"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, False)
-#     ### test ordinary behaviour ###
-#     tparams = {param: True, "reference_model": "some_path"}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "true", "type")
-#     idict = input_dict.copy()
-#     idict["forward_only"] = True
-#     filepath = tmpfile(tmp_path)
-#     tmp_input_file(filepath, idict)
-#     with pytest.raises(KeyError) as excinfo:
-#         params = Params.from_path(filepath)
-#     assert f"forward_only requirement." in str(excinfo.value)
-#
-#
-# def test_validate_inducing_field_aid(tmp_path):
-#     param = "inducing_field_aid"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     idict = input_dict.copy()
-#     idict.update({param: [1, 2, 3]})
-#     filepath = tmpfile(tmp_path)
-#     tmp_input_file(filepath, idict)
-#     params = Params.from_path(filepath)
-#     assert all(getattr(params, param) == np.array(idict[param]))
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#     catch_invalid_generator(tmp_path, param, [1.0, 2.0], "shape")
-#     params = Params(**input_dict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params.inducing_field_aid = [0, 1, 2]
-#     assert "greater than 0." in str(excinfo.value)
-#
-#
-# def test_validate_resolution(tmp_path):
-#     param = "resolution"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 0)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 6}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_window(tmp_path):
-#     param = "window"
-#     test_dict = {
-#         "center_x": 2,
-#         "center_y": 2,
-#         "width": 2,
-#         "height": 2,
-#         "azimuth": 2,
-#     }
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: test_dict.update({"center": [2, 2], "size": [2, 2]})}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, 1, "type")
-#     test_dict["nogood"] = 2
-#     catch_invalid_generator(tmp_path, param, test_dict, "keys")
-#     test_dict.pop("nogood", None)
-#     test_dict.pop("center_x", None)
-#     params = Params(**input_dict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params.window = test_dict
-#     assert "Input parameter 'window'" in str(excinfo.value)
-#
-#
-# def test_validate_workspace(tmp_path):
-#     param = "workspace"
-#     ### test ordinary behaviour ###
-#     tparams = {param: "some_path"}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, 12234, "type")
-#
-#
-# def test_validate_data(tmp_path):
-#     param = "data"
-#     ### test ordinary behaviour ###
-#     tparams = {param: {"name": "Trevor"}}
-#     tparams.update({"workspace": "."})
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, 1234, "type")
-#     idict = input_dict.copy()
-#     idict.update({"data": {"channels": {"tmi": None}}})
-#     idict["workspace"] = "."
-#     filepath = tmpfile(tmp_path)
-#     tmp_input_file(filepath, idict)
-#     with pytest.raises(KeyError) as excinfo:
-#         params = Params.from_path(filepath)
-#     assert "'name', for input parameter 'data'" in str(excinfo.value)
-#     idict = input_dict.copy()
-#     idict["workspace"] = "some_path"
-#     idict["data"] = {"name": "Norman"}
-#     idict["data"].update({"channels": {"tmi": {"uncertainties": [1, 2, 3]}}})
-#     tmp_input_file(filepath, idict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params = Params.from_path(filepath)
-#     assert "shape" in str(excinfo.value)
-#     idict = input_dict.copy()
-#     idict["workspace"] = "some_path"
-#     idict["data"] = {"name": "Norman"}
-#     idict["data"].update({"channels": {"tmi": {"uncertainties": ["str"]}}})
-#     tmp_input_file(filepath, idict)
-#     with pytest.raises(TypeError) as excinfo:
-#         params = Params.from_path(filepath)
-#     assert "type" in str(excinfo.value)
-#
-#
-# def test_validate_ignore_values(tmp_path):
-#     param = "ignore_values"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: "-1e8"}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, 1234, "type")
-#
-#
-# def test_validate_detrend(tmp_path):
-#     param = "detrend"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: {"corners": 2}}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, 1, "type")
-#     idict = input_dict.copy()
-#     idict["detrend"] = {"corners": 3}
-#     filepath = tmpfile(tmp_path)
-#     tmp_input_file(filepath, idict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params = Params.from_path(filepath)
-#     assert "Detrend order must be 0," in str(excinfo.value)
-#
-#
-# def test_validate_new_uncert(tmp_path):
-#     param = "new_uncert"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: [0.1, 1e-4]}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, ["test", "me"], "type")
-#     catch_invalid_generator(
-#         tmp_path,
-#         param,
-#         [
-#             0.1,
-#         ],
-#         "shape",
-#     )
-#     idict = input_dict.copy()
-#     idict["new_uncert"] = [12, 1e-14]
-#     filepath = tmpfile(tmp_path)
-#     tmp_input_file(filepath, idict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params = Params.from_path(filepath)
-#     assert "percent (new_uncert[0])" in str(excinfo.value)
-#     idict = input_dict.copy()
-#     idict["new_uncert"] = [0.1, -1e-14]
-#     filepath = tmpfile(tmp_path)
-#     tmp_input_file(filepath, idict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params = Params.from_path(filepath)
-#     assert "floor (new_uncert[1])" in str(excinfo.value)
-#
-#
-# def test_validate_mesh(tmp_path):
-#     param = "mesh"
-#     ### test ordinary behaviour ###
-#     param_test_generator(tmp_path)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, 1, "type")
-#
-#
-# def test_validate_output_geoh5(tmp_path):
-#     param = "output_geoh5"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: "some_path"}
-#     tparams.update({"out_group": "test"})
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, 1, "type")
-#
-#
-# def test_validate_topography(tmp_path):
-#     param = "topography"
-#     ### test ordinary behaviour ###
-#     tparams = {param: {"constant": 0}}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "bogus", "type")
-#     catch_invalid_generator(tmp_path, param, {"badkey": "na"}, "keys")
-#
-#
-# def test_validate_receivers_offset(tmp_path):
-#     param = "receivers_offset"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: {"constant": 0}}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "bogus", "type")
-#     catch_invalid_generator(tmp_path, param, {"badkey": "na"}, "keys")
-#
-#
-# def test_validate_chi_factor(tmp_path):
-#     param = "chi_factor"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 1)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 1}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "bogus", "type")
-#     params = Params(**input_dict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params.chi_factor = 0
-#     assert "chi_factor. Must be between 0 and 1." in str(excinfo.value)
-#
-#
-# def test_validate_model_norms(tmp_path):
-#     param = "model_norms"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, [2, 2, 2, 2])
-#     ### test ordinary behaviour ###
-#     tparams = {param: [1.0, 1.0, 1.0, 1.0]}
-#     param_test_generator(tmp_path, tparams)
-#     idict = input_dict.copy()
-#     idict["model_norms"] = [1, 1, 1, 1]
-#     filepath = tmpfile(tmp_path)
-#     tmp_input_file(filepath, idict)
-#     params = Params.from_path(filepath)
-#     assert params.max_iterations == 40
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, ["a", "b", "c", "d"], "type")
-#     params = Params(**input_dict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params.model_norms = [2, 2]
-#     assert "Must be a multiple of 4." in str(excinfo.value)
-#
-#
-# def test_validate_max_iterations(tmp_path):
-#     param = "max_iterations"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 10)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 15}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#     params = Params(**input_dict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params.max_iterations = -10
-#     assert "Must be > 0." in str(excinfo.value)
-#
-#
-# def test_validate_max_cg_iterations(tmp_path):
-#     param = "max_cg_iterations"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 30)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 15}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#     params = Params(**input_dict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params.max_iterations = -10
-#     assert "Must be > 0." in str(excinfo.value)
-#
-#
-# def test_validate_tol_cg(tmp_path):
-#     param = "tol_cg"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 1e-4)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 1e-6}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nogood", "type")
-#
-#
-# def test_validate_max_global_iterations(tmp_path):
-#     param = "max_global_iterations"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 100)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 40}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#     params = Params(**input_dict)
-#     with pytest.raises(ValueError) as excinfo:
-#         params.max_iterations = -10
-#     assert "Must be > 0." in str(excinfo.value)
-#
-#
-# def test_validate_gradient_type(tmp_path):
-#     param = "gradient_type"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, "total")
-#     ### test ordinary behaviour ###
-#     tparams = {param: "total"}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nogood", "value")
-#
-#
-# def test_validate_initial_beta(tmp_path):
-#     param = "initial_beta"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 5}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nogood", "type")
-#
-#
-# def test_validate_initial_beta_ratio(tmp_path):
-#     param = "initial_beta_ratio"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 1e2)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 0.6}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, 2, "type")
-#
-#
-# def test_validate_n_cpu(tmp_path):
-#     param = "n_cpu"
-#     ### test ordinary behaviour ###
-#     tparams = {param: 32}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_max_ram(tmp_path):
-#     param = "max_ram"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 2)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 16}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_depth_core(tmp_path):
-#     param = "depth_core"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: {"value": 2}}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_padding_distance(tmp_path):
-#     param = "padding_distance"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, [[0, 0], [0, 0], [0, 0]])
-#     ### test ordinary behaviour ###
-#     tparams = {param: [[1, 1], [1, 1], [1, 1]]}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#     catch_invalid_generator(tmp_path, param, [[1.0, 2.0]], "shape")
-#
-#
-# def test_validate_octree_levels_topo(tmp_path):
-#     param = "octree_levels_topo"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, [0, 1])
-#     ### test ordinary behaviour ###
-#     tparams = {param: [2, 2, 4, 4]}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_octree_levels_obs(tmp_path):
-#     param = "octree_levels_obs"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, [5, 5])
-#     ### test ordinary behaviour ###
-#     tparams = {param: [2, 2, 4, 4]}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_octree_levels_padding(tmp_path):
-#     param = "octree_levels_padding"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, [2, 2])
-#     ### test ordinary behaviour ###
-#     tparams = {param: [2, 2, 4, 4]}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_alphas(tmp_path):
-#     param = "alphas"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, [1] * 12)
-#     ### test ordinary behaviour ###
-#     tparams = {param: [5] * 12}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#     params = Params(**input_dict)
-#     params.alphas = [1] * 4
-#     assert len(params.alphas) == 12
-#     with pytest.raises(ValueError) as excinfo:
-#         params.alphas = [1] * 5
-#     assert "'alphas' must be a list of" in str(excinfo.value)
-#
-#
-# def test_validate_reference_model(tmp_path):
-#     param = "reference_model"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: "some_path"}
-#     param_test_generator(tmp_path, tparams)
-#     tparams = {param: 2.0}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, {}, "type")
-#
-#
-# def test_validate_starting_model(tmp_path):
-#     param = "starting_model"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, None)
-#     ### test ordinary behaviour ###
-#     tparams = {param: "some_path"}
-#     param_test_generator(tmp_path, tparams)
-#     tparams = {param: 1.0}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, {}, "type")
-#
-#
-# def test_validate_lower_bound(tmp_path):
-#     param = "lower_bound"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, -np.inf)
-#     ### test ordinary behaviour ###
-#     tparams = {param: -1e10}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_upper_bound(tmp_path):
-#     param = "upper_bound"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, np.inf)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 1e9}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_max_distance(tmp_path):
-#     param = "max_distance"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, np.inf)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 1e8}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_max_chunk_size(tmp_path):
-#     param = "max_chunk_size"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 128)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 256}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_chunk_by_rows(tmp_path):
-#     param = "chunk_by_rows"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, False)
-#     ### test ordinary behaviour ###
-#     tparams = {param: True}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_output_tile_files(tmp_path):
-#     param = "output_tile_files"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, False)
-#     ### test ordinary behaviour ###
-#     tparams = {param: True}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_no_data_value(tmp_path):
-#     param = "no_data_value"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, 0)
-#     ### test ordinary behaviour ###
-#     tparams = {param: 1}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_parallelized(tmp_path):
-#     param = "parallelized"
-#     ### test default behaviour ###
-#     default_test_generator(tmp_path, param, True)
-#     ### test ordinary behaviour ###
-#     tparams = {param: False}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, "nope", "type")
-#
-#
-# def test_validate_out_group(tmp_path):
-#     param = "out_group"
-#     ### test ordinary behaviour ###
-#     tparams = {param: "test"}
-#     param_test_generator(tmp_path, tparams)
-#     ### test validation behaviour ###
-#     catch_invalid_generator(tmp_path, param, 2, "type")
+def test_validate_forward_only(tmp_path):
+    param = "forward_only"
+    newval = False
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_inducing_field_strength(tmp_path):
+    param = "inducing_field_strength"
+    newval = 60000
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_inducing_field_inclination(tmp_path):
+    param = "inducing_field_inclination"
+    newval = 44
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_inducing_field_declination(tmp_path):
+    param = "inducing_field_declination"
+    newval = 9
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_topography_object(tmp_path):
+    param = "topography_object"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_topography(tmp_path):
+    param = "topography"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_data_object(tmp_path):
+    param = "data_object"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_tmi_channel(tmp_path):
+    param = "tmi_channel"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_tmi_uncertainty(tmp_path):
+    param = "tmi_uncertainty"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_starting_model_object(tmp_path):
+    param = "starting_model_object"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_starting_inclination_object(tmp_path):
+    param = "starting_inclination_object"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_starting_declination_object(tmp_path):
+    param = "starting_declination_object"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_starting_model(tmp_path):
+    param = "starting_model"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_starting_inclination(tmp_path):
+    param = "starting_inclination"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_starting_declination(tmp_path):
+    param = "starting_declination"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_tile_spatial(tmp_path):
+    param = "tile_spatial"
+    newval = 9
+    invalidval = {}
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, invalidval, "type")
+    catch_invalid_uuid_generator(param, "test", str(uuid4()))
+
+
+def test_validate_receivers_radar_drape(tmp_path):
+    param = "receivers_radar_drape"
+    newval = str(uuid4())
+    invalidval = {}
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, invalidval, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_receivers_offset_x(tmp_path):
+    param = "receivers_offset_x"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_receivers_offset_y(tmp_path):
+    param = "receivers_offset_x"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_receivers_offset_z(tmp_path):
+    param = "receivers_offset_x"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_gps_receivers_offset(tmp_path):
+    param = "gps_receivers_offset"
+    newval = str(uuid4())
+    invalidval = {}
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, invalidval, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_ignore_values(tmp_path):
+    param = "ignore_values"
+    newval = "12345"
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_resolution(tmp_path):
+    param = "resolution"
+    newval = 10
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_detrend_data(tmp_path):
+    param = "detrend_data"
+    newval = True
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_detrend_order(tmp_path):
+    param = "detrend_order"
+    newval = 2
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, 9, "value")
+
+
+def test_validate_detrend_type(tmp_path):
+    param = "detrend_type"
+    newval = "corners"
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "", "value")
+
+
+def test_validate_max_chunk_size(tmp_path):
+    param = "max_chunk_size"
+    newval = 256
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "", "type")
+
+
+def test_validate_chunk_by_rows(tmp_path):
+    param = "chunk_by_rows"
+    newval = True
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "", "type")
+
+
+def test_validate_output_tile_files(tmp_path):
+    param = "output_tile_files"
+    newval = True
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "", "type")
+
+
+def test_validate_mesh(tmp_path):
+    param = "mesh"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_mesh_from_params(tmp_path):
+    param = "mesh_from_params"
+    newval = True
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "", "type")
+
+
+def test_validate_core_cell_size_x(tmp_path):
+    param = "core_cell_size_x"
+    newval = 9
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "", "type")
+
+
+def test_validate_core_cell_size_y(tmp_path):
+    param = "core_cell_size_y"
+    newval = 9
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "", "type")
+
+
+def test_validate_core_cell_size_z(tmp_path):
+    param = "core_cell_size_z"
+    newval = 9
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "", "type")
+
+
+def test_validate_octree_levels_topo(tmp_path):
+    param = "octree_levels_topo"
+    newval = [1, 2, 3]
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_octree_levels_obs(tmp_path):
+    param = "octree_levels_obs"
+    newval = [1, 2, 3]
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_octree_levels_padding(tmp_path):
+    param = "octree_levels_padding"
+    newval = [1, 2, 3]
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_depth_core(tmp_path):
+    param = "depth_core"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_max_distance(tmp_path):
+    param = "max_distance"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_padding_distance_x(tmp_path):
+    param = "padding_distance_x"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_padding_distance_y(tmp_path):
+    param = "padding_distance_y"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_padding_distance_z(tmp_path):
+    param = "padding_distance_z"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_window_center_x(tmp_path):
+    param = "window_center_x"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_window_center_y(tmp_path):
+    param = "window_center_y"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_window_width(tmp_path):
+    param = "window_width"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_window_height(tmp_path):
+    param = "window_height"
+    newval = 99
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_inversion_style(tmp_path):
+    param = "inversion_style"
+    newval = "voxel"
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "value")
+
+
+def test_validate_chi_factor(tmp_path):
+    param = "chi_factor"
+    newval = 0.5
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_max_iterations(tmp_path):
+    param = "max_iterations"
+    newval = 2
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_max_cg_iterations(tmp_path):
+    param = "max_cg_iterations"
+    newval = 2
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_max_global_iterations(tmp_path):
+    param = "max_global_iterations"
+    newval = 2
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_initial_beta(tmp_path):
+    param = "initial_beta"
+    newval = 2
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_initial_beta_ratio(tmp_path):
+    param = "initial_beta_ratio"
+    newval = 0.5
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_tol_cg(tmp_path):
+    param = "tol_cg"
+    newval = 0.1
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_alpha_s(tmp_path):
+    param = "alpha_s"
+    newval = 0.1
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_alpha_x(tmp_path):
+    param = "alpha_x"
+    newval = 0.1
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_alpha_y(tmp_path):
+    param = "alpha_y"
+    newval = 0.1
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_alpha_z(tmp_path):
+    param = "alpha_z"
+    newval = 0.1
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_smallness_norm(tmp_path):
+    param = "smallness_norm"
+    newval = 0.5
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_x_norm(tmp_path):
+    param = "x_norm"
+    newval = 0.5
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_y_norm(tmp_path):
+    param = "y_norm"
+    newval = 0.5
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_z_norm(tmp_path):
+    param = "z_norm"
+    newval = 0.5
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_reference_model_object(tmp_path):
+    param = "reference_model_object"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_reference_inclination_object(tmp_path):
+    param = "reference_inclination_object"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_reference_declination_object(tmp_path):
+    param = "reference_declination_object"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_reference_model(tmp_path):
+    param = "reference_model"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_reference_inclination(tmp_path):
+    param = "reference_inclination"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_reference_declination(tmp_path):
+    param = "reference_declination"
+    newval = str(uuid4())
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+    catch_invalid_uuid_generator(param, "test", newval)
+
+
+def test_validate_gradient_type(tmp_path):
+    param = "gradient_type"
+    newval = "components"
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "value")
+
+
+def test_validate_lower_bound(tmp_path):
+    param = "lower_bound"
+    newval = -1000
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_upper_bound(tmp_path):
+    param = "upper_bound"
+    newval = 1000
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_parallelized(tmp_path):
+    param = "parallelized"
+    newval = False
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_n_cpu(tmp_path):
+    param = "n_cpu"
+    newval = 12
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_max_ram(tmp_path):
+    param = "max_ram"
+    newval = 10
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, "test", "type")
+
+
+def test_validate_inversion_type(tmp_path):
+    param = "inversion_type"
+    newval = "gravity"
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "value")
+
+
+def test_validate_workspace(tmp_path):
+    param = "workspace"
+    newval = "../assets/something.geoh5py"
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_output_geoh5(tmp_path):
+    param = "output_geoh5"
+    newval = "../assets/something.geoh5py"
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    # param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_out_group(tmp_path):
+    param = "out_group"
+    newval = "test_"
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")
+
+
+def test_validate_no_data_value(tmp_path):
+    param = "no_data_value"
+    newval = 5
+    ### test default behaviour ###
+    default_test_generator(tmp_path, param, newval)
+    ### test ordinary behaviour ###
+    param_test_generator(tmp_path, param, newval)
+    ### test validation behaviour ###
+    catch_invalid_generator(tmp_path, param, {}, "type")

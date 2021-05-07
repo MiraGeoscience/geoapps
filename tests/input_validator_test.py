@@ -26,25 +26,45 @@ def tmp_input_file(filepath, input_dict):
 
 
 def test_param_validation_msg():
-    msg = validator._param_validation_msg("inversion_type", "value", ["mvi"])
-    assert msg == "Invalid inversion_type value. Must be: mvi."
+    msg = validator._param_validation_msg("inversion_type", "em", "value", ["mvi"])
+    assert msg == "Invalid 'inversion_type' value: 'em'. Must be: 'mvi'."
     msg = validator._param_validation_msg(
-        "inversion_type", "value", ["mvi", "grav", "mag"]
+        "inversion_type", "EM", "value", ["mvi", "grav", "mag"]
     )
-    assert (
-        msg == f"Invalid inversion_type value. Must be one of: ('mvi', 'grav', 'mag')."
-    )
-    msg = validator._param_validation_msg("inversion_type", "type", [str])
-    assert msg == f"Invalid inversion_type type. Must be: <class 'str'>."
-    msg = validator._param_validation_msg("inversion_type", "type", [int, float])
     assert (
         msg
-        == f"Invalid inversion_type type. Must be one of: (<class 'int'>, <class 'float'>)."
+        == f"Invalid 'inversion_type' value: 'EM'. Must be one of: 'mvi', 'grav', 'mag'."
     )
-    msg = validator._param_validation_msg("inducing_field_aid", "shape", (3,))
-    assert msg == f"Invalid inducing_field_aid shape. Must be: (3,)."
-    msg = validator._param_validation_msg("inducing_field_aid", "shape", (3, 3))
-    assert msg == f"Invalid inducing_field_aid shape. Must be: (3, 3)."
+    msg = validator._param_validation_msg("inversion_type", 3, "type", [str])
+    assert (
+        msg
+        == f"Invalid 'inversion_type' type: '<class 'int'>'. Must be: '<class 'str'>'."
+    )
+    msg = validator._param_validation_msg(
+        "inversion_type", "sldkfj", "type", [int, float]
+    )
+    assert (
+        msg
+        == f"Invalid 'inversion_type' type: '<class 'str'>'. Must be one of: '<class 'int'>', '<class 'float'>'."
+    )
+    msg = validator._param_validation_msg("inducing_field_aid", [1, 2], "shape", (3,))
+    assert msg == f"Invalid 'inducing_field_aid' shape: (2,). Must be: (3,)."
+    msg = validator._param_validation_msg("inducing_field_aid", [1, 2], "shape", (3, 3))
+    assert msg == f"Invalid 'inducing_field_aid' shape: (2,). Must be: (3, 3)."
+    msg = validator._param_validation_msg(
+        "max_distance", 100, "reqs", ("core_cell_size",)
+    )
+    assert (
+        msg
+        == f"Unsatisfied 'max_distance' requirement. Input file must contain 'core_cell_size' if 'max_distance' is provided."
+    )
+    msg = validator._param_validation_msg(
+        "mesh_from_params", True, "reqs", (True, "core_cell_size")
+    )
+    assert (
+        msg
+        == f"Unsatisfied 'mesh_from_params' requirement. Input file must contain 'core_cell_size' if 'mesh_from_params' is 'True'."
+    )
 
 
 def test_isiterable():
