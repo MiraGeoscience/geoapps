@@ -5,7 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from uuid import UUID
+
 import numpy as np
+from geoh5py.workspace import Workspace
 
 required_parameters = [
     "inversion_type",
@@ -28,7 +31,7 @@ default_ui_json = {
     "inducing_field_strength": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 50000.0,
         "min": 0.0,
         "main": True,
         "group": "Inducing Field",
@@ -41,7 +44,7 @@ default_ui_json = {
     "inducing_field_inclination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 90.0,
         "min": 0.0,
         "main": True,
         "group": "Inducing Field",
@@ -54,7 +57,7 @@ default_ui_json = {
     "inducing_field_declination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 0.0,
         "min": 0.0,
         "main": True,
         "group": "Inducing Field",
@@ -119,7 +122,7 @@ default_ui_json = {
     "tmi_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 1.0,
         "group": "Data",
         "main": True,
         "dependency": "forward_only",
@@ -169,7 +172,7 @@ default_ui_json = {
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
+        "default": None,
         "group": "Starting Model",
         "isValue": False,
         "parent": "starting_model_object",
@@ -180,7 +183,7 @@ default_ui_json = {
     "starting_inclination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
+        "default": None,
         "group": "Starting Model",
         "isValue": False,
         "parent": "starting_inclination_object",
@@ -191,7 +194,7 @@ default_ui_json = {
     "starting_declination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
+        "default": None,
         "group": "Starting Model",
         "isValue": False,
         "parent": "starting_declination_object",
@@ -870,9 +873,9 @@ validations = {
         "types": [int, float],
     },
     "topography_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
-    "topography": {"types": [str, int, float], "reqs": [("topography_object")]},
+    "topography": {"types": [str, UUID, int, float], "reqs": [("topography_object")]},
     "data_object": {
         "types": [str],
     },
@@ -912,7 +915,7 @@ validations = {
         "types": [int, float],
     },
     "gps_receivers_offset": {
-        "types": [int, float],
+        "types": [int, float, str],
     },
     "ignore_values": {
         "types": [str],
@@ -1089,10 +1092,10 @@ validations = {
         "reqs": [(True, "parallelized")],
     },
     "workspace": {
-        "types": [str],
+        "types": [str, Workspace],
     },
     "output_geoh5": {
-        "types": [str],
+        "types": [str, Workspace],
     },
     "out_group": {"types": [str]},
     "no_data_value": {
@@ -1102,10 +1105,10 @@ validations = {
         "types": [str],
     },
     "workspace_geoh5": {
-        "types": [str],
+        "types": [str, Workspace],
     },
     "geoh5": {
-        "types": [str],
+        "types": [str, Workspace],
     },
     "run_command": {
         "types": [str],

@@ -67,9 +67,11 @@ class InputFile:
             else:
                 self.data[k] = v
 
-    def write_ui_json(self, default=False):
+    def write_ui_json(self, default=False, workspace=None):
 
         out = deepcopy(default_ui_json)
+        if workspace is not None:
+            out["workspace_geoh5"] = workspace
         if not default:
             if self.is_loaded:
                 for k, v in self.data.items():
@@ -1418,7 +1420,10 @@ class Params:
             return
         p = "workspace"
         self.validator.validate(p, val, validations[p])
-        self._workspace = Workspace(val)
+        if isinstance(val, str):
+            self._workspace = Workspace(val)
+        else:
+            self._workspace = val
 
     @property
     def output_geoh5(self):

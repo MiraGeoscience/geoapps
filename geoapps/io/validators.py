@@ -162,7 +162,7 @@ class InputValidator:
     def _validate_parameter_reqs(
         self, param: str, value: Any, vreqs: tuple, input_keys: List[str]
     ) -> None:
-        """ Raise a KeyError if parameter requirement is not met. """
+        """ Raise a KeyError if parameter requirement is not satisfied. """
         if len(vreqs) > 1:
             if (value == vreqs[0]) & (vreqs[1] not in input_keys):
                 msg = self._param_validation_msg(param, value, "reqs", vreqs)
@@ -189,28 +189,34 @@ class InputValidator:
         """
 
         if validation_type == "shape":
-            msg = f"Invalid {param} {validation_type}: {value}. Must be: {validations}."
+            value = np.array(value).shape
+            msg = (
+                f"Invalid '{param}' {validation_type}: {value}. Must be: {validations}."
+            )
 
         elif validation_type == "reqs":
             if len(validations) > 1:
                 msg = (
-                    f"Invalid {param} requirement. Input file must contain "
-                    f"'{validations[1]}' if '{param}' is '{validations[0]}'."
+                    f"Unsatisfied '{param}' requirement. Input file must contain "
+                    f"'{validations[1]}' if '{param}' is '{str(validations[0])}'."
                 )
             else:
                 msg = (
-                    f"Invalid {param} requirement. Input file must contain "
+                    f"Unsatisfied '{param}' requirement. Input file must contain "
                     f"'{validations[0]}' if '{param}' is provided."
                 )
 
         else:
+            if validation_type == "type":
+                value = type(value)
             if self._isiterable(validations, checklen=True):
+                tmp = "'" + "', '".join(str(k) for k in validations) + "'"
                 msg = (
-                    f"Invalid {param} {validation_type}: {value}. "
-                    f"Must be one of: {', '.join(str(k) for k in validations)}."
+                    f"Invalid '{param}' {validation_type}: '{value}'. "
+                    f"Must be one of: {tmp}."
                 )
             else:
-                msg = f"Invalid {param} {validation_type}: {value}. Must be: {validations[0]}."
+                msg = f"Invalid '{param}' {validation_type}: '{value}'. Must be: '{validations[0]}'."
 
         return msg
 
