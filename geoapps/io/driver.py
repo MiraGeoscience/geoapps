@@ -8,6 +8,7 @@
 import json
 import os
 from copy import deepcopy
+from typing import Any, Callable, Dict, List, Tuple, Union
 from uuid import UUID
 
 import numpy as np
@@ -25,19 +26,27 @@ class InputFile:
 
     Attributes
     ----------
-    filepath : path to input file.
-    workpath : path to working directory.
-    data : input file contents parsed to dictionary.
-    isloaded : True if load() method called to populate the 'data' attribute.
+    filepath : Path to input file.
+    workpath : Path to working directory.
+    data : Input file contents parsed to dictionary.
+    associations : Defines parent/child relationships.
+    is_loaded : True if load() method called to populate the 'data' attribute.
+    is_formatted : True if 'data' attribute contains simple key/value (not extra fields from
+    ui.json format).
 
     Methods
     -------
-    load()
-        Loads and validates input file contents to dictionary.
+    default()
+        Defaults values in 'data' attribute to those stored in default_ui_json 'default' fields.
+    write_ui_json()
+        Writes a ui.json formatted file from 'data' attribute contents.
+    read_ui_json()
+        Reads a ui.json formatted file into 'data' attribute dictionary.  Optionally filters
+        ui.json fields other than 'value'.
 
     """
 
-    def __init__(self, filepath):
+    def __init__(self, filepath: str):
         self.filepath = filepath
         self.workpath = os.path.dirname(os.path.abspath(filepath)) + os.path.sep
         self.data = {}
@@ -50,13 +59,15 @@ class InputFile:
         return self._filepath
 
     @filepath.setter
-    def filepath(self, f):
+    def filepath(self, f: str):
         if ".".join(f.split(".")[-2:]) != "ui.json":
             raise OSError("Input file must have 'ui.json' extension.")
         else:
             self._filepath = f
 
-    def default(self):
+    def default(self) -> None:
+        """ defaults InputFile data using 'default' field of default_ui_json"""
+
         for k, v in default_ui_json.items():
             if isinstance(v, dict):
                 if "isValue" in v.keys():
@@ -67,7 +78,17 @@ class InputFile:
             else:
                 self.data[k] = v
 
-    def write_ui_json(self, default=False, workspace=None):
+    def write_ui_json(self, default: bool = False, workspace: Workspace = None) -> None:
+        """
+        Writes a ui.json formatted file from InputFile data
+
+        Parameters
+        ----------
+        default : optional
+            Writes default values stored in default_ui_json to file.
+        workspace : optional
+            Provide a workspace_geoh5 path to simulate auto-generated field in GA.
+        """
 
         out = deepcopy(default_ui_json)
         if workspace is not None:
@@ -85,7 +106,16 @@ class InputFile:
         with open(self.filepath, "w") as f:
             json.dump(self._stringify(out), f, indent=4)
 
-    def read_ui_json(self, reformat=True):
+    def read_ui_json(self, reformat: bool = True) -> None:
+        """
+        Reads a ui.json formatted file into 'data' attribute dictionary.
+
+        Parameters
+        ----------
+
+        reformat: optional
+            Stores only 'value' fields from ui.json if True.
+        """
 
         with open(self.filepath) as f:
             data = self._numify(json.load(f))
@@ -99,7 +129,16 @@ class InputFile:
 
         self.is_loaded = True
 
-    def _ui_2_py(self, ui_dict):
+    def _ui_2_py(self, ui_dict: Dict[str, Any]) -> None:
+        """
+        Flatten ui.json format to simple key/value structure.
+
+        Parameters
+        ----------
+
+        ui_dict :
+            dictionary containing all keys, values, fields of a ui.json formatted file
+        """
 
         for k, v in ui_dict.items():
             if isinstance(v, dict):
@@ -116,8 +155,22 @@ class InputFile:
             else:
                 self.data[k] = v
 
-    def _stringify(self, d):
-        """ Convert inf, none, and list types to strings within a dictionary """
+    def _stringify(self, d: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Convert inf, none, and list types to strings within a dictionary
+
+        Parameters
+        ----------
+
+        d :
+            dictionary containing ui.json keys, values, fields
+
+        Returns
+        -------
+        Dictionary with inf, none and list types converted to string representations friendly for
+        json format.
+
+        """
 
         # map [...] to "[...]"
         excl = ["choiceList", "meshType"]
@@ -136,8 +189,21 @@ class InputFile:
 
         return d
 
-    def _numify(self, d):
-        """ Convert inf, none and list strings to numerical types within a dictionary """
+    def _numify(self, d: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Convert inf, none and list strings to numerical types within a dictionary
+
+        Parameters
+        ----------
+
+        d :
+            dictionary containing ui.json keys, values, fields
+
+        Returns
+        -------
+        Dictionary with inf, none and list string representations converted numerical types.
+
+        """
 
         def s2l(k, v):  # map "[...]" to [...]
             if isinstance(v, str):
@@ -161,8 +227,20 @@ class InputFile:
 
         return d
 
-    def _dict_mapper(self, key, val, string_funcs):
-        """ Recurses through nested dictionary and applies mapping funcs to all values """
+    def _dict_mapper(self, key: str, val: Any, string_funcs: Callable) -> None:
+        """
+        Recurses through nested dictionary and applies mapping funcs to all values
+
+        Parameters
+        ----------
+        key :
+            Dictionary key.
+        val :
+            Dictionary val (could be another dictionary).
+        string_funcs:
+            Function to apply to values within dictionary.
+        """
+
         if isinstance(val, dict):
             for k, v in val.items():
                 val[k] = self._dict_mapper(k, v, string_funcs)
@@ -172,7 +250,16 @@ class InputFile:
                 val = f(key, val)
             return val
 
-    def _set_associations(self, d):
+    def _set_associations(self, d: Dict[str, Any]) -> None:
+        """
+        Set parent/child associations for ui.json fields.
+
+        Parameters
+        ----------
+
+        d :
+            Dictionary containing ui.json keys/values/fields.
+        """
         for k, v in d.items():
             if isinstance(v, dict):
                 if "isValue" in v.keys():
@@ -199,9 +286,9 @@ class Params:
 
     Attributes
     ----------
-    validator : InputValidator
+    validator :
         class instance to handle parameter validation.
-    inversion_type : str
+    workpath : Path to working directory.
 
     Constructors
     ------------
@@ -300,7 +387,8 @@ class Params:
 
         self._set_defaults()
 
-    def _set_defaults(self):
+    def _set_defaults(self) -> None:
+        """ Populate parameters with default values stored in default_ui_json. """
         for a in self.__dict__.keys():
             if a in ["validator", "workpath", "associations"]:
                 continue
@@ -327,7 +415,8 @@ class Params:
 
     @classmethod
     def from_path(cls, filepath: str) -> None:
-        """Construct Params object from path to input file.
+        """
+        Construct Params object from path to input file.
 
         Parameters
         ----------
@@ -338,33 +427,35 @@ class Params:
         p = cls.from_ifile(ifile)
         return p
 
-    def is_uuid(self, p):
+    def is_uuid(self, p: str) -> bool:
+        """ Return true if string contains valid UUID. """
         if isinstance(p, str):
             private_attr = self.__getattribue__("_" + p)
             return True if isinstance(private_attr, UUID) else False
         else:
             pass
 
-    def parent(self, p):
-        return self.associations[p]
+    def parent(self, child_id: Union[str, UUID]) -> Union[str, UUID]:
+        """ Returns parent id of provided child id. """
+        return self.associations[child_id]
 
-    def active(self):
+    def active(self) -> List[str]:
         """ Retrieve active parameter set (value not None). """
         return [k[1:] for k, v in self.__dict__.items() if v is not None]
 
-    def components(self):
+    def components(self) -> List[str]:
         """ Retrieve component names used to index channel, uncertainty data. """
         return [k.split("_")[0] for k in self.active() if "channel" in k]
 
-    def uncertainty(self, component):
+    def uncertainty(self, component: str) -> float:
         """ Returns uncertainty for chosen data component. """
         return self.__getattribute__("_".join([component, "uncertainty"]))
 
-    def channel(self, component):
+    def channel(self, component: str) -> UUID:
         """ Returns channel uuid for chosen data component. """
         return self.__getattribute__("_".join([component, "channel"]))
 
-    def window(self):
+    def window(self) -> Dict[str, float]:
         """ Returns window dictionary """
         win = {
             "center_x": self.window_center_x,
@@ -376,7 +467,8 @@ class Params:
         }
         return win if any([v is not None for v in win.values()]) else None
 
-    def offset(self):
+    def offset(self) -> Tuple[List[float], UUID]:
+        """ Returns offset components as list and drape data. """
         offsets = [
             self.receivers_offset_x,
             self.receivers_offset_y,
@@ -386,14 +478,16 @@ class Params:
         offsets = offsets if is_offset else None
         return offsets, self.receivers_radar_drape
 
-    def inducing_field_aid(self):
+    def inducing_field_aid(self) -> List[float]:
+        """ Returns inducing field components as a list. """
         return [
             self.inducing_field_strength,
             self.inducing_field_inclination,
             self.inducing_field_declination,
         ]
 
-    def model_norms(self):
+    def model_norms(self) -> List[float]:
+        """ Returns model norm components as a list. """
         return [
             self.smallness_norm,
             self.x_norm,
@@ -1464,7 +1558,7 @@ class Params:
         self.validator.validate(p, val, validations[p])
         self._no_data_value = val
 
-    def default(self, param):
+    def default(self, param: str) -> Any:
         """ Return default value of parameter stored in default_ui_json. """
         return default_ui_json[param]["default"]
 
