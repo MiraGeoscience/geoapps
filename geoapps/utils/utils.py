@@ -6,12 +6,12 @@
 #  (see LICENSE file at the root of this source code package).
 
 import gc
+import json
 import os
 import re
 
 import dask
 import dask.array as da
-import fiona
 import geoh5py
 import numpy as np
 import pandas as pd
@@ -20,10 +20,16 @@ from geoh5py.data import FloatData
 from geoh5py.groups import Group
 from geoh5py.objects import BlockModel, Grid2D, Octree, Surface
 from geoh5py.workspace import Workspace
-from osgeo import gdal
+
+try:
+    import fiona
+    from osgeo import gdal
+    from shapely.geometry import LineString, mapping
+except ModuleNotFoundError:
+    pass
+
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
-from shapely.geometry import LineString, mapping
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
@@ -844,7 +850,7 @@ def block_model_2_tensor(block_model, models=[]):
     return tensor, out
 
 
-def treemesh_2_octree(workspace, treemesh, parent=None):
+def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
 
     indArr, levels = treemesh._ubc_indArr
     ubc_order = treemesh._ubc_order
@@ -856,7 +862,7 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
     origin[2] += treemesh.h[2].size * treemesh.h[2][0]
     mesh_object = Octree.create(
         workspace,
-        name=f"Mesh",
+        name=name,
         origin=origin,
         u_count=treemesh.h[0].size,
         v_count=treemesh.h[1].size,
@@ -1577,6 +1583,23 @@ def iso_surface(
         surfaces += [[vertices, faces]]
 
     return surfaces
+
+
+def load_json_params(file: str):
+    """
+    Read input parameters from json
+    """
+    with open(file) as f:
+        input_dict = json.load(f)
+
+    params = {}
+    for key, param in input_dict.items():
+        if isinstance(param, dict):
+            params[key] = param["value"]
+        else:
+            params[key] = param
+
+    return params
 
 
 colors = [
