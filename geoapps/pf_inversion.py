@@ -315,6 +315,7 @@ def inversion(input_file):
 
         if workspace.get_entity(uuid.UUID(input_dict["data"]["name"])):
             entity = workspace.get_entity(uuid.UUID(input_dict["data"]["name"]))[0]
+
         else:
             assert False, (
                 f"Entity {input_dict['data']['name']} could not be found in "
