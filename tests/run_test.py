@@ -27,11 +27,6 @@ project = "FlinFlon.geoh5"
 
 
 def test_calculator():
-    url = "https://github.com/MiraGeoscience/geoapps/raw/main/assets/FlinFlon.geoh5"
-
-    r = requests.get(url)
-    open(project, "wb").write(r.content)
-
     app = Calculator(h5file=project)
     app.trigger.click()
 
