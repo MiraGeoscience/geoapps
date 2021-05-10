@@ -20,7 +20,7 @@ from geoapps.io.constants import default_ui_json
 ######################  Setup  ###########################
 
 tmpfile = lambda path: os.path.join(path, "test.ui.json")
-wrkstr = "../assets/FlinFlon.geoh5"
+wrkstr = "FlinFlon.geoh5"
 workspace = Workspace(wrkstr)
 
 
