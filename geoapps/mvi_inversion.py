@@ -17,16 +17,14 @@ from uuid import UUID
 
 import dask
 import numpy as np
-import SimPEG
 from discretize import TreeMesh
-from discretize.utils import active_from_xyz, meshutils
+from discretize.utils import active_from_xyz
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import BlockModel, Grid2D, Octree, Points
-from geoh5py.workspace import Workspace
-from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
+from geoh5py.objects import Grid2D, Points
+from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 
-from geoapps.io import InputFile, Params
+from geoapps.io.MVI import MVIParams
 from geoapps.simpegPF import (
     PF,
     DataMisfit,
@@ -40,28 +38,19 @@ from geoapps.simpegPF import (
     Utils,
 )
 from geoapps.simpegPF.Utils import matutils, mkvc
-from geoapps.simpegPF.Utils.modelutils import tileSurveyPoints
-from geoapps.utils import (
-    block_model_2_tensor,
-    filter_xy,
-    octree_2_treemesh,
-    rotate_xy,
-    treemesh_2_octree,
-)
-
-# from SimPEG.utils.drivers import create_nested_mesh
+from geoapps.utils import filter_xy, octree_2_treemesh, rotate_xy, treemesh_2_octree
 
 
 def start_inversion(filepath):
     """ Starts inversion with parameters defined in input file. """
 
-    params = Params.from_path(filepath)
+    params = MVIParams.from_path(filepath)
     driver = InversionDriver(params)
     driver.run()
 
 
 class InversionDriver:
-    def __init__(self, params: Params):
+    def __init__(self, params: Union[MVIParams]):
         self.params = params
         self.workspace = params.workspace
         self.mesh = None

@@ -25,7 +25,7 @@ try:
     import fiona
     from osgeo import gdal
     from shapely.geometry import LineString, mapping
-except ModuleNotFoundError:
+except (ModuleNotFoundError, ImportError):
     pass
 
 from scipy.interpolate import interp1d

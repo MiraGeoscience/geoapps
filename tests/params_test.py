@@ -10,12 +10,12 @@ import os
 from copy import deepcopy
 from uuid import uuid4
 
-import numpy as np
 import pytest
 from geoh5py.workspace import Workspace
 
 from geoapps.io import InputFile, Params
-from geoapps.io.constants import default_ui_json
+from geoapps.io.MVI import MVIParams
+from geoapps.io.MVI.constants import default_ui_json
 
 ######################  Setup  ###########################
 
@@ -32,12 +32,12 @@ def tmp_input_file(filepath, idict):
 def default_test_generator(tmp_path, param, newval, wrkstr=None):
 
     d_u_j = deepcopy(default_ui_json)
-    params = Params()
+    params = MVIParams()
     assert getattr(params, param) == d_u_j[param]["default"]
     filepath = tmpfile(tmp_path)
     ifile = InputFile(filepath)
-    ifile.write_ui_json(default=True, workspace=wrkstr)
-    params = Params.from_path(filepath)
+    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
+    params = MVIParams.from_path(filepath)
     assert getattr(params, param) == d_u_j[param]["default"]
     with open(filepath) as f:
         ui = json.load(f)
@@ -47,7 +47,7 @@ def default_test_generator(tmp_path, param, newval, wrkstr=None):
     ui[param]["enabled"] = False
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
-    params = Params.from_path(filepath)
+    params = MVIParams.from_path(filepath)
     assert getattr(params, param) == d_u_j[param]["default"]
     with open(filepath) as f:
         ui = json.load(f)
@@ -57,13 +57,13 @@ def default_test_generator(tmp_path, param, newval, wrkstr=None):
     ui[param]["enabled"] = True
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
-    params = Params.from_path(filepath)
+    params = MVIParams.from_path(filepath)
     assert getattr(params, param) == d_u_j[param]["default"]
 
 
 def catch_invalid_generator(tmp_path, param, invalid_value, validation_type):
 
-    params = Params()
+    params = MVIParams()
     params.workspace = workspace
     if validation_type == "type":
         err = TypeError
@@ -80,7 +80,7 @@ def catch_invalid_generator(tmp_path, param, invalid_value, validation_type):
 
 
 def catch_invalid_uuid_generator(param, invalid_uuid, no_workspace):
-    params = Params()
+    params = MVIParams()
     params.workspace = workspace
     with pytest.raises(ValueError) as excinfo:
         params.__setattr__(param, invalid_uuid)
@@ -93,7 +93,7 @@ def catch_invalid_uuid_generator(param, invalid_uuid, no_workspace):
 def param_test_generator(tmp_path, param, value, wrkstr=None):
     filepath = tmpfile(tmp_path)
     ifile = InputFile(filepath)
-    ifile.write_ui_json(default=True, workspace=wrkstr)
+    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
     ui[param]["isValue"] = True
@@ -102,7 +102,7 @@ def param_test_generator(tmp_path, param, value, wrkstr=None):
     ui[param]["enabled"] = True
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
-    params = Params.from_path(filepath)
+    params = MVIParams.from_path(filepath)
     assert getattr(params, param) == value
 
 
@@ -112,9 +112,9 @@ def param_test_generator(tmp_path, param, value, wrkstr=None):
 def test_params_constructors(tmp_path):
     filepath = tmpfile(tmp_path)
     ifile = InputFile(filepath)
-    ifile.write_ui_json(default=True)
-    params1 = Params.from_path(filepath)
-    params2 = Params.from_ifile(ifile)
+    ifile.write_ui_json(default_ui_json, default=True)
+    params1 = MVIParams.from_path(filepath)
+    params2 = MVIParams.from_ifile(ifile)
 
 
 def test_validate_inversion_type(tmp_path):

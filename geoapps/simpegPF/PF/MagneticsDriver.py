@@ -2,7 +2,7 @@ import re
 import os
 from .. import Utils
 import numpy as np
-from SimPEG.Utils import mkvc
+from SimPEG.utils import mkvc
 from . import BaseMag
 from . import Magnetics
 from discretize import TensorMesh
