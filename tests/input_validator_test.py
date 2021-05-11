@@ -7,11 +7,12 @@
 
 import pytest
 
-from geoapps.io.validators import InputValidator, validations
+from geoapps.io.MVI.constants import required_parameters, validations
+from geoapps.io.validators import InputValidator
 
 ######################  Setup  ###########################
 
-validator = InputValidator()
+validator = InputValidator(required_parameters, validations)
 
 input_dict = {"inversion_type": "mvi", "core_cell_size": 2}
 tmpfile = lambda path: os.path.join(path, "test.json")
