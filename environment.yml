@@ -20,10 +20,10 @@ dependencies:
   - dask
   - gdal
   - fiona
-  - h5py
   - plotly
   - requests
   - empymod
   - pip:
     - ipyfilechooser
+    - h5py
     - geoh5py==0.1.2

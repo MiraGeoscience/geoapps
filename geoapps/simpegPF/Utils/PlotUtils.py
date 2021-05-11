@@ -6,7 +6,7 @@ from scipy.spatial import cKDTree
 from scipy.interpolate.interpnd import _ndim_coords_from_arrays
 from matplotlib.colors import LightSource, Normalize
 import matplotlib.gridspec as gridspec
-from SimPEG.utils import mkvc
+from SimPEG.Utils import mkvc
 
 
 def plot2Ddata(
