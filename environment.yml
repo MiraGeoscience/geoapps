@@ -19,11 +19,11 @@ dependencies:
   - xarray
   - dask
   - gdal
-  - fiona
+  - fiona=1.8.18
   - plotly
   - requests
   - empymod
   - pip:
     - ipyfilechooser
-    - h5py
+    - h5py==3.2.1
     - geoh5py==0.1.2
