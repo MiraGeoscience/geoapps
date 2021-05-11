@@ -5,306 +5,21 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import json
-import os
-from copy import deepcopy
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 from uuid import UUID
 
-import numpy as np
-from geoh5py.workspace import Workspace
-
-from .constants import default_ui_json, validations
-from .validators import InputValidator
-
-### Utils ###
+from ..input_file import InputFile
+from ..params import Params
+from ..validators import InputValidator
+from .constants import default_ui_json, required_parameters, validations
 
 
-class InputFile:
-    """
-    Handles loading input file containing inversion parameters.
-
-    Attributes
-    ----------
-    filepath : Path to input file.
-    workpath : Path to working directory.
-    data : Input file contents parsed to dictionary.
-    associations : Defines parent/child relationships.
-    is_loaded : True if load() method called to populate the 'data' attribute.
-    is_formatted : True if 'data' attribute contains simple key/value (not extra fields from
-    ui.json format).
-
-    Methods
-    -------
-    default()
-        Defaults values in 'data' attribute to those stored in default_ui_json 'default' fields.
-    write_ui_json()
-        Writes a ui.json formatted file from 'data' attribute contents.
-    read_ui_json()
-        Reads a ui.json formatted file into 'data' attribute dictionary.  Optionally filters
-        ui.json fields other than 'value'.
-
-    """
-
-    def __init__(self, filepath: str):
-        self.filepath = filepath
-        self.workpath = os.path.dirname(os.path.abspath(filepath)) + os.path.sep
-        self.data = {}
-        self.associations = {}
-        self.is_loaded = False
-        self.is_formatted = False
-
-    @property
-    def filepath(self):
-        return self._filepath
-
-    @filepath.setter
-    def filepath(self, f: str):
-        if ".".join(f.split(".")[-2:]) != "ui.json":
-            raise OSError("Input file must have 'ui.json' extension.")
-        else:
-            self._filepath = f
-
-    def default(self) -> None:
-        """ defaults InputFile data using 'default' field of default_ui_json"""
-
-        for k, v in default_ui_json.items():
-            if isinstance(v, dict):
-                if "isValue" in v.keys():
-                    field = "value" if v["isValue"] else "property"
-                else:
-                    field = "value"
-                self.data[k] = v[field]
-            else:
-                self.data[k] = v
-
-    def write_ui_json(self, default: bool = False, workspace: Workspace = None) -> None:
-        """
-        Writes a ui.json formatted file from InputFile data
-
-        Parameters
-        ----------
-        default : optional
-            Writes default values stored in default_ui_json to file.
-        workspace : optional
-            Provide a workspace_geoh5 path to simulate auto-generated field in GA.
-        """
-
-        out = deepcopy(default_ui_json)
-        if workspace is not None:
-            out["workspace_geoh5"] = workspace
-        if not default:
-            if self.is_loaded:
-                for k, v in self.data.items():
-                    if isinstance(out[k], dict):
-                        out[k]["value"] = v
-                    else:
-                        out[k] = v
-            else:
-                raise OSError("No data to write.")
-
-        with open(self.filepath, "w") as f:
-            json.dump(self._stringify(out), f, indent=4)
-
-    def read_ui_json(self, reformat: bool = True) -> None:
-        """
-        Reads a ui.json formatted file into 'data' attribute dictionary.
-
-        Parameters
-        ----------
-
-        reformat: optional
-            Stores only 'value' fields from ui.json if True.
-        """
-
-        with open(self.filepath) as f:
-            data = self._numify(json.load(f))
-            self._set_associations(data)
-            if reformat:
-                self._ui_2_py(data)
-                self.is_formatted = True
-                validator = InputValidator(self.data)
-            else:
-                self.data = data
-
-        self.is_loaded = True
-
-    def _ui_2_py(self, ui_dict: Dict[str, Any]) -> None:
-        """
-        Flatten ui.json format to simple key/value structure.
-
-        Parameters
-        ----------
-
-        ui_dict :
-            dictionary containing all keys, values, fields of a ui.json formatted file
-        """
-
-        for k, v in ui_dict.items():
-            if isinstance(v, dict):
-                field = "value"
-                if "isValue" in v.keys():
-                    field = "value" if v["isValue"] else "property"
-                if "enabled" in v.keys():
-                    if not v["enabled"]:
-                        field = "default"
-                if "visible" in v.keys():
-                    if not v["visible"]:
-                        field = "default"
-                self.data[k] = v[field]
-            else:
-                self.data[k] = v
-
-    def _stringify(self, d: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Convert inf, none, and list types to strings within a dictionary
-
-        Parameters
-        ----------
-
-        d :
-            dictionary containing ui.json keys, values, fields
-
-        Returns
-        -------
-        Dictionary with inf, none and list types converted to string representations friendly for
-        json format.
-
-        """
-
-        # map [...] to "[...]"
-        excl = ["choiceList", "meshType"]
-        l2s = lambda k, v: str(v)[1:-1] if isinstance(v, list) & (k not in excl) else v
-        n2s = lambda k, v: "" if v is None else v  # map None to ""
-
-        def i2s(k, v):  # map np.inf to "inf"
-            if not isinstance(v, (int, float)):
-                return v
-            else:
-                return str(v) if not np.isfinite(v) else v
-
-        for k, v in d.items():
-            v = self._dict_mapper(k, v, [l2s, n2s, i2s])
-            d[k] = v
-
-        return d
-
-    def _numify(self, d: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Convert inf, none and list strings to numerical types within a dictionary
-
-        Parameters
-        ----------
-
-        d :
-            dictionary containing ui.json keys, values, fields
-
-        Returns
-        -------
-        Dictionary with inf, none and list string representations converted numerical types.
-
-        """
-
-        def s2l(k, v):  # map "[...]" to [...]
-            if isinstance(v, str):
-                if v in ["inf", "-inf", ""]:
-                    return v
-                try:
-                    return [float(n) for n in v.split(",") if n != ""]
-                except ValueError:
-                    return v
-            else:
-                return v
-
-        s2n = lambda k, v: None if v == "" else v  # map "" to None
-        s2i = (
-            lambda k, v: float(v) if v in ["inf", "-inf"] else v
-        )  # map "inf" to np.inf
-        for k, v in d.items():
-            mappers = [s2n, s2i] if k == "ignore_values" else [s2l, s2n, s2i]
-            v = self._dict_mapper(k, v, mappers)
-            d[k] = v
-
-        return d
-
-    def _dict_mapper(self, key: str, val: Any, string_funcs: Callable) -> None:
-        """
-        Recurses through nested dictionary and applies mapping funcs to all values
-
-        Parameters
-        ----------
-        key :
-            Dictionary key.
-        val :
-            Dictionary val (could be another dictionary).
-        string_funcs:
-            Function to apply to values within dictionary.
-        """
-
-        if isinstance(val, dict):
-            for k, v in val.items():
-                val[k] = self._dict_mapper(k, v, string_funcs)
-            return val
-        else:
-            for f in string_funcs:
-                val = f(key, val)
-            return val
-
-    def _set_associations(self, d: Dict[str, Any]) -> None:
-        """
-        Set parent/child associations for ui.json fields.
-
-        Parameters
-        ----------
-
-        d :
-            Dictionary containing ui.json keys/values/fields.
-        """
-        for k, v in d.items():
-            if isinstance(v, dict):
-                if "isValue" in v.keys():
-                    field = "value" if v["isValue"] else "property"
-                else:
-                    field = "value"
-                if "parent" in v.keys():
-                    if v["parent"] is not None:
-                        try:
-                            self.associations[k] = v["parent"]
-                            child_uuid = UUID(v[field])
-                            parent_uuid = UUID(d[v["parent"]]["value"])
-                            self.associations[child_uuid] = parent_uuid
-                        except:
-                            continue
-
-            else:
-                continue
-
-
-class Params:
-    """
-    Stores input parameters to drive an inversion.
-
-    Attributes
-    ----------
-    validator :
-        class instance to handle parameter validation.
-    workpath : Path to working directory.
-
-    Constructors
-    ------------
-    from_ifile(ifile)
-        Construct Params object from InputFile instance.
-    from_path(path)
-        Construct Params object from path to input file (wraps from_ifile constructor).
-
-    """
-
+class MVIParams(Params):
     def __init__(self):
+        super().__init__()
 
-        self.validator = InputValidator()
-        self.workpath = os.path.abspath(".")
-        self.associations = {}
-        self.inversion_type = None
+        self.validations = validations
+        self.validator = InputValidator(required_parameters, validations)
         self.forward_only = None
         self.inducing_field_strength = None
         self.inducing_field_inclination = None
@@ -380,19 +95,10 @@ class Params:
         self.n_cpu = None
         self.max_ram = None
         self.inversion_type = None
-        self.workspace = None
-        self.output_geoh5 = None
         self.out_group = None
         self.no_data_value = None
 
-        self._set_defaults()
-
-    def _set_defaults(self) -> None:
-        """ Populate parameters with default values stored in default_ui_json. """
-        for a in self.__dict__.keys():
-            if a in ["validator", "workpath", "associations"]:
-                continue
-            self.__setattr__(a, default_ui_json[a[1:]]["default"])
+        self._set_defaults(default_ui_json)
 
     @classmethod
     def from_ifile(cls, ifile: InputFile) -> None:
@@ -404,44 +110,19 @@ class Params:
             class instance to handle loading input file
         """
         if not ifile.is_loaded:
-            ifile.read_ui_json()
+            ifile.read_ui_json(validations)
 
         p = cls()
+        p._ifile = ifile
         p.workpath = ifile.workpath
         p.associations = ifile.associations
         p._init_params(ifile)
 
         return p
 
-    @classmethod
-    def from_path(cls, filepath: str) -> None:
-        """
-        Construct Params object from path to input file.
-
-        Parameters
-        ----------
-        filepath : str
-            path to input file.
-        """
-        ifile = InputFile(filepath)
-        p = cls.from_ifile(ifile)
-        return p
-
-    def is_uuid(self, p: str) -> bool:
-        """ Return true if string contains valid UUID. """
-        if isinstance(p, str):
-            private_attr = self.__getattribue__("_" + p)
-            return True if isinstance(private_attr, UUID) else False
-        else:
-            pass
-
-    def parent(self, child_id: Union[str, UUID]) -> Union[str, UUID]:
-        """ Returns parent id of provided child id. """
-        return self.associations[child_id]
-
-    def active(self) -> List[str]:
-        """ Retrieve active parameter set (value not None). """
-        return [k[1:] for k, v in self.__dict__.items() if v is not None]
+    def default(self, default_ui_json, param):
+        """ Wraps Params.default. """
+        return super.default(default_ui_json, param)
 
     def components(self) -> List[str]:
         """ Retrieve component names used to index channel, uncertainty data. """
@@ -505,7 +186,7 @@ class Params:
             self._inversion_type = val
             return
         p = "inversion_type"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._inversion_type = val
 
     @property
@@ -515,7 +196,7 @@ class Params:
     @forward_only.setter
     def forward_only(self, val):
         p = "forward_only"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._forward_only = val
 
     @property
@@ -528,7 +209,7 @@ class Params:
             self._inducing_field_strength = val
             return
         p = "inducing_field_strength"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         if val <= 0:
             raise ValueError("inducing_field_strength must be greater than 0.")
         isstr = isinstance(val, str)
@@ -545,7 +226,7 @@ class Params:
             self._inducing_field_inclination = val
             return
         p = "inducing_field_inclination"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._inducing_field_inclination = val
@@ -560,7 +241,7 @@ class Params:
             self._inducing_field_declination = val
             return
         p = "inducing_field_declination"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._inducing_field_declination = val
@@ -575,7 +256,7 @@ class Params:
             self._topography_object = val
             return
         p = "topography_object"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._topography_object = self.validator.validate_uuid(self.workspace, val)
 
     @property
@@ -588,7 +269,7 @@ class Params:
             self._topography = val
             return
         p = "topography"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._topography = val
@@ -603,7 +284,7 @@ class Params:
             self._data_object = val
             return
         p = "data_object"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._data_object = self.validator.validate_uuid(self.workspace, val)
 
     @property
@@ -616,7 +297,7 @@ class Params:
             self._tmi_channel = val
             return
         p = "tmi_channel"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._tmi_channel = self.validator.validate_uuid(self.workspace, val)
 
     @property
@@ -629,7 +310,7 @@ class Params:
             self._tmi_uncertainty = val
             return
         p = "tmi_uncertainty"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._tmi_uncertainty = val
@@ -644,7 +325,7 @@ class Params:
             self._starting_model_object = val
             return
         p = "starting_model_object"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._starting_model_object = self.validator.validate_uuid(self.workspace, val)
 
     @property
@@ -657,7 +338,7 @@ class Params:
             self._starting_inclination_object = val
             return
         p = "starting_inclination_object"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._starting_inclination_object = self.validator.validate_uuid(
             self.workspace, val
         )
@@ -672,7 +353,7 @@ class Params:
             self._starting_declination_object = val
             return
         p = "starting_declination_object"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._starting_declination_object = self.validator.validate_uuid(
             self.workspace, val
         )
@@ -687,7 +368,7 @@ class Params:
             self._starting_model = val
             return
         p = "starting_model"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._starting_model = val
@@ -702,7 +383,7 @@ class Params:
             self._starting_inclination = val
             return
         p = "starting_inclination"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._starting_inclination = val
@@ -717,7 +398,7 @@ class Params:
             self._starting_declination = val
             return
         p = "starting_declination"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._starting_declination = val
@@ -732,7 +413,7 @@ class Params:
             self._tile_spatial = val
             return
         p = "tile_spatial"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._tile_spatial = val
@@ -747,7 +428,7 @@ class Params:
             self._receivers_radar_drape = val
             return
         p = "receivers_radar_drape"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._receivers_radar_drape = self.validator.validate_uuid(self.workspace, val)
 
     @property
@@ -760,7 +441,7 @@ class Params:
             self._receivers_offset_x = val
             return
         p = "receivers_offset_x"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._receivers_offset_x = val
 
     @property
@@ -773,7 +454,7 @@ class Params:
             self._receivers_offset_y = val
             return
         p = "receivers_offset_y"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._receivers_offset_y = val
 
     @property
@@ -786,7 +467,7 @@ class Params:
             self._receivers_offset_z = val
             return
         p = "receivers_offset_z"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._receivers_offset_z = val
 
     @property
@@ -799,7 +480,7 @@ class Params:
             self._gps_receivers_offset = val
             return
         p = "gps_receivers_offset"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._gps_receivers_offset = val
@@ -814,7 +495,7 @@ class Params:
             self._ignore_values = val
             return
         p = "ignore_values"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._ignore_values = val
 
     @property
@@ -827,7 +508,7 @@ class Params:
             self._resolution = val
             return
         p = "resolution"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._resolution = val
 
     @property
@@ -840,7 +521,7 @@ class Params:
             self._detrend_data = val
             return
         p = "detrend_data"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._detrend_data = val
 
     @property
@@ -853,7 +534,7 @@ class Params:
             self._detrend_order = val
             return
         p = "detrend_order"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._detrend_order = val
 
     @property
@@ -866,7 +547,7 @@ class Params:
             self._detrend_type = val
             return
         p = "detrend_type"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._detrend_type = val
 
     @property
@@ -879,7 +560,7 @@ class Params:
             self._max_chunk_size = val
             return
         p = "max_chunk_size"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._max_chunk_size = val
 
     @property
@@ -892,7 +573,7 @@ class Params:
             self._chunk_by_rows = val
             return
         p = "chunk_by_rows"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._chunk_by_rows = val
 
     @property
@@ -905,7 +586,7 @@ class Params:
             self._output_tile_files = val
             return
         p = "output_tile_files"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._output_tile_files = val
 
     @property
@@ -918,7 +599,7 @@ class Params:
             self._mesh = val
             return
         p = "mesh"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._mesh = self.validator.validate_uuid(self.workspace, val)
 
     @property
@@ -931,7 +612,7 @@ class Params:
             self._mesh_from_params = val
             return
         p = "mesh_from_params"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._mesh_from_params = val
 
     @property
@@ -944,7 +625,7 @@ class Params:
             self._core_cell_size_x = val
             return
         p = "core_cell_size_x"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._core_cell_size_x = val
 
     @property
@@ -957,7 +638,7 @@ class Params:
             self._core_cell_size_y = val
             return
         p = "core_cell_size_y"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._core_cell_size_y = val
 
     @property
@@ -970,7 +651,7 @@ class Params:
             self._core_cell_size_z = val
             return
         p = "core_cell_size_z"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._core_cell_size_z = val
 
     @property
@@ -983,7 +664,7 @@ class Params:
             self._octree_levels_topo = val
             return
         p = "octree_levels_topo"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._octree_levels_topo = val
 
     @property
@@ -996,7 +677,7 @@ class Params:
             self._octree_levels_obs = val
             return
         p = "octree_levels_obs"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._octree_levels_obs = val
 
     @property
@@ -1009,7 +690,7 @@ class Params:
             self._octree_levels_padding = val
             return
         p = "octree_levels_padding"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._octree_levels_padding = val
 
     @property
@@ -1022,7 +703,7 @@ class Params:
             self._depth_core = val
             return
         p = "depth_core"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._depth_core = val
 
     @property
@@ -1035,7 +716,7 @@ class Params:
             self._max_distance = val
             return
         p = "max_distance"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._max_distance = val
 
     @property
@@ -1048,7 +729,7 @@ class Params:
             self._padding_distance_x = val
             return
         p = "padding_distance_x"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._padding_distance_x = val
 
     @property
@@ -1061,7 +742,7 @@ class Params:
             self._padding_distance_y = val
             return
         p = "padding_distance_y"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._padding_distance_y = val
 
     @property
@@ -1074,7 +755,7 @@ class Params:
             self._padding_distance_z = val
             return
         p = "padding_distance_z"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._padding_distance_z = val
 
     @property
@@ -1087,7 +768,7 @@ class Params:
             self._window_center_x = val
             return
         p = "window_center_x"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._window_center_x = val
 
     @property
@@ -1100,7 +781,7 @@ class Params:
             self._window_center_y = val
             return
         p = "window_center_y"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._window_center_y = val
 
     @property
@@ -1113,7 +794,7 @@ class Params:
             self._window_width = val
             return
         p = "window_width"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._window_width = val
 
     @property
@@ -1126,7 +807,7 @@ class Params:
             self._window_height = val
             return
         p = "window_height"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._window_height = val
 
     @property
@@ -1139,7 +820,7 @@ class Params:
             self._inversion_style = val
             return
         p = "inversion_style"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._inversion_style = val
 
     @property
@@ -1152,7 +833,7 @@ class Params:
             self._chi_factor = val
             return
         p = "chi_factor"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._chi_factor = val
 
     @property
@@ -1165,7 +846,7 @@ class Params:
             self._max_iterations = val
             return
         p = "max_iterations"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._max_iterations = val
 
     @property
@@ -1178,7 +859,7 @@ class Params:
             self._max_cg_iterations = val
             return
         p = "max_cg_iterations"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._max_cg_iterations = val
 
     @property
@@ -1191,7 +872,7 @@ class Params:
             self._max_global_iterations = val
             return
         p = "max_global_iterations"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._max_global_iterations = val
 
     @property
@@ -1204,7 +885,7 @@ class Params:
             self._initial_beta = val
             return
         p = "initial_beta"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._initial_beta = val
 
     @property
@@ -1217,7 +898,7 @@ class Params:
             self._initial_beta_ratio = val
             return
         p = "initial_beta_ratio"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._initial_beta_ratio = val
 
     @property
@@ -1230,7 +911,7 @@ class Params:
             self._tol_cg = val
             return
         p = "tol_cg"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._tol_cg = val
 
     @property
@@ -1243,7 +924,7 @@ class Params:
             self._alpha_s = val
             return
         p = "alpha_s"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._alpha_s = val
 
     @property
@@ -1256,7 +937,7 @@ class Params:
             self._alpha_x = val
             return
         p = "alpha_x"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._alpha_x = val
 
     @property
@@ -1269,7 +950,7 @@ class Params:
             self._alpha_y = val
             return
         p = "alpha_y"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._alpha_y = val
 
     @property
@@ -1282,7 +963,7 @@ class Params:
             self._alpha_z = val
             return
         p = "alpha_z"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._alpha_z = val
 
     @property
@@ -1295,7 +976,7 @@ class Params:
             self._smallness_norm = val
             return
         p = "smallness_norm"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._smallness_norm = val
 
     @property
@@ -1308,7 +989,7 @@ class Params:
             self._x_norm = val
             return
         p = "x_norm"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._x_norm = val
 
     @property
@@ -1321,7 +1002,7 @@ class Params:
             self._y_norm = val
             return
         p = "y_norm"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._y_norm = val
 
     @property
@@ -1334,7 +1015,7 @@ class Params:
             self._z_norm = val
             return
         p = "z_norm"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._z_norm = val
 
     @property
@@ -1347,7 +1028,7 @@ class Params:
             self._reference_model_object = val
             return
         p = "reference_model_object"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._reference_model_object = self.validator.validate_uuid(self.workspace, val)
 
     @property
@@ -1360,7 +1041,7 @@ class Params:
             self._reference_inclination_object = val
             return
         p = "reference_inclination_object"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._reference_inclination_object = self.validator.validate_uuid(
             self.workspace, val
         )
@@ -1375,7 +1056,7 @@ class Params:
             self._reference_declination_object = val
             return
         p = "reference_declination_object"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._reference_declination_object = self.validator.validate_uuid(
             self.workspace, val
         )
@@ -1390,7 +1071,7 @@ class Params:
             self._reference_model = val
             return
         p = "reference_model"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._reference_model = val
@@ -1405,7 +1086,7 @@ class Params:
             self._reference_inclination = val
             return
         p = "reference_inclination"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._reference_inclination = val
@@ -1420,7 +1101,7 @@ class Params:
             self._reference_declination = val
             return
         p = "reference_declination"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         isstr = isinstance(val, str)
         val = self.validator.validate_uuid(self.workspace, val) if isstr else val
         self._reference_declination = val
@@ -1435,7 +1116,7 @@ class Params:
             self._gradient_type = val
             return
         p = "gradient_type"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._gradient_type = val
 
     @property
@@ -1448,7 +1129,7 @@ class Params:
             self._lower_bound = val
             return
         p = "lower_bound"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._lower_bound = val
 
     @property
@@ -1461,7 +1142,7 @@ class Params:
             self._upper_bound = val
             return
         p = "upper_bound"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._upper_bound = val
 
     @property
@@ -1474,7 +1155,7 @@ class Params:
             self._parallelized = val
             return
         p = "parallelized"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._parallelized = val
 
     @property
@@ -1487,7 +1168,7 @@ class Params:
             self._n_cpu = val
             return
         p = "n_cpu"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._n_cpu = val
 
     @property
@@ -1500,37 +1181,8 @@ class Params:
             self._max_ram = val
             return
         p = "max_ram"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._max_ram = val
-
-    @property
-    def workspace(self):
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, val):
-        if val is None:
-            self._workspace = val
-            return
-        p = "workspace"
-        self.validator.validate(p, val, validations[p])
-        if isinstance(val, str):
-            self._workspace = Workspace(val)
-        else:
-            self._workspace = val
-
-    @property
-    def output_geoh5(self):
-        return self._output_geoh5
-
-    @output_geoh5.setter
-    def output_geoh5(self, val):
-        if val is None:
-            self._output_geoh5 = val
-            return
-        p = "output_geoh5"
-        self.validator.validate(p, val, validations[p])
-        self._output_geoh5 = val
 
     @property
     def out_group(self):
@@ -1542,7 +1194,7 @@ class Params:
             self._out_group = val
             return
         p = "out_group"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._out_group = val
 
     @property
@@ -1555,26 +1207,5 @@ class Params:
             self._no_data_value = val
             return
         p = "no_data_value"
-        self.validator.validate(p, val, validations[p])
+        self.validator.validate(p, val, self.validations[p])
         self._no_data_value = val
-
-    def default(self, param: str) -> Any:
-        """ Return default value of parameter stored in default_ui_json. """
-        return default_ui_json[param]["default"]
-
-    def _init_params(self, inputfile: InputFile) -> None:
-        """ Overrides default parameter values with input file values. """
-
-        self.workspace = inputfile.data["workspace_geoh5"]
-        self.output_geoh5 = inputfile.data["geoh5"]
-        self.out_group = inputfile.data["out_group"]
-        for param, value in inputfile.data.items():
-            if param in ["workspace", "output_geoh5", "out_group"]:
-                continue
-            if "norm" in param:
-                if value != 2:
-                    inputfile.data["max_iterations"] = 40
-                    self.max_iterations = 40
-                self.__setattr__(param, value)
-            else:
-                self.__setattr__(param, value)

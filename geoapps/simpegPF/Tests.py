@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.linalg import norm
-from SimPEG.Utils import mkvc, sdiag, diagEst
+from SimPEG.utils import mkvc, sdiag, diagEst
 from . import Utils
 from discretize import TensorMesh, CurvilinearMesh, CylMesh, TreeMesh
 import scipy.sparse as sp

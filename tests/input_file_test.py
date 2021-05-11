@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 from geoapps.io import InputFile
-from geoapps.io.constants import default_ui_json
+from geoapps.io.MVI.constants import default_ui_json
 
 ######################  Setup  ###########################
 
@@ -42,7 +42,7 @@ def test_filepath_extension():
 def test_default():
 
     ifile = InputFile("test.ui.json")
-    ifile.default()
+    ifile.default(default_ui_json)
     ifile.data
 
 
@@ -141,7 +141,7 @@ def test_ui_json_io(tmp_path):
     ifile = InputFile(os.path.join(tmp_path, "test.ui.json"))
     assert not ifile.is_loaded
     assert not ifile.is_formatted
-    ifile.write_ui_json(default=True)
+    ifile.write_ui_json(default_ui_json, default=True)
     ifile.read_ui_json(reformat=False)
     assert ifile.data == d_u_j
     assert ifile.is_loaded
@@ -150,7 +150,7 @@ def test_ui_json_io(tmp_path):
     assert ifile.is_formatted
     ifile.data["inversion_type"] = "gravity"
     ifile.data["forward_only"] = True
-    ifile.write_ui_json(default=False)
+    ifile.write_ui_json(default_ui_json, default=False)
     ifile.read_ui_json(reformat=True)
     assert ifile.data["inversion_type"] == "mvi"
     assert ifile.data["forward_only"] == True
