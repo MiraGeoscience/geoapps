@@ -10,16 +10,12 @@ import re
 
 import matplotlib.pyplot as plt
 import numpy
+from fiona.transform import transform
 from geoh5py.data import FloatData
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
-
-try:
-    from fiona.transform import transform
-    from osgeo import gdal, osr
-except (ModuleNotFoundError, ImportError):
-    pass
+from osgeo import gdal, osr
 
 from geoapps.base import BaseApplication
 from geoapps.plotting import plot_plan_data_selection
