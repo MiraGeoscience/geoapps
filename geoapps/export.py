@@ -15,11 +15,7 @@ from geoh5py.objects import BlockModel, Curve, Octree
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
 from ipywidgets.widgets import HBox, VBox
-
-try:
-    from osgeo import osr
-except ImportError:
-    pass
+from osgeo import osr
 
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
