@@ -112,7 +112,10 @@ class BaseApplication:
                         value, Widget
                     ):
                         try:
-                            value = uuid.UUID(value)
+                            if isinstance(value, list):
+                                value = [uuid.UUID(val) for val in value]
+                            else:
+                                value = uuid.UUID(value)
                         except (ValueError, AttributeError):
                             pass
 
