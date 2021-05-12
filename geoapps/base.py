@@ -385,7 +385,7 @@ class BaseApplication:
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
-        self.h5file = workspace.h5file
+        self._h5file = workspace.h5file
 
     @property
     def working_directory(self):
