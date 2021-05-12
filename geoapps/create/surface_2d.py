@@ -180,7 +180,7 @@ class Surface2D(ObjectDataSelection):
 
                     m_vals = []
                     for m in self.data.value:
-                        prop = obj.get_property_group(m).properties[ind]
+                        prop = obj.find_or_create_property_group(name=m).properties[ind]
                         m_vals.append(
                             self.workspace.get_entity(prop)[0].values[line_ind]
                         )

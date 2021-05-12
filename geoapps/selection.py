@@ -202,7 +202,9 @@ class ObjectDataSelection(BaseApplication):
                 elif any([pg.name == value for pg in obj.property_groups]):
                     data += [
                         self.workspace.get_entity(prop)[0]
-                        for prop in obj.get_property_group(value).properties
+                        for prop in obj.find_or_create_property_group(
+                            name=value
+                        ).properties
                     ]
 
             return obj, data
