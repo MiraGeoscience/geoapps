@@ -1164,7 +1164,9 @@ class InversionApp(PlotSelection2D):
                 if component in groups:
                     data_list += [
                         self.workspace.get_entity(data)[0].name
-                        for data in entity.get_property_group(component).properties
+                        for data in entity.find_or_create_property_group(
+                            name=component
+                        ).properties
                     ]
                 elif component in entity.get_data_list():
                     data_list += [component]
