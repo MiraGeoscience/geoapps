@@ -38,11 +38,11 @@ from ipywidgets import (
 from scipy.spatial import cKDTree
 
 from geoapps.selection import LineOptions, ObjectDataSelection
-from geoapps.utils import (
+from geoapps.utils import geophysical_systems
+from geoapps.utils.utils import (
     LineDataDerivatives,
     colors,
     find_value,
-    geophysical_systems,
     hex_to_rgb,
     rotate_azimuth_dip,
     running_mean,
@@ -58,10 +58,17 @@ class PeakFinder(ObjectDataSelection):
         "object_types": Curve,
         "h5file": "../../assets/FlinFlon.geoh5",
         "add_groups": True,
-        "objects": "Data_TEM_pseudo3D",
+        "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
         "data": ["Observed"],
-        "model": {"objects": "Inversion_VTEM_Model", "data": "Iteration_7_model"},
-        "lines": {"objects": "Data_TEM_pseudo3D", "data": "Line", "lines": 6073400.0},
+        "model": {
+            "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "data": "Iteration_7_model",
+        },
+        "lines": {
+            "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+            "data": "Line",
+            "lines": 6073400.0,
+        },
         "boreholes": {"objects": "geochem", "data": "Al2O3"},
         "doi": {"data": "Z"},
         "doi_percent": 60,
@@ -1027,7 +1034,9 @@ class PeakFinder(ObjectDataSelection):
             # Add all selected data channels | groups once
             for channel in self.data.value:
                 if channel in groups:
-                    for prop in self.survey.get_property_group(channel).properties:
+                    for prop in self.survey.find_or_create_property_group(
+                        name=channel
+                    ).properties:
                         name = self.workspace.get_entity(prop)[0].name
                         if prop not in channels:
                             channels.append(name)
@@ -1469,10 +1478,10 @@ class PeakFinder(ObjectDataSelection):
                 )
 
         if self.live_link.value:
-            self.live_link_output(points)
+            self.live_link_output(self.export_directory.selected_path, points)
 
             if self.structural_markers.value:
-                self.live_link_output(curves)
+                self.live_link_output(self.export_directory.selected_path, curves)
 
         self.workspace.finalize()
 

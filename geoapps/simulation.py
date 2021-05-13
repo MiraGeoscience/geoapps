@@ -16,7 +16,7 @@ from geoh5py.workspace import Workspace
 
 from geoapps.selection import ObjectDataSelection
 from geoapps.simpegPF import PF, Maps, Utils
-from geoapps.utils import RectangularBlock, tensor_2_block_model
+from geoapps.utils.utils import RectangularBlock, tensor_2_block_model
 
 
 def block_model_widget(h5file, inducing_field="50000, 90, 0"):

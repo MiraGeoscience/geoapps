@@ -32,7 +32,8 @@ from ipywidgets.widgets import (
 from geoapps.base import BaseApplication
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import LineOptions, ObjectDataSelection, TopographyOptions
-from geoapps.utils import find_value, geophysical_systems, string_2_list
+from geoapps.utils import geophysical_systems
+from geoapps.utils.utils import find_value, string_2_list
 
 
 class ChannelOptions:
@@ -696,7 +697,7 @@ class InversionApp(PlotSelection2D):
         "add_groups": True,
         "h5file": "../../assets/FlinFlon.geoh5",
         "inducing_field": "60000, 79, 11",
-        "objects": "Gravity_Magnetics_drape60m",
+        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": ["Airborne_TMI"],
         "resolution": 50,
         "window": {
@@ -707,7 +708,10 @@ class InversionApp(PlotSelection2D):
             "azimuth": -20,
         },
         "inversion_parameters": {"norms": "0, 2, 2, 2", "max_iterations": 25},
-        "topography": {"objects": "Topography", "data": "elevation"},
+        "topography": {
+            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+            "data": "elevation",
+        },
         "sensor": {"offset": "0, 0, 60", "options": "topo + radar + (dx, dy, dz)"},
         "padding_distance": "1000, 1000, 1000, 1000, 0, 0",
     }
@@ -1160,7 +1164,9 @@ class InversionApp(PlotSelection2D):
                 if component in groups:
                     data_list += [
                         self.workspace.get_entity(data)[0].name
-                        for data in entity.get_property_group(component).properties
+                        for data in entity.find_or_create_property_group(
+                            name=component
+                        ).properties
                     ]
                 elif component in entity.get_data_list():
                     data_list += [component]
@@ -1253,6 +1259,7 @@ class InversionApp(PlotSelection2D):
             "out_group": self.inversion_parameters.output_name.value,
             "workspace": os.path.abspath(self.h5file),
             "save_to_geoh5": os.path.abspath(self.h5file),
+            "mesh": "Mesh",
         }
         if self.system.value in ["Gravity", "MVI", "Magnetics"]:
             input_dict["inversion_type"] = self.system.value.lower()
@@ -1261,6 +1268,7 @@ class InversionApp(PlotSelection2D):
                 input_dict["inducing_field_aid"] = string_2_list(
                     self.inducing_field.value
                 )
+
             # Octree mesh parameters
             input_dict["core_cell_size"] = string_2_list(
                 self.mesh_octree.core_cell_size.value
@@ -1291,12 +1299,14 @@ class InversionApp(PlotSelection2D):
                 self.mesh_1D.hz_expansion.value,
                 self.mesh_1D.n_cells.value,
             ]
+            input_dict["uncertainty_mode"] = self.inversion_parameters.uncert_mode.value
+
         input_dict["chi_factor"] = self.inversion_parameters.chi_factor.value
         input_dict["max_iterations"] = self.inversion_parameters.max_iterations.value
         input_dict[
             "max_cg_iterations"
         ] = self.inversion_parameters.max_cg_iterations.value
-
+        input_dict
         input_dict["n_cpu"] = self.inversion_parameters.n_cpu.value
         input_dict["max_ram"] = self.inversion_parameters.max_ram.value
 
@@ -1325,20 +1335,23 @@ class InversionApp(PlotSelection2D):
         if ref_type == "model":
             input_dict["reference_model"] = {
                 ref_type: {
-                    self.inversion_parameters.reference_model.objects.value: self.inversion_parameters.reference_model.data.value
+                    str(
+                        self.inversion_parameters.reference_model.objects.value
+                    ): self.inversion_parameters.reference_model.data.value
                 }
             }
         else:
             input_dict["reference_model"] = {
                 ref_type: self.inversion_parameters.reference_model.value.value
             }
-
         start_type = self.inversion_parameters.starting_model.options.value.lower()
 
         if start_type == "model":
             input_dict["starting_model"] = {
                 start_type: {
-                    self.inversion_parameters.starting_model.objects.value: self.inversion_parameters.starting_model.data.value
+                    str(
+                        self.inversion_parameters.starting_model.objects.value
+                    ): self.inversion_parameters.starting_model.data.value
                 }
             }
         else:
@@ -1354,7 +1367,9 @@ class InversionApp(PlotSelection2D):
             if susc_type == "model":
                 input_dict["susceptibility_model"] = {
                     susc_type: {
-                        self.inversion_parameters.susceptibility_model.objects.value: self.inversion_parameters.susceptibility_model.data.value
+                        str(
+                            self.inversion_parameters.susceptibility_model.objects.value
+                        ): self.inversion_parameters.susceptibility_model.data.value
                     }
                 }
             else:
@@ -1381,7 +1396,7 @@ class InversionApp(PlotSelection2D):
 
         input_dict["data"] = {}
         input_dict["data"]["type"] = "GA_object"
-        input_dict["data"]["name"] = self.objects.value
+        input_dict["data"]["name"] = str(self.objects.value)
 
         if hasattr(self.data_channel_choices, "data_channel_options"):
             channel_param = {}
@@ -1419,8 +1434,6 @@ class InversionApp(PlotSelection2D):
 
             input_dict["data"]["channels"] = channel_param
 
-        input_dict["uncertainty_mode"] = self.inversion_parameters.uncert_mode.value
-
         if self.sensor.options.value == "sensor location + (dx, dy, dz)":
             input_dict["receivers_offset"] = {
                 "constant": string_2_list(self.sensor.offset.value)
@@ -1437,7 +1450,7 @@ class InversionApp(PlotSelection2D):
             else:
                 input_dict["topography"] = {
                     "GA_object": {
-                        "name": self.topography.objects.value,
+                        "name": str(self.topography.objects.value),
                         "data": self.topography.data.value,
                     }
                 }
