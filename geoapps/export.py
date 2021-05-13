@@ -304,6 +304,8 @@ class Export(ObjectDataSelection):
                             dpi=300,
                             bbox_inches="tight",
                         )
+                        if not self.plot_result:
+                            plt.close(fig)
 
                     print(f"Object saved to {name}")
 
