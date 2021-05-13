@@ -8,6 +8,7 @@
 import json
 import multiprocessing
 import sys
+import uuid
 
 import numpy as np
 import scipy as sp
@@ -277,8 +278,8 @@ def inversion(input_file):
             # Spherical or sparse
             max_irls_iterations = 10
 
-    if workspace.get_entity(input_param["data"]["name"]):
-        entity = workspace.get_entity(input_param["data"]["name"])[0]
+    if workspace.get_entity(uuid.UUID(input_param["data"]["name"])):
+        entity = workspace.get_entity(uuid.UUID(input_param["data"]["name"]))[0]
     else:
         assert False, (
             f"Entity {input_param['data']['name']} could not be found in "
@@ -339,7 +340,7 @@ def inversion(input_file):
                 elif "GA_object" in list(input_param["topography"].keys()):
                     workspace = Workspace(input_param["workspace"])
                     topo_entity = workspace.get_entity(
-                        input_param["topography"]["GA_object"]["name"]
+                        uuid.UUID(input_param["topography"]["GA_object"]["name"])
                     )[0]
 
                     if isinstance(topo_entity, Grid2D):
