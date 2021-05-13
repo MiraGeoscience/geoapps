@@ -19,7 +19,7 @@ from osgeo import gdal, osr
 
 from geoapps.base import BaseApplication
 from geoapps.plotting import plot_plan_data_selection
-from geoapps.utils import export_grid_2_geotiff, geotiff_2_grid
+from geoapps.utils.utils import export_grid_2_geotiff, geotiff_2_grid
 
 
 class CoordinateTransformation(BaseApplication):
@@ -28,7 +28,10 @@ class CoordinateTransformation(BaseApplication):
     defaults = {
         "ga_group_name": "CoordinateTransformation",
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": ["Gravity_Magnetics_drape60m", "Data_TEM_pseudo3D"],
+        "objects": [
+            "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+            "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+        ],
         "code_in": "EPSG:26914",
         "code_out": "EPSG:4326",
     }
@@ -155,7 +158,9 @@ class CoordinateTransformation(BaseApplication):
                         ax2.set_ylabel("Latitude")
 
             if self.live_link.value:
-                self.live_link_output(self.ga_group)
+                self.live_link_output(
+                    self.export_directory.selected_path, self.ga_group
+                )
             self.workspace.finalize()
 
     @property
@@ -220,11 +225,18 @@ class CoordinateTransformation(BaseApplication):
     def update_objects_list(self):
         if getattr(self, "_workspace", None) is not None:
 
-            self.objects.options = [""] + [
-                obj.name
-                for obj in self._workspace.all_objects()
-                if isinstance(obj, self.object_types)
-            ]
+            if len(self.object_types) > 0:
+                options = [["", None]] + [
+                    [obj.name, obj.uid]
+                    for obj in self._workspace.objects
+                    if isinstance(obj, self.object_types)
+                ]
+            else:
+                options = [["", None]] + [
+                    [value, uid]
+                    for uid, value in self._workspace.list_objects_name.items()
+                ]
+            self.objects.options = options
 
     def set_wkt_in(self, _):
         datasetSRS = osr.SpatialReference()

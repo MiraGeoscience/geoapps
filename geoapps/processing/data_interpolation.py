@@ -5,8 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import discretize
 import numpy as np
+from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel, ObjectBase
 from geoh5py.workspace import Workspace
 from ipywidgets import (
@@ -23,7 +23,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils import weighted_average
+from geoapps.utils.utils import weighted_average
 
 
 class DataInterpolation(ObjectDataSelection):
@@ -34,7 +34,7 @@ class DataInterpolation(ObjectDataSelection):
     defaults = {
         "select_multiple": True,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Inversion_VTEM_Model",
+        "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         "data": ["Iteration_7_model"],
         "core_cell_size": "50, 50, 50",
         "depth_core": 500,
@@ -45,12 +45,15 @@ class DataInterpolation(ObjectDataSelection):
         "new_grid": "InterpGrid",
         "no_data_value": 1e-8,
         "out_mode": "To Object",
-        "out_object": "O2O_Interp_25m",
+        "out_object": "{7450be38-1327-4336-a9e4-5cff587b6715}",
         "padding_distance": "0, 0, 0, 0, 0, 0",
         "skew_angle": 0,
         "skew_factor": 1.0,
         "space": "Log",
-        "topography": {"objects": "Topography", "data": "Z"},
+        "topography": {
+            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+            "data": "Z",
+        },
     }
 
     def __init__(self, use_defaults=True, **kwargs):
@@ -100,12 +103,7 @@ class DataInterpolation(ObjectDataSelection):
         self._xy_reference = Dropdown(
             description="Lateral Extent", style={"description_width": "initial"}
         )
-
-        def object_pick(_):
-            self.object_pick()
-
-        self.objects.observe(object_pick, names="value")
-
+        self.objects.observe(self.object_pick, names="value")
         self.method_skew = VBox(
             [Label("Skew parameters"), self.skew_angle, self.skew_factor]
         )
@@ -339,17 +337,17 @@ class DataInterpolation(ObjectDataSelection):
 
         value = self.out_object.value
         self.out_object.options = self.objects.options
-        if value in self.out_object.options:
+        if value in list(dict(self.out_object.options).values()):
             self.out_object.value = value
 
         value = self.xy_reference.value
         self.xy_reference.options = self.objects.options
-        if value in self.xy_reference.options:
+        if value in list(dict(self.xy_reference.options).values()):
             self.xy_reference.value = value
 
         value = self.xy_extent.value
         self.xy_extent.options = self.objects.options
-        if value in self.xy_extent.options:
+        if value in list(dict(self.xy_extent.options).values()):
             self.xy_extent.value = value
 
     def method_update(self, _):
@@ -401,6 +399,7 @@ class DataInterpolation(ObjectDataSelection):
 
         else:
 
+            ref_in = None
             for entity in self._workspace.get_entity(self.xy_reference.value):
                 if isinstance(entity, ObjectBase):
                     ref_in = entity
@@ -409,6 +408,11 @@ class DataInterpolation(ObjectDataSelection):
                 xyz_ref = ref_in.centroids
             elif hasattr(ref_in, "vertices"):
                 xyz_ref = ref_in.vertices
+            else:
+                print(
+                    "No object selected for 'Lateral Extent'. Defaults to input object."
+                )
+                xyz_ref = xyz
 
             # Find extent of grid
             h = np.asarray(self.core_cell_size.value.split(",")).astype(float).tolist()
@@ -429,7 +433,7 @@ class DataInterpolation(ObjectDataSelection):
                 - (xyz_ref[:, 2].max() - xyz_ref[:, 2].min())
                 + h[2]
             )
-            mesh = discretize.utils.meshutils.mesh_builder_xyz(
+            mesh = mesh_utils.mesh_builder_xyz(
                 xyz_ref,
                 h,
                 padding_distance=[
@@ -606,10 +610,10 @@ class DataInterpolation(ObjectDataSelection):
             )
 
         if self.live_link.value:
-            self.live_link_output(self.object_out)
+            self.live_link_output(self.export_directory.selected_path, self.object_out)
 
         self.workspace.finalize()
 
-    def object_pick(self):
-        if self.objects.value in self.xy_reference.options:
+    def object_pick(self, _):
+        if self.objects.value in list(dict(self.xy_reference.options).values()):
             self.xy_reference.value = self.objects.value
