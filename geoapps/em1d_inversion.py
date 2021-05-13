@@ -652,7 +652,7 @@ def inversion(input_file):
 
             input_model = input_param["reference_model"]["model"]
             print(f"Interpolating reference model {input_model}")
-            con_object = workspace.get_entity(list(input_model.keys())[0])[0]
+            con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
             con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
             if hasattr(con_object, "centroids"):
@@ -679,7 +679,7 @@ def inversion(input_file):
             input_model = input_param["starting_model"]["model"]
 
             print(f"Interpolating starting model {input_model}")
-            con_object = workspace.get_entity(list(input_model.keys())[0])[0]
+            con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
             con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
             if hasattr(con_object, "centroids"):
@@ -1113,8 +1113,8 @@ def inversion(input_file):
 
     # Directives
     directiveList = []
-    print("NO SENSITIVITY WEIGHTS")
-    # directiveList.append(Directives.UpdateSensitivityWeights())
+
+    directiveList.append(Directives.UpdateSensitivityWeights())
     directiveList.append(
         Directives.Update_IRLS(
             maxIRLSiter=max_irls_iterations,

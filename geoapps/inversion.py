@@ -1299,12 +1299,14 @@ class InversionApp(PlotSelection2D):
                 self.mesh_1D.hz_expansion.value,
                 self.mesh_1D.n_cells.value,
             ]
+            input_dict["uncertainty_mode"] = self.inversion_parameters.uncert_mode.value
+
         input_dict["chi_factor"] = self.inversion_parameters.chi_factor.value
         input_dict["max_iterations"] = self.inversion_parameters.max_iterations.value
         input_dict[
             "max_cg_iterations"
         ] = self.inversion_parameters.max_cg_iterations.value
-
+        input_dict
         input_dict["n_cpu"] = self.inversion_parameters.n_cpu.value
         input_dict["max_ram"] = self.inversion_parameters.max_ram.value
 
