@@ -9,29 +9,24 @@
 import pytest
 import requests
 
+from geoapps.create.contours import ContourValues
+from geoapps.create.isosurface import IsoSurface
+from geoapps.create.surface_2d import Surface2D
 from geoapps.export import Export
 from geoapps.inversion import InversionApp
 from geoapps.processing import (
     Calculator,
     Clustering,
-    ContourValues,
     CoordinateTransformation,
     DataInterpolation,
     EdgeDetectionApp,
-    IsoSurface,
     PeakFinder,
-    Surface2D,
 )
 
 project = "FlinFlon.geoh5"
 
 
 def test_calculator():
-    url = "https://github.com/MiraGeoscience/geoapps/raw/main/assets/FlinFlon.geoh5"
-
-    r = requests.get(url)
-    open(project, "wb").write(r.content)
-
     app = Calculator(h5file=project)
     app.trigger.click()
 
