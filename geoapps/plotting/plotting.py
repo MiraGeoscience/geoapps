@@ -14,7 +14,7 @@ import plotly.graph_objects as go
 from geoh5py.data import Data, ReferencedData
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 
-from geoapps.utils import filter_xy, format_labels, inv_symlog, symlog
+from geoapps.utils.utils import filter_xy, format_labels, inv_symlog, symlog
 
 
 def normalize(values):
@@ -503,7 +503,7 @@ def check_data_type(data):
 #
 #     curves = [
 #         entity.parent.name + "." + entity.name
-#         for entity in workspace.all_objects()
+#         for entity in workspace.objects
 #         if isinstance(entity, Curve)
 #     ]
 #     names = [name for name in sorted(curves)]
