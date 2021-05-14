@@ -112,7 +112,10 @@ class InputFile:
             json.dump(self._stringify(out), f, indent=4)
 
     def read_ui_json(
-        self, validations: Dict[str, Any] = None, reformat: bool = True
+        self,
+        required_parameters: List[str] = None,
+        validations: Dict[str, Any] = None,
+        reformat: bool = True,
     ) -> None:
         """
         Reads a ui.json formatted file into 'data' attribute dictionary.
@@ -131,8 +134,8 @@ class InputFile:
             if reformat:
                 self._ui_2_py(data)
                 self.is_formatted = True
-                if validations is not None:
-                    InputValidator(validations, self.data)
+                if (validations is not None) or (required_parameters is not None):
+                    InputValidator(required_parameters, validations, self.data)
             else:
                 self.data = data
 
