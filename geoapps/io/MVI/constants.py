@@ -881,7 +881,11 @@ validations = {
     "topography_object": {
         "types": [str, UUID],
     },
-    "topography": {"types": [str, UUID, int, float], "reqs": [("topography_object")]},
+    "topography": {
+        "types": [str, UUID, int, float],
+        "reqs": [("topography_object")],
+        "uuid": ["topography_object"],
+    },
     "data_object": {
         "types": [str],
     },
@@ -948,7 +952,8 @@ validations = {
         "types": [bool],
     },
     "mesh": {
-        "types": [str],
+        "uuid": [],
+        "types": [str, UUID],
     },
     "mesh_from_params": {
         "types": [bool],

@@ -13,12 +13,14 @@ import numpy as np
 
 class InputValidator:
     """
-    Validations for inversion parameters.
+    Validations for driver parameters.
 
     Attributes
     ----------
-    input : Input file contents parsed to dict.
+    requirements : List of required parameters.
     validations : Validations dictionary with matching set of input parameter keys.
+    workspace (optional) : Workspace instance needed to validate uuid types.
+    input (optional) : Input file contents parsed to dict.
 
     Methods
     -------
@@ -33,22 +35,23 @@ class InputValidator:
 
     def __init__(
         self,
-        required_parameters: List[str],
+        requirements: List[str],
         validations: Dict[str, Any],
+        workspace: Workspace = None,
         input: Dict[str, Any] = None,
     ):
-        self.required_parameters = required_parameters
+        self.requirements = requirements
         self.validations = validations
+        self.workspace = workspace
         self.input = input
-        self.current_validation = None
 
     @property
-    def required_parameters(self):
-        return self._required_parameters
+    def requirements(self):
+        return self._requirements
 
-    @required_parameters.setter
-    def required_parameters(self, val):
-        self._required_parameters = val
+    @requirements.setter
+    def requirements(self, val):
+        self._requirements = val
 
     @property
     def validations(self):
@@ -68,22 +71,7 @@ class InputValidator:
             self.validate_input(val)
         self._input = val
 
-    def validate_uuid(self, workspace, uuid_str):
-        """ Check whether a string is a valid uuid and addresses an object in the workspace. """
-        try:
-            obj_uuid = UUID(uuid_str)
-        except ValueError:
-            raise ValueError(f"Badly formed hexadecimal UUID string: {uuid_str}")
-
-        obj = workspace.get_entity(obj_uuid)
-        if obj[0] is None:
-            raise IndexError(
-                f"UUID address {uuid_str} does not exist in the workspace."
-            )
-        else:
-            return obj_uuid
-
-    def validate_input(self, input: Dict[str, Any]) -> None:
+    def validate_input(self) -> None:
         """
         Validates input params and contents/type/shape/requirements of values.
 
@@ -100,13 +88,14 @@ class InputValidator:
         it's value/type/shape/requirement validations.
         """
 
-        self._validate_required_parameters(input)
+        self._validate_requirements(self.input)
 
-        for k, v in input.items():
+        for k, v in self.input.items():
             if k not in self.validations.keys():
                 raise KeyError(f"{k} is not a valid parameter name.")
             else:
-                self.validate(k, v, self.validations[k], list(input.keys()))
+                ikeys = list(self.input.keys())
+                self.validate(k, v, self.validations[k], ikeys, self.workspace)
 
     def validate(
         self,
@@ -114,37 +103,44 @@ class InputValidator:
         value: Any,
         pvalidations: Dict[str, List[Any]],
         input_keys: List[str] = None,
+        workspace: Workspace = None,
     ) -> None:
         """
         Validates parameter values, types, shapes, and requirements.
 
-        Wraps val, type, shape, reqs validate methods depending on whether
-        a validation is stored in .constants.validations dictionary
+        Wraps val, type, shape, reqs validate methods and applies each method according to what
+        is stored in the pvalidations dictionary.  If value is a dictionary type validate() will
+        recurse until value is not a dictionary and check that the data keys exist in the
+        pvalidations key set.
 
         Parameters
         ----------
-        param : Parameter for driving inversion.
+        param : Parameter name.
         value : Value attached to param.
-        pvalidations : validation dictionary with mapping validations types to their validations
+        pvalidations : validation dictionary mapping validation type to its validators.
 
         Raises
         ------
         ValueError, TypeError, KeyError
             Whenever an input parameter fails one of it's
             value/type/shape/reqs validations.
+        ValueError
+            If param value is None, but is a required parameter.
+        KeyError
+            If value is a dictionary and any of it's keys do not exist in pvalidators.
         """
 
         if isinstance(value, dict):
             for k, v in value.items():
                 if k not in pvalidations.keys():
-                    exclusions = ["values", "types", "shapes", "reqs"]
+                    exclusions = ["values", "types", "shapes", "reqs", "uuid"]
                     vkeys = [k for k in pvalidations.keys() if k not in exclusions]
                     msg = f"Invalid {param} keys: {k}. Must be one of {*vkeys,}."
                     raise KeyError(msg)
                 self.validate(k, v, pvalidations[k], input_keys)
 
         if value is None:
-            if param in self.required_parameters:
+            if param in self.requirements:
                 raise ValueError(f"{param} is a required parameter. Cannot be None.")
             else:
                 return
@@ -158,6 +154,10 @@ class InputValidator:
         if ("reqs" in pvalidations.keys()) & (input_keys is not None):
             for v in pvalidations["reqs"]:
                 self._validate_parameter_reqs(param, value, v, input_keys)
+        if "uuid" in pvalidations.keys():
+            ws = self.workspace if workspace is None else workspace
+            parent = pvalidations["uuid"] if pvalidations["uuid"] else None
+            self._validate_parameter_uuid(param, value, ws, parent)
 
     def _validate_parameter_val(self, param: str, value: Any, vvals: Any) -> None:
         """ Raise ValueError if parameter value is invalid.  """
@@ -198,6 +198,28 @@ class InputValidator:
             if vreqs[0] not in input_keys:
                 msg = self._param_validation_msg(param, value, "reqs", vreqs)
                 raise KeyError(msg)
+
+    def _validate_parameter_uuid(
+        self, param: str, value: str, workspace: Workspace, parent: str
+    ) -> None:
+        """ Check whether a string is a valid uuid and addresses an object in the workspace. """
+        try:
+            obj_uuid = UUID(uuid_str)
+        except ValueError:
+            msg = self._param_validation_msg(param, uuid_str, "uuid", validations)
+            raise ValueError(msg)
+
+        obj = workspace.get_entity(obj_uuid)
+        if obj[0] is None:
+            raise IndexError(
+                f"UUID address {uuid_str} does not exist in the workspace."
+            )
+        # TODO write a method in params class that calls this validator and then returns
+
+        parent_obj = workspace.get_entity(parent)
+        obj = parent_obj.get_entity(obj_uuid)
+        if obj[0] is None:
+            raise IndexError(f"Workspace object {obj_uuid} is not a child of {parent}.")
 
     def _param_validation_msg(
         self, param: str, value: Any, validation_type: str, validations: Any
@@ -247,8 +269,8 @@ class InputValidator:
 
         return msg
 
-    def _validate_required_parameters(
-        self, required_parameters: List[str], input: Dict[str, Any]
+    def _validate_requirements(
+        self, input: Dict[str, Any], requirements: List[str] = None
     ) -> None:
         """
         Ensures that all required input file keys are present.
@@ -264,8 +286,10 @@ class InputValidator:
             is missing from the input file contents.
 
         """
+        reqs = self.requirements if requirements is None else requirements
+
         missing = []
-        for param in required_parameters:
+        for param in reqs:
             if param not in input.keys():
                 missing.append(param)
         if missing:

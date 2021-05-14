@@ -100,27 +100,11 @@ class MVIParams(Params):
 
         self._set_defaults(default_ui_json)
 
-    @classmethod
-    def from_ifile(cls, ifile: InputFile) -> None:
-        """Construct Params object from InputFile instance.
+    def _set_defaults(self) -> None:
+        """ Wraps Params._set_defaults """
+        return super._set_defaults(default_ui_json)
 
-        Parameters
-        ----------
-        ifile : InputFile
-            class instance to handle loading input file
-        """
-        if not ifile.is_loaded:
-            ifile.read_ui_json(validations)
-
-        p = cls()
-        p._ifile = ifile
-        p.workpath = ifile.workpath
-        p.associations = ifile.associations
-        p._init_params(ifile)
-
-        return p
-
-    def default(self, default_ui_json, param):
+    def default(self, param) -> Any:
         """ Wraps Params.default. """
         return super.default(default_ui_json, param)
 
