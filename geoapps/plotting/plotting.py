@@ -14,7 +14,7 @@ import plotly.graph_objects as go
 from geoh5py.data import Data, ReferencedData
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 
-from geoapps.utils import filter_xy, format_labels, inv_symlog, symlog
+from geoapps.utils.utils import filter_xy, format_labels, inv_symlog, symlog
 
 
 def normalize(values):
