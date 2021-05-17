@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import gc
+import json
 import os
 import re
 
@@ -844,7 +845,7 @@ def block_model_2_tensor(block_model, models=[]):
     return tensor, out
 
 
-def treemesh_2_octree(workspace, treemesh, parent=None):
+def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
 
     indArr, levels = treemesh._ubc_indArr
     ubc_order = treemesh._ubc_order
@@ -856,7 +857,7 @@ def treemesh_2_octree(workspace, treemesh, parent=None):
     origin[2] += treemesh.h[2].size * treemesh.h[2][0]
     mesh_object = Octree.create(
         workspace,
-        name=f"Mesh",
+        name=name,
         origin=origin,
         u_count=treemesh.h[0].size,
         v_count=treemesh.h[1].size,
@@ -1577,6 +1578,23 @@ def iso_surface(
         surfaces += [[vertices, faces]]
 
     return surfaces
+
+
+def load_json_params(file: str):
+    """
+    Read input parameters from json
+    """
+    with open(file) as f:
+        input_dict = json.load(f)
+
+    params = {}
+    for key, param in input_dict.items():
+        if isinstance(param, dict):
+            params[key] = param["value"]
+        else:
+            params[key] = param
+
+    return params
 
 
 colors = [

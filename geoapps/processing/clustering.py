@@ -27,7 +27,7 @@ from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
 from geoapps.plotting import ScatterPlots
-from geoapps.utils import colors, hex_to_rgb, random_sampling
+from geoapps.utils.utils import colors, hex_to_rgb, random_sampling
 
 
 class Clustering(ScatterPlots):
@@ -37,7 +37,7 @@ class Clustering(ScatterPlots):
 
     defaults = {
         "h5file": r"../../assets/FlinFlon.geoh5",
-        "objects": "geochem",
+        "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": ["Al2O3", "CaO", "V", "MgO", "Ba"],
         "x": "Al2O3",
         "y": "CaO",
@@ -628,7 +628,7 @@ class Clustering(ScatterPlots):
                 }
 
             if self.live_link.value:
-                self.live_link_output(obj)
+                self.live_link_output(self.export_directory.selected_path, obj)
 
             self.workspace.finalize()
 

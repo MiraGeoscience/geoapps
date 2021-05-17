@@ -24,7 +24,7 @@ from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
 from geoapps.plotting import PlotSelection2D
-from geoapps.utils import filter_xy
+from geoapps.utils.utils import filter_xy
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -47,7 +47,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Gravity_Magnetics_drape60m",
+        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": "Airborne_Gxx",
         "resolution": 50,
         "sigma": 0.5,
@@ -229,7 +229,9 @@ class EdgeDetectionApp(PlotSelection2D):
                 )
 
             if self.live_link.value:
-                self.live_link_output(self.ga_group)
+                self.live_link_output(
+                    self.export_directory.selected_path, self.ga_group
+                )
 
             self.workspace.finalize()
 
