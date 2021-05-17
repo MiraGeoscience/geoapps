@@ -12,8 +12,8 @@ from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
 
-from geoapps import utils
 from geoapps.base import BaseApplication
+from geoapps.utils import utils
 
 
 class ObjectDataSelection(BaseApplication):
@@ -77,7 +77,7 @@ class ObjectDataSelection(BaseApplication):
         Object selector
         """
         if getattr(self, "_objects", None) is None:
-            self.objects = Dropdown(description="Object:", options=[""])
+            self.objects = Dropdown(description="Object:")
 
         return self._objects
 
@@ -202,7 +202,9 @@ class ObjectDataSelection(BaseApplication):
                 elif any([pg.name == value for pg in obj.property_groups]):
                     data += [
                         self.workspace.get_entity(prop)[0]
-                        for prop in obj.get_property_group(value).properties
+                        for prop in obj.find_or_create_property_group(
+                            name=value
+                        ).properties
                     ]
 
             return obj, data
@@ -262,15 +264,18 @@ class ObjectDataSelection(BaseApplication):
             value = self.objects.value
 
             if len(self.object_types) > 0:
-                options = [""] + [
-                    obj.name
+                options = [["", None]] + [
+                    [obj.name, obj.uid]
                     for obj in self._workspace.objects
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                options = [""] + list(self._workspace.list_objects_name.values())
+                options = [["", None]] + [
+                    [value, uid]
+                    for uid, value in self._workspace.list_objects_name.items()
+                ]
 
-            if value in options:  # Silent update
+            if value in list(dict(options).values()):  # Silent update
                 self.objects.unobserve(self.update_data_list, names="value")
                 self.objects.options = options
                 self.objects.value = value

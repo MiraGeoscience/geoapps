@@ -19,7 +19,7 @@ from geoapps.selection import ObjectDataSelection
 class Calculator(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "geochem",
+        "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": ["Al2O3", "CaO"],
         "equation": "{NewChannel} = {Al2O3} + numpy.cos({CaO} / 30.0 * numpy.pi)",
     }
@@ -144,7 +144,7 @@ class Calculator(ObjectDataSelection):
         if self.live_link.value:
             while not isinstance(obj.parent, RootGroup):
                 obj = obj.parent
-            self.live_link_output(obj)
+            self.live_link_output(self.export_directory.selected_path, obj)
 
         self.workspace.finalize()
 

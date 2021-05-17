@@ -26,6 +26,7 @@ import json
 import multiprocessing
 import os
 import sys
+import uuid
 from multiprocessing.pool import ThreadPool
 
 import dask
@@ -50,7 +51,7 @@ from geoapps.simpegPF import (
     Utils,
 )
 from geoapps.simpegPF.Utils import matutils, mkvc
-from geoapps.utils import block_model_2_tensor, filter_xy, octree_2_treemesh
+from geoapps.utils.utils import block_model_2_tensor, filter_xy, octree_2_treemesh
 
 
 def active_from_xyz(mesh, xyz, grid_reference="CC", method="linear"):
@@ -312,8 +313,9 @@ def inversion(input_file):
 
         workspace = Workspace(input_dict["workspace"])
 
-        if workspace.get_entity(input_dict["data"]["name"]):
-            entity = workspace.get_entity(input_dict["data"]["name"])[0]
+        if workspace.get_entity(uuid.UUID(input_dict["data"]["name"])):
+            entity = workspace.get_entity(uuid.UUID(input_dict["data"]["name"]))[0]
+
         else:
             assert False, (
                 f"Entity {input_dict['data']['name']} could not be found in "
@@ -472,7 +474,7 @@ def inversion(input_file):
     # Manage other inputs
     if "input_mesh_file" in list(input_dict.keys()):
         workspace = Workspace(input_dict["save_to_geoh5"])
-        input_mesh = workspace.get_entity(input_dict["input_mesh_file"])[0]
+        input_mesh = workspace.get_entity(uuid.UUID(input_dict["input_mesh_file"]))[0]
     else:
         input_mesh = None
 
@@ -504,7 +506,7 @@ def inversion(input_file):
                 elif "GA_object" in list(input_dict["topography"].keys()):
                     workspace = Workspace(input_dict["workspace"])
                     topo_entity = workspace.get_entity(
-                        input_dict["topography"]["GA_object"]["name"]
+                        uuid.UUID(input_dict["topography"]["GA_object"]["name"])
                     )[0]
 
                     if isinstance(topo_entity, Grid2D):
@@ -699,7 +701,9 @@ def inversion(input_file):
     if "starting_model" in list(input_dict.keys()):
         if "model" in list(input_dict["starting_model"].keys()):
             starting_model = input_dict["starting_model"]["model"]
-            input_mesh = workspace.get_entity(list(starting_model.keys())[0])[0]
+            input_mesh = workspace.get_entity(
+                uuid.UUID(list(starting_model.keys())[0])
+            )[0]
 
             if isinstance(input_mesh, BlockModel):
 
@@ -707,7 +711,7 @@ def inversion(input_file):
             else:
                 input_mesh = octree_2_treemesh(input_mesh)
 
-            input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2] + 1300]
+            # input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2]]
             print("converting", input_mesh.x0)
         else:
             starting_model = np.r_[input_dict["starting_model"]["value"]]
@@ -1059,7 +1063,7 @@ def inversion(input_file):
         if isinstance(input_value, dict):
             print(f"In model interpolation for {input_value}")
             workspace = Workspace(input_dict["save_to_geoh5"])
-            input_mesh = workspace.get_entity(list(input_value.keys())[0])[0]
+            input_mesh = workspace.get_entity(uuid.UUID(list(input_value.keys()))[0])[0]
 
             input_model = input_mesh.get_data(list(input_value.values())[0])[0].values
 

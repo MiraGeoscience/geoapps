@@ -5,7 +5,6 @@ from six import string_types
 from .Utils.SolverUtils import *
 
 norm = np.linalg.norm
-from SimPEG import Regularization
 from time import time
 
 __all__ = [
