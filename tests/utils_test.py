@@ -8,7 +8,7 @@
 import numpy as np
 import pytest
 
-from geoapps.utils import rotate_xy, running_mean
+from geoapps.utils.utils import rotate_xy, running_mean
 
 
 def test_rotation_xy():

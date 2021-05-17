@@ -19,7 +19,7 @@ from osgeo import osr
 
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils import (
+from geoapps.utils.utils import (
     export_curve_2_shapefile,
     export_grid_2_geotiff,
     object_2_dataframe,
@@ -37,7 +37,7 @@ class Export(ObjectDataSelection):
     defaults = {
         "select_multiple": True,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Gravity_Magnetics_drape60m",
+        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": ["Airborne_Gxx"],
         "epsg_code": "EPSG:26914",
         "file_type": "geotiff",
@@ -78,7 +78,11 @@ class Export(ObjectDataSelection):
         self.file_type.observe(update_options)
 
         def update_name(_):
-            self.export_as.value = self.objects.value
+            self.export_as.value = [
+                key
+                for key, value in self.objects.options
+                if value == self.objects.value
+            ][0]
 
         self.objects.observe(update_name, names="value")
         super().__init__(**kwargs)
@@ -164,7 +168,11 @@ class Export(ObjectDataSelection):
         """
         if getattr(self, "_export_as", None) is None:
             self._export_as = Text(
-                value=self.objects.value,
+                value=[
+                    key
+                    for key, value in self.objects.options
+                    if value == self.objects.value
+                ][0],
                 description="Save as:",
                 disabled=False,
             )
@@ -277,9 +285,12 @@ class Export(ObjectDataSelection):
 
                     if self.data_type.value == "RGB":
                         fig, ax = plt.figure(), plt.subplot()
-                        plt.gca().set_visible(False)
+
+                        if not self.plot_result:
+                            plt.gca().set_visible(False)
+
                         ax, im, _, _, _ = plot_plan_data_selection(
-                            entity, entity.get_data(key)[0], ax=ax
+                            entity, entity.get_data(key)[0], axis=ax
                         )
                         plt.colorbar(im, fraction=0.02)
                         plt.savefig(
@@ -293,6 +304,8 @@ class Export(ObjectDataSelection):
                             dpi=300,
                             bbox_inches="tight",
                         )
+                        if not self.plot_result:
+                            plt.close(fig)
 
                     print(f"Object saved to {name}")
 

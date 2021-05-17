@@ -1,10 +1,6 @@
 from scipy.constants import mu_0
-from .. import *
 from .. import Utils
-from .. import Mesh
 import numpy as np
-from SimPEG.Utils import kron3, speye, sdiag
-import matplotlib.pyplot as plt
 
 
 def spheremodel(mesh, x0, y0, z0, r):
