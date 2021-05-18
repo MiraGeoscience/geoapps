@@ -17,7 +17,7 @@ from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
 
-from geoapps.utils.utils import load_json_params
+from geoapps.utils.formatters import string_name
 
 
 class BaseApplication:
@@ -266,7 +266,7 @@ class BaseApplication:
                 self._ga_group = self.workspace.root
             else:
                 self._ga_group = ContainerGroup.create(
-                    self.workspace, name=self.ga_group_name.value
+                    self.workspace, name=string_name(self.ga_group_name.value)
                 )
                 if self.live_link.value:
                     self.live_link_output(
