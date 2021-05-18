@@ -13,6 +13,7 @@ from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_ou
 from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.plotting import PlotSelection2D
+from geoapps.utils.formatters import string_name
 
 
 class ContourValues(PlotSelection2D):
@@ -210,7 +211,7 @@ class ContourValues(PlotSelection2D):
                 else:
                     curve = Curve.create(
                         self.workspace,
-                        name=self.export_as.value,
+                        name=string_name(self.export_as.value),
                         vertices=vertices,
                         cells=np.vstack(cells).astype("uint32"),
                         parent=self.ga_group,
