@@ -24,6 +24,7 @@ from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
 from geoapps.plotting import PlotSelection2D
+from geoapps.utils.formatters import string_name
 from geoapps.utils.utils import filter_xy
 
 
@@ -222,7 +223,7 @@ class EdgeDetectionApp(PlotSelection2D):
             else:
                 curve = Curve.create(
                     self.workspace,
-                    name=self.export_as.value,
+                    name=string_name(self.export_as.value),
                     vertices=self.trigger.vertices,
                     cells=self.trigger.cells,
                     parent=self.ga_group,
