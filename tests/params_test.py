@@ -1015,7 +1015,7 @@ def test_validate_output_geoh5(tmp_path):
     param = "output_geoh5"
     newval = "../assets/something.geoh5py"
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval)
+    # param_test_generator(tmp_path, param,  newval)
     ### test validation behaviour ###
     # catch_invalid_ge/nerator(tmp_path, param, 34, "type")
 
