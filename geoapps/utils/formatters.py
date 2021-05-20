@@ -15,6 +15,6 @@ def string_name(value: str, characters: str = ".") -> str:
 
     :return value: Re-formatted string
     """
-    for char in list(characters):
+    for char in characters:
         value = value.replace(char, "_")
     return value
