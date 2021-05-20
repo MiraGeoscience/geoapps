@@ -8,14 +8,15 @@
 import json
 import os
 from copy import deepcopy
-from uuid import uuid4
+from uuid import UUID, uuid4
 
+import numpy as np
 import pytest
 from geoh5py.workspace import Workspace
 
 from geoapps.io import InputFile, Params
 from geoapps.io.MVI import MVIParams
-from geoapps.io.MVI.constants import default_ui_json
+from geoapps.io.MVI.constants import default_ui_json, validations
 
 ######################  Setup  ###########################
 
@@ -29,7 +30,7 @@ def tmp_input_file(filepath, idict):
         json.dump(idict, f)
 
 
-def default_test_generator(tmp_path, param, newval, wrkstr=None):
+def default_test_generator(tmp_path, param, newval):
 
     d_u_j = deepcopy(default_ui_json)
     params = MVIParams()
@@ -61,36 +62,78 @@ def default_test_generator(tmp_path, param, newval, wrkstr=None):
     assert getattr(params, param) == d_u_j[param]["default"]
 
 
-def catch_invalid_generator(tmp_path, param, invalid_value, validation_type):
+def catch_invalid_generator(
+    tmp_path, param, invalid_value, validation_type, workspace=None, parent=None
+):
 
-    params = MVIParams()
-    params.workspace = workspace
-    if validation_type == "type":
-        err = TypeError
-    else:
+    key_map = {
+        "value": "values",
+        "type": "types",
+        "shape": "shapes",
+        "reqs": "reqs",
+        "uuid": "uuid",
+    }
+    pvalidations = validations[param][key_map[validation_type]]
+    filepath = tmpfile(tmp_path)
+    ifile = InputFile(filepath)
+    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
+    with open(filepath) as f:
+        ui = json.load(f)
+    ui[param]["value"] = invalid_value
+    ui[param]["visible"] = True
+    ui[param]["enabled"] = True
+    ui[param]["isValue"] = True
+    if validation_type == "value":
         err = ValueError
+        assertions = [
+            "Must be",
+            param,
+            "value",
+            str(invalid_value),
+            *[str(v) for v in pvalidations],
+        ]
+    elif validation_type == "type":
+        err = TypeError
+        types = set(pvalidations + [type(invalid_value)])
+        assertions = ["Must be", param, "type", *[t.__name__ for t in types]]
+    elif validation_type == "shape":
+        err = ValueError
+        shapes = set(pvalidations + [np.array(invalid_value).shape])
+        assertions = ["Must be", param, "shape", *[str(s) for s in shapes]]
+    elif validation_type == "reqs":
+        err = KeyError
+        assertions = ["Unsatisfied", param]
+        req = pvalidations[0]
+        hasval = len(req) > 1
+        preq = req[1] if hasval else req[0]
+        ui[preq]["value"] = None
+        assertions += [str(k) for k in req]
+    elif validation_type == "uuid":
+        err = (ValueError, IndexError)
+        if workspace is None:
+            assertions = [param, "uuid", invalid_value, "valid uuid"]
+        if workspace is not None and parent is None:
+            uuid_str = str(uuid4())
+            ui[param]["value"] = uuid_str
+            assertions = [param, "uuid", uuid_str, "Address does"]
+        if workspace is not None and parent is not None:
+            ui[param]["value"] = "{c02e0470-0c3e-4119-8ac1-0aacba5334af}"
+            ui[param]["parent"] = parent
+            ui[parent]["value"] = "{79b719bc-d996-4f52-9af0-10aa9c7bb941}"
+
+            assertions = [param, "uuid", invalid_value, "child of"]
+
+    with open(filepath, "w") as f:
+        json.dump(ui, f, indent=4)
+
     with pytest.raises(err) as excinfo:
-        params.__setattr__(param, invalid_value)
+        params = MVIParams.from_path(filepath)
 
-    assert str(validation_type) in str(excinfo.value)
-    # assert str(invalid_value) in str(excinfo.value)
-    assert param in str(excinfo.value)
-
-    return params
+    for a in assertions:
+        assert a in str(excinfo.value)
 
 
-def catch_invalid_uuid_generator(param, invalid_uuid, no_workspace):
-    params = MVIParams()
-    params.workspace = workspace
-    with pytest.raises(ValueError) as excinfo:
-        params.__setattr__(param, invalid_uuid)
-    assert f"UUID string: {invalid_uuid}" in str(excinfo.value)
-    with pytest.raises(IndexError) as excinfo:
-        params.__setattr__(param, no_workspace)
-    assert f"UUID address {no_workspace}" in str(excinfo.value)
-
-
-def param_test_generator(tmp_path, param, value, wrkstr=None):
+def param_test_generator(tmp_path, param, value):
     filepath = tmpfile(tmp_path)
     ifile = InputFile(filepath)
     ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
@@ -103,7 +146,11 @@ def param_test_generator(tmp_path, param, value, wrkstr=None):
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
     params = MVIParams.from_path(filepath)
-    assert getattr(params, param) == value
+    try:
+        value = UUID(value)
+        assert getattr(params, param) == value
+    except:
+        assert getattr(params, param) == value
 
 
 ######################  Tests  ###########################
@@ -112,20 +159,23 @@ def param_test_generator(tmp_path, param, value, wrkstr=None):
 def test_params_constructors(tmp_path):
     filepath = tmpfile(tmp_path)
     ifile = InputFile(filepath)
-    ifile.write_ui_json(default_ui_json, default=True)
+    ui = default_ui_json.copy()
+    ui["geoh5"] = wrkstr
+    ifile.write_ui_json(ui, default=True)
     params1 = MVIParams.from_path(filepath)
     params2 = MVIParams.from_ifile(ifile)
 
 
 def test_validate_inversion_type(tmp_path):
     param = "inversion_type"
-    newval = "gravity"
+    newval = "mvic"
     ### test default behaviour ###
     default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "em", "value")
+    catch_invalid_generator(tmp_path, param, "mvi", "reqs")
 
 
 def test_validate_forward_only(tmp_path):
@@ -137,6 +187,7 @@ def test_validate_forward_only(tmp_path):
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, "test", "type")
+    catch_invalid_generator(tmp_path, param, True, "reqs")
 
 
 def test_validate_inducing_field_strength(tmp_path):
@@ -174,134 +225,129 @@ def test_validate_inducing_field_declination(tmp_path):
 
 def test_validate_topography_object(tmp_path):
     param = "topography_object"
-    newval = str(uuid4())
+    newval = "{79b719bc-d996-4f52-9af0-10aa9c7bb941}"
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
+    catch_invalid_generator(tmp_path, param, True, "type")
+    catch_invalid_generator(tmp_path, param, "lsdkfj", "uuid")
+    catch_invalid_generator(tmp_path, param, "", "uuid", workspace=workspace)
 
 
 def test_validate_topography(tmp_path):
     param = "topography"
-    newval = str(uuid4())
+    newval = "{79b719bc-d996-4f52-9af0-10aa9c7bb941}"
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
+    catch_invalid_generator(tmp_path, param, True, "type")
+    catch_invalid_generator(tmp_path, param, "lsdkfj", "uuid")
+    catch_invalid_generator(
+        tmp_path, param, "", "uuid", workspace=workspace, parent="topography_object"
+    )
 
 
 def test_validate_data_object(tmp_path):
     param = "data_object"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_tmi_channel(tmp_path):
     param = "tmi_channel"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_tmi_uncertainty(tmp_path):
     param = "tmi_uncertainty"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_starting_model_object(tmp_path):
     param = "starting_model_object"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_starting_inclination_object(tmp_path):
     param = "starting_inclination_object"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_starting_declination_object(tmp_path):
     param = "starting_declination_object"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_starting_model(tmp_path):
     param = "starting_model"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_starting_inclination(tmp_path):
     param = "starting_inclination"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_starting_declination(tmp_path):
     param = "starting_declination"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_tile_spatial(tmp_path):
@@ -314,7 +360,6 @@ def test_validate_tile_spatial(tmp_path):
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, invalidval, "type")
-    catch_invalid_uuid_generator(param, "test", str(uuid4()))
 
 
 def test_validate_receivers_radar_drape(tmp_path):
@@ -322,12 +367,11 @@ def test_validate_receivers_radar_drape(tmp_path):
     newval = str(uuid4())
     invalidval = {}
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, invalidval, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_receivers_offset_x(tmp_path):
@@ -368,12 +412,11 @@ def test_validate_gps_receivers_offset(tmp_path):
     newval = str(uuid4())
     invalidval = {}
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, invalidval, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_ignore_values(tmp_path):
@@ -428,7 +471,7 @@ def test_validate_detrend_type(tmp_path):
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "", "value")
+    catch_invalid_generator(tmp_path, param, "sdf", "value")
 
 
 def test_validate_max_chunk_size(tmp_path):
@@ -439,7 +482,7 @@ def test_validate_max_chunk_size(tmp_path):
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "", "type")
+    catch_invalid_generator(tmp_path, param, "asdf", "type")
 
 
 def test_validate_chunk_by_rows(tmp_path):
@@ -450,7 +493,7 @@ def test_validate_chunk_by_rows(tmp_path):
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "", "type")
+    catch_invalid_generator(tmp_path, param, "sdf", "type")
 
 
 def test_validate_output_tile_files(tmp_path):
@@ -461,19 +504,18 @@ def test_validate_output_tile_files(tmp_path):
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "", "type")
+    catch_invalid_generator(tmp_path, param, "sdf", "type")
 
 
 def test_validate_mesh(tmp_path):
     param = "mesh"
-    newval = str(uuid4())
+    newval = "{c02e0470-0c3e-4119-8ac1-0aacba5334af}"
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_mesh_from_params(tmp_path):
@@ -482,9 +524,9 @@ def test_validate_mesh_from_params(tmp_path):
     ### test default behaviour ###
     default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    param_test_generator(tmp_path, param, newval)
+    # param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "", "type")
+    catch_invalid_generator(tmp_path, param, "sdf", "type")
 
 
 def test_validate_core_cell_size_x(tmp_path):
@@ -495,7 +537,7 @@ def test_validate_core_cell_size_x(tmp_path):
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "", "type")
+    catch_invalid_generator(tmp_path, param, "sdf", "type")
 
 
 def test_validate_core_cell_size_y(tmp_path):
@@ -506,7 +548,7 @@ def test_validate_core_cell_size_y(tmp_path):
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "", "type")
+    catch_invalid_generator(tmp_path, param, "sdf", "type")
 
 
 def test_validate_core_cell_size_z(tmp_path):
@@ -517,7 +559,7 @@ def test_validate_core_cell_size_z(tmp_path):
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "", "type")
+    catch_invalid_generator(tmp_path, param, "sdf", "type")
 
 
 def test_validate_octree_levels_topo(tmp_path):
@@ -832,72 +874,66 @@ def test_validate_reference_model_object(tmp_path):
     param = "reference_model_object"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_reference_inclination_object(tmp_path):
     param = "reference_inclination_object"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_reference_declination_object(tmp_path):
     param = "reference_declination_object"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_reference_model(tmp_path):
     param = "reference_model"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_reference_inclination(tmp_path):
     param = "reference_inclination"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_reference_declination(tmp_path):
     param = "reference_declination"
     newval = str(uuid4())
     ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
-    # param_test_generator(tmp_path, param, newval, wrkstr=wrkstr)
+    param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
     catch_invalid_generator(tmp_path, param, {}, "type")
-    catch_invalid_uuid_generator(param, "test", newval)
 
 
 def test_validate_gradient_type(tmp_path):
@@ -966,22 +1002,9 @@ def test_validate_max_ram(tmp_path):
     catch_invalid_generator(tmp_path, param, "test", "type")
 
 
-def test_validate_inversion_type(tmp_path):
-    param = "inversion_type"
-    newval = "gravity"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval)
-    ### test ordinary behaviour ###
-    param_test_generator(tmp_path, param, newval)
-    ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, {}, "value")
-
-
 def test_validate_workspace(tmp_path):
     param = "workspace"
     newval = "../assets/something.geoh5py"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
     # param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
@@ -991,12 +1014,10 @@ def test_validate_workspace(tmp_path):
 def test_validate_output_geoh5(tmp_path):
     param = "output_geoh5"
     newval = "../assets/something.geoh5py"
-    ### test default behaviour ###
-    default_test_generator(tmp_path, param, newval)
     ### test ordinary behaviour ###
     # param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, {}, "type")
+    # catch_invalid_ge/nerator(tmp_path, param, 34, "type")
 
 
 def test_validate_out_group(tmp_path):

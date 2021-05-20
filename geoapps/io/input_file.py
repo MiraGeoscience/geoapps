@@ -6,9 +6,9 @@
 #  (see LICENSE file at the root of this source code package).
 
 import json
-import os
+import os.path as op
 from copy import deepcopy
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, List
 from uuid import UUID
 
 import numpy as np
@@ -43,9 +43,9 @@ class InputFile:
 
     """
 
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str = None):
         self.filepath = filepath
-        self.workpath = os.path.dirname(os.path.abspath(filepath)) + os.path.sep
+        self.workpath = op.dirname(op.abspath(filepath)) + op.sep if filepath else None
         self.data = {}
         self.associations = {}
         self.is_loaded = False
@@ -57,6 +57,9 @@ class InputFile:
 
     @filepath.setter
     def filepath(self, f: str):
+        if f is None:
+            self._filepath = f
+            return
         if ".".join(f.split(".")[-2:]) != "ui.json":
             raise OSError("Input file must have 'ui.json' extension.")
         else:
@@ -97,6 +100,7 @@ class InputFile:
         out = deepcopy(default_ui)
         if workspace is not None:
             out["workspace_geoh5"] = workspace
+            out["geoh5"] = workspace
         if not default:
             if self.is_loaded:
                 for k, v in self.data.items():
