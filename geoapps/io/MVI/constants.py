@@ -864,10 +864,18 @@ required_parameters = []
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["gravity", "magnetics", "mvi", "mvic"],
+        "values": ["mvi", "mvic"],
+        "reqs": [
+            ("mvi", "inducing_field_strength"),
+            ("mvi", "inducing_field_inclination"),
+            ("mvi", "inducing_field_declination"),
+        ],
     },
     "forward_only": {
         "types": [bool],
+        "reqs": [
+            (True, "starting_model"),
+        ],
     },
     "inducing_field_strength": {
         "types": [int, float],
@@ -880,6 +888,7 @@ validations = {
     },
     "topography_object": {
         "types": [str, UUID],
+        "uuid": [],
     },
     "topography": {
         "types": [str, UUID, int, float],
@@ -955,9 +964,7 @@ validations = {
         "uuid": [],
         "types": [str, UUID],
     },
-    "mesh_from_params": {
-        "types": [bool],
-    },
+    "mesh_from_params": {"types": [bool], "reqs": [(True, "core_cell_size_x")]},
     "core_cell_size_x": {
         "types": [int, float],
     },
@@ -978,7 +985,6 @@ validations = {
     },
     "depth_core": {
         "types": [int, float],
-        "reqs": [(True, "mesh_from_params")],
     },
     "max_distance": {
         "types": [int, float],
@@ -1096,11 +1102,9 @@ validations = {
     },
     "n_cpu": {
         "types": [int, float],
-        "reqs": [(True, "parallelized")],
     },
     "max_ram": {
         "types": [int, float],
-        "reqs": [(True, "parallelized")],
     },
     "workspace": {
         "types": [str, Workspace],

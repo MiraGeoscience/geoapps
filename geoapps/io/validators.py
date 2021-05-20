@@ -5,10 +5,11 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 from uuid import UUID
 
 import numpy as np
+from geoh5py.workspace import Workspace
 
 
 class InputValidator:
@@ -38,7 +39,7 @@ class InputValidator:
         requirements: List[str],
         validations: Dict[str, Any],
         workspace: Workspace = None,
-        input: Dict[str, Any] = None,
+        input=None,
     ):
         self.requirements = requirements
         self.validations = validations
@@ -67,11 +68,11 @@ class InputValidator:
 
     @input.setter
     def input(self, val):
+        self._input = val
         if val is not None:
             self.validate_input(val)
-        self._input = val
 
-    def validate_input(self) -> None:
+    def validate_input(self, input) -> None:
         """
         Validates input params and contents/type/shape/requirements of values.
 
@@ -88,22 +89,23 @@ class InputValidator:
         it's value/type/shape/requirement validations.
         """
 
-        self._validate_requirements(self.input)
+        self._validate_requirements(input.data)
 
-        for k, v in self.input.items():
+        for k, v in input.data.items():
             if k not in self.validations.keys():
                 raise KeyError(f"{k} is not a valid parameter name.")
             else:
-                ikeys = list(self.input.keys())
-                self.validate(k, v, self.validations[k], ikeys, self.workspace)
+                self.validate(
+                    k, v, self.validations[k], self.workspace, input.associations
+                )
 
     def validate(
         self,
         param: str,
         value: Any,
         pvalidations: Dict[str, List[Any]],
-        input_keys: List[str] = None,
         workspace: Workspace = None,
+        associations: Dict[Union[str, UUID], Union[str, UUID]] = None,
     ) -> None:
         """
         Validates parameter values, types, shapes, and requirements.
@@ -135,9 +137,9 @@ class InputValidator:
                 if k not in pvalidations.keys():
                     exclusions = ["values", "types", "shapes", "reqs", "uuid"]
                     vkeys = [k for k in pvalidations.keys() if k not in exclusions]
-                    msg = f"Invalid {param} keys: {k}. Must be one of {*vkeys,}."
+                    msg = self.iterable_validation_msg(param, "keys", k, vkeys)
                     raise KeyError(msg)
-                self.validate(k, v, pvalidations[k], input_keys)
+                self.validate(k, v, pvalidations[k], workspace, associations)
 
         if value is None:
             if param in self.requirements:
@@ -151,121 +153,116 @@ class InputValidator:
             self._validate_parameter_type(param, value, pvalidations["types"])
         if "shapes" in pvalidations.keys():
             self._validate_parameter_shape(param, value, pvalidations["shapes"])
-        if ("reqs" in pvalidations.keys()) & (input_keys is not None):
-            for v in pvalidations["reqs"]:
-                self._validate_parameter_reqs(param, value, v, input_keys)
+        if ("reqs" in pvalidations.keys()) & (self.input is not None):
+            for req in pvalidations["reqs"]:
+                self._validate_parameter_req(param, value, req)
         if "uuid" in pvalidations.keys():
             ws = self.workspace if workspace is None else workspace
-            parent = pvalidations["uuid"] if pvalidations["uuid"] else None
+            try:
+                child_uuid = UUID(value) if isinstance(value, str) else value
+                parent = associations[child_uuid]
+            except:
+                parent = None
             self._validate_parameter_uuid(param, value, ws, parent)
 
-    def _validate_parameter_val(self, param: str, value: Any, vvals: Any) -> None:
+    def _validate_parameter_val(
+        self, param: str, value: Any, vvals: List[Union[float, str]]
+    ) -> None:
         """ Raise ValueError if parameter value is invalid.  """
         if value not in vvals:
-            msg = self._param_validation_msg(param, value, "value", vvals)
+            msg = self._iterable_validation_msg(param, "value", value, vvals)
             raise ValueError(msg)
 
-    def _validate_parameter_type(self, param: str, value: type, vtypes: Any) -> None:
+    def _validate_parameter_type(
+        self, param: str, value: Any, vtypes: List[type]
+    ) -> None:
         """ Raise TypeError if parameter type is invalid. """
-        if self._isiterable(value):
-            value = np.array(value).flatten().tolist()
-            if not all(type(v) in vtypes for v in value):
-                tnames = [t.__name__ for t in vtypes]
-                msg = self._param_validation_msg(param, value, "type", tnames)
-                raise TypeError(msg)
-        elif type(value) not in vtypes:
+        isiter = self._isiterable(value)
+        value = np.array(value).flatten().tolist()[0] if isiter else value
+        if type(value) not in vtypes:
             tnames = [t.__name__ for t in vtypes]
-            msg = self._param_validation_msg(param, value, "type", tnames)
+            ptype = type(value).__name__
+            msg = self._iterable_validation_msg(param, "type", ptype, tnames)
             raise TypeError(msg)
 
     def _validate_parameter_shape(
-        self, param: str, value: Tuple[int], vshape: Any
+        self, param: str, value: Any, vshape: List[Tuple[int]]
     ) -> None:
         """ Raise ValueError if parameter shape is invalid. """
-        if np.array(value).shape != vshape:
-            msg = self._param_validation_msg(param, value, "shape", vshape)
+        pshape = np.array(value).shape
+        if pshape != vshape:
+            msg = self._iterable_validation_msg(param, "shape", pshape, vshape)
             raise ValueError(msg)
 
-    def _validate_parameter_reqs(
-        self, param: str, value: Any, vreqs: tuple, input_keys: List[str]
-    ) -> None:
+    def _validate_parameter_req(self, param: str, value: Any, req: tuple) -> None:
         """ Raise a KeyError if parameter requirement is not satisfied. """
-        if len(vreqs) > 1:
-            if (value == vreqs[0]) & (vreqs[1] not in input_keys):
-                msg = self._param_validation_msg(param, value, "reqs", vreqs)
-                raise KeyError(msg)
+
+        hasval = len(req) > 1  # req[0] contains value for which param req[1] must exist
+        preq = req[1] if hasval else req[0]
+        val = req[0] if hasval else None
+
+        if hasval:
+            if value != req[0]:
+                return
+
+        if preq in self.input.data.keys():
+            noreq = True if self.input.data[preq] == None else False
         else:
-            if vreqs[0] not in input_keys:
-                msg = self._param_validation_msg(param, value, "reqs", vreqs)
-                raise KeyError(msg)
+            noreq = True
+
+        if noreq:
+            msg = self._req_validation_msg(param, preq, val)
+            raise KeyError(msg)
+
+    def _req_validation_msg(self, param, preq, val=None):
+        """ Generate unsatisfied parameter requirement message. """
+
+        msg = f"Unsatisfied '{param}' requirement. Input file must contain "
+        if val is not None:
+            msg += f"'{preq}' if '{param}' is '{str(val)}'."
+        else:
+            msg += f"'{preq}' if '{param}' is provided."
+        return msg
 
     def _validate_parameter_uuid(
-        self, param: str, value: str, workspace: Workspace, parent: str
+        self, param: str, value: str, workspace: Workspace = None, parent: UUID = None
     ) -> None:
         """ Check whether a string is a valid uuid and addresses an object in the workspace. """
+
+        msg = self._general_validation_msg(param, "uuid", value)
         try:
-            obj_uuid = UUID(uuid_str)
+            obj_uuid = UUID(value)
         except ValueError:
-            msg = self._param_validation_msg(param, uuid_str, "uuid", validations)
+            msg += " Must be a valid uuid string."
             raise ValueError(msg)
 
-        obj = workspace.get_entity(obj_uuid)
-        if obj[0] is None:
-            raise IndexError(
-                f"UUID address {uuid_str} does not exist in the workspace."
-            )
-        # TODO write a method in params class that calls this validator and then returns
+        if workspace is not None:
+            obj = workspace.get_entity(obj_uuid)
+            if obj[0] is None:
+                msg += f" Address does not exist in workspace: {workspace}."
+                raise IndexError(msg)
 
-        parent_obj = workspace.get_entity(parent)
-        obj = parent_obj.get_entity(obj_uuid)
-        if obj[0] is None:
-            raise IndexError(f"Workspace object {obj_uuid} is not a child of {parent}.")
+        if parent is not None:
+            parent_obj = workspace.get_entity(parent)[0]
+            if obj_uuid not in [c.uid for c in parent_obj.children]:
+                msg += f" Object must be a child of {parent}."
+                raise IndexError(msg)
 
-    def _param_validation_msg(
-        self, param: str, value: Any, validation_type: str, validations: Any
+    def _general_validation_msg(self, param: str, type: str, value: Any) -> str:
+        """ Generate base error message: "Invalid '{param}' {type}: {value}.". """
+        return f"Invalid '{param}' {type}: '{value}'."
+
+    def _iterable_validation_msg(
+        self, param: str, type: str, value: Any, validations: List[Any]
     ) -> str:
-        """Generate an error message for parameter validation.
+        """ Append possibly iterable validations: "Must be (one of): {validations}.". """
 
-        Parameters
-        ----------
-        param: parameter name as stored in input file
-        validation_type: name of validation type.  One of: 'value', 'type', 'shape', 'reqs'.
-        validations: valid input content.
-
-        Returns
-        -------
-        Message to be printed with the raised exception.
-        """
-
-        if validation_type == "shape":
-            value = np.array(value).shape
-            msg = (
-                f"Invalid '{param}' {validation_type}: {value}. Must be: {validations}."
-            )
-
-        elif validation_type == "reqs":
-            if len(validations) > 1:
-                msg = (
-                    f"Unsatisfied '{param}' requirement. Input file must contain "
-                    f"'{validations[1]}' if '{param}' is '{str(validations[0])}'."
-                )
-            else:
-                msg = (
-                    f"Unsatisfied '{param}' requirement. Input file must contain "
-                    f"'{validations[0]}' if '{param}' is provided."
-                )
-
+        msg = self._general_validation_msg(param, type, value)
+        if self._isiterable(validations, checklen=True):
+            vstr = "'" + "', '".join(str(k) for k in validations) + "'"
+            msg += f" Must be one of: {vstr}."
         else:
-            if validation_type == "type":
-                value = type(value)
-            if self._isiterable(validations, checklen=True):
-                tmp = "'" + "', '".join(str(k) for k in validations) + "'"
-                msg = (
-                    f"Invalid '{param}' {validation_type}: '{value}'. "
-                    f"Must be one of: {tmp}."
-                )
-            else:
-                msg = f"Invalid '{param}' {validation_type}: '{value}'. Must be: '{validations[0]}'."
+            msg += f" Must be: '{validations[0]}'."
 
         return msg
 

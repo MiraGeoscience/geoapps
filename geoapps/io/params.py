@@ -63,13 +63,14 @@ class Params:
     """
 
     def __init__(self):
-
-        self.workspace = None
-        self.output_geoh5 = None
-        self.workpath = os.path.abspath(".")
-        self.validator = InputValidator(required_parameters, validations, workspace)
-        self.associations = {}
-        self._ifile = None
+        self.associations: Dict[Union[str, UUID], Union[str, UUID]] = None
+        self.workspace: Workspace = None
+        self.output_geoh5: str = None
+        self.workpath: str = os.path.abspath(".")
+        self.validator: InputValidator = InputValidator(
+            required_parameters, validations
+        )
+        self._ifile: InputFile = None
 
     @classmethod
     def from_ifile(cls, ifile: InputFile) -> None:
@@ -127,7 +128,7 @@ class Params:
             self.output_geoh5 = Workspace(inputfile.data["output_geoh5"])
 
         self.validator = InputValidator(
-            required_parameters, validations, self.workspace, inputfile.data
+            required_parameters, validations, self.workspace, inputfile
         )
         for param, value in inputfile.data.items():
             if param in ["workspace", "output_geoh5"]:

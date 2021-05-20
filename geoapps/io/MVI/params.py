@@ -5,7 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 from uuid import UUID
 
 from ..input_file import InputFile
@@ -18,13 +18,16 @@ class MVIParams(Params):
     def __init__(self):
         super().__init__()
 
-        self.validations = validations
-        self.validator = InputValidator(required_parameters, validations)
-        self.forward_only = None
-        self.inducing_field_strength = None
-        self.inducing_field_inclination = None
-        self.inducing_field_declination = None
-        self.topography_object = None
+        self.validations: Dict[str, Any] = validations
+        self.validator: InputValidator = InputValidator(
+            required_parameters, validations
+        )
+        self.associations: Dict[Union[str, UUID], Union[str, UUID]] = None
+        self.forward_only: bool = None
+        self.inducing_field_strength: float = None
+        self.inducing_field_inclination: float = None
+        self.inducing_field_declination: float = None
+        self.topography_object: UUID = None
         self.topography = None
         self.data_object = None
         self.tmi_channel = None
@@ -97,16 +100,17 @@ class MVIParams(Params):
         self.inversion_type = None
         self.out_group = None
         self.no_data_value = None
+        self._ifile = InputFile()
 
-        self._set_defaults(default_ui_json)
+        self._set_defaults()
 
     def _set_defaults(self) -> None:
         """ Wraps Params._set_defaults """
-        return super._set_defaults(default_ui_json)
+        return super()._set_defaults(default_ui_json)
 
     def default(self, param) -> Any:
         """ Wraps Params.default. """
-        return super.default(default_ui_json, param)
+        return super().default(default_ui_json, param)
 
     def components(self) -> List[str]:
         """ Retrieve component names used to index channel, uncertainty data. """
@@ -170,7 +174,9 @@ class MVIParams(Params):
             self._inversion_type = val
             return
         p = "inversion_type"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._inversion_type = val
 
     @property
@@ -179,8 +185,13 @@ class MVIParams(Params):
 
     @forward_only.setter
     def forward_only(self, val):
+        if val is None:
+            self._forward_only = val
+            return
         p = "forward_only"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._forward_only = val
 
     @property
@@ -193,12 +204,12 @@ class MVIParams(Params):
             self._inducing_field_strength = val
             return
         p = "inducing_field_strength"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         if val <= 0:
             raise ValueError("inducing_field_strength must be greater than 0.")
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._inducing_field_strength = val
+        self._inducing_field_strength = UUID(val) if isinstance(val, str) else val
 
     @property
     def inducing_field_inclination(self):
@@ -210,10 +221,10 @@ class MVIParams(Params):
             self._inducing_field_inclination = val
             return
         p = "inducing_field_inclination"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._inducing_field_inclination = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._inducing_field_inclination = UUID(val) if isinstance(val, str) else val
 
     @property
     def inducing_field_declination(self):
@@ -225,10 +236,10 @@ class MVIParams(Params):
             self._inducing_field_declination = val
             return
         p = "inducing_field_declination"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._inducing_field_declination = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._inducing_field_declination = UUID(val) if isinstance(val, str) else val
 
     @property
     def topography_object(self):
@@ -240,8 +251,10 @@ class MVIParams(Params):
             self._topography_object = val
             return
         p = "topography_object"
-        self.validator.validate(p, val, self.validations[p])
-        self._topography_object = self.validator.validate_uuid(self.workspace, val)
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._topography_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def topography(self):
@@ -253,10 +266,10 @@ class MVIParams(Params):
             self._topography = val
             return
         p = "topography"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._topography = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._topography = UUID(val) if isinstance(val, str) else val
 
     @property
     def data_object(self):
@@ -268,8 +281,10 @@ class MVIParams(Params):
             self._data_object = val
             return
         p = "data_object"
-        self.validator.validate(p, val, self.validations[p])
-        self._data_object = self.validator.validate_uuid(self.workspace, val)
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._data_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def tmi_channel(self):
@@ -281,8 +296,10 @@ class MVIParams(Params):
             self._tmi_channel = val
             return
         p = "tmi_channel"
-        self.validator.validate(p, val, self.validations[p])
-        self._tmi_channel = self.validator.validate_uuid(self.workspace, val)
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._tmi_channel = UUID(val) if isinstance(val, str) else val
 
     @property
     def tmi_uncertainty(self):
@@ -294,10 +311,10 @@ class MVIParams(Params):
             self._tmi_uncertainty = val
             return
         p = "tmi_uncertainty"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._tmi_uncertainty = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._tmi_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
     def starting_model_object(self):
@@ -309,8 +326,10 @@ class MVIParams(Params):
             self._starting_model_object = val
             return
         p = "starting_model_object"
-        self.validator.validate(p, val, self.validations[p])
-        self._starting_model_object = self.validator.validate_uuid(self.workspace, val)
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._starting_model_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def starting_inclination_object(self):
@@ -322,10 +341,10 @@ class MVIParams(Params):
             self._starting_inclination_object = val
             return
         p = "starting_inclination_object"
-        self.validator.validate(p, val, self.validations[p])
-        self._starting_inclination_object = self.validator.validate_uuid(
-            self.workspace, val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
         )
+        self._starting_inclination_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def starting_declination_object(self):
@@ -337,10 +356,10 @@ class MVIParams(Params):
             self._starting_declination_object = val
             return
         p = "starting_declination_object"
-        self.validator.validate(p, val, self.validations[p])
-        self._starting_declination_object = self.validator.validate_uuid(
-            self.workspace, val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
         )
+        self._starting_declination_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def starting_model(self):
@@ -352,10 +371,10 @@ class MVIParams(Params):
             self._starting_model = val
             return
         p = "starting_model"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._starting_model = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._starting_model = UUID(val) if isinstance(val, str) else val
 
     @property
     def starting_inclination(self):
@@ -367,10 +386,10 @@ class MVIParams(Params):
             self._starting_inclination = val
             return
         p = "starting_inclination"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._starting_inclination = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._starting_inclination = UUID(val) if isinstance(val, str) else val
 
     @property
     def starting_declination(self):
@@ -382,10 +401,10 @@ class MVIParams(Params):
             self._starting_declination = val
             return
         p = "starting_declination"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._starting_declination = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._starting_declination = UUID(val) if isinstance(val, str) else val
 
     @property
     def tile_spatial(self):
@@ -397,10 +416,10 @@ class MVIParams(Params):
             self._tile_spatial = val
             return
         p = "tile_spatial"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._tile_spatial = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._tile_spatial = UUID(val) if isinstance(val, str) else val
 
     @property
     def receivers_radar_drape(self):
@@ -412,8 +431,10 @@ class MVIParams(Params):
             self._receivers_radar_drape = val
             return
         p = "receivers_radar_drape"
-        self.validator.validate(p, val, self.validations[p])
-        self._receivers_radar_drape = self.validator.validate_uuid(self.workspace, val)
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._receivers_radar_drape = UUID(val) if isinstance(val, str) else val
 
     @property
     def receivers_offset_x(self):
@@ -425,7 +446,9 @@ class MVIParams(Params):
             self._receivers_offset_x = val
             return
         p = "receivers_offset_x"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._receivers_offset_x = val
 
     @property
@@ -438,7 +461,9 @@ class MVIParams(Params):
             self._receivers_offset_y = val
             return
         p = "receivers_offset_y"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._receivers_offset_y = val
 
     @property
@@ -451,7 +476,9 @@ class MVIParams(Params):
             self._receivers_offset_z = val
             return
         p = "receivers_offset_z"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._receivers_offset_z = val
 
     @property
@@ -464,10 +491,10 @@ class MVIParams(Params):
             self._gps_receivers_offset = val
             return
         p = "gps_receivers_offset"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._gps_receivers_offset = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._gps_receivers_offset = UUID(val) if isinstance(val, str) else val
 
     @property
     def ignore_values(self):
@@ -479,7 +506,9 @@ class MVIParams(Params):
             self._ignore_values = val
             return
         p = "ignore_values"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._ignore_values = val
 
     @property
@@ -492,7 +521,9 @@ class MVIParams(Params):
             self._resolution = val
             return
         p = "resolution"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._resolution = val
 
     @property
@@ -505,7 +536,9 @@ class MVIParams(Params):
             self._detrend_data = val
             return
         p = "detrend_data"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._detrend_data = val
 
     @property
@@ -518,7 +551,9 @@ class MVIParams(Params):
             self._detrend_order = val
             return
         p = "detrend_order"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._detrend_order = val
 
     @property
@@ -531,7 +566,9 @@ class MVIParams(Params):
             self._detrend_type = val
             return
         p = "detrend_type"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._detrend_type = val
 
     @property
@@ -544,7 +581,9 @@ class MVIParams(Params):
             self._max_chunk_size = val
             return
         p = "max_chunk_size"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._max_chunk_size = val
 
     @property
@@ -557,7 +596,9 @@ class MVIParams(Params):
             self._chunk_by_rows = val
             return
         p = "chunk_by_rows"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._chunk_by_rows = val
 
     @property
@@ -570,7 +611,9 @@ class MVIParams(Params):
             self._output_tile_files = val
             return
         p = "output_tile_files"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._output_tile_files = val
 
     @property
@@ -583,8 +626,10 @@ class MVIParams(Params):
             self._mesh = val
             return
         p = "mesh"
-        self.validator.validate(p, val, self.validations[p])
-        self._mesh = self.validator.validate_uuid(self.workspace, val)
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._mesh = UUID(val) if isinstance(val, str) else val
 
     @property
     def mesh_from_params(self):
@@ -596,7 +641,9 @@ class MVIParams(Params):
             self._mesh_from_params = val
             return
         p = "mesh_from_params"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._mesh_from_params = val
 
     @property
@@ -609,7 +656,9 @@ class MVIParams(Params):
             self._core_cell_size_x = val
             return
         p = "core_cell_size_x"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._core_cell_size_x = val
 
     @property
@@ -622,7 +671,9 @@ class MVIParams(Params):
             self._core_cell_size_y = val
             return
         p = "core_cell_size_y"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._core_cell_size_y = val
 
     @property
@@ -635,7 +686,9 @@ class MVIParams(Params):
             self._core_cell_size_z = val
             return
         p = "core_cell_size_z"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._core_cell_size_z = val
 
     @property
@@ -648,7 +701,9 @@ class MVIParams(Params):
             self._octree_levels_topo = val
             return
         p = "octree_levels_topo"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._octree_levels_topo = val
 
     @property
@@ -661,7 +716,9 @@ class MVIParams(Params):
             self._octree_levels_obs = val
             return
         p = "octree_levels_obs"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._octree_levels_obs = val
 
     @property
@@ -674,7 +731,9 @@ class MVIParams(Params):
             self._octree_levels_padding = val
             return
         p = "octree_levels_padding"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._octree_levels_padding = val
 
     @property
@@ -687,7 +746,9 @@ class MVIParams(Params):
             self._depth_core = val
             return
         p = "depth_core"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._depth_core = val
 
     @property
@@ -700,7 +761,9 @@ class MVIParams(Params):
             self._max_distance = val
             return
         p = "max_distance"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._max_distance = val
 
     @property
@@ -713,7 +776,9 @@ class MVIParams(Params):
             self._padding_distance_x = val
             return
         p = "padding_distance_x"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._padding_distance_x = val
 
     @property
@@ -726,7 +791,9 @@ class MVIParams(Params):
             self._padding_distance_y = val
             return
         p = "padding_distance_y"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._padding_distance_y = val
 
     @property
@@ -739,7 +806,9 @@ class MVIParams(Params):
             self._padding_distance_z = val
             return
         p = "padding_distance_z"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._padding_distance_z = val
 
     @property
@@ -752,7 +821,9 @@ class MVIParams(Params):
             self._window_center_x = val
             return
         p = "window_center_x"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._window_center_x = val
 
     @property
@@ -765,7 +836,9 @@ class MVIParams(Params):
             self._window_center_y = val
             return
         p = "window_center_y"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._window_center_y = val
 
     @property
@@ -778,7 +851,9 @@ class MVIParams(Params):
             self._window_width = val
             return
         p = "window_width"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._window_width = val
 
     @property
@@ -791,7 +866,9 @@ class MVIParams(Params):
             self._window_height = val
             return
         p = "window_height"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._window_height = val
 
     @property
@@ -804,7 +881,9 @@ class MVIParams(Params):
             self._inversion_style = val
             return
         p = "inversion_style"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._inversion_style = val
 
     @property
@@ -817,7 +896,9 @@ class MVIParams(Params):
             self._chi_factor = val
             return
         p = "chi_factor"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._chi_factor = val
 
     @property
@@ -830,7 +911,9 @@ class MVIParams(Params):
             self._max_iterations = val
             return
         p = "max_iterations"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._max_iterations = val
 
     @property
@@ -843,7 +926,9 @@ class MVIParams(Params):
             self._max_cg_iterations = val
             return
         p = "max_cg_iterations"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._max_cg_iterations = val
 
     @property
@@ -856,7 +941,9 @@ class MVIParams(Params):
             self._max_global_iterations = val
             return
         p = "max_global_iterations"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._max_global_iterations = val
 
     @property
@@ -869,7 +956,9 @@ class MVIParams(Params):
             self._initial_beta = val
             return
         p = "initial_beta"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._initial_beta = val
 
     @property
@@ -882,7 +971,9 @@ class MVIParams(Params):
             self._initial_beta_ratio = val
             return
         p = "initial_beta_ratio"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._initial_beta_ratio = val
 
     @property
@@ -895,7 +986,9 @@ class MVIParams(Params):
             self._tol_cg = val
             return
         p = "tol_cg"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._tol_cg = val
 
     @property
@@ -908,7 +1001,9 @@ class MVIParams(Params):
             self._alpha_s = val
             return
         p = "alpha_s"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._alpha_s = val
 
     @property
@@ -921,7 +1016,9 @@ class MVIParams(Params):
             self._alpha_x = val
             return
         p = "alpha_x"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._alpha_x = val
 
     @property
@@ -934,7 +1031,9 @@ class MVIParams(Params):
             self._alpha_y = val
             return
         p = "alpha_y"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._alpha_y = val
 
     @property
@@ -947,7 +1046,9 @@ class MVIParams(Params):
             self._alpha_z = val
             return
         p = "alpha_z"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._alpha_z = val
 
     @property
@@ -960,7 +1061,9 @@ class MVIParams(Params):
             self._smallness_norm = val
             return
         p = "smallness_norm"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._smallness_norm = val
 
     @property
@@ -973,7 +1076,9 @@ class MVIParams(Params):
             self._x_norm = val
             return
         p = "x_norm"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._x_norm = val
 
     @property
@@ -986,7 +1091,9 @@ class MVIParams(Params):
             self._y_norm = val
             return
         p = "y_norm"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._y_norm = val
 
     @property
@@ -999,7 +1106,9 @@ class MVIParams(Params):
             self._z_norm = val
             return
         p = "z_norm"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._z_norm = val
 
     @property
@@ -1012,8 +1121,10 @@ class MVIParams(Params):
             self._reference_model_object = val
             return
         p = "reference_model_object"
-        self.validator.validate(p, val, self.validations[p])
-        self._reference_model_object = self.validator.validate_uuid(self.workspace, val)
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._reference_model_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def reference_inclination_object(self):
@@ -1025,10 +1136,10 @@ class MVIParams(Params):
             self._reference_inclination_object = val
             return
         p = "reference_inclination_object"
-        self.validator.validate(p, val, self.validations[p])
-        self._reference_inclination_object = self.validator.validate_uuid(
-            self.workspace, val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
         )
+        self._reference_inclination_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def reference_declination_object(self):
@@ -1040,10 +1151,10 @@ class MVIParams(Params):
             self._reference_declination_object = val
             return
         p = "reference_declination_object"
-        self.validator.validate(p, val, self.validations[p])
-        self._reference_declination_object = self.validator.validate_uuid(
-            self.workspace, val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
         )
+        self._reference_declination_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def reference_model(self):
@@ -1055,10 +1166,10 @@ class MVIParams(Params):
             self._reference_model = val
             return
         p = "reference_model"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._reference_model = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._reference_model = UUID(val) if isinstance(val, str) else val
 
     @property
     def reference_inclination(self):
@@ -1070,10 +1181,10 @@ class MVIParams(Params):
             self._reference_inclination = val
             return
         p = "reference_inclination"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._reference_inclination = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._reference_inclination = UUID(val) if isinstance(val, str) else val
 
     @property
     def reference_declination(self):
@@ -1085,10 +1196,10 @@ class MVIParams(Params):
             self._reference_declination = val
             return
         p = "reference_declination"
-        self.validator.validate(p, val, self.validations[p])
-        isstr = isinstance(val, str)
-        val = self.validator.validate_uuid(self.workspace, val) if isstr else val
-        self._reference_declination = val
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._reference_declination = UUID(val) if isinstance(val, str) else val
 
     @property
     def gradient_type(self):
@@ -1100,7 +1211,9 @@ class MVIParams(Params):
             self._gradient_type = val
             return
         p = "gradient_type"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._gradient_type = val
 
     @property
@@ -1113,7 +1226,9 @@ class MVIParams(Params):
             self._lower_bound = val
             return
         p = "lower_bound"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._lower_bound = val
 
     @property
@@ -1126,7 +1241,9 @@ class MVIParams(Params):
             self._upper_bound = val
             return
         p = "upper_bound"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._upper_bound = val
 
     @property
@@ -1139,7 +1256,9 @@ class MVIParams(Params):
             self._parallelized = val
             return
         p = "parallelized"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._parallelized = val
 
     @property
@@ -1152,7 +1271,9 @@ class MVIParams(Params):
             self._n_cpu = val
             return
         p = "n_cpu"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._n_cpu = val
 
     @property
@@ -1165,7 +1286,9 @@ class MVIParams(Params):
             self._max_ram = val
             return
         p = "max_ram"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._max_ram = val
 
     @property
@@ -1178,7 +1301,9 @@ class MVIParams(Params):
             self._out_group = val
             return
         p = "out_group"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._out_group = val
 
     @property
@@ -1191,5 +1316,11 @@ class MVIParams(Params):
             self._no_data_value = val
             return
         p = "no_data_value"
-        self.validator.validate(p, val, self.validations[p])
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
         self._no_data_value = val
+
+    def _init_params(self, inputfile: InputFile) -> None:
+        """ Wraps Params._init_params. """
+        super()._init_params(inputfile, required_parameters, validations)
