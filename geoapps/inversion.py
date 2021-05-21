@@ -1164,7 +1164,9 @@ class InversionApp(PlotSelection2D):
                 if component in groups:
                     data_list += [
                         self.workspace.get_entity(data)[0].name
-                        for data in entity.get_property_group(component).properties
+                        for data in entity.find_or_create_property_group(
+                            name=component
+                        ).properties
                     ]
                 elif component in entity.get_data_list():
                     data_list += [component]
@@ -1297,12 +1299,14 @@ class InversionApp(PlotSelection2D):
                 self.mesh_1D.hz_expansion.value,
                 self.mesh_1D.n_cells.value,
             ]
+            input_dict["uncertainty_mode"] = self.inversion_parameters.uncert_mode.value
+
         input_dict["chi_factor"] = self.inversion_parameters.chi_factor.value
         input_dict["max_iterations"] = self.inversion_parameters.max_iterations.value
         input_dict[
             "max_cg_iterations"
         ] = self.inversion_parameters.max_cg_iterations.value
-
+        input_dict
         input_dict["n_cpu"] = self.inversion_parameters.n_cpu.value
         input_dict["max_ram"] = self.inversion_parameters.max_ram.value
 

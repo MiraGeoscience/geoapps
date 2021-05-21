@@ -112,7 +112,10 @@ class BaseApplication:
                         value, Widget
                     ):
                         try:
-                            value = uuid.UUID(value)
+                            if isinstance(value, list):
+                                value = [uuid.UUID(val) for val in value]
+                            else:
+                                value = uuid.UUID(value)
                         except (ValueError, AttributeError):
                             pass
 
@@ -382,7 +385,7 @@ class BaseApplication:
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
-        self.h5file = workspace.h5file
+        self._h5file = workspace.h5file
 
     @property
     def working_directory(self):

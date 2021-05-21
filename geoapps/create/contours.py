@@ -200,7 +200,7 @@ class ContourValues(PlotSelection2D):
                     curve.cells = np.vstack(cells).astype("uint32")
 
                     # Remove directly on geoh5
-                    project_handle = H5Writer.fetch_h5_handle(self.h5file, entity)
+                    project_handle = H5Writer.fetch_h5_handle(self.h5file)
                     base = list(project_handle.keys())[0]
                     obj_handle = project_handle[base]["Objects"]
                     for key in obj_handle[H5Writer.uuid_str(curve.uid)]["Data"].keys():

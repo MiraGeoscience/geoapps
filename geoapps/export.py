@@ -15,11 +15,7 @@ from geoh5py.objects import BlockModel, Curve, Octree
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
 from ipywidgets.widgets import HBox, VBox
-
-try:
-    from osgeo import osr
-except ImportError:
-    pass
+from osgeo import osr
 
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
@@ -82,7 +78,11 @@ class Export(ObjectDataSelection):
         self.file_type.observe(update_options)
 
         def update_name(_):
-            self.export_as.value = self.objects.value
+            self.export_as.value = [
+                key
+                for key, value in self.objects.options
+                if value == self.objects.value
+            ][0]
 
         self.objects.observe(update_name, names="value")
         super().__init__(**kwargs)
@@ -168,7 +168,11 @@ class Export(ObjectDataSelection):
         """
         if getattr(self, "_export_as", None) is None:
             self._export_as = Text(
-                value=self.objects.value,
+                value=[
+                    key
+                    for key, value in self.objects.options
+                    if value == self.objects.value
+                ][0],
                 description="Save as:",
                 disabled=False,
             )
@@ -281,9 +285,12 @@ class Export(ObjectDataSelection):
 
                     if self.data_type.value == "RGB":
                         fig, ax = plt.figure(), plt.subplot()
-                        plt.gca().set_visible(False)
+
+                        if not self.plot_result:
+                            plt.gca().set_visible(False)
+
                         ax, im, _, _, _ = plot_plan_data_selection(
-                            entity, entity.get_data(key)[0], ax=ax
+                            entity, entity.get_data(key)[0], axis=ax
                         )
                         plt.colorbar(im, fraction=0.02)
                         plt.savefig(
@@ -297,6 +304,8 @@ class Export(ObjectDataSelection):
                             dpi=300,
                             bbox_inches="tight",
                         )
+                        if not self.plot_result:
+                            plt.close(fig)
 
                     print(f"Object saved to {name}")
 

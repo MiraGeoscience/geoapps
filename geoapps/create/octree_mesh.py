@@ -254,8 +254,9 @@ class OctreeMesh(ObjectDataSelection):
         for label, value in refinements.items():
             print(f"Applying refinement {label}")
             try:
+                print(value["Object"])
                 entity = workspace.get_entity(uuid.UUID(value["Object"]))
-            except ValueError:
+            except (ValueError, TypeError):
                 continue
 
             if any(entity):
