@@ -11,6 +11,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
+import sys
 from multiprocessing.pool import ThreadPool
 from typing import Union
 from uuid import UUID
@@ -41,7 +42,7 @@ from geoapps.simpegPF.Utils import matutils, mkvc
 from geoapps.utils import filter_xy, octree_2_treemesh, rotate_xy, treemesh_2_octree
 
 
-def start_inversion(filepath):
+def start_inversion(filepath=None):
     """ Starts inversion with parameters defined in input file. """
 
     params = MVIParams.from_path(filepath)
