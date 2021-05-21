@@ -225,11 +225,18 @@ class CoordinateTransformation(BaseApplication):
     def update_objects_list(self):
         if getattr(self, "_workspace", None) is not None:
 
-            self.objects.options = [""] + [
-                obj.name
-                for obj in self._workspace.objects
-                if isinstance(obj, self.object_types)
-            ]
+            if len(self.object_types) > 0:
+                options = [["", None]] + [
+                    [obj.name, obj.uid]
+                    for obj in self._workspace.objects
+                    if isinstance(obj, self.object_types)
+                ]
+            else:
+                options = [["", None]] + [
+                    [value, uid]
+                    for uid, value in self._workspace.list_objects_name.items()
+                ]
+            self.objects.options = options
 
     def set_wkt_in(self, _):
         datasetSRS = osr.SpatialReference()

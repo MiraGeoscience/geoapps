@@ -5,8 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import discretize
 import numpy as np
+from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel, ObjectBase
 from geoh5py.workspace import Workspace
 from ipywidgets import (
@@ -50,7 +50,10 @@ class DataInterpolation(ObjectDataSelection):
         "skew_angle": 0,
         "skew_factor": 1.0,
         "space": "Log",
-        "topography": {"objects": "Topography", "data": "Z"},
+        "topography": {
+            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+            "data": "Z",
+        },
     }
 
     def __init__(self, use_defaults=True, **kwargs):
@@ -100,12 +103,7 @@ class DataInterpolation(ObjectDataSelection):
         self._xy_reference = Dropdown(
             description="Lateral Extent", style={"description_width": "initial"}
         )
-
-        def object_pick(_):
-            self.object_pick()
-
-        self.objects.observe(object_pick, names="value")
-
+        self.objects.observe(self.object_pick, names="value")
         self.method_skew = VBox(
             [Label("Skew parameters"), self.skew_angle, self.skew_factor]
         )
@@ -339,17 +337,17 @@ class DataInterpolation(ObjectDataSelection):
 
         value = self.out_object.value
         self.out_object.options = self.objects.options
-        if value in self.out_object.options:
+        if value in list(dict(self.out_object.options).values()):
             self.out_object.value = value
 
         value = self.xy_reference.value
         self.xy_reference.options = self.objects.options
-        if value in self.xy_reference.options:
+        if value in list(dict(self.xy_reference.options).values()):
             self.xy_reference.value = value
 
         value = self.xy_extent.value
         self.xy_extent.options = self.objects.options
-        if value in self.xy_extent.options:
+        if value in list(dict(self.xy_extent.options).values()):
             self.xy_extent.value = value
 
     def method_update(self, _):
@@ -401,6 +399,7 @@ class DataInterpolation(ObjectDataSelection):
 
         else:
 
+            ref_in = None
             for entity in self._workspace.get_entity(self.xy_reference.value):
                 if isinstance(entity, ObjectBase):
                     ref_in = entity
@@ -409,6 +408,11 @@ class DataInterpolation(ObjectDataSelection):
                 xyz_ref = ref_in.centroids
             elif hasattr(ref_in, "vertices"):
                 xyz_ref = ref_in.vertices
+            else:
+                print(
+                    "No object selected for 'Lateral Extent'. Defaults to input object."
+                )
+                xyz_ref = xyz
 
             # Find extent of grid
             h = np.asarray(self.core_cell_size.value.split(",")).astype(float).tolist()
@@ -429,7 +433,7 @@ class DataInterpolation(ObjectDataSelection):
                 - (xyz_ref[:, 2].max() - xyz_ref[:, 2].min())
                 + h[2]
             )
-            mesh = discretize.utils.meshutils.mesh_builder_xyz(
+            mesh = mesh_utils.mesh_builder_xyz(
                 xyz_ref,
                 h,
                 padding_distance=[
@@ -610,6 +614,6 @@ class DataInterpolation(ObjectDataSelection):
 
         self.workspace.finalize()
 
-    def object_pick(self):
-        if self.objects.value in self.xy_reference.options:
+    def object_pick(self, _):
+        if self.objects.value in list(dict(self.xy_reference.options).values()):
             self.xy_reference.value = self.objects.value

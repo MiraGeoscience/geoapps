@@ -77,7 +77,7 @@ class ObjectDataSelection(BaseApplication):
         Object selector
         """
         if getattr(self, "_objects", None) is None:
-            self.objects = Dropdown(description="Object:", options=[""])
+            self.objects = Dropdown(description="Object:")
 
         return self._objects
 
@@ -202,7 +202,9 @@ class ObjectDataSelection(BaseApplication):
                 elif any([pg.name == value for pg in obj.property_groups]):
                     data += [
                         self.workspace.get_entity(prop)[0]
-                        for prop in obj.get_property_group(value).properties
+                        for prop in obj.find_or_create_property_group(
+                            name=value
+                        ).properties
                     ]
 
             return obj, data
@@ -273,7 +275,7 @@ class ObjectDataSelection(BaseApplication):
                     for uid, value in self._workspace.list_objects_name.items()
                 ]
 
-            if value in options:  # Silent update
+            if value in list(dict(options).values()):  # Silent update
                 self.objects.unobserve(self.update_data_list, names="value")
                 self.objects.options = options
                 self.objects.value = value

@@ -8,6 +8,7 @@
 import json
 import multiprocessing
 import sys
+import uuid
 
 import numpy as np
 import scipy as sp
@@ -277,8 +278,8 @@ def inversion(input_file):
             # Spherical or sparse
             max_irls_iterations = 10
 
-    if workspace.get_entity(input_param["data"]["name"]):
-        entity = workspace.get_entity(input_param["data"]["name"])[0]
+    if workspace.get_entity(uuid.UUID(input_param["data"]["name"])):
+        entity = workspace.get_entity(uuid.UUID(input_param["data"]["name"]))[0]
     else:
         assert False, (
             f"Entity {input_param['data']['name']} could not be found in "
@@ -339,7 +340,7 @@ def inversion(input_file):
                 elif "GA_object" in list(input_param["topography"].keys()):
                     workspace = Workspace(input_param["workspace"])
                     topo_entity = workspace.get_entity(
-                        input_param["topography"]["GA_object"]["name"]
+                        uuid.UUID(input_param["topography"]["GA_object"]["name"])
                     )[0]
 
                     if isinstance(topo_entity, Grid2D):
@@ -651,7 +652,7 @@ def inversion(input_file):
 
             input_model = input_param["reference_model"]["model"]
             print(f"Interpolating reference model {input_model}")
-            con_object = workspace.get_entity(list(input_model.keys())[0])[0]
+            con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
             con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
             if hasattr(con_object, "centroids"):
@@ -678,7 +679,7 @@ def inversion(input_file):
             input_model = input_param["starting_model"]["model"]
 
             print(f"Interpolating starting model {input_model}")
-            con_object = workspace.get_entity(list(input_model.keys())[0])[0]
+            con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
             con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
             if hasattr(con_object, "centroids"):
@@ -1112,8 +1113,8 @@ def inversion(input_file):
 
     # Directives
     directiveList = []
-    print("NO SENSITIVITY WEIGHTS")
-    # directiveList.append(Directives.UpdateSensitivityWeights())
+
+    directiveList.append(Directives.UpdateSensitivityWeights())
     directiveList.append(
         Directives.Update_IRLS(
             maxIRLSiter=max_irls_iterations,

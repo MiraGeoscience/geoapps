@@ -1034,7 +1034,9 @@ class PeakFinder(ObjectDataSelection):
             # Add all selected data channels | groups once
             for channel in self.data.value:
                 if channel in groups:
-                    for prop in self.survey.get_property_group(channel).properties:
+                    for prop in self.survey.find_or_create_property_group(
+                        name=channel
+                    ).properties:
                         name = self.workspace.get_entity(prop)[0].name
                         if prop not in channels:
                             channels.append(name)
