@@ -63,13 +63,14 @@ class Params:
     """
 
     def __init__(self):
-
-        self.workspace = None
-        self.output_geoh5 = None
-        self.workpath = os.path.abspath(".")
-        self.validator = InputValidator(required_parameters, validations)
-        self.associations = {}
-        self._ifile = None
+        self.associations: Dict[Union[str, UUID], Union[str, UUID]] = None
+        self.workspace: Workspace = None
+        self.output_geoh5: str = None
+        self.workpath: str = os.path.abspath(".")
+        self.validator: InputValidator = InputValidator(
+            required_parameters, validations
+        )
+        self._ifile: InputFile = None
 
     @classmethod
     def from_ifile(cls, ifile: InputFile) -> None:
@@ -104,6 +105,35 @@ class Params:
         ifile = InputFile(filepath)
         p = cls.from_ifile(ifile)
         return p
+
+    def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
+        """ Populate parameters with default values stored in default_ui. """
+        for a in self.__dict__.keys():
+            if a in ["_ifile", "validations", "validator", "workpath", "associations"]:
+                continue
+            self.__setattr__(a, default_ui[a[1:]]["default"])
+
+    def _init_params(
+        self,
+        inputfile: InputFile,
+        required_parameters: List[str] = required_parameters,
+        validations: Dict[str, Any] = validations,
+    ) -> None:
+        """ Overrides default parameter values with input file values. """
+
+        self.workspace = Workspace(inputfile.data["geoh5"])
+        if inputfile.data["output_geoh5"] is None:
+            self.output_geoh5 = self.workspace
+        else:
+            self.output_geoh5 = Workspace(inputfile.data["output_geoh5"])
+
+        self.validator = InputValidator(
+            required_parameters, validations, self.workspace, inputfile
+        )
+        for param, value in inputfile.data.items():
+            if param in ["workspace", "output_geoh5"]:
+                continue
+            self.__setattr__(param, value)
 
     def is_uuid(self, p: str) -> bool:
         """ Return true if string contains valid UUID. """
@@ -153,20 +183,3 @@ class Params:
         p = "output_geoh5"
         self.validator.validate(p, val, validations[p])
         self._output_geoh5 = val
-
-    def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
-        """ Populate parameters with default values stored in default_ui. """
-        for a in self.__dict__.keys():
-            if a in ["_ifile", "validations", "validator", "workpath", "associations"]:
-                continue
-            self.__setattr__(a, default_ui[a[1:]]["default"])
-
-    def _init_params(self, inputfile: InputFile) -> None:
-        """ Overrides default parameter values with input file values. """
-
-        self.workspace = inputfile.data["workspace_geoh5"]
-        self.output_geoh5 = inputfile.data["geoh5"]
-        for param, value in inputfile.data.items():
-            if param in ["workspace", "output_geoh5"]:
-                continue
-            self.__setattr__(param, value)
