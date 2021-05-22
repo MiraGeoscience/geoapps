@@ -15,6 +15,7 @@ from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
+from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
 from geoapps.selection import ObjectDataSelection
@@ -305,9 +306,14 @@ class OctreeMesh(ObjectDataSelection):
                     Dropdown(
                         description=key,
                         options=self.objects.options,
-                        value=value,
                     ),
                 )
+
+                try:
+                    getattr(self, label + f" {key}").value = value
+                except TraitError:
+                    pass
+
             elif "Levels" in key:
                 setattr(self, label + f" {key}", Text(description=key, value=value))
             elif "Type" in key:
