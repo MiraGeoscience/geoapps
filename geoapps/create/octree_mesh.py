@@ -377,14 +377,14 @@ class OctreeMesh(ObjectDataSelection):
                 "group": "3- Padding distance",
                 "label": "Horizontal (m)",
                 "main": True,
-                "value": 0.0,
+                "value": 1000.0,
             },
             "vertical_padding": {
                 "enabled": True,
                 "group": "3- Padding distance",
                 "label": "Vertical (m)",
                 "main": True,
-                "value": 0.0,
+                "value": 1000.0,
             },
             "depth_core": {
                 "enabled": True,
