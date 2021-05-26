@@ -1,9 +1,9 @@
-import SimPEG
+import geoapps.simpegPF as spf
 from .. import Utils
 import scipy.sparse as sp
 
 
-class BaseRx(SimPEG.Survey.BaseTimeRx):
+class BaseRx(spf.Survey.BaseTimeRx):
     """
     Time domain receiver base class
 
@@ -19,7 +19,7 @@ class BaseRx(SimPEG.Survey.BaseTimeRx):
             "implemented.".format(orientation)
         )
         self.projComp = orientation
-        SimPEG.Survey.BaseTimeRx.__init__(
+        spf.Survey.BaseTimeRx.__init__(
             self, locs, times, rxType=None
         )  # TODO: remove rxType from baseRx
 

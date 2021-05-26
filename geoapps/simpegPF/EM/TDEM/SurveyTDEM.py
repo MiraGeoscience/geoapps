@@ -1,8 +1,8 @@
-import SimPEG
+import geoapps.simpegPF as spf
 from .. import Utils
-from SimPEG.Utils import Zero, Identity
+from geoapps.simpegPF.Utils import Zero, Identity
 from scipy.constants import mu_0
-from SimPEG.EM.Utils import *
+from geoapps.simpegPF.EM.Utils import *
 from . import SrcTDEM as Src
 from . import RxTDEM as Rx
 
@@ -12,7 +12,7 @@ from . import RxTDEM as Rx
 ####################################################
 
 
-class Survey(SimPEG.Survey.BaseSurvey):
+class Survey(spf.Survey.BaseSurvey):
     """
     Time domain electromagnetic survey
     """
@@ -23,10 +23,10 @@ class Survey(SimPEG.Survey.BaseSurvey):
     def __init__(self, srcList, **kwargs):
         # Sort these by frequency
         self.srcList = srcList
-        SimPEG.Survey.BaseSurvey.__init__(self, **kwargs)
+        spf.Survey.BaseSurvey.__init__(self, **kwargs)
 
     def eval(self, u):
-        data = SimPEG.Survey.Data(self)
+        data = spf.Survey.Data(self)
         for src in self.srcList:
             for rx in src.rxList:
                 data[src, rx] = rx.eval(src, self.mesh, self.prob.timeMesh, u)

@@ -2,7 +2,7 @@ import properties
 import numpy as np
 from scipy.spatial import cKDTree as kdtree
 import scipy.sparse as sp
-from SimPEG import Utils, Mesh
+from geoapps.simpegPF import Utils, Mesh
 from .EM1DSimulation import set_mesh_1d
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm

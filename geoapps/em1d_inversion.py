@@ -19,7 +19,8 @@ from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
-from SimPEG import (
+
+from geoapps.simpegPF import (
     DataMisfit,
     Directives,
     Inversion,
@@ -195,6 +196,7 @@ def inversion(input_file):
     upper_bound = input_param["upper_bound"][0]
     chi_target = input_param["chi_factor"]
     workspace = Workspace(input_param["workspace"])
+
     selection = input_param["lines"]
     hz_min, expansion, n_cells = input_param["mesh 1D"]
     ignore_values = input_param["ignore_values"]
@@ -979,7 +981,7 @@ def inversion(input_file):
                 minGNiter=1,
                 fix_Jmatrix=True,
                 betaSearch=False,
-                chifact_start=chi_target,
+                # chifact_start=chi_target,
                 chifact_target=chi_target,
             )
         )

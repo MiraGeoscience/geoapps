@@ -1,1 +1,1 @@
-from SimPEG.EM.NSEM import *
+from geoapps.simpegPF.EM.NSEM import *

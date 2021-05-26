@@ -3,7 +3,7 @@ import numpy as np
 from scipy.constants import mu_0
 import warnings
 
-from SimPEG.Utils import Zero
+from geoapps.simpegPF.Utils import Zero
 from .. import Survey, Problem, Utils
 
 from .. import Utils as emutils
