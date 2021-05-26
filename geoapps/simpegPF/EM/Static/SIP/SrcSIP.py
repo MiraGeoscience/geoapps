@@ -1,15 +1,15 @@
-import SimPEG
-from SimPEG.Utils import Zero, closestPoints, mkvc
+import geoapps.simpegPF as spf
+from geoapps.simpegPF.Utils import Zero, closestPoints, mkvc
 import numpy as np
 
 
-class BaseSrc(SimPEG.Survey.BaseSrc):
+class BaseSrc(spf.Survey.BaseSrc):
 
     current = 1.0
     loc = None
 
     def __init__(self, rxList, **kwargs):
-        SimPEG.Survey.BaseSrc.__init__(self, rxList, **kwargs)
+        spf.Survey.BaseSrc.__init__(self, rxList, **kwargs)
 
     def eval(self, prob):
         raise NotImplementedError

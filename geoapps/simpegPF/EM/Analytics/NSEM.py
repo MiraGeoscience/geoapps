@@ -1,8 +1,7 @@
 import numpy as np
 from scipy.constants import epsilon_0
 from scipy.constants import mu_0
-from SimPEG.EM.Utils.EMUtils import k
-from SimPEG.EM.Utils.EMUtils import omega
+from geoapps.simpegPF.EM.Utils.EMUtils import k, omega
 
 __all__ = ["MT_LayeredEarth"]
 

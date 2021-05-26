@@ -1,4 +1,4 @@
-from SimPEG import Maps, Utils, Problem, Props
+from geoapps.simpegPF import Maps, Utils, Problem, Props
 import numpy as np
 from .Survey import BaseEM1DSurvey
 from scipy.constants import mu_0
