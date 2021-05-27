@@ -7,12 +7,15 @@
 
 import pytest
 
+from geoapps.io import InputFile
 from geoapps.io.MVI.constants import required_parameters, validations
 from geoapps.io.validators import InputValidator
 
 ######################  Setup  ###########################
 
-validator = InputValidator(required_parameters, validations)
+ifile = InputFile("test.ui.json")
+ifile.data = {"mesh_from_params": True, "core_cell_size_x": 2}
+validator = InputValidator(required_parameters, validations, input=ifile)
 
 input_dict = {"inversion_type": "mvi", "core_cell_size": 2}
 tmpfile = lambda path: os.path.join(path, "test.json")
@@ -26,46 +29,98 @@ def tmp_input_file(filepath, input_dict):
 ######################  Tests  ###########################
 
 
-def test_param_validation_msg():
-    msg = validator._param_validation_msg("inversion_type", "em", "value", ["mvi"])
-    assert msg == "Invalid 'inversion_type' value: 'em'. Must be: 'mvi'."
-    msg = validator._param_validation_msg(
-        "inversion_type", "EM", "value", ["mvi", "grav", "mag"]
+def test_validate_parameter_val():
+    param = "inversion_type"
+    value = "em"
+    validations = ["mvi", "gravity"]
+    vtype = "value"
+    with pytest.raises(ValueError) as excinfo:
+        validator._validate_parameter_val(param, value, validations)
+    msg = f"Invalid '{param}' {vtype}: '{value}'. Must be one of: 'mvi', 'gravity'."
+    assert msg in str(excinfo.value)
+    validations = ["mvi"]
+    with pytest.raises(ValueError) as excinfo:
+        validator._validate_parameter_val(param, value, validations)
+    msg = f"Invalid '{param}' {vtype}: '{value}'. Must be: 'mvi'."
+    assert msg in str(excinfo.value)
+
+
+def test_validate_parameter_type():
+    param = "max_distance"
+    value = "notafloat"
+    validations = [int, float]
+    vtype = "type"
+    with pytest.raises(TypeError) as excinfo:
+        validator._validate_parameter_type(param, value, validations)
+    msg = f"Invalid '{param}' {vtype}: 'str'. Must be one of: 'int', 'float'."
+    assert msg in str(excinfo.value)
+    validations = [int]
+    with pytest.raises(TypeError) as excinfo:
+        validator._validate_parameter_type(param, value, validations)
+    msg = f"Invalid '{param}' {vtype}: 'str'. Must be: 'int'."
+    assert msg in str(excinfo.value)
+    param = "octree_levels_topo"
+    value = ["1", 2, 3]
+    validations = [int, float]
+    with pytest.raises(TypeError) as excinfo:
+        validator._validate_parameter_type(param, value, validations)
+    msg = f"Invalid '{param}' {vtype}: 'str'. Must be one of: 'int', 'float'."
+    assert msg in str(excinfo.value)
+    param = "ignore_values"
+    value = 342
+    validations = [str]
+    vtype = "type"
+    with pytest.raises(TypeError) as excinfo:
+        validator._validate_parameter_type(param, value, validations)
+    msg = f"Invalid '{param}' {vtype}: 'int'. Must be: 'str'."
+    assert msg in str(excinfo.value)
+
+
+def test_validate_parameter_shape():
+    param = "octree_levels_topo"
+    value = [1, 2]
+    validations = [(3,)]
+    vtype = "shape"
+    with pytest.raises(ValueError) as excinfo:
+        validator._validate_parameter_shape(param, value, validations)
+    msg = f"Invalid '{param}' {vtype}: '(2,)'. Must be: '(3,)'."
+    assert msg in str(excinfo.value)
+
+
+def test_validate_parameter_req():
+    param = "topography"
+    value = "sdetselkj"
+    validations = ("topography_object",)
+    vtype = "reqs"
+    ifile.data["core_cell_size"] = None
+    with pytest.raises(KeyError) as excinfo:
+        validator._validate_parameter_req(param, value, validations)
+    msg = f"Unsatisfied '{param}' requirement. Input file must contain "
+    msg += f"'{validations[0]}' if '{param}' is provided."
+    assert msg in str(excinfo.value)
+    param = "mesh_from_params"
+    value = True
+    validations = (
+        True,
+        "core_cell_size",
     )
-    assert (
-        msg
-        == f"Invalid 'inversion_type' value: 'EM'. Must be one of: 'mvi', 'grav', 'mag'."
-    )
-    msg = validator._param_validation_msg("inversion_type", 3, "type", [str])
-    assert (
-        msg
-        == f"Invalid 'inversion_type' type: '<class 'int'>'. Must be: '<class 'str'>'."
-    )
-    msg = validator._param_validation_msg(
-        "inversion_type", "sldkfj", "type", [int, float]
-    )
-    assert (
-        msg
-        == f"Invalid 'inversion_type' type: '<class 'str'>'. Must be one of: '<class 'int'>', '<class 'float'>'."
-    )
-    msg = validator._param_validation_msg("inducing_field_aid", [1, 2], "shape", (3,))
-    assert msg == f"Invalid 'inducing_field_aid' shape: (2,). Must be: (3,)."
-    msg = validator._param_validation_msg("inducing_field_aid", [1, 2], "shape", (3, 3))
-    assert msg == f"Invalid 'inducing_field_aid' shape: (2,). Must be: (3, 3)."
-    msg = validator._param_validation_msg(
-        "max_distance", 100, "reqs", ("core_cell_size",)
-    )
-    assert (
-        msg
-        == f"Unsatisfied 'max_distance' requirement. Input file must contain 'core_cell_size' if 'max_distance' is provided."
-    )
-    msg = validator._param_validation_msg(
-        "mesh_from_params", True, "reqs", (True, "core_cell_size")
-    )
-    assert (
-        msg
-        == f"Unsatisfied 'mesh_from_params' requirement. Input file must contain 'core_cell_size' if 'mesh_from_params' is 'True'."
-    )
+    vtype = "reqs"
+    input_keys = ["mesh_from_param", "topography"]
+    with pytest.raises(KeyError) as excinfo:
+        validator._validate_parameter_req(param, value, validations)
+    msg = f"Unsatisfied '{param}' requirement. Input file must contain "
+    msg += f"'{validations[1]}' if '{param}' is '{str(value)}'."
+    assert msg in str(excinfo.value)
+
+
+def test_validate_parameter_uuid():
+    param = "topography"
+    value = "lskdfjsdlkfj"
+    vtype = "uuid"
+    with pytest.raises(ValueError) as excinfo:
+        validator._validate_parameter_uuid(param, value)
+    msg = f"Invalid '{param}' {vtype}: '{value}'. Must be a valid uuid string"
+    assert msg in str(excinfo.value)
 
 
 def test_isiterable():
