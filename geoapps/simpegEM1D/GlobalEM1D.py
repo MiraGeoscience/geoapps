@@ -220,7 +220,7 @@ class GlobalEM1DProblem(Problem.BaseProblem):
         if self.verbose:
             print("Compute fields")
         self.survey._pred = self.forward(m)
-        return []
+        return self.survey._pred
 
     def forward(self, m):
         self.model = m
