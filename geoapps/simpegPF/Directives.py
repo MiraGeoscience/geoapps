@@ -212,6 +212,7 @@ class BetaEstimate_ByEig(InversionDirective):
         t = np.dot(x0, self.dmisfit.deriv2(m, x0, f=f))
         b = np.dot(x0, self.reg.deriv2(m, v=x0))
 
+
         self.beta0 = self.beta0_ratio * (t / b)
 
         self.invProb.beta = self.beta0
