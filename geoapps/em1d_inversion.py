@@ -991,6 +991,7 @@ def inversion(input_file):
         opt.LSshorten = 0.5
         opt.remember("xc")
         mopt = inv.run(m0)
+
         # Return predicted of Best-fitting halfspaces
 
     if isinstance(reference, str):
