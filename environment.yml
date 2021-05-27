@@ -6,7 +6,7 @@ dependencies:
   - python
   - pip
   - discretize
-  - simpeg=0.13
+  - simpeg
   - numpy
   - scipy
   - matplotlib
@@ -27,3 +27,4 @@ dependencies:
   - pip:
     - ipyfilechooser
     - geoh5py==0.1.2
+    - git+https://github.com/simpeg/simpeg.git@tiled-simulations
