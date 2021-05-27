@@ -11,6 +11,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
+import sys
 from multiprocessing.pool import ThreadPool
 from typing import Union
 from uuid import UUID
@@ -18,6 +19,7 @@ from uuid import UUID
 import dask
 import numpy as np
 import scipy.sparse as sp
+from dask import config as dconf
 from dask.distributed import Client, LocalCluster
 from discretize import TreeMesh
 from discretize.utils import active_from_xyz
@@ -312,13 +314,14 @@ class InversionDriver:
             channels = ["model"]
             if vector_property:
                 channels = ["amplitude", "theta", "phi"]
-            print("octree_cells", type(self.fetch("mesh").octree_cells))
-            ga_mesh = treemesh_2_octree(
+            # print("octree_cells", type(self.fetch("mesh").octree_cells))
+            # outmesh = self.fetch("mesh").copy(parent=self.out_group)
+            outmesh = treemesh_2_octree(
                 self.workspace, self.mesh, parent=self.out_group
             )
             directiveList.append(
                 directives.SaveIterationsGeoH5(
-                    h5_object=ga_mesh,
+                    h5_object=outmesh,
                     channels=channels,
                     mapping=self.activeCellsMap,
                     attribute_type="mvi_angles",
@@ -419,10 +422,8 @@ class InversionDriver:
             if self.params.n_cpu is None:
                 self.params.n_cpu = multiprocessing.cpu_count() / 2
 
-            dask.config.set(
-                {"array.chunk-size": str(self.params.max_chunk_size) + "MiB"}
-            )
-            dask.config.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
+            dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
+            dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
     def get_tiles(self):
 
