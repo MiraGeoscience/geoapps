@@ -314,11 +314,11 @@ class InversionDriver:
             channels = ["model"]
             if vector_property:
                 channels = ["amplitude", "theta", "phi"]
-            # print("octree_cells", type(self.fetch("mesh").octree_cells))
-            # outmesh = self.fetch("mesh").copy(parent=self.out_group)
             outmesh = treemesh_2_octree(
                 self.workspace, self.mesh, parent=self.out_group
             )
+            outmesh.rotation = self.rotation["angle"]
+
             directiveList.append(
                 directives.SaveIterationsGeoH5(
                     h5_object=outmesh,
@@ -453,17 +453,6 @@ class InversionDriver:
         local_survey.std = self.survey.std[local_index]
 
         return local_survey
-
-    def create_local_misfit(
-        self,
-        survey,
-        simulation,
-        map,
-    ):
-
-        # Create the local misfit
-
-        return local_misfit
 
     def write_data(self, normalization, no_data_value, model_map, wr):
 
