@@ -1124,7 +1124,7 @@ def inversion(input_file):
             minGNiter=1,
             betaSearch=False,
             beta_tol=0.25,
-            chifact_start=chi_target,
+            # chifact_start=chi_target,
             chifact_target=chi_target,
             prctile=50,
         )
