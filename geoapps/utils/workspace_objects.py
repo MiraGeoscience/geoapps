@@ -8,7 +8,7 @@ from typing import UUID, Union
 from uuid import UUID
 
 
-class WorkspaceObjects:
+class WorkspaceObject:
     def __init__(self, source, target, param):
         self.source = source
         self.target = target

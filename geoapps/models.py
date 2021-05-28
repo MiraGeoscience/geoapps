@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from uuid import UUID
+
 
 class Models:
 
@@ -17,11 +19,19 @@ class Models:
         "reference_declination",
     ]
 
-    def __init__(self, model_type, model):
-        self._model_type = model_type
-        self.params = params
-        self._model = None
-        self._mesh = None
+    def __init__(self, model_type, model, mesh):
+        self.model_type = model_type
+        self.mesh = mesh
+        self.model = model
+
+    @classmethod
+    def from_params(cls, model_type, params):
+        model = params[model_type]
+        if isinstance(model, UUID):
+            mesh = params.parent(model_type)
+        else:
+            mesh = None
+        p = cls(model_type, model, mesh)
 
     @property
     def model_type(self):
@@ -35,11 +45,22 @@ class Models:
         self._model_type = v
 
     @property
+    def mesh(self):
+        return self._mesh
+
+    @mesh.setter
+    def mesh(self, v):
+        if isinstance(v, UUID):
+            WorkspaceObject(v)
+        self._mesh = v
+
+    @property
     def model(self):
         return self._model
 
     @model.setter
     def model(self, v):
+        nc = self.mesh.fetch()
         if v is None:
             v = 0
         self._model = v
