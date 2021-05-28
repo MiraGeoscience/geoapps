@@ -15,6 +15,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 
 from geoapps.selection import ObjectDataSelection, TopographyOptions
+from geoapps.utils.formatters import string_name
 
 
 class Surface2D(ObjectDataSelection):
@@ -180,7 +181,9 @@ class Surface2D(ObjectDataSelection):
 
                     m_vals = []
                     for m in self.data.value:
-                        prop = obj.find_or_create_property_group(name=m).properties[ind]
+                        prop = obj.find_or_create_property_group(
+                            name=string_name(m)
+                        ).properties[ind]
                         m_vals.append(
                             self.workspace.get_entity(prop)[0].values[line_ind]
                         )
@@ -302,7 +305,7 @@ class Surface2D(ObjectDataSelection):
         if len(model_cells) > 0:
             self.surface = Surface.create(
                 self.workspace,
-                name=self.export_as.value,
+                name=string_name(self.export_as.value),
                 vertices=np.vstack(model_vertices),
                 cells=np.vstack(model_cells),
                 parent=self.ga_group,
