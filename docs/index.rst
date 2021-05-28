@@ -7,7 +7,7 @@ Welcome to **geoapps**! Where geoscientists meet to share open-source applicatio
 In short
 ^^^^^^^^
 
-The **geoapps** project has been created `Mira Geoscience <https://mirageoscience.com/>`_ for the development of open-source
+The **geoapps** project has been created by `Mira Geoscience <https://mirageoscience.com/>`_ for the development of open-source
 geoscientific applications in Python. Users will be able to directly leverage
 the powerful visualization capabilities of `Geoscience ANALYST
 <https://mirageoscience.com/mining-industry-software/geoscience-analyst/>`_
