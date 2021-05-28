@@ -7,29 +7,42 @@
 
 
 class Models:
-    def __init__(self, params):
+
+    model_types = [
+        "starting_model",
+        "starting_inclination",
+        "starting_declination",
+        "reference_model",
+        "reference_inclination",
+        "reference_declination",
+    ]
+
+    def __init__(self, model_type, model):
+        self._model_type = model_type
         self.params = params
-        self._mref = None
-        self._mstart = None
+        self._model = None
         self._mesh = None
 
     @property
-    def mref(self):
-        return self._mref
+    def model_type(self):
+        return self._model_type
 
-    @mref.setter
-    def mref(self, v):
-        if v is None:
-            v = 0
-        self._mref = v
+    @model_type.setter
+    def model_type(self, v):
+        if v not in self.model_types:
+            msg = f"Invalid 'model_type'. Must be one of {*self.model_types,}."
+            raise ValueError(msg)
+        self._model_type = v
 
     @property
-    def mstart(self):
-        return self._mstart
+    def model(self):
+        return self._model
 
-    @mstart.setter
-    def mstart(self, v):
-        self._mstart = v
+    @model.setter
+    def model(self, v):
+        if v is None:
+            v = 0
+        self._model = v
 
     def reference_model(self, params):
         self.mref = self.params.reference_model
