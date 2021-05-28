@@ -48,7 +48,7 @@ from geoapps.io.MVI import MVIParams
 from geoapps.utils import filter_xy, octree_2_treemesh, rotate_xy, treemesh_2_octree
 
 
-def start_inversion(filepath):
+def start_inversion(filepath=None):
     """ Starts inversion with parameters defined in input file. """
 
     params = MVIParams.from_path(filepath)
