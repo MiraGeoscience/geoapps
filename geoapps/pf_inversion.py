@@ -1425,6 +1425,7 @@ def inversion(input_file):
         reg = reg_p + reg_s + reg_t
 
     # Specify how the optimization will proceed, set susceptibility bounds to inf
+    print("active", sum(activeCells))
     opt = Optimization.ProjectedGNCG(
         maxIter=max_iterations,
         lower=lower_bound,

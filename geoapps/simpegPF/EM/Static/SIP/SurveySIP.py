@@ -1,9 +1,9 @@
 import numpy as np
-import SimPEG
-from SimPEG.EM.Base import BaseEMSurvey
+import geoapps.simpegPF as spf
+from geoapps.simpegPF.EM.Base import BaseEMSurvey
 from .. import Utils
-from SimPEG.EM.Static.SIP.SrcSIP import BaseSrc
-from SimPEG.EM.Static.SIP.RxSIP import BaseRx
+from geoapps.simpegPF.EM.Static.SIP.SrcSIP import BaseSrc
+from geoapps.simpegPF.EM.Static.SIP.RxSIP import BaseRx
 import uuid
 
 
@@ -34,7 +34,7 @@ class Survey(BaseEMSurvey):
         return self.prob.forward(m, f=f)
 
 
-class Data(SimPEG.Survey.Data):
+class Data(spf.Survey.Data):
     """Fancy data storage by Src and Rx"""
 
     def __init__(self, survey, v=None):

@@ -2,7 +2,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from .. import Maps, mkvc
-from SimPEG.EM.FDEM.SrcFDEM import BaseFDEMSrc as FDEMBaseSrc
+from geoapps.simpegPF.EM.FDEM.SrcFDEM import BaseFDEMSrc as FDEMBaseSrc
 from SimPEG.EM.Utils import omega
 from .Utils.sourceUtils import homo1DModelSource
 

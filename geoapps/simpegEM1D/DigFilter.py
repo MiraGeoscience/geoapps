@@ -2,7 +2,7 @@ import numpy as np
 from scipy.constants import mu_0
 from scipy.interpolate import interp1d
 from scipy.constants import pi
-from SimPEG import Utils
+from geoapps.simpegPF import Utils
 
 
 def EvalDigitalFilt(base, weight, fun, r):

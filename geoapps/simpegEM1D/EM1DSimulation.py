@@ -1,5 +1,5 @@
 import numpy as np
-from SimPEG import Mesh, Maps, Utils
+from geoapps.simpegPF import Mesh, Maps, Utils
 from .EM1DAnalytics import skin_depth, diffusion_distance
 from .EM1D import EM1D
 from .Survey import EM1DSurveyFD, EM1DSurveyTD

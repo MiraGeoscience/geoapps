@@ -1,12 +1,12 @@
 import numpy as np
 import scipy.sparse as sp
-import SimPEG
+import geoapps.simpegPF as spf
 from .. import Utils
-from SimPEG.EM.Utils import omega
-from SimPEG.Utils import Zero, Identity
+from geoapps.simpegPF.EM.Utils import omega
+from geoapps.simpegPF.Utils import Zero, Identity
 
 
-class FieldsTDEM(SimPEG.Problem.TimeFields):
+class FieldsTDEM(spf.Problem.TimeFields):
     """
 
     Fancy Field Storage for a TDEM survey. Only one field type is stored for

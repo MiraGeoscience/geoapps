@@ -1,7 +1,7 @@
 import numpy as np
 
 from .. import Utils, Mesh
-from SimPEG.EM.Static import DC
+from geoapps.simpegPF.EM.Static import DC
 
 
 def plot_pseudoSection(

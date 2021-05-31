@@ -15,7 +15,6 @@ from geoh5py.objects import Surface
 from geoh5py.workspace import Workspace
 
 from geoapps.selection import ObjectDataSelection
-from geoapps.simpegPF import PF, Maps, Utils
 from geoapps.utils.utils import RectangularBlock, tensor_2_block_model
 
 

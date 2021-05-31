@@ -1,7 +1,7 @@
 import scipy as sp
 import numpy as np
-from SimPEG.regularization import Sparse, SparseSmall, SparseDeriv, Simple
-from SimPEG import Mesh, Utils
+from geoapps.simpegPF.Regularization import Sparse, SparseSmall, SparseDeriv, Simple
+from geoapps.simpegPF import Mesh, Utils
 
 
 def get_2d_mesh(n_sounding, hz):

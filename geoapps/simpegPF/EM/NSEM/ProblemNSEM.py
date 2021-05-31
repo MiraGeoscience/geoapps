@@ -3,7 +3,7 @@ import sys
 import scipy.sparse as sp
 import numpy as np
 
-from SimPEG.EM.Utils.EMUtils import omega, mu_0
+from geoapps.simpegPF.EM.Utils.EMUtils import omega, mu_0
 from .. import SolverLU as SimpegSolver, Utils, mkvc
 from ..FDEM.ProblemFDEM import BaseFDEMProblem
 from .SurveyNSEM import Survey, Data
