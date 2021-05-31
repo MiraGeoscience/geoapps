@@ -19,19 +19,14 @@ class Models:
         "reference_declination",
     ]
 
-    def __init__(self, model_type, model, mesh):
-        self.model_type = model_type
+    def __init__(self, mesh, model_type, params, workspace, vector=False):
         self.mesh = mesh
-        self.model = model
-
-    @classmethod
-    def from_params(cls, model_type, params):
-        model = params[model_type]
-        if isinstance(model, UUID):
-            mesh = params.parent(model_type)
-        else:
-            mesh = None
-        p = cls(model_type, model, mesh)
+        self.model_type = model_type
+        self.params = params
+        self.workspace = workspace
+        self.model = params[model_type]
+        self.mesh = None
+        self.vector = vector
 
     @property
     def model_type(self):
@@ -45,43 +40,20 @@ class Models:
         self._model_type = v
 
     @property
-    def mesh(self):
-        return self._mesh
-
-    @mesh.setter
-    def mesh(self, v):
-        if isinstance(v, UUID):
-            WorkspaceObject(v)
-        self._mesh = v
-
-    @property
     def model(self):
         return self._model
 
     @model.setter
     def model(self, v):
-        nc = self.mesh.fetch()
+        nc = self.mesh.nC
         if v is None:
-            v = 0
+            v = np.zeros(nc)
+        elif isinstance(v, float):
+            v *= np.ones(nc)
+        elif isinstance(v, UUID):
+            v = fetch(v)
+
         self._model = v
-
-    def reference_model(self, params):
-        self.mref = self.params.reference_model
-        return mref
-
-    def models(self, params):
-
-        mstart = self.params.starting_model
-        mstart = [0.0] if mstart is None else mstart
-        mstart = [mstart] if isinstance(mstart, float) else mstart
-
-    # Get the reference and starting models
-    mref = self.params.reference_model
-    mref = [0.0] if mref is None else mref
-    mref = [mref] if isinstance(mref, float) else mref
-    mstart = self.params.starting_model
-    mstart = [0.0] if mstart is None else mstart
-    mstart = [mstart] if isinstance(mstart, float) else mstart
 
     self.mref = self.get_model(mref, vector_property, save_model=True)
     self.mstart = self.get_model(
@@ -178,3 +150,17 @@ class Models:
                     )
 
         return mkvc(model)
+
+    def fetch(self, p: Union[str, UUID]):
+        """ Fetch the object addressed by uuid from the workspace. """
+
+        if isinstance(p, str):
+            try:
+                p = UUID(p)
+            except:
+                p = self.params.__getattribute__(p)
+
+        try:
+            return self.workspace.get_entity(p)[0].values
+        except AttributeError:
+            return self.workspace.get_entity(p)[0]
