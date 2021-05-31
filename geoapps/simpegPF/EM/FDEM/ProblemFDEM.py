@@ -1,8 +1,8 @@
 from .. import Problem, Utils, Props, Solver as SimpegSolver
 from .SurveyFDEM import Survey as SurveyFDEM
 from .FieldsFDEM import FieldsFDEM, Fields3D_e, Fields3D_b, Fields3D_h, Fields3D_j
-from SimPEG.EM.Base import BaseEMProblem
-from SimPEG.EM.Utils import omega
+from .EM.Base import BaseEMProblem
+from .EM.Utils import omega
 
 import numpy as np
 import scipy.sparse as sp

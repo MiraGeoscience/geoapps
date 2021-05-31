@@ -9,7 +9,7 @@ else:
 
 import numpy as np
 import scipy.sparse as sp
-from SimPEG import Problem, Props, Utils, Maps, Survey
+from geoapps.simpegPF import Problem, Props, Utils, Maps, Survey
 from .Survey import EM1DSurveyFD, EM1DSurveyTD
 from .EM1DSimulation import run_simulation_FD, run_simulation_TD
 import properties
@@ -220,7 +220,7 @@ class GlobalEM1DProblem(Problem.BaseProblem):
         if self.verbose:
             print("Compute fields")
         self.survey._pred = self.forward(m)
-        return []
+        return self.survey._pred
 
     def forward(self, m):
         self.model = m

@@ -34,7 +34,7 @@ import platform
 import multiprocessing
 
 # Required packages
-import SimPEG
+import geoapps.simpegPF
 import cython
 import properties
 import vectormath
@@ -259,7 +259,7 @@ def _get_packages(add_pckg):
     pckgs = [
         numpy,
         scipy,
-        SimPEG,
+        geoapps.simpegPF,
         cython,
         properties,
         vectormath,

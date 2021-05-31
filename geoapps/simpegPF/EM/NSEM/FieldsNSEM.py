@@ -1,12 +1,12 @@
 from .. import Utils
 from .. import Problem
 
-from SimPEG.Utils import Zero
-from SimPEG.Utils import Identity
+from geoapps.simpegPF.Utils import Zero
+from geoapps.simpegPF.Utils import Identity
 
 import numpy as np
 import scipy.sparse as sp
-from SimPEG.EM.Utils import omega
+from geoapps.simpegPF.EM.Utils import omega
 
 
 ##############

@@ -1,5 +1,5 @@
 import numpy as np
-from SimPEG import Utils
+from geoapps.simpegPF import Utils
 from scipy.constants import mu_0, pi
 from scipy.special import erf
 import matplotlib.pyplot as plt

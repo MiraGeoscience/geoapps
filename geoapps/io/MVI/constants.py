@@ -1131,4 +1131,10 @@ validations = {
     "run_command_boolean": {
         "types": [bool],
     },
+    "conda_environment": {
+        "types": [str],
+    },
+    "conda_environment_boolean": {
+        "types": [bool],
+    },
 }
