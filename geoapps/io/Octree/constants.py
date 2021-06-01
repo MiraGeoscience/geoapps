@@ -77,7 +77,7 @@ default_ui_json = {
         "main": True,
         "value": 500.0,
     },
-    "ga_group_name": {
+    "out_group": {
         "enabled": True,
         "group": "",
         "label": "Name:",
@@ -150,259 +150,44 @@ default_ui_json = {
 required_parameters = []
 
 validations = {
-    "inversion_type": {
-        "types": [str],
-        "values": ["mvi", "mvic"],
-        "reqs": [
-            ("mvi", "inducing_field_strength"),
-            ("mvi", "inducing_field_inclination"),
-            ("mvi", "inducing_field_declination"),
-        ],
-    },
-    "forward_only": {
-        "types": [bool],
-        "reqs": [
-            (True, "starting_model"),
-        ],
-    },
-    "inducing_field_strength": {
-        "types": [int, float],
-    },
-    "inducing_field_inclination": {
-        "types": [int, float],
-    },
-    "inducing_field_declination": {
-        "types": [int, float],
-    },
-    "topography_object": {
+    "extent": {
         "types": [str, UUID],
         "uuid": [],
     },
-    "topography": {
-        "types": [str, UUID, int, float],
-        "reqs": [("topography_object")],
-        "uuid": ["topography_object"],
-    },
-    "data_object": {
-        "types": [str],
-    },
-    "tmi_channel": {"types": [str], "reqs": [("data_object")]},
-    "tmi_uncertainty": {
-        "types": [str, int, float],
-    },
-    "starting_model_object": {
-        "types": [str],
-    },
-    "starting_inclination_object": {
-        "types": [str],
-    },
-    "starting_declination_object": {
-        "types": [str],
-    },
-    "starting_model": {
-        "types": [str, int, float],
-    },
-    "starting_inclination": {
-        "types": [str, int, float],
-    },
-    "starting_declination": {
-        "types": [str, int, float],
-    },
-    "tile_spatial": {
-        "types": [str, int, float],
-    },
-    "receivers_radar_drape": {"types": [str], "reqs": [("data_object")]},
-    "receivers_offset_x": {
+    "u_cell_size": {
         "types": [int, float],
     },
-    "receivers_offset_y": {
+    "v_cell_size": {
         "types": [int, float],
     },
-    "receivers_offset_z": {
+    "w_cell_size": {
         "types": [int, float],
     },
-    "gps_receivers_offset": {
-        "types": [int, float, str],
-    },
-    "ignore_values": {
-        "types": [str],
-    },
-    "resolution": {
+    "horizontal_padding": {
         "types": [int, float],
     },
-    "detrend_data": {
-        "types": [bool],
-    },
-    "detrend_order": {
-        "types": [int],
-        "values": [0, 1, 2],
-    },
-    "detrend_type": {
-        "types": [str],
-        "values": ["all", "corners"],
-    },
-    "max_chunk_size": {"types": [int, float]},
-    "chunk_by_rows": {
-        "types": [bool],
-    },
-    "output_tile_files": {
-        "types": [bool],
-    },
-    "mesh": {
-        "uuid": [],
-        "types": [str, UUID],
-    },
-    "mesh_from_params": {"types": [bool], "reqs": [(True, "core_cell_size_x")]},
-    "core_cell_size_x": {
-        "types": [int, float],
-    },
-    "core_cell_size_y": {
-        "types": [int, float],
-    },
-    "core_cell_size_z": {
-        "types": [int, float],
-    },
-    "octree_levels_topo": {
-        "types": [int, float],
-    },
-    "octree_levels_obs": {
-        "types": [int, float],
-    },
-    "octree_levels_padding": {
+    "vertical_padding": {
         "types": [int, float],
     },
     "depth_core": {
         "types": [int, float],
     },
-    "max_distance": {
-        "types": [int, float],
+    "refinement_object": {
+        "types": [str, UUID],
+        "uuid": [],
     },
-    "padding_distance_x": {
-        "types": [int, float],
-    },
-    "padding_distance_y": {
-        "types": [int, float],
-    },
-    "padding_distance_z": {
-        "types": [int, float],
-    },
-    "window_center_x": {
-        "types": [int, float],
-    },
-    "window_center_y": {
-        "types": [int, float],
-    },
-    "window_center_z": {
-        "types": [int, float],
-    },
-    "window_width": {
-        "types": [int, float],
-    },
-    "window_height": {
-        "types": [int, float],
-    },
-    "window_azimuth": {
-        "types": [int, float],
-    },
-    "inversion_style": {
-        "types": [str],
-        "values": ["voxel"],
-    },
-    "chi_factor": {
-        "types": [int, float],
-    },
-    "max_iterations": {
-        "types": [int, float],
-    },
-    "max_cg_iterations": {
-        "types": [int, float],
-    },
-    "max_global_iterations": {
-        "types": [int, float],
-    },
-    "initial_beta_ratio": {
-        "types": [float],
-    },
-    "provide_beta": {
-        "types": [bool],
-    },
-    "initial_beta": {
-        "types": [int, float],
-    },
-    "tol_cg": {"types": [int, float]},
-    "alpha_s": {
-        "types": [int, float],
-    },
-    "alpha_x": {
-        "types": [int, float],
-    },
-    "alpha_y": {
-        "types": [int, float],
-    },
-    "alpha_z": {
-        "types": [int, float],
-    },
-    "smallness_norm": {
-        "types": [int, float],
-    },
-    "x_norm": {
-        "types": [int, float],
-    },
-    "y_norm": {
-        "types": [int, float],
-    },
-    "z_norm": {
-        "types": [int, float],
-    },
-    "reference_model_object": {
+    "refinement_level": {
         "types": [str],
     },
-    "reference_inclination_object": {
+    "refinement_type": {
         "types": [str],
+        "values": ["all", "corners"],
     },
-    "reference_declination_object": {
+    "refinement_distance": {
+        "types": [int, float],
+    },
+    "out_group": {
         "types": [str],
-    },
-    "reference_model": {
-        "types": [str, int, float],
-        "reqs": [("reference_model_object")],
-    },
-    "reference_inclination": {
-        "types": [str, int, float],
-        "reqs": [("reference_inclination_object")],
-    },
-    "reference_declination": {
-        "types": [str, int, float],
-        "reqs": [("reference_declination_object")],
-    },
-    "gradient_type": {
-        "types": [str],
-        "values": ["total", "components"],
-    },
-    "lower_bound": {
-        "types": [int, float],
-    },
-    "upper_bound": {
-        "types": [int, float],
-    },
-    "parallelized": {
-        "types": [bool],
-    },
-    "n_cpu": {
-        "types": [int, float],
-    },
-    "max_ram": {
-        "types": [int, float],
-    },
-    "workspace": {
-        "types": [str, Workspace],
-    },
-    "output_geoh5": {
-        "types": [str, Workspace],
-    },
-    "out_group": {"types": [str]},
-    "no_data_value": {
-        "types": [int, float],
     },
     "monitoring_directory": {
         "types": [str],
