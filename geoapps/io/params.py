@@ -109,9 +109,10 @@ class Params:
     def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
         """ Populate parameters with default values stored in default_ui. """
         for a in self.__dict__.keys():
-            if a in ["_ifile", "validations", "validator", "workpath", "associations"]:
+            try:
+                self.__setattr__(a, default_ui[a[1:]]["default"])
+            except KeyError:
                 continue
-            self.__setattr__(a, default_ui[a[1:]]["default"])
 
     def _init_params(
         self,
