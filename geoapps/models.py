@@ -7,26 +7,105 @@
 
 from uuid import UUID
 
+import numpy as np
+from SimPEG.utils.mat_utils import dip_azimuth2cartesian, mkvc
 
-class Models:
 
-    model_types = [
-        "starting_model",
-        "starting_inclination",
-        "starting_declination",
-        "reference_model",
-        "reference_inclination",
-        "reference_declination",
-    ]
+class InversionModel:
 
-    def __init__(self, mesh, model_type, params, workspace, vector=False):
-        self.mesh = mesh
+    model_types = ["starting", "reference", "lower_bound", "upper_bound"]
+
+    def __init__(self, imesh, model_type, params, workspace):
+        self.imesh = imesh
         self.model_type = model_type
         self.params = params
         self.workspace = workspace
-        self.model = params[model_type]
-        self.mesh = None
-        self.vector = vector
+        self.model = None
+        self.vector = None
+        self._initialize()
+
+    def _initialize(self):
+        """ Build the model vector from params data. """
+        self.vector = True if self.params.inversion_type == "mvi" else False
+        model = self.get(self.model_type + "_model")
+
+        if self.vector:
+            inclination = self.get(self.model_type + "_inclination")
+            declination = self.get(self.model_type + "_declination")
+
+            if inclination is None:
+                inclination = (
+                    np.ones(self.imesh.nC) * self.params.inducing_field_inclination
+                )
+
+            if declination is None:
+                declination = (
+                    np.ones(self.imesh.nC) * self.params.inducing_field_declination
+                )
+                declination += self.imesh.rotation["angle"]
+
+            field_vecs = dip_azimuth2cartesian(
+                dip=inclination,
+                azm_N=declination,
+            )
+            model = (field_vecs.T * model).T
+
+        self.model = mkvc(model)
+
+    def get(self, name):
+        """ Get named model vector from value stored in params class. """
+
+        if hasattr(self.params, name):
+            model = getattr(self.params, name)
+            if isinstance(model, UUID):
+                model = self._get_object(model)
+            else:
+                model = self._get_value(model)
+        else:
+            model = None
+
+        return model
+
+    def _get_value(self, model):
+        """ Fills vector of length mesh.nC with model value. """
+
+        nc = self.imesh.nC
+        if isinstance(model, float):
+            model *= np.ones(nc)
+
+        return model
+
+    def _get_object(self, model):
+        """ Fetches model from workspace, and interpolates as needed. """
+
+        parent_uuid = self.params.parent(model)
+        parent = self.fetch(parent_uuid)
+        model = self.fetch(model)
+
+        if self.params.mesh != parent_uuid:
+            model = self._obj_2_mesh(parent)
+
+        return model
+
+    def _obj_2_mesh(self, obj, parent):
+        """ Interpolates obj into inversion mesh using nearest neighbors of parent. """
+
+        if hasattr(parent, "centroids"):
+            xyz_in = parent.centroids
+        else:
+            xyz_in = parent.vertices
+
+        xyz_out = self.imesh.original_cc()
+
+        return weighted_average(xyz_in, xyz_out, obj)
+
+        # if save_model:
+        #     val = model.copy()
+        #     val[activeCells == False] = self.no_data_value
+        #     self.fetch("mesh").add_data(
+        #         {"Reference_model": {"values": val[self.mesh._ubc_order]}}
+        #     )
+        #     print("Reference model transferred to new mesh!")
 
     @property
     def model_type(self):
@@ -39,119 +118,7 @@ class Models:
             raise ValueError(msg)
         self._model_type = v
 
-    @property
-    def model(self):
-        return self._model
-
-    @model.setter
-    def model(self, v):
-        nc = self.mesh.nC
-        if v is None:
-            v = np.zeros(nc)
-        elif isinstance(v, float):
-            v *= np.ones(nc)
-        elif isinstance(v, UUID):
-            v = fetch(v)
-
-        self._model = v
-
-    self.mref = self.get_model(mref, vector_property, save_model=True)
-    self.mstart = self.get_model(
-        mstart,
-        vector_property,
-    )
-
-    if vector_property:
-        self.mref = self.mref[np.kron(np.ones(3), self.activeCells).astype("bool")]
-        self.mstart = self.mstart[np.kron(np.ones(3), self.activeCells).astype("bool")]
-    else:
-        self.mref = self.mref[self.activeCells]
-        self.mstart = self.mstart[self.activeCells]
-
-    def get_model(self, input_value, vector_property, save_model=False):
-
-        # Loading a model file
-
-        if isinstance(input_value, UUID):
-            input_model = self.fetch(input_value)
-            input_parent = self.params.parent(input_value)
-            input_mesh = self.fetch(input_parent)
-
-            # Remove null values
-            active = ((input_model > 1e-38) * (input_model < 2e-38)) == 0
-            input_model = input_model[active]
-
-            if hasattr(input_mesh, "centroids"):
-                xyz_cc = input_mesh.centroids[active, :]
-            else:
-                xyz_cc = input_mesh.vertices[active, :]
-
-            if self.window is not None:
-                xyz_cc = rotate_xy(
-                    xyz_cc, self.rotation["origin"], -self.rotation["angle"]
-                )
-
-            input_tree = cKDTree(xyz_cc)
-
-            # Transfer models from mesh to mesh
-            if self.mesh != input_mesh:
-
-                rad, ind = input_tree.query(self.mesh.gridCC, 8)
-
-                model = np.zeros(rad.shape[0])
-                wght = np.zeros(rad.shape[0])
-                for ii in range(rad.shape[1]):
-                    model += input_model[ind[:, ii]] / (rad[:, ii] + 1e-3) ** 0.5
-                    wght += 1.0 / (rad[:, ii] + 1e-3) ** 0.5
-
-                model /= wght
-
-            if save_model:
-                val = model.copy()
-                val[activeCells == False] = self.no_data_value
-                self.fetch("mesh").add_data(
-                    {"Reference_model": {"values": val[self.mesh._ubc_order]}}
-                )
-                print("Reference model transferred to new mesh!")
-
-            if vector_property:
-                model = utils.sdiag(model) * np.kron(
-                    utils.mat_utils.dip_azimuth2cartesian(
-                        dip=self.survey.srcField.param[1],
-                        azm_N=self.survey.srcField.param[2],
-                    ),
-                    np.ones((model.shape[0], 1)),
-                )
-
-        else:
-            if not vector_property:
-                model = np.ones(self.mesh.nC) * input_value[0]
-
-            else:
-                if np.r_[input_value].shape[0] == 3:
-                    # Assumes reference specified as: AMP, DIP, AZIM
-                    model = np.kron(np.c_[input_value], np.ones(self.mesh.nC)).T
-                    model = mkvc(
-                        utils.sdiag(model[:, 0])
-                        * utils.mat_utils.dip_azimuth2cartesian(
-                            model[:, 1], model[:, 2]
-                        )
-                    )
-                else:
-                    # Assumes amplitude reference value in inducing field direction
-                    model = utils.sdiag(
-                        np.ones(self.mesh.nC) * input_value[0]
-                    ) * np.kron(
-                        utils.mat_utils.dip_azimuth2cartesian(
-                            dip=self.survey.source_field.parameters[1],
-                            azm_N=self.survey.source_field.parameters[2],
-                        ),
-                        np.ones((self.mesh.nC, 1)),
-                    )
-
-        return mkvc(model)
-
-    def fetch(self, p: Union[str, UUID]):
+    def fetch(self, p):
         """ Fetch the object addressed by uuid from the workspace. """
 
         if isinstance(p, str):
