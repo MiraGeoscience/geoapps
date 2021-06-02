@@ -4,6 +4,11 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
 
 import json
 import multiprocessing
@@ -20,6 +25,14 @@ from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 
+from geoapps.simpegEM1D import (
+    GlobalEM1DProblemFD,
+    GlobalEM1DProblemTD,
+    GlobalEM1DSurveyFD,
+    GlobalEM1DSurveyTD,
+    LateralConstraint,
+    get_2d_mesh,
+)
 from geoapps.simpegPF import (
     DataMisfit,
     Directives,
@@ -29,17 +42,8 @@ from geoapps.simpegPF import (
     Optimization,
     Utils,
 )
-
-from .simpegEM1D import (
-    GlobalEM1DProblemFD,
-    GlobalEM1DProblemTD,
-    GlobalEM1DSurveyFD,
-    GlobalEM1DSurveyTD,
-    LateralConstraint,
-    get_2d_mesh,
-)
-from .utils import geophysical_systems
-from .utils.utils import filter_xy, rotate_xy, running_mean
+from geoapps.utils import geophysical_systems
+from geoapps.utils.utils import filter_xy, rotate_xy, running_mean
 
 
 def inversion(input_file):
