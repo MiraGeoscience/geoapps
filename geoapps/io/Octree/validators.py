@@ -1,6 +1,14 @@
+#  Copyright (c) 2021 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
 from typing import Any, Dict, List
 
 from geoh5py.workspace import Workspace
+
 from geoapps.io.validators import InputValidator
 
 
@@ -41,30 +49,30 @@ class OctreeValidator(InputValidator):
 
         self._validate_requirements(input.data)
         refinements = {}
-        ref_params_list = ['object', 'levels', 'type', 'distance']
+        ref_params_list = ["object", "levels", "type", "distance"]
         for k, v in input.data.items():
             if "refinement" in k.lower():
-                if v['group'] not in list(refinements.keys()):
-                    refinements[v['group']] = {}
-
                 for param in ref_params_list:
                     if param in k.lower():
-                        refinements[v['group']][param] = v
+                        group = k.lower().replace(param, "").lstrip()
+                        if group not in list(refinements.keys()):
+                            refinements[group] = {}
+
+                        refinements[group][param] = v
                         validator = self.validations[f"refinement_{param}"]
+
+                        break
 
             elif k not in self.validations.keys():
                 raise KeyError(f"{k} is not a valid parameter name.")
             else:
                 validator = self.validations[k]
 
-            self.validate(
-                k, v, validator, self.workspace, input.associations
-            )
+            self.validate(k, v, validator, self.workspace, input.associations)
 
         for refinement in refinements.values():
             assert len(list(refinement.values())) == 4, (
-                "Refinement parameters must contain one of each" +
-                f"{ref_params_list}"
+                "Refinement parameters must contain one of each" + f"{ref_params_list}"
             )
 
         self.refinements = refinements

@@ -10,8 +10,8 @@ from uuid import UUID
 
 from ..input_file import InputFile
 from ..params import Params
-from ..validators import InputValidator
 from .constants import default_ui_json, required_parameters, validations
+from .validators import OctreeValidator
 
 
 class OctreeParams(Params):
@@ -19,7 +19,7 @@ class OctreeParams(Params):
         super().__init__()
 
         self.validations: Dict[str, Any] = validations
-        self.validator: InputValidator = InputValidator(
+        self.validator: OctreeValidator = OctreeValidator(
             required_parameters, validations
         )
         self.extent = None
@@ -37,11 +37,9 @@ class OctreeParams(Params):
         self.run_command_boolean = None
         self.conda_environment = None
         self.conda_environment_boolean = None
-        self.refinements = None
-        self._ifile = InputFile()
-        self._ifile.input_from_dict(default_ui_json, required_parameters, validations)
+        self._refinements = None
 
-        self._init_params(self._ifile)
+        self._init_from_dict(default_ui_json)
 
     @property
     def extent(self):
@@ -148,6 +146,13 @@ class OctreeParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._depth_core = val
+
+    @property
+    def refinements(self):
+        if getattr(self, "_refinements", None) is None:
+            self._refinements = self.validator.refinements
+
+        return self._refinements
 
     def _init_params(self, inputfile: InputFile) -> None:
         """ Wraps Params._init_params. """
