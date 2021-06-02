@@ -22,7 +22,7 @@ class OctreeParams(Params):
         self.validator: OctreeValidator = OctreeValidator(
             required_parameters, validations
         )
-        self.extent = None
+        self.objects = None
         self.u_cell_size = None
         self.v_cell_size = None
         self.w_cell_size = None
@@ -42,20 +42,20 @@ class OctreeParams(Params):
         self._init_from_dict(default_ui_json)
 
     @property
-    def extent(self):
-        return self._extent
+    def objects(self):
+        return self._objects
 
-    @extent.setter
-    def extent(self, val):
+    @objects.setter
+    def objects(self, val):
         if val is None:
-            self._extent = val
+            self._objects = val
             return
 
-        p = "extent"
+        p = "objects"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._extent = UUID(val)
+        self._objects = UUID(val)
 
     @property
     def u_cell_size(self):
