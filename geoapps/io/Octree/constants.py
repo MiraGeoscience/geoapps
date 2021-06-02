@@ -17,7 +17,7 @@ defaults = {}
 default_ui_json = {
     "title": "Octree Mesh Creator",
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "extent": {
+    "objects": {
         "enabled": True,
         "group": "1- Core",
         "label": "Core hull extent",
@@ -170,7 +170,7 @@ validations = {
     "title": {
         "types": [str],
     },
-    "extent": {
+    "objects": {
         "types": [str, UUID],
         "uuid": [],
     },

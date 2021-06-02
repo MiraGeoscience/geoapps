@@ -9,7 +9,6 @@ import json
 import sys
 import uuid
 from os import path
-from typing import Union
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, Octree, Points, Surface
@@ -18,8 +17,9 @@ from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
+from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils.utils import load_json_params, string_2_list, treemesh_2_octree
+from geoapps.utils.utils import string_2_list, treemesh_2_octree
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -29,9 +29,7 @@ class OctreeMesh(ObjectDataSelection):
 
     def __init__(self, **kwargs):
 
-        params = self.default_ui.copy()
-        for key, value in kwargs.items():
-            params[key] = value
+        self.params = OctreeParams()
 
         self.object_types = [Curve, Octree, Points, Surface]
         self._u_cell_size = FloatText(
@@ -53,7 +51,10 @@ class OctreeMesh(ObjectDataSelection):
             description="Vertical (m)",
         )
 
-        super().__init__(**params)
+        self.refinements = self.params.refinements
+        self.refinement_list = []
+
+        super().__init__(**self.params.__dict__)
 
         self.required = [
             self.project_panel,
@@ -87,9 +88,9 @@ class OctreeMesh(ObjectDataSelection):
 
     def __populate__(self, **kwargs):
 
-        refinements = self.get_refinement_params(kwargs)
-
         for key, value in kwargs.items():
+            if key[0] == "_":
+                key = key[1:]
 
             if hasattr(self, "_" + key) or hasattr(self, key):
 
@@ -118,26 +119,26 @@ class OctreeMesh(ObjectDataSelection):
                     pass
 
         self.refinement_list = []
-        for label, params in refinements.items():
+        for label, params in self.refinements.items():
             self.refinement_list += [self.add_refinement_widget(label, params)]
 
-    @property
-    def extent(self):
-        """
-        Alias of `objects` property
-        """
-        return self.objects
-
-    @extent.setter
-    def extent(self, value: Union[uuid.UUID, str]):
-        if isinstance(value, str):
-            try:
-                value = uuid.UUID(value)
-            except ValueError:
-                print(
-                    f"Extent value must be a {uuid.UUID} or a string convertible to uuid"
-                )
-        self.objects.value = value
+    # @property
+    # def extent(self):
+    #     """
+    #     Alias of `objects` property
+    #     """
+    #     return self.objects
+    #
+    # @extent.setter
+    # def extent(self, value: Union[uuid.UUID, str]):
+    #     if isinstance(value, str):
+    #         try:
+    #             value = uuid.UUID(value)
+    #         except ValueError:
+    #             print(
+    #                 f"Extent value must be a {uuid.UUID} or a string convertible to uuid"
+    #             )
+    #     self.objects.value = value
 
     @property
     def u_cell_size(self):
@@ -186,20 +187,20 @@ class OctreeMesh(ObjectDataSelection):
         self._h5file = workspace.h5file
         self.update_objects_choices()
 
-    @staticmethod
-    def get_refinement_params(values: dict):
-        """
-        Extract refinement parameters from input ui.json
-        """
-        refinements = {}
-        for key, value in values.items():
-            if "Refinement" in key:
-                if value["group"] not in list(refinements.keys()):
-                    refinements[value["group"]] = {}
-
-                refinements[value["group"]][value["label"]] = value["value"]
-
-        return refinements
+    # @staticmethod
+    # def get_refinement_params(values: dict):
+    #     """
+    #     Extract refinement parameters from input ui.json
+    #     """
+    #     refinements = {}
+    #     for key, value in values.items():
+    #         if "Refinement" in key:
+    #             if value["group"] not in list(refinements.keys()):
+    #                 refinements[value["group"]] = {}
+    #
+    #             refinements[value["group"]][value["label"]] = value["value"]
+    #
+    #     return refinements
 
     def update_objects_choices(self):
         # Refresh the list of objects for all
@@ -292,12 +293,12 @@ class OctreeMesh(ObjectDataSelection):
         """
         Add a refinement from dictionary
         """
-        widget_list = [Label(label)]
+        widget_list = [Label(label.capitalize())]
         for key, value in params.items():
-            if "Object" in key:
+            if "object" in key:
                 try:
                     value = uuid.UUID(value)
-                except ValueError:
+                except (ValueError, TypeError):
                     value = None
 
                 setattr(
@@ -314,9 +315,13 @@ class OctreeMesh(ObjectDataSelection):
                 except TraitError:
                     pass
 
-            elif "Levels" in key:
-                setattr(self, label + f" {key}", Text(description=key, value=value))
-            elif "Type" in key:
+            elif "levels" in key:
+                setattr(
+                    self,
+                    label + f" {key}",
+                    Text(description=key, value=", ".join(map(str, value))),
+                )
+            elif "type" in key:
                 setattr(
                     self,
                     label + f" {key}",
@@ -326,7 +331,7 @@ class OctreeMesh(ObjectDataSelection):
                         value=value,
                     ),
                 )
-            elif "Max" in key:
+            elif "distance" in key:
                 setattr(
                     self, label + f" {key}", FloatText(description=key, value=value)
                 )

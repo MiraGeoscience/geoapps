@@ -26,6 +26,8 @@ class ObjectDataSelection(BaseApplication):
     def __init__(self, **kwargs):
         kwargs = self.apply_defaults(**kwargs)
 
+        self._objects = None
+        self._data = None
         self._add_groups = False
         self._find_label = []
         self._object_types = []
