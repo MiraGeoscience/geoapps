@@ -9,6 +9,11 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
 
 import os
 import sys
@@ -16,7 +21,6 @@ from multiprocessing.pool import ThreadPool
 from typing import Union
 from uuid import UUID
 
-import dask
 import numpy as np
 import scipy.sparse as sp
 from dask import config as dconf
@@ -26,9 +30,8 @@ from discretize.utils import active_from_xyz
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Grid2D, Points
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
-from scipy.spatial import Delaunay, cKDTree
+from scipy.spatial import cKDTree
 from SimPEG import (
-    dask,
     data,
     data_misfit,
     directives,
@@ -41,13 +44,13 @@ from SimPEG import (
     utils,
 )
 from SimPEG.potential_fields import magnetics
-from SimPEG.utils import mkvc, tile_locations
+from SimPEG.utils import tile_locations
 from SimPEG.utils.drivers import create_nested_mesh
 
 from geoapps.io.MVI import MVIParams
-from geoapps.meshes import InversionMesh
-from geoapps.models import InversionModel
-from geoapps.utils import filter_xy, octree_2_treemesh, rotate_xy, treemesh_2_octree
+from geoapps.utils import filter_xy, rotate_xy, treemesh_2_octree
+
+from .components import InversionMesh, InversionModel
 
 
 def start_inversion(filepath=None):
