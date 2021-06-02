@@ -4,15 +4,9 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
 
 from uuid import UUID
 
-import numpy as np
 from geoh5py.workspace import Workspace
 
 required_parameters = [
@@ -118,10 +112,10 @@ default_ui_json = {
         "value": "radial",
         "default": "radial",
     },
-    "Refinement A Max Distance": {
+    "Refinement A Distance": {
         "enabled": True,
         "group": "Refinement A",
-        "label": "Max Distance",
+        "label": "Distance",
         "value": 1000.0,
         "default": 1000.0,
     },
@@ -152,20 +146,30 @@ default_ui_json = {
         "value": "surface",
         "default": "surface",
     },
-    "Refinement B Max Distance": {
+    "Refinement B Distance": {
         "enabled": True,
         "group": "Refinement B",
-        "label": "Max Distance",
+        "label": "Distance",
         "value": 1000.0,
         "default": 1000.0,
     },
     "run_command": ("geoapps.create.octree_mesh"),
     "monitoring_directory": "",
+    "output_geoh5": {
+        "default": None,
+        "visible": False,
+        "enabled": False,
+        "label": "path to results geoh5py file",
+        "value": None,
+    },
 }
 
 required_parameters = []
 
 validations = {
+    "title": {
+        "types": [str],
+    },
     "extent": {
         "types": [str, UUID],
         "uuid": [],
@@ -193,11 +197,11 @@ validations = {
         "uuid": [],
     },
     "refinement_levels": {
-        "types": [str],
+        "types": [int, float],
     },
     "refinement_type": {
         "types": [str],
-        "values": ["all", "corners"],
+        "values": ["surface", "radial"],
     },
     "refinement_distance": {
         "types": [int, float],
@@ -212,6 +216,9 @@ validations = {
         "types": [str, Workspace],
     },
     "geoh5": {
+        "types": [str, Workspace],
+    },
+    "output_geoh5": {
         "types": [str, Workspace],
     },
     "run_command": {
