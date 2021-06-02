@@ -22,7 +22,6 @@ class OctreeParams(Params):
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
-        self.associations: Dict[Union[str, UUID], Union[str, UUID]] = None
         self.extent = None
         self.u_cell_size = None
         self.v_cell_size = None
@@ -30,10 +29,6 @@ class OctreeParams(Params):
         self.horizontal_padding = None
         self.vertical_padding = None
         self.depth_core = None
-        self.refinement_object = None
-        self.refinement_level = None
-        self.refinement_type = None
-        self.refinement_distance = None
         self.ga_group_name = None
         self.monitoring_directory = None
         self.workspace_geoh5 = None
@@ -44,16 +39,9 @@ class OctreeParams(Params):
         self.conda_environment_boolean = None
         self.refinements = None
         self._ifile = InputFile()
+        self._ifile.input_from_dict(default_ui_json, required_parameters, validations)
 
-        self._set_defaults()
-
-    def _set_defaults(self) -> None:
-        """ Wraps Params._set_defaults """
-        return super()._set_defaults(default_ui_json)
-
-    def default(self, param) -> Any:
-        """ Wraps Params.default. """
-        return super().default(default_ui_json, param)
+        self._init_params(self._ifile)
 
     @property
     def extent(self):

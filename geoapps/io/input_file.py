@@ -133,15 +133,33 @@ class InputFile:
         """
 
         with open(self.filepath) as f:
-            data = self._numify(json.load(f))
-            self._set_associations(data)
-            if reformat:
-                self._ui_2_py(data)
-                self.is_formatted = True
-                if (validations is not None) or (required_parameters is not None):
-                    InputValidator(required_parameters, validations, self.data)
-            else:
-                self.data = data
+            param_dict = json.load(f)
+            self.input_from_dict(
+                param_dict,
+                required_parameters=required_parameters,
+                validations=validations,
+                reformat=reformat,
+            )
+
+    def input_from_dict(
+        self,
+        input_dict: dict,
+        required_parameters: List[str] = None,
+        validations: Dict[str, Any] = None,
+        reformat: bool = True,
+    ):
+        """
+        Parse the content of input parameters.
+        """
+        data = self._numify(input_dict)
+        self._set_associations(data)
+        if reformat:
+            self._ui_2_py(data)
+            self.is_formatted = True
+            if (validations is not None) or (required_parameters is not None):
+                InputValidator(required_parameters, validations, self.data)
+        else:
+            self.data = data
 
         self.is_loaded = True
 
