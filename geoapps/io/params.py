@@ -67,13 +67,11 @@ class Params:
         self.workspace: Workspace = None
         self.output_geoh5: str = None
         self.workpath: str = os.path.abspath(".")
-        self.validator: InputValidator = InputValidator(
-            required_parameters, validations
-        )
+        self.validator = None
         self._ifile: InputFile = None
 
     @classmethod
-    def from_ifile(cls, ifile: InputFile) -> None:
+    def from_ifile(cls, ifile: InputFile):
         """Construct Params object from InputFile instance.
 
         Parameters
@@ -106,6 +104,20 @@ class Params:
         p = cls.from_ifile(ifile)
         return p
 
+    def _init_from_dict(self, ui_json: dict) -> None:
+        """
+        Construct Params object from a dictionary.
+
+        Parameters
+        ----------
+        ui_json: Dictionary of parameters store in ui.json format
+        """
+        self._ifile = InputFile()
+        self._ifile.input_from_dict(ui_json, required_parameters, validations)
+        self.workpath = self._ifile.workpath
+        self.associations = self._ifile.associations
+        self._init_params(self._ifile)
+
     def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
         """ Populate parameters with default values stored in default_ui. """
         for a in self.__dict__.keys():
@@ -128,13 +140,16 @@ class Params:
         else:
             self.output_geoh5 = Workspace(inputfile.data["output_geoh5"])
 
-        self.validator = InputValidator(
-            required_parameters, validations, self.workspace, inputfile
-        )
+        self.validator.workspace = self.workspace
+        self.validator.input = inputfile
+
         for param, value in inputfile.data.items():
-            if param in ["workspace", "output_geoh5"]:
+            try:
+                if param in ["workspace", "output_geoh5"]:
+                    continue
+                self.__setattr__(param, value)
+            except KeyError:
                 continue
-            self.__setattr__(param, value)
 
     def is_uuid(self, p: str) -> bool:
         """ Return true if string contains valid UUID. """
