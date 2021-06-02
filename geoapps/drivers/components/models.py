@@ -15,8 +15,8 @@ class InversionModel:
 
     model_types = ["starting", "reference", "lower_bound", "upper_bound"]
 
-    def __init__(self, imesh, model_type, params, workspace):
-        self.imesh = imesh
+    def __init__(self, inversion_mesh, model_type, params, workspace):
+        self.inversion_mesh = inversion_mesh
         self.model_type = model_type
         self.params = params
         self.workspace = workspace
@@ -35,14 +35,16 @@ class InversionModel:
 
             if inclination is None:
                 inclination = (
-                    np.ones(self.imesh.nC) * self.params.inducing_field_inclination
+                    np.ones(self.inversion_mesh.nC)
+                    * self.params.inducing_field_inclination
                 )
 
             if declination is None:
                 declination = (
-                    np.ones(self.imesh.nC) * self.params.inducing_field_declination
+                    np.ones(self.inversion_mesh.nC)
+                    * self.params.inducing_field_declination
                 )
-                declination += self.imesh.rotation["angle"]
+                declination += self.inversion_mesh.rotation["angle"]
 
             field_vecs = dip_azimuth2cartesian(
                 dip=inclination,
@@ -69,7 +71,7 @@ class InversionModel:
     def _get_value(self, model):
         """ Fills vector of length mesh.nC with model value. """
 
-        nc = self.imesh.nC
+        nc = self.inversion_mesh.nC
         if isinstance(model, float):
             model *= np.ones(nc)
 
@@ -95,7 +97,7 @@ class InversionModel:
         else:
             xyz_in = parent.vertices
 
-        xyz_out = self.imesh.original_cc()
+        xyz_out = self.inversion_mesh.original_cc()
 
         return weighted_average(xyz_in, xyz_out, obj)
 
