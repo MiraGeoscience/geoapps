@@ -55,10 +55,10 @@ class Params:
 
     Constructors
     ------------
-    from_ifile(ifile)
+    from_input_file(input_file)
         Construct Params object from InputFile instance.
     from_path(path)
-        Construct Params object from path to input file (wraps from_ifile constructor).
+        Construct Params object from path to input file (wraps from_input_file constructor).
 
     """
 
@@ -68,40 +68,40 @@ class Params:
         self.output_geoh5: str = None
         self.workpath: str = os.path.abspath(".")
         self.validator = None
-        self._ifile: InputFile = None
+        self._input_file: InputFile = None
 
     @classmethod
-    def from_ifile(cls, ifile: InputFile):
+    def from_input_file(cls, input_file: InputFile):
         """Construct Params object from InputFile instance.
 
         Parameters
         ----------
-        ifile : InputFile
+        input_file : InputFile
             class instance to handle loading input file
         """
-        if not ifile.is_loaded:
-            ifile.read_ui_json()
+        if not input_file.is_loaded:
+            input_file.read_ui_json()
 
         p = cls()
-        p._ifile = ifile
-        p.workpath = ifile.workpath
-        p.associations = ifile.associations
-        p._init_params(ifile)
+        p._input_file = input_file
+        p.workpath = input_file.workpath
+        p.associations = input_file.associations
+        p._init_params(input_file)
 
         return p
 
     @classmethod
-    def from_path(cls, filepath: str) -> None:
+    def from_path(cls, file_path: str) -> None:
         """
         Construct Params object from path to input file.
 
         Parameters
         ----------
-        filepath : str
+        file_path : str
             path to input file.
         """
-        ifile = InputFile(filepath)
-        p = cls.from_ifile(ifile)
+        input_file = InputFile(file_path)
+        p = cls.from_input_file(input_file)
         return p
 
     def _init_from_dict(self, ui_json: dict) -> None:
@@ -112,11 +112,11 @@ class Params:
         ----------
         ui_json: Dictionary of parameters store in ui.json format
         """
-        self._ifile = InputFile()
-        self._ifile.input_from_dict(ui_json, required_parameters, validations)
-        self.workpath = self._ifile.workpath
-        self.associations = self._ifile.associations
-        self._init_params(self._ifile)
+        self._input_file = InputFile()
+        self._input_file.input_from_dict(ui_json, required_parameters, validations)
+        self.workpath = self._input_file.workpath
+        self.associations = self._input_file.associations
+        self._init_params(self._input_file)
 
     def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
         """ Populate parameters with default values stored in default_ui. """
@@ -199,3 +199,7 @@ class Params:
         p = "output_geoh5"
         self.validator.validate(p, val, validations[p])
         self._output_geoh5 = val
+
+    @property
+    def input_file(self):
+        return self._input_file

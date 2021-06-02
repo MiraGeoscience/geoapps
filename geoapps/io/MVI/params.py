@@ -100,7 +100,7 @@ class MVIParams(Params):
         self.inversion_type = None
         self.out_group = None
         self.no_data_value = None
-        self._ifile = InputFile()
+        self._input_file = InputFile()
 
         self._set_defaults()
 
