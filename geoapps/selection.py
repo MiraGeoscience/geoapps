@@ -24,7 +24,9 @@ class ObjectDataSelection(BaseApplication):
     defaults = {}
 
     def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
+        self.defaults = self.update_defaults(**kwargs)
+
+        super().__init__()
 
         self._objects = None
         self._data = None
@@ -33,7 +35,6 @@ class ObjectDataSelection(BaseApplication):
         self._object_types = []
         self._select_multiple = False
 
-        super().__init__(**kwargs)
         self.data_panel = VBox([self.objects, self.data])
         self.update_data_list(None)
         self._main = self.data_panel

@@ -51,7 +51,9 @@ class Clustering(ScatterPlots):
     }
 
     def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
+        self.defaults = self.update_defaults(**kwargs)
+
+        super().__init__()
 
         self.scalings = {}
         self.lower_bounds = {}
@@ -92,6 +94,7 @@ class Clustering(ScatterPlots):
         self.refresh_clusters.on_click(self.run_clustering)
         self.histogram_panel = VBox([self.channels_plot_options])
         self.boxplot_panel = VBox([self.channels_plot_options])
+
         self.stats_table = interactive_output(
             self.make_stats_table,
             {
@@ -99,8 +102,6 @@ class Clustering(ScatterPlots):
                 "show": self.plotting_options,
             },
         )
-
-        super().__init__(**kwargs)
 
         # self.plotting_options = VBox(
         #     [
@@ -137,14 +138,6 @@ class Clustering(ScatterPlots):
         self.clusters_panel = VBox([self.clusters_options, self.color_pickers[0]])
         self.clusters_options.observe(self.clusters_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
-
-        self.update_choices(None)
-        self.run_clustering(None)
-        self.make_heatmap(None)
-        self.make_box_plot(None)
-        self.make_inertia_plot(None)
-        self.make_hist_plot(None)
-
         self.trigger.on_click(self.save_cluster)
         self._main = VBox(
             [
@@ -181,6 +174,21 @@ class Clustering(ScatterPlots):
     def clusters_options(self):
         """ipywidgets.Dropdown()"""
         return self._clusters_options
+
+    @property
+    def main(self):
+        """
+        :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
+        """
+        self.__populate__(**self.defaults)
+        self.update_choices(None)
+        self.run_clustering(None)
+        self.make_heatmap(None)
+        self.make_box_plot(None)
+        self.make_inertia_plot(None)
+        self.make_hist_plot(None)
+
+        return self._main
 
     @property
     def mapping(self):
