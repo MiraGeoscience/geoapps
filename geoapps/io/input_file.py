@@ -81,8 +81,10 @@ class InputFile:
 
     def write_ui_json(
         self,
-        default_ui: Dict[str, Any],
+        ui_dict: Dict[str, Any],
         default: bool = False,
+        name: str = None,
+        param_dict: dict = None,
         workspace: Workspace = None,
     ) -> None:
         """
@@ -90,30 +92,43 @@ class InputFile:
 
         Parameters
         ----------
-        default_ui :
-            Dictionary storing ui data including default values.
+        ui_dict :
+            Dictionary in ui.json format, including defaults.
         default : optional
-            Writes default values stored in default_ui to file.
+            Writes default values stored in ui_dict to file.
+        name: optional
+            Name of the file
+        param_dict : optional
+            Parameters to insert in ui_dict values.
+            Defaults to the :obj:`InputFile.data` is not provided.
         workspace : optional
             Provide a workspace_geoh5 path to simulate auto-generated field in GA.
         """
 
-        out = deepcopy(default_ui)
+        out = deepcopy(ui_dict)
         if workspace is not None:
             out["workspace_geoh5"] = workspace
             out["geoh5"] = workspace
         if not default:
-            if self.is_loaded:
-                for k, v in self.data.items():
-                    if isinstance(out[k], dict):
-                        out[k]["isValue"] = True
-                        out[k]["value"] = v
-                    else:
-                        out[k] = v
-            else:
-                raise OSError("No data to write.")
+            if param_dict is None:
+                if self.is_loaded:
+                    param_dict = self.data
+                else:
+                    raise OSError("No data to write.")
 
-        with open(self.filepath, "w") as f:
+            for k, v in param_dict.items():
+                if isinstance(out[k], dict):
+                    out[k]["isValue"] = True
+                    out[k]["value"] = v
+                else:
+                    out[k] = v
+
+        out_file = self.filepath
+
+        if name is not None:
+            out_file = op.join(op.dirname(self.filepath), name + ".ui.json")
+
+        with open(out_file, "w") as f:
             json.dump(self._stringify(out), f, indent=4)
 
     def read_ui_json(

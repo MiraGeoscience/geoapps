@@ -78,7 +78,7 @@ default_ui_json = {
         "value": 500.0,
         "default": 500.0,
     },
-    "out_group": {
+    "ga_group_name": {
         "enabled": True,
         "group": "",
         "label": "Name:",
@@ -155,6 +155,7 @@ default_ui_json = {
     },
     "run_command": ("geoapps.create.octree_mesh"),
     "monitoring_directory": "",
+    "conda_environment": "geoapps",
     "output_geoh5": {
         "default": None,
         "visible": False,
@@ -206,7 +207,7 @@ validations = {
     "refinement_distance": {
         "types": [int, float],
     },
-    "out_group": {
+    "ga_group_name": {
         "types": [str],
     },
     "monitoring_directory": {
