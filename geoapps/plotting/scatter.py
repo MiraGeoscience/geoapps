@@ -54,6 +54,10 @@ class ScatterPlots(ObjectDataSelection):
     }
 
     def __init__(self, static=False, **kwargs):
+        self.defaults = self.update_defaults(**kwargs)
+
+        super().__init__()
+
         self.static = static
         self.select_multiple = True
         self._add_groups = True
@@ -254,8 +258,6 @@ class ScatterPlots(ObjectDataSelection):
         self.data.observe(self.update_choices, names="value")
         self.objects.observe(self.update_objects, names="value")
         self.downsampling.observe(self.update_downsampling, names="value")
-
-        super().__init__(**self.apply_defaults(**kwargs))
 
         self.figure = go.FigureWidget()
 

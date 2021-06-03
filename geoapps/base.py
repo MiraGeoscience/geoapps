@@ -30,8 +30,7 @@ class BaseApplication:
     }
 
     def __init__(self, **kwargs):
-
-        kwargs = self.apply_defaults(**kwargs)
+        self.defaults = self.update_defaults(**kwargs)
         self.plot_result = False
         self._h5file = None
         self._workspace = None
@@ -92,7 +91,6 @@ class BaseApplication:
                 self.export_directory,
             ]
         )
-        self.__populate__(**kwargs)
 
         def ga_group_name_update(_):
             self.ga_group_name_update()
@@ -132,7 +130,7 @@ class BaseApplication:
                 except:
                     pass
 
-    def apply_defaults(self, **kwargs):
+    def update_defaults(self, **kwargs):
         """
         Add defaults to the kwargs
         """
@@ -211,6 +209,8 @@ class BaseApplication:
         """
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
         """
+        self.__populate__(**self.defaults)
+
         return self._main
 
     @property
