@@ -10,6 +10,8 @@ from uuid import UUID
 import numpy as np
 from SimPEG.utils.mat_utils import dip_azimuth2cartesian, mkvc
 
+from geoapps.utils import weighted_average
+
 
 class InversionModel:
 
@@ -26,33 +28,46 @@ class InversionModel:
 
     def _initialize(self):
         """ Build the model vector from params data. """
+
         self.vector = True if self.params.inversion_type == "mvi" else False
-        model = self.get(self.model_type + "_model")
 
-        if self.vector:
-            inclination = self.get(self.model_type + "_inclination")
-            declination = self.get(self.model_type + "_declination")
+        if self.model_type in ["starting", "reference"]:
 
-            if inclination is None:
-                inclination = (
-                    np.ones(self.inversion_mesh.nC)
-                    * self.params.inducing_field_inclination
+            model = self.get(self.model_type + "_model")
+
+            if self.vector:
+
+                inclination = self.get(self.model_type + "_inclination")
+                declination = self.get(self.model_type + "_declination")
+
+                if inclination is None:
+                    inclination = (
+                        np.ones(self.inversion_mesh.nC)
+                        * self.params.inducing_field_inclination
+                    )
+
+                if declination is None:
+                    declination = (
+                        np.ones(self.inversion_mesh.nC)
+                        * self.params.inducing_field_declination
+                    )
+                    declination += self.inversion_mesh.rotation["angle"]
+
+                field_vecs = dip_azimuth2cartesian(
+                    dip=inclination,
+                    azm_N=declination,
                 )
 
-            if declination is None:
-                declination = (
-                    np.ones(self.inversion_mesh.nC)
-                    * self.params.inducing_field_declination
-                )
-                declination += self.inversion_mesh.rotation["angle"]
+                model = (field_vecs.T * model).T
 
-            field_vecs = dip_azimuth2cartesian(
-                dip=inclination,
-                azm_N=declination,
-            )
-            model = (field_vecs.T * model).T
+        else:
+
+            model = self.get(self.model_type)
 
         self.model = mkvc(model)
+
+    def permute_2_octree(self):
+        return self.model[self.inversion_mesh.octree_permutation]
 
     def get(self, name):
         """ Get named model vector from value stored in params class. """
@@ -85,7 +100,7 @@ class InversionModel:
         model = self.fetch(model)
 
         if self.params.mesh != parent_uuid:
-            model = self._obj_2_mesh(parent)
+            model = self._obj_2_mesh(model, parent)
 
         return model
 
@@ -99,7 +114,7 @@ class InversionModel:
 
         xyz_out = self.inversion_mesh.original_cc()
 
-        return weighted_average(xyz_in, xyz_out, obj)
+        return weighted_average(xyz_in, xyz_out, [obj])
 
         # if save_model:
         #     val = model.copy()
