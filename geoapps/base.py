@@ -100,7 +100,7 @@ class BaseApplication:
         self._main = VBox([self.project_panel, self.output_panel])
 
     def __call__(self):
-        return self._main
+        return self.main
 
     def __populate__(self, **kwargs):
         for key, value in kwargs.items():
