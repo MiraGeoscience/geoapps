@@ -157,3 +157,25 @@ class OctreeParams(Params):
     def _init_params(self, inputfile: InputFile) -> None:
         """ Wraps Params._init_params. """
         super()._init_params(inputfile, required_parameters, validations)
+
+    def update_input_data(self) -> None:
+        """
+        Update the data in InputFile for changes made to param
+        """
+        for key in self.input_file.data.keys():
+            try:
+                value = getattr(self, key)
+                if hasattr(value, "h5file"):
+                    value = value.h5file
+                self.input_file.data[key] = value
+            except KeyError:
+                continue
+
+    def write_input_file(self):
+        """Write out a ui.json with the current state of parameters"""
+        if getattr(self, "input_file", None) is not None:
+            input_dict = default_ui_json
+            if self.input_file.input_dict is not None:
+                input_dict = self.input_file.input_dict
+
+            self.input_file.write_ui_json(input_dict, workspace=self.workspace.h5file)
