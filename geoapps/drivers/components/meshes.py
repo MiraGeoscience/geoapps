@@ -7,6 +7,7 @@
 
 from uuid import UUID
 
+import numpy as np
 from scipy.spatial import cKDTree
 
 from geoapps.utils import octree_2_treemesh, rotate_xy
@@ -20,6 +21,7 @@ class InversionMesh:
         self.mesh = None
         self.nC = None
         self.rotation = None
+        self.octree_sort = None
         self._initialize()
 
     def _initialize(self):
@@ -47,11 +49,12 @@ class InversionMesh:
 
             self.mesh = octree_2_treemesh(self.mesh)
             self.rotation = {"origin": origin, "angle": angle}
+            self.octree_permutation = self.mesh._ubc_order
 
     def original_cc(self):
-        cc = self.mesh.cell_centers()
-        cc = rotate_xy(cc, self.rotation["origin"], -self.rotation["angle"])
-        return cc
+        cc = self.mesh.cell_centers
+        cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
+        return cc[self.octree_permutation]
 
     def fetch(self, p):
         """ Fetch the object addressed by uuid from the workspace. """
