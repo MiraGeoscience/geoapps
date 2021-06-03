@@ -50,6 +50,7 @@ class InputFile:
         self.associations = {}
         self.is_loaded = False
         self.is_formatted = False
+        self.input_dict = None
 
     @property
     def filepath(self):
@@ -131,7 +132,6 @@ class InputFile:
         reformat: optional
             Stores only 'value' fields from ui.json if True.
         """
-
         with open(self.filepath) as f:
             param_dict = json.load(f)
             self.input_from_dict(
@@ -161,6 +161,7 @@ class InputFile:
         else:
             self.data = data
 
+        self.input_dict = input_dict
         self.is_loaded = True
 
     def _ui_2_py(self, ui_dict: Dict[str, Any]) -> None:
