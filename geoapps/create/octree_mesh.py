@@ -5,7 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import json
 import sys
 import uuid
 from os import path
@@ -17,6 +16,7 @@ from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
+from geoapps.io.Octree.constants import default_ui_json
 from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
 from geoapps.utils.utils import string_2_list, treemesh_2_octree
@@ -186,6 +186,9 @@ class OctreeMesh(ObjectDataSelection):
         self._workspace = workspace
         self._h5file = workspace.h5file
         self.update_objects_choices()
+        self.params.input_file.filepath = path.join(
+            path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
+        )
 
     # @staticmethod
     # def get_refinement_params(values: dict):
@@ -211,15 +214,30 @@ class OctreeMesh(ObjectDataSelection):
 
     def trigger_click(self, _):
 
-        params = self.save_json_params(self.ga_group_name.value, self.default_ui.copy())
-        self.run(**params)
+        # params = self.save_json_params(self.ga_group_name.value, self.default_ui.copy())
+        for key, value in self.__dict__.items():
+            try:
+                if isinstance(getattr(self, key), Widget):
+                    value = getattr(self, key).value
+                    if isinstance(value, uuid.UUID):
+                        value = str(value)
+
+                    setattr(self.params, key, value)
+            except AttributeError:
+                continue
+
+        self.params.update_input_data()
+        self.params.write_input_file()
+        self.run(self.params.input_file.filepath)
 
     @staticmethod
-    def run(**kwargs):
+    def run(file_name):
         """
         Create an octree mesh from input values
         """
-        workspace = Workspace(kwargs["geoh5"])
+        params = OctreeParams.from_path(file_name)
+
+        workspace = params.workspace
         obj = workspace.get_entity(uuid.UUID(kwargs["extent"]["value"]))
 
         if not any(obj):
@@ -295,6 +313,8 @@ class OctreeMesh(ObjectDataSelection):
         """
         widget_list = [Label(label.capitalize())]
         for key, value in params.items():
+            attr_name = (label + f"{key}").title()
+
             if "object" in key:
                 try:
                     value = uuid.UUID(value)
@@ -303,175 +323,50 @@ class OctreeMesh(ObjectDataSelection):
 
                 setattr(
                     self,
-                    label + f" {key}",
+                    attr_name,
                     Dropdown(
-                        description=key,
+                        description=key.capitalize(),
                         options=self.objects.options,
                     ),
                 )
 
                 try:
-                    getattr(self, label + f" {key}").value = value
+                    getattr(self, attr_name).value = value
                 except TraitError:
                     pass
 
             elif "levels" in key:
                 setattr(
                     self,
-                    label + f" {key}",
-                    Text(description=key, value=", ".join(map(str, value))),
+                    attr_name,
+                    Text(
+                        description=key.capitalize(), value=", ".join(map(str, value))
+                    ),
                 )
             elif "type" in key:
                 setattr(
                     self,
-                    label + f" {key}",
+                    attr_name,
                     Dropdown(
-                        description=key,
+                        description=key.capitalize(),
                         options=["surface", "radial"],
                         value=value,
                     ),
                 )
             elif "distance" in key:
                 setattr(
-                    self, label + f" {key}", FloatText(description=key, value=value)
+                    self,
+                    attr_name,
+                    FloatText(description=key.capitalize(), value=value),
                 )
-            widget_list += [getattr(self, label + f" {key}", None)]
+            widget_list += [getattr(self, attr_name, None)]
 
         return VBox(widget_list, layout=Layout(border="solid"))
 
-    @property
-    def default_ui(self):
-        return {
-            "title": "Octree Mesh Creator",
-            "geoh5": "../../assets/FlinFlon.geoh5",
-            "extent": {
-                "enabled": True,
-                "group": "1- Core",
-                "label": "Core hull extent",
-                "main": True,
-                "meshType": [
-                    "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-                    "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-                    "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-                ],
-                "value": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-            },
-            "u_cell_size": {
-                "enabled": True,
-                "group": "2- Core cell size",
-                "label": "Easting (m)",
-                "main": True,
-                "value": 25,
-            },
-            "v_cell_size": {
-                "enabled": True,
-                "group": "2- Core cell size",
-                "label": "Northing (m)",
-                "main": True,
-                "value": 25,
-            },
-            "w_cell_size": {
-                "enabled": True,
-                "group": "2- Core cell size",
-                "label": "Vertical (m)",
-                "main": True,
-                "value": 25,
-            },
-            "horizontal_padding": {
-                "enabled": True,
-                "group": "3- Padding distance",
-                "label": "Horizontal (m)",
-                "main": True,
-                "value": 1000.0,
-            },
-            "vertical_padding": {
-                "enabled": True,
-                "group": "3- Padding distance",
-                "label": "Vertical (m)",
-                "main": True,
-                "value": 1000.0,
-            },
-            "depth_core": {
-                "enabled": True,
-                "group": "1- Core",
-                "label": "Minimum Depth (m)",
-                "main": True,
-                "value": 500.0,
-            },
-            "ga_group_name": {
-                "enabled": True,
-                "group": "",
-                "label": "Name:",
-                "value": "Octree_Mesh",
-            },
-            "Refinement A Object": {
-                "enabled": True,
-                "group": "Refinement A",
-                "label": "Object",
-                "meshType": [
-                    "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-                    "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-                    "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-                ],
-                "value": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-            },
-            "Refinement A Levels": {
-                "enabled": True,
-                "group": "Refinement A",
-                "label": "Levels",
-                "value": "4,4,4",
-            },
-            "Refinement A Type": {
-                "choiceList": ["surface", "radial"],
-                "enabled": True,
-                "group": "Refinement A",
-                "label": "Type",
-                "value": "radial",
-            },
-            "Refinement A Max Distance": {
-                "enabled": True,
-                "group": "Refinement A",
-                "label": "Max Distance",
-                "value": 1000.0,
-            },
-            "Refinement B Object": {
-                "enabled": True,
-                "group": "Refinement B",
-                "label": "Object",
-                "meshType": [
-                    "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-                    "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-                    "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-                ],
-                "value": "",
-            },
-            "Refinement B Levels": {
-                "enabled": True,
-                "group": "Refinement B",
-                "label": "Levels",
-                "value": "0,0,2",
-            },
-            "Refinement B Type": {
-                "choiceList": ["surface", "radial"],
-                "enabled": True,
-                "group": "Refinement B",
-                "label": "Type",
-                "value": "surface",
-            },
-            "Refinement B Max Distance": {
-                "enabled": True,
-                "group": "Refinement B",
-                "label": "Max Distance",
-                "value": 1000.0,
-            },
-            "run_command": ("geoapps.create.octree_mesh"),
-            "monitoring_directory": "",
-        }
-
 
 if __name__ == "__main__":
-    with open(sys.argv[1]) as f:
-        input_dict = json.load(f)
+    # with open(sys.argv[1]) as f:
+    #     input_dict = json.load(f)
 
     # input_params = load_json_params()
-    OctreeMesh.run(**input_dict)
+    OctreeMesh.run(sys.argv[1])
