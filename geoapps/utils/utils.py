@@ -339,8 +339,8 @@ def weighted_average(
 
     tree = cKDTree(xyz_in)
     rad, ind = tree.query(xyz_out, n)
-    ind = np.expand_dims(ind, 0) if ind.ndim == 1 else ind
-    rad = np.expand_dims(rad, 0) if rad.ndim == 1 else rad
+    ind = np.expand_dims(ind, 1) if ind.ndim == 1 else ind
+    rad = np.expand_dims(rad, 1) if rad.ndim == 1 else rad
     rad[rad > max_distance] = np.nan
     avg_values = []
     for value in values:

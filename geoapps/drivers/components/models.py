@@ -114,7 +114,7 @@ class InversionModel:
 
         xyz_out = self.inversion_mesh.original_cc()
 
-        return weighted_average(xyz_in, xyz_out, [obj])
+        return weighted_average(xyz_in, xyz_out, [obj])[0]
 
         # if save_model:
         #     val = model.copy()
