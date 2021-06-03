@@ -35,7 +35,6 @@ class Export(ObjectDataSelection):
     """
 
     defaults = {
-        "select_multiple": True,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": ["Airborne_Gxx"],
@@ -45,7 +44,9 @@ class Export(ObjectDataSelection):
     }
 
     def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
+        super().__init__()
+        self.defaults = self.update_defaults(**kwargs)
+        self.select_multiple = True
         self._file_type = Dropdown(
             options=["ESRI shapefile", "csv", "geotiff", "UBC format"],
             value="csv",
@@ -71,32 +72,14 @@ class Export(ObjectDataSelection):
         self.wkt_code.observe(self.set_authority_code, names="value")
         self.type_widget = VBox([self.file_type])
         self.projection_panel = VBox([self.epsg_code, self.wkt_code])
-
-        def update_options(_):
-            self.update_options()
-
-        self.file_type.observe(update_options)
-
-        def update_name(_):
-            self.export_as.value = [
-                key
-                for key, value in self.objects.options
-                if value == self.objects.value
-            ][0]
-
-        self.objects.observe(update_name, names="value")
-        super().__init__(**kwargs)
+        self.file_type.observe(self.update_options)
+        self.objects.observe(self.update_name, names="value")
         self.trigger.description = "Export"
-
-        def save_selection(_):
-            self.save_selection()
-
-        self.trigger.on_click(save_selection)
-
+        self.trigger.on_click(self.save_selection)
         self._main = VBox(
             [
                 self.project_panel,
-                HBox([self.main, self.no_data_value]),
+                HBox([self.data_panel, self.no_data_value]),
                 self.type_widget,
                 self.no_data_value,
                 self.export_as,
@@ -207,7 +190,7 @@ class Export(ObjectDataSelection):
         self.export_directory._set_form_values(export_path, "")
         self.export_directory._apply_selection()
 
-    def save_selection(self):
+    def save_selection(self, _):
         if self.workspace.get_entity(self.objects.value):
             entity = self.workspace.get_entity(self.objects.value)[0]
         else:
@@ -393,8 +376,12 @@ class Export(ObjectDataSelection):
             self.epsg_code.value = ""
         self.epsg_code.observe(self.set_wkt, names="value")
 
-    def update_options(self):
+    def update_name(self, _):
+        self.export_as.value = [
+            key for key, value in self.objects.options if value == self.objects.value
+        ][0]
 
+    def update_options(self, _):
         if self.file_type.value in ["ESRI shapefile"]:
             self.type_widget.children = [self.file_type, self.projection_panel]
         elif self.file_type.value in ["geotiff"]:

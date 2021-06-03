@@ -22,22 +22,18 @@ class ObjectDataSelection(BaseApplication):
     """
 
     defaults = {}
+    _add_groups = False
+    _select_multiple = False
+    _object_types = []
+    _find_label = []
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
-
         super().__init__()
-
+        self.defaults = self.update_defaults(**kwargs)
         self._objects = None
         self._data = None
-        self._add_groups = False
-        self._find_label = []
-        self._object_types = []
-        self._select_multiple = False
-
-        self.data_panel = VBox([self.objects, self.data])
-        self.update_data_list(None)
-        self._main = self.data_panel
+        self._data_panel = None
+        self._main = None
 
     @property
     def add_groups(self):
@@ -73,6 +69,26 @@ class ObjectDataSelection(BaseApplication):
             value, (Dropdown, SelectMultiple)
         ), f"'Objects' must be of type {Dropdown} or {SelectMultiple}"
         self._data = value
+
+    @property
+    def data_panel(self):
+        if getattr(self, "_data_panel", None) is None:
+            self._data_panel = VBox([self.objects, self.data])
+
+        return self._data_panel
+
+    @property
+    def main(self):
+        """
+        :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
+        """
+        self.__populate__(**self.defaults)
+
+        if self._main is None:
+            self._main = self.data_panel
+            self.update_data_list(None)
+
+        return self._main
 
     @property
     def objects(self):

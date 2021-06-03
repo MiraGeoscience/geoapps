@@ -54,10 +54,8 @@ class ScatterPlots(ObjectDataSelection):
     }
 
     def __init__(self, static=False, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
-
         super().__init__()
-
+        self.defaults = self.update_defaults(**kwargs)
         self.static = static
         self.select_multiple = True
         self._add_groups = True
