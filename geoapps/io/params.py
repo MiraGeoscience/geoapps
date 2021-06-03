@@ -69,6 +69,12 @@ class Params:
         self.workpath: str = os.path.abspath(".")
         self.validator = None
         self._input_file: InputFile = None
+        self._default_ui_json = None
+
+    @property
+    def default_ui_json(self):
+        """Dictionary of default values structured in ANALYST ui.json format"""
+        return self._default_ui_json
 
     @classmethod
     def from_input_file(cls, input_file: InputFile):
@@ -203,3 +209,27 @@ class Params:
     @property
     def input_file(self):
         return self._input_file
+
+    def write_input_file(self, name: str = None):
+        """Write out a ui.json with the current state of parameters"""
+        if getattr(self, "input_file", None) is not None:
+            input_dict = self.default_ui_json
+            if self.input_file.input_dict is not None:
+                input_dict = self.input_file.input_dict
+
+            params = {}
+            for key in self.input_file.data.keys():
+                try:
+                    value = getattr(self, key)
+                    if hasattr(value, "h5file"):
+                        value = value.h5file
+                    params[key] = value
+                except KeyError:
+                    continue
+
+            self.input_file.write_ui_json(
+                input_dict,
+                name=name,
+                param_dict=params,
+                workspace=self.workspace.h5file,
+            )

@@ -16,7 +16,6 @@ from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
-from geoapps.io.Octree.constants import default_ui_json
 from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
 from geoapps.utils.utils import string_2_list, treemesh_2_octree
@@ -28,9 +27,9 @@ class OctreeMesh(ObjectDataSelection):
     """
 
     def __init__(self, **kwargs):
-
+        super().__init__()
         self.params = OctreeParams()
-
+        self.defaults = self.update_defaults(**self.params.__dict__)
         self.object_types = [Curve, Octree, Points, Surface]
         self._u_cell_size = FloatText(
             description="Easting",
@@ -50,18 +49,14 @@ class OctreeMesh(ObjectDataSelection):
         self._vertical_padding = FloatText(
             description="Vertical (m)",
         )
-
-        self.refinements = self.params.refinements
+        self._refinements = self.params.refinements
         self.refinement_list = []
-
-        super().__init__(**self.params.__dict__)
-
         self.required = [
             self.project_panel,
             VBox(
                 [
                     Label("Base Parameters"),
-                    self._objects,
+                    self.objects,
                     self._depth_core,
                     Label("Core cell size"),
                     self._u_cell_size,
@@ -75,7 +70,7 @@ class OctreeMesh(ObjectDataSelection):
             ),
         ]
 
-        self._main = VBox(self.required + self.refinement_list + [self.output_panel])
+        self._main = None
 
         self.objects.description = "Core hull extent:"
         self.trigger.description = "Create"
@@ -119,26 +114,22 @@ class OctreeMesh(ObjectDataSelection):
                     pass
 
         self.refinement_list = []
-        for label, params in self.refinements.items():
+        for label, params in self._refinements.items():
             self.refinement_list += [self.add_refinement_widget(label, params)]
 
-    # @property
-    # def extent(self):
-    #     """
-    #     Alias of `objects` property
-    #     """
-    #     return self.objects
-    #
-    # @extent.setter
-    # def extent(self, value: Union[uuid.UUID, str]):
-    #     if isinstance(value, str):
-    #         try:
-    #             value = uuid.UUID(value)
-    #         except ValueError:
-    #             print(
-    #                 f"Extent value must be a {uuid.UUID} or a string convertible to uuid"
-    #             )
-    #     self.objects.value = value
+    @property
+    def main(self):
+        """
+        :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
+        """
+        self.__populate__(**self.defaults)
+
+        if self._main is None:
+            self._main = VBox(
+                self.required + self.refinement_list + [self.output_panel]
+            )
+
+        return self._main
 
     @property
     def u_cell_size(self):
@@ -155,10 +146,6 @@ class OctreeMesh(ObjectDataSelection):
     @property
     def depth_core(self):
         return self._depth_core
-
-    @property
-    def main(self):
-        return self._main
 
     @property
     def horizontal_padding(self):
@@ -190,21 +177,6 @@ class OctreeMesh(ObjectDataSelection):
             path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
         )
 
-    # @staticmethod
-    # def get_refinement_params(values: dict):
-    #     """
-    #     Extract refinement parameters from input ui.json
-    #     """
-    #     refinements = {}
-    #     for key, value in values.items():
-    #         if "Refinement" in key:
-    #             if value["group"] not in list(refinements.keys()):
-    #                 refinements[value["group"]] = {}
-    #
-    #             refinements[value["group"]][value["label"]] = value["value"]
-    #
-    #     return refinements
-
     def update_objects_choices(self):
         # Refresh the list of objects for all
         self.update_objects_list()
@@ -226,66 +198,62 @@ class OctreeMesh(ObjectDataSelection):
             except AttributeError:
                 continue
 
-        self.params.update_input_data()
-        self.params.write_input_file()
-        self.run(self.params.input_file.filepath)
+        self.params.write_input_file(name=self.params.ga_group_name)
+        self.run(self.params)
 
     @staticmethod
-    def run(file_name):
+    def run(params: OctreeParams) -> Octree:
         """
         Create an octree mesh from input values
         """
-        params = OctreeParams.from_path(file_name)
 
         workspace = params.workspace
-        obj = workspace.get_entity(uuid.UUID(kwargs["extent"]["value"]))
+        obj = workspace.get_entity(uuid.UUID(params.objects))
 
         if not any(obj):
             return
 
         p_d = [
             [
-                kwargs["horizontal_padding"]["value"],
-                kwargs["horizontal_padding"]["value"],
+                params.horizontal_padding,
+                params.horizontal_padding,
             ],
             [
-                kwargs["horizontal_padding"]["value"],
-                kwargs["horizontal_padding"]["value"],
+                params.horizontal_padding,
+                params.horizontal_padding,
             ],
-            [kwargs["vertical_padding"]["value"], kwargs["vertical_padding"]["value"]],
+            [params.vertical_padding, params.vertical_padding],
         ]
 
         print("Setting the mesh extent")
         treemesh = mesh_builder_xyz(
             obj[0].vertices,
             [
-                kwargs["u_cell_size"]["value"],
-                kwargs["v_cell_size"]["value"],
-                kwargs["w_cell_size"]["value"],
+                params.u_cell_size,
+                params.v_cell_size,
+                params.w_cell_size,
             ],
             padding_distance=p_d,
             mesh_type="tree",
-            depth_core=kwargs["depth_core"]["value"],
+            depth_core=params.depth_core,
         )
 
-        # Extract refinement
-        refinements = OctreeMesh.get_refinement_params(kwargs)
+        for label, value in params.refinements.items():
 
-        for label, value in refinements.items():
-            print(f"Applying refinement {label}")
             try:
-                print(value["Object"])
-                entity = workspace.get_entity(uuid.UUID(value["Object"]))
+                entity = workspace.get_entity(uuid.UUID(value["object"]))
+
             except (ValueError, TypeError):
                 continue
 
             if any(entity):
+                print(f"Applying refinement {label} on: {entity[0].name}")
                 treemesh = refine_tree_xyz(
                     treemesh,
                     entity[0].vertices,
-                    method=value["Type"],
-                    octree_levels=string_2_list(value["Levels"]),
-                    max_distance=value["Max Distance"],
+                    method=value["type"],
+                    octree_levels=value["levels"],
+                    max_distance=value["distance"],
                     finalize=False,
                 )
 
@@ -293,14 +261,12 @@ class OctreeMesh(ObjectDataSelection):
         treemesh.finalize()
 
         print("Writing to file ")
-        octree = treemesh_2_octree(
-            workspace, treemesh, name=kwargs["ga_group_name"]["value"]
-        )
+        octree = treemesh_2_octree(workspace, treemesh, name=params.ga_group_name)
 
-        if kwargs["monitoring_directory"] != "" and path.exists(
-            kwargs["monitoring_directory"]
+        if params.monitoring_directory is not None and path.exists(
+            params.monitoring_directory
         ):
-            BaseApplication.live_link_output(kwargs["monitoring_directory"], octree)
+            BaseApplication.live_link_output(params.monitoring_directory, octree)
 
         print(
             f"Octree mesh '{octree.name}' completed and exported to {workspace.h5file}"
@@ -365,8 +331,5 @@ class OctreeMesh(ObjectDataSelection):
 
 
 if __name__ == "__main__":
-    # with open(sys.argv[1]) as f:
-    #     input_dict = json.load(f)
-
-    # input_params = load_json_params()
-    OctreeMesh.run(sys.argv[1])
+    params = OctreeParams.from_path(sys.argv[1])
+    OctreeMesh.run(params)

@@ -101,16 +101,16 @@ class MVIParams(Params):
         self.out_group = None
         self.no_data_value = None
         self._input_file = InputFile()
-
+        self._default_ui_json = default_ui_json
         self._set_defaults()
 
     def _set_defaults(self) -> None:
         """ Wraps Params._set_defaults """
-        return super()._set_defaults(default_ui_json)
+        return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
         """ Wraps Params.default. """
-        return super().default(default_ui_json, param)
+        return super().default(self.default_ui_json, param)
 
     def components(self) -> List[str]:
         """ Retrieve component names used to index channel, uncertainty data. """
