@@ -25,7 +25,7 @@ def test_initialize():
     assert len(np.unique(starting_model.model)) == 3
 
 
-def test_model_object():
+def test_model_from_object():
     p = deepcopy(params)
     inversion_mesh = InversionMesh(params, ws)
     cc = inversion_mesh.mesh.cell_centers[0].reshape(1, 3)
@@ -37,3 +37,4 @@ def test_model_object():
     params.lower_bound = data_object.uid
     lower_bound = InversionModel(inversion_mesh, "lower_bound", params, ws)
     assert np.all((lower_bound.model - 3) < 1e-10)
+    assert len(lower_bound.model) == inversion_mesh.nC
