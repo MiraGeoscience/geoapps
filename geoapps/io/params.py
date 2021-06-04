@@ -14,12 +14,12 @@ from geoh5py.workspace import Workspace
 from .input_file import InputFile
 from .validators import InputValidator
 
-required_parameters = ["workspace", "output_geoh5"]
+required_parameters = ["workspace", "geoh5"]
 validations = {
     "workspace": {
         "types": [str, Workspace],
     },
-    "output_geoh5": {
+    "geoh5": {
         "types": [str, Workspace],
     },
 }
@@ -32,9 +32,9 @@ class Params:
     Attributes
     ----------
     workspace :
-        Path to geoh5py workspace object.
-    output_geoh5:
-        Path to geoh5py results workspace object.
+        Path to geoh5 file workspace object.
+    geoh5:
+        Path to geoh5 file results workspace object.
     workpath :
         Path to working directory.
     validator :
@@ -65,7 +65,7 @@ class Params:
     def __init__(self):
         self.associations: Dict[Union[str, UUID], Union[str, UUID]] = None
         self.workspace: Workspace = None
-        self.output_geoh5: str = None
+        self.geoh5: str = None
         self.workpath: str = os.path.abspath(".")
         self.validator = None
         self._input_file: InputFile = None
@@ -77,7 +77,7 @@ class Params:
         return self._default_ui_json
 
     @classmethod
-    def from_input_file(cls, input_file: InputFile):
+    def from_input_file(cls, input_file: InputFile) -> "Params":
         """Construct Params object from InputFile instance.
 
         Parameters
@@ -97,7 +97,7 @@ class Params:
         return p
 
     @classmethod
-    def from_path(cls, file_path: str) -> None:
+    def from_path(cls, file_path: str) -> "Params":
         """
         Construct Params object from path to input file.
 
@@ -110,7 +110,7 @@ class Params:
         p = cls.from_input_file(input_file)
         return p
 
-    def _init_from_dict(self, ui_json: dict) -> None:
+    def init_from_dict(self, ui_json: dict) -> None:
         """
         Construct Params object from a dictionary.
 
@@ -141,17 +141,17 @@ class Params:
         """ Overrides default parameter values with input file values. """
 
         self.workspace = Workspace(inputfile.data["geoh5"])
-        if inputfile.data["output_geoh5"] is None:
-            self.output_geoh5 = self.workspace
+        if inputfile.data["geoh5"] is None:
+            self.geoh5 = self.workspace
         else:
-            self.output_geoh5 = Workspace(inputfile.data["output_geoh5"])
+            self.geoh5 = Workspace(inputfile.data["geoh5"])
 
         self.validator.workspace = self.workspace
         self.validator.input = inputfile
 
         for param, value in inputfile.data.items():
             try:
-                if param in ["workspace", "output_geoh5"]:
+                if param in ["workspace", "geoh5"]:
                     continue
                 self.__setattr__(param, value)
             except KeyError:
@@ -194,17 +194,17 @@ class Params:
             self._workspace = val
 
     @property
-    def output_geoh5(self):
-        return self._output_geoh5
+    def geoh5(self):
+        return self._geoh5
 
-    @output_geoh5.setter
-    def output_geoh5(self, val):
+    @geoh5.setter
+    def geoh5(self, val):
         if val is None:
-            self._output_geoh5 = val
+            self._geoh5 = val
             return
-        p = "output_geoh5"
+        p = "geoh5"
         self.validator.validate(p, val, validations[p])
-        self._output_geoh5 = val
+        self._geoh5 = val
 
     @property
     def input_file(self):

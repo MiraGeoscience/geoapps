@@ -38,8 +38,8 @@ class OctreeParams(Params):
         self.conda_environment = None
         self.conda_environment_boolean = None
         self._refinements = None
+        self._input_file = InputFile()
         self._default_ui_json = default_ui_json
-        self._init_from_dict(default_ui_json)
 
     @property
     def objects(self):

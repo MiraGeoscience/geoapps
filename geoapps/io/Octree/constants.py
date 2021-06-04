@@ -156,13 +156,6 @@ default_ui_json = {
     "run_command": ("geoapps.create.octree_mesh"),
     "monitoring_directory": "",
     "conda_environment": "geoapps",
-    "output_geoh5": {
-        "default": None,
-        "visible": False,
-        "enabled": False,
-        "label": "path to results geoh5py file",
-        "value": None,
-    },
 }
 
 required_parameters = []
@@ -217,9 +210,6 @@ validations = {
         "types": [str, Workspace],
     },
     "geoh5": {
-        "types": [str, Workspace],
-    },
-    "output_geoh5": {
         "types": [str, Workspace],
     },
     "run_command": {
