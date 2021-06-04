@@ -12,12 +12,30 @@ from SimPEG.utils.mat_utils import dip_azimuth2cartesian, mkvc
 
 from geoapps.utils import weighted_average
 
+from . import InversionMesh
+
 
 class InversionModel:
+    """
+    A class for constructing and storing models defined on the cell centers of an inversion mesh.
+
+    Parameters
+    ----------
+
+    inversion_mesh :
+
+
+    """
 
     model_types = ["starting", "reference", "lower_bound", "upper_bound"]
 
-    def __init__(self, inversion_mesh, model_type, params, workspace):
+    def __init__(
+        self,
+        inversion_mesh: InversionMesh,
+        model_type: str,
+        params: Params,
+        workspace: Workspace,
+    ):
         self.inversion_mesh = inversion_mesh
         self.model_type = model_type
         self.params = params
@@ -27,7 +45,11 @@ class InversionModel:
         self._initialize()
 
     def _initialize(self):
-        """ Build the model vector from params data. """
+        """
+        Build the model vector from params data.
+
+
+        """
 
         self.vector = True if self.params.inversion_type == "mvi" else False
 
