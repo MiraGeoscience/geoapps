@@ -5,11 +5,14 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
 from uuid import UUID
 
 import numpy as np
+from geoh5py.workspace import Workspace
 from SimPEG.utils.mat_utils import dip_azimuth2cartesian, mkvc
 
+from geoapps.io import Params
 from geoapps.utils import weighted_average
 
 from . import InversionMesh
