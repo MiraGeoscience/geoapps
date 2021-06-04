@@ -12,8 +12,8 @@ from geoh5py.workspace import Workspace
 from geoapps.drivers.components import InversionMesh
 from geoapps.io.MVI import MVIParams
 
-ws = Workspace("../assets/FlinFlon.geoh5")
-# ws = Workspace("./FlinFlon.geoh5")
+# ws = Workspace("../assets/FlinFlon.geoh5")
+ws = Workspace("./FlinFlon.geoh5")
 
 params = MVIParams.from_path("../assets/mvi_inversion_driver.ui.json")
 
