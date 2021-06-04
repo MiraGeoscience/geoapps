@@ -26,9 +26,15 @@ class OctreeMesh(ObjectDataSelection):
     Widget used for the creation of an octree meshes
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, ui_json=None):
         super().__init__()
-        self.params = OctreeParams()
+
+        if ui_json is not None and path.exists(ui_json):
+            self.params = OctreeParams.from_path(ui_json)
+        else:
+            self.params = OctreeParams()
+            self.params.init_from_dict(self.params.default_ui_json)
+
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.object_types = [Curve, Octree, Points, Surface]
         self._u_cell_size = FloatText(
@@ -75,6 +81,7 @@ class OctreeMesh(ObjectDataSelection):
         self.objects.description = "Core hull extent:"
         self.trigger.description = "Create"
         self.ga_group_name.description = "Name:"
+        self.ga_group_name.observe(self.update_output_name, names="value")
         self.trigger.on_click(self.trigger_click)
 
         for obj in self.__dict__:
@@ -184,19 +191,24 @@ class OctreeMesh(ObjectDataSelection):
         for widget in self.refinement_list:
             widget.children[1].options = self.objects.options
 
-    def trigger_click(self, _):
+    def update_output_name(self, _):
+        self.params.ga_group_name = self.ga_group_name.value
 
-        # params = self.save_json_params(self.ga_group_name.value, self.default_ui.copy())
+    def trigger_click(self, _):
         for key, value in self.__dict__.items():
             try:
                 if isinstance(getattr(self, key), Widget):
-                    value = getattr(self, key).value
-                    if isinstance(value, uuid.UUID):
-                        value = str(value)
-
-                    setattr(self.params, key, value)
+                    setattr(self.params, key, getattr(self, key).value)
             except AttributeError:
                 continue
+
+        for refinement, params_refinement in zip(
+            self.refinement_list, self.params.refinements.values()
+        ):
+            params_refinement["object"] = refinement.children[1].value
+            params_refinement["levels"] = string_2_list(refinement.children[2].value)
+            params_refinement["type"] = refinement.children[3].value
+            params_refinement["distance"] = refinement.children[4].value
 
         self.params.write_input_file(name=self.params.ga_group_name)
         self.run(self.params)
@@ -208,7 +220,7 @@ class OctreeMesh(ObjectDataSelection):
         """
 
         workspace = params.workspace
-        obj = workspace.get_entity(uuid.UUID(params.objects))
+        obj = workspace.get_entity(params.objects)
 
         if not any(obj):
             return
@@ -241,7 +253,12 @@ class OctreeMesh(ObjectDataSelection):
         for label, value in params.refinements.items():
 
             try:
-                entity = workspace.get_entity(uuid.UUID(value["object"]))
+                uid = (
+                    uuid.UUID(value["object"])
+                    if isinstance(value["object"], str)
+                    else value["object"]
+                )
+                entity = workspace.get_entity(uid)
 
             except (ValueError, TypeError):
                 continue
@@ -332,4 +349,5 @@ class OctreeMesh(ObjectDataSelection):
 
 if __name__ == "__main__":
     params = OctreeParams.from_path(sys.argv[1])
+    print(params.geoh5)
     OctreeMesh.run(params)

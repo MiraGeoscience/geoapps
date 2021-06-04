@@ -25,7 +25,7 @@ class OctreeValidator(InputValidator):
         input=None,
     ):
         super().__init__(requirements, validations, workspace=workspace, input=input)
-        self.refinements = None
+        self.refinements = {}
 
     def validate_input(self, input) -> None:
         """

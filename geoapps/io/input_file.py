@@ -224,17 +224,20 @@ class InputFile:
 
         # map [...] to "[...]"
         excl = ["choiceList", "meshType"]
-        l2s = lambda k, v: str(v)[1:-1] if isinstance(v, list) & (k not in excl) else v
-        n2s = lambda k, v: "" if v is None else v  # map None to ""
+        list2str = (
+            lambda k, v: str(v)[1:-1] if isinstance(v, list) & (k not in excl) else v
+        )
+        uuid2str = lambda k, v: str(v) if isinstance(v, UUID) else v
+        none2str = lambda k, v: "" if v is None else v  # map None to ""
 
-        def i2s(k, v):  # map np.inf to "inf"
+        def inf2str(k, v):  # map np.inf to "inf"
             if not isinstance(v, (int, float)):
                 return v
             else:
                 return str(v) if not np.isfinite(v) else v
 
         for k, v in d.items():
-            v = self._dict_mapper(k, v, [l2s, n2s, i2s])
+            v = self._dict_mapper(k, v, [list2str, none2str, inf2str, uuid2str])
             d[k] = v
 
         return d

@@ -283,17 +283,6 @@ class BaseApplication:
         return self._ga_group_name
 
     @property
-    def geoh5(self):
-        """
-        Mirror of h5file
-        """
-        return self.h5file
-
-    @geoh5.setter
-    def geoh5(self, value):
-        self.h5file = value
-
-    @property
     def h5file(self):
         """
         :obj:`str`: Target geoh5 project file.
