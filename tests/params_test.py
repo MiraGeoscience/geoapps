@@ -955,7 +955,7 @@ def test_validate_lower_bound(tmp_path):
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "test", "type")
+    catch_invalid_generator(tmp_path, param, {}, "type")
 
 
 def test_validate_upper_bound(tmp_path):
@@ -966,7 +966,7 @@ def test_validate_upper_bound(tmp_path):
     ### test ordinary behaviour ###
     param_test_generator(tmp_path, param, newval)
     ### test validation behaviour ###
-    catch_invalid_generator(tmp_path, param, "test", "type")
+    catch_invalid_generator(tmp_path, param, {}, "type")
 
 
 def test_validate_parallelized(tmp_path):
