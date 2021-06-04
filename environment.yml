@@ -7,7 +7,6 @@ dependencies:
   - pip
   - git
   - discretize
-  - simpeg
   - numpy
   - scipy
   - matplotlib
@@ -29,4 +28,3 @@ dependencies:
   - pip:
     - git+https://github.com/MiraGeoscience/simpeg.git@feature/tiled-simulations
     - geoh5py==0.1.2
-    - git+https://github.com/simpeg/simpeg.git@tiled-simulations
