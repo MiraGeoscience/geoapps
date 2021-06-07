@@ -55,9 +55,10 @@ class DataInterpolation(ObjectDataSelection):
         },
     }
 
+    _select_multiple = True
+
     def __init__(self, use_defaults=True, **kwargs):
-        super().__init__()
-        self.select_multiple = True
+
         if use_defaults:
             self.defaults = self.update_defaults(**kwargs)
 
@@ -119,24 +120,12 @@ class DataInterpolation(ObjectDataSelection):
                 self.expansion_fact,
             ]
         )
-
         self.method.observe(self.method_update)
         self.out_mode.observe(self.out_update)
 
         def interpolate_call(_):
             self.interpolate_call()
             self.update_objects_choices()
-
-        self.trigger.on_click(interpolate_call)
-        self.trigger.description = "Interpolate"
-        self._topography = TopographyOptions()
-        self.topography.offset.disabled = True
-        self.topography.options.options = ["None", "Object", "Constant"]
-
-        if getattr(self, "_workspace", None) is not None:
-            self.topography.workspace = self._workspace
-            if "topography" in kwargs.keys():
-                self.topography.__populate__(**kwargs["topography"])
 
         self.parameter_choices = Dropdown(
             description="Interpolation Parameters",
@@ -165,19 +154,16 @@ class DataInterpolation(ObjectDataSelection):
         self.ga_group_name.description = "Output Label:"
         self.ga_group_name.value = "_Interp"
         self.parameter_choices.observe(self.parameter_change)
-        self._main = VBox(
-            [
-                self.project_panel,
-                HBox(
-                    [
-                        VBox([Label("Source"), self.data_panel]),
-                        VBox([Label("Destination"), self.destination_panel]),
-                    ]
-                ),
-                self.parameter_panel,
-                self.output_panel,
-            ]
+
+        super().__init__(**self.defaults)
+
+        self.trigger.on_click(interpolate_call)
+        self.trigger.description = "Interpolate"
+        self._topography = TopographyOptions(
+            workspace=self.workspace, **self.defaults["topography"]
         )
+        self.topography.offset.disabled = True
+        self.topography.options.options = ["None", "Object", "Constant"]
 
     @property
     def core_cell_size(self):
@@ -199,6 +185,24 @@ class DataInterpolation(ObjectDataSelection):
         :obj:`ipywidgets.FloatText()`
         """
         return self._expansion_fact
+
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox(
+                [
+                    self.project_panel,
+                    HBox(
+                        [
+                            VBox([Label("Source"), self.data_panel]),
+                            VBox([Label("Destination"), self.destination_panel]),
+                        ]
+                    ),
+                    self.parameter_panel,
+                    self.output_panel,
+                ]
+            )
+        return self._main
 
     @property
     def max_distance(self):
