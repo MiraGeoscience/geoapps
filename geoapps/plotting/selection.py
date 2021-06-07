@@ -29,9 +29,12 @@ class PlotSelection2D(ObjectDataSelection):
     }
 
     def __init__(self, **kwargs):
+        super().__init__()
+        self.defaults = self.update_defaults(**kwargs)
         self.figure = None
         self.axis = None
         self.indices = None
+        self.highlight_selection = None
         self.collections = []
         self._azimuth = FloatSlider(
             min=-90,
@@ -56,6 +59,7 @@ class PlotSelection2D(ObjectDataSelection):
             continuous_update=False,
             orientation="vertical",
         )
+        self._colorbar = widgets.Checkbox(description="Colorbar")
         self._contours = widgets.Text(
             value="",
             description="Contours",
@@ -88,17 +92,7 @@ class PlotSelection2D(ObjectDataSelection):
             description="Zoom on selection",
             icon="check",
         )
-
-        def set_bounding_box(_):
-            self.set_bounding_box()
-
-        self.highlight_selection = None
-
-        super().__init__(**self.apply_defaults(**kwargs))
-
-        self.objects.observe(set_bounding_box, names="value")
-        self.set_bounding_box()
-
+        self.objects.observe(self.set_bounding_box, names="value")
         self.window_plot = widgets.interactive_output(
             self.plot_selection,
             {
@@ -112,9 +106,9 @@ class PlotSelection2D(ObjectDataSelection):
                 "zoom_extent": self.zoom_extent,
                 "contours": self.contours,
                 "refresh": self.refresh,
+                "colorbar": self.colorbar,
             },
         )
-
         self.window_selection = VBox(
             [
                 VBox([self.resolution, self.data_count]),
@@ -128,7 +122,7 @@ class PlotSelection2D(ObjectDataSelection):
                                 self.center_x,
                                 self.window_plot,
                                 self.azimuth,
-                                self.zoom_extent,
+                                HBox([self.zoom_extent, self.colorbar]),
                             ]
                         ),
                     ],
@@ -136,12 +130,7 @@ class PlotSelection2D(ObjectDataSelection):
                 ),
             ]
         )
-        self._main = VBox([self.main, self.window_selection])
-
-        if "window" in kwargs.keys():
-            self.refresh.value = False
-            self.__populate__(**kwargs["window"])
-            self.refresh.value = True
+        self._main = VBox([self.project_panel, self.data_panel, self.window_selection])
 
     @property
     def azimuth(self):
@@ -163,6 +152,13 @@ class PlotSelection2D(ObjectDataSelection):
         :obj:`ipywidgets.FloatSlider`: Northing position of the selection box.
         """
         return self._center_y
+
+    @property
+    def colorbar(self):
+        """
+        :obj:`ipywidgets.widgets.Checkbox` Display the colorbar.
+        """
+        return self._colorbar
 
     @property
     def contours(self):
@@ -187,6 +183,15 @@ class PlotSelection2D(ObjectDataSelection):
         :obj:`ipywidgets.FloatSlider`: Height (m) of the selection box
         """
         return self._height
+
+    @property
+    def main(self):
+        """
+        :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
+        """
+        self.__populate__(**self.defaults)
+        self.set_bounding_box(None)
+        return self._main
 
     @property
     def resolution(self):
@@ -221,6 +226,7 @@ class PlotSelection2D(ObjectDataSelection):
         zoom_extent,
         contours,
         refresh,
+        colorbar,
     ):
         if not refresh:
             return
@@ -277,6 +283,7 @@ class PlotSelection2D(ObjectDataSelection):
                     "contours": contours,
                     "highlight_selection": self.highlight_selection,
                     "collections": self.collections,
+                    "colorbar": colorbar,
                 },
             )
 
@@ -284,7 +291,7 @@ class PlotSelection2D(ObjectDataSelection):
             self.contours.contour_set = contour_set
             self.data_count.value = f"Data Count: {ind_filter.sum()}"
 
-    def set_bounding_box(self):
+    def set_bounding_box(self, _):
         # Fetch vertices in the project
         lim_x = [1e8, -1e8]
         lim_y = [1e8, -1e8]

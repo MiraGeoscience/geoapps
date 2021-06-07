@@ -31,28 +31,18 @@ class ContourValues(PlotSelection2D):
     }
 
     def __init__(self, **kwargs):
-
-        kwargs = self.apply_defaults(**kwargs)
-        self._contours = Text(
-            value="", description="Contours", disabled=False, continuous_update=False
-        )
+        super().__init__()
+        self.defaults = self.update_defaults(**kwargs)
         self._export_as = Text(value="Contours")
-
         self._z_value = Checkbox(
             value=False, indent=False, description="Assign Z from values"
         )
-
-        super().__init__(**kwargs)
-
         out = interactive_output(
             self.compute_plot,
             {
                 "contour_values": self.contours,
             },
         )
-
-        # self.export_as.observe(save_selection, names="value")
-        self.data_panel = VBox([self.objects, self.data])
         self._main = VBox(
             [
                 self.project_panel,
@@ -80,23 +70,10 @@ class ContourValues(PlotSelection2D):
                 out,
             ]
         )
-
-        def save_selection(_):
-            self.save_selection()
-
-        self.trigger.on_click(save_selection)
+        self.trigger.on_click(self.save_selection)
         self.trigger.description = "Export to GA"
         self.trigger.button_style = "danger"
-
-        def update_name(_):
-            self.update_name()
-
-        self.data.observe(update_name, names="value")
-        self.update_name()
-        #
-        # for key in self.__dict__:
-        #     if isinstance(getattr(self, key, None), Widget):
-        #         getattr(self, key, None).observe(save_selection, names="value")
+        self.data.observe(self.update_name, names="value")
 
     @property
     def contours(self):
@@ -129,6 +106,15 @@ class ContourValues(PlotSelection2D):
         """
         return self._z_value
 
+    @property
+    def main(self):
+        """
+        :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
+        """
+        self.__populate__(**self.defaults)
+        self.update_name(None)
+        return self._main
+
     def compute_plot(self, contour_values):
         """
         Get current selection and trigger update
@@ -138,7 +124,6 @@ class ContourValues(PlotSelection2D):
             return
         if contour_values is not None:
             self.contours.value = contour_values
-        # self.save_selection()
 
     def update_contours(self):
         """
@@ -147,13 +132,13 @@ class ContourValues(PlotSelection2D):
         if self.data.value is not None:
             self.export_as.value = self.data.value + "_" + self.contours.value
 
-    def update_name(self):
+    def update_name(self, _):
         if self.data.value is not None:
             self.export_as.value = self.data.value
         else:
             self.export_as.value = "Contours"
 
-    def save_selection(self):
+    def save_selection(self, _):
         entity, _ = self.get_selected_entities()
 
         if getattr(self.contours, "contour_set", None) is not None:

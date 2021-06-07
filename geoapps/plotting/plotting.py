@@ -98,7 +98,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
         data.values[0], str
     ):
         values = np.asarray(data.values, dtype=float).copy()
-        values[(values > 1e-18) * (values < 2e-18)] = np.nan
         values[values == -99999] = np.nan
 
     color_norm = None
@@ -215,10 +214,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
         axis.set_xlim([x.min() - width * 0.1, x.max() + width * 0.1])
         axis.set_ylim([y.min() - height * 0.1, y.max() + height * 0.1])
 
-    if (
-        "colorbar" in kwargs.keys()
-        and values[~np.isnan(values)].min() != values[~np.isnan(values)].max()
-    ):
+    if "colorbar" in kwargs.keys() and kwargs["colorbar"]:
         plt.colorbar(out, ax=axis)
 
     line_selection = np.zeros_like(indices, dtype=bool)
