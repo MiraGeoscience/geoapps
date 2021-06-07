@@ -32,7 +32,6 @@ class DataInterpolation(ObjectDataSelection):
     """
 
     defaults = {
-        "select_multiple": True,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         "data": ["Iteration_7_model"],
@@ -57,9 +56,10 @@ class DataInterpolation(ObjectDataSelection):
     }
 
     def __init__(self, use_defaults=True, **kwargs):
-
+        super().__init__()
+        self.select_multiple = True
         if use_defaults:
-            kwargs = self.apply_defaults(**kwargs)
+            self.defaults = self.update_defaults(**kwargs)
 
         self._core_cell_size = Text(
             description="Smallest cells",
@@ -123,8 +123,6 @@ class DataInterpolation(ObjectDataSelection):
         self.method.observe(self.method_update)
         self.out_mode.observe(self.out_update)
 
-        super().__init__(**kwargs)
-
         def interpolate_call(_):
             self.interpolate_call()
             self.update_objects_choices()
@@ -163,7 +161,6 @@ class DataInterpolation(ObjectDataSelection):
             "Vertical Extent": VBox([self.topography.main, self.max_depth]),
             "No-data-value": self.no_data_value,
         }
-
         self.parameter_panel = HBox([self.parameter_choices, self.method_panel])
         self.ga_group_name.description = "Output Label:"
         self.ga_group_name.value = "_Interp"
@@ -173,7 +170,7 @@ class DataInterpolation(ObjectDataSelection):
                 self.project_panel,
                 HBox(
                     [
-                        VBox([Label("Source"), self.main]),
+                        VBox([Label("Source"), self.data_panel]),
                         VBox([Label("Destination"), self.destination_panel]),
                     ]
                 ),
