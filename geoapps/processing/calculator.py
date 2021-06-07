@@ -25,20 +25,16 @@ class Calculator(ObjectDataSelection):
     }
 
     def __init__(self, **kwargs):
-
-        kwargs = self.apply_defaults(**kwargs)
+        super().__init__()
+        self.defaults = self.update_defaults(**kwargs)
         self.var = {}
         self.select_multiple = True
         self._channel = Text(description="Name: ")
         self._equation = Textarea(layout=Layout(width="75%"))
         self._use = Button(description=">> Add Variable >>")
         self.use.on_click(self.click_use)
-
-        super().__init__(**kwargs)
-
         self.trigger.on_click(self.click_trigger)
-
-        self.data_panel = VBox([self.objects, HBox([self.data, self.use])])
+        self._data_panel = VBox([self.objects, HBox([self.data, self.use])])
         self.output_panel = VBox([self.trigger, self.live_link_panel])
         self._main = VBox(
             [
