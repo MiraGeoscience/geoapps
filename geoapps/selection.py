@@ -22,18 +22,17 @@ class ObjectDataSelection(BaseApplication):
     """
 
     defaults = {}
+    _data = None
+    _objects = None
     _add_groups = False
     _select_multiple = False
     _object_types = []
     _find_label = []
 
     def __init__(self, **kwargs):
-        super().__init__()
-        self.defaults = self.update_defaults(**kwargs)
-        self._objects = None
-        self._data = None
         self._data_panel = None
-        self._main = None
+
+        super().__init__(**kwargs)
 
     @property
     def add_groups(self):
@@ -61,6 +60,9 @@ class ObjectDataSelection(BaseApplication):
                 self._data = Dropdown(
                     description="Data: ",
                 )
+            if self._objects is not None:
+                self.update_data_list(None)
+
         return self._data
 
     @data.setter
@@ -310,19 +312,15 @@ class LineOptions(ObjectDataSelection):
     defaults = {"find_label": "line"}
 
     def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
+        super().__init__()
+        self.defaults = self.update_defaults(**kwargs)
 
         self._multiple_lines = None
-
-        super().__init__(**kwargs)
 
         if "objects" in kwargs.keys() and isinstance(kwargs["objects"], Dropdown):
             self._objects.observe(self.update_data_list, names="value")
 
         self._data.observe(self.update_line_list, names="value")
-        self.update_data_list(None)
-        self.update_line_list(None)
-
         self._main = VBox([self._data, self.lines])
         self._data.description = "Lines field"
 
@@ -372,23 +370,21 @@ class TopographyOptions(ObjectDataSelection):
     """
 
     def __init__(self, **kwargs):
+        super().__init__()
+        self.defaults = self.update_defaults(**kwargs)
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
         self._offset = FloatText(description="Vertical offset (+ve up)")
         self._constant = FloatText(
             description="Elevation (m)",
         )
-
-        super().__init__(**kwargs)
-
-        self.objects.value = utils.find_value(self.objects.options, self.find_label)
         self.option_list = {
-            "Object": self.main,
-            "Relative to Sensor": self.offset,
-            "Constant": self.constant,
+            "Object": self._data_panel,
+            "Relative to Sensor": self._offset,
+            "Constant": self._constant,
             "None": widgets.Label("No topography"),
         }
         self._options = widgets.RadioButtons(
-            options=["Object", "Relative to Sensor", "Constant"],
+            options=["None", "Object", "Relative to Sensor", "Constant"],
             description="Define by:",
         )
         self.options.observe(self.update_options)

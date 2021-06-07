@@ -25,8 +25,6 @@ class Surface2D(ObjectDataSelection):
     """
 
     defaults = {
-        "add_groups": "only",
-        "select_multiple": True,
         "object_types": Curve,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
@@ -34,13 +32,13 @@ class Surface2D(ObjectDataSelection):
         "max_distance": 250,
         "elevations": {"data": "ELEV"},
         "lines": {"data": "Line"},
+        "topography": {},
     }
 
+    _add_groups = "only"
+    _select_multiple = True
+
     def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
-        self._lines = ObjectDataSelection(add_groups=True, find_value=["line"])
-        self._topography = TopographyOptions()
-        self._elevations = ObjectDataSelection(add_groups="only")
         self._z_option = RadioButtons(
             options=["elevation", "depth"],
             description="Vertical Reference:",
@@ -60,45 +58,32 @@ class Surface2D(ObjectDataSelection):
 
         super().__init__(**kwargs)
 
-        self.ga_group_name.value = "CDI"
-        if "lines" in kwargs.keys():
-            self.lines.__populate__(**kwargs["lines"])
-        if "topography" in kwargs.keys():
-            self.topography.__populate__(**kwargs["topography"])
-        if "elevations" in kwargs.keys():
-            self.elevations.__populate__(**kwargs["elevations"])
+        self._lines = ObjectDataSelection(
+            add_groups=False,
+            workspace=self.workspace,
+            objects=self.objects,
+            ind_value=["line"],
+            **self.defaults["lines"],
+        )
+        self._topography = TopographyOptions(
+            workspace=self.workspace, **self.defaults["topography"]
+        )
+        self._elevations = ObjectDataSelection(
+            add_groups="only",
+            workspace=self.workspace,
+            objects=self.objects,
+            **self.defaults["elevations"],
+        )
 
+        self.ga_group_name.value = "CDI"
         self.lines.data.description = "Line field:"
         self.elevations.data.description = "Elevations:"
         self.type.observe(self.type_change, names="value")
         self.data.observe(self.data_change, names="value")
-        self.data_change(None)
         self.data.description = "Model fields: "
-
-        def z_options_change(_):
-            self.z_options_change()
-
-        self.z_option.observe(z_options_change)
+        self.z_option.observe(self.z_options_change, names="value")
         self.depth_panel = HBox([self.z_option, self.elevations.data])
-        self.data_panel = self.main
         self.trigger.on_click(self.compute_trigger)
-        self._main = HBox(
-            [
-                VBox(
-                    [
-                        self.project_panel,
-                        self.data_panel,
-                        self.type,
-                        self.depth_panel,
-                        self.lines.data,
-                        self.max_distance,
-                        Label("Output"),
-                        self.export_as,
-                        self.output_panel,
-                    ]
-                )
-            ]
-        )
 
     def compute_trigger(self, _):
 
@@ -355,7 +340,7 @@ class Surface2D(ObjectDataSelection):
         if self.data.value:
             self.export_as.value = self.data.value[0] + "_surface"
 
-    def z_options_change(self):
+    def z_options_change(self, _):
         if self.z_option.value == "depth":
             self.elevations.data.description = "Depth:"
             self.depth_panel.children = [
@@ -408,6 +393,28 @@ class Surface2D(ObjectDataSelection):
         return self._max_distance
 
     @property
+    def main(self):
+        if self._main is None:
+            self._main = HBox(
+                [
+                    VBox(
+                        [
+                            self.project_panel,
+                            self.data_panel,
+                            self.type,
+                            self.depth_panel,
+                            self.lines.data,
+                            self.max_distance,
+                            Label("Output"),
+                            self.export_as,
+                            self.output_panel,
+                        ]
+                    )
+                ]
+            )
+        return self._main
+
+    @property
     def export_as(self):
         """
         ipywidgets.Text()
@@ -449,15 +456,13 @@ class Surface2D(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
+        print("Setting workspace")
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
         self._h5file = workspace.h5file
 
         # Refresh the list of objects
         self.update_objects_list()
-
-        self.lines.objects = self.objects
-        self.elevations.objects = self.objects
 
         self.lines.workspace = workspace
         self.elevations.workspace = workspace
