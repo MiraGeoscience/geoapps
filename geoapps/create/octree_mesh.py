@@ -26,8 +26,9 @@ class OctreeMesh(ObjectDataSelection):
     Widget used for the creation of an octree meshes
     """
 
+    _object_types = (Curve, Octree, Points, Surface)
+
     def __init__(self, ui_json=None):
-        super().__init__()
 
         if ui_json is not None and path.exists(ui_json):
             self.params = OctreeParams.from_path(ui_json)
@@ -36,7 +37,7 @@ class OctreeMesh(ObjectDataSelection):
             self.params.init_from_dict(self.params.default_ui_json)
 
         self.defaults = self.update_defaults(**self.params.__dict__)
-        self.object_types = [Curve, Octree, Points, Surface]
+
         self._u_cell_size = FloatText(
             description="Easting",
         )
@@ -57,6 +58,9 @@ class OctreeMesh(ObjectDataSelection):
         )
         self._refinements = self.params.refinements
         self.refinement_list = []
+
+        super().__init__(**self.defaults)
+
         self.required = [
             self.project_panel,
             VBox(
@@ -69,14 +73,12 @@ class OctreeMesh(ObjectDataSelection):
                     self._v_cell_size,
                     self._w_cell_size,
                     Label("Padding distance"),
-                    self.horizontal_padding,
-                    self.vertical_padding,
+                    self._horizontal_padding,
+                    self._vertical_padding,
                 ],
                 layout=Layout(border="solid"),
             ),
         ]
-
-        self._main = None
 
         self.objects.description = "Core hull extent:"
         self.trigger.description = "Create"
@@ -129,8 +131,6 @@ class OctreeMesh(ObjectDataSelection):
         """
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
         """
-        self.__populate__(**self.defaults)
-
         if self._main is None:
             self._main = VBox(
                 self.required + self.refinement_list + [self.output_panel]
