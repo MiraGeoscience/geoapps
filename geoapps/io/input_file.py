@@ -78,6 +78,8 @@ class InputFile:
             else:
                 self.data[k] = v
 
+            self.is_loaded = True
+
     def write_ui_json(
         self,
         default_ui: Dict[str, Any],

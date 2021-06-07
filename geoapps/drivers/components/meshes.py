@@ -5,26 +5,50 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from uuid import UUID
+from typing import List
 
-import numpy as np
-from scipy.spatial import cKDTree
+from geoh5py.workspace import Workspace
 
+from geoapps.io import Params
 from geoapps.utils import octree_2_treemesh, rotate_xy
 
 
 class InversionMesh:
-    def __init__(self, params, workspace, window=None):
+    """A class for handling conversion of Octree mesh type to TreeMesh type.
+
+    :param params: Params object containing "mesh" attribute that stores UUID
+        addressing an Octree mesh within the workspace.
+    :param workspace: Workspace object containing mesh data.
+    :param window: Data defining the limits for a restricted size inversion,
+        and possibly rotation information.
+    :param mesh: TreeMesh object.
+    :param nC: Number of cells of mesh.
+    :param rotation: Rotation of original Octree mesh.
+    :octree_permutation: Permutation vector to restore cell centers or
+        model values to origin Octree mesh order.
+    """
+
+    def __init__(
+        self, params: Params, workspace: Workspace, window: List[float] = None
+    ) -> None:
+
         self.params = params
         self.workspace = workspace
         self.window = window
         self.mesh = None
         self.nC = None
         self.rotation = None
-        self.octree_sort = None
+        self.octree_permutation = None
         self._initialize()
 
-    def _initialize(self):
+    def _initialize(self) -> None:
+        """
+        Collects mesh data stored in geoh5 workspace into TreeMesh object.
+
+        Handles conversion from geoh5's native Octree mesh type to TreeMesh
+        type required for SimPEG inversion and stores data needed to restore
+        original the Octree mesh type.
+        """
 
         if self.params.mesh_from_params:
 
@@ -34,7 +58,7 @@ class InversionMesh:
 
         else:
 
-            self.mesh = self.fetch("mesh")
+            self.mesh = self.workspace.get_entity(self.params.mesh)[0]
             self.nC = self.mesh.n_cells
 
             if self.mesh.rotation:
@@ -52,20 +76,7 @@ class InversionMesh:
             self.octree_permutation = self.mesh._ubc_order
 
     def original_cc(self):
+        """ Returns the cell centers of the original Octree mesh type. """
         cc = self.mesh.cell_centers
         cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
         return cc[self.octree_permutation]
-
-    def fetch(self, p):
-        """ Fetch the object addressed by uuid from the workspace. """
-
-        if isinstance(p, str):
-            try:
-                p = UUID(p)
-            except:
-                p = self.params.__getattribute__(p)
-
-        try:
-            return self.workspace.get_entity(p)[0].values
-        except AttributeError:
-            return self.workspace.get_entity(p)[0]

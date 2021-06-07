@@ -20,14 +20,8 @@ from . import InversionMesh
 
 class InversionModel:
     """
-    A class for constructing and storing models defined on the cell centers of an inversion mesh.
-
-    Parameters
-    ----------
-
-    inversion_mesh :
-
-
+    A class for constructing and storing models defined on the cell centers
+    of an inversion mesh.
     """
 
     model_types = ["starting", "reference", "lower_bound", "upper_bound"]
@@ -39,6 +33,16 @@ class InversionModel:
         params: Params,
         workspace: Workspace,
     ):
+        """
+
+        :param inversion_mesh: Inversion mesh object
+        :param model_type: Type of inversion model, can be any of "starting", "reference",
+            "lower_bound", "upper_bound".
+        :param params: Params object containing param with model data string in attribute
+            indexed by model_type string.
+        :param workspace: Workspace object possibly containing model data addressed by
+            UUID stored in the params object.
+        """
         self.inversion_mesh = inversion_mesh
         self.model_type = model_type
         self.params = params
@@ -51,7 +55,9 @@ class InversionModel:
         """
         Build the model vector from params data.
 
-
+        If params.inversion_type is "mvi" and no inclindation/declination
+        are provided, then values are projected onto the direction of the
+        inducing field.
         """
 
         self.vector = True if self.params.inversion_type == "mvi" else False
@@ -92,10 +98,35 @@ class InversionModel:
         self.model = mkvc(model)
 
     def permute_2_octree(self):
+        """
+        Reorder self.model values stored in cell centers of a TreeMesh to
+        it's original Octree mesh order.
+
+        :return: Vector of model values reordered for Octree mesh.
+        """
         return self.model[self.inversion_mesh.octree_permutation]
 
-    def get(self, name):
-        """ Get named model vector from value stored in params class. """
+    def permute_2_treemesh(self, model):
+        """
+        Reorder model values stored in cell centers of an Octree mesh to
+        TreeMesh order in self.mesh.
+
+        :param model: Octree sorted model
+        :return: Vector of model values reordered for TreeMesh.
+        """
+        return model[np.argsort(self.inversion_mesh.octree_permutation)]
+
+    def get(self, name: str):
+        """
+        Return model vector from value stored in params class.
+
+        Wraps _get_object and _get_value methods depending on type of
+        data attached to the model name stored in self.params
+
+        :param name: model name as stored in self.params
+        :return: vector with appropriate size for problem.
+
+        """
 
         if hasattr(self.params, name):
             model = getattr(self.params, name)
@@ -109,16 +140,34 @@ class InversionModel:
         return model
 
     def _get_value(self, model):
-        """ Fills vector of length mesh.nC with model value. """
+        """
+        Fills vector with model value to match size of inversion mesh.
+
+        :param model: Float value to fill vector with.
+        :return: Vector of model float repeated nC times, where nC is
+            the number of cells in the inversion mesh.
+        """
 
         nc = self.inversion_mesh.nC
-        if isinstance(model, float):
+        if isinstance(model, (int, float)):
             model *= np.ones(nc)
 
         return model
 
     def _get_object(self, model):
-        """ Fetches model from workspace, and interpolates as needed. """
+        """
+        Fetches model from workspace, and interpolates as needed.
+
+        If the parent of the workspace object addressed by 'model' parameter
+        is not the inversion mesh, then a nearest_neighbor interpolation will
+        be performed on the incoming data to get model values on the cell
+        centers of the inversion mesh.
+
+        :param model: UUID type that addresses object in workspace containing
+            model data.
+        :return: Model vector with data interpolated into cell centers of
+            the inversion mesh.
+        """
 
         parent_uuid = self.params.parent(model)
         parent = self.fetch(parent_uuid)
@@ -126,11 +175,21 @@ class InversionModel:
 
         if self.params.mesh != parent_uuid:
             model = self._obj_2_mesh(model, parent)
+        else:
+            model = self.permute_2_treemesh(model)
 
         return model
 
     def _obj_2_mesh(self, obj, parent):
-        """ Interpolates obj into inversion mesh using nearest neighbors of parent. """
+        """
+        Interpolates obj into inversion mesh using nearest neighbors of parent.
+
+        :param obj: geoh5 entity object containing model data
+        :param parent: parent geoh5 entity to model containing location data.
+        :return: Vector of values nearest neighbor interpolated into
+            inversion mesh.
+
+        """
 
         if hasattr(parent, "centroids"):
             xyz_in = parent.centroids
