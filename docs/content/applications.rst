@@ -30,6 +30,7 @@ Object/Data Utilities
     applications/contouring
     applications/create_surface
     applications/create_isosurface
+    applications/create_octree
     applications/coordinate_transformation
     applications/data_interpolation
 

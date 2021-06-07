@@ -1068,7 +1068,7 @@ def inversion(input_file):
         if isinstance(input_value, dict):
             print(f"In model interpolation for {input_value}")
             workspace = Workspace(input_dict["save_to_geoh5"])
-            input_mesh = workspace.get_entity(uuid.UUID(list(input_value.keys()))[0])[0]
+            input_mesh = workspace.get_entity(uuid.UUID(list(input_value.keys())[0]))[0]
 
             input_model = input_mesh.get_data(list(input_value.values())[0])[0].values
 
