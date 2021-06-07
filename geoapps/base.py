@@ -28,15 +28,16 @@ class BaseApplication:
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
     }
+    _h5file = None
+    _main = None
+    _workspace = None
+    _working_directory = None
+    _workspace_geoh5 = None
+    _monitoring_directory = None
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
         self.plot_result = False
-        self._h5file = None
-        self._workspace = None
-        self._working_directory = None
-        self._workspace_geoh5 = None
-        self._monitoring_directory = None
         self.figure = None
         self._file_browser = FileChooser()
         self._ga_group_name = Text(
@@ -97,7 +98,7 @@ class BaseApplication:
 
         self.ga_group_name.observe(ga_group_name_update)
 
-        self._main = VBox([self.project_panel, self.output_panel])
+        self.__populate__(**self.defaults)
 
     def __call__(self):
         return self.main
@@ -212,7 +213,8 @@ class BaseApplication:
         """
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
         """
-        self.__populate__(**self.defaults)
+        if self._main is None:
+            self._main = VBox([self.project_panel, self.output_panel])
 
         return self._main
 
