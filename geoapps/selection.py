@@ -26,7 +26,7 @@ class ObjectDataSelection(BaseApplication):
     _objects = None
     _add_groups = False
     _select_multiple = False
-    _object_types = []
+    _object_types = None
     _find_label = []
 
     def __init__(self, **kwargs):

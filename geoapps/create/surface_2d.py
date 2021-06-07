@@ -25,7 +25,6 @@ class Surface2D(ObjectDataSelection):
     """
 
     defaults = {
-        "object_types": Curve,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
         "data": ["COND"],
@@ -37,6 +36,7 @@ class Surface2D(ObjectDataSelection):
 
     _add_groups = "only"
     _select_multiple = True
+    _object_types = (Curve,)
 
     def __init__(self, **kwargs):
         self._z_option = RadioButtons(
