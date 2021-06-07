@@ -37,16 +37,13 @@ class CoordinateTransformation(BaseApplication):
     }
 
     def __init__(self, **kwargs):
-
-        kwargs = self.apply_defaults(**kwargs)
-
+        super().__init__()
+        self.defaults = self.update_defaults(**kwargs)
+        self.trigger.on_click(self.trigger_click)
         self.code_out.observe(self.set_wkt_out, names="value")
         self.code_in.observe(self.set_wkt_in, names="value")
         self.wkt_in.observe(self.set_authority_in, names="value")
         self.wkt_out.observe(self.set_authority_out, names="value")
-
-        super().__init__(**kwargs)
-
         self.input_projection = HBox([self.code_in, self.wkt_in])
         self.output_projection = HBox([self.code_out, self.wkt_out])
         self._main = VBox(
@@ -59,12 +56,7 @@ class CoordinateTransformation(BaseApplication):
             ]
         )
 
-        def trigger_click(_):
-            self.trigger_click()
-
-        self.trigger.on_click(trigger_click)
-
-    def trigger_click(self):
+    def trigger_click(self, _):
         """
         Run the coordinate transformation
         """
