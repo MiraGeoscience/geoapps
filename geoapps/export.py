@@ -43,10 +43,10 @@ class Export(ObjectDataSelection):
         "data_type": "RGB",
     }
 
+    _select_multiple = True
+
     def __init__(self, **kwargs):
-        super().__init__()
         self.defaults = self.update_defaults(**kwargs)
-        self.select_multiple = True
         self._file_type = Dropdown(
             options=["ESRI shapefile", "csv", "geotiff", "UBC format"],
             value="csv",
@@ -74,19 +74,11 @@ class Export(ObjectDataSelection):
         self.projection_panel = VBox([self.epsg_code, self.wkt_code])
         self.file_type.observe(self.update_options)
         self.objects.observe(self.update_name, names="value")
+
+        super().__init__(**self.defaults)
+
         self.trigger.description = "Export"
         self.trigger.on_click(self.save_selection)
-        self._main = VBox(
-            [
-                self.project_panel,
-                HBox([self.data_panel, self.no_data_value]),
-                self.type_widget,
-                self.no_data_value,
-                self.export_as,
-                self.trigger,
-                self.export_directory,
-            ]
-        )
 
     @property
     def wkt_code(self):
@@ -160,6 +152,22 @@ class Export(ObjectDataSelection):
                 disabled=False,
             )
         return self._export_as
+
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox(
+                [
+                    self.project_panel,
+                    HBox([self.data_panel, self.no_data_value]),
+                    self.type_widget,
+                    self.no_data_value,
+                    self.export_as,
+                    self.trigger,
+                    self.export_directory,
+                ]
+            )
+        return self._main
 
     @property
     def workspace(self):
