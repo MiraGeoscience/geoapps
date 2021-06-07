@@ -391,11 +391,7 @@ class TopographyOptions(ObjectDataSelection):
             options=["Object", "Relative to Sensor", "Constant"],
             description="Define by:",
         )
-
-        def update_options(_):
-            self.update_options()
-
-        self.options.observe(update_options)
+        self.options.observe(self.update_options)
         self._main = VBox([self.options, self.option_list[self.options.value]])
 
     @property
@@ -414,7 +410,7 @@ class TopographyOptions(ObjectDataSelection):
     def options(self):
         return self._options
 
-    def update_options(self):
+    def update_options(self, _):
         self._main.children = [
             self.options,
             self.option_list[self.options.value],
