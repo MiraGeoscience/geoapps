@@ -29,9 +29,7 @@ class PlotSelection2D(ObjectDataSelection):
     }
 
     def __init__(self, **kwargs):
-        super().__init__()
         self.defaults = self.update_defaults(**kwargs)
-        self.figure = None
         self.axis = None
         self.indices = None
         self.highlight_selection = None
@@ -93,6 +91,8 @@ class PlotSelection2D(ObjectDataSelection):
             icon="check",
         )
         self.objects.observe(self.set_bounding_box, names="value")
+        super().__init__(**self.defaults)
+
         self.window_plot = widgets.interactive_output(
             self.plot_selection,
             {
@@ -130,7 +130,15 @@ class PlotSelection2D(ObjectDataSelection):
                 ),
             ]
         )
-        self._main = VBox([self.project_panel, self.data_panel, self.window_selection])
+
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox(
+                [self.project_panel, self.data_panel, self.window_selection]
+            )
+
+        return self._main
 
     @property
     def azimuth(self):

@@ -39,6 +39,7 @@ class Surface2D(ObjectDataSelection):
     _object_types = (Curve,)
 
     def __init__(self, **kwargs):
+        self.defaults = self.update_defaults(**kwargs)
         self._z_option = RadioButtons(
             options=["elevation", "depth"],
             description="Vertical Reference:",
@@ -56,7 +57,7 @@ class Surface2D(ObjectDataSelection):
         self._export_as = Text("CDI_", description="Surface:")
         self._convert = ToggleButton(description="Convert >>", button_style="success")
 
-        super().__init__(**kwargs)
+        super().__init__(**self.defaults)
 
         self._lines = ObjectDataSelection(
             add_groups=False,
