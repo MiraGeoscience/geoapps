@@ -50,6 +50,7 @@ class InputFile:
         self.associations = {}
         self.is_loaded = False
         self.is_formatted = False
+        self.input_dict = None
 
     @property
     def filepath(self):
@@ -82,8 +83,10 @@ class InputFile:
 
     def write_ui_json(
         self,
-        default_ui: Dict[str, Any],
+        ui_dict: Dict[str, Any],
         default: bool = False,
+        name: str = None,
+        param_dict: dict = None,
         workspace: Workspace = None,
     ) -> None:
         """
@@ -91,30 +94,43 @@ class InputFile:
 
         Parameters
         ----------
-        default_ui :
-            Dictionary storing ui data including default values.
+        ui_dict :
+            Dictionary in ui.json format, including defaults.
         default : optional
-            Writes default values stored in default_ui to file.
+            Writes default values stored in ui_dict to file.
+        name: optional
+            Name of the file
+        param_dict : optional
+            Parameters to insert in ui_dict values.
+            Defaults to the :obj:`InputFile.data` is not provided.
         workspace : optional
             Provide a workspace_geoh5 path to simulate auto-generated field in GA.
         """
 
-        out = deepcopy(default_ui)
+        out = deepcopy(ui_dict)
         if workspace is not None:
             out["workspace_geoh5"] = workspace
             out["geoh5"] = workspace
         if not default:
-            if self.is_loaded:
-                for k, v in self.data.items():
-                    if isinstance(out[k], dict):
-                        out[k]["isValue"] = True
-                        out[k]["value"] = v
-                    else:
-                        out[k] = v
-            else:
-                raise OSError("No data to write.")
+            if param_dict is None:
+                if self.is_loaded:
+                    param_dict = self.data
+                else:
+                    raise OSError("No data to write.")
 
-        with open(self.filepath, "w") as f:
+            for k, v in param_dict.items():
+                if isinstance(out[k], dict):
+                    out[k]["isValue"] = True
+                    out[k]["value"] = v
+                else:
+                    out[k] = v
+
+        out_file = self.filepath
+
+        if name is not None:
+            out_file = op.join(op.dirname(self.filepath), name + ".ui.json")
+
+        with open(out_file, "w") as f:
             json.dump(self._stringify(out), f, indent=4)
 
     def read_ui_json(
@@ -133,18 +149,36 @@ class InputFile:
         reformat: optional
             Stores only 'value' fields from ui.json if True.
         """
-
         with open(self.filepath) as f:
-            data = self._numify(json.load(f))
-            self._set_associations(data)
-            if reformat:
-                self._ui_2_py(data)
-                self.is_formatted = True
-                if (validations is not None) or (required_parameters is not None):
-                    InputValidator(required_parameters, validations, self.data)
-            else:
-                self.data = data
+            param_dict = json.load(f)
+            self.input_from_dict(
+                param_dict,
+                required_parameters=required_parameters,
+                validations=validations,
+                reformat=reformat,
+            )
 
+    def input_from_dict(
+        self,
+        input_dict: dict,
+        required_parameters: List[str] = None,
+        validations: Dict[str, Any] = None,
+        reformat: bool = True,
+    ):
+        """
+        Parse the content of input parameters.
+        """
+        data = self._numify(input_dict)
+        self._set_associations(data)
+        if reformat:
+            self._ui_2_py(data)
+            self.is_formatted = True
+            if (validations is not None) or (required_parameters is not None):
+                InputValidator(required_parameters, validations, self.data)
+        else:
+            self.data = data
+
+        self.input_dict = input_dict
         self.is_loaded = True
 
     def _ui_2_py(self, ui_dict: Dict[str, Any]) -> None:
@@ -192,17 +226,20 @@ class InputFile:
 
         # map [...] to "[...]"
         excl = ["choiceList", "meshType"]
-        l2s = lambda k, v: str(v)[1:-1] if isinstance(v, list) & (k not in excl) else v
-        n2s = lambda k, v: "" if v is None else v  # map None to ""
+        list2str = (
+            lambda k, v: str(v)[1:-1] if isinstance(v, list) & (k not in excl) else v
+        )
+        uuid2str = lambda k, v: str(v) if isinstance(v, UUID) else v
+        none2str = lambda k, v: "" if v is None else v  # map None to ""
 
-        def i2s(k, v):  # map np.inf to "inf"
+        def inf2str(k, v):  # map np.inf to "inf"
             if not isinstance(v, (int, float)):
                 return v
             else:
                 return str(v) if not np.isfinite(v) else v
 
         for k, v in d.items():
-            v = self._dict_mapper(k, v, [l2s, n2s, i2s])
+            v = self._dict_mapper(k, v, [list2str, none2str, inf2str, uuid2str])
             d[k] = v
 
         return d
