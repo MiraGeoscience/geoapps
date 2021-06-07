@@ -7,14 +7,18 @@
 
 import numpy as np
 from discretize import TreeMesh
-from geoh5py.workspace import Workspace
 
 from geoapps.drivers.components import InversionMesh
+from geoapps.io import InputFile
 from geoapps.io.MVI import MVIParams
+from geoapps.io.MVI.constants import default_ui_json
 
-ws = Workspace("./FlinFlon.geoh5")
-uipath = "../geoapps/drivers/example_ui_json/mvi_inversion_driver.ui.json"
-params = MVIParams.from_path(uipath)
+input_file = InputFile()
+input_file.default(default_ui_json)
+input_file.data["geoh5"] = "./FlinFlon.geoh5"
+params = MVIParams.from_ifile(input_file)
+params.mesh = "{e334f687-df71-4538-ad28-264e420210b8}"
+ws = params.workspace
 
 
 def test_initialize():
@@ -25,5 +29,5 @@ def test_initialize():
 
 def test_original_cc():
     inversion_mesh = InversionMesh(params, ws)
-    msh = inversion_mesh.fetch("mesh")
+    msh = ws.get_entity(params.mesh)[0]
     assert np.all(msh.centroids == inversion_mesh.original_cc())
