@@ -176,9 +176,7 @@ class Surface2D(ObjectDataSelection):
 
                     m_vals = np.vstack(m_vals).T
                     keep = (
-                        (z_vals > 1e-38)
-                        * (z_vals < 2e-38)
-                        * np.any((m_vals > 1e-38) * (m_vals < 2e-38), axis=1)
+                        np.isnan(z_vals) * np.any(np.isnan(m_vals), axis=1)
                     ) == False
                     keep[np.isnan(z_vals)] = False
                     keep[np.any(np.isnan(m_vals), axis=1)] = False
@@ -253,7 +251,7 @@ class Surface2D(ObjectDataSelection):
 
             if elevations:  # Assumes non-property_group selection
                 z_values = elevations[0].values
-                ind = (z_values > 1e-38) & (z_values < 2e-38) == False
+                ind = np.isnan(z_values) == False
                 locations = np.c_[locations[ind, :2], z_values[ind]]
             else:
                 ind = np.ones(locations.shape[0], dtype="bool")
@@ -309,12 +307,19 @@ class Surface2D(ObjectDataSelection):
                 }
             )
 
-        if len(self.models) > 0:
-            for ind, field in enumerate(self.data.value):
+            if len(self.models) > 0:
+                for field, model in zip(self.data.value, self.models):
 
+                    self.surface.add_data(
+                        {
+                            field: {"values": model},
+                        }
+                    )
+        else:
+            for data_obj, model in zip(data_list, self.models):
                 self.surface.add_data(
                     {
-                        field: {"values": self.models[ind]},
+                        data_obj.name: {"values": model},
                     }
                 )
 
@@ -457,7 +462,6 @@ class Surface2D(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        print("Setting workspace")
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
         self._h5file = workspace.h5file
