@@ -247,6 +247,9 @@ class EdgeDetectionApp(PlotSelection2D):
 
             grid, data = self.get_selected_entities()
 
+            if grid is None:
+                return
+
             x = grid.centroids[:, 0].reshape(grid.shape, order="F")
             y = grid.centroids[:, 1].reshape(grid.shape, order="F")
             z = grid.centroids[:, 2].reshape(grid.shape, order="F")
@@ -260,8 +263,9 @@ class EdgeDetectionApp(PlotSelection2D):
             y = y[ind_x, :][:, ind_y]
             z = z[ind_x, :][:, ind_y]
             grid_data = grid_data[ind_x, :][:, ind_y]
-            grid_data -= grid_data.min()
-            grid_data /= grid_data.max()
+            grid_data -= np.nanmin(grid_data)
+            grid_data /= np.nanmax(grid_data)
+            grid_data[np.isnan(grid_data)] = 0
 
             if np.any(grid_data):
                 # Find edges
