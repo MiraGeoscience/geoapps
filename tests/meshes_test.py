@@ -30,4 +30,4 @@ def test_initialize():
 def test_original_cc():
     inversion_mesh = InversionMesh(params, ws)
     msh = ws.get_entity(params.mesh)[0]
-    assert np.all(msh.centroids == inversion_mesh.original_cc())
+    assert np.all((msh.centroids - inversion_mesh.original_cc()) < 1e-16)
