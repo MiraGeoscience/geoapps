@@ -38,7 +38,9 @@ class ScatterPlots(ObjectDataSelection):
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": ["Al2O3", "CaO", "V", "MgO", "Ba"],
         "x": "Al2O3",
+        "x_active": True,
         "y": "CaO",
+        "y_active": True,
         "z": "Ba",
         "y_log": True,
         "z_log": True,
@@ -50,27 +52,20 @@ class ScatterPlots(ObjectDataSelection):
         "size_active": True,
         "color_maps": "inferno",
         "refresh": True,
-        "refresh_trigger": True,
+        "refresh": True,
     }
 
-    def __init__(self, static=False, **kwargs):
-        super().__init__()
+    _select_multiple = True
+    _add_groups = True
+    _downsampling = None
+
+    def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
-        self.static = static
-        self.select_multiple = True
-        self._add_groups = True
         self.custom_colormap = []
         self._indices = None
 
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
-
-        self._downsampling = IntSlider(
-            description="Population Downsampling:",
-            min=1,
-            style={"description_width": "initial"},
-            continuous_update=False,
-        )
 
         self._x = Dropdown(description="Data:")
         self._x.observe(channel_bounds_setter, names="value")
@@ -233,7 +228,7 @@ class ScatterPlots(ObjectDataSelection):
                 HBox([self._size_min, self._size_max]),
             ]
         )
-        self._refresh_trigger = ToggleButton(description="Refresh Plot", value=False)
+        self._refresh = ToggleButton(description="Refresh Plot", value=False)
 
         # Wrap all axis panels into dropdown
         def axes_pannels_trigger(_):
@@ -256,9 +251,7 @@ class ScatterPlots(ObjectDataSelection):
         self.data.observe(self.update_choices, names="value")
         self.objects.observe(self.update_objects, names="value")
         self.downsampling.observe(self.update_downsampling, names="value")
-
         self.figure = go.FigureWidget()
-
         self.crossplot = interactive_output(
             self.plot_selection,
             {
@@ -294,37 +287,13 @@ class ScatterPlots(ObjectDataSelection):
                 "size_markers": self.size_markers,
                 "size_min": self.size_min,
                 "size_max": self.size_max,
-                "refresh_trigger": self.refresh_trigger,
+                "refresh": self.refresh,
             },
         )
-
-        def write_html(_):
-            self.write_html()
-
-        self.trigger.on_click(write_html)
+        self.trigger.on_click(self.write_html)
         self.trigger.description = "Save HTML"
 
-        if self.static:
-            self._main = VBox(
-                [
-                    self.project_panel,
-                    HBox([self.objects, self.data]),
-                    self.downsampling,
-                    self.axes_options,
-                    self.trigger,
-                ]
-            )
-        else:
-            self._main = VBox(
-                [
-                    self.project_panel,
-                    HBox([self.objects, self.data]),
-                    VBox([Label("Downsampling"), self.downsampling]),
-                    self.axes_options,
-                    self.trigger,
-                    self.figure,
-                ]
-            )
+        super().__init__(**self.defaults)
 
     @property
     def n_values(self):
@@ -405,16 +374,39 @@ class ScatterPlots(ObjectDataSelection):
         return self._color_max
 
     @property
-    def downsampling(self):
+    def downsampling(self) -> IntSlider:
         """
-        :obj:`ipywidgets.IntSlider`
+        Widget controlling the size of the population.
         """
+        if getattr(self, "_downsampling", None) is None:
+            self._downsampling = IntSlider(
+                description="Population Downsampling:",
+                min=1,
+                style={"description_width": "initial"},
+                continuous_update=False,
+            )
         return self._downsampling
 
     @property
-    def refresh_trigger(self):
+    def main(self):
+        if self._main is None:
+            self._main = VBox(
+                [
+                    self.project_panel,
+                    HBox([self.objects, self.data]),
+                    VBox([Label("Downsampling"), self.downsampling]),
+                    self.axes_options,
+                    self.trigger,
+                    self.figure,
+                ]
+            )
+
+        return self._main
+
+    @property
+    def refresh(self):
         """"""
-        return self._refresh_trigger
+        return self._refresh
 
     @property
     def size(self):
@@ -639,6 +631,8 @@ class ScatterPlots(ObjectDataSelection):
             cmax = getattr(self, "_" + name + "_max")
             cmax.value = f"{np.max(values):.2e}"
 
+        self.refresh.value = True
+
     def plot_selection(
         self,
         x,
@@ -673,14 +667,10 @@ class ScatterPlots(ObjectDataSelection):
         size_markers,
         size_min,
         size_max,
-        refresh_trigger,
+        refresh,
     ):
 
-        if (
-            not self.refresh_trigger.value
-            or not self.refresh.value
-            or self.indices is None
-        ):
+        if not self.refresh.value or self.indices is None:
             return None
 
         if (
@@ -840,7 +830,7 @@ class ScatterPlots(ObjectDataSelection):
             self.figure.data = []
 
     def update_axes(self, refresh_plot=True):
-        self.refresh_trigger.value = False
+        self.refresh.value = False
         for name in [
             "x",
             "y",
@@ -857,10 +847,10 @@ class ScatterPlots(ObjectDataSelection):
             else:
                 widget.value = None
         if refresh_plot:
-            self.refresh_trigger.value = True
+            self.refresh.value = True
 
     def update_choices(self, _):
-        self.refresh_trigger.value = False
+        self.refresh.value = False
 
         for channel in self.data.value:
             self.get_channel(channel)
@@ -875,14 +865,14 @@ class ScatterPlots(ObjectDataSelection):
         if self.downsampling.value != self.n_values:
             self.update_downsampling(None, refresh_plot=False)
 
-        self.refresh_trigger.value = True
+        self.refresh.value = True
 
     def update_downsampling(self, _, refresh_plot=True):
 
         if not list(self.data_channels.values()):
             return
 
-        self.refresh_trigger.value = False
+        self.refresh.value = False
         values = []
         for axis in [self.x, self.y, self.z]:
             vals = self.get_channel(axis.value)
@@ -907,16 +897,24 @@ class ScatterPlots(ObjectDataSelection):
             rtol=1e0,
             method="histogram",
         )
-        self.refresh_trigger.value = refresh_plot
+        self.refresh.value = refresh_plot
 
     def update_objects(self, _):
         self.data_channels = {}
+        self.refresh.value = False
+        self.figure.data = []
+        self.x_active.value = False
+        self.y_active.value = False
+        self.z_active.value = False
+        self.color_active.value = False
+        self.size_active.value = False
         self.downsampling.max = self.n_values
         self.downsampling.value = np.min([5000, self.n_values])
         self._indices = None
         self.update_downsampling(None, refresh_plot=False)
+        self.refresh.value = True
 
-    def write_html(self):
+    def write_html(self, _):
         self.figure.write_html(
             os.path.join(
                 os.path.abspath(os.path.dirname(self.h5file)), "Crossplot.html"

@@ -36,11 +36,11 @@ class BaseApplication:
     _monitoring_directory = None
     _ga_group_name = None
     _trigger = None
+    _figure = None
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
         self.plot_result = False
-        self.figure = None
         self._file_browser = FileChooser()
         self._ga_group = None
         self._file_browser._select.on_click(self.file_browser_change)
