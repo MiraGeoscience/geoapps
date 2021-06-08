@@ -34,18 +34,14 @@ class BaseApplication:
     _working_directory = None
     _workspace_geoh5 = None
     _monitoring_directory = None
+    _ga_group_name = None
+    _trigger = None
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
         self.plot_result = False
         self.figure = None
         self._file_browser = FileChooser()
-        self._ga_group_name = Text(
-            value="",
-            description="Group:",
-            continuous_update=False,
-            style={"description_width": "initial"},
-        )
         self._ga_group = None
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
@@ -76,13 +72,6 @@ class BaseApplication:
         self._export_directory._select.on_click(self.export_browser_change)
         self.live_link_panel = VBox([self.live_link])
         self._refresh = ToggleButton(value=False)
-        self._trigger = Button(
-            description="Compute",
-            button_style="danger",
-            tooltip="Run computation",
-            icon="check",
-        )
-
         self.output_panel = VBox(
             [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
         )
@@ -281,10 +270,17 @@ class BaseApplication:
         return self._ga_group
 
     @property
-    def ga_group_name(self):
+    def ga_group_name(self) -> Text:
         """
-        Default group name to export to
+        Widget to assign a group name to export to
         """
+        if getattr(self, "_ga_group_name", None) is None:
+            self._ga_group_name = Text(
+                value="",
+                description="Group:",
+                continuous_update=False,
+                style={"description_width": "initial"},
+            )
         return self._ga_group_name
 
     @property
@@ -357,10 +353,17 @@ class BaseApplication:
         return out_dict
 
     @property
-    def trigger(self):
+    def trigger(self) -> Button:
         """
-        :obj:`ipywidgets.ToggleButton`: Trigger some computation and output.
+        Widget for generic trigger of computations.
         """
+        if getattr(self, "_trigger", None) is None:
+            self._trigger = Button(
+                description="Compute",
+                button_style="danger",
+                tooltip="Run computation",
+                icon="check",
+            )
         return self._trigger
 
     @property
