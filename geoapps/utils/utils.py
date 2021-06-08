@@ -859,7 +859,6 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
     levels = levels[ubc_order]
 
     origin = treemesh.x0.copy()
-    origin[2] += treemesh.h[2].size * treemesh.h[2][0]
     mesh_object = Octree.create(
         workspace,
         name=name,
@@ -869,7 +868,7 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
         w_count=treemesh.h[2].size,
         u_cell_size=treemesh.h[0][0],
         v_cell_size=treemesh.h[1][0],
-        w_cell_size=-treemesh.h[2][0],
+        w_cell_size=treemesh.h[2][0],
         octree_cells=np.c_[indArr, levels],
         parent=parent,
     )
@@ -894,6 +893,9 @@ def octree_2_treemesh(mesh):
 
     h1, h2, h3 = [np.ones(nr) * np.abs(sz) for nr, sz in zip(nCunderMesh, smallCell)]
 
+    # fix this up to handle when ubc format is dumped to GA.
+    # write test that passes if ubc format provided.
+    # sum up all the negative u_cell_size, v_cell_size, w_cell_size and subtract (no effect if not from ubc format.
     x0 = tswCorn - np.array([0, 0, np.sum(h3)])
 
     ls = np.log2(nCunderMesh).astype(int)
