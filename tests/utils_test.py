@@ -7,6 +7,9 @@
 
 import numpy as np
 import pytest
+from discretize import TreeMesh
+from discretize.utils import refine_tree_xyz
+from geoh5py.workspace import Workspace
 
 from geoapps.drivers.components import InversionMesh
 from geoapps.io import InputFile
@@ -130,12 +133,24 @@ def test_weigted_average():
 
 
 def test_treemesh_2_octree():
-    input_file = InputFile()
-    input_file.default(default_ui_json)
-    input_file.data["geoh5"] = "./FlinFlon.geoh5"
-    params = MVIParams.from_input_file(input_file)
-    params.mesh = "{e334f687-df71-4538-ad28-264e420210b8}"
-    ws = params.workspace
-    inversion_mesh = InversionMesh(params, ws)
-    octree_mesh = treemesh_2_octree(ws, inversion_mesh.mesh)
-    # rotate_xy(inversion_mesh.mesh.cell_centers, octree_mesh.origin, octree_mesh.rotation)
+    ws = Workspace("./FlinFlon.geoh5")
+    mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
+    mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
+    omesh = treemesh_2_octree(ws, mesh)
+    assert omesh.n_cells == mesh.n_cells
+    assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-16)
+    expected_refined_cells = [
+        (0, 0, 3, 1),
+        (0, 0, 2, 1),
+        (1, 0, 3, 1),
+        (1, 0, 2, 1),
+        (0, 1, 3, 1),
+        (0, 1, 2, 1),
+        (1, 1, 3, 1),
+        (1, 1, 2, 1),
+    ]
+    ijk_refined = omesh.octree_cells[["I", "J", "K"]][
+        omesh.octree_cells["NCells"] == 1
+    ].tolist()
+    assert [k in ijk_refined for k in expected_refined_cells]
+    assert [k in expected_refined_cells for k in ijk_refined]
