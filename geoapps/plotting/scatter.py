@@ -58,6 +58,11 @@ class ScatterPlots(ObjectDataSelection):
     _select_multiple = True
     _add_groups = True
     _downsampling = None
+    _color = None
+    _x = None
+    _y = None
+    _z = None
+    _size = None
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
@@ -67,9 +72,8 @@ class ScatterPlots(ObjectDataSelection):
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
 
-        self._x = Dropdown(description="Data:")
-        self._x.observe(channel_bounds_setter, names="value")
-        self._x.name = "x"
+        self.x.observe(channel_bounds_setter, names="value")
+        self.x.name = "x"
         self._x_active = Checkbox(description="Active", value=True, indent=False)
         self._x_log = Checkbox(
             description="Log10",
@@ -94,10 +98,8 @@ class ScatterPlots(ObjectDataSelection):
                 HBox([self._x_min, self._x_max]),
             ]
         )
-
-        self._y = Dropdown(description="Data:")
-        self._y.observe(channel_bounds_setter, names="value")
-        self._y.name = "y"
+        self.y.observe(channel_bounds_setter, names="value")
+        self.y.name = "y"
         self._y_active = Checkbox(
             description="Active",
             value=True,
@@ -122,10 +124,8 @@ class ScatterPlots(ObjectDataSelection):
                 HBox([self._y_min, self._y_max]),
             ]
         )
-
-        self._z = Dropdown(description="Data:")
-        self._z.observe(channel_bounds_setter, names="value")
-        self._z.name = "z"
+        self.z.observe(channel_bounds_setter, names="value")
+        self.z.name = "z"
         self._z_active = Checkbox(
             description="Active",
             value=False,
@@ -154,9 +154,8 @@ class ScatterPlots(ObjectDataSelection):
                 HBox([self._z_min, self._z_max]),
             ]
         )
-        self._color = Dropdown(description="Data:")
-        self._color.observe(channel_bounds_setter, names="value")
-        self._color.name = "color"
+        self.color.observe(channel_bounds_setter, names="value")
+        self.color.name = "color"
         self._color_log = Checkbox(
             description="Log10",
             value=False,
@@ -191,10 +190,8 @@ class ScatterPlots(ObjectDataSelection):
                 HBox([self._color_min, self._color_max]),
             ]
         )
-
-        self._size = Dropdown(description="Data:")
-        self._size.observe(channel_bounds_setter, names="value")
-        self._size.name = "size"
+        self.size.observe(channel_bounds_setter, names="value")
+        self.size.name = "size"
         self._size_active = Checkbox(
             description="Active",
             value=False,
@@ -327,8 +324,11 @@ class ScatterPlots(ObjectDataSelection):
     @property
     def color(self):
         """
-        :obj:`ipywidgets.Dropdown`
+        Widget for the selection of color values
         """
+        if getattr(self, "_color", None) is None:
+            self._color = Dropdown(description="Data:")
+
         return self._color
 
     @property
@@ -396,6 +396,7 @@ class ScatterPlots(ObjectDataSelection):
                     HBox([self.objects, self.data]),
                     VBox([Label("Downsampling"), self.downsampling]),
                     self.axes_options,
+                    self.refresh,
                     self.trigger,
                     self.figure,
                 ]
@@ -411,8 +412,10 @@ class ScatterPlots(ObjectDataSelection):
     @property
     def size(self):
         """
-        :obj:`ipywidgets.Dropdown`
+        Widget for the selection of size scaling values
         """
+        if getattr(self, "_size", None) is None:
+            self._size = Dropdown(description="Data:")
         return self._size
 
     @property
@@ -460,8 +463,10 @@ class ScatterPlots(ObjectDataSelection):
     @property
     def x(self):
         """
-        :obj:`ipywidgets.Dropdown`
+        Widget for the selection of x-axis values
         """
+        if getattr(self, "_x", None) is None:
+            self._x = Dropdown(description="Data:")
         return self._x
 
     @property
@@ -502,8 +507,10 @@ class ScatterPlots(ObjectDataSelection):
     @property
     def y(self):
         """
-        :obj:`ipywidgets.Dropdown`
+        Widget for the selection of y-axis values
         """
+        if getattr(self, "_y", None) is None:
+            self._y = Dropdown(description="Data:")
         return self._y
 
     @property
@@ -544,8 +551,10 @@ class ScatterPlots(ObjectDataSelection):
     @property
     def z(self):
         """
-        :obj:`ipywidgets.Dropdown`
+        Widget for the selection of z-axis values
         """
+        if getattr(self, "_z", None) is None:
+            self._z = Dropdown(description="Data:")
         return self._z
 
     @property
@@ -630,8 +639,6 @@ class ScatterPlots(ObjectDataSelection):
             cmin.value = f"{np.min(values):.2e}"
             cmax = getattr(self, "_" + name + "_max")
             cmax.value = f"{np.max(values):.2e}"
-
-        self.refresh.value = True
 
     def plot_selection(
         self,
@@ -830,7 +837,7 @@ class ScatterPlots(ObjectDataSelection):
             self.figure.data = []
 
     def update_axes(self, refresh_plot=True):
-        self.refresh.value = False
+
         for name in [
             "x",
             "y",
@@ -838,6 +845,7 @@ class ScatterPlots(ObjectDataSelection):
             "color",
             "size",
         ]:
+            self.refresh.value = False
             widget = getattr(self, "_" + name)
             val = widget.value
             widget.options = list(self.data_channels.keys())

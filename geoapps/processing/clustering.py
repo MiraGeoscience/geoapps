@@ -40,18 +40,18 @@ class Clustering(ScatterPlots):
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": ["Al2O3", "CaO", "V", "MgO", "Ba"],
         "x": "Al2O3",
+        "x_active": True,
         "y": "CaO",
+        "y_active": True,
         "z": "Ba",
         "z_active": True,
         "color_active": True,
         "size": "MgO",
         "size_active": True,
         "refresh": True,
-        "refresh_trigger": True,
     }
 
     def __init__(self, **kwargs):
-        super().__init__()
         self.defaults = self.update_defaults(**kwargs)
         self.scalings = {}
         self.lower_bounds = {}
@@ -84,15 +84,10 @@ class Clustering(ScatterPlots):
             description="Analytics",
         )
         self.input_box = VBox([self.plotting_options])
-        # self.heatmap_fig = go.FigureWidget()
-        # self.heatmap_plot = interactive_output(
-        #     self.make_heatmap, {"channels": self.data, "show": self.plotting_options,}
-        # )
         self._refresh_clusters = Button(description="Refresh", button_style="warning")
         self.refresh_clusters.on_click(self.run_clustering)
         self.histogram_panel = VBox([self.channels_plot_options])
         self.boxplot_panel = VBox([self.channels_plot_options])
-
         self.stats_table = interactive_output(
             self.make_stats_table,
             {
@@ -100,13 +95,6 @@ class Clustering(ScatterPlots):
                 "show": self.plotting_options,
             },
         )
-
-        # self.plotting_options = VBox(
-        #     [
-        #         self.plotting_options,
-        #
-        #     ]
-        # )
         self.ga_group_name.description = "Name"
         self.ga_group_name.value = "MyCluster"
         self.plotting_options.observe(self.show_trigger, names="value")
@@ -125,11 +113,8 @@ class Clustering(ScatterPlots):
             self.color_pickers[ii].observe(self.update_colormap, names="value")
             self.color_pickers[ii].observe(self.make_box_plot, names="value")
 
-        self.update_colormap(None, refresh_plot=False)
         self.custom_colormap = list(self.colormap.values())
-
         self.color.observe(self.check_color, names="value")
-
         self._clusters_options = Dropdown(
             description="Cluster", options=np.arange(self.n_clusters.max)
         )
@@ -137,31 +122,10 @@ class Clustering(ScatterPlots):
         self.clusters_options.observe(self.clusters_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
         self.trigger.on_click(self.save_cluster)
-        self._main = VBox(
-            [
-                self.project_panel,
-                VBox(
-                    [
-                        self.objects,
-                        self.data,
-                        self.downsampling,
-                        HBox(
-                            [
-                                self.n_clusters,
-                                VBox(
-                                    [
-                                        self.clusters_panel,
-                                    ]
-                                ),
-                            ],
-                        ),
-                    ]
-                ),
-                self.refresh_clusters,
-                self.input_box,
-                self.output_panel,
-            ]
-        )
+
+        super().__init__(**self.defaults)
+
+        self.refresh_clusters.click()
 
     @property
     def channels_plot_options(self):
@@ -178,13 +142,32 @@ class Clustering(ScatterPlots):
         """
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
         """
-        self.__populate__(**self.defaults)
-        self.update_choices(None)
-        self.run_clustering(None)
-        self.make_heatmap(None)
-        self.make_box_plot(None)
-        self.make_inertia_plot(None)
-        self.make_hist_plot(None)
+        if self._main is None:
+            self._main = VBox(
+                [
+                    self.project_panel,
+                    VBox(
+                        [
+                            self.objects,
+                            self.data,
+                            self.downsampling,
+                            HBox(
+                                [
+                                    self.n_clusters,
+                                    VBox(
+                                        [
+                                            self.clusters_panel,
+                                        ]
+                                    ),
+                                ],
+                            ),
+                        ]
+                    ),
+                    self.refresh_clusters,
+                    self.input_box,
+                    self.output_panel,
+                ]
+            )
 
         return self._main
 
@@ -223,40 +206,41 @@ class Clustering(ScatterPlots):
         """
         Update and display a specific plot.
         """
-        if self.plotting_options.value == "Statistics":
-            self.input_box.children = [
-                self.plotting_options,
-                self.stats_table,
-            ]
-        elif self.plotting_options.value == "Confusion Matrix":
-            self.make_heatmap(None)
-            self.input_box.children = [self.plotting_options, self.heatmap_fig]
-        elif self.plotting_options.value == "Crossplot":
-            self.input_box.children = [
-                self.plotting_options,
-                self.axes_options,
-                self.figure,
-            ]
-        elif self.plotting_options.value == "Histogram":
-            self.input_box.children = [
-                self.plotting_options,
-                self.histogram_panel,
-            ]
-            self.make_hist_plot(None)
-        elif self.plotting_options.value == "Boxplot":
-            self.make_box_plot(None)
-            self.input_box.children = [
-                self.plotting_options,
-                self.boxplot_panel,
-            ]
-        elif self.plotting_options.value == "Inertia":
-            self.make_inertia_plot(None)
-            self.input_box.children = [
-                self.plotting_options,
-                self.inertia_plot,
-            ]
+        try:
+            if self.plotting_options.value == "Statistics":
+                self.input_box.children = [
+                    self.plotting_options,
+                    self.stats_table,
+                ]
+            elif self.plotting_options.value == "Confusion Matrix":
+                self.make_heatmap(None)
+                self.input_box.children = [self.plotting_options, self.heatmap_fig]
+            elif self.plotting_options.value == "Crossplot":
+                self.input_box.children = [
+                    self.plotting_options,
+                    self.axes_options,
+                    self.figure,
+                ]
+            elif self.plotting_options.value == "Histogram":
+                self.input_box.children = [
+                    self.plotting_options,
+                    self.histogram_panel,
+                ]
+                self.make_hist_plot(None)
+            elif self.plotting_options.value == "Boxplot":
+                self.make_box_plot(None)
+                self.input_box.children = [
+                    self.plotting_options,
+                    self.boxplot_panel,
+                ]
+            elif self.plotting_options.value == "Inertia":
+                self.make_inertia_plot(None)
+                self.input_box.children = [
+                    self.plotting_options,
+                    self.inertia_plot,
+                ]
 
-        else:
+        except AttributeError:
             self.input_box.children = [
                 self.plotting_options,
             ]
@@ -276,7 +260,7 @@ class Clustering(ScatterPlots):
         """
         Change the colormap for clusters
         """
-        self.refresh_trigger.value = False
+        self.refresh.value = False
         self.colormap = {}
         for ii in range(self.n_clusters.value):
             colorpicker = self.color_pickers[ii]
@@ -295,13 +279,14 @@ class Clustering(ScatterPlots):
                 ]
 
         self.custom_colormap = list(self.colormap.values())
-        self.refresh_trigger.value = refresh_plot
+        self.refresh.value = refresh_plot
 
     def update_objects(self, _):
         """
         Reset all attributes on object change.
         """
         # Reset in all
+        self.refresh.value = False
         self.data_channels = {}
         self.clusters = {}
         self.scalings = {}
@@ -313,7 +298,15 @@ class Clustering(ScatterPlots):
         self.channels_plot_options.options = []
         self.channels_plot_options.value = None
         self._mapping = None
+        self.figure.data = []
+        self.x_active.value = False
+        self.y_active.value = False
+        self.z_active.value = False
+        self.color_active.value = False
+        self.size_active.value = False
         self._indices = None
+        self.update_downsampling(None, refresh_plot=False)
+        self.refresh.value = True
 
         if self.n_values is not None:
             self.downsampling.max = self.n_values
@@ -327,7 +320,7 @@ class Clustering(ScatterPlots):
             return
 
         self.trigger.description = "Running ..."
-        self.refresh_trigger.value = False
+        self.refresh.value = False
 
         # Prime the app with clusters
         # Normalize values and run
@@ -360,7 +353,7 @@ class Clustering(ScatterPlots):
         self.trigger.description = "Export"
         self.refresh_clusters.description = "Refresh"
         self.show_trigger(None)
-        self.refresh_trigger.value = True
+        self.refresh.value = True
 
     def make_inertia_plot(self, _):
         """
@@ -375,15 +368,13 @@ class Clustering(ScatterPlots):
                 x=[self.n_clusters.value],
                 y=[self.clusters[self.n_clusters.value].inertia_],
             )
-            if self.static:
+
+            if getattr(self, "inertia_plot", None) is None:
                 self.inertia_plot = go.FigureWidget([line, point])
             else:
-                if getattr(self, "inertia_plot", None) is None:
-                    self.inertia_plot = go.FigureWidget([line, point])
-                else:
-                    self.inertia_plot.data = []
-                    self.inertia_plot.add_trace(line)
-                    self.inertia_plot.add_trace(point)
+                self.inertia_plot.data = []
+                self.inertia_plot.add_trace(line)
+                self.inertia_plot.add_trace(point)
             self.inertia_plot.update_layout(
                 {
                     "height": 300,
@@ -406,21 +397,18 @@ class Clustering(ScatterPlots):
             field = self.channels_plot_options.value
             plot = go.Histogram(x=self.dataframe[field], histnorm="percent", name=field)
 
-            if self.static:
-                self.histo_plots[field] = go.FigureWidget([plot])
-            else:
-                if field not in self.histo_plots.keys():
-                    self.histo_plots[field] = go.FigureWidget()
+            if field not in self.histo_plots.keys():
+                self.histo_plots[field] = go.FigureWidget()
 
-                self.histo_plots[field].data = []
-                self.histo_plots[field].add_trace(plot)
-                self.histogram_panel.children = [
-                    self.channels_plot_options,
-                    self.scalings[field],
-                    HBox([self.lower_bounds[field], self.upper_bounds[field]]),
-                    #                 self.log_dict[field],
-                    self.histo_plots[field],
-                ]
+            self.histo_plots[field].data = []
+            self.histo_plots[field].add_trace(plot)
+            self.histogram_panel.children = [
+                self.channels_plot_options,
+                self.scalings[field],
+                HBox([self.lower_bounds[field], self.upper_bounds[field]]),
+                #                 self.log_dict[field],
+                self.histo_plots[field],
+            ]
 
     def make_box_plot(self, _):
         """
@@ -450,19 +438,16 @@ class Clustering(ScatterPlots):
                     )
                 )
 
-            if self.static:
-                self.box_plots[field] = go.FigureWidget(boxes)
-            else:
-                if field not in self.box_plots.keys():
-                    self.box_plots[field] = go.FigureWidget()
+            if field not in self.box_plots.keys():
+                self.box_plots[field] = go.FigureWidget()
 
-                self.box_plots[field].data = []
-                for box in boxes:
-                    self.box_plots[field].add_trace(box)
-                self.boxplot_panel.children = [
-                    self.channels_plot_options,
-                    self.box_plots[field],
-                ]
+            self.box_plots[field].data = []
+            for box in boxes:
+                self.box_plots[field].add_trace(box)
+            self.boxplot_panel.children = [
+                self.channels_plot_options,
+                self.box_plots[field],
+            ]
 
             self.box_plots[field].update_layout(
                 {
@@ -499,14 +484,11 @@ class Clustering(ScatterPlots):
                 zsmooth=False,
             )
 
-            if self.static:
-                self.heatmap_fig = go.FigureWidget([plot])
-            else:
-                if getattr(self, "heatmap_fig", None) is None:
-                    self.heatmap_fig = go.FigureWidget()
+            if getattr(self, "heatmap_fig", None) is None:
+                self.heatmap_fig = go.FigureWidget()
 
-                self.heatmap_fig.data = []
-                self.heatmap_fig.add_trace(plot)
+            self.heatmap_fig.data = []
+            self.heatmap_fig.add_trace(plot)
 
             self.heatmap_fig.update_scenes(
                 aspectratio=dict(x=1, y=1, z=0.7), aspectmode="manual"
@@ -650,7 +632,7 @@ class Clustering(ScatterPlots):
         if "kmeans" in self.data_channels.keys():
             del self.data_channels["kmeans"]
 
-        self.refresh_trigger.value = False
+        self.refresh.value = False
 
         for channel in self.data.value:
             self.get_channel(channel)

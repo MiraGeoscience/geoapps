@@ -37,6 +37,7 @@ class BaseApplication:
     _ga_group_name = None
     _trigger = None
     _figure = None
+    _refresh = None
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
@@ -71,7 +72,6 @@ class BaseApplication:
         self._export_directory = FileChooser(show_only_dirs=True)
         self._export_directory._select.on_click(self.export_browser_change)
         self.live_link_panel = VBox([self.live_link])
-        self._refresh = ToggleButton(value=False)
         self.output_panel = VBox(
             [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
         )
@@ -327,8 +327,10 @@ class BaseApplication:
     @property
     def refresh(self):
         """
-        :obj:`ipywidgets.ToggleButton`: Switch to refresh the plot
+        Generic toggle button to control a refresh of the application
         """
+        if getattr(self, "_refresh", None) is None:
+            self._refresh = ToggleButton(value=False)
         return self._refresh
 
     def save_json_params(self, file_name: str, out_dict: dict):
