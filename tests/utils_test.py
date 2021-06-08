@@ -8,7 +8,16 @@
 import numpy as np
 import pytest
 
-from geoapps.utils.utils import rotate_xy, running_mean, weighted_average
+from geoapps.drivers.components import InversionMesh
+from geoapps.io import InputFile
+from geoapps.io.MVI import MVIParams
+from geoapps.io.MVI.constants import default_ui_json
+from geoapps.utils.utils import (
+    rotate_xy,
+    running_mean,
+    treemesh_2_octree,
+    weighted_average,
+)
 
 
 def test_rotation_xy():
@@ -118,3 +127,15 @@ def test_weigted_average():
     values = [np.array([1, 2, 3])]
     out = weighted_average(xyz_in, xyz_out, values, threshold=1e30)
     assert out[0] == 2
+
+
+def test_treemesh_2_octree():
+    input_file = InputFile()
+    input_file.default(default_ui_json)
+    input_file.data["geoh5"] = "./FlinFlon.geoh5"
+    params = MVIParams.from_input_file(input_file)
+    params.mesh = "{e334f687-df71-4538-ad28-264e420210b8}"
+    ws = params.workspace
+    inversion_mesh = InversionMesh(params, ws)
+    octree_mesh = treemesh_2_octree(ws, inversion_mesh.mesh)
+    # rotate_xy(inversion_mesh.mesh.cell_centers, octree_mesh.origin, octree_mesh.rotation)
