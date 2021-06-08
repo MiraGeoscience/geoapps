@@ -6,16 +6,12 @@
 #  (see LICENSE file at the root of this source code package).
 
 import numpy as np
-import pytest
 from discretize import TreeMesh
-from discretize.utils import refine_tree_xyz
+from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers.components import InversionMesh
-from geoapps.io import InputFile
-from geoapps.io.MVI import MVIParams
-from geoapps.io.MVI.constants import default_ui_json
 from geoapps.utils.utils import (
+    octree_2_treemesh,
     rotate_xy,
     running_mean,
     treemesh_2_octree,
@@ -154,3 +150,14 @@ def test_treemesh_2_octree():
     ].tolist()
     assert [k in ijk_refined for k in expected_refined_cells]
     assert [k in expected_refined_cells for k in ijk_refined]
+
+
+def test_octree_2_treemesh():
+    ws = Workspace("./FlinFlon.geoh5")
+    mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
+    mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
+    mesh.write_UBC("test_mesh_ga.msh")
+    omesh_object = treemesh_2_octree(ws, mesh, name="test_mesh")
+    ws = Workspace("./FlinFlon.geoh5")
+    omesh_object = ws.get_entity("test_mesh_ga")[0]
+    tmesh = octree_2_treemesh(omesh_object)
