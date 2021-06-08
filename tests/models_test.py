@@ -19,7 +19,7 @@ from geoapps.utils import rotate_xy
 input_file = InputFile()
 input_file.default(default_ui_json)
 input_file.data["geoh5"] = "./FlinFlon.geoh5"
-params = MVIParams.from_ifile(input_file)
+params = MVIParams.from_input_file(input_file)
 params.mesh = "{e334f687-df71-4538-ad28-264e420210b8}"
 params.starting_model = 1e-04
 params.inducing_field_inclination = 79.0
