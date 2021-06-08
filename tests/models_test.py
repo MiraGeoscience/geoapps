@@ -40,7 +40,7 @@ def test_model_from_object():
     inversion_mesh = InversionMesh(params, ws)
     cc = inversion_mesh.mesh.cell_centers[0].reshape(1, 3)
     point_object = Points.create(ws, name=f"test_point", vertices=cc)
-    point_object.add_data({"test_data": {"values": np.array([3])}})
+    point_object.add_data({"test_data": {"values": np.array([3.0])}})
     data_object = ws.get_entity("test_data")[0]
     params.associations[data_object.uid] = point_object.uid
     params.lower_bound_object = point_object.uid
@@ -101,7 +101,7 @@ def test_permute_2_treemesh():
     yind = (cc[:, 1] > ymin) & (cc[:, 1] < ymax)
     zind = (cc[:, 2] > zmin) & (cc[:, 2] < zmax)
     ind = xind & yind & zind
-    model = np.zeros(octree_mesh.n_cells)
+    model = np.zeros(octree_mesh.n_cells, dtype=float)
     model[ind] = 1
     octree_mesh.add_data({"test_model": {"values": model}})
     params.upper_bound = ws.get_entity("test_model")[0].uid
