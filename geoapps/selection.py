@@ -310,19 +310,24 @@ class LineOptions(ObjectDataSelection):
     """
 
     defaults = {"find_label": "line"}
+    _multiple_lines = None
 
     def __init__(self, **kwargs):
-        super().__init__()
+
         self.defaults = self.update_defaults(**kwargs)
 
-        self._multiple_lines = None
+        super().__init__(**self.defaults)
 
-        if "objects" in kwargs.keys() and isinstance(kwargs["objects"], Dropdown):
-            self._objects.observe(self.update_data_list, names="value")
+        self.objects.observe(self.update_data_list, names="value")
+        self.data.observe(self.update_line_list, names="value")
+        self.data.description = "Lines field"
 
-        self._data.observe(self.update_line_list, names="value")
-        self._main = VBox([self._data, self.lines])
-        self._data.description = "Lines field"
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox([self._data, self.lines])
+
+        return self._main
 
     @property
     def lines(self):
