@@ -888,10 +888,26 @@ default_ui_json = {
         "label": "no data value",
         "value": 0,
     },
-    "monitoring_directory": None,
-    "workspace_geoh5": None,
-    "geoh5": None,
-    "run_command": None,
+    "monitoring_directory": {
+        "default": None,
+        "enabled": False,
+        "value": None,
+    },
+    "workspace_geoh5": {
+        "default": None,
+        "enabled": False,
+        "value": None,
+    },
+    "geoh5": {
+        "default": None,
+        "enabled": False,
+        "value": None,
+    },
+    "run_command": {
+        "default": None,
+        "enabled": False,
+        "value": None,
+    },
     "run_command_boolean": {
         "default": False,
         "value": False,

@@ -163,7 +163,7 @@ def test_params_constructors(tmp_path):
     ui["geoh5"] = wrkstr
     ifile.write_ui_json(ui, default=True)
     params1 = MVIParams.from_path(filepath)
-    params2 = MVIParams.from_ifile(ifile)
+    params2 = MVIParams.from_input_file(ifile)
 
 
 def test_validate_inversion_type(tmp_path):
