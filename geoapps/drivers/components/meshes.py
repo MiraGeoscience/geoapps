@@ -62,7 +62,7 @@ class InversionMesh:
             self.nC = self.mesh.n_cells
 
             if self.mesh.rotation:
-                origin = [float(self.mesh.origin[k]) for k in ["x", "y", "z"]]
+                origin = self.mesh.origin.tolist()
                 angle = self.mesh.rotation[0]
                 if self.window is not None:
                     self.window["azimuth"] = -angle
