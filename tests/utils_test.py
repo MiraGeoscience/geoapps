@@ -129,10 +129,11 @@ def test_weigted_average():
 
 
 def test_treemesh_2_octree():
+
     ws = Workspace("./FlinFlon.geoh5")
-    mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
+    mesh = TreeMesh([[5] * 8, [5] * 4, [5] * 16], [0, 0, 0])
     mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
-    omesh = treemesh_2_octree(ws, mesh)
+    omesh = treemesh_2_octree(ws, mesh, name="test_mesh")
     assert omesh.n_cells == mesh.n_cells
     assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-16)
     expected_refined_cells = [
@@ -154,7 +155,7 @@ def test_treemesh_2_octree():
 
 def test_octree_2_treemesh():
     ws = Workspace("./FlinFlon.geoh5")
-    mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
+    mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
     mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
     mesh.write_UBC("test_mesh_ga.msh")
     omesh_object = treemesh_2_octree(ws, mesh, name="test_mesh")
