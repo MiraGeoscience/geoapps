@@ -88,6 +88,7 @@ class InversionDriver:
         cluster = LocalCluster(processes=False)
         client = Client(cluster)
         self.inversion_mesh = InversionMesh(self.params, self.workspace, self.window)
+        self.window["azimuth"] = -self.inversion_mesh.rotation["angle"]
         self.topo, self.topo_interp_function = self.get_topography()
         self.starting_model = InversionModel(
             self.inversion_mesh, "starting", self.params, self.workspace
