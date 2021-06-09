@@ -28,12 +28,19 @@ class OctreeMesh(ObjectDataSelection):
 
     _object_types = (Curve, Octree, Points, Surface)
 
-    def __init__(self, ui_json=None):
+    def __init__(self, ui_json=None, **kwargs):
 
         if ui_json is not None and path.exists(ui_json):
             self.params = OctreeParams.from_path(ui_json)
         else:
             self.params = OctreeParams()
+            default_dict = self.params.default_ui_json
+            for key, arg in kwargs.items():
+                try:
+                    default_dict[key] = arg
+                except KeyError:
+                    continue
+
             self.params.init_from_dict(self.params.default_ui_json)
 
         self.defaults = self.update_defaults(**self.params.__dict__)
