@@ -104,7 +104,7 @@ def test_create_octree_app():
                 "label": "Type",
                 "value": "radial",
             },
-            "Refinement A Max Distance": {
+            "Refinement A Distance": {
                 "group": "Refinement A",
                 "label": "Max Distance",
                 "value": max_distance,
@@ -125,7 +125,7 @@ def test_create_octree_app():
                 "label": "Type",
                 "value": "surface",
             },
-            "Refinement B Max Distance": {
+            "Refinement B Distance": {
                 "group": "Refinement B",
                 "label": "Max Distance",
                 "value": max_distance,
@@ -134,7 +134,7 @@ def test_create_octree_app():
 
         app = OctreeMesh(
             geoh5=str(ws.h5file),
-            extent=points.uid,
+            objects=str(points.uid),
             u_cell_size=h[0],
             v_cell_size=h[1],
             w_cell_size=h[2],
