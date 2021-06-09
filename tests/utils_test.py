@@ -153,21 +153,3 @@ def test_treemesh_2_octree():
     ].tolist()
     assert [k in ijk_refined for k in expected_refined_cells]
     assert [k in expected_refined_cells for k in ijk_refined]
-
-
-def test_octree_2_treemesh():
-    ws = Workspace("./FlinFlon.geoh5")
-    mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
-    mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
-    omesh = treemesh_2_octree(ws, mesh)
-    for p in itertools.product("uvw", repeat=3):
-        omesh.origin = [0, 0, 0]
-        for axis in "uvw":
-            attr = axis + "_cell_size"
-            setattr(omesh, attr, np.abs(getattr(omesh, attr)))
-        for axis in np.unique(p):
-            attr = axis + "_cell_size"
-            setattr(omesh, attr, -1 * getattr(omesh, attr))
-            omesh.origin["xyz"["uvw".find(axis)]] = 40
-        tmesh = octree_2_treemesh(omesh)
-        assert np.all((tmesh.cell_centers - mesh.cell_centers) < 1e-16)
