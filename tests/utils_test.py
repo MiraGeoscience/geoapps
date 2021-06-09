@@ -130,31 +130,6 @@ def test_weigted_average():
     assert out[0] == 2
 
 
-def test_treemesh_2_octree():
-
-    ws = Workspace("./FlinFlon.geoh5")
-    mesh = TreeMesh([[5] * 8, [5] * 4, [5] * 16], [0, 0, 0])
-    mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
-    omesh = treemesh_2_octree(ws, mesh, name="test_mesh")
-    assert omesh.n_cells == mesh.n_cells
-    assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-16)
-    expected_refined_cells = [
-        (0, 0, 0, 1),
-        (0, 0, 1, 1),
-        (1, 0, 0, 1),
-        (1, 0, 1, 1),
-        (0, 1, 0, 1),
-        (0, 1, 1, 1),
-        (1, 1, 0, 1),
-        (1, 1, 1, 1),
-    ]
-    ijk_refined = omesh.octree_cells[["I", "J", "K"]][
-        omesh.octree_cells["NCells"] == 1
-    ].tolist()
-    assert [k in ijk_refined for k in expected_refined_cells]
-    assert [k in expected_refined_cells for k in ijk_refined]
-
-
 def test_octree_2_treemesh():
     ws = Workspace("./FlinFlon.geoh5")
     mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
