@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import itertools
+
 import numpy as np
 from discretize import TreeMesh
 from geoh5py.objects import Octree
@@ -155,10 +157,17 @@ def test_treemesh_2_octree():
 
 def test_octree_2_treemesh():
     ws = Workspace("./FlinFlon.geoh5")
-    mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
+    mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
     mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
-    mesh.write_UBC("test_mesh_ga.msh")
-    omesh_object = treemesh_2_octree(ws, mesh, name="test_mesh")
-    ws = Workspace("./FlinFlon.geoh5")
-    omesh_object = ws.get_entity("test_mesh_ga")[0]
-    tmesh = octree_2_treemesh(omesh_object)
+    omesh = treemesh_2_octree(ws, mesh)
+    for p in itertools.product("uvw", repeat=3):
+        omesh.origin = [0, 0, 0]
+        for axis in "uvw":
+            attr = axis + "_cell_size"
+            setattr(omesh, attr, np.abs(getattr(omesh, attr)))
+        for axis in np.unique(p):
+            attr = axis + "_cell_size"
+            setattr(omesh, attr, -1 * getattr(omesh, attr))
+            omesh.origin["xyz"["uvw".find(axis)]] = 40
+        tmesh = octree_2_treemesh(omesh)
+        assert np.all(tmesh.cell_centers == mesh.cell_centers)
