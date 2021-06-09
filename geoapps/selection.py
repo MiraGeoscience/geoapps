@@ -374,7 +374,9 @@ class TopographyOptions(ObjectDataSelection):
     Define the topography used by the inversion
     """
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self, option_list=["None", "Object", "Relative to Sensor", "Constant"], **kwargs
+    ):
         self.defaults = self.update_defaults(**kwargs)
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
         self._offset = FloatText(description="Vertical offset (+ve up)")
@@ -382,13 +384,13 @@ class TopographyOptions(ObjectDataSelection):
             description="Elevation (m)",
         )
         self.option_list = {
+            "None": widgets.Label("No topography"),
             "Object": self.data_panel,
             "Relative to Sensor": self._offset,
             "Constant": self._constant,
-            "None": widgets.Label("No topography"),
         }
         self._options = widgets.RadioButtons(
-            options=["None", "Object", "Relative to Sensor", "Constant"],
+            options=option_list,
             description="Define by:",
         )
         self.options.observe(self.update_options)
@@ -419,7 +421,7 @@ class TopographyOptions(ObjectDataSelection):
         return self._options
 
     def update_options(self, _):
-        self._main.children = [
+        self.main.children = [
             self.options,
             self.option_list[self.options.value],
         ]

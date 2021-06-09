@@ -50,12 +50,14 @@ class DataInterpolation(ObjectDataSelection):
         "skew_factor": 1.0,
         "space": "Log",
         "topography": {
+            "options": "Object",
             "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
             "data": "Z",
         },
     }
 
     _select_multiple = True
+    _topography = None
 
     def __init__(self, use_defaults=True, **kwargs):
 
@@ -127,17 +129,6 @@ class DataInterpolation(ObjectDataSelection):
             self.interpolate_call()
             self.update_objects_choices()
 
-        self.parameter_choices = Dropdown(
-            description="Interpolation Parameters",
-            options=[
-                "Method",
-                "Scaling",
-                "Horizontal Extent",
-                "Vertical Extent",
-                "No-data-value",
-            ],
-            style={"description_width": "initial"},
-        )
         self.parameters = {
             "Method": self.method_panel,
             "Scaling": self.space,
@@ -147,9 +138,16 @@ class DataInterpolation(ObjectDataSelection):
                     self.xy_extent,
                 ]
             ),
-            "Vertical Extent": VBox([self.topography.main, self.max_depth]),
+            "Vertical Extent": VBox([]),
             "No-data-value": self.no_data_value,
         }
+
+        self.parameter_choices = Dropdown(
+            description="Interpolation Parameters",
+            options=list(self.parameters.keys()),
+            style={"description_width": "initial"},
+        )
+
         self.parameter_panel = HBox([self.parameter_choices, self.method_panel])
         self.ga_group_name.description = "Output Label:"
         self.ga_group_name.value = "_Interp"
@@ -157,13 +155,12 @@ class DataInterpolation(ObjectDataSelection):
 
         super().__init__(**self.defaults)
 
+        self.parameters["Vertical Extent"].children = [
+            self.topography.main,
+            self.max_depth,
+        ]
         self.trigger.on_click(interpolate_call)
         self.trigger.description = "Interpolate"
-        self._topography = TopographyOptions(
-            workspace=self.workspace, **self.defaults["topography"]
-        )
-        self.topography.offset.disabled = True
-        self.topography.options.options = ["None", "Object", "Constant"]
 
     @property
     def core_cell_size(self):
@@ -286,6 +283,13 @@ class DataInterpolation(ObjectDataSelection):
         """
         :obj:`geoapps.TopographyOptions()`
         """
+        if getattr(self, "_topography", None) is None:
+            self._topography = TopographyOptions(
+                option_list=["None", "Object", "Constant"],
+                workspace=self.workspace,
+                **self.defaults["topography"],
+            )
+
         return self._topography
 
     @property
@@ -323,7 +327,7 @@ class DataInterpolation(ObjectDataSelection):
 
         self.update_objects_choices()
 
-        if getattr(self, "topography", None) is not None:
+        if getattr(self, "_topography", None) is not None:
             self.topography.workspace = workspace
 
     def parameter_change(self, _):
