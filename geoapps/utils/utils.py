@@ -891,12 +891,10 @@ def octree_2_treemesh(mesh):
 
     nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
 
-    h1, h2, h3 = [np.ones(nr) * np.abs(sz) for nr, sz in zip(nCunderMesh, smallCell)]
-
-    # fix this up to handle when ubc format is dumped to GA.
-    # write test that passes if ubc format provided.
-    # sum up all the negative u_cell_size, v_cell_size, w_cell_size and subtract (no effect if not from ubc format.
-    x0 = tswCorn - np.array([0, 0, np.sum(h3)])
+    cell_sizes = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
+    u_shift, v_shift, w_shift = [np.sum(h[h < 0]) for h in cell_sizes]
+    h1, h2, h3 = [np.abs(h) for h in cell_sizes]
+    x0 = tswCorn + np.array([u_shift, v_shift, w_shift])
 
     ls = np.log2(nCunderMesh).astype(int)
     if ls[0] == ls[1] and ls[1] == ls[2]:
