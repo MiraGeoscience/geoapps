@@ -852,10 +852,13 @@ def block_model_2_tensor(block_model, models=[]):
 
 def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
 
-    indArr, levels = treemesh._ubc_indArr
     ubc_order = treemesh._ubc_order
+    indArr, levels = treemesh._ubc_indArr
+    indArr -= 1
+    indArr[:, 2] = max(indArr[:, 2]) - indArr[:, 2]
+    indArr[:, 2] -= levels - 1
 
-    indArr = indArr[ubc_order] - 1
+    indArr = indArr[ubc_order]
     levels = levels[ubc_order]
 
     origin = treemesh.x0.copy()

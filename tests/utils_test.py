@@ -136,14 +136,14 @@ def test_treemesh_2_octree():
     assert omesh.n_cells == mesh.n_cells
     assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-16)
     expected_refined_cells = [
-        (0, 0, 3, 1),
-        (0, 0, 2, 1),
-        (1, 0, 3, 1),
-        (1, 0, 2, 1),
-        (0, 1, 3, 1),
-        (0, 1, 2, 1),
-        (1, 1, 3, 1),
-        (1, 1, 2, 1),
+        (0, 0, 0, 1),
+        (0, 0, 1, 1),
+        (1, 0, 0, 1),
+        (1, 0, 1, 1),
+        (0, 1, 0, 1),
+        (0, 1, 1, 1),
+        (1, 1, 0, 1),
+        (1, 1, 1, 1),
     ]
     ijk_refined = omesh.octree_cells[["I", "J", "K"]][
         omesh.octree_cells["NCells"] == 1
