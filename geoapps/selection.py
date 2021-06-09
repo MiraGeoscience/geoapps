@@ -375,7 +375,6 @@ class TopographyOptions(ObjectDataSelection):
     """
 
     def __init__(self, **kwargs):
-        super().__init__()
         self.defaults = self.update_defaults(**kwargs)
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
         self._offset = FloatText(description="Vertical offset (+ve up)")
@@ -383,7 +382,7 @@ class TopographyOptions(ObjectDataSelection):
             description="Elevation (m)",
         )
         self.option_list = {
-            "Object": self._data_panel,
+            "Object": self.data_panel,
             "Relative to Sensor": self._offset,
             "Constant": self._constant,
             "None": widgets.Label("No topography"),
@@ -393,7 +392,8 @@ class TopographyOptions(ObjectDataSelection):
             description="Define by:",
         )
         self.options.observe(self.update_options)
-        self._main = VBox([self.options, self.option_list[self.options.value]])
+
+        super().__init__(**self.defaults)
 
     @property
     def panel(self):
@@ -402,6 +402,13 @@ class TopographyOptions(ObjectDataSelection):
     @property
     def constant(self):
         return self._constant
+
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox([self.options, self.option_list[self.options.value]])
+
+        return self._main
 
     @property
     def offset(self):
