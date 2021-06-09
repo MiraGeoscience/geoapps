@@ -137,7 +137,7 @@ def test_treemesh_2_octree():
     mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
     omesh = treemesh_2_octree(ws, mesh, name="test_mesh")
     assert omesh.n_cells == mesh.n_cells
-    assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-16)
+    assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-14)
     expected_refined_cells = [
         (0, 0, 0, 1),
         (0, 0, 1, 1),
