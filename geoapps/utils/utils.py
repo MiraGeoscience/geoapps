@@ -850,30 +850,27 @@ def block_model_2_tensor(block_model, models=[]):
     return tensor, out
 
 
-def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
+def treemesh_2_octree(workspace, treemesh, **kwargs):
 
-    ubc_order = treemesh._ubc_order
     indArr, levels = treemesh._ubc_indArr
-    indArr -= 1
-    indArr[:, 2] = max(indArr[:, 2]) - indArr[:, 2]
-    indArr[:, 2] -= levels - 1
+    ubc_order = treemesh._ubc_order
 
-    indArr = indArr[ubc_order]
+    indArr = indArr[ubc_order] - 1
     levels = levels[ubc_order]
 
     origin = treemesh.x0.copy()
+    origin[2] += treemesh.h[2].size * treemesh.h[2][0]
     mesh_object = Octree.create(
         workspace,
-        name=name,
         origin=origin,
         u_count=treemesh.h[0].size,
         v_count=treemesh.h[1].size,
         w_count=treemesh.h[2].size,
         u_cell_size=treemesh.h[0][0],
         v_cell_size=treemesh.h[1][0],
-        w_cell_size=treemesh.h[2][0],
+        w_cell_size=-treemesh.h[2][0],
         octree_cells=np.c_[indArr, levels],
-        parent=parent,
+        **kwargs,
     )
 
     return mesh_object
