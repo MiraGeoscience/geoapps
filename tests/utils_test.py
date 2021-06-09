@@ -145,4 +145,4 @@ def test_octree_2_treemesh():
             setattr(omesh, attr, -1 * getattr(omesh, attr))
             omesh.origin["xyz"["uvw".find(axis)]] = 40
         tmesh = octree_2_treemesh(omesh)
-        assert np.all((tmesh.cell_centers - mesh.cell_centers) < 1e-16)
+        assert np.all((tmesh.cell_centers - mesh.cell_centers) < 1e-14)
