@@ -200,14 +200,6 @@ class InversionModel:
 
         return weighted_average(xyz_in, xyz_out, [obj])[0]
 
-        # if save_model:
-        #     val = model.copy()
-        #     val[activeCells == False] = self.no_data_value
-        #     self.fetch("mesh").add_data(
-        #         {"Reference_model": {"values": val[self.mesh._ubc_order]}}
-        #     )
-        #     print("Reference model transferred to new mesh!")
-
     @property
     def model_type(self):
         return self._model_type
