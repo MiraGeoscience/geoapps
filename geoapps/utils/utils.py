@@ -322,7 +322,7 @@ def weighted_average(
     :param xyz_in: shape(*, 3) Input coordinate locations.
     :param xyz_out: shape(*, 3) Output coordinate locations.
     :param values: Values to be averaged from the input to output locations.
-    :param max_distance: Maximum averaging distance, beyond which values are assigned nan.
+    :param max_distance: Maximum averaging distance beyond which values do not contribute to the average.
     :param n: Number of nearest neighbours used in the weighted average.
     :param return_indices: If True, return the indices of the nearest neighbours from the input locations.
     :param threshold: Small value added to the radial distance to avoid zero division.
@@ -330,6 +330,7 @@ def weighted_average(
 
     :return avg_values: List of values averaged to the output coordinates
     """
+    n = np.min([xyz_in.shape[0], n])
     assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
 
     assert all(
@@ -338,6 +339,8 @@ def weighted_average(
 
     tree = cKDTree(xyz_in)
     rad, ind = tree.query(xyz_out, n)
+    ind = np.c_[ind]
+    rad = np.c_[rad]
     rad[rad > max_distance] = np.nan
     avg_values = []
     for value in values:
@@ -345,8 +348,10 @@ def weighted_average(
         weight = np.zeros(xyz_out.shape[0])
 
         for ii in range(n):
-            values_interp += value[ind[:, ii]] / (rad[:, ii] + threshold)
-            weight += 1.0 / (rad[:, ii] + threshold)
+            v = value[ind[:, ii]] / (rad[:, ii] + threshold)
+            values_interp = np.nansum([values_interp, v], axis=0)
+            w = 1.0 / (rad[:, ii] + threshold)
+            weight = np.nansum([weight, w], axis=0)
 
         avg_values += [values_interp / weight]
 

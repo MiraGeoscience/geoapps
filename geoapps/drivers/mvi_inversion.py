@@ -9,6 +9,11 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
 
 import os
 import sys
@@ -16,7 +21,6 @@ from multiprocessing.pool import ThreadPool
 from typing import Union
 from uuid import UUID
 
-import dask
 import numpy as np
 import scipy.sparse as sp
 from dask import config as dconf
@@ -26,9 +30,8 @@ from discretize.utils import active_from_xyz
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Grid2D, Points
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
-from scipy.spatial import Delaunay, cKDTree
+from scipy.spatial import cKDTree
 from SimPEG import (
-    dask,
     data,
     data_misfit,
     directives,
@@ -41,11 +44,13 @@ from SimPEG import (
     utils,
 )
 from SimPEG.potential_fields import magnetics
-from SimPEG.utils import mkvc, tile_locations
+from SimPEG.utils import tile_locations
 from SimPEG.utils.drivers import create_nested_mesh
 
 from geoapps.io.MVI import MVIParams
-from geoapps.utils import filter_xy, octree_2_treemesh, rotate_xy, treemesh_2_octree
+from geoapps.utils import filter_xy, rotate_xy, treemesh_2_octree
+
+from .components import InversionMesh, InversionModel
 
 
 def start_inversion(filepath=None):
@@ -67,7 +72,7 @@ class InversionDriver:
             os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
         )
         self.window = self.params.window()
-        self.mesh = None
+        self.inversion_mesh = None
         self.topography = None
         # self.results = Workspace(params.output_geoh5)
 
@@ -91,12 +96,21 @@ class InversionDriver:
         self.configure_dask()
         cluster = LocalCluster(processes=False)
         client = Client(cluster)
-        self.mesh, self.rotation = self.get_mesh()
+        self.inversion_mesh = InversionMesh(self.params, self.workspace, self.window)
         self.topo, self.topo_interp_function = self.get_topography()
-        self.activeCells = active_from_xyz(self.mesh, self.topo, grid_reference="N")
+        self.starting_model = InversionModel(
+            self.inversion_mesh, "starting", self.params, self.workspace
+        )
+        self.reference_model = InversionModel(
+            self.inversion_mesh, "reference", self.params, self.workspace
+        )
+
+        self.activeCells = active_from_xyz(
+            self.inversion_mesh.mesh, self.topo, grid_reference="N"
+        )
         self.no_data_value = 0
         self.activeCellsMap = maps.InjectActiveCells(
-            self.mesh, self.activeCells, self.no_data_value
+            self.inversion_mesh.mesh, self.activeCells, self.no_data_value
         )
         self.nC = int(self.activeCells.sum())
 
@@ -113,27 +127,16 @@ class InversionDriver:
         # construct a simpeg Survey object
         self.survey, normalization = self.get_survey()
 
-        # Get the reference and starting models
-        mref = self.params.reference_model
-        mref = [0.0] if mref is None else mref
-        mref = [mref] if isinstance(mref, float) else mref
-        mstart = self.params.starting_model
-        mstart = [0.0] if mstart is None else mstart
-        mstart = [mstart] if isinstance(mstart, float) else mstart
-
-        self.mref = self.get_model(mref, vector_property, save_model=True)
-        self.mstart = self.get_model(
-            mstart,
-            vector_property,
-        )
         if vector_property:
-            self.mref = self.mref[np.kron(np.ones(3), self.activeCells).astype("bool")]
-            self.mstart = self.mstart[
+            self.reference_model.model = self.reference_model.model[
+                np.kron(np.ones(3), self.activeCells).astype("bool")
+            ]
+            self.starting_model.model = self.starting_model.model[
                 np.kron(np.ones(3), self.activeCells).astype("bool")
             ]
         else:
-            self.mref = self.mref[self.activeCells]
-            self.mstart = self.mstart[self.activeCells]
+            self.reference_model.model = self.reference_model.model[self.activeCells]
+            self.starting_model.model = self.starting_model.model[self.activeCells]
 
         ###############################################################################
         # Processing
@@ -149,8 +152,10 @@ class InversionDriver:
 
             locs = self.survey.receiver_locations[local_index]
             lsurvey = self.localize_survey(local_index, locs)
-            lmesh = create_nested_mesh(locs, self.mesh)
-            lmap = maps.TileMap(self.mesh, self.activeCells, lmesh, components=3)
+            lmesh = create_nested_mesh(locs, self.inversion_mesh.mesh)
+            lmap = maps.TileMap(
+                self.inversion_mesh.mesh, self.activeCells, lmesh, components=3
+            )
             lsim = magnetics.simulation.Simulation3DIntegral(
                 survey=lsurvey,
                 mesh=lmesh,
@@ -164,7 +169,7 @@ class InversionDriver:
             )
 
             if self.params.forward_only:
-                d = simulation.fields(utils.mkvc(self.mstart))
+                d = simulation.fields(utils.mkvc(self.starting_model.model))
                 dpreds.append(d)
                 self.write_data(dpreds)
                 return
@@ -188,9 +193,11 @@ class InversionDriver:
 
         wires = maps.Wires(("p", self.nC), ("s", self.nC), ("t", self.nC))
         wr = np.zeros(3 * self.nC)
-        norm = np.tile(self.mesh.cell_volumes[self.activeCells] ** 2.0, 3)
+        norm = np.tile(
+            self.inversion_mesh.mesh.cell_volumes[self.activeCells] ** 2.0, 3
+        )
         for ii, dmisfit in enumerate(global_misfit.objfcts):
-            wr += dmisfit.getJtJdiag(self.mstart) / norm
+            wr += dmisfit.getJtJdiag(self.starting_model.model) / norm
 
         # wr += np.percentile(wr, 40)
         # wr *= norm
@@ -201,7 +208,7 @@ class InversionDriver:
 
         # Create a regularization
         reg_p = regularization.Sparse(
-            self.mesh,
+            self.inversion_mesh.mesh,
             indActive=self.activeCells,
             mapping=wires.p,
             gradientType=self.params.gradient_type,
@@ -212,10 +219,10 @@ class InversionDriver:
             norms=self.params.model_norms(),
         )
         reg_p.cell_weights = wires.p * wr
-        reg_p.mref = self.mref
+        reg_p.mref = self.reference_model.model
 
         reg_s = regularization.Sparse(
-            self.mesh,
+            self.inversion_mesh.mesh,
             indActive=self.activeCells,
             mapping=wires.s,
             gradientType=self.params.gradient_type,
@@ -227,10 +234,10 @@ class InversionDriver:
         )
 
         reg_s.cell_weights = wires.s * wr
-        reg_s.mref = self.mref
+        reg_s.mref = self.reference_model.model
 
         reg_t = regularization.Sparse(
-            self.mesh,
+            self.inversion_mesh.mesh,
             indActive=self.activeCells,
             mapping=wires.t,
             gradientType=self.params.gradient_type,
@@ -242,11 +249,11 @@ class InversionDriver:
         )
 
         reg_t.cell_weights = wires.t * wr
-        reg_t.mref = self.mref
+        reg_t.mref = self.reference_model.model
 
         # Assemble the 3-component regularizations
         reg = reg_p + reg_s + reg_t
-        reg.mref = self.mref
+        reg.mref = self.reference_model.model
 
         # Specify how the optimization will proceed, set susceptibility bounds to inf
         print("active", sum(self.activeCells))
@@ -314,10 +321,13 @@ class InversionDriver:
             channels = ["model"]
             if vector_property:
                 channels = ["amplitude", "theta", "phi"]
-            outmesh = treemesh_2_octree(
-                self.workspace, self.mesh, parent=self.out_group
+            outmesh = self.fetch("mesh").copy(
+                parent=self.out_group, copy_children=False
             )
-            outmesh.rotation = self.rotation["angle"]
+            # outmesh = treemesh_2_octree(
+            #     self.workspace, self.mesh, parent=self.out_group
+            # )
+            # outmesh.rotation = self.rotation["angle"]
 
             directiveList.append(
                 directives.SaveIterationsGeoH5(
@@ -326,7 +336,7 @@ class InversionDriver:
                     mapping=self.activeCellsMap,
                     attribute_type="mvi_angles",
                     association="CELL",
-                    sorting=self.mesh._ubc_order,
+                    sorting=self.inversion_mesh.mesh._ubc_order,
                     # replace_values=True,
                     # no_data_value=self.no_data_value,
                 )
@@ -334,7 +344,9 @@ class InversionDriver:
 
             rxLoc = self.survey.receiver_locations
             xy_rot = rotate_xy(
-                rxLoc[:, :2], self.rotation["origin"], self.rotation["angle"]
+                rxLoc[:, :2],
+                self.inversion_mesh.rotation["origin"],
+                self.inversion_mesh.rotation["angle"],
             )
             xy_rot = np.c_[xy_rot, rxLoc[:, 2]]
             point_object = Points.create(
@@ -370,7 +382,7 @@ class InversionDriver:
         )
 
         # Run the inversion
-        mrec = inv.run(self.mstart)
+        mrec = inv.run(self.starting_model.model)
 
         if getattr(global_misfit, "objfcts", None) is not None:
             dpred = np.zeros_like(self.survey.dobs)
@@ -460,17 +472,19 @@ class InversionDriver:
         if self.window is not None:
             rxLoc = self.survey.receiver_locations
             xy_rot = rotate_xy(
-                rxLoc[:, :2], self.rotation["origin"], self.rotation["angle"]
+                rxLoc[:, :2],
+                self.inversion_mesh.rotation["origin"],
+                self.inversion_mesh.rotation["angle"],
             )
             xy_rot = np.c_[xy_rot, rxLoc[:, 2]]
 
             origin_rot = rotate_xy(
-                self.mesh.x0[:2].reshape((1, 2)),
-                self.rotation["origin"],
-                self.rotation["angle"],
+                self.inversion_mesh.mesh.x0[:2].reshape((1, 2)),
+                self.inversion_mesh.rotation["origin"],
+                self.inversion_mesh.rotation["angle"],
             )
 
-            dxy = (origin_rot - self.mesh.x0[:2]).ravel()
+            dxy = (origin_rot - self.inversion_mesh.mesh.x0[:2]).ravel()
 
         else:
             rotation = 0
@@ -488,14 +502,14 @@ class InversionDriver:
             point_object.add_data({"Observed_" + component: {"values": val}})
 
         output_mesh = treemesh_2_octree(
-            self.workspace, self.mesh, parent=self.out_group
+            self.workspace, self.inversion_mesh.mesh, parent=self.out_group
         )
-        output_mesh.rotation = self.rotation["angle"]
+        output_mesh.rotation = self.inversion_mesh.rotation["angle"]
 
         # mesh_object.origin = (
         #         np.r_[mesh_object.origin.tolist()] + np.r_[dxy, np.sum(self.mesh.h[2])]
         # )
-        output_mesh.origin = self.rotation["origin"]
+        output_mesh.origin = self.inversion_mesh.rotation["origin"]
 
         self.workspace.finalize()
 
@@ -518,11 +532,13 @@ class InversionDriver:
                 {
                     "Starting_model": {
                         "values": np.linalg.norm(
-                            (self.activeCellsMap * model_map * self.mstart).reshape(
-                                (3, -1)
-                            ),
+                            (
+                                self.activeCellsMap
+                                * model_map
+                                * self.starting_model.model
+                            ).reshape((3, -1)),
                             axis=0,
-                        )[self.mesh._ubc_order],
+                        )[self.inversion_mesh.mesh._ubc_order],
                         "association": "CELL",
                     }
                 }
@@ -545,134 +561,31 @@ class InversionDriver:
             self.fetch("mesh").add_data(
                 {
                     "SensWeights": {
-                        "values": (self.activeCellsMap * wr)[: self.mesh.nC][
-                            self.mesh._ubc_order
+                        "values": (self.activeCellsMap * wr)[: self.inversion_mesh.nC][
+                            self.inversion_mesh.mesh._ubc_order
                         ],
                         "association": "CELL",
                     }
                 }
             )
-        elif isinstance(self.mesh, TreeMesh):
+        elif isinstance(self.inversion_mesh.mesh, TreeMesh):
             TreeMesh.writeUBC(
-                self.mesh,
+                self.inversion_mesh.mesh,
                 self.outDir + "OctreeMeshGlobal.msh",
                 models={
                     self.outDir
                     + "SensWeights.mod": (
                         self.activeCellsMap * model_map * global_weights
-                    )[: self.mesh.nC]
+                    )[: self.inversion_mesh.nC]
                 },
             )
         else:
-            self.mesh.writeModelUBC(
+            self.inversion_mesh.mesh.writeModelUBC(
                 "SensWeights.mod",
-                (self.activeCellsMap * model_map * global_weights)[: self.mesh.nC],
+                (self.activeCellsMap * model_map * global_weights)[
+                    : self.inversion_mesh.nC
+                ],
             )
-
-    def get_mesh(self):
-        """ Construct or retrieve the mesh """
-
-        if self.params.mesh_from_params:
-            # TODO implement meshing from params option
-            msg = "Cannot currently mesh from parameters. Must provide mesh object."
-            raise NotImplementedError(msg)
-        else:
-            mesh = self.fetch("mesh")
-            if mesh.rotation:
-                origin = [mesh.origin[k] for k in ["x", "y", "z"]]
-                angle = mesh.rotation[0]
-                self.window["azimuth"] = -angle
-            else:
-                origin = self.window["center"]
-                angle = self.window["azimuth"]
-
-            rotation = {"origin": origin, "angle": angle}
-            mesh = octree_2_treemesh(mesh)
-
-        return mesh, rotation
-
-    def get_model(self, input_value, vector_property, save_model=False):
-
-        # Loading a model file
-
-        if isinstance(input_value, UUID):
-            input_model = self.fetch(input_value)
-            input_parent = self.params.parent(input_value)
-            input_mesh = self.fetch(input_parent)
-
-            # Remove null values
-            active = ((input_model > 1e-38) * (input_model < 2e-38)) == 0
-            input_model = input_model[active]
-
-            if hasattr(input_mesh, "centroids"):
-                xyz_cc = input_mesh.centroids[active, :]
-            else:
-                xyz_cc = input_mesh.vertices[active, :]
-
-            if self.window is not None:
-                xyz_cc = rotate_xy(
-                    xyz_cc, self.rotation["origin"], -self.rotation["angle"]
-                )
-
-            input_tree = cKDTree(xyz_cc)
-
-            # Transfer models from mesh to mesh
-            if self.mesh != input_mesh:
-
-                rad, ind = input_tree.query(self.mesh.gridCC, 8)
-
-                model = np.zeros(rad.shape[0])
-                wght = np.zeros(rad.shape[0])
-                for ii in range(rad.shape[1]):
-                    model += input_model[ind[:, ii]] / (rad[:, ii] + 1e-3) ** 0.5
-                    wght += 1.0 / (rad[:, ii] + 1e-3) ** 0.5
-
-                model /= wght
-
-            if save_model:
-                val = model.copy()
-                val[activeCells == False] = self.no_data_value
-                self.fetch("mesh").add_data(
-                    {"Reference_model": {"values": val[self.mesh._ubc_order]}}
-                )
-                print("Reference model transferred to new mesh!")
-
-            if vector_property:
-                model = utils.sdiag(model) * np.kron(
-                    utils.mat_utils.dip_azimuth2cartesian(
-                        dip=self.survey.srcField.param[1],
-                        azm_N=self.survey.srcField.param[2],
-                    ),
-                    np.ones((model.shape[0], 1)),
-                )
-
-        else:
-            if not vector_property:
-                model = np.ones(self.mesh.nC) * input_value[0]
-
-            else:
-                if np.r_[input_value].shape[0] == 3:
-                    # Assumes reference specified as: AMP, DIP, AZIM
-                    model = np.kron(np.c_[input_value], np.ones(self.mesh.nC)).T
-                    model = mkvc(
-                        utils.sdiag(model[:, 0])
-                        * utils.mat_utils.dip_azimuth2cartesian(
-                            model[:, 1], model[:, 2]
-                        )
-                    )
-                else:
-                    # Assumes amplitude reference value in inducing field direction
-                    model = utils.sdiag(
-                        np.ones(self.mesh.nC) * input_value[0]
-                    ) * np.kron(
-                        utils.mat_utils.dip_azimuth2cartesian(
-                            dip=self.survey.source_field.parameters[1],
-                            azm_N=self.survey.source_field.parameters[2],
-                        ),
-                        np.ones((self.mesh.nC, 1)),
-                    )
-
-        return mkvc(model)
 
     def get_survey(self):
         """ Populates SimPEG.LinearSurvey object with workspace data """
@@ -711,37 +624,40 @@ class InversionDriver:
             data_locs[:, 0], data_locs[:, 1], self.params.resolution, window=self.window
         )
 
-        if self.rotation["angle"] is not None:
+        if self.inversion_mesh.rotation["angle"] is not None:
 
             xy_rot = rotate_xy(
                 data_locs[window_ind, :2],
-                self.rotation["origin"],
-                -self.rotation["angle"],
+                self.inversion_mesh.rotation["origin"],
+                -self.inversion_mesh.rotation["angle"],
             )
 
             xyz_loc = np.c_[xy_rot, data_locs[window_ind, 2]]
         else:
             xyz_loc = data_locs[window_ind, :]
 
-        F = LinearNDInterpolator(self.topo[:, :2], self.topo[:, 2])
-        z_topo = F(xyz_loc[:, :2])
-
-        if np.any(np.isnan(z_topo)):
-            tree = cKDTree(self.topo[:, :2])
-            _, ind = tree.query(xyz_loc[np.isnan(z_topo), :2])
-            z_topo[np.isnan(z_topo)] = self.topo[ind, 2]
-
-        xyz_loc[:, 2] = z_topo
-
         offset, radar = self.params.offset()
         if radar is not None:
+
+            F = LinearNDInterpolator(self.topo[:, :2], self.topo[:, 2])
+            z_topo = F(xyz_loc[:, :2])
+
+            if np.any(np.isnan(z_topo)):
+                tree = cKDTree(self.topo[:, :2])
+                _, ind = tree.query(xyz_loc[np.isnan(z_topo), :2])
+                z_topo[np.isnan(z_topo)] = self.topo[ind, 2]
+
+            xyz_loc[:, 2] = z_topo
             radar_offset = self.fetch(radar)
             xyz_loc[:, 2] += radar_offset[window_ind]
 
         xyz_loc += offset if offset is not None else 0
 
         if self.window is not None:
-            self.params.inducing_field_declination += float(self.rotation["angle"])
+            self.params.inducing_field_declination += float(
+                self.inversion_mesh.rotation["angle"]
+            )
+
         receivers = magnetics.receivers.Point(xyz_loc, components=components)
         source = magnetics.sources.SourceField(
             receiver_list=[receivers], parameters=self.params.inducing_field_aid()
@@ -801,61 +717,14 @@ class InversionDriver:
             )
             xy_rot = rotate_xy(
                 topo_locs[ind, :2],
-                self.rotation["origin"],
-                -self.rotation["angle"],
+                self.inversion_mesh.rotation["origin"],
+                -self.inversion_mesh.rotation["angle"],
             )
             topo_locs = np.c_[xy_rot, topo_locs[ind, 2]]
 
         topo_interp_function = NearestNDInterpolator(topo_locs[:, :2], topo_locs[:, 2])
 
         return topo_locs, topo_interp_function
-
-    def create_nested_mesh(
-        self,
-        locations,
-        base_mesh,
-        method="convex_hull",
-        max_distance=100.0,
-        pad_distance=1000.0,
-        min_level=2,
-        finalize=True,
-    ):
-        nested_mesh = TreeMesh(
-            [base_mesh.h[0], base_mesh.h[1], base_mesh.h[2]], x0=base_mesh.x0
-        )
-        min_level = base_mesh.max_level - min_level
-        base_refinement = base_mesh.cell_levels_by_index(np.arange(base_mesh.nC))
-        base_refinement[base_refinement > min_level] = min_level
-        nested_mesh.insert_cells(
-            base_mesh.gridCC,
-            base_refinement,
-            finalize=False,
-        )
-        tree = cKDTree(locations[:, :2])
-        rad, _ = tree.query(base_mesh.gridCC[:, :2])
-        indices = np.where(rad < pad_distance)[0]
-        # indices = np.where(tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1)[0]
-        levels = base_mesh.cell_levels_by_index(indices)
-        levels[levels == base_mesh.max_level] = base_mesh.max_level - 1
-        nested_mesh.insert_cells(
-            base_mesh.gridCC[indices, :],
-            levels,
-            finalize=False,
-        )
-        if method == "convex_hull":
-            # Find cells inside the data extant
-            tri2D = Delaunay(locations[:, :2])
-            indices = tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1
-        else:
-            # tree = cKDTree(locations[:, :2])
-            # rad, _ = tree.query(base_mesh.gridCC[:, :2])
-            indices = rad < max_distance
-        nested_mesh.insert_cells(
-            base_mesh.gridCC[indices, :],
-            base_mesh.cell_levels_by_index(np.where(indices)[0]),
-            finalize=finalize,
-        )
-        return nested_mesh
 
 
 if __name__ == "__main__":

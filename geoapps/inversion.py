@@ -947,13 +947,13 @@ class InversionApp(PlotSelection2D):
             if self.system.value in ["Gravity", "MVI", "Magnetics"]:
                 os.system(
                     "start cmd.exe @cmd /k "
-                    + 'python -m geoapps.pf_inversion "'
+                    + 'python -m geoapps.drivers.pf_inversion "'
                     + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
                 )
             else:
                 os.system(
                     "start cmd.exe @cmd /k "
-                    + 'python -m geoapps.em1d_inversion "'
+                    + 'python -m geoapps.drivers.em1d_inversion "'
                     + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
                 )
             self.run.value = False
