@@ -133,26 +133,26 @@ def test_weigted_average():
 def test_treemesh_2_octree():
 
     ws = Workspace("./FlinFlon.geoh5")
-    mesh = TreeMesh([[5] * 8, [5] * 4, [5] * 16], [0, 0, 0])
-    mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
+    mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
+    mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
     omesh = treemesh_2_octree(ws, mesh, name="test_mesh")
     assert omesh.n_cells == mesh.n_cells
     assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-14)
     expected_refined_cells = [
-        (0, 0, 0, 1),
-        (0, 0, 1, 1),
-        (1, 0, 0, 1),
-        (1, 0, 1, 1),
-        (0, 1, 0, 1),
-        (0, 1, 1, 1),
-        (1, 1, 0, 1),
-        (1, 1, 1, 1),
+        (0, 0, 6),
+        (0, 0, 7),
+        (1, 0, 6),
+        (1, 0, 7),
+        (0, 1, 6),
+        (0, 1, 7),
+        (1, 1, 6),
+        (1, 1, 7),
     ]
     ijk_refined = omesh.octree_cells[["I", "J", "K"]][
         omesh.octree_cells["NCells"] == 1
     ].tolist()
-    assert [k in ijk_refined for k in expected_refined_cells]
-    assert [k in expected_refined_cells for k in ijk_refined]
+    assert np.all([k in ijk_refined for k in expected_refined_cells])
+    assert np.all([k in expected_refined_cells for k in ijk_refined])
 
 
 def test_octree_2_treemesh():
