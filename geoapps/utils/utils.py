@@ -879,7 +879,6 @@ def treemesh_2_octree(workspace, treemesh, **kwargs):
 def octree_2_treemesh(mesh):
     """
     Convert a geoh5 Octree mesh to discretize.TreeMesh
-
     Modified code from module discretize.TreeMesh.readUBC function.
     """
 
