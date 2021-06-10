@@ -1231,7 +1231,7 @@ class MVIParams(Params):
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._lower_bound = val
+        self._lower_bound = UUID(val) if isinstance(val, str) else val
 
     @property
     def upper_bound(self):
@@ -1246,7 +1246,7 @@ class MVIParams(Params):
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._upper_bound = val
+        self._upper_bound = UUID(val) if isinstance(val, str) else val
 
     @property
     def parallelized(self):

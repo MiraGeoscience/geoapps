@@ -322,7 +322,7 @@ def weighted_average(
     :param xyz_in: shape(*, 3) Input coordinate locations.
     :param xyz_out: shape(*, 3) Output coordinate locations.
     :param values: Values to be averaged from the input to output locations.
-    :param max_distance: Maximum averaging distance, beyond which values are assigned nan.
+    :param max_distance: Maximum averaging distance beyond which values do not contribute to the average.
     :param n: Number of nearest neighbours used in the weighted average.
     :param return_indices: If True, return the indices of the nearest neighbours from the input locations.
     :param threshold: Small value added to the radial distance to avoid zero division.
@@ -330,6 +330,7 @@ def weighted_average(
 
     :return avg_values: List of values averaged to the output coordinates
     """
+    n = np.min([xyz_in.shape[0], n])
     assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
 
     assert all(
@@ -338,6 +339,8 @@ def weighted_average(
 
     tree = cKDTree(xyz_in)
     rad, ind = tree.query(xyz_out, n)
+    ind = np.c_[ind]
+    rad = np.c_[rad]
     rad[rad > max_distance] = np.nan
     avg_values = []
     for value in values:
@@ -345,8 +348,10 @@ def weighted_average(
         weight = np.zeros(xyz_out.shape[0])
 
         for ii in range(n):
-            values_interp += value[ind[:, ii]] / (rad[:, ii] + threshold)
-            weight += 1.0 / (rad[:, ii] + threshold)
+            v = value[ind[:, ii]] / (rad[:, ii] + threshold)
+            values_interp = np.nansum([values_interp, v], axis=0)
+            w = 1.0 / (rad[:, ii] + threshold)
+            weight = np.nansum([weight, w], axis=0)
 
         avg_values += [values_interp / weight]
 
@@ -845,7 +850,7 @@ def block_model_2_tensor(block_model, models=[]):
     return tensor, out
 
 
-def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
+def treemesh_2_octree(workspace, treemesh, **kwargs):
 
     indArr, levels = treemesh._ubc_indArr
     ubc_order = treemesh._ubc_order
@@ -857,7 +862,6 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
     origin[2] += treemesh.h[2].size * treemesh.h[2][0]
     mesh_object = Octree.create(
         workspace,
-        name=name,
         origin=origin,
         u_count=treemesh.h[0].size,
         v_count=treemesh.h[1].size,
@@ -866,7 +870,7 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
         v_cell_size=treemesh.h[1][0],
         w_cell_size=-treemesh.h[2][0],
         octree_cells=np.c_[indArr, levels],
-        parent=parent,
+        **kwargs,
     )
 
     return mesh_object
@@ -875,7 +879,6 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
 def octree_2_treemesh(mesh):
     """
     Convert a geoh5 Octree mesh to discretize.TreeMesh
-
     Modified code from module discretize.TreeMesh.readUBC function.
     """
 
@@ -887,9 +890,10 @@ def octree_2_treemesh(mesh):
 
     nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
 
-    h1, h2, h3 = [np.ones(nr) * np.abs(sz) for nr, sz in zip(nCunderMesh, smallCell)]
-
-    x0 = tswCorn - np.array([0, 0, np.sum(h3)])
+    cell_sizes = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
+    u_shift, v_shift, w_shift = [np.sum(h[h < 0]) for h in cell_sizes]
+    h1, h2, h3 = [np.abs(h) for h in cell_sizes]
+    x0 = tswCorn + np.array([u_shift, v_shift, w_shift])
 
     ls = np.log2(nCunderMesh).astype(int)
     if ls[0] == ls[1] and ls[1] == ls[2]:
