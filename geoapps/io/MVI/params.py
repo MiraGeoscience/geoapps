@@ -15,8 +15,10 @@ from .constants import default_ui_json, required_parameters, validations
 
 
 class MVIParams(Params):
-    def __init__(self):
-        super().__init__()
+
+    _default_ui_json = default_ui_json
+
+    def __init__(self, **kwargs):
 
         self.validations: Dict[str, Any] = validations
         self.validator: InputValidator = InputValidator(
@@ -102,15 +104,15 @@ class MVIParams(Params):
         self.no_data_value = None
         self._ifile = InputFile()
 
-        self._set_defaults()
+        super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
         """ Wraps Params._set_defaults """
-        return super()._set_defaults(default_ui_json)
+        return super()._set_defaults(self._default_ui_json)
 
     def default(self, param) -> Any:
         """ Wraps Params.default. """
-        return super().default(default_ui_json, param)
+        return super().default(self._default_ui_json, param)
 
     def components(self) -> List[str]:
         """ Retrieve component names used to index channel, uncertainty data. """

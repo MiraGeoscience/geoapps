@@ -38,7 +38,7 @@ def default_test_generator(tmp_path, param, newval):
     filepath = tmpfile(tmp_path)
     ifile = InputFile(filepath)
     ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
-    params = MVIParams.from_path(filepath)
+    params = MVIParams.from_path(filepath, workspace=workspace)
     assert getattr(params, param) == d_u_j[param]["default"]
     with open(filepath) as f:
         ui = json.load(f)
@@ -48,7 +48,7 @@ def default_test_generator(tmp_path, param, newval):
     ui[param]["enabled"] = False
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath)
+    params = MVIParams.from_path(filepath, workspace=workspace)
     assert getattr(params, param) == d_u_j[param]["default"]
     with open(filepath) as f:
         ui = json.load(f)
@@ -58,7 +58,7 @@ def default_test_generator(tmp_path, param, newval):
     ui[param]["enabled"] = True
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath)
+    params = MVIParams.from_path(filepath, workspace=workspace)
     assert getattr(params, param) == d_u_j[param]["default"]
 
 
@@ -127,7 +127,7 @@ def catch_invalid_generator(
         json.dump(ui, f, indent=4)
 
     with pytest.raises(err) as excinfo:
-        MVIParams.from_path(filepath)
+        MVIParams.from_path(filepath, workspace=workspace)
 
     for a in assertions:
         assert a in str(excinfo.value)
@@ -145,7 +145,7 @@ def param_test_generator(tmp_path, param, value):
     ui[param]["enabled"] = True
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath)
+    params = MVIParams.from_path(filepath, workspace=workspace)
 
     try:
         value = UUID(str(value))
@@ -164,8 +164,8 @@ def test_params_constructors(tmp_path):
     ui = default_ui_json.copy()
     ui["geoh5"] = wrkstr
     ifile.write_ui_json(ui, default=True)
-    params1 = MVIParams.from_path(filepath)
-    params2 = MVIParams.from_ifile(ifile)
+    params1 = MVIParams.from_path(filepath, workspace=workspace)
+    params2 = MVIParams.from_ifile(ifile, workspace=workspace)
 
 
 def test_default_generator(tmp_path):
