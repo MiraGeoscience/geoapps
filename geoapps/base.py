@@ -10,6 +10,7 @@ import time
 import uuid
 from os import mkdir, path
 from shutil import copyfile, move
+from typing import Optional
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.shared import Entity
@@ -17,6 +18,7 @@ from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
 
+from geoapps.io.params import Params
 from geoapps.utils.formatters import string_name
 
 
@@ -35,15 +37,16 @@ class BaseApplication:
     _workspace_geoh5 = None
     _monitoring_directory = None
     _ga_group_name = None
+    _ga_group = None
     _trigger = None
     _figure = None
     _refresh = None
+    _params: Optional[Params] = None
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
         self.plot_result = False
         self._file_browser = FileChooser()
-        self._ga_group = None
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
         self._copy_trigger = Button(
@@ -137,11 +140,11 @@ class BaseApplication:
         if not self.file_browser._select.disabled:
             _, extension = path.splitext(self.file_browser.selected)
 
-            if extension == ".json":
-                # params = load_json_params(self.file_browser.selected)
-                with open(self.file_browser.selected) as f:
-                    params = json.load(f)
-                self.__populate__(**params)
+            if extension == ".json" and getattr(self, "_param_class", None) is not None:
+                self.params = getattr(self, "_param_class").from_path(
+                    self.file_browser.selected
+                )
+                self.__populate__(**self.params.__dict__)
 
             elif extension == ".geoh5":
                 self.h5file = self.file_browser.selected
@@ -323,6 +326,21 @@ class BaseApplication:
         :obj:`ipyfilechooser.FileChooser`: Path for the monitoring folder to be copied to Geoscience ANALYST preferences.
         """
         return self._export_directory
+
+    @property
+    def params(self) -> Params:
+        """
+        Application parameters
+        """
+        return self._params
+
+    @params.setter
+    def params(self, params: Params):
+        assert isinstance(
+            params, Params
+        ), f"Input parameters must be an instance of {Params}"
+
+        self._params = params
 
     @property
     def refresh(self):

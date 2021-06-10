@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from typing import Optional, Union
+
 import ipywidgets as widgets
 import numpy as np
 from geoh5py.data import FloatData, IntegerData, ReferencedData
@@ -47,7 +49,7 @@ class ObjectDataSelection(BaseApplication):
         self._add_groups = value
 
     @property
-    def data(self):
+    def data(self) -> Union[Dropdown, SelectMultiple]:
         """
         Data selector
         """
@@ -73,14 +75,14 @@ class ObjectDataSelection(BaseApplication):
         self._data = value
 
     @property
-    def data_panel(self):
+    def data_panel(self) -> VBox:
         if getattr(self, "_data_panel", None) is None:
             self._data_panel = VBox([self.objects, self.data])
 
         return self._data_panel
 
     @property
-    def main(self):
+    def main(self) -> VBox:
         """
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
         """
@@ -92,7 +94,7 @@ class ObjectDataSelection(BaseApplication):
         return self._main
 
     @property
-    def objects(self):
+    def objects(self) -> Dropdown:
         """
         Object selector
         """
@@ -178,7 +180,7 @@ class ObjectDataSelection(BaseApplication):
             self._data = Dropdown(description="Data: ", options=options)
 
     @property
-    def workspace(self):
+    def workspace(self) -> Optional[Workspace]:
         """
         Target geoh5py workspace
         """

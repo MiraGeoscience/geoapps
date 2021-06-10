@@ -26,14 +26,21 @@ class OctreeMesh(ObjectDataSelection):
     Widget used for the creation of an octree meshes
     """
 
+    _param_class = OctreeParams
     _object_types = (Curve, Octree, Points, Surface)
+    _u_cell_size = None
+    _v_cell_size = None
+    _w_cell_size = None
+    _depth_core = None
+    _horizontal_padding = None
+    _vertical_padding = None
 
     def __init__(self, ui_json=None, **kwargs):
 
         if ui_json is not None and path.exists(ui_json):
-            self.params = OctreeParams.from_path(ui_json)
+            self.params = self._param_class.from_path(ui_json)
         else:
-            self.params = OctreeParams()
+            self.params = self._param_class()
             default_dict = self.params.default_ui_json
             for key, arg in kwargs.items():
                 try:
@@ -44,48 +51,30 @@ class OctreeMesh(ObjectDataSelection):
             self.params.init_from_dict(self.params.default_ui_json)
 
         self.defaults = self.update_defaults(**self.params.__dict__)
+        self.refinement_list = VBox([])
 
-        self._u_cell_size = FloatText(
-            description="Easting",
-        )
-        self._v_cell_size = FloatText(
-            description="Northing",
-        )
-        self._w_cell_size = FloatText(
-            description="Vertical",
-        )
-        self._depth_core = FloatText(
-            description="Minimum depth (m)",
-        )
-        self._horizontal_padding = FloatText(
-            description="Horizontal (m)",
-        )
-        self._vertical_padding = FloatText(
-            description="Vertical (m)",
-        )
-        self._refinements = self.params.refinements
-        self.refinement_list = []
+        super().__init__(**kwargs)
 
-        super().__init__(**self.defaults)
-
-        self.required = [
-            self.project_panel,
-            VBox(
-                [
-                    Label("Base Parameters"),
-                    self.objects,
-                    self._depth_core,
-                    Label("Core cell size"),
-                    self._u_cell_size,
-                    self._v_cell_size,
-                    self._w_cell_size,
-                    Label("Padding distance"),
-                    self._horizontal_padding,
-                    self._vertical_padding,
-                ],
-                layout=Layout(border="solid"),
-            ),
-        ]
+        self.required = VBox(
+            [
+                self.project_panel,
+                VBox(
+                    [
+                        Label("Base Parameters"),
+                        self.objects,
+                        self.depth_core,
+                        Label("Core cell size"),
+                        self.u_cell_size,
+                        self.v_cell_size,
+                        self.w_cell_size,
+                        Label("Padding distance"),
+                        self.horizontal_padding,
+                        self.vertical_padding,
+                    ],
+                    layout=Layout(border="solid"),
+                ),
+            ]
+        )
 
         self.objects.description = "Core hull extent:"
         self.trigger.description = "Create"
@@ -129,9 +118,11 @@ class OctreeMesh(ObjectDataSelection):
                 except:
                     pass
 
-        self.refinement_list = []
-        for label, params in self._refinements.items():
-            self.refinement_list += [self.add_refinement_widget(label, params)]
+        refinement_list = []
+        for label, params in self.params.refinements.items():
+            refinement_list += [self.add_refinement_widget(label, params)]
+
+        self.refinement_list.children = refinement_list
 
     @property
     def main(self):
@@ -139,34 +130,74 @@ class OctreeMesh(ObjectDataSelection):
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
         """
         if self._main is None:
-            self._main = VBox(
-                self.required + self.refinement_list + [self.output_panel]
-            )
+            self._main = VBox([self.required, self.refinement_list, self.output_panel])
 
         return self._main
 
     @property
-    def u_cell_size(self):
+    def u_cell_size(self) -> FloatText:
+        """
+        Widget controlling the u-cell size
+        """
+        if getattr(self, "_u_cell_size", None) is None:
+            self._u_cell_size = FloatText(
+                description="Easting",
+            )
         return self._u_cell_size
 
     @property
-    def v_cell_size(self):
+    def v_cell_size(self) -> FloatText:
+        """
+        Widget controlling the v-cell size
+        """
+        if getattr(self, "_v_cell_size", None) is None:
+            self._v_cell_size = FloatText(
+                description="Northing",
+            )
         return self._v_cell_size
 
     @property
-    def w_cell_size(self):
+    def w_cell_size(self) -> FloatText:
+        """
+        Widget controlling the w-cell size
+        """
+        if getattr(self, "_w_cell_size", None) is None:
+            self._w_cell_size = FloatText(
+                description="Vertical",
+            )
         return self._w_cell_size
 
     @property
-    def depth_core(self):
+    def depth_core(self) -> FloatText:
+        """
+        Widget controlling the depth core
+        """
+        if getattr(self, "_depth_core", None) is None:
+            self._depth_core = FloatText(
+                description="Minimum depth (m)",
+            )
         return self._depth_core
 
     @property
-    def horizontal_padding(self):
+    def horizontal_padding(self) -> FloatText:
+        """
+        Widget controlling the horizontal padding
+        """
+        if getattr(self, "_horizontal_padding", None) is None:
+            self._horizontal_padding = FloatText(
+                description="Horizontal (m)",
+            )
         return self._horizontal_padding
 
     @property
-    def vertical_padding(self):
+    def vertical_padding(self) -> FloatText:
+        """
+        Widget controlling the vertical padding
+        """
+        if getattr(self, "_vertical_padding", None) is None:
+            self._vertical_padding = FloatText(
+                description="Vertical (m)",
+            )
         return self._vertical_padding
 
     @property
@@ -190,12 +221,17 @@ class OctreeMesh(ObjectDataSelection):
         self.params.input_file.filepath = path.join(
             path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
         )
+        self._file_browser.reset(
+            path=self.working_directory,
+            filename=path.basename(self._h5file),
+        )
+        self._file_browser._apply_selection()
 
     def update_objects_choices(self):
         # Refresh the list of objects for all
         self.update_objects_list()
 
-        for widget in self.refinement_list:
+        for widget in self.refinement_list.children:
             widget.children[1].options = self.objects.options
 
     def update_output_name(self, _):
