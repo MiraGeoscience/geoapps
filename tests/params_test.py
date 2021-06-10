@@ -683,14 +683,14 @@ def test_validate_lower_bound(tmp_path):
     param = "lower_bound"
     newval = -1000
     param_test_generator(tmp_path, param, newval)
-    catch_invalid_generator(tmp_path, param, "test", "type")
+    catch_invalid_generator(tmp_path, param, {}, "type")
 
 
 def test_validate_upper_bound(tmp_path):
     param = "upper_bound"
     newval = 1000
     param_test_generator(tmp_path, param, newval)
-    catch_invalid_generator(tmp_path, param, "test", "type")
+    catch_invalid_generator(tmp_path, param, {}, "type")
 
 
 def test_validate_parallelized(tmp_path):
