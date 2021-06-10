@@ -193,7 +193,7 @@ class BaseApplication:
                 live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
                 self.monitoring_directory = live_path
 
-            if hasattr(self, "params"):
+            if getattr(self, "_params", None) is not None:
                 setattr(self.params, "monitoring_directory", self.monitoring_directory)
 
             self.live_link_panel.children = [self.live_link, self.monitoring_panel]
