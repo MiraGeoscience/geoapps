@@ -4,16 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+
 
 import os
 import sys
@@ -97,6 +88,7 @@ class InversionDriver:
         cluster = LocalCluster(processes=False)
         client = Client(cluster)
         self.inversion_mesh = InversionMesh(self.params, self.workspace, self.window)
+        self.window["azimuth"] = -self.inversion_mesh.rotation["angle"]
         self.topo, self.topo_interp_function = self.get_topography()
         self.starting_model = InversionModel(
             self.inversion_mesh, "starting", self.params, self.workspace
