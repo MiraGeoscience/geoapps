@@ -165,7 +165,7 @@ def test_params_constructors(tmp_path):
     ui["geoh5"] = wrkstr
     ifile.write_ui_json(ui, default=True)
     params1 = MVIParams.from_path(filepath, workspace=workspace)
-    params2 = MVIParams.from_ifile(ifile, workspace=workspace)
+    params2 = MVIParams.from_input_file(ifile, workspace=workspace)
 
 
 def test_default_generator(tmp_path):
@@ -684,6 +684,7 @@ def test_validate_lower_bound(tmp_path):
     newval = -1000
     param_test_generator(tmp_path, param, newval)
     catch_invalid_generator(tmp_path, param, "test", "type")
+    catch_invalid_generator(tmp_path, param, {}, "type")
 
 
 def test_validate_upper_bound(tmp_path):
@@ -691,6 +692,7 @@ def test_validate_upper_bound(tmp_path):
     newval = 1000
     param_test_generator(tmp_path, param, newval)
     catch_invalid_generator(tmp_path, param, "test", "type")
+    catch_invalid_generator(tmp_path, param, {}, "type")
 
 
 def test_validate_parallelized(tmp_path):
