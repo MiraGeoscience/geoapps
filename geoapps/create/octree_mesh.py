@@ -248,7 +248,7 @@ class OctreeMesh(ObjectDataSelection):
                 continue
 
         for refinement, params_refinement in zip(
-            self.refinement_list, self.params.refinements.values()
+            self.refinement_list.children, self.params.refinements.values()
         ):
             params_refinement["object"] = refinement.children[1].value
             params_refinement["levels"] = string_2_list(refinement.children[2].value)
