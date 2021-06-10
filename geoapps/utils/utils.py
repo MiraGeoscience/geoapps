@@ -850,7 +850,7 @@ def block_model_2_tensor(block_model, models=[]):
     return tensor, out
 
 
-def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
+def treemesh_2_octree(workspace, treemesh, **kwargs):
 
     indArr, levels = treemesh._ubc_indArr
     ubc_order = treemesh._ubc_order
@@ -862,7 +862,6 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
     origin[2] += treemesh.h[2].size * treemesh.h[2][0]
     mesh_object = Octree.create(
         workspace,
-        name=name,
         origin=origin,
         u_count=treemesh.h[0].size,
         v_count=treemesh.h[1].size,
@@ -871,7 +870,7 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
         v_cell_size=treemesh.h[1][0],
         w_cell_size=-treemesh.h[2][0],
         octree_cells=np.c_[indArr, levels],
-        parent=parent,
+        **kwargs,
     )
 
     return mesh_object
@@ -892,9 +891,10 @@ def octree_2_treemesh(mesh):
 
     nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
 
-    h1, h2, h3 = [np.ones(nr) * np.abs(sz) for nr, sz in zip(nCunderMesh, smallCell)]
-
-    x0 = tswCorn - np.array([0, 0, np.sum(h3)])
+    cell_sizes = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
+    u_shift, v_shift, w_shift = [np.sum(h[h < 0]) for h in cell_sizes]
+    h1, h2, h3 = [np.abs(h) for h in cell_sizes]
+    x0 = tswCorn + np.array([u_shift, v_shift, w_shift])
 
     ls = np.log2(nCunderMesh).astype(int)
     if ls[0] == ls[1] and ls[1] == ls[2]:
