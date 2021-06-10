@@ -5,10 +5,20 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import numpy as np
-import pytest
+import itertools
 
-from geoapps.utils.utils import rotate_xy, running_mean, weighted_average
+import numpy as np
+from discretize import TreeMesh
+from geoh5py.objects import Octree
+from geoh5py.workspace import Workspace
+
+from geoapps.utils.utils import (
+    octree_2_treemesh,
+    rotate_xy,
+    running_mean,
+    treemesh_2_octree,
+    weighted_average,
+)
 
 
 def test_rotation_xy():
@@ -118,3 +128,21 @@ def test_weigted_average():
     values = [np.array([1, 2, 3])]
     out = weighted_average(xyz_in, xyz_out, values, threshold=1e30)
     assert out[0] == 2
+
+
+def test_octree_2_treemesh():
+    ws = Workspace("./FlinFlon.geoh5")
+    mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
+    mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
+    omesh = treemesh_2_octree(ws, mesh)
+    for p in itertools.product("uvw", repeat=3):
+        omesh.origin = [0, 0, 0]
+        for axis in "uvw":
+            attr = axis + "_cell_size"
+            setattr(omesh, attr, np.abs(getattr(omesh, attr)))
+        for axis in np.unique(p):
+            attr = axis + "_cell_size"
+            setattr(omesh, attr, -1 * getattr(omesh, attr))
+            omesh.origin["xyz"["uvw".find(axis)]] = 40
+        tmesh = octree_2_treemesh(omesh)
+        assert np.all((tmesh.cell_centers - mesh.cell_centers) < 1e-14)
