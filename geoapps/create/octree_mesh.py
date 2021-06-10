@@ -43,12 +43,14 @@ class OctreeMesh(ObjectDataSelection):
             self.params = self._param_class()
             default_dict = self.params.default_ui_json
             for key, arg in kwargs.items():
+                if key == "h5file":
+                    key = "geoh5"
                 try:
                     default_dict[key] = arg
                 except KeyError:
                     continue
 
-            self.params.init_from_dict(self.params.default_ui_json)
+            self.params.init_from_dict(default_dict)
 
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.refinement_list = VBox([])

@@ -193,15 +193,6 @@ class PlotSelection2D(ObjectDataSelection):
         return self._height
 
     @property
-    def main(self):
-        """
-        :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
-        """
-        self.__populate__(**self.defaults)
-        self.set_bounding_box(None)
-        return self._main
-
-    @property
     def resolution(self):
         """
         :obj:`ipywidgets.FloatText`: Minimum data separation (m)
