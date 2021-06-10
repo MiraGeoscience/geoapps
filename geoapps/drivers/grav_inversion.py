@@ -111,8 +111,11 @@ class InversionDriver:
         elif self.params.inversion_type == "grav":
             self._run_grav()
 
+    def _run_grav(self):
+        """ Drive gravity inversion from params. """
+
     def _run_mvi(self):
-        """ Drive mvi inversion from params """
+        """ Drive mvi inversion from params. """
 
         # Set some run options
         vector_property = True
