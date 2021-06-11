@@ -40,8 +40,8 @@ class OctreeMesh(ObjectDataSelection):
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class.from_path(ui_json)
         else:
-            self.params = self._param_class()
-            default_dict = self.params.default_ui_json
+
+            default_dict = self._param_class._default_ui_json
             for key, arg in kwargs.items():
                 if key == "h5file":
                     key = "geoh5"
@@ -50,7 +50,7 @@ class OctreeMesh(ObjectDataSelection):
                 except KeyError:
                     continue
 
-            self.params.init_from_dict(default_dict)
+            self.params = self._param_class.from_dict(default_dict)
 
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.refinement_list = VBox([])

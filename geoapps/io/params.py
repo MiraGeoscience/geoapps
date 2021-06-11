@@ -122,6 +122,12 @@ class Params:
 
         return p
 
+    @classmethod
+    def from_dict(cls, ui_json: dict) -> "Params":
+        p = cls()
+        p.init_from_dict(ui_json)
+        return p
+
     def init_from_dict(self, ui_json: dict) -> None:
         """
         Construct Params object from a dictionary.
