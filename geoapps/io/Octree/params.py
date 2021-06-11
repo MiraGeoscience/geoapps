@@ -29,6 +29,7 @@ class OctreeParams(Params):
         self.validator: OctreeValidator = OctreeValidator(
             required_parameters, validations
         )
+        self.geoh5 = None
         self.objects = None
         self.u_cell_size = None
         self.v_cell_size = None
@@ -39,7 +40,6 @@ class OctreeParams(Params):
         self.ga_group_name = None
         self.monitoring_directory = None
         self.workspace_geoh5 = None
-        self.geoh5 = None
         self.run_command = None
         self.run_command_boolean = None
         self.conda_environment = None
