@@ -10,8 +10,7 @@ from uuid import UUID
 
 from ..input_file import InputFile
 from ..params import Params
-from .constants import default_ui_json, required_parameters, validations
-from .validators import OctreeValidator
+from . import OctreeValidator, default_ui_json, required_parameters, validations
 
 
 class OctreeParams(Params):
