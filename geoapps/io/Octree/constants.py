@@ -164,6 +164,9 @@ validations = {
     "title": {
         "types": [str],
     },
+    "geoh5": {
+        "types": [str, Workspace],
+    },
     "objects": {
         "types": [str, UUID],
         "uuid": [],
@@ -207,9 +210,6 @@ validations = {
         "types": [str],
     },
     "workspace_geoh5": {
-        "types": [str, Workspace],
-    },
-    "geoh5": {
         "types": [str, Workspace],
     },
     "run_command": {

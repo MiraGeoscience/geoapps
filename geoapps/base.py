@@ -30,6 +30,7 @@ class BaseApplication:
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
     }
+    _geoh5 = None
     _h5file = None
     _main = None
     _workspace = None
@@ -285,6 +286,22 @@ class BaseApplication:
                 style={"description_width": "initial"},
             )
         return self._ga_group_name
+
+    @property
+    def geoh5(self):
+        """
+        Alias for workspace or h5file property
+        """
+        return self._geoh5
+
+    @geoh5.setter
+    def geoh5(self, value):
+        if isinstance(value, Workspace):
+            self.workspace = value
+        elif isinstance(value, str):
+            self.h5file = value
+        else:
+            raise ValueError
 
     @property
     def h5file(self):

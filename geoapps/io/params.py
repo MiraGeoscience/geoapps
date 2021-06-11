@@ -138,9 +138,12 @@ class Params:
 
     def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
         """ Populate parameters with default values stored in default_ui. """
-        for a in self.__dict__.keys():
+        for key, value in default_ui.items():
             try:
-                self.__setattr__(a, default_ui[a[1:]]["default"])
+                if isinstance(default_ui[key], dict):
+                    self.__setattr__(key, value["default"])
+                else:
+                    self.__setattr__(key, value)
             except KeyError:
 
                 continue

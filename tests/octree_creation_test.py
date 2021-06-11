@@ -84,7 +84,7 @@ def test_create_octree_app():
             finalize=True,
         )
 
-        octree = treemesh_2_octree(ws, treemesh)
+        octree = treemesh_2_octree(ws, treemesh, name="Octree_Mesh")
 
         # Repeat the creation using the app
         refinements = {
