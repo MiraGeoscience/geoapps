@@ -122,6 +122,12 @@ class Params:
 
         return p
 
+    @classmethod
+    def from_dict(cls, ui_json: dict) -> "Params":
+        p = cls()
+        p.init_from_dict(ui_json)
+        return p
+
     def init_from_dict(self, ui_json: dict) -> None:
         """
         Construct Params object from a dictionary.
@@ -138,9 +144,12 @@ class Params:
 
     def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
         """ Populate parameters with default values stored in default_ui. """
-        for a in self.__dict__.keys():
+        for key, value in default_ui.items():
             try:
-                self.__setattr__(a, default_ui[a[1:]]["default"])
+                if isinstance(default_ui[key], dict):
+                    self.__setattr__(key, value["default"])
+                else:
+                    self.__setattr__(key, value)
             except KeyError:
 
                 continue
