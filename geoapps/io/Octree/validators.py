@@ -71,8 +71,10 @@ class OctreeValidator(InputValidator):
             self.validate(k, v, validator, self.workspace, input.associations)
 
         for refinement in refinements.values():
-            assert len(list(refinement.values())) == 4, (
-                "Refinement parameters must contain one of each" + f"{ref_params_list}"
-            )
+            if not len(list(refinement.values())) == 4:
+                raise ValueError(
+                    "Refinement parameters must contain one of each"
+                    + f"{ref_params_list}"
+                )
 
         self.refinements = refinements
