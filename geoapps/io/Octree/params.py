@@ -8,9 +8,15 @@
 from typing import Any, Dict
 from uuid import UUID
 
+from geoapps.io.Octree import (
+    OctreeValidator,
+    default_ui_json,
+    required_parameters,
+    validations,
+)
+
 from ..input_file import InputFile
 from ..params import Params
-from . import OctreeValidator, default_ui_json, required_parameters, validations
 
 
 class OctreeParams(Params):

@@ -62,14 +62,24 @@ class Params:
 
     """
 
-    def __init__(self):
-        self.associations: Dict[Union[str, UUID], Union[str, UUID]] = None
-        self.workspace: Workspace = None
-        self.geoh5: str = None
+    _default_ui_json = {}
+    associations: Dict[Union[str, UUID], Union[str, UUID]] = None
+    _workspace: Workspace = None
+    _output_geoh5: str = None
+    _validator: InputValidator = None
+    _ifile: InputFile = None
+
+    def __init__(self, **kwargs):
+
         self.workpath: str = os.path.abspath(".")
-        self.validator = None
-        self._input_file: InputFile = None
-        self._default_ui_json = None
+
+        self._set_defaults()
+
+        for key, value in kwargs.items():
+            try:
+                setattr(self, key, value)
+            except AttributeError:
+                continue
 
     @property
     def default_ui_json(self):
@@ -77,7 +87,7 @@ class Params:
         return self._default_ui_json
 
     @classmethod
-    def from_input_file(cls, input_file: InputFile) -> "Params":
+    def from_input_file(cls, input_file: InputFile, **kwargs) -> "Params":
         """Construct Params object from InputFile instance.
 
         Parameters
@@ -88,8 +98,8 @@ class Params:
         if not input_file.is_loaded:
             input_file.read_ui_json()
 
-        p = cls()
-        p._input_file = input_file
+        p = cls(**kwargs)
+        p._ifile = input_file
         p.workpath = input_file.workpath
         p.associations = input_file.associations
         p._init_params(input_file)
@@ -97,7 +107,7 @@ class Params:
         return p
 
     @classmethod
-    def from_path(cls, file_path: str) -> "Params":
+    def from_path(cls, file_path: str, **kwargs) -> "Params":
         """
         Construct Params object from path to input file.
 
@@ -106,8 +116,10 @@ class Params:
         file_path : str
             path to input file.
         """
+
         input_file = InputFile(file_path)
-        p = cls.from_input_file(input_file)
+        p = cls.from_input_file(input_file, **kwargs)
+
         return p
 
     def init_from_dict(self, ui_json: dict) -> None:
@@ -130,6 +142,7 @@ class Params:
             try:
                 self.__setattr__(a, default_ui[a[1:]]["default"])
             except KeyError:
+
                 continue
 
     def _init_params(
@@ -139,10 +152,11 @@ class Params:
         validations: Dict[str, Any] = validations,
     ) -> None:
         """ Overrides default parameter values with input file values. """
+        if getattr(self, "workspace", None) is None:
+            self.workspace = Workspace(inputfile.data["geoh5"])
 
-        self.workspace = Workspace(inputfile.data["geoh5"])
         if inputfile.data["geoh5"] is None:
-            self.geoh5 = self.workspace
+            self.output_geoh5 = self.workspace
         else:
             self.geoh5 = Workspace(inputfile.data["geoh5"])
 
@@ -176,6 +190,20 @@ class Params:
     def default(self, default_ui: Dict[str, Any], param: str) -> Any:
         """ Return default value of parameter stored in default_ui_json. """
         return default_ui[param]["default"]
+
+    @property
+    def validator(self) -> InputValidator:
+
+        if getattr(self, "_validator", None) is None:
+            self._validator = InputValidator(required_parameters, validations)
+        return self._validator
+
+    @validator.setter
+    def validator(self, validator: InputValidator):
+        assert isinstance(
+            validator, InputValidator
+        ), f"Input value must be of class {InputValidator}"
+        self._validator = validator
 
     @property
     def workspace(self):

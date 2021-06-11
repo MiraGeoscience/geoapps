@@ -15,8 +15,10 @@ from .constants import default_ui_json, required_parameters, validations
 
 
 class MVIParams(Params):
-    def __init__(self):
-        super().__init__()
+
+    _default_ui_json = default_ui_json
+
+    def __init__(self, **kwargs):
 
         self.validations: Dict[str, Any] = validations
         self.validator: InputValidator = InputValidator(
@@ -101,8 +103,8 @@ class MVIParams(Params):
         self.out_group = None
         self.no_data_value = None
         self._input_file = InputFile()
-        self._default_ui_json = default_ui_json
-        self._set_defaults()
+
+        super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
         """ Wraps Params._set_defaults """
