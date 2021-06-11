@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from typing import Optional, Union
+
 import ipywidgets as widgets
 import numpy as np
 from geoh5py.data import FloatData, IntegerData, ReferencedData
@@ -22,19 +24,17 @@ class ObjectDataSelection(BaseApplication):
     """
 
     defaults = {}
+    _data = None
+    _objects = None
+    _add_groups = False
+    _select_multiple = False
+    _object_types = None
+    _find_label = []
 
     def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
-
-        self._add_groups = False
-        self._find_label = []
-        self._object_types = []
-        self._select_multiple = False
+        self._data_panel = None
 
         super().__init__(**kwargs)
-        self.data_panel = VBox([self.objects, self.data])
-        self.update_data_list(None)
-        self._main = self.data_panel
 
     @property
     def add_groups(self):
@@ -49,7 +49,7 @@ class ObjectDataSelection(BaseApplication):
         self._add_groups = value
 
     @property
-    def data(self):
+    def data(self) -> Union[Dropdown, SelectMultiple]:
         """
         Data selector
         """
@@ -62,6 +62,9 @@ class ObjectDataSelection(BaseApplication):
                 self._data = Dropdown(
                     description="Data: ",
                 )
+            if self._objects is not None:
+                self.update_data_list(None)
+
         return self._data
 
     @data.setter
@@ -72,7 +75,26 @@ class ObjectDataSelection(BaseApplication):
         self._data = value
 
     @property
-    def objects(self):
+    def data_panel(self) -> VBox:
+        if getattr(self, "_data_panel", None) is None:
+            self._data_panel = VBox([self.objects, self.data])
+
+        return self._data_panel
+
+    @property
+    def main(self) -> VBox:
+        """
+        :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
+        """
+        self.__populate__(**self.defaults)
+        if self._main is None:
+            self._main = self.data_panel
+            self.update_data_list(None)
+
+        return self._main
+
+    @property
+    def objects(self) -> Dropdown:
         """
         Object selector
         """
@@ -158,7 +180,7 @@ class ObjectDataSelection(BaseApplication):
             self._data = Dropdown(description="Data: ", options=options)
 
     @property
-    def workspace(self):
+    def workspace(self) -> Optional[Workspace]:
         """
         Target geoh5py workspace
         """
@@ -290,23 +312,24 @@ class LineOptions(ObjectDataSelection):
     """
 
     defaults = {"find_label": "line"}
+    _multiple_lines = None
 
     def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
 
-        self._multiple_lines = None
+        self.defaults = self.update_defaults(**kwargs)
 
-        super().__init__(**kwargs)
+        super().__init__(**self.defaults)
 
-        if "objects" in kwargs.keys() and isinstance(kwargs["objects"], Dropdown):
-            self._objects.observe(self.update_data_list, names="value")
+        self.objects.observe(self.update_data_list, names="value")
+        self.data.observe(self.update_line_list, names="value")
+        self.data.description = "Lines field"
 
-        self._data.observe(self.update_line_list, names="value")
-        self.update_data_list(None)
-        self.update_line_list(None)
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox([self._data, self.lines])
 
-        self._main = VBox([self._data, self.lines])
-        self._data.description = "Lines field"
+        return self._main
 
     @property
     def lines(self):
@@ -353,32 +376,28 @@ class TopographyOptions(ObjectDataSelection):
     Define the topography used by the inversion
     """
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self, option_list=["None", "Object", "Relative to Sensor", "Constant"], **kwargs
+    ):
+        self.defaults = self.update_defaults(**kwargs)
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
         self._offset = FloatText(description="Vertical offset (+ve up)")
         self._constant = FloatText(
             description="Elevation (m)",
         )
-
-        super().__init__(**kwargs)
-
-        self.objects.value = utils.find_value(self.objects.options, self.find_label)
         self.option_list = {
-            "Object": self.main,
-            "Relative to Sensor": self.offset,
-            "Constant": self.constant,
             "None": widgets.Label("No topography"),
+            "Object": self.data_panel,
+            "Relative to Sensor": self._offset,
+            "Constant": self._constant,
         }
         self._options = widgets.RadioButtons(
-            options=["Object", "Relative to Sensor", "Constant"],
+            options=option_list,
             description="Define by:",
         )
+        self.options.observe(self.update_options)
 
-        def update_options(_):
-            self.update_options()
-
-        self.options.observe(update_options)
-        self._main = VBox([self.options, self.option_list[self.options.value]])
+        super().__init__(**self.defaults)
 
     @property
     def panel(self):
@@ -389,6 +408,13 @@ class TopographyOptions(ObjectDataSelection):
         return self._constant
 
     @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox([self.options, self.option_list[self.options.value]])
+
+        return self._main
+
+    @property
     def offset(self):
         return self._offset
 
@@ -396,8 +422,8 @@ class TopographyOptions(ObjectDataSelection):
     def options(self):
         return self._options
 
-    def update_options(self):
-        self._main.children = [
+    def update_options(self, _):
+        self.main.children = [
             self.options,
             self.option_list[self.options.value],
         ]

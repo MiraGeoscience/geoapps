@@ -5,7 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 from uuid import UUID
 
 from ..input_file import InputFile
@@ -102,17 +102,17 @@ class MVIParams(Params):
         self.inversion_type = None
         self.out_group = None
         self.no_data_value = None
-        self._ifile = InputFile()
+        self._input_file = InputFile()
 
         super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
         """ Wraps Params._set_defaults """
-        return super()._set_defaults(self._default_ui_json)
+        return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
         """ Wraps Params.default. """
-        return super().default(self._default_ui_json, param)
+        return super().default(self.default_ui_json, param)
 
     def components(self) -> List[str]:
         """ Retrieve component names used to index channel, uncertainty data. """
