@@ -12,10 +12,10 @@ from geoapps.utils import filter_xy, rotate_xy
 
 
 class InversionData:
-    def __init__(self, workspace, params, inversion_mesh, topography, window):
+    def __init__(self, workspace, params, mesh, topography, window):
         self.workspace = workspace
         self.params = params
-        self.inversion_mesh = inversion_mesh
+        self.mesh = mesh
         self.topography = topography
         self.window = window
         self.filter = None
@@ -27,9 +27,9 @@ class InversionData:
         self.data = {}
         self.uncertainties = {}
         self.survey = None
-        self.initialize()
+        self._initialize()
 
-    def initialize(self):
+    def _initialize(self):
         """ Extract data from params class. """
 
         self.offset, self.radar = self.params.offset()
@@ -49,15 +49,11 @@ class InversionData:
             data_locs = self.window_locs(data_locs, self.window)
             Points.create(self.workspace, name="test_locs_window", vertices=data_locs)
 
-        if self.inversion_mesh.rotation is not None:
-            origin = self.inversion_mesh.rotation["origin"]
-            angle = -self.inversion_mesh.rotation["angle"]
+        if self.mesh.rotation is not None:
+            origin = self.mesh.rotation["origin"]
+            angle = -self.mesh.rotation["angle"]
             data_locs = self.rotate_locs(data_locs, origin, angle)
 
-        points_object = Points.create(
-            self.workspace, name="test_locs_rotation", vertices=data_locs
-        )
-        points_object.add_data({"data": {"values": self.data["tmi"][self.filter]}})
         if self.offset is not None:
             data_locs = self.offset_locs(data_locs, self.offset)
 
@@ -65,11 +61,9 @@ class InversionData:
             radar_offset = self.workspace.get_entity(self.radar)[0].values
             data_locs = self.drape_locs(data_locs, self.topo, radar_offset)
 
-        self.survey = self.get_survey(
-            data_locs,
-        )
+        self.survey = self.get_survey(self.params, data_locs)
 
-    def get_locs(self, workspace, params):
+    def get_locs(cls, workspace, params):
         """ Returns locations of data object centroids or vertices. """
 
         data_object = workspace.get_entity(params.data_object)[0]
@@ -84,7 +78,7 @@ class InversionData:
     def filter_locs(self, locs, resolution=0, window=None):
         """ Filters data locations and accumulates self.filters. """
 
-        angle = -self.inversion_mesh.rotation["angle"]
+        angle = -self.mesh.rotation["angle"]
         if self.filter is None:
             self.filter = filter_xy(locs[:, 0], locs[:, 1], resolution, window, angle)
         else:
@@ -139,7 +133,9 @@ class InversionData:
             else:
                 ignore_value = float(ignore_values)
 
-        return ignore_value, ignore_type
+            return ignore_value, ignore_type
+        else:
+            return None, None
 
     def get_data(self, component):
         channel = self.params.channel(component)
@@ -215,8 +211,8 @@ class SurveyFactory:
             )
             survey = magnetics.survey.Survey(source)
 
-            data = np.vstack(data.values).T
-            uncertainties = np.vstack(uncertainties.values).T
+            data = np.vstack(data.values()).T
+            uncertainties = np.vstack(uncertainties.values()).T
 
             survey.dobs = data.ravel()
             survey.std = uncertainties.ravel()

@@ -22,12 +22,12 @@ ws = params.workspace
 
 
 def test_initialize():
-    inversion_mesh = InversionMesh(params, ws)
-    assert isinstance(inversion_mesh.mesh, TreeMesh)
-    assert inversion_mesh.rotation["angle"] == 20
+    mesh = InversionMesh(params, ws)
+    assert isinstance(mesh.mesh, TreeMesh)
+    assert mesh.rotation["angle"] == 20
 
 
 def test_original_cc():
-    inversion_mesh = InversionMesh(params, ws)
+    mesh = InversionMesh(params, ws)
     msh = ws.get_entity(params.mesh)[0]
-    assert np.all((msh.centroids - inversion_mesh.original_cc()) < 1e-14)
+    np.testing.assert_allclose(msh.centroids, mesh.original_cc())

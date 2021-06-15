@@ -8,3 +8,4 @@
 from .data import InversionData
 from .meshes import InversionMesh
 from .models import InversionModel
+from .topography import get_topography
