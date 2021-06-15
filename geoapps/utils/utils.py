@@ -9,6 +9,7 @@ import gc
 import json
 import os
 import re
+from typing import Dict, Tuple
 
 import dask
 import dask.array as da
@@ -361,8 +362,84 @@ def weighted_average(
     return avg_values
 
 
+def window_xy(
+    x: np.ndarray, y: np.ndarray, window: Dict[str, float], mask: np.array = None
+) -> Tuple[np.array, np.array, np.array]:
+    """ Window data in x, y coordinates with center, size based limits. """
+
+    if ("center" in window.keys()) & ("size" in window.keys()):
+        x_lim = [
+            window["center"][0] - window["size"][0] / 2,
+            window["center"][0] + window["size"][0] / 2,
+        ]
+        y_lim = [
+            window["center"][1] - window["size"][1] / 2,
+            window["center"][1] + window["size"][1] / 2,
+        ]
+    else:
+        msg = f"Missing window keys: 'center' and 'size'."
+        raise KeyError(msg)
+
+    window_mask = x > x_lim[0]
+    window_mask &= x < x_lim[1]
+    window_mask &= y > y_lim[0]
+    window_mask &= y < y_lim[1]
+
+    if mask is not None:
+        window_mask &= mask
+
+    return window_mask, x[window_mask], y[window_mask]
+
+
+def downsample_xy(x, y, distance, mask=None):
+
+    downsample_mask = np.ones_like(x, dtype=bool)
+    xy = np.c_[x, y]
+    tree = cKDTree(xy)
+
+    mask_ind = np.where(downsample_mask)[0]
+    nstn = xy.shape[0]
+    for ii in range(nstn):
+        if downsample_mask[mask_ind[ii]]:
+            ind = tree.query_ball_point(xy[ii, :2], distance)
+            downsample_mask[mask_ind[ind]] = False
+            downsample_mask[mask_ind[ii]] = True
+
+    if mask is not None:
+        downsample_mask &= mask
+
+    xy = xy[downsample_mask]
+    return downsample_mask, xy[:, 0], xy[:, 1]
+
+
+def downsample_grid(xg, yg, distance, mask=None):
+
+    if distance > 1:
+        downsample_mask = np.zeros_like(xg, dtype=bool)
+        d_l = np.max(
+            [
+                np.linalg.norm(np.c_[xg[0, 0] - xg[0, 1], yg[0, 0] - yg[0, 1]]),
+                np.linalg.norm(np.c_[xg[0, 0] - xg[1, 0], yg[0, 0] - yg[1, 0]]),
+            ]
+        )
+        dwn = int(np.ceil(distance / d_l))
+        downsample_mask[::dwn, ::dwn] = True
+
+        x = xg.ravel()
+        y = yg.ravel()
+        downsample_mask = downsample_mask.ravel()
+
+        if mask is not None:
+            downsample_mask &= mask
+
+        return downsample_mask, x[downsample_mask], y[downsample_mask]
+
+    else:
+        return np.ones_like(xg.ravel(), dtype=bool), xg.ravel(), yg.ravel()
+
+
 def filter_xy(
-    x: np.array, y: np.array, distance: float, window: dict = None
+    x: np.array, y: np.array, distance: float, window: dict = None, angle: float = None
 ) -> np.array:
     """
     Function to extract and down-sample xy locations based on minimum distance and window parameters.
@@ -380,54 +457,31 @@ def filter_xy(
 
     :return selection: Array of 'bool' of shape(x)
     """
-    mask = np.ones_like(x, dtype="bool")
+
+    mask = np.ones_like(x.ravel(), dtype=bool)
+
     if window is not None:
-        x_lim = [
-            window["center"][0] - window["size"][0] / 2,
-            window["center"][0] + window["size"][0] / 2,
-        ]
-        y_lim = [
-            window["center"][1] - window["size"][1] / 2,
-            window["center"][1] + window["size"][1] / 2,
-        ]
-        xy_rot = rotate_xy(
-            np.c_[x.ravel(), y.ravel()], window["center"], window["azimuth"]
-        )
-        mask = (
-            (xy_rot[:, 0] > x_lim[0])
-            * (xy_rot[:, 0] < x_lim[1])
-            * (xy_rot[:, 1] > y_lim[0])
-            * (xy_rot[:, 1] < y_lim[1])
-        ).reshape(x.shape)
+
+        if angle is not None:
+            azim = angle
+        elif "azimuth" in window.keys():
+            azim = window["azimuth"]
+        else:
+            azim = None
+
+        if azim is not None:
+            xy_locs = rotate_xy(np.c_[x.ravel(), y.ravel()], window["center"], azim)
+        else:
+            xy_locs = np.c_[x.ravel(), y.ravel()]
+
+        mask, _, _ = window_xy(xy_locs[:, 0], xy_locs[:, 1], window, mask=mask)
 
     if x.ndim == 1:
-        filter_xy = np.ones_like(x, dtype="bool")
-        if distance > 0:
-            mask_ind = np.where(mask)[0]
-            xy = np.c_[x[mask], y[mask]]
-            tree = cKDTree(xy)
-
-            nstn = xy.shape[0]
-            # Initialize the filter
-            for ii in range(nstn):
-                if filter_xy[mask_ind[ii]]:
-                    ind = tree.query_ball_point(xy[ii, :2], distance)
-                    filter_xy[mask_ind[ind]] = False
-                    filter_xy[mask_ind[ii]] = True
-
-    elif distance > 0:
-        filter_xy = np.zeros_like(x, dtype="bool")
-        d_l = np.max(
-            [
-                np.linalg.norm(np.c_[x[0, 0] - x[0, 1], y[0, 0] - y[0, 1]]),
-                np.linalg.norm(np.c_[x[0, 0] - x[1, 0], y[0, 0] - y[1, 0]]),
-            ]
-        )
-        dwn = int(np.ceil(distance / d_l))
-        filter_xy[::dwn, ::dwn] = True
+        mask, _, _ = downsample_xy(x, y, distance, mask=mask)
     else:
-        filter_xy = np.ones_like(x, dtype="bool")
-    return filter_xy * mask
+        mask, _, _ = downsample_grid(x, y, distance, mask=mask)
+
+    return mask
 
 
 def rotate_xy(xyz: np.ndarray, center: list, angle: float):

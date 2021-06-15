@@ -13,11 +13,15 @@ from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
 from geoapps.utils.utils import (
+    downsample_grid,
+    downsample_xy,
+    filter_xy,
     octree_2_treemesh,
     rotate_xy,
     running_mean,
     treemesh_2_octree,
     weighted_average,
+    window_xy,
 )
 
 
@@ -171,3 +175,59 @@ def test_octree_2_treemesh():
             omesh.origin["xyz"["uvw".find(axis)]] = 40
         tmesh = octree_2_treemesh(omesh)
         assert np.all((tmesh.cell_centers - mesh.cell_centers) < 1e-14)
+
+
+def test_window_xy():
+    xg, yg = np.meshgrid(np.arange(11), np.arange(11))
+    x = xg.ravel()
+    y = yg.ravel()
+    window = {
+        "center": [5, 5],
+        "size": [1, 1],
+    }
+    ind, xw, yw = window_xy(x, y, window)
+    assert len(xw) == 1
+    assert len(yw) == 1
+    assert xw[0] == 5
+    assert yw[0] == 5
+    assert sum(ind) == 1
+
+    window = {"center": [6, 2.5], "size": [3, 2]}
+    ind, xw, yw = window_xy(x, y, window)
+    assert [p in xw for p in [5, 6, 7]]
+    assert [p in [5, 6, 7] for p in xw]
+    assert [p in yw for p in [3, 4]]
+    assert [p in [3, 4] for p in yw]
+
+
+def test_downsample_xy():
+    xg, yg = np.meshgrid(np.arange(11), np.arange(11))
+    x = xg.ravel()
+    y = yg.ravel()
+    ind, xd, yd = downsample_xy(x, y, 0)
+    assert np.all(x == xd)
+    assert np.all(y == yd)
+
+    ind, xd, yd = downsample_xy(x, y, 1)
+    assert np.all(x[::2] == xd)
+    assert np.all(y[::2] == yd)
+
+
+def test_downsample_grid():
+    xg, yg = np.meshgrid(np.arange(11), np.arange(11))
+    ind, xd, yd = downsample_grid(xg, yg, 2)
+    assert np.all(np.diff(yd.reshape(6, 6), axis=0) == 2)
+    assert np.all(np.diff(xd.reshape(6, 6), axis=1) == 2)
+
+
+# def test_filter_xy():
+#     xg, yg = np.meshgrid(np.arange(11), np.arange(11))
+#     x = xg.ravel()
+#     y = yg.ravel()
+#     distance = 0
+#     window = {
+#         "center": [6, 2.5],
+#         "size" : [3, 2]
+#     }
+#     ind = filter_xy(x, y, distance, window)
+#     assert [p in x for p in [5, 6, 7]]
