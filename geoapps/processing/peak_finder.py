@@ -58,25 +58,16 @@ class PeakFinder(ObjectDataSelection):
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
         "data": ["Observed"],
-        "model": {
-            "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-            "data": "Iteration_7_model",
-        },
         "lines": {
             "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
             "data": "Line",
             "lines": 6073400.0,
         },
-        "boreholes": {"objects": "geochem", "data": "Al2O3"},
-        "doi": {"data": "Z"},
-        "doi_percent": 60,
-        "doi_revert": True,
         "center": 4050,
         "width": 1000,
         "smoothing": 6,
         "tem_checkbox": True,
         "markers": True,
-        "slice_width": 25,
         "x_label": "Distance",
         "ga_group_name": "PeakFinder",
     }
@@ -105,12 +96,6 @@ class PeakFinder(ObjectDataSelection):
         self._survey = None
         self._time_groups = None
         self.objects.observe(self.objects_change, names="value")
-        self.model_panel = VBox([self.show_model])
-        self.show_model.observe(self.show_model_trigger, names="value")
-        self.doi_panel = VBox([self.show_doi])
-        self.show_doi.observe(self.show_doi_trigger, names="value")
-        self.borehole_panel = VBox([self.show_borehole])
-        self.show_borehole.observe(self.show_borehole_trigger, names="value")
         self.system.observe(self.system_observer, names="value")
         self.system_panel_option.observe(self.system_panel_trigger)
         self.system_panel = VBox([self.system_panel_option])
@@ -120,11 +105,6 @@ class PeakFinder(ObjectDataSelection):
         self.decay_panel = VBox([self.show_decay])
         self.previous_line = self.lines.lines.value
         self.objects.description = "Survey"
-        self.boreholes.objects.description = "Points"
-        self.boreholes.data.description = "Values"
-        self.model_selection.objects.description = "Surface:"
-        self.model_selection.data.description = "Model"
-        self.doi_selection.data.description = "DOI Layer"
         self.scale_panel = VBox([self.scale_button, self.scale_value])
         self.scale_button.observe(self.scale_update)
         self.channel_selection.observe(self.channel_panel_update, names="value")
@@ -175,45 +155,10 @@ class PeakFinder(ObjectDataSelection):
             ]
         )
         self.tem_checkbox.observe(self.objects_change, names="value")
-        self.model_section = interactive_output(
-            self.plot_model_selection,
-            {
-                "ind": self.lines.lines,
-                "center": self.center,
-                "width": self.width,
-                "model": self.model_selection.data,
-                "smoothing": self.smoothing,
-                "slice_width": self.slice_width,
-                "x_label": self.x_label,
-                "colormap": self.color_maps,
-                "log": self.model_log,
-                "min": self.model_min,
-                "max": self.model_max,
-                "reverse": self.reverse_cmap,
-                "opacity": self.opacity,
-                "doi_show": self.show_doi,
-                "doi": self.doi_selection.data,
-                "doi_percent": self.doi_percent,
-                "doi_revert": self.doi_revert,
-                "borehole_show": self.show_borehole,
-                "borehole_object": self.boreholes.objects,
-                "borehole_data": self.boreholes.data,
-                "boreholes_size": self.boreholes_size,
-                "max_migration": self.max_migration,
-                "min_channels": self.min_channels,
-                "min_amplitude": self.min_amplitude,
-                "min_value": self.min_value,
-                "min_width": self.min_width,
-                "plot_trigger": self.plot_trigger,
-            },
-        )
 
         super().__init__(**self.defaults)
 
         self.lines.__populate__(**self.defaults["lines"])
-        self.boreholes.__populate__(**self.defaults["boreholes"])
-        self.model_selection.__populate__(**self.defaults["model"])
-        self.doi_selection.__populate__(**self.defaults["doi"])
 
         self.channel_panel = VBox(
             [
@@ -226,7 +171,6 @@ class PeakFinder(ObjectDataSelection):
                 self.channel_panel,
             ]
         )
-
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export Peaks"
         self.trigger_panel = VBox(
@@ -254,32 +198,6 @@ class PeakFinder(ObjectDataSelection):
                 self.max_migration,
                 self.min_channels,
                 self.residual,
-            ]
-        )
-        self.model_parameters = VBox(
-            [
-                self.model_selection.objects,
-                self.model_selection.data,
-                self.model_log,
-                self.model_min,
-                self.model_max,
-                self.color_maps,
-                self.reverse_cmap,
-                self.opacity,
-            ],
-        )
-        self.doi_parameters = VBox(
-            [
-                self.doi_selection.data,
-                self.doi_percent,
-                self.doi_revert,
-            ]
-        )
-        self.scatter_parameters = VBox(
-            [
-                self.boreholes.main,
-                self.slice_width,
-                self.boreholes_size,
             ]
         )
         self.output_panel = VBox(
@@ -323,7 +241,6 @@ class PeakFinder(ObjectDataSelection):
                         ),
                     ]
                 ),
-                self.model_panel,
                 self.output_panel,
             ]
         )
@@ -339,32 +256,6 @@ class PeakFinder(ObjectDataSelection):
             )
 
         return self._plot_trigger
-
-    @property
-    def boreholes(self):
-        """
-        :obj:`geoapps.selection.ObjectDataSelection`: Widget for the selection of borehole data
-        """
-        if getattr(self, "_boreholes", None) is None:
-            self._boreholes = ObjectDataSelection(object_types=Points)
-
-        return self._boreholes
-
-    @property
-    def boreholes_size(self):
-        """
-        :obj:`ipywidgets.IntSlider`: Adjust the size of borehole markers
-        """
-        if getattr(self, "_boreholes_size", None) is None:
-            self._boreholes_size = IntSlider(
-                value=3,
-                min=1,
-                max=20,
-                description="Marker Size",
-                continuous_update=False,
-            )
-
-        return self._boreholes_size
 
     @property
     def center(self):
@@ -408,20 +299,6 @@ class PeakFinder(ObjectDataSelection):
         return self._channel_selection
 
     @property
-    def color_maps(self):
-        """
-        :obj:`ipywidgets.Dropdown`: Selection of colormap used by the model plot
-        """
-        if getattr(self, "_color_maps", None) is None:
-            self._color_maps = Dropdown(
-                description="Colormaps",
-                options=px.colors.named_colorscales(),
-                value="edge",
-            )
-
-        return self._color_maps
-
-    @property
     def data(self):
         """
         :obj:`ipywidgets.SelectMultiple`: Data selection used by the application
@@ -439,45 +316,6 @@ class PeakFinder(ObjectDataSelection):
         self._data = value
         self._data.observe(self.set_data, names="value")
         self.set_data(None)
-
-    @property
-    def doi_percent(self):
-        """
-        :obj:`ipywidgets.FloatSlider`: Define the DOI index used to mask the model plot
-        """
-        if getattr(self, "_doi_percent", None) is None:
-            self._doi_percent = FloatSlider(
-                value=20.0,
-                min=0.0,
-                max=100.0,
-                step=0.1,
-                continuous_update=False,
-                description="DOI %",
-            )
-
-        return self._doi_percent
-
-    @property
-    def doi_revert(self):
-        """
-        :obj:`ipywidgets.Checkbox`: Apply the inverse of the DOI index
-        """
-        if getattr(self, "_doi_revert", None) is None:
-            self._doi_revert = Checkbox(description="Revert", value=False)
-
-        return self._doi_revert
-
-    @property
-    def doi_selection(self):
-        """
-        :obj:`geoapps.selection.ObjectDataSelection`: Widget for the selection of a DOI model
-        """
-        if getattr(self, "_doi_selection", None) is None:
-            self._doi_selection = ObjectDataSelection(
-                objects=self.model_selection.objects
-            )
-
-        return self._doi_selection
 
     @property
     def flip_sign(self):
@@ -647,67 +485,6 @@ class PeakFinder(ObjectDataSelection):
         return self._min_width
 
     @property
-    def model_log(self):
-        """
-        :obj:`ipywidgets.Checkbox`: Display model values in log10 scale
-        """
-        if getattr(self, "_model_log", None) is None:
-            self._model_log = Checkbox(description="log", value=True, indent=False)
-
-        return self._model_log
-
-    @property
-    def model_max(self):
-        """
-        :obj:`ipywidgets.FloatText`: Upper bound value used to plot the model
-        """
-        if getattr(self, "_model_max", None) is None:
-            self._model_max = FloatText(
-                description="max", value=1e-1, continuous_update=False
-            )
-
-        return self._model_max
-
-    @property
-    def model_min(self):
-        """
-        :obj:`ipywidgets.FloatText`: Lower bound value used to plot the model
-        """
-        if getattr(self, "_model_min", None) is None:
-            self._model_min = FloatText(
-                description="min", value=1e-4, continuous_update=False
-            )
-
-        return self._model_min
-
-    @property
-    def model_selection(self):
-        """
-        :obj:`geoapps.selection.ObjectDataSelection`: Widget for the selection of a surface model object and values
-        """
-        if getattr(self, "_model_selection", None) is None:
-            self._model_selection = ObjectDataSelection(object_types=Surface)
-
-        return self._model_selection
-
-    @property
-    def opacity(self):
-        """
-        :obj:`ipywidgets.FloatSlider`: Adjust the transparency of the model plot
-        """
-        if getattr(self, "_opacity", None) is None:
-            self._opacity = FloatSlider(
-                value=0.9,
-                min=0.0,
-                max=1.0,
-                step=0.05,
-                continuous_update=False,
-                description="Opacity",
-            )
-
-        return self._opacity
-
-    @property
     def residual(self):
         """
         :obj:`ipywidgets.Checkbox`: Use the residual between the original and smoothed data profile
@@ -716,16 +493,6 @@ class PeakFinder(ObjectDataSelection):
             self._residual = Checkbox(description="Show residual", value=False)
 
         return self._residual
-
-    @property
-    def reverse_cmap(self):
-        """
-        :obj:`ipywidgets.ToggleButton`: Reverse the colormap used by the model plot
-        """
-        if getattr(self, "_reverse_cmap", None) is None:
-            self._reverse_cmap = ToggleButton(description="Flip colormap", value=False)
-
-        return self._reverse_cmap
 
     @property
     def run_all(self):
@@ -776,19 +543,6 @@ class PeakFinder(ObjectDataSelection):
         return self._scale_value
 
     @property
-    def show_borehole(self):
-        """
-        :obj:`ipywidgets.ToggleButton`: Display the borehole panel
-        """
-        if getattr(self, "_show_borehole", None) is None:
-            self._show_borehole = ToggleButton(
-                description="Show Scatter",
-                value=False,
-            )
-
-        return self._show_borehole
-
-    @property
     def show_decay(self):
         """
         :obj:`ipywidgets.ToggleButton`: Display the decay curve plot
@@ -797,51 +551,6 @@ class PeakFinder(ObjectDataSelection):
             self._show_decay = ToggleButton(description="Show decay", value=False)
 
         return self._show_decay
-
-    @property
-    def show_doi(self):
-        """
-        :obj:`ipywidgets.ToggleButton`: Display the doi options panel
-        """
-        if getattr(self, "_show_doi", None) is None:
-            self._show_doi = ToggleButton(
-                description="Show DOI",
-                value=False,
-            )
-
-        return self._show_doi
-
-    @property
-    def show_model(self):
-        """
-        :obj:`ipywidgets.ToggleButton`: Display the model plot options panel
-        """
-        if getattr(self, "_show_model", None) is None:
-            self._show_model = ToggleButton(
-                description="Show model",
-                value=False,
-            )
-
-        return self._show_model
-
-    @property
-    def slice_width(self):
-        """
-        :obj:`ipywidgets.FloatSlider`: Change the search radius for plotting around the model section
-        """
-        if getattr(self, "_slice_width", None) is None:
-            self._slice_width = FloatSlider(
-                value=10.0,
-                min=1.0,
-                max=500.0,
-                step=1.0,
-                description="Slice width (m)",
-                disabled=False,
-                continuous_update=False,
-                orientation="horizontal",
-            )
-
-        return self._slice_width
 
     @property
     def smoothing(self):
@@ -988,10 +697,6 @@ class PeakFinder(ObjectDataSelection):
         self._h5file = workspace.h5file
         self.update_objects_list()
         self.lines._workspace = workspace
-        self.model_selection.workspace = workspace
-        self.boreholes.workspace = workspace
-        self.doi_selection._workspace = workspace
-        self.reset_model_figure()
 
     @property
     def x_label(self):
@@ -1094,28 +799,6 @@ class PeakFinder(ObjectDataSelection):
                 self.max_migration.disabled = False
 
             self.set_data(None)
-
-    def reset_model_figure(self):
-        self.model_figure = go.FigureWidget()
-        self.model_figure.add_trace(go.Scatter3d())
-        self.model_figure.add_trace(go.Cone())
-        self.model_figure.add_trace(go.Mesh3d())
-        self.model_figure.add_trace(go.Scatter3d())
-        self.model_figure.update_layout(
-            scene={
-                "xaxis_title": "Easting (m)",
-                "yaxis_title": "Northing (m)",
-                "zaxis_title": "Elevation (m)",
-                "yaxis": {"autorange": "reversed"},
-                "xaxis": {"autorange": "reversed"},
-                "aspectmode": "data",
-            },
-            width=700,
-            height=500,
-            autosize=False,
-            uirevision=False,
-        )
-        self.show_model.value = False
 
     def system_panel_trigger(self, _):
         """
@@ -1775,163 +1458,6 @@ class PeakFinder(ObjectDataSelection):
                 axs.set_xlabel("Time (sec)")
                 axs.set_title("Decay - MADTau")
 
-    def plot_model_selection(
-        self,
-        ind,
-        center,
-        width,
-        x_label,
-        colormap,
-        log,
-        min,
-        max,
-        reverse,
-        opacity,
-        model,
-        smoothing,
-        slice_width,
-        doi_show,
-        doi,
-        doi_percent,
-        doi_revert,
-        borehole_show,
-        borehole_object,
-        borehole_data,
-        boreholes_size,
-        max_migration,
-        min_channels,
-        min_amplitude,
-        min_value,
-        min_width,
-        plot_trigger,
-    ):
-        """
-        Observer of :obj:`geoapps.processing.PeakFinder.`:
-        """
-        if (
-            getattr(self, "survey", None) is None
-            or getattr(self.lines, "profile", None) is None
-            or self.show_model.value is False
-            or getattr(self.lines, "model_vertices", None) is None
-            or plot_trigger is False
-            or self.pause_plot_refresh
-        ):
-            return
-
-        self.update_line_model()
-        self.update_line_boreholes()
-
-        if reverse:
-            colormap += "_r"
-
-        if (
-            getattr(self.lines, "model_vertices", None) is not None
-            and getattr(self.lines, "model_values", None) is not None
-        ):
-            tree = cKDTree(self.lines.model_vertices)
-
-            # Create dip marker
-            center_x = float(self.lines.profile.interp_x(center))
-            center_y = float(self.lines.profile.interp_y(center))
-            center_z = float(self.lines.profile.interp_z(center))
-
-            _, ind = tree.query(np.c_[center_x, center_y, center_z])
-
-            self.model_figure.data[0].x = self.lines.model_vertices[ind, 0]
-            self.model_figure.data[0].y = self.lines.model_vertices[ind, 1]
-            self.model_figure.data[0].z = self.lines.model_vertices[ind, 2]
-            self.model_figure.data[0].mode = "markers"
-            self.model_figure.data[0].marker = {
-                "symbol": "diamond",
-                "color": "red",
-                "size": 10,
-            }
-
-            cox, azimuth, dip = [], [], []
-            locs = self.lines.profile.locations_resampled
-            for group in self.lines.anomalies:
-                _, ind = tree.query(
-                    np.c_[
-                        self.lines.profile.interp_x(locs[group["peak"][0]]),
-                        self.lines.profile.interp_y(locs[group["peak"][0]]),
-                        self.lines.profile.interp_z(locs[group["peak"][0]]),
-                    ]
-                )
-
-                cox += [
-                    np.c_[
-                        self.lines.model_vertices[ind, 0],
-                        self.lines.model_vertices[ind, 1],
-                        self.lines.model_vertices[ind, 2],
-                    ]
-                ]
-                azimuth += [group["azimuth"]]
-                dip += [group["migration"]]
-
-            self.model_figure.data[1].x = []
-            self.model_figure.data[1].y = []
-            self.model_figure.data[1].z = []
-
-            if len(cox) > 0:
-                dip = np.hstack(dip)
-                dip /= dip.max() + 1e-4
-                dip = np.rad2deg(np.arcsin(dip))
-
-                vec = rotate_azimuth_dip(np.hstack(azimuth), dip)
-                cox = np.vstack(cox)
-                scaler = 100
-                self.model_figure.data[1].x = cox[:, 0]
-                self.model_figure.data[1].y = cox[:, 1]
-                self.model_figure.data[1].z = cox[:, 2]
-                self.model_figure.data[1].u = vec[:, 0] * scaler
-                self.model_figure.data[1].v = vec[:, 1] * scaler
-                self.model_figure.data[1].w = vec[:, 2] * scaler
-                self.model_figure.data[1].colorscale = [
-                    [0, "rgb(0,0,0)"],
-                    [1, "rgb(0,0,0)"],
-                ]
-                self.model_figure.data[1].showscale = False
-
-            simplices = self.lines.model_cells.reshape((-1, 3))
-
-            if log:
-                model_values = np.log10(self.lines.model_values)
-                min = np.log10(min)
-                max = np.log10(max)
-            else:
-                model_values = self.lines.model_values
-
-            if self.show_doi.value:
-                model_values[self.lines.doi_values > doi_percent] = np.nan
-
-            self.model_figure.data[2].x = self.lines.model_vertices[:, 0]
-            self.model_figure.data[2].y = self.lines.model_vertices[:, 1]
-            self.model_figure.data[2].z = self.lines.model_vertices[:, 2]
-            self.model_figure.data[2].intensity = model_values
-            self.model_figure.data[2].opacity = opacity
-            self.model_figure.data[2].i = simplices[:, 0]
-            self.model_figure.data[2].j = simplices[:, 1]
-            self.model_figure.data[2].k = simplices[:, 2]
-            self.model_figure.data[2].colorscale = colormap
-            self.model_figure.data[2].cmin = min
-            self.model_figure.data[2].cmax = max
-
-            if (
-                getattr(self.lines, "borehole_vertices", None) is not None
-                and self.show_borehole.value
-            ):
-                self.model_figure.data[3].visible = True
-                self.model_figure.data[3].x = self.lines.borehole_vertices[:, 0]
-                self.model_figure.data[3].y = self.lines.borehole_vertices[:, 1]
-                self.model_figure.data[3].z = self.lines.borehole_vertices[:, 2]
-                self.model_figure.data[3].mode = "markers"
-                self.model_figure.data[3].marker.size = boreholes_size
-
-                if getattr(self.lines, "borehole_values", None) is not None:
-                    self.model_figure.data[3].marker.color = self.lines.borehole_values
-            else:
-                self.model_figure.data[3].visible = False
-
     def scale_update(self, _):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
@@ -2012,9 +1538,6 @@ class PeakFinder(ObjectDataSelection):
                 self.width.max = end
 
         self.previous_line = self.lines.lines.value
-        if self.show_model.value:
-            self.update_line_model()
-
         self.pause_plot_refresh = False
 
     def get_line_indices(self, line_id):
@@ -2039,124 +1562,6 @@ class PeakFinder(ObjectDataSelection):
             return
 
         return indices
-
-    def update_line_model(self):
-        if getattr(self.lines, "profile", None) is None:
-            return
-
-        entity_name = self.model_selection.objects.value
-        if self.workspace.get_entity(entity_name) and (
-            getattr(self, "surface_model", None) is None
-            or self.surface_model.name != entity_name
-        ):
-
-            self.show_model.description = "Processing line ..."
-            self.surface_model = self.workspace.get_entity(entity_name)[0]
-            self.surface_model.tree = cKDTree(self.surface_model.vertices[:, :2])
-
-        if getattr(self, "surface_model", None) is None:
-            return
-
-        if (
-            getattr(self.lines.profile, "line_id", None) is None
-            or self.lines.profile.line_id != self.lines.lines.value
-        ):
-
-            lims = [
-                (self.center.value - self.width.value / 2.0),
-                (self.center.value + self.width.value / 2.0),
-            ]
-            x_locs = self.lines.profile.x_locs
-            y_locs = self.lines.profile.y_locs
-            z_locs = self.lines.profile.z_locs
-            xyz = np.c_[x_locs, y_locs, z_locs]
-
-            ind = (
-                (xyz[:, 0] > self.lines.profile.interp_x(lims[0]))
-                * (xyz[:, 0] < self.lines.profile.interp_x(lims[1]))
-                * (xyz[:, 1] > self.lines.profile.interp_y(lims[0]))
-                * (xyz[:, 1] < self.lines.profile.interp_y(lims[1]))
-            )
-
-            tree = cKDTree(xyz[ind, :2])
-            ind = tree.query_ball_tree(self.surface_model.tree, self.slice_width.value)
-
-            indices = np.zeros(self.surface_model.n_vertices, dtype="bool")
-
-            indices[np.r_[np.hstack(ind)].astype("int")] = True
-
-            cells_in = indices[self.surface_model.cells].reshape((-1, 3))
-            cells = self.surface_model.cells[np.any(cells_in, axis=1), :]
-            vert_ind, cell_ind = np.unique(np.asarray(cells), return_inverse=True)
-
-            # Give new indices to subset
-            self.lines.model_vertices = self.surface_model.vertices[vert_ind, :]
-            self.lines.model_cells = cell_ind
-            self.lines.vertices_map = vert_ind
-            # Save the current line id to skip next time
-            self.lines.profile.line_id = self.lines.lines.value
-
-        if self.surface_model.get_data(self.model_selection.data.value):
-            self.lines.model_values = self.surface_model.get_data(
-                self.model_selection.data.value
-            )[0].values[self.lines.vertices_map]
-
-        doi_values = np.zeros_like(self.lines.vertices_map)
-        if self.surface_model.get_data(self.doi_selection.data.value):
-
-            doi_values = self.surface_model.get_data(self.doi_selection.data.value)[
-                0
-            ].values[self.lines.vertices_map]
-        elif self.doi_selection.data.value == "Z":
-            doi_values = self.surface_model.vertices[:, 2][self.lines.vertices_map]
-
-        if np.any(doi_values != 0):
-            doi_values -= doi_values.min()
-            doi_values /= doi_values.max()
-            doi_values *= 100.0
-
-            if self.doi_revert.value:
-                doi_values = np.abs(100 - doi_values)
-
-        self.lines.doi_values = doi_values
-
-        if self.show_model.value:
-            self.show_model.description = "Hide model"
-        else:
-            self.show_model.description = "Show model"
-
-    def update_line_boreholes(self):
-        if getattr(self.lines, "profile", None) is None:
-            return
-
-        entity_name = self.boreholes.objects.value
-        if self.workspace.get_entity(entity_name) and (
-            getattr(self, "borehole_trace", None) is None
-            or self.borehole_trace.name != entity_name
-        ):
-            self.borehole_trace = self.workspace.get_entity(entity_name)[0]
-
-        if getattr(self, "borehole_trace", None) is None:
-            return
-
-        if getattr(self.lines, "model_vertices", None) is not None:
-
-            tree = cKDTree(self.lines.model_vertices)
-            rad, ind = tree.query(self.borehole_trace.vertices)
-
-            # Give new indices to subset
-            if np.any(rad < self.slice_width.value):
-                in_slice = rad < self.slice_width.value
-                self.lines.borehole_vertices = self.borehole_trace.vertices[in_slice, :]
-
-                if self.borehole_trace.get_data(self.boreholes.data.value):
-                    self.lines.borehole_values = self.borehole_trace.get_data(
-                        self.boreholes.data.value
-                    )[0].values[in_slice]
-                else:
-                    self.lines.borehole_values = "black"
-            else:
-                self.lines.borehole_vertices = None
 
     def reset_groups(self, gates={}):
         if gates:
@@ -2244,23 +1649,6 @@ class PeakFinder(ObjectDataSelection):
             self.min_value.value = d_min
             self.scale_value.value = thresh_value
 
-    def show_model_trigger(self, _):
-        """
-        Observer of :obj:`geoapps.processing.PeakFinder.`: Add the model widget
-        """
-        if self.show_model.value:
-            self.model_panel.children = [
-                self.show_model,
-                self.model_figure,
-                HBox([self.model_parameters, self.doi_panel, self.borehole_panel]),
-            ]
-            self.show_model.description = "Hide model"
-            self.plot_trigger.value = False
-            self.plot_trigger.value = True
-        else:
-            self.model_panel.children = [self.show_model]
-            self.show_model.description = "Show model"
-
     def show_decay_trigger(self, _):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`: Add the decay curve plot
@@ -2271,29 +1659,6 @@ class PeakFinder(ObjectDataSelection):
         else:
             self.decay_panel.children = [self.show_decay]
             self.show_decay.description = "Show decay curve"
-
-    def show_doi_trigger(self, _):
-        """
-        Observer of :obj:`geoapps.processing.PeakFinder.`: Add the DOI options
-        """
-        if self.show_doi.value:
-            self.doi_panel.children = [self.show_doi, self.doi_parameters]
-            self.show_doi.description = "Hide DOI"
-        else:
-            self.doi_panel.children = [self.show_doi]
-            self.show_doi.description = "Show DOI"
-
-    def show_borehole_trigger(self, _):
-        """
-        Observer of :obj:`geoapps.processing.PeakFinder.`: Add the DOI options
-        """
-        if self.show_borehole.value:
-            self.borehole_panel.children = [self.show_borehole, self.scatter_parameters]
-            self.show_borehole.description = "Hide Scatter"
-        else:
-            self.borehole_panel.children = [self.show_borehole]
-            self.show_borehole.description = "Show Scatter"
-        return
 
 
 @dask.delayed
