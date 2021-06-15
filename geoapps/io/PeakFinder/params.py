@@ -70,14 +70,22 @@ class PeakFinderParams(Params):
         self.setter_validator("data", val)
 
     @property
-    def lines(self):
-        return self._lines
+    def line_field(self):
+        return self._line_field
 
-    @lines.setter
-    def lines(self, val):
+    @line_field.setter
+    def line_field(self, val):
         self.setter_validator(
             "lines", val, fun=lambda x: UUID(x) if isinstance(x, str) else x
         )
+
+    @property
+    def line_id(self):
+        return self._line_id
+
+    @line_id.setter
+    def line_id(self, val):
+        self.setter_validator("lines", val)
 
     @property
     def smoothing(self):

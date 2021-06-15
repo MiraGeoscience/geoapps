@@ -41,15 +41,22 @@ default_ui_json = {
         "parent": "objects",
         "value": "Observed",
     },
-    "lines": {
+    "line_field": {
         "association": "Vertex",
         "dataType": "Float",
         "group": "Data",
         "main": True,
-        "dataGroupType": "Multi-element",
-        "label": "Line ID",
+        "label": "Line Field",
         "parent": "objects",
         "value": "ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c",
+    },
+    "line_id": {
+        "association": "Vertex",
+        "dataType": "Text",
+        "group": "Data",
+        "main": True,
+        "label": "Line ID",
+        "value": "",
     },
     "smoothing": {
         "group": "Data",
@@ -104,10 +111,13 @@ validations = {
     "tem_checkbox": {
         "types": [bool],
     },
-    "lines": {
+    "line_field": {
         "types": [str, UUID, int, float],
         "reqs": [("objects")],
         "uuid": ["objects"],
+    },
+    "line_id": {
+        "types": [str, int, float],
     },
     "smoothing": {
         "types": [int, float],

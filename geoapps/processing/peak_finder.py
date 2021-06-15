@@ -73,7 +73,7 @@ class PeakFinder(ObjectDataSelection):
     # }
 
     _param_class = PeakFinderParams
-    _add_groups = True
+    _add_groups = "only"
     _object_types = (Curve,)
     decay_figure = None
     marker = {"left": "<", "right": ">"}
@@ -110,6 +110,7 @@ class PeakFinder(ObjectDataSelection):
         self._survey = None
         self._time_groups = None
         self.objects.observe(self.objects_change, names="value")
+        self.data.observe(self.set_data, names="value")
         self.system.observe(self.system_observer, names="value")
         self.system_panel_option.observe(self.system_panel_trigger)
         self.system_panel = VBox([self.system_panel_option])
@@ -117,6 +118,8 @@ class PeakFinder(ObjectDataSelection):
         self.groups_widget = VBox([self.groups_setter])
         self.groups_panel = VBox([self.group_list, self.channels, self.group_color])
         self.decay_panel = VBox([self.show_decay])
+        self.line_field = self.lines.data
+        self.line_id = self.lines.lines
         self.previous_line = self.lines.lines.value
         self.objects.description = "Survey"
         self.scale_panel = VBox([self.scale_button, self.scale_value])
@@ -171,8 +174,6 @@ class PeakFinder(ObjectDataSelection):
         self.tem_checkbox.observe(self.objects_change, names="value")
 
         super().__init__(**kwargs)
-
-        self.lines.__populate__(**self.defaults["lines"])
 
         self.channel_panel = VBox(
             [
@@ -327,7 +328,7 @@ class PeakFinder(ObjectDataSelection):
         :obj:`ipywidgets.SelectMultiple`: Data selection used by the application
         """
         if getattr(self, "_data", None) is None:
-            self.data = SelectMultiple(description="Data: ")
+            self.data = Dropdown(description="Data: ")
 
         return self._data
 
@@ -337,8 +338,6 @@ class PeakFinder(ObjectDataSelection):
             value, (Dropdown, SelectMultiple)
         ), f"'Objects' must be of type {Dropdown} or {SelectMultiple}"
         self._data = value
-        self._data.observe(self.set_data, names="value")
-        self.set_data(None)
 
     @property
     def flip_sign(self):
