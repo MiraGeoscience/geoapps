@@ -325,10 +325,13 @@ class InputFile:
                     if v["parent"] is not None:
                         try:
                             self.associations[k] = v["parent"]
-                            child_uuid = UUID(v[field])
+                            try:
+                                child_key = UUID(v[field])
+                            except ValueError:
+                                child_key = v[field]
                             parent_uuid = UUID(d[v["parent"]]["value"])
-                            self.associations[child_uuid] = parent_uuid
-                        except:
+                            self.associations[child_key] = parent_uuid
+                        except ValueError:
                             continue
 
             else:
