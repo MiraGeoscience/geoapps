@@ -28,38 +28,38 @@ ws = params.workspace
 
 
 def test_initialize():
-    inversion_mesh = InversionMesh(params, ws)
-    starting_model = InversionModel(inversion_mesh, "starting", params, ws)
-    assert len(starting_model.model) == 3 * inversion_mesh.nC
+    mesh = InversionMesh(params, ws)
+    starting_model = InversionModel(mesh, "starting", params, ws)
+    assert len(starting_model.model) == 3 * mesh.nC
     assert len(np.unique(starting_model.model)) == 3
 
 
 def test_model_from_object():
     # Test behaviour when loading model from Points object with non-matching mesh
     p = deepcopy(params)
-    inversion_mesh = InversionMesh(params, ws)
-    cc = inversion_mesh.mesh.cell_centers[0].reshape(1, 3)
+    mesh = InversionMesh(params, ws)
+    cc = mesh.mesh.cell_centers[0].reshape(1, 3)
     point_object = Points.create(ws, name=f"test_point", vertices=cc)
     point_object.add_data({"test_data": {"values": np.array([3.0])}})
     data_object = ws.get_entity("test_data")[0]
     params.associations[data_object.uid] = point_object.uid
     params.lower_bound_object = point_object.uid
     params.lower_bound = data_object.uid
-    lower_bound = InversionModel(inversion_mesh, "lower_bound", params, ws)
+    lower_bound = InversionModel(mesh, "lower_bound", params, ws)
     assert np.all((lower_bound.model - 3) < 1e-10)
-    assert len(lower_bound.model) == inversion_mesh.nC
+    assert len(lower_bound.model) == mesh.nC
 
 
 def test_permute_2_octree():
 
     params.lower_bound = 0.0
-    inversion_mesh = InversionMesh(params, ws)
-    lower_bound = InversionModel(inversion_mesh, "lower_bound", params, ws)
-    cc = inversion_mesh.mesh.cell_centers
+    mesh = InversionMesh(params, ws)
+    lower_bound = InversionModel(mesh, "lower_bound", params, ws)
+    cc = mesh.mesh.cell_centers
     center = np.mean(cc, axis=0)
-    dx = inversion_mesh.mesh.hx.min()
-    dy = inversion_mesh.mesh.hy.min()
-    dz = inversion_mesh.mesh.hz.min()
+    dx = mesh.mesh.hx.min()
+    dy = mesh.mesh.hy.min()
+    dz = mesh.mesh.hz.min()
     xmin = center[0] - (5 * dx)
     xmax = center[0] + (5 * dx)
     ymin = center[1] - (5 * dy)
@@ -106,12 +106,10 @@ def test_permute_2_treemesh():
     octree_mesh.add_data({"test_model": {"values": model}})
     params.upper_bound = ws.get_entity("test_model")[0].uid
     params.associations[params.upper_bound] = octree_mesh.uid
-    inversion_mesh = InversionMesh(params, ws)
-    upper_bound = InversionModel(inversion_mesh, "upper_bound", params, ws)
-    locs = inversion_mesh.mesh.cell_centers
-    locs_rot = rotate_xy(
-        locs, inversion_mesh.rotation["origin"], inversion_mesh.rotation["angle"]
-    )
+    mesh = InversionMesh(params, ws)
+    upper_bound = InversionModel(mesh, "upper_bound", params, ws)
+    locs = mesh.mesh.cell_centers
+    locs_rot = rotate_xy(locs, mesh.rotation["origin"], mesh.rotation["angle"])
     locs_rot = locs_rot[upper_bound.model == 1, :]
     assert xmin <= locs_rot[:, 0].min()
     assert xmax >= locs_rot[:, 0].max()
