@@ -6,15 +6,15 @@
 #  (see LICENSE file at the root of this source code package).
 
 import re
+import sys
+from os import path
 
 import dask
 import matplotlib.pyplot as plt
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
 from dask.distributed import Client, get_client
 from geoh5py.data import ReferencedData
-from geoh5py.objects import Curve, Points, Surface
+from geoh5py.objects import Curve, Points
 from geoh5py.workspace import Workspace
 from ipywidgets import (
     Box,
@@ -35,7 +35,6 @@ from ipywidgets import (
     VBox,
     interactive_output,
 )
-from scipy.spatial import cKDTree
 
 from geoapps.selection import LineOptions, ObjectDataSelection
 from geoapps.utils import geophysical_systems
@@ -44,9 +43,10 @@ from geoapps.utils.utils import (
     colors,
     find_value,
     hex_to_rgb,
-    rotate_azimuth_dip,
     running_mean,
 )
+
+from ..io.PeakFinder import PeakFinderParams
 
 
 class PeakFinder(ObjectDataSelection):
@@ -54,45 +54,59 @@ class PeakFinder(ObjectDataSelection):
     Application for the picking of targets along Time-domain EM profiles
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
-        "data": ["Observed"],
-        "lines": {
-            "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
-            "data": "Line",
-            "lines": 6073400.0,
-        },
-        "center": 4050,
-        "width": 1000,
-        "smoothing": 6,
-        "tem_checkbox": True,
-        "markers": True,
-        "x_label": "Distance",
-        "ga_group_name": "PeakFinder",
-    }
+    # defaults = {
+    #     "h5file": "../../assets/FlinFlon.geoh5",
+    #     "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+    #     "data": ["Observed"],
+    #     "lines": {
+    #         "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+    #         "data": "Line",
+    #         "lines": 6073400.0,
+    #     },
+    #     "center": 4050,
+    #     "width": 1000,
+    #     "smoothing": 6,
+    #     "tem_checkbox": True,
+    #     "markers": True,
+    #     "x_label": "Distance",
+    #     "ga_group_name": "PeakFinder",
+    # }
 
+    _param_class = PeakFinderParams
     _add_groups = True
     _object_types = (Curve,)
+    decay_figure = None
+    marker = {"left": "<", "right": ">"}
 
-    def __init__(self, **kwargs):
+    def __init__(self, ui_json=None, **kwargs):
 
-        self.defaults = self.update_defaults(**kwargs)
+        if ui_json is not None and path.exists(ui_json):
+            self.params = self._param_class.from_path(ui_json)
+        else:
+
+            default_dict = self._param_class._default_ui_json
+            for key, arg in kwargs.items():
+                if key == "h5file":
+                    key = "geoh5"
+                try:
+                    default_dict[key] = arg
+                except KeyError:
+                    continue
+
+            self.params = self._param_class.from_dict(default_dict)
+
+        self.defaults = self.update_defaults(**self.params.__dict__)
 
         try:
             self.client = get_client()
         except ValueError:
             self.client = Client()
 
-        self.decay_figure = None
         self.all_anomalies = []
-        self.borehole_trace = None
         self.data_channels = {}
         self.data_channel_options = {}
         self.em_system_specs = geophysical_systems.parameters()
-        self.marker = {"left": "<", "right": ">"}
         self.pause_plot_refresh = False
-        self.surface_model = None
         self._survey = None
         self._time_groups = None
         self.objects.observe(self.objects_change, names="value")
@@ -113,7 +127,7 @@ class PeakFinder(ObjectDataSelection):
         self.highlight_selection(None)
         self.run_all.on_click(self.run_all_click)
         self.flip_sign.observe(self.set_data, names="value")
-        plotting = interactive_output(
+        self.plotting = interactive_output(
             self.plot_data_selection,
             {
                 "ind": self.lines.lines,
@@ -156,7 +170,7 @@ class PeakFinder(ObjectDataSelection):
         )
         self.tem_checkbox.observe(self.objects_change, names="value")
 
-        super().__init__(**self.defaults)
+        super().__init__(**kwargs)
 
         self.lines.__populate__(**self.defaults["lines"])
 
@@ -206,44 +220,53 @@ class PeakFinder(ObjectDataSelection):
                 self.trigger_panel,
             ]
         )
-        self._main = VBox(
-            [
-                self.project_panel,
-                HBox(
-                    [
-                        VBox(
-                            [self.main, self.flip_sign],
-                            layout=Layout(width="50%"),
-                        ),
-                        Box(
-                            children=[self.lines.main],
-                            layout=Layout(
-                                display="flex",
-                                flex_flow="row",
-                                align_items="stretch",
-                                width="100%",
-                                justify_content="flex-start",
+
+    @property
+    def main(self):
+        if getattr(self, "_main", None) is None:
+            VBox(
+                [
+                    self.project_panel,
+                    HBox(
+                        [
+                            VBox(
+                                [self.main, self.flip_sign],
+                                layout=Layout(width="50%"),
                             ),
-                        ),
-                    ],
-                ),
-                self.tem_box,
-                plotting,
-                HBox(
-                    [
-                        VBox(
-                            [Label("Visual Parameters"), self.visual_parameters],
-                            layout=Layout(width="50%"),
-                        ),
-                        VBox(
-                            [Label("Detection Parameters"), self.detection_parameters],
-                            layout=Layout(width="50%"),
-                        ),
-                    ]
-                ),
-                self.output_panel,
-            ]
-        )
+                            Box(
+                                children=[self.lines.main],
+                                layout=Layout(
+                                    display="flex",
+                                    flex_flow="row",
+                                    align_items="stretch",
+                                    width="100%",
+                                    justify_content="flex-start",
+                                ),
+                            ),
+                        ],
+                    ),
+                    self.tem_box,
+                    self.plotting,
+                    HBox(
+                        [
+                            VBox(
+                                [Label("Visual Parameters"), self.visual_parameters],
+                                layout=Layout(width="50%"),
+                            ),
+                            VBox(
+                                [
+                                    Label("Detection Parameters"),
+                                    self.detection_parameters,
+                                ],
+                                layout=Layout(width="50%"),
+                            ),
+                        ]
+                    ),
+                    self.output_panel,
+                ]
+            )
+
+        return self._main
 
     @property
     def plot_trigger(self):
@@ -1649,6 +1672,49 @@ class PeakFinder(ObjectDataSelection):
             self.min_value.value = d_min
             self.scale_value.value = thresh_value
 
+    @classmethod
+    def run(cls, params):
+        """
+        Create an octree mesh from input values
+        """
+
+        workspace = params.workspace
+        obj = workspace.get_entity(params.objects)
+
+        print(f"Selected object {obj}")
+        # vertices = self.client.scatter(self.survey.vertices)
+        # channels = self.client.scatter(self.active_channels)
+        # time_groups = self.client.scatter(self.time_groups)
+        # for line_id in list(self.lines.lines.options)[1:]:
+        #     line_indices = self.get_line_indices(line_id)
+        #
+        #     if line_indices is None:
+        #         continue
+        #
+        #     anomalies += [
+        #         self.client.compute(
+        #             find_anomalies(
+        #                 vertices,
+        #                 line_indices,
+        #                 channels,
+        #                 time_groups,
+        #                 data_normalization=self.em_system_specs[self.system.value][
+        #                     "normalization"
+        #                 ],
+        #                 smoothing=self.smoothing.value,
+        #                 # use_residual=self.residual.value,
+        #                 min_amplitude=self.min_amplitude.value,
+        #                 min_value=self.min_value.value,
+        #                 min_width=self.min_width.value,
+        #                 max_migration=self.max_migration.value,
+        #                 min_channels=self.min_channels.value,
+        #                 minimal_output=True,
+        #             )
+        #         )
+        #     ]
+        #
+        # self.all_anomalies = self.client.gather(anomalies)
+
     def show_decay_trigger(self, _):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`: Add the decay curve plot
@@ -1978,3 +2044,9 @@ def find_anomalies(
         return groups, profile
     else:
         return groups
+
+
+if __name__ == "__main__":
+    params = PeakFinderParams.from_path(sys.argv[1])
+    print(params.geoh5)
+    PeakFinder.run(params)
