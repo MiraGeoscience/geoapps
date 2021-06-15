@@ -89,36 +89,7 @@ class OctreeMesh(ObjectDataSelection):
                 getattr(self, obj).style = {"description_width": "initial"}
 
     def __populate__(self, **kwargs):
-
-        for key, value in kwargs.items():
-            if key[0] == "_":
-                key = key[1:]
-
-            if hasattr(self, "_" + key) or hasattr(self, key):
-
-                if isinstance(value, dict) and "value" in list(value.keys()):
-                    value = value["value"]
-
-                try:
-                    if isinstance(getattr(self, key, None), Widget) and not isinstance(
-                        value, Widget
-                    ):
-                        try:
-                            value = uuid.UUID(value)
-                        except:
-                            pass
-                        setattr(getattr(self, key), "value", value)
-                        if hasattr(getattr(self, key), "style"):
-                            getattr(self, key).style = {"description_width": "initial"}
-
-                    elif isinstance(value, BaseApplication) and isinstance(
-                        getattr(self, "_" + key, None), BaseApplication
-                    ):
-                        setattr(self, "_" + key, value)
-                    else:
-                        setattr(self, key, value)
-                except:
-                    pass
+        super().__populate__(**kwargs)
 
         refinement_list = []
         for label, params in self.params.refinements.items():
