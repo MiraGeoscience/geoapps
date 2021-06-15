@@ -41,7 +41,7 @@ from SimPEG.utils.drivers import create_nested_mesh
 from geoapps.io.MVI import MVIParams
 from geoapps.utils import filter_xy, rotate_xy, treemesh_2_octree
 
-from .components import InversionMesh, InversionModel
+from .components import InversionData, InversionMesh, InversionModel
 
 
 def start_inversion(filepath=None):
@@ -54,6 +54,7 @@ def start_inversion(filepath=None):
 
 class InversionDriver:
     def __init__(self, params: MVIParams):
+
         self.params = params
         self.workspace = params.workspace
         self.out_group = ContainerGroup.create(
@@ -87,6 +88,7 @@ class InversionDriver:
         self.configure_dask()
         cluster = LocalCluster(processes=False)
         client = Client(cluster)
+
         self.inversion_mesh = InversionMesh(self.params, self.workspace, self.window)
         self.window["azimuth"] = -self.inversion_mesh.rotation["angle"]
         self.topo, self.topo_interp_function = self.get_topography()
@@ -117,6 +119,13 @@ class InversionDriver:
         self.n_blocks = 3
 
         # construct a simpeg Survey object
+        data = InversionData(
+            self.workspace,
+            self.params,
+            self.inversion_mesh,
+            self.topography,
+            self.window,
+        )
         self.survey, normalization = self.get_survey()
 
         if vector_property:
