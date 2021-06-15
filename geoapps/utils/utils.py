@@ -362,7 +362,7 @@ def weighted_average(
 
 
 def filter_xy(
-    x: np.array, y: np.array, distance: float, window: dict = None
+    x: np.array, y: np.array, distance: float, window: dict = None, angle: float = None
 ) -> np.array:
     """
     Function to extract and down-sample xy locations based on minimum distance and window parameters.
@@ -390,14 +390,19 @@ def filter_xy(
             window["center"][1] - window["size"][1] / 2,
             window["center"][1] + window["size"][1] / 2,
         ]
-        xy_rot = rotate_xy(
-            np.c_[x.ravel(), y.ravel()], window["center"], window["azimuth"]
-        )
+
+        if "azimuth" in window.keys():
+            azimuth = window["azimuth"]
+        if angle is not None:
+            azimuth = angle
+
+        xy_locs = rotate_xy(np.c_[x.ravel(), y.ravel()], window["center"], azimuth)
+
         mask = (
-            (xy_rot[:, 0] > x_lim[0])
-            * (xy_rot[:, 0] < x_lim[1])
-            * (xy_rot[:, 1] > y_lim[0])
-            * (xy_rot[:, 1] < y_lim[1])
+            (xy_locs[:, 0] > x_lim[0])
+            * (xy_locs[:, 0] < x_lim[1])
+            * (xy_locs[:, 1] > y_lim[0])
+            * (xy_locs[:, 1] < y_lim[1])
         ).reshape(x.shape)
 
     if x.ndim == 1:
@@ -427,6 +432,7 @@ def filter_xy(
         filter_xy[::dwn, ::dwn] = True
     else:
         filter_xy = np.ones_like(x, dtype="bool")
+
     return filter_xy * mask
 
 
