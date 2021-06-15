@@ -247,6 +247,16 @@ class Params:
     def input_file(self):
         return self._input_file
 
+    def setter_validator(self, key: str, value, fun=lambda x: x):
+        if value is None:
+            setattr(self, f"_{key}", value)
+            return
+
+        self.validator.validate(
+            key, value, self.validations[key], self.workspace, self.associations
+        )
+        setattr(self, f"_{key}", fun(value))
+
     def write_input_file(self, name: str = None):
         """Write out a ui.json with the current state of parameters"""
         if getattr(self, "input_file", None) is not None:
