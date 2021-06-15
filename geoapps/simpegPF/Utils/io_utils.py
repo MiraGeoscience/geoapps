@@ -300,7 +300,7 @@ def readUBCmagneticsObservations(obs_file):
         :param survey
         :param M, magnetization orentiaton (MI, MD)
     """
-    from SimPEG.PF import BaseMag
+    from geoapps.simpegPF.PF import BaseMag
 
     fid = open(obs_file)
 
@@ -397,7 +397,7 @@ def readUBCgravityObservations(obs_file):
     :param survey
 
     """
-    from SimPEG.PF import BaseGrav
+    from geoapps.simpegPF.PF import BaseGrav
 
     fid = open(obs_file)
 

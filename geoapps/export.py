@@ -19,7 +19,7 @@ from osgeo import osr
 
 from geoapps.plotting import plot_plan_data_selection
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils import (
+from geoapps.utils.utils import (
     export_curve_2_shapefile,
     export_grid_2_geotiff,
     object_2_dataframe,
@@ -35,17 +35,18 @@ class Export(ObjectDataSelection):
     """
 
     defaults = {
-        "select_multiple": True,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Gravity_Magnetics_drape60m",
+        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": ["Airborne_Gxx"],
         "epsg_code": "EPSG:26914",
         "file_type": "geotiff",
         "data_type": "RGB",
     }
 
+    _select_multiple = True
+
     def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
+        self.defaults = self.update_defaults(**kwargs)
         self._file_type = Dropdown(
             options=["ESRI shapefile", "csv", "geotiff", "UBC format"],
             value="csv",
@@ -71,35 +72,13 @@ class Export(ObjectDataSelection):
         self.wkt_code.observe(self.set_authority_code, names="value")
         self.type_widget = VBox([self.file_type])
         self.projection_panel = VBox([self.epsg_code, self.wkt_code])
+        self.file_type.observe(self.update_options)
+        self.objects.observe(self.update_name, names="value")
 
-        def update_options(_):
-            self.update_options()
+        super().__init__(**self.defaults)
 
-        self.file_type.observe(update_options)
-
-        def update_name(_):
-            self.export_as.value = self.objects.value
-
-        self.objects.observe(update_name, names="value")
-        super().__init__(**kwargs)
         self.trigger.description = "Export"
-
-        def save_selection(_):
-            self.save_selection()
-
-        self.trigger.on_click(save_selection)
-
-        self._main = VBox(
-            [
-                self.project_panel,
-                HBox([self.main, self.no_data_value]),
-                self.type_widget,
-                self.no_data_value,
-                self.export_as,
-                self.trigger,
-                self.export_directory,
-            ]
-        )
+        self.trigger.on_click(self.save_selection)
 
     @property
     def wkt_code(self):
@@ -164,11 +143,31 @@ class Export(ObjectDataSelection):
         """
         if getattr(self, "_export_as", None) is None:
             self._export_as = Text(
-                value=self.objects.value,
+                value=[
+                    key
+                    for key, value in self.objects.options
+                    if value == self.objects.value
+                ][0],
                 description="Save as:",
                 disabled=False,
             )
         return self._export_as
+
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox(
+                [
+                    self.project_panel,
+                    HBox([self.data_panel, self.no_data_value]),
+                    self.type_widget,
+                    self.no_data_value,
+                    self.export_as,
+                    self.trigger,
+                    self.export_directory,
+                ]
+            )
+        return self._main
 
     @property
     def workspace(self):
@@ -199,7 +198,7 @@ class Export(ObjectDataSelection):
         self.export_directory._set_form_values(export_path, "")
         self.export_directory._apply_selection()
 
-    def save_selection(self):
+    def save_selection(self, _):
         if self.workspace.get_entity(self.objects.value):
             entity = self.workspace.get_entity(self.objects.value)[0]
         else:
@@ -277,9 +276,12 @@ class Export(ObjectDataSelection):
 
                     if self.data_type.value == "RGB":
                         fig, ax = plt.figure(), plt.subplot()
-                        plt.gca().set_visible(False)
+
+                        if not self.plot_result:
+                            plt.gca().set_visible(False)
+
                         ax, im, _, _, _ = plot_plan_data_selection(
-                            entity, entity.get_data(key)[0], ax=ax
+                            entity, entity.get_data(key)[0], axis=ax
                         )
                         plt.colorbar(im, fraction=0.02)
                         plt.savefig(
@@ -293,6 +295,8 @@ class Export(ObjectDataSelection):
                             dpi=300,
                             bbox_inches="tight",
                         )
+                        if not self.plot_result:
+                            plt.close(fig)
 
                     print(f"Object saved to {name}")
 
@@ -380,8 +384,12 @@ class Export(ObjectDataSelection):
             self.epsg_code.value = ""
         self.epsg_code.observe(self.set_wkt, names="value")
 
-    def update_options(self):
+    def update_name(self, _):
+        self.export_as.value = [
+            key for key, value in self.objects.options if value == self.objects.value
+        ][0]
 
+    def update_options(self, _):
         if self.file_type.value in ["ESRI shapefile"]:
             self.type_widget.children = [self.file_type, self.projection_panel]
         elif self.file_type.value in ["geotiff"]:

@@ -1690,7 +1690,7 @@ class SparseDeriv(BaseSparse):
             if self.space == "spherical":
                 dmdx = coterminal(dmdx)
 
-            dmdx = self.regmesh.aveFx2CC * (Utils.sdiag(self.length_x) * dmdx)
+            dmdx = (Utils.sdiag(self.length_x) * dmdx) * self.regmesh.aveCC2Fx
 
             if self.regmesh.dim > 1:
 
@@ -1699,7 +1699,7 @@ class SparseDeriv(BaseSparse):
                 if self.space == "spherical":
                     dmdy = coterminal(dmdy)
 
-                dmdy = self.regmesh.aveFy2CC * (Utils.sdiag(self.length_y) * dmdy)
+                dmdy = (Utils.sdiag(self.length_y) * dmdy) * self.regmesh.aveCC2Fy
 
             if self.regmesh.dim > 2:
 
@@ -1708,7 +1708,7 @@ class SparseDeriv(BaseSparse):
                 if self.space == "spherical":
                     dmdz = coterminal(dmdz)
 
-                dmdz = self.regmesh.aveFz2CC * (Utils.sdiag(self.length_z) * dmdz)
+                dmdz = (Utils.sdiag(self.length_z) * dmdz) * self.regmesh.aveCC2Fz
 
             if self.regmesh.dim == 2:
                 dmdx = (dmdx ** 2.0 + dmdy ** 2.0) ** 0.5

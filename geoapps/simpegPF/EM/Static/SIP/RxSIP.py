@@ -1,9 +1,9 @@
-import SimPEG
+import geoapps.simpegPF as spf
 import numpy as np
-from SimPEG.Utils import Zero, closestPoints
+from geoapps.simpegPF.Utils import Zero, closestPoints
 
 
-class BaseRx(SimPEG.Survey.BaseTimeRx):
+class BaseRx(spf.Survey.BaseTimeRx):
     locs = None
     rxType = None
 
@@ -18,7 +18,7 @@ class BaseRx(SimPEG.Survey.BaseTimeRx):
     }
 
     def __init__(self, locs, times, rxType, **kwargs):
-        SimPEG.Survey.BaseTimeRx.__init__(self, locs, times, rxType, **kwargs)
+        spf.Survey.BaseTimeRx.__init__(self, locs, times, rxType, **kwargs)
 
     @property
     def projField(self):

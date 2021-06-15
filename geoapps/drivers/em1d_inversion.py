@@ -5,9 +5,11 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
 import json
 import multiprocessing
 import sys
+import uuid
 
 import numpy as np
 import scipy as sp
@@ -18,7 +20,16 @@ from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
-from SimPEG import (
+
+from geoapps.simpegEM1D import (
+    GlobalEM1DProblemFD,
+    GlobalEM1DProblemTD,
+    GlobalEM1DSurveyFD,
+    GlobalEM1DSurveyTD,
+    LateralConstraint,
+    get_2d_mesh,
+)
+from geoapps.simpegPF import (
     DataMisfit,
     Directives,
     Inversion,
@@ -27,154 +38,8 @@ from SimPEG import (
     Optimization,
     Utils,
 )
-
-from .simpegEM1D import (
-    GlobalEM1DProblemFD,
-    GlobalEM1DProblemTD,
-    GlobalEM1DSurveyFD,
-    GlobalEM1DSurveyTD,
-    LateralConstraint,
-    get_2d_mesh,
-)
-from .utils import filter_xy, geophysical_systems, rotate_xy, running_mean
-
-
-class SaveIterationsGeoH5(Directives.InversionDirective):
-    """
-    Saves inversion results to a geoh5 file
-    """
-
-    # Initialize the output dict
-    h5_object = None
-    channels = ["model"]
-    attribute = "model"
-    association = "VERTEX"
-    sorting = None
-    mapping = None
-    data_type = {}
-    save_objective_function = False
-
-    def initialize(self):
-
-        if self.attribute == "predicted":
-            if getattr(self.dmisfit, "objfcts", None) is not None:
-                dpred = []
-                for local_misfit in self.dmisfit.objfcts:
-                    dpred.append(
-                        np.asarray(local_misfit.survey.dpred(self.invProb.model))
-                    )
-                prop = np.hstack(dpred)
-            else:
-                prop = self.dmisfit.survey.dpred(self.invProb.model)
-        else:
-            prop = self.invProb.model
-
-        if self.mapping is not None:
-            prop = self.mapping * prop
-
-        if self.attribute == "mvi_model":
-            prop = np.linalg.norm(prop.reshape((-1, 3), order="F"), axis=1)
-
-        elif self.attribute == "mvis_model":
-            prop = prop.reshape((-1, 3), order="F")[:, 0]
-
-        for ii, channel in enumerate(self.channels):
-
-            attr = prop[ii :: len(self.channels)]
-
-            if self.sorting is not None:
-                attr = attr[self.sorting]
-
-            data = self.h5_object.add_data(
-                {
-                    f"Initial"
-                    + channel: {"association": self.association, "values": attr}
-                }
-            )
-            data.entity_type.name = channel
-            self.data_type[channel] = data.entity_type
-
-            if self.attribute == "predicted":
-                self.h5_object.add_data_to_group(data, f"Iteration_{0}")
-
-        if self.save_objective_function:
-            regCombo = ["phi_ms", "phi_msx", "phi_msy", "phi_msz"]
-
-            # Save the data.
-            iterDict = {"beta": f"{self.invProb.beta:.3e}"}
-            iterDict["phi_d"] = f"{self.invProb.phi_d:.3e}"
-            iterDict["phi_m"] = f"{self.invProb.phi_m:.3e}"
-
-            for label, fcts in zip(regCombo, self.reg.objfcts[0].objfcts):
-                iterDict[label] = f"{fcts(self.invProb.model):.3e}"
-
-            self.h5_object.parent.add_comment(
-                json.dumps(iterDict), author=f"Iteration_{0}"
-            )
-
-        self.h5_object.workspace.finalize()
-
-    def endIter(self):
-
-        if self.attribute == "predicted":
-            if getattr(self.dmisfit, "objfcts", None) is not None:
-                dpred = []
-                for local_misfit in self.dmisfit.objfcts:
-                    dpred.append(
-                        np.asarray(local_misfit.survey.dpred(self.invProb.model))
-                    )
-                prop = np.hstack(dpred)
-            else:
-                prop = self.dmisfit.survey.dpred(self.invProb.model)
-        else:
-            prop = self.invProb.model
-
-        if self.mapping is not None:
-            prop = self.mapping * prop
-
-        if self.attribute == "mvi_model":
-            prop = np.linalg.norm(prop.reshape((-1, 3), order="F"), axis=1)
-
-        elif self.attribute == "mvis_model":
-            prop = prop.reshape((-1, 3), order="F")[:, 0]
-
-        for ii, channel in enumerate(self.channels):
-
-            attr = prop[ii :: len(self.channels)]
-
-            if self.sorting is not None:
-                attr = attr[self.sorting]
-
-            data = self.h5_object.add_data(
-                {
-                    f"Iteration_{self.opt.iter}_"
-                    + channel: {
-                        "association": self.association,
-                        "values": attr,
-                        "entity_type": self.data_type[channel],
-                    }
-                }
-            )
-
-            if self.attribute == "predicted":
-                self.h5_object.add_data_to_group(data, f"Iteration_{self.opt.iter}")
-
-        if self.save_objective_function:
-            regCombo = ["phi_ms", "phi_msx", "phi_msy", "phi_msz"]
-
-            # Save the data.
-            iterDict = {"beta": f"{self.invProb.beta:.3e}"}
-            iterDict["phi_d"] = f"{self.invProb.phi_d:.3e}"
-            iterDict["phi_m"] = f"{self.invProb.phi_m:.3e}"
-
-            for label, fcts in zip(regCombo, self.reg.objfcts[0].objfcts):
-                iterDict[label] = f"{fcts(self.invProb.model):.3e}"
-
-            self.h5_object.parent.add_comment(
-                json.dumps(iterDict), author=f"Iteration_{self.opt.iter}"
-            )
-
-        self.h5_object.workspace.finalize()
+from geoapps.utils import geophysical_systems
+from geoapps.utils.utils import filter_xy, rotate_xy, running_mean
 
 
 def inversion(input_file):
@@ -193,6 +58,7 @@ def inversion(input_file):
     upper_bound = input_param["upper_bound"][0]
     chi_target = input_param["chi_factor"]
     workspace = Workspace(input_param["workspace"])
+
     selection = input_param["lines"]
     hz_min, expansion, n_cells = input_param["mesh 1D"]
     ignore_values = input_param["ignore_values"]
@@ -276,8 +142,8 @@ def inversion(input_file):
             # Spherical or sparse
             max_irls_iterations = 10
 
-    if workspace.get_entity(input_param["data"]["name"]):
-        entity = workspace.get_entity(input_param["data"]["name"])[0]
+    if workspace.get_entity(uuid.UUID(input_param["data"]["name"])):
+        entity = workspace.get_entity(uuid.UUID(input_param["data"]["name"]))[0]
     else:
         assert False, (
             f"Entity {input_param['data']['name']} could not be found in "
@@ -338,7 +204,7 @@ def inversion(input_file):
                 elif "GA_object" in list(input_param["topography"].keys()):
                     workspace = Workspace(input_param["workspace"])
                     topo_entity = workspace.get_entity(
-                        input_param["topography"]["GA_object"]["name"]
+                        uuid.UUID(input_param["topography"]["GA_object"]["name"])
                     )[0]
 
                     if isinstance(topo_entity, Grid2D):
@@ -397,11 +263,6 @@ def inversion(input_file):
                 angles = np.arctan2(xyz[1:, 1] - xyz[:-1, 1], xyz[1:, 0] - xyz[:-1, 0])
                 angles = np.r_[angles[0], angles].tolist()
                 angles = running_mean(angles, width=5)
-                # dxy = np.zeros_like(xyz)
-
-                # for ind, angle in enumerate(angles):
-                #     dxy[ind, :] = rotate_xy(offsets, [0, 0], np.rad2deg(angle))
-
                 dxy = np.vstack(
                     [rotate_xy(offsets, [0, 0], np.rad2deg(angle)) for angle in angles]
                 )
@@ -567,7 +428,6 @@ def inversion(input_file):
             # Create a grid for the surface
             X = np.kron(np.ones(nZ), x_loc.reshape((x_loc.shape[0], 1)))
             Y = np.kron(np.ones(nZ), y_loc.reshape((x_loc.shape[0], 1)))
-
             Z = np.kron(np.ones(nZ), z_loc.reshape((x_loc.shape[0], 1))) + np.kron(
                 CCz, np.ones((x_loc.shape[0], 1))
             )
@@ -598,16 +458,13 @@ def inversion(input_file):
             # Remove the simplices too long
             tri2D.simplices = tri2D.simplices[indx == False, :]
             tri2D.vertices = tri2D.vertices[indx == False, :]
-
             temp = np.arange(int(nZ * n_sounding)).reshape((nZ, n_sounding), order="F")
             model_ordering.append(temp[:, order].T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_cells.append(tri2D.simplices + model_count)
             model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
-
             line_ids.append(np.ones_like(order) * float(line))
             data_ordering.append(order + pred_count)
-
             pred_vertices.append(xyz[order, :])
             pred_cells.append(
                 np.c_[np.arange(x_loc.shape[0] - 1), np.arange(x_loc.shape[0] - 1) + 1]
@@ -618,9 +475,7 @@ def inversion(input_file):
             pred_count += x_loc.shape[0]
 
         out_group = ContainerGroup.create(workspace, name=input_param["out_group"])
-
         out_group.add_comment(json.dumps(input_param, indent=4).strip(), author="input")
-
         surface = Surface.create(
             workspace,
             name=f"{input_param['out_group']}_Model",
@@ -630,7 +485,6 @@ def inversion(input_file):
         )
 
         surface.add_data({"Line": {"values": np.hstack(model_line_ids)}})
-
         model_ordering = np.hstack(model_ordering).astype(int)
         curve = Curve.create(
             workspace,
@@ -641,7 +495,6 @@ def inversion(input_file):
         )
 
         curve.add_data({"Line": {"values": np.hstack(line_ids)}})
-
         data_ordering = np.hstack(data_ordering)
 
     reference = "BFHS"
@@ -650,7 +503,7 @@ def inversion(input_file):
 
             input_model = input_param["reference_model"]["model"]
             print(f"Interpolating reference model {input_model}")
-            con_object = workspace.get_entity(list(input_model.keys())[0])[0]
+            con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
             con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
             if hasattr(con_object, "centroids"):
@@ -677,7 +530,7 @@ def inversion(input_file):
             input_model = input_param["starting_model"]["model"]
 
             print(f"Interpolating starting model {input_model}")
-            con_object = workspace.get_entity(list(input_model.keys())[0])[0]
+            con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
             con_model = con_object.get_data(list(input_model.values())[0])[0].values
 
             if hasattr(con_object, "centroids"):
@@ -735,6 +588,7 @@ def inversion(input_file):
     dobs = np.zeros(n_sounding * block)
     uncert = np.zeros(n_sounding * block)
     n_data = 0
+
     for ind, (d, u) in enumerate(zip(data, uncertainties)):
         dobs[ind::block] = d[win_ind][stn_id]
         uncert[ind::block] = u[win_ind][stn_id]
@@ -818,7 +672,6 @@ def inversion(input_file):
         src_type = np.array([em_specs["tx_specs"]["type"]], dtype=str).repeat(
             n_sounding
         )
-
         a = [em_specs["tx_specs"]["a"]] * n_sounding
         I = [em_specs["tx_specs"]["I"]] * n_sounding
 
@@ -920,9 +773,7 @@ def inversion(input_file):
             )
 
         probHalfspace.pair(surveyHS)
-
         dmisfit = DataMisfit.l2_DataMisfit(surveyHS)
-
         dmisfit.W = 1.0 / uncert_reduced
 
         if isinstance(starting, float):
@@ -941,8 +792,8 @@ def inversion(input_file):
             alpha_x=alphas[1],
             alpha_y=alphas[2],
         )
-
         min_distance = None
+
         if resolution > 0:
             min_distance = resolution * 4
 
@@ -952,7 +803,6 @@ def inversion(input_file):
             dim=2,
             minimum_distance=min_distance,
         )
-
         opt = Optimization.ProjectedGNCG(
             maxIter=10,
             lower=np.log(lower_bound),
@@ -977,17 +827,15 @@ def inversion(input_file):
                 minGNiter=1,
                 fix_Jmatrix=True,
                 betaSearch=False,
-                chifact_start=chi_target,
+                # chifact_start=chi_target,
                 chifact_target=chi_target,
             )
         )
         directiveList.append(Directives.UpdatePreconditioner())
         inv = Inversion.BaseInversion(invProb_HS, directiveList=directiveList)
-
         opt.LSshorten = 0.5
         opt.remember("xc")
         mopt = inv.run(m0)
-        # Return predicted of Best-fitting halfspaces
 
     if isinstance(reference, str):
         m0 = Utils.mkvc(np.kron(mopt, np.ones_like(hz)))
@@ -1022,7 +870,6 @@ def inversion(input_file):
 
     prob.pair(survey)
     pred = survey.dpred(m0)
-
     uncert_orig = uncert.copy()
     # Write uncertainties to objects
     for ind, channel in enumerate(channels):
@@ -1051,26 +898,10 @@ def inversion(input_file):
             curve.add_data_to_group(d_i, f"Uncertainties")
 
         uncert[ind::block][uncert_orig[ind::block] == np.inf] = np.inf
-        # if len(ignore_values) > 0:
-        #     if "<" in ignore_values:
-        #         uncert[
-        #             data_mapping * dobs / normalization
-        #             <= float(ignore_values.split("<")[1])
-        #         ] = np.inf
-        #     elif ">" in ignore_values:
-        #         uncert[
-        #             data_mapping * dobs / normalization
-        #             >= float(ignore_values.split(">")[1])
-        #         ] = np.inf
-        #     else:
-        #         uncert[
-        #             data_mapping * dobs / normalization == float(ignore_values)
-        #         ] = np.inf
 
     mesh_reg = get_2d_mesh(n_sounding, hz)
     dmisfit = DataMisfit.l2_DataMisfit(survey)
     dmisfit.W = 1.0 / uncert
-
     reg = LateralConstraint(
         mesh_reg,
         mapping=Maps.IdentityMap(nP=mesh_reg.nC),
@@ -1081,10 +912,8 @@ def inversion(input_file):
     )
     reg.norms = model_norms
     reg.mref = mref
-
     wr = prob.getJtJdiag(m0) ** 0.5
     wr /= wr.max()
-
     surface.add_data({"Cell_weights": {"values": wr[model_ordering]}})
 
     if em_specs["type"] == "frequency":
@@ -1097,7 +926,6 @@ def inversion(input_file):
     reg.get_grad_horizontal(
         xyz[:, :2] + np.random.randn(xyz.shape[0], 2), hz, minimum_distance=min_distance
     )
-
     opt = Optimization.ProjectedGNCG(
         maxIter=max_iterations,
         lower=np.log(lower_bound),
@@ -1106,12 +934,8 @@ def inversion(input_file):
         maxIterCG=max_cg_iterations,
         tolCG=tol_cg,
     )
-
     invProb = InvProblem.BaseInvProblem(dmisfit, reg, opt, beta=initial_beta)
-
-    # Directives
     directiveList = []
-
     directiveList.append(Directives.UpdateSensitivityWeights())
     directiveList.append(
         Directives.Update_IRLS(
@@ -1119,7 +943,7 @@ def inversion(input_file):
             minGNiter=1,
             betaSearch=False,
             beta_tol=0.25,
-            chifact_start=chi_target,
+            # chifact_start=chi_target,
             chifact_target=chi_target,
             prctile=50,
         )
@@ -1131,9 +955,8 @@ def inversion(input_file):
         )
 
     directiveList.append(Directives.UpdatePreconditioner())
-
     directiveList.append(
-        SaveIterationsGeoH5(
+        Directives.SaveIterationsGeoH5(
             h5_object=surface,
             sorting=model_ordering,
             mapping=mapping,
@@ -1141,7 +964,7 @@ def inversion(input_file):
         )
     )
     directiveList.append(
-        SaveIterationsGeoH5(
+        Directives.SaveIterationsGeoH5(
             h5_object=curve,
             sorting=data_ordering,
             mapping=data_mapping,
@@ -1154,7 +977,6 @@ def inversion(input_file):
         invProb,
         directiveList=directiveList,
     )
-
     prob.counter = opt.counter = Utils.Counter()
     opt.LSshorten = 0.5
     opt.remember("xc")
@@ -1166,7 +988,6 @@ def inversion(input_file):
                 invProb.dpred[ind::block][data_ordering]
                 - dobs[ind::block][data_ordering]
             )
-
             d = curve.add_data(
                 {
                     f"Residual_norm{channel}": {
@@ -1176,7 +997,6 @@ def inversion(input_file):
                 }
             )
             curve.add_data_to_group(d, f"Residual_pct")
-
             d = curve.add_data(
                 {f"Residual{channel}": {"association": "VERTEX", "values": res}}
             )

@@ -5,23 +5,28 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
+from uuid import UUID
 
 import numpy as np
-
-from .constants import required_parameters, validations
+from geoh5py.workspace import Workspace
 
 
 class InputValidator:
     """
-    Validations for inversion parameters.
+    Validations for driver parameters.
 
     Attributes
     ----------
-    input : Input file contents parsed to dict.
+    requirements : List of required parameters.
+    validations : Validations dictionary with matching set of input parameter keys.
+    workspace (optional) : Workspace instance needed to validate uuid types.
+    input (optional) : Input file contents parsed to dict.
 
     Methods
     -------
+    validate_uuid(uuid)
+        validates string as a valid uuid.
     validate_input(input)
         Validates input params and contents/type/shape/keys of values.
     validate(param value)
@@ -29,9 +34,33 @@ class InputValidator:
 
     """
 
-    def __init__(self, input: Dict[str, Any] = None):
+    def __init__(
+        self,
+        requirements: List[str],
+        validations: Dict[str, Any],
+        workspace: Workspace = None,
+        input=None,
+    ):
+        self.requirements = requirements
+        self.validations = validations
+        self.workspace = workspace
         self.input = input
-        self.current_validation = None
+
+    @property
+    def requirements(self):
+        return self._requirements
+
+    @requirements.setter
+    def requirements(self, val):
+        self._requirements = val
+
+    @property
+    def validations(self):
+        return self._validations
+
+    @validations.setter
+    def validations(self, val):
+        self._validations = val
 
     @property
     def input(self):
@@ -39,11 +68,11 @@ class InputValidator:
 
     @input.setter
     def input(self, val):
+        self._input = val
         if val is not None:
             self.validate_input(val)
-        self._input = val
 
-    def validate_input(self, input: Dict[str, Any]) -> None:
+    def validate_input(self, input) -> None:
         """
         Validates input params and contents/type/shape/requirements of values.
 
@@ -60,142 +89,186 @@ class InputValidator:
         it's value/type/shape/requirement validations.
         """
 
-        self._validate_required_parameters(input)
+        self._validate_requirements(input.data)
 
-        for k, v in input.items():
-            if k not in validations.keys():
+        for k, v in input.data.items():
+            if k not in self.validations.keys():
                 raise KeyError(f"{k} is not a valid parameter name.")
             else:
-                self.validate(k, v, validations[k], list(input.keys()))
+                self.validate(
+                    k, v, self.validations[k], self.workspace, input.associations
+                )
 
     def validate(
-        self, param: str, value: Any, validations: Any, input_keys: List[str] = None
+        self,
+        param: str,
+        value: Any,
+        pvalidations: Dict[str, List[Any]],
+        workspace: Workspace = None,
+        associations: Dict[Union[str, UUID], Union[str, UUID]] = None,
     ) -> None:
         """
         Validates parameter values, types, shapes, and requirements.
 
-        Wraps val, type, shape, reqs validate methods depending on whether
-        a validation is stored in .constants.validations dictionary
+        Wraps val, type, shape, reqs validate methods and applies each method according to what
+        is stored in the pvalidations dictionary.  If value is a dictionary type validate() will
+        recurse until value is not a dictionary and check that the data keys exist in the
+        pvalidations key set.
 
         Parameters
         ----------
-        param : Parameter for driving inversion.
+        param : Parameter name.
         value : Value attached to param.
-        validations : validation dictionary from .constants.validations with
-            keys for val, type, shape or reqs validation types
+        pvalidations : validation dictionary mapping validation type to its validators.
 
         Raises
         ------
         ValueError, TypeError, KeyError
             Whenever an input parameter fails one of it's
             value/type/shape/reqs validations.
+        ValueError
+            If param value is None, but is a required parameter.
+        KeyError
+            If value is a dictionary and any of it's keys do not exist in pvalidators.
         """
 
         if isinstance(value, dict):
             for k, v in value.items():
-                if k not in validations.keys():
-                    exclusions = ["values", "types", "shapes", "reqs"]
-                    vkeys = [k for k in validations.keys() if k not in exclusions]
-                    msg = f"Invalid {param} keys: {k}. Must be one of {*vkeys,}."
+                if k not in pvalidations.keys():
+                    exclusions = ["values", "types", "shapes", "reqs", "uuid"]
+                    vkeys = [k for k in pvalidations.keys() if k not in exclusions]
+                    msg = self.iterable_validation_msg(param, "keys", k, vkeys)
                     raise KeyError(msg)
-                self.validate(k, v, validations[k], input_keys)
+                self.validate(k, v, pvalidations[k], workspace, associations)
 
         if value is None:
-            if param in required_parameters:
+            if param in self.requirements:
                 raise ValueError(f"{param} is a required parameter. Cannot be None.")
             else:
                 return
 
-        if "values" in validations.keys():
-            self._validate_parameter_val(param, value, validations["values"])
-        if "types" in validations.keys():
-            self._validate_parameter_type(param, value, validations["types"])
-        if "shapes" in validations.keys():
-            self._validate_parameter_shape(param, value, validations["shapes"])
-        if ("reqs" in validations.keys()) & (input_keys is not None):
-            for v in validations["reqs"]:
-                self._validate_parameter_reqs(param, value, v, input_keys)
+        if "values" in pvalidations.keys():
+            self._validate_parameter_val(param, value, pvalidations["values"])
+        if "types" in pvalidations.keys():
+            self._validate_parameter_type(param, value, pvalidations["types"])
+        if "shapes" in pvalidations.keys():
+            self._validate_parameter_shape(param, value, pvalidations["shapes"])
+        if ("reqs" in pvalidations.keys()) & (self.input is not None):
+            for req in pvalidations["reqs"]:
+                self._validate_parameter_req(param, value, req)
+        if "uuid" in pvalidations.keys():
+            ws = self.workspace if workspace is None else workspace
+            try:
+                child_uuid = UUID(value) if isinstance(value, str) else value
+                parent = associations[child_uuid]
+            except:
+                parent = None
+            self._validate_parameter_uuid(param, value, ws, parent)
 
-    def _validate_parameter_val(self, param: str, value: Any, vvals: Any) -> None:
+    def _validate_parameter_val(
+        self, param: str, value: Any, vvals: List[Union[float, str]]
+    ) -> None:
         """ Raise ValueError if parameter value is invalid.  """
         if value not in vvals:
-            msg = self._param_validation_msg(param, "value", vvals)
+            msg = self._iterable_validation_msg(param, "value", value, vvals)
             raise ValueError(msg)
 
-    def _validate_parameter_type(self, param: str, value: type, vtypes: Any) -> None:
+    def _validate_parameter_type(
+        self, param: str, value: Any, vtypes: List[type]
+    ) -> None:
         """ Raise TypeError if parameter type is invalid. """
-        if self._isiterable(value):
-            value = np.array(value).flatten().tolist()
-            if not all(type(v) in vtypes for v in value):
-                tnames = [t.__name__ for t in vtypes]
-                msg = self._param_validation_msg(param, "type", tnames)
-                raise TypeError(msg)
-        elif type(value) not in vtypes:
+        isiter = self._isiterable(value)
+        value = np.array(value).flatten().tolist()[0] if isiter else value
+        if type(value) not in vtypes:
             tnames = [t.__name__ for t in vtypes]
-            msg = self._param_validation_msg(param, "type", tnames)
+            ptype = type(value).__name__
+            msg = self._iterable_validation_msg(param, "type", ptype, tnames)
             raise TypeError(msg)
 
     def _validate_parameter_shape(
-        self, param: str, value: Tuple[int], vshape: Any
+        self, param: str, value: Any, vshape: List[Tuple[int]]
     ) -> None:
         """ Raise ValueError if parameter shape is invalid. """
-        if np.array(value).shape != vshape:
-            msg = self._param_validation_msg(param, "shape", vshape)
+        pshape = np.array(value).shape
+        if pshape != vshape:
+            msg = self._iterable_validation_msg(param, "shape", pshape, vshape)
             raise ValueError(msg)
 
-    def _validate_parameter_reqs(
-        self, param: str, value: Any, vreqs: tuple, input_keys: List[str]
+    def _validate_parameter_req(self, param: str, value: Any, req: tuple) -> None:
+        """ Raise a KeyError if parameter requirement is not satisfied. """
+
+        hasval = len(req) > 1  # req[0] contains value for which param req[1] must exist
+        preq = req[1] if hasval else req[0]
+        val = req[0] if hasval else None
+
+        if hasval:
+            if value != req[0]:
+                return
+
+        if preq in self.input.data.keys():
+            noreq = True if self.input.data[preq] == None else False
+        else:
+            noreq = True
+
+        if noreq:
+            msg = self._req_validation_msg(param, preq, val)
+            raise KeyError(msg)
+
+    def _req_validation_msg(self, param, preq, val=None):
+        """ Generate unsatisfied parameter requirement message. """
+
+        msg = f"Unsatisfied '{param}' requirement. Input file must contain "
+        if val is not None:
+            msg += f"'{preq}' if '{param}' is '{str(val)}'."
+        else:
+            msg += f"'{preq}' if '{param}' is provided."
+        return msg
+
+    def _validate_parameter_uuid(
+        self, param: str, value: str, workspace: Workspace = None, parent: UUID = None
     ) -> None:
-        """ Raise a KeyError if parameter requirement is not met. """
-        if len(vreqs) > 1:
-            if (value == vreqs[0]) & (vreqs[1] not in input_keys):
-                msg = self._param_validation_msg(param, "reqs", vreqs)
-                raise KeyError(msg)
-        else:
-            if vreqs[0] not in input_keys:
-                msg = self._param_validation_msg(param, "reqs", vreqs)
-                raise KeyError(msg)
+        """ Check whether a string is a valid uuid and addresses an object in the workspace. """
 
-    def _param_validation_msg(
-        self, param: str, validation_type: str, validations: Any
+        msg = self._general_validation_msg(param, "uuid", value)
+        try:
+            obj_uuid = UUID(value)
+        except ValueError:
+            msg += " Must be a valid uuid string."
+            raise ValueError(msg)
+
+        if workspace is not None:
+            obj = workspace.get_entity(obj_uuid)
+            if obj[0] is None:
+                msg += f" Address does not exist in workspace: {workspace}."
+                raise IndexError(msg)
+
+        if parent is not None:
+            parent_obj = workspace.get_entity(parent)[0]
+            if obj_uuid not in [c.uid for c in parent_obj.children]:
+                msg += f" Object must be a child of {parent}."
+                raise IndexError(msg)
+
+    def _general_validation_msg(self, param: str, type: str, value: Any) -> str:
+        """ Generate base error message: "Invalid '{param}' {type}: {value}.". """
+        return f"Invalid '{param}' {type}: '{value}'."
+
+    def _iterable_validation_msg(
+        self, param: str, type: str, value: Any, validations: List[Any]
     ) -> str:
-        """Generate an error message for parameter validation.
+        """ Append possibly iterable validations: "Must be (one of): {validations}.". """
 
-        Parameters
-        ----------
-        param: parameter name as stored in input file
-        validation_type: name of validation type.  One of: 'value', 'type', 'shape', 'reqs'.
-        validations: valid input content.
-
-        Returns
-        -------
-        Message to be printed with the raised exception.
-        """
-
-        if validation_type == "shape":
-            msg = f"Invalid {param} {validation_type}. Must be: {validations}."
-
-        elif validation_type == "reqs":
-            if len(validations) > 1:
-                msg = (
-                    f"Invalid {param} requirement. Input file must contain "
-                    f"'{validations[1]}' if '{param}' is '{validations[0]}'."
-                )
-            else:
-                msg = (
-                    f"Invalid {param} requirement. Input file must contain "
-                    f"'{validations[0]}' if '{param}' is provided."
-                )
-
+        msg = self._general_validation_msg(param, type, value)
+        if self._isiterable(validations, checklen=True):
+            vstr = "'" + "', '".join(str(k) for k in validations) + "'"
+            msg += f" Must be one of: {vstr}."
         else:
-            if self._isiterable(validations, checklen=True):
-                msg = f"Invalid {param} {validation_type}. Must be one of: {*validations,}."
-            else:
-                msg = f"Invalid {param} {validation_type}. Must be: {validations[0]}."
+            msg += f" Must be: '{validations[0]}'."
 
         return msg
 
-    def _validate_required_parameters(self, input: Dict[str, Any]) -> None:
+    def _validate_requirements(
+        self, input: Dict[str, Any], requirements: List[str] = None
+    ) -> None:
         """
         Ensures that all required input file keys are present.
 
@@ -210,8 +283,10 @@ class InputValidator:
             is missing from the input file contents.
 
         """
+        reqs = self.requirements if requirements is None else requirements
+
         missing = []
-        for param in required_parameters:
+        for param in reqs:
             if param not in input.keys():
                 missing.append(param)
         if missing:

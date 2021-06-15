@@ -5,8 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import discretize
 import numpy as np
+from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel, ObjectBase
 from geoh5py.workspace import Workspace
 from ipywidgets import (
@@ -23,7 +23,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils import weighted_average
+from geoapps.utils.utils import weighted_average
 
 
 class DataInterpolation(ObjectDataSelection):
@@ -32,9 +32,8 @@ class DataInterpolation(ObjectDataSelection):
     """
 
     defaults = {
-        "select_multiple": True,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Inversion_VTEM_Model",
+        "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         "data": ["Iteration_7_model"],
         "core_cell_size": "50, 50, 50",
         "depth_core": 500,
@@ -45,18 +44,25 @@ class DataInterpolation(ObjectDataSelection):
         "new_grid": "InterpGrid",
         "no_data_value": 1e-8,
         "out_mode": "To Object",
-        "out_object": "O2O_Interp_25m",
+        "out_object": "{7450be38-1327-4336-a9e4-5cff587b6715}",
         "padding_distance": "0, 0, 0, 0, 0, 0",
         "skew_angle": 0,
         "skew_factor": 1.0,
         "space": "Log",
-        "topography": {"objects": "Topography", "data": "Z"},
+        "topography": {
+            "options": "Object",
+            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+            "data": "Z",
+        },
     }
+
+    _select_multiple = True
+    _topography = None
 
     def __init__(self, use_defaults=True, **kwargs):
 
         if use_defaults:
-            kwargs = self.apply_defaults(**kwargs)
+            self.defaults = self.update_defaults(**kwargs)
 
         self._core_cell_size = Text(
             description="Smallest cells",
@@ -100,12 +106,7 @@ class DataInterpolation(ObjectDataSelection):
         self._xy_reference = Dropdown(
             description="Lateral Extent", style={"description_width": "initial"}
         )
-
-        def object_pick(_):
-            self.object_pick()
-
-        self.objects.observe(object_pick, names="value")
-
+        self.objects.observe(self.object_pick, names="value")
         self.method_skew = VBox(
             [Label("Skew parameters"), self.skew_angle, self.skew_factor]
         )
@@ -121,38 +122,13 @@ class DataInterpolation(ObjectDataSelection):
                 self.expansion_fact,
             ]
         )
-
         self.method.observe(self.method_update)
         self.out_mode.observe(self.out_update)
-
-        super().__init__(**kwargs)
 
         def interpolate_call(_):
             self.interpolate_call()
             self.update_objects_choices()
 
-        self.trigger.on_click(interpolate_call)
-        self.trigger.description = "Interpolate"
-        self._topography = TopographyOptions()
-        self.topography.offset.disabled = True
-        self.topography.options.options = ["None", "Object", "Constant"]
-
-        if getattr(self, "_workspace", None) is not None:
-            self.topography.workspace = self._workspace
-            if "topography" in kwargs.keys():
-                self.topography.__populate__(**kwargs["topography"])
-
-        self.parameter_choices = Dropdown(
-            description="Interpolation Parameters",
-            options=[
-                "Method",
-                "Scaling",
-                "Horizontal Extent",
-                "Vertical Extent",
-                "No-data-value",
-            ],
-            style={"description_width": "initial"},
-        )
         self.parameters = {
             "Method": self.method_panel,
             "Scaling": self.space,
@@ -162,27 +138,29 @@ class DataInterpolation(ObjectDataSelection):
                     self.xy_extent,
                 ]
             ),
-            "Vertical Extent": VBox([self.topography.main, self.max_depth]),
+            "Vertical Extent": VBox([]),
             "No-data-value": self.no_data_value,
         }
+
+        self.parameter_choices = Dropdown(
+            description="Interpolation Parameters",
+            options=list(self.parameters.keys()),
+            style={"description_width": "initial"},
+        )
 
         self.parameter_panel = HBox([self.parameter_choices, self.method_panel])
         self.ga_group_name.description = "Output Label:"
         self.ga_group_name.value = "_Interp"
         self.parameter_choices.observe(self.parameter_change)
-        self._main = VBox(
-            [
-                self.project_panel,
-                HBox(
-                    [
-                        VBox([Label("Source"), self.main]),
-                        VBox([Label("Destination"), self.destination_panel]),
-                    ]
-                ),
-                self.parameter_panel,
-                self.output_panel,
-            ]
-        )
+
+        super().__init__(**self.defaults)
+
+        self.parameters["Vertical Extent"].children = [
+            self.topography.main,
+            self.max_depth,
+        ]
+        self.trigger.on_click(interpolate_call)
+        self.trigger.description = "Interpolate"
 
     @property
     def core_cell_size(self):
@@ -204,6 +182,24 @@ class DataInterpolation(ObjectDataSelection):
         :obj:`ipywidgets.FloatText()`
         """
         return self._expansion_fact
+
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox(
+                [
+                    self.project_panel,
+                    HBox(
+                        [
+                            VBox([Label("Source"), self.data_panel]),
+                            VBox([Label("Destination"), self.destination_panel]),
+                        ]
+                    ),
+                    self.parameter_panel,
+                    self.output_panel,
+                ]
+            )
+        return self._main
 
     @property
     def max_distance(self):
@@ -287,6 +283,13 @@ class DataInterpolation(ObjectDataSelection):
         """
         :obj:`geoapps.TopographyOptions()`
         """
+        if getattr(self, "_topography", None) is None:
+            self._topography = TopographyOptions(
+                option_list=["None", "Object", "Constant"],
+                workspace=self.workspace,
+                **self.defaults["topography"],
+            )
+
         return self._topography
 
     @property
@@ -324,7 +327,7 @@ class DataInterpolation(ObjectDataSelection):
 
         self.update_objects_choices()
 
-        if getattr(self, "topography", None) is not None:
+        if getattr(self, "_topography", None) is not None:
             self.topography.workspace = workspace
 
     def parameter_change(self, _):
@@ -339,17 +342,17 @@ class DataInterpolation(ObjectDataSelection):
 
         value = self.out_object.value
         self.out_object.options = self.objects.options
-        if value in self.out_object.options:
+        if value in list(dict(self.out_object.options).values()):
             self.out_object.value = value
 
         value = self.xy_reference.value
         self.xy_reference.options = self.objects.options
-        if value in self.xy_reference.options:
+        if value in list(dict(self.xy_reference.options).values()):
             self.xy_reference.value = value
 
         value = self.xy_extent.value
         self.xy_extent.options = self.objects.options
-        if value in self.xy_extent.options:
+        if value in list(dict(self.xy_extent.options).values()):
             self.xy_extent.value = value
 
     def method_update(self, _):
@@ -401,6 +404,7 @@ class DataInterpolation(ObjectDataSelection):
 
         else:
 
+            ref_in = None
             for entity in self._workspace.get_entity(self.xy_reference.value):
                 if isinstance(entity, ObjectBase):
                     ref_in = entity
@@ -409,6 +413,11 @@ class DataInterpolation(ObjectDataSelection):
                 xyz_ref = ref_in.centroids
             elif hasattr(ref_in, "vertices"):
                 xyz_ref = ref_in.vertices
+            else:
+                print(
+                    "No object selected for 'Lateral Extent'. Defaults to input object."
+                )
+                xyz_ref = xyz
 
             # Find extent of grid
             h = np.asarray(self.core_cell_size.value.split(",")).astype(float).tolist()
@@ -429,7 +438,7 @@ class DataInterpolation(ObjectDataSelection):
                 - (xyz_ref[:, 2].max() - xyz_ref[:, 2].min())
                 + h[2]
             )
-            mesh = discretize.utils.meshutils.mesh_builder_xyz(
+            mesh = mesh_utils.mesh_builder_xyz(
                 xyz_ref,
                 h,
                 padding_distance=[
@@ -606,10 +615,10 @@ class DataInterpolation(ObjectDataSelection):
             )
 
         if self.live_link.value:
-            self.live_link_output(self.object_out)
+            self.live_link_output(self.export_directory.selected_path, self.object_out)
 
         self.workspace.finalize()
 
-    def object_pick(self):
-        if self.objects.value in self.xy_reference.options:
+    def object_pick(self, _):
+        if self.objects.value in list(dict(self.xy_reference.options).values()):
             self.xy_reference.value = self.objects.value

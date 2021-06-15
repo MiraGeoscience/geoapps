@@ -212,6 +212,7 @@ class BetaEstimate_ByEig(InversionDirective):
         t = np.dot(x0, self.dmisfit.deriv2(m, x0, f=f))
         b = np.dot(x0, self.reg.deriv2(m, v=x0))
 
+
         self.beta0 = self.beta0_ratio * (t / b)
 
         self.invProb.beta = self.beta0
@@ -794,6 +795,7 @@ class SaveIterationsGeoH5(InversionDirective):
     data_type = {}
     replace_values = False
     no_data_value = None
+    reg_fun = ["phi_ms", "phi_msx", "phi_msy", "phi_msz"]
 
     def initialize(self):
 
@@ -832,21 +834,20 @@ class SaveIterationsGeoH5(InversionDirective):
             data.entity_type.name = channel
             self.data_type[channel] = data.entity_type
 
+
         if self.save_objective_function:
-            regCombo = ["phi_ms", "phi_msx"]
-
-            if self.prob[0].mesh.dim >= 2:
-                regCombo += ["phi_msy"]
-
-            if self.prob[0].mesh.dim == 3:
-                regCombo += ["phi_msz"]
-
             # Save the data.
             iterDict = {"beta": f"{self.invProb.beta:.3e}"}
             iterDict["phi_d"] = f"{self.invProb.phi_d:.3e}"
-            iterDict["phi_m"] = f"{self.invProb.phi_m:.3e}"
 
-            for label, fcts in zip(regCombo, self.reg.objfcts[0].objfcts):
+            if isinstance(self.invProb.phi_m, (list, np.ndarray)):
+                phi_m = np.sum(self.invProb.phi_m)
+            else:
+                phi_m = self.invProb.phi_m
+
+            iterDict["phi_m"] = f"{phi_m:.3e}"
+
+            for label, fcts in zip(self.reg_fun, self.reg.objfcts[0].objfcts):
                 iterDict[label] = f"{fcts(self.invProb.model):.3e}"
 
             self.h5_object.parent.add_comment(
@@ -901,14 +902,6 @@ class SaveIterationsGeoH5(InversionDirective):
                 )
 
         if self.save_objective_function:
-            regCombo = ["phi_ms", "phi_msx"]
-
-            if self.prob[0].mesh.dim >= 2:
-                regCombo += ["phi_msy"]
-
-            if self.prob[0].mesh.dim == 3:
-                regCombo += ["phi_msz"]
-
             # Save objective function.
             if isinstance(self.invProb.beta, float):
                 beta = self.invProb.beta
@@ -922,15 +915,15 @@ class SaveIterationsGeoH5(InversionDirective):
             else:
                 phi_d = self.invProb.phi_d[0]
 
-            if isinstance(self.invProb.phi_m, float):
-                phi_m = self.invProb.phi_m
+            if isinstance(self.invProb.phi_m, (list, np.ndarray)):
+                phi_m = np.sum(self.invProb.phi_m)
             else:
-                phi_m = self.invProb.phi_m[0]
+                phi_m = self.invProb.phi_m
 
             iterDict["phi_d"] = f"{phi_d:.3e}"
             iterDict["phi_m"] = f"{phi_m:.3e}"
 
-            for label, fcts in zip(regCombo, self.reg.objfcts[0].objfcts):
+            for label, fcts in zip(self.reg_fun, self.reg.objfcts[0].objfcts):
                 iterDict[label] = f"{fcts(self.invProb.model):.3e}"
 
             self.h5_object.parent.add_comment(

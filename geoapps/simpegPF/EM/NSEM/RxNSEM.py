@@ -6,12 +6,12 @@ Receivers for the NSEM problem
 
 from scipy.constants import mu_0
 
-import SimPEG
+import geoapps.simpegPF as spf
 import numpy as np
 from .. import mkvc
 
 
-class BaseRxNSEM_Point(SimPEG.Survey.BaseRx):
+class BaseRxNSEM_Point(spf.Survey.BaseRx):
     """
     Natural source receiver base class.
 
@@ -41,7 +41,7 @@ class BaseRxNSEM_Point(SimPEG.Survey.BaseRx):
         self.orientation = orientation
         self.component = component
 
-        SimPEG.Survey.BaseRx.__init__(
+        spf.Survey.BaseRx.__init__(
             self, locs, rxType=None
         )  # TODO: remove rxType from baseRx
 
@@ -120,7 +120,7 @@ class BaseRxNSEM_Point(SimPEG.Survey.BaseRx):
 
     # Utility for convienece
     def _sDiag(self, t):
-        return SimPEG.Utils.sdiag(mkvc(t, 2))
+        return spf.Utils.sdiag(mkvc(t, 2))
 
     # Get the components of the fields
     # px: x-polaration and py: y-polaration.
@@ -364,7 +364,7 @@ class BaseRxNSEM_Point(SimPEG.Survey.BaseRx):
         )
 
 
-class Point_impedance1D(SimPEG.Survey.BaseRx):
+class Point_impedance1D(spf.Survey.BaseRx):
     """
     Natural source 1D impedance receiver class
 
@@ -380,7 +380,7 @@ class Point_impedance1D(SimPEG.Survey.BaseRx):
         ], f"'component' must be 'real' or 'imag', not {component!s}"
 
         self.component = component
-        SimPEG.Survey.BaseRx.__init__(self, locs, rxType=None)
+        spf.Survey.BaseRx.__init__(self, locs, rxType=None)
 
     @property
     def mesh(self):
@@ -395,7 +395,7 @@ class Point_impedance1D(SimPEG.Survey.BaseRx):
 
     # Utility for convienece
     def _sDiag(self, t):
-        return SimPEG.Utils.sdiag(mkvc(t, 2))
+        return psf.Utils.sdiag(mkvc(t, 2))
 
     @property
     def src(self):
