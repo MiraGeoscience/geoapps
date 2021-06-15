@@ -4,8 +4,8 @@ import properties
 import warnings
 
 from .. import Utils
-from SimPEG.Utils import Zero, Identity
-from SimPEG.EM.Utils import *
+from geoapps.simpegPF.Utils import Zero, Identity
+from geoapps.simpegPF.EM.Utils import *
 from ..Base import BaseEMSrc
 
 

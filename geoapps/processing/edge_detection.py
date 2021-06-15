@@ -10,12 +10,12 @@ from geoh5py.io import H5Writer
 from geoh5py.objects import Curve, Grid2D
 from geoh5py.workspace import Workspace
 from ipywidgets import (
+    Button,
     FloatSlider,
     HBox,
     IntSlider,
     Layout,
     Text,
-    ToggleButton,
     VBox,
     interactive_output,
 )
@@ -24,7 +24,8 @@ from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
 from geoapps.plotting import PlotSelection2D
-from geoapps.utils import filter_xy
+from geoapps.utils.formatters import string_name
+from geoapps.utils.utils import filter_xy
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -47,26 +48,22 @@ class EdgeDetectionApp(PlotSelection2D):
 
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "Gravity_Magnetics_drape60m",
+        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": "Airborne_Gxx",
         "resolution": 50,
         "sigma": 0.5,
-        "compute": True,
         "window": {
             "azimuth": -20,
         },
         "ga_group_name": "Edges",
     }
-    object_types = (Grid2D,)
+    _object_types = (Grid2D,)
 
     def __init__(self, **kwargs):
-
-        self._compute = ToggleButton(
-            value=False,
+        self.defaults = self.update_defaults(**kwargs)
+        self._compute = Button(
             description="Compute",
             button_style="warning",
-            tooltip="Description",
-            icon="check",
         )
         self._export_as = Text(
             value="Edges",
@@ -112,51 +109,16 @@ class EdgeDetectionApp(PlotSelection2D):
             continuous_update=False,
             description="Window size",
         )
-        super().__init__(**kwargs)
-
-        out = interactive_output(
-            self.compute_trigger,
-            {"compute": self.compute},
-        )
-
-        def save_trigger(_):
-            self.save_trigger()
+        self.data.observe(self.update_name, names="value")
+        self.compute.on_click(self.compute_trigger)
+        super().__init__(**self.defaults)
 
         # Make changes to trigger warning color
         self.trigger.description = "Save to GA"
-        self.trigger.on_click(save_trigger)
+        self.trigger.on_click(self.save_trigger)
         self.trigger.button_style = "success"
 
-        def update_name(_):
-            self.update_name()
-
-        self.data.observe(update_name, names="value")
-        self.update_name()
-
-        self._main = VBox(
-            [
-                self.project_panel,
-                HBox(
-                    [
-                        self.main,
-                        VBox(
-                            [
-                                self.sigma,
-                                self.threshold,
-                                self.line_length,
-                                self.line_gap,
-                                self.window_size,
-                                self.compute,
-                                self.export_as,
-                                self.output_panel,
-                            ],
-                            layout=Layout(width="50%"),
-                        ),
-                        out,
-                    ]
-                ),
-            ]
-        )
+        self.compute.click()
 
     @property
     def compute(self):
@@ -179,6 +141,39 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._line_gap
 
     @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox(
+                [
+                    self.project_panel,
+                    HBox(
+                        [
+                            VBox(
+                                [
+                                    self.data_panel,
+                                    self.window_selection,
+                                ]
+                            ),
+                            VBox(
+                                [
+                                    self.sigma,
+                                    self.threshold,
+                                    self.line_length,
+                                    self.line_gap,
+                                    self.window_size,
+                                    self.compute,
+                                    self.export_as,
+                                    self.output_panel,
+                                ],
+                                layout=Layout(width="50%"),
+                            ),
+                        ]
+                    ),
+                ]
+            )
+        return self._main
+
+    @property
     def sigma(self):
         """FloatSlider"""
         return self._sigma
@@ -193,7 +188,7 @@ class EdgeDetectionApp(PlotSelection2D):
         """IntSlider"""
         return self._window_size
 
-    def save_trigger(self):
+    def save_trigger(self, _):
         entity, _ = self.get_selected_entities()
         if getattr(self.trigger, "vertices", None) is not None:
 
@@ -222,111 +217,107 @@ class EdgeDetectionApp(PlotSelection2D):
             else:
                 curve = Curve.create(
                     self.workspace,
-                    name=self.export_as.value,
+                    name=string_name(self.export_as.value),
                     vertices=self.trigger.vertices,
                     cells=self.trigger.cells,
                     parent=self.ga_group,
                 )
 
             if self.live_link.value:
-                self.live_link_output(self.ga_group)
+                self.live_link_output(
+                    self.export_directory.selected_path, self.ga_group
+                )
 
             self.workspace.finalize()
 
-    def update_name(self):
+    def update_name(self, _):
         if self.data.value is not None:
             self.export_as.value = self.data.value
         else:
             self.export_as.value = "Edges"
 
-    def compute_trigger(self, compute):
-        if compute:
+    def compute_trigger(self, _):
+        grid, data = self.get_selected_entities()
 
-            grid, data = self.get_selected_entities()
+        if grid is None:
+            return
 
-            x = grid.centroids[:, 0].reshape(grid.shape, order="F")
-            y = grid.centroids[:, 1].reshape(grid.shape, order="F")
-            z = grid.centroids[:, 2].reshape(grid.shape, order="F")
-            grid_data = data[0].values.reshape(grid.shape, order="F")
-            indices = self.indices
-            ind_x, ind_y = (
-                np.any(indices, axis=1),
-                np.any(indices, axis=0),
-            )
-            x = x[ind_x, :][:, ind_y]
-            y = y[ind_x, :][:, ind_y]
-            z = z[ind_x, :][:, ind_y]
-            grid_data = grid_data[ind_x, :][:, ind_y]
-            grid_data -= grid_data.min()
-            grid_data /= grid_data.max()
+        x = grid.centroids[:, 0].reshape(grid.shape, order="F")
+        y = grid.centroids[:, 1].reshape(grid.shape, order="F")
+        z = grid.centroids[:, 2].reshape(grid.shape, order="F")
+        grid_data = data[0].values.reshape(grid.shape, order="F")
+        indices = self.indices
+        ind_x, ind_y = (
+            np.any(indices, axis=1),
+            np.any(indices, axis=0),
+        )
+        x = x[ind_x, :][:, ind_y]
+        y = y[ind_x, :][:, ind_y]
+        z = z[ind_x, :][:, ind_y]
+        grid_data = grid_data[ind_x, :][:, ind_y]
+        grid_data -= np.nanmin(grid_data)
+        grid_data /= np.nanmax(grid_data)
+        grid_data[np.isnan(grid_data)] = 0
 
-            if np.any(grid_data):
-                # Find edges
-                edges = canny(grid_data, sigma=self.sigma.value, use_quantiles=True)
-                shape = edges.shape
-                # Cycle through tiles of square size
-                max_l = np.min([self.window_size.value, shape[0], shape[1]])
-                half = np.floor(max_l / 2)
-                overlap = 1.25
+        if np.any(grid_data):
+            # Find edges
+            edges = canny(grid_data, sigma=self.sigma.value, use_quantiles=True)
+            shape = edges.shape
+            # Cycle through tiles of square size
+            max_l = np.min([self.window_size.value, shape[0], shape[1]])
+            half = np.floor(max_l / 2)
+            overlap = 1.25
 
-                n_cell_y = (shape[0] - 2 * half) * overlap / max_l
-                n_cell_x = (shape[1] - 2 * half) * overlap / max_l
+            n_cell_y = (shape[0] - 2 * half) * overlap / max_l
+            n_cell_x = (shape[1] - 2 * half) * overlap / max_l
 
-                if n_cell_x > 0:
-                    cnt_x = np.linspace(
-                        half, shape[1] - half, 2 + int(np.round(n_cell_x)), dtype=int
-                    ).tolist()
-                    half_x = half
-                else:
-                    cnt_x = [np.ceil(shape[1] / 2)]
-                    half_x = np.ceil(shape[1] / 2)
+            if n_cell_x > 0:
+                cnt_x = np.linspace(
+                    half, shape[1] - half, 2 + int(np.round(n_cell_x)), dtype=int
+                ).tolist()
+                half_x = half
+            else:
+                cnt_x = [np.ceil(shape[1] / 2)]
+                half_x = np.ceil(shape[1] / 2)
 
-                if n_cell_y > 0:
-                    cnt_y = np.linspace(
-                        half, shape[0] - half, 2 + int(np.round(n_cell_y)), dtype=int
-                    ).tolist()
-                    half_y = half
-                else:
-                    cnt_y = [np.ceil(shape[0] / 2)]
-                    half_y = np.ceil(shape[0] / 2)
+            if n_cell_y > 0:
+                cnt_y = np.linspace(
+                    half, shape[0] - half, 2 + int(np.round(n_cell_y)), dtype=int
+                ).tolist()
+                half_y = half
+            else:
+                cnt_y = [np.ceil(shape[0] / 2)]
+                half_y = np.ceil(shape[0] / 2)
 
-                coords = []
-                for cx in cnt_x:
-                    for cy in cnt_y:
+            coords = []
+            for cx in cnt_x:
+                for cy in cnt_y:
 
-                        i_min, i_max = int(cy - half_y), int(cy + half_y)
-                        j_min, j_max = int(cx - half_x), int(cx + half_x)
-                        lines = probabilistic_hough_line(
-                            edges[i_min:i_max, j_min:j_max],
-                            line_length=self.line_length.value,
-                            threshold=self.threshold.value,
-                            line_gap=self.line_gap.value,
-                            seed=0,
+                    i_min, i_max = int(cy - half_y), int(cy + half_y)
+                    j_min, j_max = int(cx - half_x), int(cx + half_x)
+                    lines = probabilistic_hough_line(
+                        edges[i_min:i_max, j_min:j_max],
+                        line_length=self.line_length.value,
+                        threshold=self.threshold.value,
+                        line_gap=self.line_gap.value,
+                        seed=0,
+                    )
+
+                    if np.any(lines):
+                        coord = np.vstack(lines)
+                        coords.append(
+                            np.c_[
+                                x[i_min:i_max, j_min:j_max][coord[:, 1], coord[:, 0]],
+                                y[i_min:i_max, j_min:j_max][coord[:, 1], coord[:, 0]],
+                                z[i_min:i_max, j_min:j_max][coord[:, 1], coord[:, 0]],
+                            ]
                         )
-
-                        if np.any(lines):
-                            coord = np.vstack(lines)
-                            coords.append(
-                                np.c_[
-                                    x[i_min:i_max, j_min:j_max][
-                                        coord[:, 1], coord[:, 0]
-                                    ],
-                                    y[i_min:i_max, j_min:j_max][
-                                        coord[:, 1], coord[:, 0]
-                                    ],
-                                    z[i_min:i_max, j_min:j_max][
-                                        coord[:, 1], coord[:, 0]
-                                    ],
-                                ]
-                            )
-                if coords:
-                    coord = np.vstack(coords)
-                    self.objects.lines = coord
-                    self.plot_store_lines()
-                else:
-                    self.objects.lines = None
-
-            self.compute.value = False
+            if coords:
+                coord = np.vstack(coords)
+                self.objects.lines = coord
+                self.plot_store_lines()
+            else:
+                self.objects.lines = None
 
     def plot_store_lines(self):
 

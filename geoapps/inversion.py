@@ -32,7 +32,8 @@ from ipywidgets.widgets import (
 from geoapps.base import BaseApplication
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import LineOptions, ObjectDataSelection, TopographyOptions
-from geoapps.utils import find_value, geophysical_systems, string_2_list
+from geoapps.utils import geophysical_systems
+from geoapps.utils.utils import find_value, string_2_list
 
 
 class ChannelOptions:
@@ -103,34 +104,42 @@ class SensorOptions(ObjectDataSelection):
     Define the receiver spatial parameters
     """
 
-    def __init__(self, **kwargs):
+    _options = None
 
+    def __init__(self, **kwargs):
+        self.defaults = self.update_defaults(**kwargs)
         self._offset = Text(description="(dx, dy, dz) (+ve up)", value="0, 0, 0")
         self._constant = FloatText(
             description="Constant elevation (m)",
         )
-        if "offset" in kwargs.keys():
-            self._offset.value = kwargs["value"]
-
-        self._options = widgets.RadioButtons(
-            options=[
-                "sensor location + (dx, dy, dz)",
-                "topo + radar + (dx, dy, dz)",
-            ],
-            description="Define by:",
-        )
-
-        super().__init__(**self.apply_defaults(**kwargs))
+        if "offset" in self.defaults.keys():
+            self._offset.value = self.defaults["offset"]
 
         self.option_list = {
-            "sensor location + (dx, dy, dz)": self._offset,
-            "topo + radar + (dx, dy, dz)": VBox([self._offset, self._data]),
+            "sensor location + (dx, dy, dz)": self.offset,
+            "topo + radar + (dx, dy, dz)": VBox(
+                [
+                    self.offset,
+                ]
+            ),
         }
         self.options.observe(self.update_options, names="value")
-        self._main = VBox([self.options, self.option_list[self.options.value]])
-        self._data.description = "Radar (Optional):"
-        self._data.style = {"description_width": "initial"}
-        self.update_data_list(None)
+
+        super().__init__(**self.defaults)
+
+        self.option_list["topo + radar + (dx, dy, dz)"].children = [
+            self.offset,
+            self.data,
+        ]
+        self.data.description = "Radar (Optional):"
+        self.data.style = {"description_width": "initial"}
+
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox([self.options, self.option_list[self.options.value]])
+
+        return self._main
 
     @property
     def offset(self):
@@ -138,10 +147,19 @@ class SensorOptions(ObjectDataSelection):
 
     @property
     def options(self):
+
+        if getattr(self, "_options", None) is None:
+            self._options = widgets.RadioButtons(
+                options=[
+                    "sensor location + (dx, dy, dz)",
+                    "topo + radar + (dx, dy, dz)",
+                ],
+                description="Define by:",
+            )
         return self._options
 
     def update_options(self, _):
-        self._main.children = [
+        self.main.children = [
             self.options,
             self.option_list[self.options.value],
         ]
@@ -367,7 +385,7 @@ class InversionOptions(BaseApplication):
     defaults = {}
 
     def __init__(self, **kwargs):
-
+        self.defaults = self.update_defaults(**kwargs)
         self._output_name = widgets.Text(
             value="Inversion_", description="Save to:", disabled=False
         )
@@ -467,7 +485,7 @@ class InversionOptions(BaseApplication):
         )
         self.option_choices.observe(self.inversion_option_change, names="value")
 
-        super().__init__(**self.apply_defaults(**kwargs))
+        super().__init__(**self.defaults)
 
         self._main = widgets.VBox(
             [
@@ -692,29 +710,37 @@ def inversion_defaults():
 
 class InversionApp(PlotSelection2D):
     defaults = {
-        "select_multiple": True,
-        "add_groups": True,
         "h5file": "../../assets/FlinFlon.geoh5",
         "inducing_field": "60000, 79, 11",
-        "objects": "Gravity_Magnetics_drape60m",
+        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": ["Airborne_TMI"],
         "resolution": 50,
-        "window": {
-            "center_x": 314600.0,
-            "center_y": 6072200.0,
-            "width": 1000.0,
-            "height": 1500.0,
-            "azimuth": -20,
-        },
+        "center_x": 314600.0,
+        "center_y": 6072200.0,
+        "width": 1000.0,
+        "height": 1500.0,
+        "azimuth": -20,
         "inversion_parameters": {"norms": "0, 2, 2, 2", "max_iterations": 25},
-        "topography": {"objects": "Topography", "data": "elevation"},
+        "topography": {
+            "options": "Object",
+            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+            "data": "elevation",
+        },
         "sensor": {"offset": "0, 0, 60", "options": "topo + radar + (dx, dy, dz)"},
         "padding_distance": "1000, 1000, 1000, 1000, 0, 0",
     }
 
+    _select_multiple = True
+    _add_groups = True
+    _sensor = None
+    _lines = None
+    _topography = None
+    _inversion_parameters = None
+    _spatial_options = None
+
     def __init__(self, **kwargs):
 
-        kwargs = self.apply_defaults(**kwargs)
+        self.defaults = self.update_defaults(**kwargs)
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -744,91 +770,23 @@ class InversionApp(PlotSelection2D):
         self.run.observe(self.run_trigger, names="value")
         self.write.observe(self.write_trigger, names="value")
         self.system.observe(self.system_observer, names="value")
-        self.mesh_octree = MeshOctreeOptions(**kwargs)
-        self.mesh_1D = Mesh1DOptions(**kwargs)
-
-        super().__init__(**kwargs)
-
+        self.mesh_octree = MeshOctreeOptions(**self.defaults)
+        self.mesh_1D = Mesh1DOptions(**self.defaults)
         self.objects.observe(self.object_observer, names="value")
         self.data.observe(self.update_component_panel, names="value")
         self.data_channel_choices.observe(
             self.data_channel_choices_observer, names="value"
         )
-        self.topography = TopographyOptions()
-        self.topography.workspace = self._workspace
-
-        if "topography" in kwargs.keys():
-            self.topography.__populate__(**kwargs["topography"])
-
-        self.inversion_parameters = InversionOptions()
-        self.inversion_parameters.update_workspace(self._workspace)
-
-        if "inversion_parameters" in kwargs.keys():
-            self.inversion_parameters.__populate__(**kwargs["inversion_parameters"])
-
-        self.sensor = SensorOptions()
-        self.sensor.workspace = self._workspace
-        self.sensor.objects = self.objects
-
-        if "sensor" in kwargs.keys():
-            self.sensor.__populate__(**kwargs["sensor"])
-
-        self.lines = LineOptions()
-        self.lines.workspace = self._workspace
-        self.lines.objects = self.objects
-        self.lines.lines.observe(self.update_selection, names="value")
-        self.spatial_options = {
-            "Topography": self.topography.main,
-            "Sensor": self.sensor.main,
-            "Line ID": self.lines.main,
-        }
-        self.spatial_choices = widgets.Dropdown(
-            options=list(self.spatial_options.keys()),
-            value=list(self.spatial_options.keys())[0],
-            disabled=False,
-        )
+        self.spatial_choices = widgets.Dropdown()
         self.spatial_choices.observe(self.spatial_option_change, names="value")
-        self.spatial_panel = VBox(
-            [self.spatial_choices, self.spatial_options[self.spatial_choices.value]]
-        )
+        self.spatial_panel = VBox([self.spatial_choices])
+        super().__init__(**self.defaults)
 
         for item in ["width", "height", "resolution"]:
             getattr(self, item).observe(self.update_octree_param, names="value")
 
         self.output_panel = VBox([self.export_directory, self.write, self.run])
-        self._main = VBox(
-            [
-                self.project_panel,
-                HBox(
-                    [
-                        self.data_panel,
-                        VBox(
-                            [
-                                VBox(
-                                    [
-                                        Label("Geophysical System"),
-                                        self.survey_type_panel,
-                                    ]
-                                ),
-                                VBox([Label("Channels"), self.data_channel_panel]),
-                            ],
-                        ),
-                    ]
-                ),
-                self.window_selection,
-                VBox(
-                    [
-                        Label("Topo, Sensor and Line Location Options"),
-                        self.spatial_panel,
-                    ]
-                ),
-                self.inversion_parameters.main,
-                self.forward_only,
-                self.output_panel,
-            ]
-        )
 
-        self.object_observer(None)
         self.inversion_parameters.update_ref(None)
 
     @property
@@ -847,9 +805,81 @@ class InversionApp(PlotSelection2D):
         return self._inducing_field
 
     @property
+    def inversion_parameters(self):
+        if getattr(self, "_inversion_parameters", None) is None:
+            self._inversion_parameters = InversionOptions(
+                workspace=self._workspace, **self.defaults["inversion_parameters"]
+            )
+
+        return self._inversion_parameters
+
+    @property
+    def lines(self):
+        if getattr(self, "_lines", None) is None:
+            self._lines = LineOptions(workspace=self._workspace, objects=self._objects)
+            self.lines.lines.observe(self.update_selection, names="value")
+        return self._lines
+
+    @property
+    def main(self):
+        if getattr(self, "_main", None) is None:
+            self._main = VBox(
+                [
+                    self.project_panel,
+                    HBox(
+                        [
+                            self.data_panel,
+                            VBox(
+                                [
+                                    VBox(
+                                        [
+                                            Label("Geophysical System"),
+                                            self.survey_type_panel,
+                                        ]
+                                    ),
+                                    VBox([Label("Channels"), self.data_channel_panel]),
+                                ],
+                            ),
+                        ]
+                    ),
+                    self.window_selection,
+                    VBox(
+                        [
+                            Label("Topo, Sensor and Line Location Options"),
+                            self.spatial_panel,
+                        ]
+                    ),
+                    self.inversion_parameters.main,
+                    self.forward_only,
+                    self.output_panel,
+                ]
+            )
+        return self._main
+
+    @property
     def run(self):
         """"""
         return self._run
+
+    @property
+    def sensor(self):
+        if getattr(self, "_sensor", None) is None:
+            self._sensor = SensorOptions(
+                workspace=self._workspace,
+                objects=self._objects,
+                **self.defaults["sensor"],
+            )
+        return self._sensor
+
+    @property
+    def spatial_options(self):
+        if getattr(self, "_spatial_options", None) is None:
+            self._spatial_options = {
+                "Topography": self.topography.main,
+                "Sensor": self.sensor.main,
+                "Line ID": self.lines.main,
+            }
+        return self._spatial_options
 
     @property
     def starting_channel(self):
@@ -860,6 +890,16 @@ class InversionApp(PlotSelection2D):
     def system(self):
         """"""
         return self._system
+
+    @property
+    def topography(self):
+        if getattr(self, "_topography", None) is None:
+
+            self._topography = TopographyOptions(
+                workspace=self._workspace, **self.defaults["topography"]
+            )
+
+        return self._topography
 
     @property
     def workspace(self):
@@ -883,7 +923,7 @@ class InversionApp(PlotSelection2D):
         self.update_objects_list()
 
         # Check for startup
-        if getattr(self, "inversion_parameters", None) is not None:
+        if getattr(self, "_inversion_parameters", None) is not None:
             self.inversion_parameters.update_workspace(workspace)
             self.lines.workspace = workspace
             self.sensor.workspace = workspace
@@ -907,13 +947,13 @@ class InversionApp(PlotSelection2D):
             if self.system.value in ["Gravity", "MVI", "Magnetics"]:
                 os.system(
                     "start cmd.exe @cmd /k "
-                    + 'python -m geoapps.pf_inversion "'
+                    + 'python -m geoapps.drivers.pf_inversion "'
                     + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
                 )
             else:
                 os.system(
                     "start cmd.exe @cmd /k "
-                    + 'python -m geoapps.em1d_inversion "'
+                    + 'python -m geoapps.drivers.em1d_inversion "'
                     + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
                 )
             self.run.value = False
@@ -1160,7 +1200,9 @@ class InversionApp(PlotSelection2D):
                 if component in groups:
                     data_list += [
                         self.workspace.get_entity(data)[0].name
-                        for data in entity.get_property_group(component).properties
+                        for data in entity.find_or_create_property_group(
+                            name=component
+                        ).properties
                     ]
                 elif component in entity.get_data_list():
                     data_list += [component]
@@ -1253,6 +1295,7 @@ class InversionApp(PlotSelection2D):
             "out_group": self.inversion_parameters.output_name.value,
             "workspace": os.path.abspath(self.h5file),
             "save_to_geoh5": os.path.abspath(self.h5file),
+            "mesh": "Mesh",
         }
         if self.system.value in ["Gravity", "MVI", "Magnetics"]:
             input_dict["inversion_type"] = self.system.value.lower()
@@ -1261,6 +1304,7 @@ class InversionApp(PlotSelection2D):
                 input_dict["inducing_field_aid"] = string_2_list(
                     self.inducing_field.value
                 )
+
             # Octree mesh parameters
             input_dict["core_cell_size"] = string_2_list(
                 self.mesh_octree.core_cell_size.value
@@ -1291,12 +1335,14 @@ class InversionApp(PlotSelection2D):
                 self.mesh_1D.hz_expansion.value,
                 self.mesh_1D.n_cells.value,
             ]
+            input_dict["uncertainty_mode"] = self.inversion_parameters.uncert_mode.value
+
         input_dict["chi_factor"] = self.inversion_parameters.chi_factor.value
         input_dict["max_iterations"] = self.inversion_parameters.max_iterations.value
         input_dict[
             "max_cg_iterations"
         ] = self.inversion_parameters.max_cg_iterations.value
-
+        input_dict
         input_dict["n_cpu"] = self.inversion_parameters.n_cpu.value
         input_dict["max_ram"] = self.inversion_parameters.max_ram.value
 
@@ -1325,20 +1371,23 @@ class InversionApp(PlotSelection2D):
         if ref_type == "model":
             input_dict["reference_model"] = {
                 ref_type: {
-                    self.inversion_parameters.reference_model.objects.value: self.inversion_parameters.reference_model.data.value
+                    str(
+                        self.inversion_parameters.reference_model.objects.value
+                    ): self.inversion_parameters.reference_model.data.value
                 }
             }
         else:
             input_dict["reference_model"] = {
                 ref_type: self.inversion_parameters.reference_model.value.value
             }
-
         start_type = self.inversion_parameters.starting_model.options.value.lower()
 
         if start_type == "model":
             input_dict["starting_model"] = {
                 start_type: {
-                    self.inversion_parameters.starting_model.objects.value: self.inversion_parameters.starting_model.data.value
+                    str(
+                        self.inversion_parameters.starting_model.objects.value
+                    ): self.inversion_parameters.starting_model.data.value
                 }
             }
         else:
@@ -1354,7 +1403,9 @@ class InversionApp(PlotSelection2D):
             if susc_type == "model":
                 input_dict["susceptibility_model"] = {
                     susc_type: {
-                        self.inversion_parameters.susceptibility_model.objects.value: self.inversion_parameters.susceptibility_model.data.value
+                        str(
+                            self.inversion_parameters.susceptibility_model.objects.value
+                        ): self.inversion_parameters.susceptibility_model.data.value
                     }
                 }
             else:
@@ -1381,7 +1432,7 @@ class InversionApp(PlotSelection2D):
 
         input_dict["data"] = {}
         input_dict["data"]["type"] = "GA_object"
-        input_dict["data"]["name"] = self.objects.value
+        input_dict["data"]["name"] = str(self.objects.value)
 
         if hasattr(self.data_channel_choices, "data_channel_options"):
             channel_param = {}
@@ -1419,8 +1470,6 @@ class InversionApp(PlotSelection2D):
 
             input_dict["data"]["channels"] = channel_param
 
-        input_dict["uncertainty_mode"] = self.inversion_parameters.uncert_mode.value
-
         if self.sensor.options.value == "sensor location + (dx, dy, dz)":
             input_dict["receivers_offset"] = {
                 "constant": string_2_list(self.sensor.offset.value)
@@ -1437,7 +1486,7 @@ class InversionApp(PlotSelection2D):
             else:
                 input_dict["topography"] = {
                     "GA_object": {
-                        "name": self.topography.objects.value,
+                        "name": str(self.topography.objects.value),
                         "data": self.topography.data.value,
                     }
                 }

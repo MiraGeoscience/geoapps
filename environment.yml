@@ -5,8 +5,8 @@ channels:
 dependencies:
   - python
   - pip
+  - git
   - discretize
-  - simpeg=0.13
   - numpy
   - scipy
   - matplotlib
@@ -24,6 +24,7 @@ dependencies:
   - plotly
   - requests
   - empymod
+  - ipyfilechooser
   - pip:
-    - ipyfilechooser
+    - git+https://github.com/MiraGeoscience/simpeg.git@feature/tiled-simulations
     - geoh5py==0.1.2

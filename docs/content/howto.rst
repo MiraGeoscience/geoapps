@@ -19,8 +19,8 @@ Applications generally consist of two Cells:
 	    :align: center
 	    :width: 100%
 
-- (Top) Text block that describe what the application is about with useful links.
-- (Bottom) A Code block that imports the necessary library and launches the main `Jupyter Widgets <https://ipywidgets.readthedocs.io/en/latest/examples/Widget%20Basics.html>`_.
+- (Top) Text block that describes what the application is about with useful links.
+- (Bottom) A Code block that imports the necessary libraries and launches the main `Jupyter Widgets <https://ipywidgets.readthedocs.io/en/latest/examples/Widget%20Basics.html>`_.
 
 To start the application, the Code cell must be executed. This can be done either through the
 Run Button
@@ -32,7 +32,7 @@ Run Button
 or by selecting the Code cell and pressing **Shift+Enter** on your keyboard.
 
 Two indicators let the user know that code is currently being executed:
-A bracket with a start next to the cell
+A bracket with a star next to the cell
 
 	.. figure:: ../images/cell_execution_bottom.png
 	    :align: center

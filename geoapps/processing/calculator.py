@@ -19,41 +19,42 @@ from geoapps.selection import ObjectDataSelection
 class Calculator(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "geochem",
+        "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": ["Al2O3", "CaO"],
         "equation": "{NewChannel} = {Al2O3} + numpy.cos({CaO} / 30.0 * numpy.pi)",
     }
 
-    def __init__(self, **kwargs):
+    _select_multiple = True
 
-        kwargs = self.apply_defaults(**kwargs)
+    def __init__(self, **kwargs):
+        self.defaults = self.update_defaults(**kwargs)
         self.var = {}
-        self.select_multiple = True
         self._channel = Text(description="Name: ")
         self._equation = Textarea(layout=Layout(width="75%"))
         self._use = Button(description=">> Add Variable >>")
         self.use.on_click(self.click_use)
 
-        super().__init__(**kwargs)
+        super().__init__(**self.defaults)
 
         self.trigger.on_click(self.click_trigger)
-
-        self.data_panel = VBox([self.objects, HBox([self.data, self.use])])
+        self._data_panel = VBox([self.objects, HBox([self.data, self.use])])
         self.output_panel = VBox([self.trigger, self.live_link_panel])
-        self._main = VBox(
-            [
-                self.project_panel,
-                self.data_panel,
-                VBox(
-                    [self.equation],
-                    layout=Layout(width="100%"),
-                ),
-                self.output_panel,
-            ]
-        )
 
-    def __call__(self):
-        return self.main
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = VBox(
+                [
+                    self.project_panel,
+                    self.data_panel,
+                    VBox(
+                        [self.equation],
+                        layout=Layout(width="100%"),
+                    ),
+                    self.output_panel,
+                ]
+            )
+        return self._main
 
     @property
     def equation(self):
@@ -144,7 +145,7 @@ class Calculator(ObjectDataSelection):
         if self.live_link.value:
             while not isinstance(obj.parent, RootGroup):
                 obj = obj.parent
-            self.live_link_output(obj)
+            self.live_link_output(self.export_directory.selected_path, obj)
 
         self.workspace.finalize()
 

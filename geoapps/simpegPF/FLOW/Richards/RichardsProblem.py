@@ -9,9 +9,9 @@ from .. import Problem
 from .. import Optimization
 from .. import Solver
 
-from SimPEG.FLOW.Richards.RichardsSurvey import RichardsSurvey
-from SimPEG.FLOW.Richards.Empirical import BaseHydraulicConductivity
-from SimPEG.FLOW.Richards.Empirical import BaseWaterRetention
+from geoapps.simpegPF.FLOW.Richards.RichardsSurvey import RichardsSurvey
+from geoapps.simpegPF.FLOW.Richards.Empirical import BaseHydraulicConductivity
+from geoapps.simpegPF.FLOW.Richards.Empirical import BaseWaterRetention
 
 
 class RichardsProblem(Problem.BaseTimeProblem):

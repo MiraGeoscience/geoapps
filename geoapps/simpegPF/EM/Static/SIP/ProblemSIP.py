@@ -3,9 +3,9 @@ import numpy as np
 from .. import Utils
 from .. import Props
 
-from SimPEG.EM.Base import BaseEMProblem
-from SimPEG.EM.Static.DC.FieldsDC import FieldsDC, Fields_CC, Fields_N
-from SimPEG.EM.Static.DC import getxBCyBC_CC
+from geoapps.simpegPF.EM.Base import BaseEMProblem
+from geoapps.simpegPF.EM.Static.DC.FieldsDC import FieldsDC, Fields_CC, Fields_N
+from geoapps.simpegPF.EM.Static.DC import getxBCyBC_CC
 from .SurveySIP import Survey, Data
 
 

@@ -38,11 +38,11 @@ from ipywidgets import (
 from scipy.spatial import cKDTree
 
 from geoapps.selection import LineOptions, ObjectDataSelection
-from geoapps.utils import (
+from geoapps.utils import geophysical_systems
+from geoapps.utils.utils import (
     LineDataDerivatives,
     colors,
     find_value,
-    geophysical_systems,
     hex_to_rgb,
     rotate_azimuth_dip,
     running_mean,
@@ -55,13 +55,18 @@ class PeakFinder(ObjectDataSelection):
     """
 
     defaults = {
-        "object_types": Curve,
         "h5file": "../../assets/FlinFlon.geoh5",
-        "add_groups": True,
-        "objects": "Data_TEM_pseudo3D",
+        "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
         "data": ["Observed"],
-        "model": {"objects": "Inversion_VTEM_Model", "data": "Iteration_7_model"},
-        "lines": {"objects": "Data_TEM_pseudo3D", "data": "Line", "lines": 6073400.0},
+        "model": {
+            "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "data": "Iteration_7_model",
+        },
+        "lines": {
+            "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+            "data": "Line",
+            "lines": 6073400.0,
+        },
         "boreholes": {"objects": "geochem", "data": "Al2O3"},
         "doi": {"data": "Z"},
         "doi_percent": 60,
@@ -76,14 +81,18 @@ class PeakFinder(ObjectDataSelection):
         "ga_group_name": "PeakFinder",
     }
 
+    _add_groups = True
+    _object_types = (Curve,)
+
     def __init__(self, **kwargs):
 
-        kwargs = self.apply_defaults(**kwargs)
+        self.defaults = self.update_defaults(**kwargs)
 
         try:
             self.client = get_client()
         except ValueError:
             self.client = Client()
+
         self.decay_figure = None
         self.all_anomalies = []
         self.borehole_trace = None
@@ -199,19 +208,12 @@ class PeakFinder(ObjectDataSelection):
             },
         )
 
-        super().__init__(**kwargs)
+        super().__init__(**self.defaults)
 
-        if "lines" in kwargs.keys():
-            self.lines.__populate__(**kwargs["lines"])
-
-        if "boreholes" in kwargs.keys():
-            self.boreholes.__populate__(**kwargs["boreholes"])
-
-        if "model" in kwargs.keys():
-            self.model_selection.__populate__(**kwargs["model"])
-
-        if "doi" in kwargs.keys():
-            self.doi_selection.__populate__(**kwargs["doi"])
+        self.lines.__populate__(**self.defaults["lines"])
+        self.boreholes.__populate__(**self.defaults["boreholes"])
+        self.model_selection.__populate__(**self.defaults["model"])
+        self.doi_selection.__populate__(**self.defaults["doi"])
 
         self.channel_panel = VBox(
             [
@@ -539,7 +541,9 @@ class PeakFinder(ObjectDataSelection):
         :obj:`geoapps.selection.LineOptions`: Line selection widget defining the profile used for plotting.
         """
         if getattr(self, "_lines", None) is None:
-            self._lines = LineOptions(multiple_lines=False, objects=self.objects)
+            self._lines = LineOptions(
+                workspace=self.workspace, multiple_lines=False, objects=self.objects
+            )
 
         return self._lines
 
@@ -1027,7 +1031,9 @@ class PeakFinder(ObjectDataSelection):
             # Add all selected data channels | groups once
             for channel in self.data.value:
                 if channel in groups:
-                    for prop in self.survey.get_property_group(channel).properties:
+                    for prop in self.survey.find_or_create_property_group(
+                        name=channel
+                    ).properties:
                         name = self.workspace.get_entity(prop)[0].name
                         if prop not in channels:
                             channels.append(name)
@@ -1469,10 +1475,10 @@ class PeakFinder(ObjectDataSelection):
                 )
 
         if self.live_link.value:
-            self.live_link_output(points)
+            self.live_link_output(self.export_directory.selected_path, points)
 
             if self.structural_markers.value:
-                self.live_link_output(curves)
+                self.live_link_output(self.export_directory.selected_path, curves)
 
         self.workspace.finalize()
 
@@ -1639,7 +1645,7 @@ class PeakFinder(ObjectDataSelection):
                 )
 
         if scale == "symlog":
-            plt.yscale("symlog", linthreshy=scale_value)
+            plt.yscale("symlog", linthresh=scale_value)
 
         x_lims = [
             center - width / 2.0,

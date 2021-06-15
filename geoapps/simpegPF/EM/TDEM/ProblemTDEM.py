@@ -1,9 +1,9 @@
 import scipy.sparse as sp
 import numpy as np
 from .. import Problem, Utils, Solver as SimpegSolver
-from SimPEG.EM.Base import BaseEMProblem
-from SimPEG.EM.TDEM.SurveyTDEM import Survey as SurveyTDEM
-from SimPEG.EM.TDEM.FieldsTDEM import (
+from geoapps.simpegPF.EM.Base import BaseEMProblem
+from geoapps.simpegPF.EM.TDEM.SurveyTDEM import Survey as SurveyTDEM
+from geoapps.simpegPF.EM.TDEM.FieldsTDEM import (
     FieldsTDEM,
     Fields3D_b,
     Fields3D_e,
