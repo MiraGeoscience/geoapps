@@ -37,6 +37,11 @@ class PeakFinderParams(Params):
         self.run_command = None
         self.conda_environment = None
         self._input_file = InputFile()
+        self._input_file.input_from_dict(
+            self.default_ui_json,
+            required_parameters=required_parameters,
+            validations=validations,
+        )
 
         super().__init__(**kwargs)
 
@@ -54,15 +59,7 @@ class PeakFinderParams(Params):
 
     @objects.setter
     def objects(self, val):
-        if val is None:
-            self._objects = val
-            return
-
-        p = "objects"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._objects = UUID(val)
+        self.setter_validator("objects", val, fun=lambda x: UUID(x))
 
     @property
     def data(self):
@@ -70,14 +67,7 @@ class PeakFinderParams(Params):
 
     @data.setter
     def data(self, val):
-        if val is None:
-            self._data = val
-            return
-        p = "data"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._data = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("data", val)
 
     @property
     def lines(self):
@@ -85,14 +75,9 @@ class PeakFinderParams(Params):
 
     @lines.setter
     def lines(self, val):
-        if val is None:
-            self._lines = val
-            return
-        p = "lines"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
+        self.setter_validator(
+            "lines", val, fun=lambda x: UUID(x) if isinstance(x, str) else x
         )
-        self._lines = UUID(val) if isinstance(val, str) else val
 
     @property
     def smoothing(self):
@@ -100,14 +85,15 @@ class PeakFinderParams(Params):
 
     @smoothing.setter
     def smoothing(self, val):
-        if val is None:
-            self._smoothing = val
-            return
-        p = "smoothing"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._smoothing = val
+        self.setter_validator("smoothing", val)
+
+    @property
+    def tem_checkbox(self):
+        return self._tem_checkbox
+
+    @tem_checkbox.setter
+    def tem_checkbox(self, val):
+        self.setter_validator("tem_checkbox", val)
 
     @property
     def center(self):
@@ -115,14 +101,7 @@ class PeakFinderParams(Params):
 
     @center.setter
     def center(self, val):
-        if val is None:
-            self._center = val
-            return
-        p = "center"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._center = val
+        self.setter_validator("center", val)
 
     @property
     def width(self):
@@ -130,14 +109,7 @@ class PeakFinderParams(Params):
 
     @width.setter
     def width(self, val):
-        if val is None:
-            self._width = val
-            return
-        p = "width"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._width = val
+        self.setter_validator("width", val)
 
     @property
     def ga_group_name(self):
@@ -145,14 +117,7 @@ class PeakFinderParams(Params):
 
     @ga_group_name.setter
     def ga_group_name(self, val):
-        if val is None:
-            self._ga_group_name = val
-            return
-        p = "ga_group_name"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._ga_group_name = val
+        self.setter_validator("ga_group_name", val)
 
     def _init_params(self, inputfile: InputFile) -> None:
         """ Wraps Params._init_params. """
