@@ -364,8 +364,33 @@ def weighted_average(
 
 def window_xy(
     x: np.ndarray, y: np.ndarray, window: Dict[str, float], mask: np.array = None
-) -> Tuple[np.array, np.array, np.array]:
-    """ Window data in x, y coordinates with center, size based limits. """
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Window x, y coordinates with window limits built from center and size.
+
+    Notes
+    -----
+
+    This formulation knows nothing about rotation, so 'rotated' coordinates
+    should first be 'un-rotated' to a north-south, east-west orientation.
+
+    :param x: Easting coordinates, as vector or meshgrid-like array.
+    :param y: Northing coordinates, as vector or meshgrid-like array.
+    :param window: Window parameters describing a domain of interest.
+        Must contain the following keys and values:
+        window = {
+            "center": [X: float, Y: float],
+            "size": [width: float, height: float]
+        }
+    :param mask: Optionally provide an existing mask and return the union
+        of the two masks and it's effect on x and y.
+
+    :return: mask: Boolean mask that was applied to x, and y.
+    :return: x[mask]: Masked input array x.
+    :return: y[mask]: Masked input array y.
+
+
+    """
 
     if ("center" in window.keys()) & ("size" in window.keys()):
         x_lim = [
@@ -391,7 +416,24 @@ def window_xy(
     return window_mask, x[window_mask], y[window_mask]
 
 
-def downsample_xy(x, y, distance, mask=None):
+def downsample_xy(
+    x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray = None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+
+    """
+    Downsample locations to approximate a grid with defined spacing.
+
+    :param x: Easting coordinates, as a 1-dimensional vector.
+    :param y: Northing coordinates, as a 1-dimensional vector.
+    :param distance: Desired coordinate spacing.
+    :param mask: Optionally provide an existing mask and return the union
+        of the two masks and it's effect on x and y.
+
+    :return: mask: Boolean mask that was applied to x, and y.
+    :return: x[mask]: Masked input array x.
+    :return: y[mask]: Masked input array y.
+
+    """
 
     downsample_mask = np.ones_like(x, dtype=bool)
     xy = np.c_[x, y]
@@ -412,74 +454,110 @@ def downsample_xy(x, y, distance, mask=None):
     return downsample_mask, xy[:, 0], xy[:, 1]
 
 
-def downsample_grid(xg, yg, distance, mask=None):
+def downsample_grid(
+    xg: np.ndarray, yg: np.ndarray, distance: float, mask: np.ndarray = None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Downsample grid locations to approximate spacing provided by 'distance'.
 
-    if distance > 1:
-        downsample_mask = np.zeros_like(xg, dtype=bool)
-        d_l = np.max(
-            [
-                np.linalg.norm(np.c_[xg[0, 0] - xg[0, 1], yg[0, 0] - yg[0, 1]]),
-                np.linalg.norm(np.c_[xg[0, 0] - xg[1, 0], yg[0, 0] - yg[1, 0]]),
-            ]
-        )
-        dwn = int(np.ceil(distance / d_l))
-        downsample_mask[::dwn, ::dwn] = True
+    Notes
+    -----
+    This implementation is more efficient than the 'downsample_xy' function
+    for locations on a regular grid.
 
-        x = xg.ravel()
-        y = yg.ravel()
-        downsample_mask = downsample_mask.ravel()
+    :param xg: Meshgrid-like array of Easting coordinates.
+    :param yg: Meshgrid-like array of Northing coordinates.
+    :param distance: Desired coordinate spacing.
+    :param mask: Optionally provide an existing mask and return the union
+        of the two masks and it's effect on xg and yg.
 
-        if mask is not None:
-            downsample_mask &= mask
+    :return: mask: Boolean mask that was applied to xg, and yg.
+    :return: xg[mask]: Masked input array xg.
+    :return: yg[mask]: Masked input array yg.
 
-        return downsample_mask, x[downsample_mask], y[downsample_mask]
+    """
 
-    else:
-        return np.ones_like(xg.ravel(), dtype=bool), xg.ravel(), yg.ravel()
+    u_diff = lambda u: np.unique(np.diff(u, axis=1))[0]
+    v_diff = lambda v: np.unique(np.diff(v, axis=0))[0]
+
+    du = np.linalg.norm(np.c_[u_diff(xg), u_diff(yg)])
+    dv = np.linalg.norm(np.c_[v_diff(xg), v_diff(yg)])
+    u_ds = int(np.rint(distance / du))
+    v_ds = int(np.rint(distance / dv))
+
+    downsample_mask = np.zeros_like(xg, dtype=bool)
+    downsample_mask[::v_ds, ::u_ds] = True
+
+    if mask is not None:
+        downsample_mask &= mask
+
+    return downsample_mask, xg[downsample_mask], yg[downsample_mask]
 
 
 def filter_xy(
-    x: np.array, y: np.array, distance: float, window: dict = None, angle: float = None
+    x: np.array,
+    y: np.array,
+    distance: float = None,
+    window: dict = None,
+    angle: float = None,
 ) -> np.array:
     """
-    Function to extract and down-sample xy locations based on minimum distance and window parameters.
+    Window and down-sample locations based on distance and window parameters.
 
-    :param x: Easting coordinates
-    :param y: Northing coordinates
-    :param distance: Minimum distance between neighbours
+    :param x: Easting coordinates, as vector or meshgrid-like array
+    :param y: Northing coordinates, as vector or meshgrid-like array
+    :param distance: Desired coordinate spacing.
     :param window: Window parameters describing a domain of interest.
         Must contain the following keys and values:
         window = {
             "center": [X: float, Y: float],
-            "size": [width: float, height: float],
-            "azimuth": float
+            "size": [width: float, height: float]
         }
+        May also contain an "azimuth" in the case of rotated x and y.
+    :param angle: Angle through which the locations must be rotated
+        to take on a east-west, north-south orientation.  Supersedes
+        the 'azimuth' key/value pair in the window dictionary if it
+        exists.
 
-    :return selection: Array of 'bool' of shape(x)
+    :return mask: Boolean mask to be applied input arrays x and y.
     """
 
-    mask = np.ones_like(x.ravel(), dtype=bool)
+    mask = np.ones_like(x, dtype=bool)
+
+    azim = None
+    if angle is not None:
+        azim = angle
+    elif window is not None:
+        if "azimuth" in window.keys():
+            azim = window["azimuth"]
+
+    if azim is not None:
+        xy_locs = rotate_xy(np.c_[x.ravel(), y.ravel()], window["center"], azim)
+        xy_locs = np.round(xy_locs, 8)
+        xr = xy_locs[:, 0].reshape(x.shape)
+        yr = xy_locs[:, 1].reshape(y.shape)
 
     if window is not None:
 
-        if angle is not None:
-            azim = angle
-        elif "azimuth" in window.keys():
-            azim = window["azimuth"]
+        if azim is not None:
+            mask, _, _ = window_xy(xr, yr, window, mask=mask)
         else:
-            azim = None
+            mask, _, _ = window_xy(x, y, window, mask=mask)
+
+    if distance is not None:
 
         if azim is not None:
-            xy_locs = rotate_xy(np.c_[x.ravel(), y.ravel()], window["center"], azim)
+            u_diff = np.unique(np.diff(xr, axis=1))
+            v_diff = np.unique(np.diff(yr, axis=0))
         else:
-            xy_locs = np.c_[x.ravel(), y.ravel()]
+            u_diff = np.unique(np.diff(x, axis=1))
+            v_diff = np.unique(np.diff(y, axis=0))
 
-        mask, _, _ = window_xy(xy_locs[:, 0], xy_locs[:, 1], window, mask=mask)
-
-    if x.ndim == 1:
-        mask, _, _ = downsample_xy(x, y, distance, mask=mask)
-    else:
-        mask, _, _ = downsample_grid(x, y, distance, mask=mask)
+        check_diff = (len(u_diff) == 1) & (len(v_diff) == 1)
+        if check_diff:
+            mask, _, _ = downsample_grid(x, y, distance, mask=mask)
+        else:
+            mask, _, _ = downsample_xy(x, y, distance, mask=mask)
 
     return mask
 
