@@ -436,7 +436,7 @@ def downsample_xy(
     """
 
     downsample_mask = np.ones_like(x, dtype=bool)
-    xy = np.c_[x, y]
+    xy = np.c_[x.ravel(), y.ravel()]
     tree = cKDTree(xy)
 
     mask_ind = np.where(downsample_mask)[0]
@@ -531,30 +531,34 @@ def filter_xy(
         if "azimuth" in window.keys():
             azim = window["azimuth"]
 
-    if azim is not None:
+    is_rotated = False if (azim is None) | (azim == 0) else True
+    if is_rotated:
         xy_locs = rotate_xy(np.c_[x.ravel(), y.ravel()], window["center"], azim)
-        xy_locs = np.round(xy_locs, 8)
         xr = xy_locs[:, 0].reshape(x.shape)
         yr = xy_locs[:, 1].reshape(y.shape)
 
     if window is not None:
 
-        if azim is not None:
+        if is_rotated:
             mask, _, _ = window_xy(xr, yr, window, mask=mask)
         else:
             mask, _, _ = window_xy(x, y, window, mask=mask)
 
     if distance is not None:
 
-        if azim is not None:
-            u_diff = np.unique(np.diff(xr, axis=1))
-            v_diff = np.unique(np.diff(yr, axis=0))
-        else:
-            u_diff = np.unique(np.diff(x, axis=1))
-            v_diff = np.unique(np.diff(y, axis=0))
+        is_grid = False
+        if x.ndim > 1:
 
-        check_diff = (len(u_diff) == 1) & (len(v_diff) == 1)
-        if check_diff:
+            if is_rotated:
+                u_diff = np.unique(np.round(np.diff(xr, axis=1), 8))
+                v_diff = np.unique(np.round(np.diff(yr, axis=0), 8))
+            else:
+                u_diff = np.unique(np.round(np.diff(x, axis=1), 8))
+                v_diff = np.unique(np.round(np.diff(y, axis=0), 8))
+
+            is_grid = (len(u_diff) == 1) & (len(v_diff) == 1)
+
+        if is_grid:
             mask, _, _ = downsample_grid(x, y, distance, mask=mask)
         else:
             mask, _, _ = downsample_xy(x, y, distance, mask=mask)
