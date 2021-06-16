@@ -951,12 +951,11 @@ def object_2_dataframe(entity, fields=[], inplace=False, vertices=True, index=No
 
     d_f = pd.DataFrame(data_dict, columns=list(data_dict.keys()))
     for field in fields:
-        if entity.get_data(field):
-            obj = entity.get_data(field)[0]
-            if obj.values.shape[0] == locs.shape[0]:
-                d_f[field] = obj.values.copy()[index]
+        for data in entity.workspace.get_entity(field):
+            if (data in entity.children) and (data.values.shape[0] == locs.shape[0]):
+                d_f[data.name] = data.values.copy()[index]
                 if inplace:
-                    obj.values = None
+                    data.values = None
 
     return d_f
 

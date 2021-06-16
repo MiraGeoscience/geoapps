@@ -324,11 +324,16 @@ class Export(ObjectDataSelection):
                         + self.data.uid_name_map[key]
                         + ".mod"
                     ] = item[ind]
-                mesh.writeUBC(
+                name = (
                     path.join(self.export_directory.selected_path, self.export_as.value)
-                    + ".msh",
+                    + ".msh"
+                )
+                mesh.writeUBC(
+                    name,
                     models=models,
                 )
+                print(f"Mesh saved to {name}")
+                print(f"Models saved to {list(models.keys())}")
 
             else:
 
@@ -346,11 +351,12 @@ class Export(ObjectDataSelection):
                     entity.origin["y"] + entity.v_cells[entity.v_cells < 0].sum(),
                     entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
                 ]
-
-                mesh.writeUBC(
+                name = (
                     path.join(self.export_directory.selected_path, self.export_as.value)
                     + ".msh"
                 )
+                mesh.writeUBC(name)
+                print(f"Mesh saved to {name}")
 
                 if any(data_values):
                     for key, item in data_values.items():
@@ -364,11 +370,15 @@ class Export(ObjectDataSelection):
                         else:
                             values = item
 
-                        np.savetxt(
-                            path.join(self.export_directory.selected_path, key)
-                            + ".mod",
-                            values,
+                        name = (
+                            path.join(
+                                self.export_directory.selected_path,
+                                self.data.uid_name_map[key],
+                            )
+                            + ".mod"
                         )
+                        np.savetxt(name, values)
+                        print(f"Model saved to {name}")
 
     def set_wkt(self, _):
         datasetSRS = osr.SpatialReference()
