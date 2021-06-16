@@ -246,8 +246,8 @@ class PlotSelection2D(ObjectDataSelection):
             else:
                 data_channel = data_name
 
-        if entity.get_data(data_channel):
-            data_obj = entity.get_data(data_channel)[0]
+        if self.workspace.get_entity(data_channel):
+            data_obj = self.workspace.get_entity(data_channel)[0]
         elif data_channel == "Z":
             data_obj = "Z"
 
