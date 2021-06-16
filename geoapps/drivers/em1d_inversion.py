@@ -242,7 +242,7 @@ def inversion(input_file):
 
         for key, values in selection.items():
 
-            line_data = entity.get_data(key)[0]
+            line_data = workspace.get_entity(key)[0]
             if isinstance(line_data, ReferencedData):
                 values = [
                     key
@@ -252,7 +252,9 @@ def inversion(input_file):
 
             for line in values:
 
-                line_ind = np.where(entity.get_data(key)[0].values == float(line))[0]
+                line_ind = np.where(workspace.get_entity(key)[0].values == float(line))[
+                    0
+                ]
 
                 if len(line_ind) < 2:
                     continue
@@ -312,8 +314,10 @@ def inversion(input_file):
 
             if "radar_drape" in list(
                 input_param["receivers_offset"].keys()
-            ) and entity.get_data(input_param["receivers_offset"]["radar_drape"][3]):
-                z_channel = entity.get_data(
+            ) and workspace.get_entity(
+                input_param["receivers_offset"]["radar_drape"][3]
+            ):
+                z_channel = workspace.get_entity(
                     input_param["receivers_offset"]["radar_drape"][3]
                 )[0].values
                 locations[:, 2] += z_channel[win_ind]
@@ -396,7 +400,7 @@ def inversion(input_file):
     pred_cells = []
     for key, values in selection.items():
 
-        line_data = entity.get_data(key)[0]
+        line_data = workspace.get_entity(key)[0]
         if isinstance(line_data, ReferencedData):
             values = [
                 key for key, value in line_data.value_map.map.items() if value in values
@@ -404,9 +408,9 @@ def inversion(input_file):
 
         for line in values:
 
-            line_ind = np.where(entity.get_data(key)[0].values[win_ind] == float(line))[
-                0
-            ]
+            line_ind = np.where(
+                workspace.get_entity(key)[0].values[win_ind] == float(line)
+            )[0]
 
             n_sounding = len(line_ind)
             if n_sounding < 2:

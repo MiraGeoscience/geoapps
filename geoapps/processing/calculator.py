@@ -150,7 +150,7 @@ class Calculator(ObjectDataSelection):
         self.workspace.finalize()
 
         choice = self.data.value
-        self.data.options = obj.get_data_list()
+        self.data.options = [[child.name, child.uid] for child in obj.children]
         self.data.value = choice
 
         if self.plot_result:

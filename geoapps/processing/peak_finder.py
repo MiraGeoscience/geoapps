@@ -759,7 +759,7 @@ class PeakFinder(ObjectDataSelection):
             for channel in self.data.value:
                 if channel in groups:
                     for prop in self.survey.find_or_create_property_group(
-                        name=channel
+                        name=self.data.uid_name_map[channel]
                     ).properties:
                         name = self.workspace.get_entity(prop)[0].name
                         if prop not in channels:
@@ -1501,7 +1501,7 @@ class PeakFinder(ObjectDataSelection):
             return
 
         if (
-            len(self.survey.get_data(self.lines.data.value)) == 0
+            len(self.workspace.get_entity(self.lines.data.value)) == 0
             or self.lines.lines.value == ""
         ):
             return
@@ -1566,7 +1566,7 @@ class PeakFinder(ObjectDataSelection):
         """
         Find the vertices for a given line ID
         """
-        line_data = self.survey.get_data(self.lines.data.value)[0]
+        line_data = self.workspace.get_entity(self.lines.data.value)[0]
 
         if isinstance(line_data, ReferencedData):
             line_id = [
