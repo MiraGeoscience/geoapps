@@ -214,20 +214,78 @@ def test_downsample_xy():
 
 
 def test_downsample_grid():
+
+    # Test a simple grid equal spacing in x, y
     xg, yg = np.meshgrid(np.arange(11), np.arange(11))
     ind, xd, yd = downsample_grid(xg, yg, 2)
     assert np.all(np.diff(yd.reshape(6, 6), axis=0) == 2)
     assert np.all(np.diff(xd.reshape(6, 6), axis=1) == 2)
 
+    # Test a rotated grid equal spacing in u, v
+    xy_rot = rotate_xy(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
+    xg_rot = xy_rot[:, 0].reshape(11, 11)
+    yg_rot = xy_rot[:, 1].reshape(11, 11)
+    ind, xd, yd = downsample_grid(xg_rot, yg_rot, 2)
+    xy = rotate_xy(np.c_[xd, yd], [5, 5], -30)
+    xg_test = xy[:, 0].reshape(6, 6)
+    yg_test = xy[:, 1].reshape(6, 6)
+    np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((6, 5), 2))
+    np.testing.assert_allclose(np.diff(yg_test, axis=0), np.full((5, 6), 2))
 
-# def test_filter_xy():
-#     xg, yg = np.meshgrid(np.arange(11), np.arange(11))
-#     x = xg.ravel()
-#     y = yg.ravel()
-#     distance = 0
-#     window = {
-#         "center": [6, 2.5],
-#         "size" : [3, 2]
-#     }
-#     ind = filter_xy(x, y, distance, window)
-#     assert [p in x for p in [5, 6, 7]]
+    # Test unequal spacing in x, y
+    xg, yg = np.meshgrid(np.arange(11), np.linspace(0, 10, 21))
+    ind, xd, yd = downsample_grid(xg, yg, 2)
+    xg_test = xd.reshape(6, 6)
+    yg_test = yd.reshape(6, 6)
+    np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((6, 5), 2))
+    np.testing.assert_allclose(np.diff(yg_test, axis=0), np.full((5, 6), 2))
+
+
+def test_filter_xy():
+
+    xg, yg = np.meshgrid(np.arange(11), np.arange(11))
+    xy_rot = rotate_xy(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
+    xg_rot = xy_rot[:, 0].reshape(11, 11)
+    yg_rot = xy_rot[:, 1].reshape(11, 11)
+    window = {
+        "center": [5, 5],
+        "size": [9, 5],
+    }
+    # Test the windowing functionality
+    w_mask = filter_xy(xg, yg, window=window)
+    xg_test, yg_test = xg[w_mask].reshape(5, 9), yg[w_mask].reshape(5, 9)
+    np.testing.assert_allclose(
+        xg_test, np.meshgrid(np.arange(1, 10), np.arange(3, 8))[0]
+    )
+    np.testing.assert_allclose(
+        yg_test, np.meshgrid(np.arange(1, 10), np.arange(3, 8))[1]
+    )
+
+    # Test the downsampling functionality
+    ds_mask = filter_xy(xg, yg, distance=2)
+    xg_test, yg_test = xg[ds_mask].reshape(6, 6), yg[ds_mask].reshape(6, 6)
+    np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((6, 5), 2))
+    np.testing.assert_allclose(np.diff(yg_test, axis=0), np.full((5, 6), 2))
+
+    # Test the combo functionality
+    comb_mask = filter_xy(xg, yg, distance=2, window=window)
+    assert np.all(comb_mask == (w_mask & ds_mask))
+    xg_test, yg_test = xg[comb_mask].reshape(2, 4), yg[comb_mask].reshape(2, 4)
+    assert np.all((xg_test >= 1) & (xg_test <= 9))
+    assert np.all((yg_test >= 3) & (yg_test <= 7))
+    np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((2, 3), 2))
+    np.testing.assert_allclose(np.diff(yg_test, axis=0), np.full((1, 4), 2))
+
+    # Test rotation options
+    combo_mask = filter_xy(xg_rot, yg_rot, distance=2, window=window, angle=-30)
+    xg_test, yg_test = xg_rot[comb_mask], yg_rot[comb_mask]
+    xy_rot = rotate_xy(np.c_[xg_test, yg_test], [5, 5], -30)
+    xg_rot_test, yg_rot_test = xy_rot[:, 0].reshape(2, 4), xy_rot[:, 1].reshape(2, 4)
+    assert np.all((xg_rot_test >= 1) & (xg_rot_test <= 9))
+    assert np.all((yg_rot_test >= 3) & (yg_rot_test <= 7))
+    np.testing.assert_allclose(np.diff(xg_rot_test, axis=1), np.full((2, 3), 2))
+    np.testing.assert_allclose(np.diff(yg_rot_test, axis=0), np.full((1, 4), 2))
+
+    window["azimuth"] = -30
+    combo_mask_test = filter_xy(xg_rot, yg_rot, distance=2, window=window)
+    assert np.all(combo_mask_test == combo_mask)
