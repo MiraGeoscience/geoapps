@@ -33,19 +33,30 @@ def find_value(labels: list, keywords: list, default=None) -> list:
     """
     Find matching keywords within a list of labels.
 
-    :param labels: List of labels that may contain the keywords.
+    :param labels: List of labels or list of [key, value] that may contain the keywords.
     :param keywords: List of keywords to search for.
     :param default: Default value be returned if none of the keywords are found.
 
     :return matching_labels: List of labels containing any of the keywords.
     """
     value = None
-    for name in labels:
+
+    for entry in labels:
         for string in keywords:
+
+            if isinstance(entry, list):
+                name = entry[0]
+            else:
+                name = entry
+
             if isinstance(string, str) and (
                 (string.lower() in name.lower()) or (name.lower() in string.lower())
             ):
-                value = name
+                if isinstance(entry, list):
+                    value = entry[1]
+                else:
+                    value = name
+
     if value is None:
         value = default
     return value

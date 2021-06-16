@@ -223,10 +223,10 @@ def plot_plan_data_selection(entity, data, **kwargs):
     ):
         for key, values in kwargs["highlight_selection"].items():
 
-            if not np.any(entity.get_data(key)):
+            if not np.any(entity.workspace.get_entity(key)):
                 continue
 
-            line_data = entity.get_data(key)[0]
+            line_data = entity.workspace.get_entity(key)[0]
             if isinstance(line_data, ReferencedData):
                 values = [
                     key
@@ -239,7 +239,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 x, y, values = (
                     locations[ind, 0],
                     locations[ind, 1],
-                    entity.get_data(key)[0].values[ind],
+                    entity.workspace.get_entity(key)[0].values[ind],
                 )
                 ind_line = filter_xy(x, y, resolution, window=window)
                 axis.scatter(x[ind_line], y[ind_line], marker_size * 2, "k", marker="+")
@@ -272,8 +272,8 @@ def plot_profile_data_selection(
 
         for line in values:
 
-            if entity.get_data(key):
-                ind = np.where(entity.get_data(key)[0].values == line)[0]
+            if entity.workspace.get_entity(key):
+                ind = np.where(entity.workspace.get_entity(key)[0].values == line)[0]
             else:
                 continue
             if len(ind) == 0:
@@ -303,10 +303,10 @@ def plot_profile_data_selection(
 
             for ii, field in enumerate(field_list):
                 if (
-                    entity.get_data(field)
-                    and entity.get_data(field)[0].values is not None
+                    entity.workspace.get_entity(field)
+                    and entity.workspace.get_entity(field)[0].values is not None
                 ):
-                    values = entity.get_data(field)[0].values[ind][order]
+                    values = entity.workspace.get_entity(field)[0].values[ind][order]
 
                     xx.append(dist[order][~np.isnan(values)])
                     yy.append(values[~np.isnan(values)])

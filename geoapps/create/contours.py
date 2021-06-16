@@ -24,7 +24,7 @@ class ContourValues(PlotSelection2D):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "Airborne_TMI",
+        "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
         "contours": "-400:2000:100,-240",
         "resolution": 50,
         "ga_group_name": "Contours",
@@ -135,12 +135,14 @@ class ContourValues(PlotSelection2D):
         """
         if self.data.value is not None:
             self.export_as.value = (
-                self.data.options[self.data.value] + "_" + self.contours.value
+                self.workspace.list_data_name[self.data.value]
+                + "_"
+                + self.contours.value
             )
 
     def update_name(self, _):
         if self.data.value is not None:
-            self.export_as.value = self.data.options[self.data.value]
+            self.export_as.value = self.workspace.list_data_name[self.data.value]
         else:
             self.export_as.value = "Contours"
 
