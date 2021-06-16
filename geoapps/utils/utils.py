@@ -353,7 +353,8 @@ def weighted_average(
             w = 1.0 / (rad[:, ii] + threshold)
             weight = np.nansum([weight, w], axis=0)
 
-        avg_values += [values_interp / weight]
+        values_interp[weight > 0] = values_interp[weight > 0] / weight[weight > 0]
+        avg_values += [values_interp]
 
     if return_indices:
         return avg_values, ind
