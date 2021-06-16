@@ -96,7 +96,7 @@ class IsoSurface(ObjectDataSelection):
     def data_change(self, _):
 
         if self.data.value:
-            self.export_as.value = "Iso_" + self.data.value
+            self.export_as.value = "Iso_" + self.data.options[self.data.value]
 
     @property
     def convert(self):

@@ -245,27 +245,22 @@ class ObjectDataSelection(BaseApplication):
             if getattr(obj, "get_data_list", None) is None:
                 return
 
-            options = [""]
+            options = ["", None]
 
             if (self.add_groups or self.add_groups == "only") and obj.property_groups:
                 options = (
                     options
-                    + ["-- Groups --"]
-                    + [p_g.name for p_g in obj.property_groups]
+                    + ["-- Groups --", None]
+                    + [[p_g.name, p_g.uid] for p_g in obj.property_groups]
                 )
 
             if self.add_groups != "only":
-                data_list = obj.get_data_list()
-                options = (
-                    options
-                    + ["--- Channels ---"]
-                    + [
-                        obj.get_data(uid)[0].name
-                        for uid in data_list
-                        if isinstance(obj.get_data(uid)[0], (IntegerData, FloatData))
-                    ]
-                    + ["Z"]
-                )
+                options += ["--- Channels ---", None]
+                for child in obj.children:
+                    if isinstance(child, (IntegerData, FloatData)):
+                        options += [child.name, child.uid]
+
+                options += [["X", None], ["Y", None], ["Z", None]]
 
             value = self.data.value
             self.data.options = options
