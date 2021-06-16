@@ -36,19 +36,25 @@ class ScatterPlots(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
-        "data": ["Al2O3", "CaO", "V", "MgO", "Ba"],
-        "x": "Al2O3",
+        "data": [
+            "{18c2560c-6161-468a-8571-5d9d59649535}",
+            "{41d51965-3670-43ba-8a10-d399070689e3}",
+            "{94a150e8-16d9-4784-a7aa-e6271df3a3ef}",
+            "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
+            "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
+        ],
+        "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
         "x_active": True,
-        "y": "CaO",
+        "y": "{18c2560c-6161-468a-8571-5d9d59649535}",
         "y_active": True,
-        "z": "Ba",
+        "z": "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
         "y_log": True,
         "z_log": True,
         "z_active": True,
-        "color": "V",
+        "color": "{94a150e8-16d9-4784-a7aa-e6271df3a3ef}",
         "color_active": True,
         "color_log": True,
-        "size": "MgO",
+        "size": "{41d51965-3670-43ba-8a10-d399070689e3}",
         "size_active": True,
         "color_maps": "inferno",
         "refresh": True,
@@ -56,7 +62,7 @@ class ScatterPlots(ObjectDataSelection):
     }
 
     _select_multiple = True
-    _add_groups = True
+    _add_groups = False
     _downsampling = None
     _color = None
     _x = None
@@ -397,8 +403,8 @@ class ScatterPlots(ObjectDataSelection):
                     VBox([Label("Downsampling"), self.downsampling]),
                     self.axes_options,
                     self.refresh,
-                    self.trigger,
                     self.figure,
+                    self.trigger,
                 ]
             )
 
@@ -606,15 +612,16 @@ class ScatterPlots(ObjectDataSelection):
 
         if channel not in self.data_channels.keys():
 
-            if obj.get_data(channel):
-                values = np.asarray(obj.get_data(channel)[0].values, dtype=float).copy()
-                values[(values > 1e-38) * (values < 2e-38)] = np.nan
-            elif channel == "Z":
+            if self.workspace.get_entity(channel):
+                values = np.asarray(
+                    self.workspace.get_entity(channel)[0].values, dtype=float
+                ).copy()
+            elif channel in "XYZ":
                 # Check number of points
                 if hasattr(obj, "centroids"):
-                    values = obj.centroids[:, 2]
+                    values = obj.centroids[:, "XYZ".index(channel)]
                 elif hasattr(obj, "vertices"):
-                    values = obj.vertices[:, 2]
+                    values = obj.vertices[:, "XYZ".index(channel)]
             else:
                 return
 
@@ -848,7 +855,9 @@ class ScatterPlots(ObjectDataSelection):
             self.refresh.value = False
             widget = getattr(self, "_" + name)
             val = widget.value
-            widget.options = list(self.data_channels.keys())
+            widget.options = [
+                [self.data.uid_name_map[key], key] for key in self.data_channels
+            ]
 
             if val in widget.options:
                 widget.value = val
