@@ -34,7 +34,7 @@ class DataInterpolation(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-        "data": ["Iteration_7_model"],
+        "data": ["{f3e36334-be0a-4210-b13e-06933279de25}"],
         "core_cell_size": "50, 50, 50",
         "depth_core": 500,
         "expansion_fact": 1.05,
@@ -473,9 +473,15 @@ class DataInterpolation(ObjectDataSelection):
 
         values, sign, dtype = {}, {}, {}
         for field in self.data.value:
-            model_in = self.workspace.get_entity(field)[0]
-            values[field] = np.asarray(model_in.values, dtype=float).copy()
-            dtype[field] = model_in.values.dtype
+
+            if isinstance(field, str) and field in "XYZ":
+                values[field] = xyz[:, "XYZ".index(field)]
+                dtype[field] = values[field].dtype
+            else:
+                model_in = self.workspace.get_entity(field)[0]
+                values[field] = np.asarray(model_in.values, dtype=float).copy()
+                dtype[field] = model_in.values.dtype
+
             values[field][values[field] == self.no_data_value.value] = np.nan
             if self.space.value == "Log":
                 sign[field] = np.sign(values[field])
@@ -613,7 +619,10 @@ class DataInterpolation(ObjectDataSelection):
                 vals = values_interp[key].astype(dtype[field])
 
             self.object_out.add_data(
-                {key + self.ga_group_name.value: {"values": vals, "type": primitive}}
+                {
+                    self.data.uid_name_map[key]
+                    + self.ga_group_name.value: {"values": vals, "type": primitive}
+                }
             )
 
         if self.live_link.value:
