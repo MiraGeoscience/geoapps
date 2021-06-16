@@ -169,8 +169,8 @@ def plot_plan_data_selection(entity, data, **kwargs):
             )
         X, Y = x[indices], y[indices]
 
-        if data == "Z":
-            values = entity.vertices[:, 2]
+        if data in "XYZ":
+            values = entity.vertices[:, "XYZ".index(data)]
 
         if values is not None:
             values = values[indices]

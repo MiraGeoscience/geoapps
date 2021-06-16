@@ -49,7 +49,7 @@ class EdgeDetectionApp(PlotSelection2D):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "Airborne_Gxx",
+        "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
         "resolution": 50,
         "sigma": 0.5,
         "window": {
@@ -232,14 +232,14 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def update_name(self, _):
         if self.data.value is not None:
-            self.export_as.value = self.data.value
+            self.export_as.value = self.data.uid_name_map[self.data.value]
         else:
             self.export_as.value = "Edges"
 
     def compute_trigger(self, _):
         grid, data = self.get_selected_entities()
 
-        if grid is None:
+        if grid is None or len(data) == 0:
             return
 
         x = grid.centroids[:, 0].reshape(grid.shape, order="F")

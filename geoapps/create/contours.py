@@ -135,14 +135,12 @@ class ContourValues(PlotSelection2D):
         """
         if self.data.value is not None:
             self.export_as.value = (
-                self.workspace.list_data_name[self.data.value]
-                + "_"
-                + self.contours.value
+                self.data.uid_name_map[self.data.value] + "_" + self.contours.value
             )
 
     def update_name(self, _):
         if self.data.value is not None:
-            self.export_as.value = self.workspace.list_data_name[self.data.value]
+            self.export_as.value = self.data.uid_name_map[self.data.value]
         else:
             self.export_as.value = "Contours"
 

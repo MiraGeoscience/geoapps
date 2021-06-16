@@ -473,7 +473,7 @@ class DataInterpolation(ObjectDataSelection):
 
         values, sign, dtype = {}, {}, {}
         for field in self.data.value:
-            model_in = object_from.get_data(field)[0]
+            model_in = self.workspace.get_entity(field)[0]
             values[field] = np.asarray(model_in.values, dtype=float).copy()
             dtype[field] = model_in.values.dtype
             values[field][values[field] == self.no_data_value.value] = np.nan
@@ -552,8 +552,10 @@ class DataInterpolation(ObjectDataSelection):
             else:
                 topo = topo_obj.centroids
 
-            if self.topography.data.value != "Z":
-                topo[:, 2] = topo_obj.get_data(self.topography.data.value)[0].values
+            if self.topography.data.uid_name_map[self.topography.data.value] != "Z":
+                topo[:, 2] = self.workspace.get_entity(self.topography.data.value)[
+                    0
+                ].values
 
             lin_interp = LinearNDInterpolator(topo[:, :2], topo[:, 2])
             z_interp = lin_interp(xyz_out_orig[:, :2])

@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 from typing import Optional, Union
+from uuid import UUID
 
 import ipywidgets as widgets
 import numpy as np
@@ -218,14 +219,14 @@ class ObjectDataSelection(BaseApplication):
 
             data = []
             for value in values:
-                if obj.get_data(value):
-                    data += obj.get_data(value)
+                if self.workspace.get_entity(value):
+                    data += self.workspace.get_entity(value)
 
-                elif any([pg.name == value for pg in obj.property_groups]):
+                elif any([pg.uid == value for pg in obj.property_groups]):
                     data += [
                         self.workspace.get_entity(prop)[0]
                         for prop in obj.find_or_create_property_group(
-                            name=value
+                            name=self.data.uid_name_map[value]
                         ).properties
                     ]
 
@@ -260,10 +261,19 @@ class ObjectDataSelection(BaseApplication):
                     if isinstance(child, (IntegerData, FloatData)):
                         options += [[child.name, child.uid]]
 
-                options += [["X", None], ["Y", None], ["Z", None]]
+                options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
 
             value = self.data.value
             self.data.options = options
+
+            uid_name = {}
+            for key, value in options:
+                if isinstance(value, UUID):
+                    uid_name[value] = key
+                elif isinstance(value, str) and value in "XYZ":
+                    uid_name[value] = value
+
+            self.data.uid_name_map = uid_name
 
             if self.select_multiple and any([val in options for val in value]):
                 self.data.value = [val for val in value if val in options]
@@ -273,6 +283,7 @@ class ObjectDataSelection(BaseApplication):
                 self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
             self.data.options = []
+            self.data.uid_name_map = {}
 
         self.refresh.value = True
 

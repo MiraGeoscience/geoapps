@@ -37,7 +37,10 @@ class Export(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": ["Airborne_Gxx"],
+        "data": [
+            "{44822654-b6ae-45b0-8886-2d845f80f422}",
+            "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
+        ],
         "epsg_code": "EPSG:26914",
         "file_type": "geotiff",
         "data_type": "RGB",
@@ -209,8 +212,8 @@ class Export(ObjectDataSelection):
             data_values = {}
 
             for key in self.data.value:
-                if entity.get_data(key):
-                    data_values[key] = entity.get_data(key)[0].values.copy()
+                if self.workspace.get_entity(key):
+                    data_values[key] = self.workspace.get_entity(key)[0].values.copy()
                     data_values[key][
                         (data_values[key] > 1e-38) * (data_values[key] < 2e-38)
                     ] = self.no_data_value.value
@@ -234,7 +237,9 @@ class Export(ObjectDataSelection):
             if self.data.value:
                 for key in self.data.value:
                     out_name = re.sub(
-                        "[^0-9a-zA-Z]+", "_", self.export_as.value + "_" + key
+                        "[^0-9a-zA-Z]+",
+                        "_",
+                        self.export_as.value + "_" + self.data.uid_name_map[key],
                     )
                     export_curve_2_shapefile(
                         entity,
@@ -263,12 +268,12 @@ class Export(ObjectDataSelection):
                 name = (
                     path.join(self.export_directory.selected_path, self.export_as.value)
                     + "_"
-                    + key
+                    + self.data.uid_name_map[key]
                     + ".tif"
                 )
-                if entity.get_data(key):
+                if self.workspace.get_entity(key):
                     export_grid_2_geotiff(
-                        entity.get_data(key)[0],
+                        self.workspace.get_entity(key)[0],
                         name,
                         wkt_code=self.wkt_code.value,
                         data_type=self.data_type.value,
@@ -281,7 +286,7 @@ class Export(ObjectDataSelection):
                             plt.gca().set_visible(False)
 
                         ax, im, _, _, _ = plot_plan_data_selection(
-                            entity, entity.get_data(key)[0], axis=ax
+                            entity, self.workspace.get_entity(key)[0], axis=ax
                         )
                         plt.colorbar(im, fraction=0.02)
                         plt.savefig(
@@ -290,7 +295,7 @@ class Export(ObjectDataSelection):
                                 self.export_as.value,
                             )
                             + "_"
-                            + key
+                            + self.data.uid_name_map[key]
                             + "_Colorbar.png",
                             dpi=300,
                             bbox_inches="tight",
@@ -311,14 +316,12 @@ class Export(ObjectDataSelection):
                 models = {}
                 for key, item in data_values.items():
                     ind = np.argsort(mesh._ubc_order)
-
-                    data_obj = entity.get_data(key)[0]
                     models[
                         path.join(
                             self.export_directory.selected_path, self.export_as.value
                         )
                         + "_"
-                        + key
+                        + self.data.uid_name_map[key]
                         + ".mod"
                     ] = item[ind]
                 mesh.writeUBC(

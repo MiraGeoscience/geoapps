@@ -111,9 +111,11 @@ class Surface2D(ObjectDataSelection):
 
                 topo_xy = vertices[:, :2]
 
-                if topo_obj.get_data(self.topography.data.value):
-                    topo_z = topo_obj.get_data(self.topography.data.value)[0].values
-                else:
+                try:
+                    topo_z = self.workspace.get_entity(self.topography.data.value)[
+                        0
+                    ].values
+                except IndexError:
                     topo_z = vertices[:, 2]
 
             else:
@@ -133,7 +135,7 @@ class Surface2D(ObjectDataSelection):
             tree_topo = cKDTree(topo_xy)
 
         if self.type.value == "Sections":
-            lines_id = obj.get_data(self.lines.data.value)[0].values
+            lines_id = self.workspace.get_entity(self.lines.data.value)[0].values
             lines = np.unique(lines_id).tolist()
             model_vertices = []
             model_cells = []
@@ -168,7 +170,7 @@ class Surface2D(ObjectDataSelection):
                     m_vals = []
                     for m in self.data.value:
                         prop = obj.find_or_create_property_group(
-                            name=string_name(m)
+                            name=string_name(self.data.uid_name_map[m])
                         ).properties[ind]
                         m_vals.append(
                             self.workspace.get_entity(prop)[0].values[line_ind]
@@ -308,11 +310,10 @@ class Surface2D(ObjectDataSelection):
             )
 
             if len(self.models) > 0:
-                for field, model in zip(self.data.value, self.models):
-
+                for uid, model in zip(self.data.value, self.models):
                     self.surface.add_data(
                         {
-                            field: {"values": model},
+                            self.data.uid_name_map[uid]: {"values": model},
                         }
                     )
         else:
@@ -344,7 +345,9 @@ class Surface2D(ObjectDataSelection):
     def data_change(self, _):
 
         if self.data.value:
-            self.export_as.value = self.data.value[0] + "_surface"
+            self.export_as.value = (
+                self.data.uid_name_map[self.data.value[0]] + "_surface"
+            )
 
     def z_options_change(self, _):
         if self.z_option.value == "depth":
