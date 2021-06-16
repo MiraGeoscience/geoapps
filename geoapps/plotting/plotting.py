@@ -83,7 +83,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
     # for collection in axis.collections:
     #     collection.remove()
 
-    locations = entity.vertices
+    if getattr(entity, "vertices", None) is not None:
+        locations = entity.vertices
+    else:
+        locations = entity.centroids
+
     if "resolution" not in kwargs.keys():
         resolution = 0
     else:
@@ -99,6 +103,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
     ):
         values = np.asarray(data.values, dtype=float).copy()
         values[values == -99999] = np.nan
+    elif isinstance(data, str) and (data in "XYZ"):
+        values = locations[:, "XYZ".index(data)]
+
+    if values is not None and (values.shape[0] != locations.shape[0]):
+        values = None
 
     color_norm = None
     if "color_norm" in kwargs.keys():
@@ -168,9 +177,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 window=window,
             )
         X, Y = x[indices], y[indices]
-
-        if data in "XYZ":
-            values = entity.vertices[:, "XYZ".index(data)]
 
         if values is not None:
             values = values[indices]
