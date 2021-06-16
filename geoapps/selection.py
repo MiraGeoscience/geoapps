@@ -266,14 +266,7 @@ class ObjectDataSelection(BaseApplication):
             value = self.data.value
             self.data.options = options
 
-            uid_name = {}
-            for key, value in options:
-                if isinstance(value, UUID):
-                    uid_name[value] = key
-                elif isinstance(value, str) and value in "XYZ":
-                    uid_name[value] = value
-
-            self.data.uid_name_map = uid_name
+            self.update_uid_name_map()
 
             if self.select_multiple and any([val in options for val in value]):
                 self.data.value = [val for val in value if val in options]
@@ -310,6 +303,18 @@ class ObjectDataSelection(BaseApplication):
                 self._objects.observe(self.update_data_list, names="value")
             else:
                 self.objects.options = options
+
+    def update_uid_name_map(self):
+        """
+        Update the dictionary that maps uuid to name.
+        """
+        uid_name = {}
+        for key, value in self.data.options:
+            if isinstance(value, UUID):
+                uid_name[value] = key
+            elif isinstance(value, str) and value in "XYZ":
+                uid_name[value] = value
+        self.data.uid_name_map = uid_name
 
 
 class LineOptions(ObjectDataSelection):
