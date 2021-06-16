@@ -219,16 +219,15 @@ class ObjectDataSelection(BaseApplication):
 
             data = []
             for value in values:
-                if self.workspace.get_entity(value):
-                    data += self.workspace.get_entity(value)
-
-                elif any([pg.uid == value for pg in obj.property_groups]):
+                if any([pg.uid == value for pg in obj.property_groups]):
                     data += [
                         self.workspace.get_entity(prop)[0]
                         for prop in obj.find_or_create_property_group(
                             name=self.data.uid_name_map[value]
                         ).properties
                     ]
+                elif self.workspace.get_entity(value):
+                    data += self.workspace.get_entity(value)
 
             return obj, data
         else:
