@@ -25,7 +25,7 @@ class PlotSelection2D(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "Airborne_TMI",
+        "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
     }
 
     def __init__(self, **kwargs):
@@ -246,13 +246,12 @@ class PlotSelection2D(ObjectDataSelection):
             else:
                 data_channel = data_name
 
-        if self.workspace.get_entity(data_channel):
+        if isinstance(data_channel, str) and (data_channel in "XYZ"):
+            data_obj = data_channel
+        elif self.workspace.get_entity(data_channel):
             data_obj = self.workspace.get_entity(data_channel)[0]
-        elif data_channel == "Z":
-            data_obj = "Z"
 
         if isinstance(entity, (Grid2D, Surface, Points, Curve)):
-
             self.figure = plt.figure(figsize=(10, 10))
             self.axis = plt.subplot()
             corners = np.r_[
