@@ -21,8 +21,6 @@ class IsoSurface(ObjectDataSelection):
     """
 
     defaults = {
-        "add_groups": False,
-        "select_multiple": False,
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         "data": "Iteration_7_model",
@@ -31,9 +29,11 @@ class IsoSurface(ObjectDataSelection):
         "contours": "0.005: 0.02: 0.005, 0.0025",
     }
 
-    def __init__(self, **kwargs):
-        kwargs = self.apply_defaults(**kwargs)
+    _add_groups = False
+    _select_multiple = False
 
+    def __init__(self, **kwargs):
+        self.defaults = self.update_defaults(**kwargs)
         self._topography = TopographyOptions()
         self._max_distance = FloatText(
             description="Max Interpolation Distance (m):",
@@ -46,31 +46,14 @@ class IsoSurface(ObjectDataSelection):
         )
         self._export_as = Text("Iso_", description="Surface:")
 
-        super().__init__(**kwargs)
-
         self.ga_group_name.value = "ISO"
         self.data.observe(self.data_change, names="value")
-        self.data_change(None)
         self.data.description = "Value fields: "
-        self.data_panel = self.main
         self.trigger.on_click(self.compute_trigger)
 
+        super().__init__(**self.defaults)
+
         self.output_panel = VBox([self.export_as, self.output_panel])
-        self._main = HBox(
-            [
-                VBox(
-                    [
-                        self.project_panel,
-                        self.data_panel,
-                        self._contours,
-                        self.max_distance,
-                        self.resolution,
-                        Label("Output"),
-                        self.output_panel,
-                    ]
-                )
-            ]
-        )
 
     def compute_trigger(self, _):
 
@@ -138,6 +121,26 @@ class IsoSurface(ObjectDataSelection):
         ipywidgets.Text()
         """
         return self._export_as
+
+    @property
+    def main(self):
+        if self._main is None:
+            self._main = HBox(
+                [
+                    VBox(
+                        [
+                            self.project_panel,
+                            self.data_panel,
+                            self._contours,
+                            self.max_distance,
+                            self.resolution,
+                            Label("Output"),
+                            self.output_panel,
+                        ]
+                    )
+                ]
+            )
+        return self._main
 
     @property
     def max_distance(self):
