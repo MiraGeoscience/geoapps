@@ -5,38 +5,43 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from copy import deepcopy
 
 import numpy as np
 from geoh5py.objects import Points
+from geoh5py.workspace import Workspace
 
 from geoapps.drivers.components import InversionMesh, InversionModel
-from geoapps.io import InputFile
 from geoapps.io.MVI import MVIParams
 from geoapps.io.MVI.constants import default_ui_json
 from geoapps.utils import rotate_xy
+from geoapps.utils.testing import Geoh5Tester
 
-input_file = InputFile()
-input_file.default(default_ui_json)
-input_file.data["geoh5"] = "./FlinFlon.geoh5"
-params = MVIParams.from_input_file(input_file)
-params.mesh = "{e334f687-df71-4538-ad28-264e420210b8}"
-params.starting_model = 1e-04
-params.inducing_field_inclination = 79.0
-params.inducing_field_declination = 11.0
-ws = params.workspace
+workspace = Workspace("./FlinFlon.geoh5")
 
 
-def test_initialize():
+def setup_params(path):
+
+    geotest = Geoh5Tester(workspace, path, "test.geoh5", default_ui_json, MVIParams)
+    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    geotest.set_param("starting_model", 1e-04)
+    geotest.set_param("inducing_field_inclination", 79.0)
+    geotest.set_param("inducing_field_declination", 11.0)
+
+    return geotest.make()
+
+
+def test_initialize(tmp_path):
+
+    ws, params = setup_params(tmp_path)
     inversion_mesh = InversionMesh(params, ws)
     starting_model = InversionModel(inversion_mesh, "starting", params, ws)
     assert len(starting_model.model) == 3 * inversion_mesh.nC
     assert len(np.unique(starting_model.model)) == 3
 
 
-def test_model_from_object():
+def test_model_from_object(tmp_path):
     # Test behaviour when loading model from Points object with non-matching mesh
-    p = deepcopy(params)
+    ws, params = setup_params(tmp_path)
     inversion_mesh = InversionMesh(params, ws)
     cc = inversion_mesh.mesh.cell_centers[0].reshape(1, 3)
     point_object = Points.create(ws, name=f"test_point", vertices=cc)
@@ -50,8 +55,9 @@ def test_model_from_object():
     assert len(lower_bound.model) == inversion_mesh.nC
 
 
-def test_permute_2_octree():
+def test_permute_2_octree(tmp_path):
 
+    ws, params = setup_params(tmp_path)
     params.lower_bound = 0.0
     inversion_mesh = InversionMesh(params, ws)
     lower_bound = InversionModel(inversion_mesh, "lower_bound", params, ws)
@@ -84,7 +90,9 @@ def test_permute_2_octree():
     assert zmax >= locs_perm_rot[:, 2].max()
 
 
-def test_permute_2_treemesh():
+def test_permute_2_treemesh(tmp_path):
+
+    ws, params = setup_params(tmp_path)
     octree_mesh = ws.get_entity(params.mesh)[0]
     cc = octree_mesh.centroids
     center = np.mean(cc, axis=0)
