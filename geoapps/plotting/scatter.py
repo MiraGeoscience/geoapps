@@ -748,33 +748,33 @@ class ScatterPlots(ObjectDataSelection):
                 inbound = (x_axis >= x_min) * (x_axis <= x_max)
                 x_axis[~inbound] = np.nan
                 x_axis, x_label, x_ticks, x_ticklabels = format_axis(
-                    x, x_axis, x_log, x_thresh
+                    self.data.uid_name_map[x], x_axis, x_log, x_thresh
                 )
             else:
                 inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 z_axis[~inbound] = np.nan
                 x_axis, x_label, x_ticks, x_ticklabels = format_axis(
-                    z, z_axis, z_log, z_thresh
+                    self.data.uid_name_map[z], z_axis, z_log, z_thresh
                 )
 
             if y_axis is not None:
                 inbound = (y_axis >= y_min) * (y_axis <= y_max)
                 y_axis[~inbound] = np.nan
                 y_axis, y_label, y_ticks, y_ticklabels = format_axis(
-                    y, y_axis, y_log, y_thresh
+                    self.data.uid_name_map[y], y_axis, y_log, y_thresh
                 )
             else:
                 inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 z_axis[~inbound] = np.nan
                 y_axis, y_label, y_ticks, y_ticklabels = format_axis(
-                    z, z_axis, z_log, z_thresh
+                    self.data.uid_name_map[z], z_axis, z_log, z_thresh
                 )
 
             if z_axis is not None:
                 inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 z_axis[~inbound] = np.nan
                 z_axis, z_label, z_ticks, z_ticklabels = format_axis(
-                    z, z_axis, z_log, z_thresh
+                    self.data.uid_name_map[z], z_axis, z_log, z_thresh
                 )
 
             if self.custom_colormap:
@@ -859,7 +859,7 @@ class ScatterPlots(ObjectDataSelection):
                 [self.data.uid_name_map[key], key] for key in self.data_channels
             ]
 
-            if val in widget.options:
+            if val in list(dict(widget.options).values()):
                 widget.value = val
             else:
                 widget.value = None
@@ -925,8 +925,9 @@ class ScatterPlots(ObjectDataSelection):
         self.z_active.value = False
         self.color_active.value = False
         self.size_active.value = False
-        self.downsampling.max = self.n_values
-        self.downsampling.value = np.min([5000, self.n_values])
+        if self.n_values is not None:
+            self.downsampling.max = self.n_values
+            self.downsampling.value = np.min([5000, self.n_values])
         self._indices = None
         self.update_downsampling(None, refresh_plot=False)
         self.refresh.value = True
