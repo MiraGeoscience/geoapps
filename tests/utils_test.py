@@ -15,8 +15,8 @@ import itertools
 import numpy as np
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
-from test_utils import Geoh5Tester
 
+from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.utils import (
     octree_2_treemesh,
     rotate_xy,
