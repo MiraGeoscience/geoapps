@@ -2,6 +2,9 @@ name: pytest on Unix OS
 
 on:
   pull_request:
+      - main
+      - hotfix/**
+      - release/**
   push:
     branches:
       - develop
