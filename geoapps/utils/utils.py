@@ -544,7 +544,7 @@ def filter_xy(
         else:
             mask, _, _ = window_xy(x, y, window, mask=mask)
 
-    if distance is not None:
+    if distance not in [None, 0]:
 
         is_grid = False
         if x.ndim > 1:

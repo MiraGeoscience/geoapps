@@ -35,24 +35,24 @@ class InversionData:
         self.offset, self.radar = self.params.offset()
         self.ignore_value, self.ignore_type = self._parse_ignore_values(self.params)
 
-        components = self.params.components()
-        for comp in components:
+        for comp in self.params.components():
             self.data[comp] = self.get_data(comp)
             uncertainty = self.get_uncertainty(comp)
             self.uncertainties[comp] = self.ignore(uncertainty, self.data)
         self.components = self.data.keys()
 
         data_locs = self.get_locs(self.workspace, self.params)
-        data_locs = self.downsample_locs(data_locs, self.params.resolution)
-
-        if self.window is not None:
-            data_locs = self.window_locs(data_locs, self.window)
-            Points.create(self.workspace, name="test_locs_window", vertices=data_locs)
 
         if self.mesh.rotation is not None:
             origin = self.mesh.rotation["origin"]
             angle = -self.mesh.rotation["angle"]
             data_locs = self.rotate_locs(data_locs, origin, angle)
+
+        if self.window is not None:
+            data_locs = self.window_locs(data_locs, self.window)
+
+        if self.params.resolution is not None:
+            data_locs = self.downsample_locs(data_locs, self.params.resolution)
 
         if self.offset is not None:
             data_locs = self.offset_locs(data_locs, self.offset)
@@ -75,7 +75,7 @@ class InversionData:
 
         return locs
 
-    def filter_locs(self, locs, resolution=0, window=None):
+    def filter_locs(self, locs, resolution=None, window=None):
         """ Filters data locations and accumulates self.filters. """
 
         angle = -self.mesh.rotation["angle"]
@@ -89,7 +89,7 @@ class InversionData:
 
     def downsample_locs(self, locs, resolution):
         """ Downsample locations to particular resolution. """
-        return self.filter_locs(locs, resolution=resolution)
+        return self.filter_xy(locs, resolution=resolution)
 
     def window_locs(self, locs, window):
         """ Isolate a subset of xyz location based on window limits. """
@@ -97,7 +97,6 @@ class InversionData:
 
     def rotate_locs(self, locs, origin, angle):
         """ Un-rotate data using origin and angle assigned to inversion mesh. """
-
         xy = rotate_xy(locs[:, :2], origin, angle)
         return np.c_[xy, locs[:, 2]]
 
