@@ -508,7 +508,7 @@ class LineDataDerivatives:
         padding.
     :param residual: Use the residual between the values and the running mean to compute derivatives.
     :param sampling: Sampling interval length (m) used in the FFT. Defaults to the mean data separation.
-    :param smoothing: Number of neighbours used by the :obj:`geoapps.test_utils.running_mean` routine.
+    :param smoothing: Number of neighbours used by the :obj:`geoapps.utils.running_mean` routine.
     """
 
     def __init__(
