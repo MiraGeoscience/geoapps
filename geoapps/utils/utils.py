@@ -967,25 +967,13 @@ def block_model_2_tensor(block_model, models=[]):
         ],
         x0="CC0",
     )
-
     tensor.x0 = [
         block_model.origin["x"] + block_model.u_cells[block_model.u_cells < 0].sum(),
         block_model.origin["y"] + block_model.v_cells[block_model.v_cells < 0].sum(),
         block_model.origin["z"] + block_model.z_cells[block_model.z_cells < 0].sum(),
     ]
-
-    print(
-        tensor.x0,
-        [
-            block_model.origin["x"]
-            + block_model.u_cells[block_model.u_cells < 0].sum(),
-            block_model.origin["y"]
-            + block_model.v_cells[block_model.v_cells < 0].sum(),
-            block_model.origin["z"]
-            + block_model.z_cells[block_model.z_cells < 0].sum(),
-        ],
-    )
     out = []
+
     for model in models:
         values = model.copy().reshape((tensor.nCz, tensor.nCx, tensor.nCy), order="F")
 
