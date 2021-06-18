@@ -370,9 +370,10 @@ def window_xy(
 
     Notes
     -----
-
-    This formulation knows nothing about rotation, so 'rotated' coordinates
-    should first be 'un-rotated' to a north-south, east-west orientation.
+    This formulation is restricted to window outside of a north-south,
+    east-west oriented box.  If the data you wish to window has an
+    orientation other than this, then consider using the filter_xy
+    function which includes an optional rotation parameter.
 
     :param x: Easting coordinates, as vector or meshgrid-like array.
     :param y: Northing coordinates, as vector or meshgrid-like array.
@@ -405,10 +406,10 @@ def window_xy(
         msg = f"Missing window keys: 'center' and 'size'."
         raise KeyError(msg)
 
-    window_mask = x > x_lim[0]
-    window_mask &= x < x_lim[1]
-    window_mask &= y > y_lim[0]
-    window_mask &= y < y_lim[1]
+    window_mask = x >= x_lim[0]
+    window_mask &= x <= x_lim[1]
+    window_mask &= y >= y_lim[0]
+    window_mask &= y <= y_lim[1]
 
     if mask is not None:
         window_mask &= mask
