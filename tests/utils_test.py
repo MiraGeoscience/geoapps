@@ -4,14 +4,19 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
 
 import itertools
 
 import numpy as np
 from discretize import TreeMesh
-from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
+from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.utils import (
     octree_2_treemesh,
     rotate_xy,
@@ -19,6 +24,8 @@ from geoapps.utils.utils import (
     treemesh_2_octree,
     weighted_average,
 )
+
+workspace = Workspace("./FlinFlon.geoh5")
 
 
 def test_rotation_xy():
@@ -130,9 +137,10 @@ def test_weigted_average():
     assert out[0] == 2
 
 
-def test_treemesh_2_octree():
+def test_treemesh_2_octree(tmp_path):
 
-    ws = Workspace("./FlinFlon.geoh5")
+    geotest = Geoh5Tester(workspace, tmp_path, "test.geoh5")
+    ws = geotest.make()
     mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
     mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
     omesh = treemesh_2_octree(ws, mesh, name="test_mesh")
@@ -155,8 +163,10 @@ def test_treemesh_2_octree():
     assert np.all([k in expected_refined_cells for k in ijk_refined])
 
 
-def test_octree_2_treemesh():
-    ws = Workspace("./FlinFlon.geoh5")
+def test_octree_2_treemesh(tmp_path):
+
+    geotest = Geoh5Tester(workspace, tmp_path, "test.geoh5")
+    ws = geotest.make()
     mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
     mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
     omesh = treemesh_2_octree(ws, mesh)
