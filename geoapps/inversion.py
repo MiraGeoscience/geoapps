@@ -713,7 +713,7 @@ class InversionApp(PlotSelection2D):
         "h5file": "../../assets/FlinFlon.geoh5",
         "inducing_field": "60000, 79, 11",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": ["Airborne_TMI"],
+        "data": ["{44822654-b6ae-45b0-8886-2d845f80f422}"],
         "resolution": 50,
         "center_x": 314600.0,
         "center_y": 6072200.0,
@@ -724,7 +724,7 @@ class InversionApp(PlotSelection2D):
         "topography": {
             "options": "Object",
             "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-            "data": "elevation",
+            "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
         },
         "sensor": {"offset": "0, 0, 60", "options": "topo + radar + (dx, dy, dz)"},
         "padding_distance": "1000, 1000, 1000, 1000, 0, 0",
@@ -1078,14 +1078,16 @@ class InversionApp(PlotSelection2D):
             data_widget = self.data_channel_choices.data_channel_options[channel.header]
 
             entity = self.workspace.get_entity(self.objects.value)[0]
-            if channel.value is None or not entity.get_data(channel.value):
+            if channel.value is None or channel.value not in [
+                child.uid for child in entity.children
+            ]:
                 data_widget.children[0].value = False
                 if self.system.value in ["MVI", "Magnetics", "Gravity"]:
                     data_widget.children[3].value = "0, 1"
             else:
                 data_widget.children[0].value = True
                 if self.system.value in ["MVI", "Magnetics", "Gravity"]:
-                    values = entity.get_data(channel.value)[0].values
+                    values = self.workspace.get_entity(channel.value)[0].values
                     if values is not None and values.dtype in [
                         np.float32,
                         np.float64,
@@ -1168,14 +1170,15 @@ class InversionApp(PlotSelection2D):
         self.resolution.indices = None
 
         if self.workspace.get_entity(self.objects.value):
-            obj = self.workspace.get_entity(self.objects.value)[0]
-            data_list = obj.get_data_list()
+            self.update_uid_name_map()
             self.sensor.update_data_list(None)
             self.lines.update_data_list(None)
             self.lines.update_line_list(None)
 
             for aem_system, specs in self.em_system_specs.items():
-                if any([specs["flag"] in channel for channel in data_list]):
+                if any(
+                    [specs["flag"] in channel for channel in self.data.uid_name_map]
+                ):
                     self.system.value = aem_system
 
             self.system_observer(None)
@@ -1214,17 +1217,15 @@ class InversionApp(PlotSelection2D):
 
     def update_component_panel(self, _):
         if self.workspace.get_entity(self.objects.value):
-            entity = self.workspace.get_entity(self.objects.value)[0]
-            data_list = self.get_data_list(entity)
-
+            _, data_list = self.get_selected_entities()
+            options = [[data.name, data.uid] for data in data_list]
             if hasattr(self.data_channel_choices, "data_channel_options"):
                 for (
                     key,
                     data_widget,
                 ) in self.data_channel_choices.data_channel_options.items():
-                    data_widget.children[2].options = data_list
-                    value = find_value(data_list, [key])
-                    data_widget.children[2].value = value
+                    data_widget.children[2].options = options
+                    data_widget.children[2].value = find_value(options, [key])
 
     def data_channel_choices_observer(self, _):
         if hasattr(
@@ -1241,10 +1242,11 @@ class InversionApp(PlotSelection2D):
                 self.workspace.get_entity(self.objects.value)
                 and data_widget.children[2].value is None
             ):
-                entity = self.workspace.get_entity(self.objects.value)[0]
-                data_list = self.get_data_list(entity)
-                value = find_value(data_list, [self.data_channel_choices.value])
-                data_widget.children[2].value = value
+                _, data_list = self.get_selected_entities()
+                options = [[data.name, data.uid] for data in data_list]
+                data_widget.children[2].value = find_value(
+                    options, [self.data_channel_choices.value]
+                )
 
             self.plotting_data = data_widget.children[2].value
             self.refresh.value = False
@@ -1331,7 +1333,9 @@ class InversionApp(PlotSelection2D):
         else:
             input_dict["system"] = self.system.value
             input_dict["lines"] = {
-                self.lines.data.value: [str(line) for line in self.lines.lines.value]
+                str(self.lines.data.value): [
+                    str(line) for line in self.lines.lines.value
+                ]
             }
 
             input_dict["mesh 1D"] = [
@@ -1375,9 +1379,9 @@ class InversionApp(PlotSelection2D):
         if ref_type == "model":
             input_dict["reference_model"] = {
                 ref_type: {
-                    str(
-                        self.inversion_parameters.reference_model.objects.value
-                    ): self.inversion_parameters.reference_model.data.value
+                    str(self.inversion_parameters.reference_model.objects.value): str(
+                        self.inversion_parameters.reference_model.data.value
+                    )
                 }
             }
         else:
@@ -1389,9 +1393,9 @@ class InversionApp(PlotSelection2D):
         if start_type == "model":
             input_dict["starting_model"] = {
                 start_type: {
-                    str(
-                        self.inversion_parameters.starting_model.objects.value
-                    ): self.inversion_parameters.starting_model.data.value
+                    str(self.inversion_parameters.starting_model.objects.value): str(
+                        self.inversion_parameters.starting_model.data.value
+                    )
                 }
             }
         else:
@@ -1409,7 +1413,9 @@ class InversionApp(PlotSelection2D):
                     susc_type: {
                         str(
                             self.inversion_parameters.susceptibility_model.objects.value
-                        ): self.inversion_parameters.susceptibility_model.data.value
+                        ): str(
+                            self.inversion_parameters.susceptibility_model.data.value
+                        )
                     }
                 }
             else:
@@ -1449,7 +1455,7 @@ class InversionApp(PlotSelection2D):
                     continue
 
                 channel_param[key] = {}
-                channel_param[key]["name"] = data_widget.children[2].value
+                channel_param[key]["name"] = str(data_widget.children[2].value)
                 channel_param[key]["uncertainties"] = string_2_list(
                     data_widget.children[3].value
                 )
@@ -1491,7 +1497,7 @@ class InversionApp(PlotSelection2D):
                 input_dict["topography"] = {
                     "GA_object": {
                         "name": str(self.topography.objects.value),
-                        "data": self.topography.data.value,
+                        "data": str(self.topography.data.value),
                     }
                 }
         elif self.topography.options.value == "Relative to Sensor":
