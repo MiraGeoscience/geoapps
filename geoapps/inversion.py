@@ -1170,14 +1170,17 @@ class InversionApp(PlotSelection2D):
         self.resolution.indices = None
 
         if self.workspace.get_entity(self.objects.value):
-            self.update_uid_name_map()
+            self.update_data_list(None)
             self.sensor.update_data_list(None)
             self.lines.update_data_list(None)
             self.lines.update_line_list(None)
 
             for aem_system, specs in self.em_system_specs.items():
                 if any(
-                    [specs["flag"] in channel for channel in self.data.uid_name_map]
+                    [
+                        specs["flag"] in channel
+                        for channel in self.data.uid_name_map.values()
+                    ]
                 ):
                     self.system.value = aem_system
 
