@@ -39,7 +39,7 @@ default_ui_json = {
         "dataGroupType": "Multi-element",
         "label": "Channels",
         "parent": "objects",
-        "value": "Observed",
+        "value": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}",
     },
     "line_field": {
         "association": "Vertex",
@@ -48,21 +48,46 @@ default_ui_json = {
         "main": True,
         "label": "Line Field",
         "parent": "objects",
-        "value": "ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c",
+        "value": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}",
     },
     "line_id": {
         "association": "Vertex",
-        "dataType": "Text",
+        "dataType": "Float",
         "group": "Data",
         "main": True,
         "label": "Line ID",
-        "value": "",
+        "value": 6073400.0,
     },
     "smoothing": {
-        "group": "Data",
+        "group": "Detection Parameters",
         "main": True,
         "label": "Smoothing window",
         "value": 6,
+    },
+    "min_amplitude": {
+        "group": "Detection Parameters",
+        "label": "Minimum Amplitude (%)",
+        "value": 1,
+    },
+    "min_value": {
+        "group": "Detection Parameters",
+        "label": "Minimum Value",
+        "value": "",
+    },
+    "min_width": {
+        "group": "Detection Parameters",
+        "label": "Minimum Width (m)",
+        "value": 100,
+    },
+    "max_migration": {
+        "group": "Detection Parameters",
+        "label": "Maximum Peak Migration (m)",
+        "value": 25,
+    },
+    "min_channels": {
+        "group": "Detection Parameters",
+        "label": "Minimum # Channels",
+        "value": 1,
     },
     "tem_checkbox": {
         "main": True,
@@ -104,7 +129,7 @@ validations = {
         "uuid": [],
     },
     "data": {
-        "types": [str],
+        "types": [str, UUID],
         "reqs": [("objects")],
         "property_groups": ["objects"],
     },
@@ -117,9 +142,24 @@ validations = {
         "uuid": ["objects"],
     },
     "line_id": {
-        "types": [str, int, float],
+        "types": [int, float],
     },
     "smoothing": {
+        "types": [int, float],
+    },
+    "min_amplitude": {
+        "types": [int, float],
+    },
+    "min_value": {
+        "types": [int, float],
+    },
+    "min_width": {
+        "types": [int, float],
+    },
+    "max_migration": {
+        "types": [int, float],
+    },
+    "min_channels": {
         "types": [int, float],
     },
     "center": {

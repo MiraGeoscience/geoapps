@@ -28,7 +28,8 @@ class PeakFinderParams(Params):
         self.objects = None
         self.data = None
         self.tem_checkbox = None
-        self.lines = None
+        self.line_field = None
+        self.line_id = None
         self.smoothing = None
         self.center = None
         self.width = None
@@ -76,7 +77,7 @@ class PeakFinderParams(Params):
     @line_field.setter
     def line_field(self, val):
         self.setter_validator(
-            "lines", val, fun=lambda x: UUID(x) if isinstance(x, str) else x
+            "line_field", val, fun=lambda x: UUID(x) if isinstance(x, str) else x
         )
 
     @property
@@ -85,7 +86,7 @@ class PeakFinderParams(Params):
 
     @line_id.setter
     def line_id(self, val):
-        self.setter_validator("lines", val)
+        self.setter_validator("line_id", val)
 
     @property
     def smoothing(self):
