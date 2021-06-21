@@ -85,12 +85,8 @@ class BaseApplication:
                 self.export_directory,
             ]
         )
-
-        def ga_group_name_update(_):
-            self.ga_group_name_update()
-
-        self.ga_group_name.observe(ga_group_name_update)
-
+        self.trigger.on_click(self.trigger_click)
+        self.ga_group_name.observe(self.ga_group_name_update)
         self.__populate__(**self.defaults)
 
     def __call__(self):
@@ -457,8 +453,23 @@ class BaseApplication:
             value = working_copy(self.h5file)
             self.h5file = value
 
-    def ga_group_name_update(self):
+    def ga_group_name_update(self, _):
         self._ga_group = None
+
+    def trigger_click(self, _):
+        for key, value in self.__dict__.items():
+            try:
+                if isinstance(getattr(self, key), Widget):
+                    setattr(self.params, key, getattr(self, key).value)
+            except AttributeError:
+                continue
+
+        self.params.write_input_file(name=self.params.ga_group_name)
+        self.run(self.params)
+
+    @staticmethod
+    def run(cls, params):
+        ...
 
 
 def working_copy(h5file):
