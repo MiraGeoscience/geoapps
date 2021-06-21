@@ -24,17 +24,24 @@ class PeakFinderParams(Params):
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
+
         self.geoh5 = None
         self.objects = None
         self.data = None
-        self.tem_checkbox = None
+        self.ga_group_name = None
+
         self.line_field = None
         self.line_id = None
-        self.smoothing = None
+        self.monitoring_directory = None
         self.center = None
         self.width = None
-        self.ga_group_name = None
-        self.monitoring_directory = None
+        self.min_width = None
+        self.min_amplitude = None
+        self.min_channels = None
+        self.max_migration = None
+        self.smoothing = None
+        self.tem_checkbox = None
+
         self.run_command = None
         self.conda_environment = None
         self._input_file = InputFile()
@@ -55,12 +62,12 @@ class PeakFinderParams(Params):
         return super().default(self.default_ui_json, param)
 
     @property
-    def objects(self):
-        return self._objects
+    def center(self):
+        return self._center
 
-    @objects.setter
-    def objects(self, val):
-        self.setter_validator("objects", val, fun=lambda x: UUID(x))
+    @center.setter
+    def center(self, val):
+        self.setter_validator("center", val)
 
     @property
     def data(self):
@@ -69,6 +76,14 @@ class PeakFinderParams(Params):
     @data.setter
     def data(self, val):
         self.setter_validator("data", val)
+
+    @property
+    def ga_group_name(self):
+        return self._ga_group_name
+
+    @ga_group_name.setter
+    def ga_group_name(self, val):
+        self.setter_validator("ga_group_name", val)
 
     @property
     def line_field(self):
@@ -89,6 +104,54 @@ class PeakFinderParams(Params):
         self.setter_validator("line_id", val)
 
     @property
+    def max_migration(self):
+        return self._max_migration
+
+    @max_migration.setter
+    def max_migration(self, val):
+        self.setter_validator("max_migration", val)
+
+    @property
+    def min_amplitude(self):
+        return self._min_amplitude
+
+    @min_amplitude.setter
+    def min_amplitude(self, val):
+        self.setter_validator("min_amplitude", val)
+
+    @property
+    def min_channels(self):
+        return self._min_channels
+
+    @min_channels.setter
+    def min_channels(self, val):
+        self.setter_validator("min_channels", val)
+
+    @property
+    def min_value(self):
+        return self._min_value
+
+    @min_value.setter
+    def min_value(self, val):
+        self.setter_validator("min_value", val)
+
+    @property
+    def min_width(self):
+        return self._min_width
+
+    @min_width.setter
+    def min_width(self, val):
+        self.setter_validator("min_width", val)
+
+    @property
+    def objects(self):
+        return self._objects
+
+    @objects.setter
+    def objects(self, val):
+        self.setter_validator("objects", val, fun=lambda x: UUID(x))
+
+    @property
     def smoothing(self):
         return self._smoothing
 
@@ -105,28 +168,12 @@ class PeakFinderParams(Params):
         self.setter_validator("tem_checkbox", val)
 
     @property
-    def center(self):
-        return self._center
-
-    @center.setter
-    def center(self, val):
-        self.setter_validator("center", val)
-
-    @property
     def width(self):
         return self._width
 
     @width.setter
     def width(self, val):
         self.setter_validator("width", val)
-
-    @property
-    def ga_group_name(self):
-        return self._ga_group_name
-
-    @ga_group_name.setter
-    def ga_group_name(self, val):
-        self.setter_validator("ga_group_name", val)
 
     def _init_params(self, inputfile: InputFile) -> None:
         """ Wraps Params._init_params. """

@@ -50,17 +50,9 @@ default_ui_json = {
         "parent": "objects",
         "value": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}",
     },
-    "line_id": {
-        "association": "Vertex",
-        "dataType": "Float",
-        "group": "Data",
-        "main": True,
-        "label": "Line ID",
-        "value": 6073400.0,
-    },
+    "line_id": 6073400.0,
     "smoothing": {
         "group": "Detection Parameters",
-        "main": True,
         "label": "Smoothing window",
         "value": 6,
     },
