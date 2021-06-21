@@ -146,7 +146,6 @@ class PeakFinder(ObjectDataSelection):
         self.channel_selection.observe(self.channel_panel_update, names="value")
         self.channels.observe(self.edit_group, names="value")
         self.group_list.observe(self.highlight_selection, names="value")
-        self.run_all.on_click(self.run_all_click)
         self.flip_sign.observe(self.set_data, names="value")
         self.highlight_selection(None)
         self.channel_panel = VBox(
@@ -708,6 +707,9 @@ class PeakFinder(ObjectDataSelection):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
         self._h5file = workspace.h5file
+        self.params.input_file.filepath = path.join(
+            path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
+        )
         self.update_objects_list()
         self.lines._workspace = workspace
 
@@ -1468,6 +1470,7 @@ class PeakFinder(ObjectDataSelection):
             skew,
             peaks,
         ) = ([], [], [], [], [], [], [], [], [], [], [], [])
+
         # for line in self.all_anomalies:
         #     for group in line:
         #         if "time_group" in list(group.keys()) and len(group["cox"]) > 0:
