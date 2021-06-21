@@ -313,7 +313,7 @@ class InversionDriver:
         directiveList.append(directives.UpdatePreconditioner())
 
         # Save model
-        if self.params.output_geoh5 is not None:
+        if self.params.geoh5 is not None:
 
             model_type = "mvi_model"
 
