@@ -12,7 +12,7 @@ import numpy as np
 from geoh5py.objects import Grid2D, Points
 from scipy.interpolate import LinearNDInterpolator
 
-from geoapps.utils import downsample_xy, rotate_xy, window_xy
+from geoapps.utils import filter_xy, rotate_xy
 
 
 class InversionData:
@@ -27,6 +27,7 @@ class InversionData:
         self.mask = None
         self.origin = None
         self.angle = None
+        self.is_rotated = False
         self.resolution = None
         self.offset = None
         self.radar = None
@@ -70,33 +71,43 @@ class InversionData:
         if self.mesh.rotation is not None:
             self.origin = self.mesh.rotation["origin"]
             self.angle = -self.mesh.rotation["angle"]
-            self.locs = self.rotate(self.locs)
+            self.is_rotated = True
 
         if self.window is not None:
-            self.mask, _, _ = window_xy(
-                self.locs[:, 0], self.locs[:, 1], self.window, mask=self.mask
+            self.mask = filter_xy(
+                self.locs[:, 0],
+                self.locs[:, 1],
+                window=self.window,
+                angle=self.angle,
+                mask=self.mask,
             )
 
         if self.params.resolution is not None:
             self.resolution = self.params.resolution
-            self.mask, _, _ = downsample_xy(
-                self.locs[:, 0], self.locs[:, 1], self.params.resolution, mask=self.mask
+            self.mask = filter_xy(
+                self.locs[:, 0],
+                self.locs[:, 1],
+                distance=self.resolution,
+                mask=self.mask,
             )
 
         self.locs = self.filter(self.locs)
         self.data = self.filter(self.data)
         self.uncertainties = self.filter(self.uncertainties)
 
-        if self.params.detrend_data:
-            self.detrend_order = self.params.detrend_order
-            self.detrend_type = self.params.detrend_type
-            self.data = self.detrend(self.data)
-
         self.offset, self.radar = self.params.offset()
         if self.offset is not None:
             self.locs = self.displace(self.locs, self.offset)
         if self.radar is not None:
             self.locs = self.drape(self.locs)
+
+        if self.is_rotated:
+            self.locs = self.rotate(self.locs)
+
+        if self.params.detrend_data:
+            self.detrend_order = self.params.detrend_order
+            self.detrend_type = self.params.detrend_type
+            self.data = self.detrend(self.data)
 
         self.data = self.normalize(self.data)
 
