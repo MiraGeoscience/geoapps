@@ -5,41 +5,39 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from copy import deepcopy
+
 import numpy as np
-from geoh5py.objects import Grid2D
-from scipy.interpolate import NearestNDInterpolator
 
-from geoapps.utils import filter_xy, rotate_xy
+from geoapps.utils import filter_xy
+
+from .locations import InversionLocations
 
 
-def get_topography(workspace, params, mesh, window):
+class InversionTopography(InversionLocations):
+    """ Retrieve topography data from workspace and apply transformations. """
 
-    topography_object = workspace.get_entity(params.topography_object)[0]
-    if isinstance(topography_object, Grid2D):
-        topo_locs = topography_object.centroids
-    else:
-        topo_locs = topography_object.vertices
+    def __init__(self, workspace, params, mesh, window):
+        super().__init__(workspace, params, mesh, window)
+        self._initialize()
 
-    if workspace.list_entities_name[params.topography] != "Z":
-        topo_locs[:, 2] = workspace.get_entity(params.topography)[0].values
+    def _initialize(self):
 
-    if window is not None:
-        topo_window = window.copy()
-        topo_window["size"] = [ll * 2 for ll in window["size"]]
-        ind = filter_xy(
-            topo_locs[:, 0],
-            topo_locs[:, 1],
-            params.resolution / 2,
-            window=topo_window,
-            angle=-mesh.rotation["angle"],
-        )
-        xy_rot = rotate_xy(
-            topo_locs[ind, :2],
-            mesh.rotation["origin"],
-            -mesh.rotation["angle"],
-        )
-        topo_locs = np.c_[xy_rot, topo_locs[ind, 2]]
+        self.locs = super().get_locs(self.params.topography_object)
+        self.mask = np.ones(len(self.locs), dtype=bool)
 
-    topo_interp_function = NearestNDInterpolator(topo_locs[:, :2], topo_locs[:, 2])
+        if self.window is not None:
+            self.window = deepcopy(self.window)
+            self.window["size"] = [2 * s for s in self.window["size"]]
+            self.mask = filter_xy(
+                self.locs[:, 0],
+                self.locs[:, 1],
+                window=self.window,
+                angle=self.angle,
+                mask=self.mask,
+            )
 
-    return topo_locs, topo_interp_function
+        self.locs = super().filter(self.locs)
+
+        if self.is_rotated:
+            self.locs = super().rotate(self.locs)
