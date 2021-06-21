@@ -495,8 +495,8 @@ def downsample_grid(
 
     du = np.linalg.norm(np.c_[u_diff(xg), u_diff(yg)])
     dv = np.linalg.norm(np.c_[v_diff(xg), v_diff(yg)])
-    u_ds = int(np.rint(distance / du))
-    v_ds = int(np.rint(distance / dv))
+    u_ds = np.max([int(np.rint(distance / du)), 1])
+    v_ds = np.max([int(np.rint(distance / dv)), 1])
 
     downsample_mask = np.zeros_like(xg, dtype=bool)
     downsample_mask[::v_ds, ::u_ds] = True
