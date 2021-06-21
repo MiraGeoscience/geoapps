@@ -26,7 +26,7 @@ def setup_params(tmp):
 def test_initialize(tmp_path):
 
     ws, params = setup_params(tmp_path)
-    inversion_mesh = InversionMesh(params, ws)
+    inversion_mesh = InversionMesh(ws, params)
     assert isinstance(inversion_mesh.mesh, TreeMesh)
     assert inversion_mesh.rotation["angle"] == 20
 
@@ -34,6 +34,6 @@ def test_initialize(tmp_path):
 def test_original_cc(tmp_path):
 
     ws, params = setup_params(tmp_path)
-    inversion_mesh = InversionMesh(params, ws)
+    inversion_mesh = InversionMesh(ws, params)
     msh = ws.get_entity(params.mesh)[0]
     np.testing.assert_allclose(msh.centroids, inversion_mesh.original_cc())

@@ -29,11 +29,11 @@ class InversionMesh:
     """
 
     def __init__(
-        self, params: Params, workspace: Workspace, window: List[float] = None
+        self, workspace: Workspace, params: Params, window: List[float] = None
     ) -> None:
 
-        self.params = params
         self.workspace = workspace
+        self.params = params
         self.window = window
         self.mesh = None
         self.nC = None
