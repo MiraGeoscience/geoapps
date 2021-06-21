@@ -269,7 +269,7 @@ class SurveyFactory:
 
             from SimPEG.potential_fields import magnetics
 
-            receivers = magnetics.receivers.Point(locs, components=data.keys())
+            receivers = magnetics.receivers.Point(locs, components=list(data.keys()))
             source = magnetics.sources.SourceField(
                 receiver_list=[receivers], parameters=self.params.inducing_field_aid()
             )
