@@ -84,9 +84,9 @@ class Surface2D(ObjectDataSelection):
         self.data.description = "Model fields: "
         self.z_option.observe(self.z_options_change, names="value")
         self.depth_panel = HBox([self.z_option, self.elevations.data])
-        self.trigger.on_click(self.compute_trigger)
+        self.trigger.on_click(self.trigger_click)
 
-    def compute_trigger(self, _):
+    def trigger_click(self, _):
 
         if not self.workspace.get_entity(self.objects.value):
             return

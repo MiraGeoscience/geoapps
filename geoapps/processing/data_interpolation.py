@@ -124,11 +124,6 @@ class DataInterpolation(ObjectDataSelection):
         )
         self.method.observe(self.method_update)
         self.out_mode.observe(self.out_update)
-
-        def interpolate_call(_):
-            self.interpolate_call()
-            self.update_objects_choices()
-
         self.parameters = {
             "Method": self.method_panel,
             "Scaling": self.space,
@@ -159,7 +154,7 @@ class DataInterpolation(ObjectDataSelection):
             self.topography.main,
             self.max_depth,
         ]
-        self.trigger.on_click(interpolate_call)
+        self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Interpolate"
 
     @property
@@ -372,7 +367,7 @@ class DataInterpolation(ObjectDataSelection):
         else:
             self.destination_panel.children = [self.out_mode, self.new_grid_panel]
 
-    def interpolate_call(self):
+    def trigger_click(self, _):
 
         for entity in self._workspace.get_entity(self.objects.value):
             if isinstance(entity, ObjectBase):
@@ -629,6 +624,7 @@ class DataInterpolation(ObjectDataSelection):
             self.live_link_output(self.export_directory.selected_path, self.object_out)
 
         self.workspace.finalize()
+        self.update_objects_choices()
 
     def object_pick(self, _):
         if self.objects.value in list(dict(self.xy_reference.options).values()):

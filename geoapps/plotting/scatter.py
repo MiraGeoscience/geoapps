@@ -293,7 +293,7 @@ class ScatterPlots(ObjectDataSelection):
                 "refresh": self.refresh,
             },
         )
-        self.trigger.on_click(self.write_html)
+        self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Save HTML"
 
         super().__init__(**self.defaults)
@@ -932,7 +932,7 @@ class ScatterPlots(ObjectDataSelection):
         self.update_downsampling(None, refresh_plot=False)
         self.refresh.value = True
 
-    def write_html(self, _):
+    def trigger_click(self, _):
         self.figure.write_html(
             os.path.join(
                 os.path.abspath(os.path.dirname(self.h5file)), "Crossplot.html"

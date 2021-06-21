@@ -49,7 +49,7 @@ class ContourValues(PlotSelection2D):
             },
         )
 
-        self.trigger.on_click(self.save_selection)
+        self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export to GA"
         self.trigger.button_style = "danger"
 
@@ -144,7 +144,7 @@ class ContourValues(PlotSelection2D):
         else:
             self.export_as.value = "Contours"
 
-    def save_selection(self, _):
+    def trigger_click(self, _):
         entity, _ = self.get_selected_entities()
 
         if getattr(self.contours, "contour_set", None) is not None:

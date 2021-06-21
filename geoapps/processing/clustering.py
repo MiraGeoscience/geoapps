@@ -128,7 +128,7 @@ class Clustering(ScatterPlots):
         self.clusters_panel = VBox([self.clusters_options, self.color_pickers[0]])
         self.clusters_options.observe(self.clusters_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
-        self.trigger.on_click(self.save_cluster)
+        self.trigger.on_click(self.trigger_click)
 
         super().__init__(**self.defaults)
 
@@ -559,7 +559,7 @@ class Clustering(ScatterPlots):
                 yaxis={"autorange": "reversed"},
             )
 
-    def save_cluster(self, _):
+    def trigger_click(self, _):
         """
         Write cluster groups to the target geoh5 object.
         """

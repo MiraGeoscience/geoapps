@@ -23,7 +23,7 @@ class IsoSurface(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-        "data": "Iteration_7_model",
+        "data": "{f3e36334-be0a-4210-b13e-06933279de25}",
         "max_distance": 500,
         "resolution": 50,
         "contours": "0.005: 0.02: 0.005, 0.0025",
@@ -49,13 +49,13 @@ class IsoSurface(ObjectDataSelection):
         self.ga_group_name.value = "ISO"
         self.data.observe(self.data_change, names="value")
         self.data.description = "Value fields: "
-        self.trigger.on_click(self.compute_trigger)
+        self.trigger.on_click(self.trigger_click)
 
         super().__init__(**self.defaults)
 
         self.output_panel = VBox([self.export_as, self.output_panel])
 
-    def compute_trigger(self, _):
+    def trigger_click(self, _):
 
         if not self.workspace.get_entity(self.objects.value):
             return

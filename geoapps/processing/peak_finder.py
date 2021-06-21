@@ -54,24 +54,6 @@ class PeakFinder(ObjectDataSelection):
     Application for the picking of targets along Time-domain EM profiles
     """
 
-    # defaults = {
-    #     "h5file": "../../assets/FlinFlon.geoh5",
-    #     "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
-    #     "data": ["Observed"],
-    #     "lines": {
-    #         "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
-    #         "data": "Line",
-    #         "lines": 6073400.0,
-    #     },
-    #     "center": 4050,
-    #     "width": 1000,
-    #     "smoothing": 6,
-    #     "tem_checkbox": True,
-    #     "markers": True,
-    #     "x_label": "Distance",
-    #     "ga_group_name": "PeakFinder",
-    # }
-
     _param_class = PeakFinderParams
     _add_groups = "only"
     _object_types = (Curve,)
@@ -96,40 +78,20 @@ class PeakFinder(ObjectDataSelection):
             self.params = self._param_class.from_dict(default_dict)
 
         self.defaults = self.update_defaults(**self.params.__dict__)
-
-        try:
-            self.client = get_client()
-        except ValueError:
-            self.client = Client()
-
         self.all_anomalies = []
         self.data_channels = {}
         self.data_channel_options = {}
-        self.em_system_specs = geophysical_systems.parameters()
         self.pause_plot_refresh = False
         self._survey = None
         self._time_groups = None
-        self.objects.observe(self.objects_change, names="value")
-        self.data.observe(self.set_data, names="value")
-        self.system.observe(self.system_observer, names="value")
-        self.system_panel_option.observe(self.system_panel_trigger)
+
+        super().__init__(**kwargs)
+
         self.system_panel = VBox([self.system_panel_option])
-        self.groups_setter.observe(self.groups_trigger)
         self.groups_widget = VBox([self.groups_setter])
         self.groups_panel = VBox([self.group_list, self.channels, self.group_color])
         self.decay_panel = VBox([self.show_decay])
-        self.line_field = self.lines.data
-        self.line_id = self.lines.lines
-        self.previous_line = self.lines.lines.value
-        self.objects.description = "Survey"
         self.scale_panel = VBox([self.scale_button, self.scale_value])
-        self.scale_button.observe(self.scale_update)
-        self.channel_selection.observe(self.channel_panel_update, names="value")
-        self.channels.observe(self.edit_group, names="value")
-        self.group_list.observe(self.highlight_selection, names="value")
-        self.highlight_selection(None)
-        self.run_all.on_click(self.run_all_click)
-        self.flip_sign.observe(self.set_data, names="value")
         self.plotting = interactive_output(
             self.plot_data_selection,
             {
@@ -171,10 +133,22 @@ class PeakFinder(ObjectDataSelection):
                 self.decay_panel,
             ]
         )
+
+        # Set up interactions
+        self.system_panel_option.observe(self.system_panel_trigger)
+        self.objects.observe(self.objects_change, names="value")
+        self.data.observe(self.set_data, names="value")
+        self.system.observe(self.system_observer, names="value")
         self.tem_checkbox.observe(self.objects_change, names="value")
-
-        super().__init__(**kwargs)
-
+        self.groups_setter.observe(self.groups_trigger)
+        self.previous_line = self.lines.lines.value
+        self.scale_button.observe(self.scale_update)
+        self.channel_selection.observe(self.channel_panel_update, names="value")
+        self.channels.observe(self.edit_group, names="value")
+        self.group_list.observe(self.highlight_selection, names="value")
+        self.run_all.on_click(self.run_all_click)
+        self.flip_sign.observe(self.set_data, names="value")
+        self.highlight_selection(None)
         self.channel_panel = VBox(
             [
                 self.channel_selection,
@@ -186,8 +160,7 @@ class PeakFinder(ObjectDataSelection):
                 self.channel_panel,
             ]
         )
-        self.trigger.on_click(self.trigger_click)
-        self.trigger.description = "Export Peaks"
+        self.trigger.description = "Process All Lines"
         self.trigger_panel = VBox(
             [
                 VBox([self.trigger, self.structural_markers, self.ga_group_name]),
@@ -217,21 +190,21 @@ class PeakFinder(ObjectDataSelection):
         )
         self.output_panel = VBox(
             [
-                self.run_all,
                 self.trigger_panel,
             ]
         )
+        self.objects_change(None)
 
     @property
     def main(self):
         if getattr(self, "_main", None) is None:
-            VBox(
+            self._main = VBox(
                 [
                     self.project_panel,
                     HBox(
                         [
                             VBox(
-                                [self.main, self.flip_sign],
+                                [self.data_panel, self.flip_sign],
                                 layout=Layout(width="50%"),
                             ),
                             Box(
@@ -340,6 +313,10 @@ class PeakFinder(ObjectDataSelection):
         self._data = value
 
     @property
+    def em_system_specs(self):
+        return geophysical_systems.parameters()
+
+    @property
     def flip_sign(self):
         """
         :obj:`ipywidgets.ToggleButton`: Apply a sign flip to the selected data
@@ -396,6 +373,20 @@ class PeakFinder(ObjectDataSelection):
         return self._groups_setter
 
     @property
+    def line_field(self):
+        """
+        Alias of lines.data widget
+        """
+        return self.lines.data
+
+    @property
+    def line_id(self):
+        """
+        Alias of lines.lines widget
+        """
+        return self.lines.lines
+
+    @property
     def lines(self):
         """
         :obj:`geoapps.selection.LineOptions`: Line selection widget defining the profile used for plotting.
@@ -413,7 +404,7 @@ class PeakFinder(ObjectDataSelection):
         :obj:`ipywidgets.ToggleButton`: Display markers on the data plot
         """
         if getattr(self, "_markers", None) is None:
-            self._markers = ToggleButton(description="Show markers")
+            self._markers = ToggleButton(description="Show markers", value=True)
 
         return self._markers
 
@@ -750,22 +741,21 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.data`: Populate the list of available channels and refresh groups
         """
-        if getattr(self, "survey", None) is not None:
+        if getattr(self, "survey", None) is not None and self.data.value is not None:
             self.pause_plot_refresh = True
-            groups = [p_g.name for p_g in self.survey.property_groups]
+            groups = [p_g.uid for p_g in self.survey.property_groups]
             channels = []
 
             # Add all selected data channels | groups once
-            for channel in self.data.value:
-                if channel in groups:
-                    for prop in self.survey.find_or_create_property_group(
-                        name=self.data.uid_name_map[channel]
-                    ).properties:
-                        name = self.workspace.get_entity(prop)[0].name
-                        if prop not in channels:
-                            channels.append(name)
-                elif channel not in channels:
-                    channels.append(channel)
+            if self.data.value in groups:
+                for prop in self.survey.find_or_create_property_group(
+                    name=self.data.uid_name_map[self.data.value]
+                ).properties:
+                    name = self.workspace.get_entity(prop)[0].name
+                    if prop not in channels:
+                        channels.append(name)
+            else:
+                channels.append(self.data.value)
 
             self.channels.options = channels
             for channel in channels:
@@ -894,46 +884,46 @@ class PeakFinder(ObjectDataSelection):
         self.plot_trigger.value = False
         self.plot_trigger.value = True
 
-    def run_all_click(self, _):
-        """
-        Observer of :obj:`geoapps.processing.PeakFinder.`: to process the entire Curve object for all lines
-        """
-        self.run_all.description = "Computing..."
-        anomalies = []
-        vertices = self.client.scatter(self.survey.vertices)
-        channels = self.client.scatter(self.active_channels)
-        time_groups = self.client.scatter(self.time_groups)
-        for line_id in list(self.lines.lines.options)[1:]:
-            line_indices = self.get_line_indices(line_id)
-
-            if line_indices is None:
-                continue
-
-            anomalies += [
-                self.client.compute(
-                    find_anomalies(
-                        vertices,
-                        line_indices,
-                        channels,
-                        time_groups,
-                        data_normalization=self.em_system_specs[self.system.value][
-                            "normalization"
-                        ],
-                        smoothing=self.smoothing.value,
-                        # use_residual=self.residual.value,
-                        min_amplitude=self.min_amplitude.value,
-                        min_value=self.min_value.value,
-                        min_width=self.min_width.value,
-                        max_migration=self.max_migration.value,
-                        min_channels=self.min_channels.value,
-                        minimal_output=True,
-                    )
-                )
-            ]
-
-        self.all_anomalies = self.client.gather(anomalies)
-        self.trigger.button_style = "success"
-        self.run_all.description = "Process All Lines"
+    # def run_all_click(self, _):
+    #     """
+    #     Observer of :obj:`geoapps.processing.PeakFinder.`: to process the entire Curve object for all lines
+    #     """
+    #     self.run_all.description = "Computing..."
+    #     anomalies = []
+    #     vertices = self.client.scatter(self.survey.vertices)
+    #     channels = self.client.scatter(self.active_channels)
+    #     time_groups = self.client.scatter(self.time_groups)
+    #     for line_id in list(self.lines.lines.options)[1:]:
+    #         line_indices = self.get_line_indices(line_id)
+    #
+    #         if line_indices is None:
+    #             continue
+    #
+    #         anomalies += [
+    #             self.client.compute(
+    #                 find_anomalies(
+    #                     vertices,
+    #                     line_indices,
+    #                     channels,
+    #                     time_groups,
+    #                     data_normalization=self.em_system_specs[self.system.value][
+    #                         "normalization"
+    #                     ],
+    #                     smoothing=self.smoothing.value,
+    #                     # use_residual=self.residual.value,
+    #                     min_amplitude=self.min_amplitude.value,
+    #                     min_value=self.min_value.value,
+    #                     min_width=self.min_width.value,
+    #                     max_migration=self.max_migration.value,
+    #                     min_channels=self.min_channels.value,
+    #                     minimal_output=True,
+    #                 )
+    #             )
+    #         ]
+    #
+    #     self.all_anomalies = self.client.gather(anomalies)
+    #     self.trigger.button_style = "success"
+    #     self.run_all.description = "Process All Lines"
 
     def regroup(self):
         group_id = -1
@@ -961,231 +951,18 @@ class PeakFinder(ObjectDataSelection):
 
             group["time_group"] = group_id
 
-    def trigger_click(self, _):
-        """
-        Observer of :obj:`geoapps.processing.PeakFinder.`:
-        """
-        if not self.all_anomalies:
-            return
-
-        if not self.tem_checkbox:
-            self.regroup()
-
-        # Append all lines
-        (
-            time_group,
-            tau,
-            migration,
-            azimuth,
-            cox,
-            amplitude,
-            inflx_up,
-            inflx_dwn,
-            start,
-            end,
-            skew,
-            peaks,
-        ) = ([], [], [], [], [], [], [], [], [], [], [], [])
-        for line in self.all_anomalies:
-            for group in line:
-                if "time_group" in list(group.keys()) and len(group["cox"]) > 0:
-                    time_group += [group["time_group"]]
-
-                    if group["linear_fit"] is None:
-                        tau += [0]
-                    else:
-                        tau += [np.abs(group["linear_fit"][0] ** -1.0)]
-                    migration += [group["migration"]]
-                    amplitude += [group["amplitude"]]
-                    azimuth += [group["azimuth"]]
-                    cox += [group["cox"]]
-                    inflx_dwn += [group["inflx_dwn"]]
-                    inflx_up += [group["inflx_up"]]
-                    start += [group["start"]]
-                    end += [group["end"]]
-                    skew += [group["skew"]]
-                    peaks += [group["peaks"]]
-
-        if cox:
-            time_group = np.hstack(time_group) + 1  # Start count at 1
-
-            # Create reference values and color_map
-            group_map, color_map = {}, []
-            for ind, group in self.time_groups.items():
-                group_map[ind + 1] = group["name"]
-                color_map += [[ind + 1] + hex_to_rgb(group["color"]) + [1]]
-
-            color_map = np.core.records.fromarrays(
-                np.vstack(color_map).T, names=["Value", "Red", "Green", "Blue", "Alpha"]
-            )
-            points = Points.create(
-                self.workspace,
-                name="PointMarkers",
-                vertices=np.vstack(cox),
-                parent=self.ga_group,
-            )
-            points.entity_type.name = self.ga_group_name.value
-            migration = np.hstack(migration)
-            dip = migration / migration.max()
-            dip = np.rad2deg(np.arccos(dip))
-            skew = np.hstack(skew)
-            azimuth = np.hstack(azimuth)
-            points.add_data(
-                {
-                    "amplitude": {"values": np.hstack(amplitude)},
-                    "skew": {"values": skew},
-                }
-            )
-
-            if self.tem_checkbox.value:
-                points.add_data(
-                    {
-                        "tau": {"values": np.hstack(tau)},
-                        "azimuth": {"values": azimuth},
-                        "dip": {"values": dip},
-                    }
-                )
-
-            time_group_data = points.add_data(
-                {
-                    "time_group": {
-                        "type": "referenced",
-                        "values": np.hstack(time_group),
-                        "value_map": group_map,
-                    }
-                }
-            )
-            time_group_data.entity_type.color_map = {
-                "name": "Time Groups",
-                "values": color_map,
-            }
-
-            if self.tem_checkbox.value:
-                group = points.find_or_create_property_group(
-                    name="AzmDip", property_group_type="Dip direction & dip"
-                )
-                group.properties = [
-                    points.get_data("azimuth")[0].uid,
-                    points.get_data("dip")[0].uid,
-                ]
-
-            # Add structural markers
-            if self.structural_markers.value:
-
-                if self.tem_checkbox.value:
-                    markers = []
-
-                    def rotation_2D(angle):
-                        R = np.r_[
-                            np.c_[
-                                np.cos(np.pi * angle / 180),
-                                -np.sin(np.pi * angle / 180),
-                            ],
-                            np.c_[
-                                np.sin(np.pi * angle / 180), np.cos(np.pi * angle / 180)
-                            ],
-                        ]
-                        return R
-
-                    for azm, xyz, mig in zip(
-                        np.hstack(azimuth).tolist(),
-                        np.vstack(cox).tolist(),
-                        migration.tolist(),
-                    ):
-                        marker = np.r_[
-                            np.c_[-0.5, 0.0] * 50,
-                            np.c_[0.5, 0] * 50,
-                            np.c_[0.0, 0.0],
-                            np.c_[0.0, 1.0] * mig,
-                        ]
-
-                        marker = (
-                            np.c_[np.dot(rotation_2D(-azm), marker.T).T, np.zeros(4)]
-                            + xyz
-                        )
-                        markers.append(marker.squeeze())
-
-                    curves = Curve.create(
-                        self.workspace,
-                        name="TickMarkers",
-                        vertices=np.vstack(markers),
-                        cells=np.arange(len(markers) * 4, dtype="uint32").reshape(
-                            (-1, 2)
-                        ),
-                        parent=self.ga_group,
-                    )
-                    time_group_data = curves.add_data(
-                        {
-                            "time_group": {
-                                "type": "referenced",
-                                "values": np.kron(np.hstack(time_group), np.ones(4)),
-                                "value_map": group_map,
-                            }
-                        }
-                    )
-                    time_group_data.entity_type.color_map = {
-                        "name": "Time Groups",
-                        "values": color_map,
-                    }
-                inflx_pts = Points.create(
-                    self.workspace,
-                    name="Inflections_Up",
-                    vertices=np.vstack(inflx_up),
-                    parent=self.ga_group,
-                )
-                time_group_data = inflx_pts.add_data(
-                    {
-                        "time_group": {
-                            "type": "referenced",
-                            "values": np.repeat(
-                                np.hstack(time_group), [ii.shape[0] for ii in inflx_up]
-                            ),
-                            "value_map": group_map,
-                        }
-                    }
-                )
-                time_group_data.entity_type.color_map = {
-                    "name": "Time Groups",
-                    "values": color_map,
-                }
-                inflx_pts = Points.create(
-                    self.workspace,
-                    name="Inflections_Down",
-                    vertices=np.vstack(inflx_dwn),
-                    parent=self.ga_group,
-                )
-                time_group_data.copy(parent=inflx_pts)
-
-                start_pts = Points.create(
-                    self.workspace,
-                    name="Starts",
-                    vertices=np.vstack(start),
-                    parent=self.ga_group,
-                )
-                time_group_data.copy(parent=start_pts)
-
-                end_pts = Points.create(
-                    self.workspace,
-                    name="Ends",
-                    vertices=np.vstack(end),
-                    parent=self.ga_group,
-                )
-                time_group_data.copy(parent=end_pts)
-
-                peak_pts = Points.create(
-                    self.workspace,
-                    name="Peaks",
-                    vertices=np.vstack(peaks),
-                    parent=self.ga_group,
-                )
-
-        if self.live_link.value:
-            self.live_link_output(self.export_directory.selected_path, points)
-
-            if self.structural_markers.value:
-                self.live_link_output(self.export_directory.selected_path, curves)
-
-        self.workspace.finalize()
+    # def trigger_click(self, _):
+    #     """
+    #     Observer of :obj:`geoapps.processing.PeakFinder.`:
+    #     """
+    #     if not self.all_anomalies:
+    #         return
+    #
+    #     if not self.tem_checkbox:
+    #         self.regroup()
+    #
+    #     # Append all lines
+    #
 
     def highlight_selection(self, _):
         """
@@ -1511,25 +1288,20 @@ class PeakFinder(ObjectDataSelection):
         if line_indices is None:
             return
         self.survey.line_indices = line_indices
-        result = self.client.compute(
-            find_anomalies(
-                self.survey.vertices,
-                line_indices,
-                self.active_channels,
-                self.time_groups,
-                data_normalization=self.em_system_specs[self.system.value][
-                    "normalization"
-                ],
-                smoothing=self.smoothing.value,
-                # use_residual=self.residual.value,
-                min_amplitude=self.min_amplitude.value,
-                min_value=self.min_value.value,
-                min_width=self.min_width.value,
-                max_migration=self.max_migration.value,
-                min_channels=self.min_channels.value,
-                return_profile=True,
-            )
-        ).result()
+        result = find_anomalies(
+            self.survey.vertices,
+            line_indices,
+            self.active_channels,
+            self.time_groups,
+            data_normalization=self.em_system_specs[self.system.value]["normalization"],
+            smoothing=self.smoothing.value,
+            min_amplitude=self.min_amplitude.value,
+            min_value=self.min_value.value,
+            min_width=self.min_width.value,
+            max_migration=self.max_migration.value,
+            min_channels=self.min_channels.value,
+            return_profile=True,
+        )
 
         if len(result) > 0:
             self.lines.anomalies, self.lines.profile = result
@@ -1677,8 +1449,225 @@ class PeakFinder(ObjectDataSelection):
         Create an octree mesh from input values
         """
 
+        # client = Client()
+
         workspace = params.workspace
         obj = workspace.get_entity(params.objects)
+
+        (
+            time_group,
+            tau,
+            migration,
+            azimuth,
+            cox,
+            amplitude,
+            inflx_up,
+            inflx_dwn,
+            start,
+            end,
+            skew,
+            peaks,
+        ) = ([], [], [], [], [], [], [], [], [], [], [], [])
+        # for line in self.all_anomalies:
+        #     for group in line:
+        #         if "time_group" in list(group.keys()) and len(group["cox"]) > 0:
+        #             time_group += [group["time_group"]]
+        #
+        #             if group["linear_fit"] is None:
+        #                 tau += [0]
+        #             else:
+        #                 tau += [np.abs(group["linear_fit"][0] ** -1.0)]
+        #             migration += [group["migration"]]
+        #             amplitude += [group["amplitude"]]
+        #             azimuth += [group["azimuth"]]
+        #             cox += [group["cox"]]
+        #             inflx_dwn += [group["inflx_dwn"]]
+        #             inflx_up += [group["inflx_up"]]
+        #             start += [group["start"]]
+        #             end += [group["end"]]
+        #             skew += [group["skew"]]
+        #             peaks += [group["peaks"]]
+        #
+        # if cox:
+        #     time_group = np.hstack(time_group) + 1  # Start count at 1
+        #
+        #     # Create reference values and color_map
+        #     group_map, color_map = {}, []
+        #     for ind, group in self.time_groups.items():
+        #         group_map[ind + 1] = group["name"]
+        #         color_map += [[ind + 1] + hex_to_rgb(group["color"]) + [1]]
+        #
+        #     color_map = np.core.records.fromarrays(
+        #         np.vstack(color_map).T, names=["Value", "Red", "Green", "Blue", "Alpha"]
+        #     )
+        #     points = Points.create(
+        #         self.workspace,
+        #         name="PointMarkers",
+        #         vertices=np.vstack(cox),
+        #         parent=self.ga_group,
+        #     )
+        #     points.entity_type.name = self.ga_group_name.value
+        #     migration = np.hstack(migration)
+        #     dip = migration / migration.max()
+        #     dip = np.rad2deg(np.arccos(dip))
+        #     skew = np.hstack(skew)
+        #     azimuth = np.hstack(azimuth)
+        #     points.add_data(
+        #         {
+        #             "amplitude": {"values": np.hstack(amplitude)},
+        #             "skew": {"values": skew},
+        #         }
+        #     )
+        #
+        #     if self.tem_checkbox.value:
+        #         points.add_data(
+        #             {
+        #                 "tau": {"values": np.hstack(tau)},
+        #                 "azimuth": {"values": azimuth},
+        #                 "dip": {"values": dip},
+        #             }
+        #         )
+        #
+        #     time_group_data = points.add_data(
+        #         {
+        #             "time_group": {
+        #                 "type": "referenced",
+        #                 "values": np.hstack(time_group),
+        #                 "value_map": group_map,
+        #             }
+        #         }
+        #     )
+        #     time_group_data.entity_type.color_map = {
+        #         "name": "Time Groups",
+        #         "values": color_map,
+        #     }
+        #
+        #     if self.tem_checkbox.value:
+        #         group = points.find_or_create_property_group(
+        #             name="AzmDip", property_group_type="Dip direction & dip"
+        #         )
+        #         group.properties = [
+        #             points.get_data("azimuth")[0].uid,
+        #             points.get_data("dip")[0].uid,
+        #         ]
+        #
+        #     # Add structural markers
+        #     if self.structural_markers.value:
+        #
+        #         if self.tem_checkbox.value:
+        #             markers = []
+        #
+        #             def rotation_2D(angle):
+        #                 R = np.r_[
+        #                     np.c_[
+        #                         np.cos(np.pi * angle / 180),
+        #                         -np.sin(np.pi * angle / 180),
+        #                     ],
+        #                     np.c_[
+        #                         np.sin(np.pi * angle / 180), np.cos(np.pi * angle / 180)
+        #                     ],
+        #                 ]
+        #                 return R
+        #
+        #             for azm, xyz, mig in zip(
+        #                     np.hstack(azimuth).tolist(),
+        #                     np.vstack(cox).tolist(),
+        #                     migration.tolist(),
+        #             ):
+        #                 marker = np.r_[
+        #                     np.c_[-0.5, 0.0] * 50,
+        #                     np.c_[0.5, 0] * 50,
+        #                     np.c_[0.0, 0.0],
+        #                     np.c_[0.0, 1.0] * mig,
+        #                 ]
+        #
+        #                 marker = (
+        #                         np.c_[np.dot(rotation_2D(-azm), marker.T).T, np.zeros(4)]
+        #                         + xyz
+        #                 )
+        #                 markers.append(marker.squeeze())
+        #
+        #             curves = Curve.create(
+        #                 self.workspace,
+        #                 name="TickMarkers",
+        #                 vertices=np.vstack(markers),
+        #                 cells=np.arange(len(markers) * 4, dtype="uint32").reshape(
+        #                     (-1, 2)
+        #                 ),
+        #                 parent=self.ga_group,
+        #             )
+        #             time_group_data = curves.add_data(
+        #                 {
+        #                     "time_group": {
+        #                         "type": "referenced",
+        #                         "values": np.kron(np.hstack(time_group), np.ones(4)),
+        #                         "value_map": group_map,
+        #                     }
+        #                 }
+        #             )
+        #             time_group_data.entity_type.color_map = {
+        #                 "name": "Time Groups",
+        #                 "values": color_map,
+        #             }
+        #         inflx_pts = Points.create(
+        #             self.workspace,
+        #             name="Inflections_Up",
+        #             vertices=np.vstack(inflx_up),
+        #             parent=self.ga_group,
+        #         )
+        #         time_group_data = inflx_pts.add_data(
+        #             {
+        #                 "time_group": {
+        #                     "type": "referenced",
+        #                     "values": np.repeat(
+        #                         np.hstack(time_group), [ii.shape[0] for ii in inflx_up]
+        #                     ),
+        #                     "value_map": group_map,
+        #                 }
+        #             }
+        #         )
+        #         time_group_data.entity_type.color_map = {
+        #             "name": "Time Groups",
+        #             "values": color_map,
+        #         }
+        #         inflx_pts = Points.create(
+        #             self.workspace,
+        #             name="Inflections_Down",
+        #             vertices=np.vstack(inflx_dwn),
+        #             parent=self.ga_group,
+        #         )
+        #         time_group_data.copy(parent=inflx_pts)
+        #
+        #         start_pts = Points.create(
+        #             self.workspace,
+        #             name="Starts",
+        #             vertices=np.vstack(start),
+        #             parent=self.ga_group,
+        #         )
+        #         time_group_data.copy(parent=start_pts)
+        #
+        #         end_pts = Points.create(
+        #             self.workspace,
+        #             name="Ends",
+        #             vertices=np.vstack(end),
+        #             parent=self.ga_group,
+        #         )
+        #         time_group_data.copy(parent=end_pts)
+        #
+        #         peak_pts = Points.create(
+        #             self.workspace,
+        #             name="Peaks",
+        #             vertices=np.vstack(peaks),
+        #             parent=self.ga_group,
+        #         )
+        #
+        # if self.live_link.value:
+        #     self.live_link_output(self.export_directory.selected_path, points)
+        #
+        #     if self.structural_markers.value:
+        #         self.live_link_output(self.export_directory.selected_path, curves)
+        #
+        # self.workspace.finalize()
 
         print(f"Selected object {obj}")
         # vertices = self.client.scatter(self.survey.vertices)
@@ -1726,7 +1715,6 @@ class PeakFinder(ObjectDataSelection):
             self.show_decay.description = "Show decay curve"
 
 
-@dask.delayed
 def find_anomalies(
     locations,
     line_indices,

@@ -115,7 +115,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
         # Make changes to trigger warning color
         self.trigger.description = "Save to GA"
-        self.trigger.on_click(self.save_trigger)
+        self.trigger.on_click(self.trigger_click)
         self.trigger.button_style = "success"
 
         self.compute.click()
@@ -188,7 +188,7 @@ class EdgeDetectionApp(PlotSelection2D):
         """IntSlider"""
         return self._window_size
 
-    def save_trigger(self, _):
+    def trigger_click(self, _):
         entity, _ = self.get_selected_entities()
         if getattr(self.trigger, "vertices", None) is not None:
 
