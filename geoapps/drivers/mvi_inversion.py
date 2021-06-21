@@ -91,7 +91,9 @@ class InversionDriver:
 
         self.mesh = InversionMesh(self.params, self.workspace, self.window)
         self.window["azimuth"] = -self.mesh.rotation["angle"]
-        self.topo, self.topo_interp_function = get_topography()
+        self.topo, self.topo_interp_function = get_topography(
+            self.workspace, self.params, self.mesh, self.window
+        )
         self.starting_model = InversionModel(
             self.mesh, "starting", self.params, self.workspace
         )
@@ -119,14 +121,14 @@ class InversionDriver:
         self.n_blocks = 3
 
         # construct a simpeg Survey object
-        data = InversionData(
+        self.data = InversionData(
             self.workspace,
             self.params,
             self.mesh,
             self.topography,
             self.window,
         )
-        self.survey, normalization = self.get_survey()
+        self.survey = self.data.get_survey()
 
         if vector_property:
             self.reference_model.model = self.reference_model.model[
@@ -201,7 +203,7 @@ class InversionDriver:
         wr **= 0.5
         wr = wr / wr.max()
 
-        # self.write_data(sorting, normalization, no_data_value, model_map, wr)
+        # self.write_data(sorting, self.data.normalization, no_data_value, model_map, wr)
 
         # Create a regularization
         reg_p = regularization.Sparse(
@@ -356,7 +358,7 @@ class InversionDriver:
                 directives.SaveIterationsGeoH5(
                     h5_object=point_object,
                     channels=self.survey.components,
-                    mapping=np.hstack(normalization * rxLoc.shape[0]),
+                    mapping=np.hstack(self.data.normalization),
                     attribute_type="predicted",
                     sorting=tuple(self.sorting),
                     save_objective_function=True,
