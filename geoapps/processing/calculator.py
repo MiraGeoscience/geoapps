@@ -36,7 +36,7 @@ class Calculator(ObjectDataSelection):
 
         super().__init__(**self.defaults)
 
-        self.trigger.on_click(self.click_trigger)
+        self.trigger.on_click(self.trigger_click)
         self._data_panel = VBox([self.objects, HBox([self.data, self.use])])
         self.output_panel = VBox([self.trigger, self.live_link_panel])
 
@@ -110,7 +110,7 @@ class Calculator(ObjectDataSelection):
 
             self.equation.value = self.equation.value + "{" + name + "}"
 
-    def click_trigger(self, _):
+    def trigger_click(self, _):
         """
         Evaluate the expression and output the result to geoh5
         """

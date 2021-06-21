@@ -750,9 +750,6 @@ class InversionApp(PlotSelection2D):
         self._inducing_field = widgets.Text(
             description="Inducing Field [Amp, Inc, Dec]",
         )
-        self._run = ToggleButton(
-            value=False, description="Run SimPEG", button_style="danger", icon="check"
-        )
         self._starting_channel = (IntText(value=None, description="Starting Channel"),)
         self._system = Dropdown(
             options=["MVI", "Magnetics", "Gravity"] + list(self.em_system_specs.keys()),
@@ -767,7 +764,7 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices = widgets.Dropdown()
         self.data_channel_panel = widgets.VBox([self.data_channel_choices])
         self.survey_type_panel = VBox([self.system])
-        self.run.observe(self.run_trigger, names="value")
+        self.trigger.observe(self.trigger_click, names="value")
         self.write.observe(self.write_trigger, names="value")
         self.system.observe(self.system_observer, names="value")
         self.mesh_octree = MeshOctreeOptions(**self.defaults)
@@ -785,7 +782,7 @@ class InversionApp(PlotSelection2D):
         for item in ["width", "height", "resolution"]:
             getattr(self, item).observe(self.update_octree_param, names="value")
 
-        self.output_panel = VBox([self.export_directory, self.write, self.run])
+        self.output_panel = VBox([self.export_directory, self.write, self.trigger])
 
         self.inversion_parameters.update_ref(None)
 
@@ -855,11 +852,6 @@ class InversionApp(PlotSelection2D):
                 ]
             )
         return self._main
-
-    @property
-    def run(self):
-        """"""
-        return self._run
 
     @property
     def sensor(self):
@@ -941,23 +933,21 @@ class InversionApp(PlotSelection2D):
         """"""
         return self._write
 
-    def run_trigger(self, _):
+    def trigger_click(self, _):
         """"""
-        if self.run.value:
-            if self.system.value in ["Gravity", "MVI", "Magnetics"]:
-                os.system(
-                    "start cmd.exe @cmd /k "
-                    + 'python -m geoapps.drivers.pf_inversion "'
-                    + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
-                )
-            else:
-                os.system(
-                    "start cmd.exe @cmd /k "
-                    + 'python -m geoapps.drivers.em1d_inversion "'
-                    + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
-                )
-            self.run.value = False
-            self.run.button_style = ""
+        if self.system.value in ["Gravity", "MVI", "Magnetics"]:
+            os.system(
+                "start cmd.exe @cmd /k "
+                + 'python -m geoapps.drivers.pf_inversion "'
+                + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
+            )
+        else:
+            os.system(
+                "start cmd.exe @cmd /k "
+                + 'python -m geoapps.drivers.em1d_inversion "'
+                + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
+            )
+        self.trigger.button_style = ""
 
     def system_observer(self, _):
         """
@@ -1158,7 +1148,7 @@ class InversionApp(PlotSelection2D):
             ]
 
         self.write.button_style = "warning"
-        self.run.button_style = "danger"
+        self.trigger.button_style = "danger"
 
         if self.system.value in ["MVI", "Magnetics"]:
             self.survey_type_panel.children = [self.system, self.inducing_field]
@@ -1196,7 +1186,7 @@ class InversionApp(PlotSelection2D):
                     data_widget.children[2].value = value
 
             self.write.button_style = "warning"
-            self.run.button_style = "danger"
+            self.trigger.button_style = "danger"
 
     def get_data_list(self, entity):
         groups = [p_g.uid for p_g in entity.property_groups]
@@ -1256,7 +1246,7 @@ class InversionApp(PlotSelection2D):
             self.refresh.value = True
 
         self.write.button_style = "warning"
-        self.run.button_style = "danger"
+        self.trigger.button_style = "danger"
 
     def spatial_option_change(self, _):
         self.spatial_panel.children = [
@@ -1264,7 +1254,7 @@ class InversionApp(PlotSelection2D):
             self.spatial_options[self.spatial_choices.value],
         ]
         self.write.button_style = "warning"
-        self.run.button_style = "danger"
+        self.trigger.button_style = "danger"
 
     def update_octree_param(self, _):
         dl = self.resolution.value
@@ -1289,7 +1279,7 @@ class InversionApp(PlotSelection2D):
         )
         self.resolution.indices = None
         self.write.button_style = "warning"
-        self.run.button_style = "danger"
+        self.trigger.button_style = "danger"
 
     def update_selection(self, _):
         self.highlight_selection = {self.lines.data.value: self.lines.lines.value}
@@ -1478,7 +1468,7 @@ class InversionApp(PlotSelection2D):
                     print(
                         f"Gradient data with rotated window is currently not supported"
                     )
-                    self.run.button_style = "danger"
+                    self.trigger.button_style = "danger"
                     return
 
             input_dict["data"]["channels"] = channel_param
@@ -1518,14 +1508,14 @@ class InversionApp(PlotSelection2D):
 
         if len(checks) > 0:
             print(f"Required value for {checks}")
-            self.run.button_style = "danger"
+            self.trigger.button_style = "danger"
         else:
             self.write.button_style = ""
             file = f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
             with open(file, "w") as f:
                 json.dump(input_dict, f, indent=4)
-            self.run.button_style = "success"
+            self.trigger.button_style = "success"
 
         self.write.value = False
         self.write.button_style = ""
-        self.run.button_style = "success"
+        self.trigger.button_style = "success"

@@ -81,7 +81,7 @@ class Export(ObjectDataSelection):
         super().__init__(**self.defaults)
 
         self.trigger.description = "Export"
-        self.trigger.on_click(self.save_selection)
+        self.trigger.on_click(self.trigger_click)
 
     @property
     def wkt_code(self):
@@ -201,7 +201,7 @@ class Export(ObjectDataSelection):
         self.export_directory._set_form_values(export_path, "")
         self.export_directory._apply_selection()
 
-    def save_selection(self, _):
+    def trigger_click(self, _):
         if self.workspace.get_entity(self.objects.value):
             entity = self.workspace.get_entity(self.objects.value)[0]
         else:
