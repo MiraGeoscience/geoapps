@@ -19,9 +19,7 @@ from dask.distributed import Client, LocalCluster
 from discretize import TreeMesh
 from discretize.utils import active_from_xyz
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Grid2D, Points
-from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
-from scipy.spatial import cKDTree
+from geoh5py.objects import Points
 from SimPEG import (
     data,
     data_misfit,
@@ -39,7 +37,7 @@ from SimPEG.utils import tile_locations
 from SimPEG.utils.drivers import create_nested_mesh
 
 from geoapps.io.MVI import MVIParams
-from geoapps.utils import filter_xy, rotate_xy, treemesh_2_octree
+from geoapps.utils import rotate_xy, treemesh_2_octree
 
 from .components import (
     InversionData,

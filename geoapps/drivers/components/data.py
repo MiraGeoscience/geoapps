@@ -226,23 +226,23 @@ class SurveyFactory:
     def build(self, locs, data, uncertainties):
 
         if self.params.inversion_type == "mvi":
-
-            from SimPEG.potential_fields import magnetics
-
-            receivers = magnetics.receivers.Point(locs, components=list(data.keys()))
-            source = magnetics.sources.SourceField(
-                receiver_list=[receivers], parameters=self.params.inducing_field_aid()
-            )
-            survey = magnetics.survey.Survey(source)
-
-            data = np.vstack(data.values()).T
-            uncertainties = np.vstack(uncertainties.values()).T
-
-            survey.dobs = data.ravel()
-            survey.std = uncertainties.ravel()
-
-            return survey
-
+            from SimPEG.potential_fields import magnetics as data_module
+        elif self.params.inversion_type == "gravity":
+            from SimPEG.potential_fields import gravity as data_module
         else:
             msg = f"Inversion type: {self.params.inversion_type} not implemented yet."
             raise NotImplementedError(msg)
+
+        receivers = data_module.receivers.Point(locs, components=list(data.keys()))
+        source = data_module.sources.SourceField(
+            receiver_list=[receivers], parameters=self.params.inducing_field_aid()
+        )
+        survey = data_module.survey.Survey(source)
+
+        data = np.vstack(data.values()).T
+        uncertainties = np.vstack(uncertainties.values()).T
+
+        survey.dobs = data.ravel()
+        survey.std = uncertainties.ravel()
+
+        return survey
