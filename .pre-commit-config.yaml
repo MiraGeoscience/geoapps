@@ -68,6 +68,10 @@ repos:
         exclude: \.mdj$
     -   id: mixed-line-ending
     -   id: name-tests-test
+-   repo: https://github.com/sirosen/check-jsonschema
+    rev: 0.3.1
+    hooks:
+    -   id: check-github-workflows
 -   repo: local
     hooks:
     -   id: rstcheck
