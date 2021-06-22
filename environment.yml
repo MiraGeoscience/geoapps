@@ -27,4 +27,4 @@ dependencies:
   - ipyfilechooser
   - pip:
     - git+https://github.com/MiraGeoscience/simpeg.git@feature/tiled-simulations
-    - geoh5py==0.1.2
+    - geoh5py==0.1.3
