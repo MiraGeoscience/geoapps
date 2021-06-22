@@ -70,15 +70,15 @@ def test_export():
 
 
 def test_inversion(tmp_path):
-    test_path = "test.geoh5"
-    geotest = Geoh5Tester(workspace, tmp_path, test_path)
+    test_ws_path = "test.geoh5"
+    geotest = Geoh5Tester(workspace, tmp_path, test_ws_path)
     geotest.copy_entity(UUID("{e334f687-df71-4538-ad28-264e420210b8}"))
     geotest.copy_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))
     geotest.copy_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))
     geotest.copy_entity(UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"))
     geotest.copy_entity(UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"))
     app = InversionApp(
-        h5file=test_path,
+        h5file=geotest.ws.h5file,
         inversion_parameters={"max_iterations": 1},
     )
     app.write.value = True
