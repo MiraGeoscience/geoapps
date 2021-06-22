@@ -501,6 +501,7 @@ def filter_xy(
     distance: float = None,
     window: dict = None,
     angle: float = None,
+    mask: np.ndarray = None,
 ) -> np.array:
     """
     Window and down-sample locations based on distance and window parameters.
@@ -519,11 +520,14 @@ def filter_xy(
         to take on a east-west, north-south orientation.  Supersedes
         the 'azimuth' key/value pair in the window dictionary if it
         exists.
+    :param mask: Boolean mask to be combined with filter_xy masks via
+        logical 'and' operation.
 
     :return mask: Boolean mask to be applied input arrays x and y.
     """
 
-    mask = np.ones_like(x, dtype=bool)
+    if mask is None:
+        mask = np.ones_like(x, dtype=bool)
 
     azim = None
     if angle is not None:
@@ -545,7 +549,7 @@ def filter_xy(
         else:
             mask, _, _ = window_xy(x, y, window, mask=mask)
 
-    if distance is not None:
+    if distance not in [None, 0]:
 
         is_grid = False
         if x.ndim > 1:
