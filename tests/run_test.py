@@ -78,7 +78,7 @@ def test_inversion(tmp_path):
     geotest.copy_entity(UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"))
     geotest.copy_entity(UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"))
     app = InversionApp(
-        h5file=test_ws_path,
+        h5file=geotest.ws.h5file,
         inversion_parameters={"max_iterations": 1},
     )
     app.write.value = True
