@@ -66,9 +66,6 @@ class GravityDriver:
         self.outDir = (
             os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
         )
-        self.window = self.params.window()
-        self.mesh = None
-        self.topography = None
         # self.results = Workspace(params.output_geoh5)
 
     def fetch(self, p: Union[str, UUID]):
@@ -102,6 +99,10 @@ class GravityDriver:
         cluster = LocalCluster(processes=False)
         client = Client(cluster)
 
+        # Collect window parameters into dictionary
+        self.window = self.params.window()
+
+        # Build inversion components from params
         (
             self.mesh,
             self.topography,
@@ -110,47 +111,30 @@ class GravityDriver:
             self.data,
         ) = self.get_components()
 
-        self.window["azimuth"] = -self.mesh.rotation["angle"]
+        # Create SimPEG Survey object
+        self.survey = self.data.get_survey()
 
-        self.activeCells = active_from_xyz(
-            self.mesh.mesh, self.topography.locs, grid_reference="N"
+        # Build active cells array
+        self.active_cells = self.topo.active()
+        self.active_cells_map = maps.InjectActiveCells(
+            self.mesh.mesh, self.active_cells, 0
         )
-        self.no_data_value = 0
-        self.activeCellsMap = maps.InjectActiveCells(
-            self.mesh.mesh, self.activeCells, self.no_data_value
-        )
-        self.nC = int(self.activeCells.sum())
-
-        if self.params.inversion_type == "mvi":
-            self._run_mvi()
-
-    def _run_mvi(self):
-        """ Drive mvi inversion from params """
+        self.nC = int(self.active_cells.sum())
 
         # Set some run options
         vector_property = True
         self.n_blocks = 3
 
-        # construct a simpeg Survey object
-        self.data = InversionData(
-            self.workspace,
-            self.params,
-            self.mesh,
-            self.topography,
-            self.window,
-        )
-        self.survey = self.data.get_survey()
-
         if vector_property:
             self.reference_model.model = self.reference_model.model[
-                np.kron(np.ones(3), self.activeCells).astype("bool")
+                np.kron(np.ones(3), self.active_cells).astype("bool")
             ]
             self.starting_model.model = self.starting_model.model[
-                np.kron(np.ones(3), self.activeCells).astype("bool")
+                np.kron(np.ones(3), self.active_cells).astype("bool")
             ]
         else:
-            self.reference_model.model = self.reference_model.model[self.activeCells]
-            self.starting_model.model = self.starting_model.model[self.activeCells]
+            self.reference_model.model = self.reference_model.model[self.active_cells]
+            self.starting_model.model = self.starting_model.model[self.active_cells]
 
         ###############################################################################
         # Processing
@@ -167,7 +151,7 @@ class GravityDriver:
             locs = self.survey.receiver_locations[local_index]
             lsurvey = self.localize_survey(local_index, locs)
             lmesh = create_nested_mesh(locs, self.mesh.mesh)
-            lmap = maps.TileMap(self.mesh.mesh, self.activeCells, lmesh, components=3)
+            lmap = maps.TileMap(self.mesh.mesh, self.active_cells, lmesh, components=3)
             lsim = magnetics.simulation.Simulation3DIntegral(
                 survey=lsurvey,
                 mesh=lmesh,
@@ -205,7 +189,7 @@ class GravityDriver:
 
         wires = maps.Wires(("p", self.nC), ("s", self.nC), ("t", self.nC))
         wr = np.zeros(3 * self.nC)
-        norm = np.tile(self.mesh.mesh.cell_volumes[self.activeCells] ** 2.0, 3)
+        norm = np.tile(self.mesh.mesh.cell_volumes[self.active_cells] ** 2.0, 3)
         for ii, dmisfit in enumerate(global_misfit.objfcts):
             wr += dmisfit.getJtJdiag(self.starting_model.model) / norm
 
@@ -214,12 +198,12 @@ class GravityDriver:
         wr **= 0.5
         wr = wr / wr.max()
 
-        # self.write_data(sorting, self.data.normalization, no_data_value, model_map, wr)
+        # self.write_data(sorting, self.data.normalization, model_map, wr)
 
         # Create a regularization
         reg_p = regularization.Sparse(
             self.mesh.mesh,
-            indActive=self.activeCells,
+            indActive=self.active_cells,
             mapping=wires.p,
             gradientType=self.params.gradient_type,
             alpha_s=self.params.alpha_s,
@@ -233,7 +217,7 @@ class GravityDriver:
 
         reg_s = regularization.Sparse(
             self.mesh.mesh,
-            indActive=self.activeCells,
+            indActive=self.active_cells,
             mapping=wires.s,
             gradientType=self.params.gradient_type,
             alpha_s=self.params.alpha_s,
@@ -248,7 +232,7 @@ class GravityDriver:
 
         reg_t = regularization.Sparse(
             self.mesh.mesh,
-            indActive=self.activeCells,
+            indActive=self.active_cells,
             mapping=wires.t,
             gradientType=self.params.gradient_type,
             alpha_s=self.params.alpha_s,
@@ -266,7 +250,7 @@ class GravityDriver:
         reg.mref = self.reference_model.model
 
         # Specify how the optimization will proceed, set susceptibility bounds to inf
-        print("active", sum(self.activeCells))
+        print("active", sum(self.active_cells))
         opt = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
             lower=self.params.lower_bound,
@@ -343,12 +327,10 @@ class GravityDriver:
                 directives.SaveIterationsGeoH5(
                     h5_object=outmesh,
                     channels=channels,
-                    mapping=self.activeCellsMap,
+                    mapping=self.active_cells_map,
                     attribute_type="mvi_angles",
                     association="CELL",
                     sorting=self.mesh.mesh._ubc_order,
-                    # replace_values=True,
-                    # no_data_value=self.no_data_value,
                 )
             )
 
@@ -462,7 +444,7 @@ class GravityDriver:
 
         return tiles
 
-    def write_data(self, normalization, no_data_value, model_map, wr):
+    def write_data(self, normalization, model_map, wr):
 
         # self.out_group.add_comment(json.dumps(input_dict, indent=4).strip(), author="input")
         if self.window is not None:
@@ -529,7 +511,7 @@ class GravityDriver:
                     "Starting_model": {
                         "values": np.linalg.norm(
                             (
-                                self.activeCellsMap
+                                self.active_cells_map
                                 * model_map
                                 * self.starting_model.model
                             ).reshape((3, -1)),
@@ -546,18 +528,18 @@ class GravityDriver:
         self.sorting = np.argsort(np.hstack(self.sorting))
 
         if self.n_blocks > 1:
-            self.activeCellsMap.P = sp.block_diag(
-                [self.activeCellsMap.P for ii in range(self.n_blocks)]
+            self.active_cells_map.P = sp.block_diag(
+                [self.active_cells_map.P for ii in range(self.n_blocks)]
             )
-            self.activeCellsMap.valInactive = np.kron(
-                np.ones(self.n_blocks), self.activeCellsMap.valInactive
+            self.active_cells_map.valInactive = np.kron(
+                np.ones(self.n_blocks), self.active_cells_map.valInactive
             )
 
         if self.params.output_geoh5 is not None:
             self.fetch("mesh").add_data(
                 {
                     "SensWeights": {
-                        "values": (self.activeCellsMap * wr)[: self.mesh.nC][
+                        "values": (self.active_cells_map * wr)[: self.mesh.nC][
                             self.mesh.mesh._ubc_order
                         ],
                         "association": "CELL",
@@ -571,14 +553,14 @@ class GravityDriver:
                 models={
                     self.outDir
                     + "SensWeights.mod": (
-                        self.activeCellsMap * model_map * global_weights
+                        self.active_cells_map * model_map * global_weights
                     )[: self.mesh.nC]
                 },
             )
         else:
             self.mesh.mesh.writeModelUBC(
                 "SensWeights.mod",
-                (self.activeCellsMap * model_map * global_weights)[: self.mesh.nC],
+                (self.active_cells_map * model_map * global_weights)[: self.mesh.nC],
             )
 
 

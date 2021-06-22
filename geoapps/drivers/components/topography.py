@@ -8,6 +8,8 @@
 from copy import deepcopy
 
 import numpy as np
+from discretize.utils import active_from_xyz
+from SimPEG import maps
 
 from geoapps.utils import filter_xy
 
@@ -41,3 +43,10 @@ class InversionTopography(InversionLocations):
 
         if self.is_rotated:
             self.locs = super().rotate(self.locs)
+
+    def active_cells(self):
+        active_cells = active_from_xyz(self.mesh.mesh, self.locs, grid_reference="N")
+        nc = int(active_cells.sum())
+        map = maps.InjectActiveCells(self.mesh.mesh, active_cells, 0)
+
+        return active_cells, nc, map
