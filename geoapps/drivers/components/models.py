@@ -28,10 +28,10 @@ class InversionModel:
 
     def __init__(
         self,
+        workspace: Workspace,
+        params: Params,
         mesh: InversionMesh,
         model_type: str,
-        params: Params,
-        workspace: Workspace,
     ):
         """
 

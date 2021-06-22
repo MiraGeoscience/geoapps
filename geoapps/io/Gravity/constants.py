@@ -22,10 +22,10 @@ defaults = {}
 
 default_ui_json = {
     "inversion_type": {
-        "default": "mvi",
+        "default": "gravity",
         "visible": False,
         "enabled": False,
-        "value": "mvi",
+        "value": "gravity",
     },
     "forward_only": {
         "default": False,
@@ -779,12 +779,7 @@ required_parameters = []
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["mvi", "mvic"],
-        "reqs": [
-            ("mvi", "inducing_field_strength"),
-            ("mvi", "inducing_field_inclination"),
-            ("mvi", "inducing_field_declination"),
-        ],
+        "values": ["gravity"],
     },
     "forward_only": {
         "types": [bool],

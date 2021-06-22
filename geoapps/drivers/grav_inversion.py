@@ -32,11 +32,11 @@ from SimPEG import (
     regularization,
     utils,
 )
-from SimPEG.potential_fields import magnetics
+from SimPEG.potential_fields import gravity
 from SimPEG.utils import tile_locations
 from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.io.MVI import MVIParams
+from geoapps.io.Gravity import GravityParams
 from geoapps.utils import rotate_xy, treemesh_2_octree
 
 from .components import (
@@ -50,13 +50,13 @@ from .components import (
 def start_inversion(filepath=None):
     """ Starts inversion with parameters defined in input file. """
 
-    params = MVIParams.from_path(filepath)
-    driver = InversionDriver(params)
+    params = GravityParams.from_path(filepath)
+    driver = GravityDriver(params)
     driver.run()
 
 
-class InversionDriver:
-    def __init__(self, params: MVIParams):
+class GravityDriver:
+    def __init__(self, params: GravityParams):
 
         self.params = params
         self.workspace = params.workspace
@@ -85,6 +85,16 @@ class InversionDriver:
         except AttributeError:
             return self.workspace.get_entity(p)[0]
 
+    def get_components(self):
+
+        mesh = InversionMesh(self.workspace, self.params, self.window)
+        topo = InversionTopography(self.workspace, self.params, mesh, self.window)
+        mstart = InversionModel(self.workspace, self.params, mesh, "starting")
+        mref = InversionModel(self.workspace, self.params, mesh, "reference")
+        data = InversionData(self.workspace, self.params, mesh, topo, self.window)
+
+        return mesh, topo, mstart, mref, data
+
     def run(self):
         """ Run inversion from params """
 
@@ -92,23 +102,15 @@ class InversionDriver:
         cluster = LocalCluster(processes=False)
         client = Client(cluster)
 
-        self.mesh = InversionMesh(self.workspace, self.params, self.window)
+        (
+            self.mesh,
+            self.topography,
+            self.starting_model,
+            self.reference_model,
+            self.data,
+        ) = self.get_components()
+
         self.window["azimuth"] = -self.mesh.rotation["angle"]
-        self.topography = InversionTopography(
-            self.workspace, self.params, self.mesh, self.window
-        )
-        self.starting_model = InversionModel(
-            self.workspace,
-            self.params,
-            self.mesh,
-            "starting",
-        )
-        self.reference_model = InversionModel(
-            self.workspace,
-            self.params,
-            self.mesh,
-            "reference",
-        )
 
         self.activeCells = active_from_xyz(
             self.mesh.mesh, self.topography.locs, grid_reference="N"
@@ -459,20 +461,6 @@ class InversionDriver:
             )
 
         return tiles
-
-    def localize_survey(self, local_index, locations):
-
-        receivers = magnetics.receivers.Point(
-            locations, components=self.survey.components
-        )
-        srcField = magnetics.sources.SourceField(
-            receiver_list=[receivers], parameters=self.survey.source_field.parameters
-        )
-        local_survey = magnetics.survey.Survey(srcField)
-        local_survey.dobs = self.survey.dobs[local_index]
-        local_survey.std = self.survey.std[local_index]
-
-        return local_survey
 
     def write_data(self, normalization, no_data_value, model_map, wr):
 
