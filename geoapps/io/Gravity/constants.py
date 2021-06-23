@@ -88,7 +88,7 @@ default_ui_json = {
     "gz_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 1.0,
+        "default": 1e-2,
         "group": "Data",
         "main": True,
         "dependency": "forward_only",
@@ -97,7 +97,7 @@ default_ui_json = {
         "label": "Uncertainty",
         "parent": "data_object",
         "property": None,
-        "value": 1.0,
+        "value": 1e-2,
     },
     "starting_model_object": {
         "default": None,
@@ -120,7 +120,7 @@ default_ui_json = {
         "parent": "starting_model_object",
         "label": "starting model value",
         "property": None,
-        "value": 0.0,
+        "value": 0.05,
     },
     "tile_spatial": {
         "association": "Cell",
@@ -458,13 +458,13 @@ default_ui_json = {
         "value": 1.0,
     },
     "max_iterations": {
-        "default": 10,
+        "default": 20,
         "min": 0,
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "max iteration count",
-        "value": 10,
+        "value": 20,
     },
     "max_cg_iterations": {
         "default": 10,
@@ -485,7 +485,7 @@ default_ui_json = {
         "value": 100,
     },
     "initial_beta_ratio": {
-        "default": 1e-1,
+        "default": 1e1,
         "min": 0.0,
         "group": "Optimization",
         "optional": True,
@@ -493,7 +493,7 @@ default_ui_json = {
         "dependency": "initial_beta",
         "dependencyType": "disabled",
         "label": "initial beta ratio",
-        "value": 1e-1,
+        "value": 1e1,
     },
     "initial_beta": {
         "default": None,
