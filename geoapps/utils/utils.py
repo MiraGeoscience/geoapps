@@ -41,12 +41,13 @@ def find_value(labels: list, keywords: list, default=None) -> list:
     :return matching_labels: List of labels containing any of the keywords.
     """
     value = None
-    for name in labels:
-        for string in keywords:
+    for string in keywords:
+        for name in labels:
             if isinstance(string, str) and (
                 (string.lower() in name.lower()) or (name.lower() in string.lower())
             ):
                 value = name
+                break
     if value is None:
         value = default
     return value
