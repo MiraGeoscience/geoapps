@@ -10,8 +10,8 @@ from uuid import UUID
 
 from ..input_file import InputFile
 from ..params import Params
-from ..validators import InputValidator
 from .constants import default_ui_json, required_parameters, validations
+from .validators import PeakFinderValidator
 
 
 class PeakFinderParams(Params):
@@ -21,7 +21,7 @@ class PeakFinderParams(Params):
     def __init__(self, **kwargs):
 
         self.validations: Dict[str, Any] = validations
-        self.validator: InputValidator = InputValidator(
+        self.validator: PeakFinderValidator = PeakFinderValidator(
             required_parameters, validations
         )
 
@@ -50,7 +50,7 @@ class PeakFinderParams(Params):
             required_parameters=required_parameters,
             validations=validations,
         )
-
+        self._groups = None
         super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
@@ -174,6 +174,13 @@ class PeakFinderParams(Params):
     @width.setter
     def width(self, val):
         self.setter_validator("width", val)
+
+    @property
+    def groups(self):
+        if getattr(self, "_groups", None) is None:
+            self._groups = self.validator.groups
+
+        return self._groups
 
     def _init_params(self, inputfile: InputFile) -> None:
         """ Wraps Params._init_params. """

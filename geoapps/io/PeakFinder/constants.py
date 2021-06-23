@@ -41,6 +41,11 @@ default_ui_json = {
         "parent": "objects",
         "value": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}",
     },
+    "group_auto": {
+        "main": True,
+        "label": "Auto-group",
+        "value": True,
+    },
     "line_field": {
         "association": "Vertex",
         "dataType": "Float",
@@ -51,6 +56,36 @@ default_ui_json = {
         "value": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}",
     },
     "line_id": 6073400.0,
+    "Property Group A Data": {
+        "association": "Vertex",
+        "dataType": "Float",
+        "group": "Property Group A",
+        "dataGroupType": "Multi-element",
+        "label": "Property Group A:",
+        "parent": "objects",
+        "value": "",
+    },
+    "Property Group A Color": {
+        "dataType": "Text",
+        "group": "Property Group A",
+        "label": "Property Group A Color:",
+        "value": "",
+    },
+    "Property Group B Data": {
+        "association": "Vertex",
+        "dataType": "Float",
+        "group": "Property Group B",
+        "dataGroupType": "Multi-element",
+        "label": "Property Group B:",
+        "parent": "objects",
+        "value": "",
+    },
+    "Property Group B Color": {
+        "dataType": "Text",
+        "group": "Property Group B",
+        "label": "Property Group B Color:",
+        "value": "",
+    },
     "smoothing": {
         "group": "Detection Parameters",
         "label": "Smoothing window",
@@ -124,6 +159,17 @@ validations = {
         "types": [str, UUID],
         "reqs": [("objects")],
         "property_groups": ["objects"],
+    },
+    "group_auto": {
+        "types": [bool],
+    },
+    "property_group_data": {
+        "types": [str, UUID],
+        "reqs": [("objects")],
+        "property_groups": ["objects"],
+    },
+    "property_group_color": {
+        "types": [str],
     },
     "tem_checkbox": {
         "types": [bool],

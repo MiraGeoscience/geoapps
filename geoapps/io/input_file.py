@@ -327,7 +327,7 @@ class InputFile:
                             self.associations[k] = v["parent"]
                             try:
                                 child_key = UUID(v[field])
-                            except ValueError:
+                            except (ValueError, TypeError):
                                 child_key = v[field]
                             parent_uuid = UUID(d[v["parent"]]["value"])
                             self.associations[child_key] = parent_uuid

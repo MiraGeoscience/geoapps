@@ -7,9 +7,9 @@
 
 import re
 import sys
+import uuid
 from os import path
 
-import dask
 import matplotlib.pyplot as plt
 import numpy as np
 from dask.distributed import Client, get_client
@@ -35,6 +35,7 @@ from ipywidgets import (
     VBox,
     interactive_output,
 )
+from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.selection import LineOptions, ObjectDataSelection
 from geoapps.utils import geophysical_systems
@@ -60,6 +61,26 @@ class PeakFinder(ObjectDataSelection):
     _group_auto = None
     decay_figure = None
     marker = {"left": "<", "right": ">"}
+    _default_time_groups = {
+        "early": {"label": ["early"], "color": "#0000FF", "channels": []},
+        "middle": {"label": ["middle"], "color": "#FFFF00", "channels": []},
+        "late": {"label": ["late"], "color": "#FF0000", "channels": []},
+        "early + middle": {
+            "label": ["early", "middle"],
+            "color": "#00FFFF",
+            "channels": [],
+        },
+        "early + middle + late": {
+            "label": ["early", "middle", "late"],
+            "color": "#008000",
+            "channels": [],
+        },
+        "middle + late": {
+            "label": ["middle", "late"],
+            "color": "#FFA500",
+            "channels": [],
+        },
+    }
 
     def __init__(self, ui_json=None, **kwargs):
 
@@ -84,15 +105,14 @@ class PeakFinder(ObjectDataSelection):
         self.data_channel_options = {}
         self.pause_plot_refresh = False
         self._survey = None
-        self._time_groups = None
+        self._time_groups = {}
+        self.groups_panel = VBox([])
+        self.group_auto.observe(self.create_default_groups, names="value")
 
         super().__init__(**kwargs)
 
         self.system_panel = VBox([self.system_panel_option])
         self.groups_widget = VBox([self.groups_setter])
-        self.groups_panel = VBox(
-            [self.group_auto, self.group_list, self.channels, self.group_color]
-        )
         self.decay_panel = VBox([self.show_decay])
         self.scale_panel = VBox([self.scale_button, self.scale_value])
         self.plotting = interactive_output(
@@ -197,6 +217,22 @@ class PeakFinder(ObjectDataSelection):
         )
         self.objects_change(None)
 
+    def __populate__(self, **kwargs):
+        super().__populate__(**kwargs)
+
+        group_list = []
+        for label, params in self.params.groups.items():
+            obj_list = self.workspace.get_entity(self.objects.value)
+            if params["data"] is not None and any(obj_list):
+                prop_group = [
+                    pg for pg in obj_list.property_groups if pg.uid == params["data"]
+                ]
+
+                group_list += [self.add_group_widget(label, params)]
+                self._time_groups[prop_group] = {"color": params["color"]}
+
+        self.groups_panel.children = group_list
+
     @property
     def main(self):
         if getattr(self, "_main", None) is None:
@@ -206,7 +242,7 @@ class PeakFinder(ObjectDataSelection):
                     HBox(
                         [
                             VBox(
-                                [self.data_panel, self.flip_sign],
+                                [self.data_panel, self.group_auto, self.flip_sign],
                                 layout=Layout(width="50%"),
                             ),
                             Box(
@@ -315,6 +351,138 @@ class PeakFinder(ObjectDataSelection):
         self._data = value
 
     @property
+    def group_a(self) -> Dropdown:
+        """
+        Group selection used for group A (early time)
+        """
+        if getattr(self, "_group_a", None) is None:
+            self.group_a = Dropdown(description="Data: ")
+
+        return self._group_a
+
+    @property
+    def group_a_color(self) -> ColorPicker:
+        """
+        Assign a color to group A
+        """
+        if getattr(self, "_group_a_color", None) is None:
+            self._group_a_color = ColorPicker(
+                concise=False, description="Color", value="blue", disabled=False
+            )
+
+        return self._group_a_color
+
+    @property
+    def group_b(self) -> Dropdown:
+        """
+        Group selection used for group B (middle time)
+        """
+        if getattr(self, "_group_b", None) is None:
+            self.group_b = Dropdown(description="Data: ")
+
+        return self._group_b
+
+    @property
+    def group_b_color(self) -> ColorPicker:
+        """
+        Assign a color to group B
+        """
+        if getattr(self, "_group_b_color", None) is None:
+            self._group_b_color = ColorPicker(
+                concise=False, description="Color", value="blue", disabled=False
+            )
+
+        return self._group_b_color
+
+    @property
+    def group_c(self) -> Dropdown:
+        """
+        Group selection used for group C (late time)
+        """
+        if getattr(self, "_group_c", None) is None:
+            self.group_c = Dropdown(description="Data: ")
+
+        return self._group_c
+
+    @property
+    def group_c_color(self) -> ColorPicker:
+        """
+        Assign a color to group C
+        """
+        if getattr(self, "_group_c_color", None) is None:
+            self._group_c_color = ColorPicker(
+                concise=False, description="Color", value="blue", disabled=False
+            )
+
+        return self._group_c_color
+
+    @property
+    def group_d(self) -> Dropdown:
+        """
+        Group selection used for group C (late time)
+        """
+        if getattr(self, "_group_d", None) is None:
+            self.group_d = Dropdown(description="Data: ")
+
+        return self._group_d
+
+    @property
+    def group_d_color(self) -> ColorPicker:
+        """
+        Assign a color to group D
+        """
+        if getattr(self, "_group_d_color", None) is None:
+            self._group_d_color = ColorPicker(
+                concise=False, description="Color", value="blue", disabled=False
+            )
+
+        return self._group_d_color
+
+    @property
+    def group_e(self) -> Dropdown:
+        """
+        Group selection used for group C (late time)
+        """
+        if getattr(self, "_group_e", None) is None:
+            self.group_e = Dropdown(description="Data: ")
+
+        return self._group_e
+
+    @property
+    def group_e_color(self) -> ColorPicker:
+        """
+        Assign a color to group E
+        """
+        if getattr(self, "_group_e_color", None) is None:
+            self._group_e_color = ColorPicker(
+                concise=False, description="Color", value="blue", disabled=False
+            )
+
+        return self._group_e_color
+
+    @property
+    def group_f(self) -> Dropdown:
+        """
+        Group selection used for group C (late time)
+        """
+        if getattr(self, "_group_f", None) is None:
+            self.group_f = Dropdown(description="Data: ")
+
+        return self._group_f
+
+    @property
+    def group_b_color(self) -> ColorPicker:
+        """
+        Assign a color to group B
+        """
+        if getattr(self, "_group_b_color", None) is None:
+            self._group_b_color = ColorPicker(
+                concise=False, description="Color", value="blue", disabled=False
+            )
+
+        return self._group_b_color
+
+    @property
     def em_system_specs(self):
         return geophysical_systems.parameters()
 
@@ -331,12 +499,14 @@ class PeakFinder(ObjectDataSelection):
         return self._flip_sign
 
     @property
-    def group_auto(self) -> Button:
+    def group_auto(self) -> ToggleButton:
         """
         Auto-create groups (3) from selected data channels.
         """
-        if getattr(self, "_flip_sign", None) is None:
-            self._group_auto = Button(description="Create groups [E | M | L]")
+        if getattr(self, "_group_auto", None) is None:
+            self._group_auto = ToggleButton(
+                description="Default (3) groups", value=False
+            )
 
         return self._group_auto
 
@@ -651,31 +821,6 @@ class PeakFinder(ObjectDataSelection):
         """
         Dict of time groups used to classify peaks
         """
-
-        if getattr(self, "_time_groups", None) is None:
-            self._time_groups = {
-                0: {"name": "early", "label": [0], "color": "#0000FF", "channels": []},
-                1: {"name": "middle", "label": [1], "color": "#FFFF00", "channels": []},
-                2: {"name": "late", "label": [2], "color": "#FF0000", "channels": []},
-                3: {
-                    "name": "early + middle",
-                    "label": [0, 1],
-                    "color": "#00FFFF",
-                    "channels": [],
-                },
-                4: {
-                    "name": "early + middle + late",
-                    "label": [0, 1, 2],
-                    "color": "#008000",
-                    "channels": [],
-                },
-                5: {
-                    "name": "middle + late",
-                    "label": [1, 2],
-                    "color": "#FFA500",
-                    "channels": [],
-                },
-            }
         return self._time_groups
 
     @time_groups.setter
@@ -737,6 +882,48 @@ class PeakFinder(ObjectDataSelection):
 
         return self._x_label
 
+    def add_group_widget(self, label: str, params: dict):
+        """
+        Add a group from dictionary
+        """
+        widget_list = [Label(label.capitalize())]
+        for key, value in params.items():
+            attr_name = (label + f"{key}").title()
+
+            if "data" in key:
+                try:
+                    value = uuid.UUID(value)
+                except (ValueError, TypeError):
+                    value = None
+
+                setattr(
+                    self,
+                    attr_name,
+                    Dropdown(
+                        description=key.capitalize(),
+                        options=self.objects.options,
+                    ),
+                )
+
+                try:
+                    getattr(self, attr_name).value = value
+                except TraitError:
+                    pass
+
+            elif "color" in key:
+                setattr(
+                    self,
+                    attr_name,
+                    ColorPicker(description=key.capitalize()),
+                )
+                try:
+                    getattr(self, attr_name).value = str(value)
+                except TraitError:
+                    pass
+            widget_list += [getattr(self, attr_name, None)]
+
+        return VBox(widget_list, layout=Layout(border="solid"))
+
     def channel_panel_update(self, _):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.channel_selection`: Change data channel panel
@@ -778,7 +965,7 @@ class PeakFinder(ObjectDataSelection):
                     self.data_channels[obj.name] = obj
 
             # Generate default groups
-            self.reset_groups()
+            # self.reset_groups()
 
             if self.tem_checkbox.value:
                 for key, widget in self.data_channel_options.items():
@@ -871,7 +1058,7 @@ class PeakFinder(ObjectDataSelection):
 
             self.data_channel_options[key] = VBox([channel_selection, channel_time])
 
-        self.reset_groups()
+        # self.reset_groups()
 
     def groups_trigger(self, _):
         """
@@ -893,7 +1080,7 @@ class PeakFinder(ObjectDataSelection):
             ):
                 gates[key] = list(self.channels.value)
 
-        self.reset_groups()
+        # self.reset_groups()
         self.plot_trigger.value = False
         self.plot_trigger.value = True
 
@@ -1374,55 +1561,132 @@ class PeakFinder(ObjectDataSelection):
 
         return indices
 
+    def create_default_groups(self, _):
+
+        obj = self.workspace.get_entity(self.objects.value)[0]
+        group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
+
+        if any(group):
+            data_list = [
+                self.workspace.get_entity(uid)[0] for uid in group[0].properties
+            ]
+
+            # start = self.em_system_specs[self.system.value]["channel_start_index"]
+            # end = (
+            #         len(self.em_system_specs[self.system.value]["channels"].keys()) + 1
+            # )
+            # _default_time_groups = {
+            #     "early": {"label": ["early"], "color": "#0000FF", "channels": []},
+            #     "middle": {"label": ["middle"], "color": "#FFFF00", "channels": []},
+            #     "late": {"label": ["late"], "color": "#FF0000", "channels": []},
+            #     "early + middle": {
+            #         "label": ["early", "middle"],
+            #         "color": "#00FFFF",
+            #         "channels": [],
+            #     },
+            #     "early + middle + late": {
+            #         "label": ["early", "middle", "late"],
+            #         "color": "#008000",
+            #         "channels": [],
+            #     },
+            #     "middle + late": {
+            #         "label": ["middle", "late"],
+            #         "color": "#FFA500",
+            #         "channels": [],
+            #     },
+            # }
+            # Divide channels in three equal blocks
+            start = 0
+            end = len(data_list)
+            block = int((end - start) / 3)
+            ranges = {
+                "early": np.arange(start, start + block).tolist(),
+                "middle": np.arange(start + block, start + 2 * block).tolist(),
+                "late": np.arange(start + 2 * block, end).tolist(),
+            }
+
+            time_groups = {}
+            for key, default in self._default_time_groups.items():
+                prop_group = obj.find_or_create_property_group(name=key)
+                for prop in prop_group.properties:
+                    prop_group.remove(prop)
+
+                for val in default["label"]:
+                    for ind in ranges[val]:
+                        prop_group.properties += [data_list[ind].uid]
+
+                time_groups[prop_group] = {"color": default["color"]}
+
+            self._time_groups = time_groups
+            #
+            # gates_list = [[], [], []]
+            # try:
+            #     for channel in self.data.value:
+            #         [
+            #             gates_list[ii].append(channel)
+            #             for ii, block in enumerate([early, mid, late])
+            #             if int(re.findall(r"\d+", channel)[-1]) in block
+            #         ]
+            #
+            #     for key, gates in enumerate(gates_list):
+            #         self.time_groups[key]["channels"] = gates
+            #
+            # except IndexError:
+            #     print(
+            #         "Could not find a time channel for the given list of time channels. "
+            #         "Switching to non-tem mode."
+            #     )
+            #     self.tem_checkbox.value = False
+
     def reset_groups(self, gates={}):
         if gates:
             for key, values in gates.items():
                 if key in list(self.time_groups.keys()):
                     self.time_groups[key]["channels"] = values
 
-        else:
-            self._time_groups = None
+        # else:
+        # self._time_groups = None
 
-            if self.tem_checkbox.value:
-                start = self.em_system_specs[self.system.value]["channel_start_index"]
-                end = (
-                    len(self.em_system_specs[self.system.value]["channels"].keys()) + 1
-                )
-
-                # Divide channels in three equal blocks
-                block = int((end - start) / 3)
-                early = np.arange(start, start + block).tolist()
-                mid = np.arange(start + block, start + 2 * block).tolist()
-                late = np.arange(start + 2 * block, end).tolist()
-
-                gates_list = [[], [], []]
-                try:
-                    for channel in self.data.value:
-                        [
-                            gates_list[ii].append(channel)
-                            for ii, block in enumerate([early, mid, late])
-                            if int(re.findall(r"\d+", channel)[-1]) in block
-                        ]
-
-                    for key, gates in enumerate(gates_list):
-                        self.time_groups[key]["channels"] = gates
-
-                except IndexError:
-                    print(
-                        "Could not find a time channel for the given list of time channels. "
-                        "Switching to non-tem mode."
-                    )
-                    self.tem_checkbox.value = False
-
-            else:  # One group per selected channel
-                self._time_groups = {}
-                for ii, channel in enumerate(self.channels.options):
-                    self._time_groups[ii] = {
-                        "name": channel,
-                        "label": [ii],
-                        "color": colors[ii],
-                        "channels": [channel],
-                    }
+        # if self.tem_checkbox.value:
+        #     start = self.em_system_specs[self.system.value]["channel_start_index"]
+        #     end = (
+        #         len(self.em_system_specs[self.system.value]["channels"].keys()) + 1
+        #     )
+        #
+        #     # Divide channels in three equal blocks
+        #     block = int((end - start) / 3)
+        #     early = np.arange(start, start + block).tolist()
+        #     mid = np.arange(start + block, start + 2 * block).tolist()
+        #     late = np.arange(start + 2 * block, end).tolist()
+        #
+        #     gates_list = [[], [], []]
+        #     try:
+        #         for channel in self.data.value:
+        #             [
+        #                 gates_list[ii].append(channel)
+        #                 for ii, block in enumerate([early, mid, late])
+        #                 if int(re.findall(r"\d+", channel)[-1]) in block
+        #             ]
+        #
+        #         for key, gates in enumerate(gates_list):
+        #             self.time_groups[key]["channels"] = gates
+        #
+        #     except IndexError:
+        #         print(
+        #             "Could not find a time channel for the given list of time channels. "
+        #             "Switching to non-tem mode."
+        #         )
+        #         self.tem_checkbox.value = False
+        #
+        # else:  # One group per selected channel
+        #     self._time_groups = {}
+        #     for ii, channel in enumerate(self.channels.options):
+        #         self._time_groups[ii] = {
+        #             "name": channel,
+        #             "label": [ii],
+        #             "color": colors[ii],
+        #             "channels": [channel],
+        #         }
 
         channels = []
         for group in self.time_groups.values():
