@@ -181,7 +181,7 @@ def test_normalize(tmp_path):
     data.data = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
     data.components = list(data.data.keys())
     test_data = data.normalize(data.data)
-    assert np.all(data.normalization == [1, -1])
+    assert np.all(data.normalizations == [1, -1])
     assert np.all(test_data["gz"] == (-1 * data.data["gz"]))
 
 

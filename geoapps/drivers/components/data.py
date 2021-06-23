@@ -11,7 +11,7 @@ from typing import Dict, Tuple
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
 
-from geoapps.utils import filter_xy
+from geoapps.utils import calculate_2D_trend, filter_xy
 
 from .locations import InversionLocations
 
@@ -32,7 +32,7 @@ class InversionData(InversionLocations):
         self.components = None
         self.data = {}
         self.uncertainties = {}
-        self.normalization = []
+        self.normalizations = []
         self.survey = None
         self._initialize()
 
@@ -79,7 +79,7 @@ class InversionData(InversionLocations):
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
-            self.data = self.detrend(self.data)
+            self.data = self.detrend()
 
         self.data = self.normalize(self.data)
 
@@ -185,7 +185,7 @@ class InversionData(InversionLocations):
         """ Remove trend from data. """
         d = self.data.copy()
         for comp in self.components:
-            data_trend, _ = utils.matutils.calculate_2D_trend(
+            data_trend, _ = calculate_2D_trend(
                 self.locs,
                 d[comp],
                 self.params.detrend_order,
@@ -197,22 +197,24 @@ class InversionData(InversionLocations):
     def normalize(self, data):
         """ Apply normalization to data. """
         d = deepcopy(data)
-        normalization = []
+        normalizations = []
         for comp in self.components:
             if comp == "gz":
-                normalization.append(-1.0)
+                normalizations.append(-1.0)
                 d[comp] *= -1.0
                 print(f"Sign flip for {comp} component")
             else:
-                normalization.append(1.0)
-        self.normalization = normalization
+                normalizations.append(1.0)
+        self.normalizations = normalizations
         return d
 
-    def get_survey(self):
+    def get_survey(self, local_index=None):
         """ Populates SimPEG.LinearSurvey object with workspace data """
 
         survey_factory = SurveyFactory(self.params)
-        survey = survey_factory.build(self.locs, self.data, self.uncertainties)
+        survey = survey_factory.build(
+            self.locs, self.data, self.uncertainties, local_index
+        )
 
         return survey
 
@@ -223,7 +225,14 @@ class SurveyFactory:
     def __init__(self, params):
         self.params = params
 
-    def build(self, locs, data, uncertainties):
+    def build(self, locs, data, uncertainties, local_index=None):
+
+        n_channels = len(data.keys())
+
+        if local_index is None:
+            local_index = np.arange(len(locs))
+
+        local_index = np.tile(local_index, n_channels)
 
         if self.params.inversion_type == "mvi":
             from SimPEG.potential_fields import magnetics as data_module
@@ -237,14 +246,18 @@ class SurveyFactory:
             msg = f"Inversion type: {self.params.inversion_type} not implemented yet."
             raise NotImplementedError(msg)
 
-        receivers = data_module.receivers.Point(locs, components=list(data.keys()))
+        receivers = data_module.receivers.Point(
+            locs[local_index], components=list(data.keys())
+        )
         source = data_module.sources.SourceField(
             receiver_list=[receivers], parameters=parameters
         )
         survey = data_module.survey.Survey(source)
 
-        data = np.vstack(data.values()).T
-        uncertainties = np.vstack(uncertainties.values()).T
+        survey.dobs = self.stack_channels(data)[local_index]
+        survey.std = self.stack_channels(uncertainties)[local_index]
 
-        survey.dobs = data.ravel()
-        survey.std = uncertainties.ravel()
+        return survey
+
+    def stack_channels(self, channel_data: Dict[str, np.ndarray]):
+        return np.vstack(channel_data.values()).ravel()

@@ -29,8 +29,8 @@ class GravityParams(Params):
         self.topography_object: UUID = None
         self.topography = None
         self.data_object = None
-        self.grav_channel = None
-        self.grav_uncertainty = None
+        self.gz_channel = None
+        self.gz_uncertainty = None
         self.starting_model_object = None
         self.starting_model = None
         self.tile_spatial = None
@@ -105,7 +105,7 @@ class GravityParams(Params):
 
     def components(self) -> List[str]:
         """ Retrieve component names used to index channel, uncertainty data. """
-        return [k.split("_")[0] for k in self.active() if "channel" in k]
+        return [k.split("_")[0] for k in self.active_set() if "channel" in k]
 
     def uncertainty(self, component: str) -> float:
         """ Returns uncertainty for chosen data component. """
@@ -223,34 +223,34 @@ class GravityParams(Params):
         self._data_object = UUID(val) if isinstance(val, str) else val
 
     @property
-    def grav_channel(self):
-        return self._grav_channel
+    def gz_channel(self):
+        return self._gz_channel
 
-    @grav_channel.setter
-    def grav_channel(self, val):
+    @gz_channel.setter
+    def gz_channel(self, val):
         if val is None:
-            self._grav_channel = val
+            self._gz_channel = val
             return
-        p = "tmi_channel"
+        p = "gz_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._grav_channel = UUID(val) if isinstance(val, str) else val
+        self._gz_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def grav_uncertainty(self):
-        return self._grav_uncertainty
+    def gz_uncertainty(self):
+        return self._gz_uncertainty
 
-    @grav_uncertainty.setter
-    def grav_uncertainty(self, val):
+    @gz_uncertainty.setter
+    def gz_uncertainty(self, val):
         if val is None:
-            self._grav_uncertainty = val
+            self._gz_uncertainty = val
             return
-        p = "grav_uncertainty"
+        p = "gz_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._grav_uncertainty = UUID(val) if isinstance(val, str) else val
+        self._gz_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
     def starting_model_object(self):

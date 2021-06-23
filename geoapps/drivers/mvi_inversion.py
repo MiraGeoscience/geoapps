@@ -212,7 +212,7 @@ class InversionDriver:
         wr **= 0.5
         wr = wr / wr.max()
 
-        # self.write_data(sorting, self.data.normalization, no_data_value, model_map, wr)
+        # self.write_data(sorting, self.data.normalizations, no_data_value, model_map, wr)
 
         # Create a regularization
         reg_p = regularization.Sparse(
@@ -367,7 +367,7 @@ class InversionDriver:
                 directives.SaveIterationsGeoH5(
                     h5_object=point_object,
                     channels=self.survey.components,
-                    mapping=np.hstack(self.data.normalization),
+                    mapping=np.hstack(self.data.normalizations),
                     attribute_type="predicted",
                     sorting=tuple(self.sorting),
                     save_objective_function=True,
@@ -474,7 +474,7 @@ class InversionDriver:
 
         return local_survey
 
-    def write_data(self, normalization, no_data_value, model_map, wr):
+    def write_data(self, normalizations, no_data_value, model_map, wr):
 
         # self.out_group.add_comment(json.dumps(input_dict, indent=4).strip(), author="input")
         if self.window is not None:
@@ -504,7 +504,7 @@ class InversionDriver:
         )
 
         for ii, (component, norm) in enumerate(
-            zip(self.survey.components, normalization)
+            zip(self.survey.components, normalizations)
         ):
             val = norm * self.survey.dobs[ii :: len(self.survey.components)]
             point_object.add_data({"Observed_" + component: {"values": val}})
@@ -525,7 +525,7 @@ class InversionDriver:
 
             dpred = np.hstack(dpred)
             for ind, (comp, norm) in enumerate(
-                zip(self.survey.components, normalization)
+                zip(self.survey.components, normalizations)
             ):
                 val = norm * dpred[ind :: len(self.survey.components)]
 

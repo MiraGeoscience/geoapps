@@ -48,7 +48,8 @@ class InversionModel:
         self.params = params
         self.workspace = workspace
         self.model = None
-        self.vector = None
+        self.is_vector = None
+        self.n_blocks = None
         self._initialize()
 
     def _initialize(self):
@@ -60,13 +61,14 @@ class InversionModel:
         inducing field.
         """
 
-        self.vector = True if self.params.inversion_type == "mvi" else False
+        self.is_vector = True if self.params.inversion_type == "mvi" else False
+        self.nblocks = 3 if self.params.inversion_type == "mvi" else 1
 
         if self.model_type in ["starting", "reference"]:
 
             model = self.get(self.model_type + "_model")
 
-            if self.vector:
+            if self.is_vector:
 
                 inclination = self.get(self.model_type + "_inclination")
                 declination = self.get(self.model_type + "_declination")
@@ -93,7 +95,12 @@ class InversionModel:
 
             model = self.get(self.model_type)
 
-        self.model = mkvc(model)
+        if model is not None:
+            self.model = mkvc(model)
+
+    def remove_air(self, active_cells):
+        """ Use active cells vector to remove air cells from model """
+        self.model = self.model[np.tile(active_cells, self.nblocks)]
 
     def permute_2_octree(self):
         """

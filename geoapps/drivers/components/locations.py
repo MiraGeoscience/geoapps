@@ -26,9 +26,6 @@ class InversionLocations:
         self.angle = None
         self.is_rotated = False
         self.locs = None
-        self._initialize()
-
-    def _initialize(self):
 
         if self.mesh.rotation is not None:
             self.origin = self.mesh.rotation["origin"]
