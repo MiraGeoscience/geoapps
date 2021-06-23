@@ -912,7 +912,7 @@ class SaveIterationsGeoH5(InversionDirective):
                 )
             if self.group_output:
                 self.h5_object.add_data_to_group(
-                    data, name=f"Iteration_{self.opt.iter-1}"
+                    data, name=f"Iteration_{self.opt.iter}"
                 )
 
         if self.save_objective_function:
