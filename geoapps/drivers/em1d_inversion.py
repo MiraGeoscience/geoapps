@@ -971,6 +971,7 @@ def inversion(input_file):
             attribute="predicted",
             channels=channels,
             save_objective_function=True,
+            group_output=True,
         )
     )
     inv = Inversion.BaseInversion(
