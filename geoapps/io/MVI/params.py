@@ -116,7 +116,7 @@ class MVIParams(Params):
 
     def components(self) -> List[str]:
         """ Retrieve component names used to index channel, uncertainty data. """
-        return [k.split("_")[0] for k in self.active() if "channel" in k]
+        return [k.split("_")[0] for k in self.active_set() if "channel" in k]
 
     def uncertainty(self, component: str) -> float:
         """ Returns uncertainty for chosen data component. """

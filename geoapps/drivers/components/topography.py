@@ -49,4 +49,4 @@ class InversionTopography(InversionLocations):
         nc = int(active_cells.sum())
         map = maps.InjectActiveCells(self.mesh.mesh, active_cells, 0)
 
-        return active_cells, nc, map
+        return active_cells

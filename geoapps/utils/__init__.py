@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 from .utils import (
+    calculate_2D_trend,
     downsample_grid,
     downsample_xy,
     filter_xy,

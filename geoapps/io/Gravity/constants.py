@@ -73,7 +73,7 @@ default_ui_json = {
         ],
         "value": None,
     },
-    "grav_channel": {
+    "gz_channel": {
         "association": "Cell",
         "dataType": "Float",
         "default": None,
@@ -85,7 +85,7 @@ default_ui_json = {
         "parent": "data_object",
         "value": None,
     },
-    "grav_uncertainty": {
+    "gz_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
         "default": 1.0,
@@ -467,13 +467,13 @@ default_ui_json = {
         "value": 10,
     },
     "max_cg_iterations": {
-        "default": 30,
+        "default": 10,
         "min": 0,
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "max conjugate gradient iteration count",
-        "value": 30,
+        "value": 10,
     },
     "max_global_iterations": {
         "default": 100,
@@ -485,7 +485,7 @@ default_ui_json = {
         "value": 100,
     },
     "initial_beta_ratio": {
-        "default": 1e2,
+        "default": 1e-1,
         "min": 0.0,
         "group": "Optimization",
         "optional": True,
@@ -493,7 +493,7 @@ default_ui_json = {
         "dependency": "initial_beta",
         "dependencyType": "disabled",
         "label": "initial beta ratio",
-        "value": 1e2,
+        "value": 1e-1,
     },
     "initial_beta": {
         "default": None,
@@ -507,13 +507,13 @@ default_ui_json = {
         "value": 0.0,
     },
     "tol_cg": {
-        "default": 1e-4,
+        "default": 1e-16,
         "min": 0,
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "conjugate gradient tolerance",
-        "value": 1e-4,
+        "value": 1e-16,
     },
     "alpha_s": {
         "default": 1.0,
@@ -647,7 +647,7 @@ default_ui_json = {
     "lower_bound": {
         "association": "Cell",
         "dataType": "Float",
-        "default": -np.inf,
+        "default": -1,
         "group": "Regularization",
         "isValue": True,
         "visible": True,
@@ -656,7 +656,7 @@ default_ui_json = {
         "label": "lower bound on model",
         "parent": "lower_bound_object",
         "property": None,
-        "value": -np.inf,
+        "value": -1,
     },
     "upper_bound_object": {
         "default": None,
@@ -676,7 +676,7 @@ default_ui_json = {
     "upper_bound": {
         "association": "Cell",
         "dataType": "Float",
-        "default": np.inf,
+        "default": 1,
         "group": "Regularization",
         "isValue": True,
         "visible": True,
@@ -685,7 +685,7 @@ default_ui_json = {
         "label": "upper bound on model",
         "parent": "upper_bound_object",
         "property": None,
-        "value": np.inf,
+        "value": 1,
     },
     "parallelized": {
         "default": True,
@@ -799,8 +799,8 @@ validations = {
     "data_object": {
         "types": [str, UUID],
     },
-    "grav_channel": {"types": [str, UUID], "reqs": [("data_object")]},
-    "grav_uncertainty": {
+    "gz_channel": {"types": [str, UUID], "reqs": [("data_object")]},
+    "gz_uncertainty": {
         "types": [str, int, float],
     },
     "starting_model_object": {

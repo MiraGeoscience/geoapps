@@ -44,6 +44,7 @@ from .components import (
     InversionMesh,
     InversionModel,
     InversionTopography,
+    SurveyFactory,
 )
 
 
@@ -88,9 +89,21 @@ class GravityDriver:
         topo = InversionTopography(self.workspace, self.params, mesh, self.window)
         mstart = InversionModel(self.workspace, self.params, mesh, "starting")
         mref = InversionModel(self.workspace, self.params, mesh, "reference")
+        lbound = InversionModel(self.workspace, self.params, mesh, "lower_bound")
+        ubound = InversionModel(self.workspace, self.params, mesh, "upper_bound")
         data = InversionData(self.workspace, self.params, mesh, topo, self.window)
 
-        return mesh, topo, mstart, mref, data
+        return mesh, topo, mstart, mref, lbound, ubound, data
+
+    def models(self):
+        """ Return all models with data """
+        models = [
+            self.starting_model,
+            self.reference_model,
+            self.lower_bound,
+            self.upper_bound,
+        ]
+        return [m for m in models if m.model is not None]
 
     def run(self):
         """ Run inversion from params """
@@ -108,33 +121,26 @@ class GravityDriver:
             self.topography,
             self.starting_model,
             self.reference_model,
+            self.lower_bound,
+            self.upper_bound,
             self.data,
         ) = self.get_components()
 
         # Create SimPEG Survey object
         self.survey = self.data.get_survey()
 
-        # Build active cells array
-        self.active_cells = self.topo.active()
+        # Build active cells array and reduce models active set
+        self.active_cells = self.topography.active_cells()
         self.active_cells_map = maps.InjectActiveCells(
             self.mesh.mesh, self.active_cells, 0
         )
-        self.nC = int(self.active_cells.sum())
 
-        # Set some run options
-        vector_property = True
-        self.n_blocks = 3
+        for model in self.models():
+            model.remove_air(self.active_cells)
 
-        if vector_property:
-            self.reference_model.model = self.reference_model.model[
-                np.kron(np.ones(3), self.active_cells).astype("bool")
-            ]
-            self.starting_model.model = self.starting_model.model[
-                np.kron(np.ones(3), self.active_cells).astype("bool")
-            ]
-        else:
-            self.reference_model.model = self.reference_model.model[self.active_cells]
-            self.starting_model.model = self.starting_model.model[self.active_cells]
+        self.n_cells = int(np.sum(self.active_cells))
+        self.is_vector = self.starting_model.is_vector
+        self.is_rotated = False if self.mesh.rotation is None else True
 
         ###############################################################################
         # Processing
@@ -144,20 +150,17 @@ class GravityDriver:
         self.nTiles = len(self.tiles)
         print("Number of tiles:" + str(self.nTiles))
 
-        model_map = maps.IdentityMap(nP=3 * self.nC)
         local_misfits, dpreds, self.sorting = [], [], []
         for tile_id, local_index in enumerate(self.tiles):
-
-            locs = self.survey.receiver_locations[local_index]
-            lsurvey = self.localize_survey(local_index, locs)
+            lsurvey = self.data.get_survey(local_index)
+            locs = lsurvey.receiver_locations
             lmesh = create_nested_mesh(locs, self.mesh.mesh)
-            lmap = maps.TileMap(self.mesh.mesh, self.active_cells, lmesh, components=3)
-            lsim = magnetics.simulation.Simulation3DIntegral(
+            lmap = maps.TileMap(self.mesh.mesh, self.active_cells, lmesh)
+            lsim = gravity.simulation.Simulation3DIntegral(
                 survey=lsurvey,
                 mesh=lmesh,
-                chiMap=maps.IdentityMap(nP=int(lmap.local_active.sum()) * 3),
+                rhoMap=maps.IdentityMap(nP=int(lmap.local_active.sum())),
                 actInd=lmap.local_active,
-                modelType="vector",
                 sensitivity_path=self.outDir + "Tile" + str(tile_id) + ".zarr",
                 chunk_format="row",
                 store_sensitivities="disk",
@@ -181,15 +184,13 @@ class GravityDriver:
                 self.sorting.append(local_index)
 
         global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
+
         # Trigger sensitivity calcs
         for local in local_misfits:
             local.simulation.Jmatrix
-            local.simulation.Jmatrix
-            # del local.simulation.mesh
 
-        wires = maps.Wires(("p", self.nC), ("s", self.nC), ("t", self.nC))
-        wr = np.zeros(3 * self.nC)
-        norm = np.tile(self.mesh.mesh.cell_volumes[self.active_cells] ** 2.0, 3)
+        wr = np.zeros(self.n_cells)
+        norm = self.mesh.mesh.cell_volumes[self.active_cells] ** 2.0
         for ii, dmisfit in enumerate(global_misfit.objfcts):
             wr += dmisfit.getJtJdiag(self.starting_model.model) / norm
 
@@ -198,13 +199,13 @@ class GravityDriver:
         wr **= 0.5
         wr = wr / wr.max()
 
-        # self.write_data(sorting, self.data.normalization, model_map, wr)
+        # self.write_data(sorting, self.data.normalizations, model_map, wr)
 
         # Create a regularization
-        reg_p = regularization.Sparse(
+        reg = regularization.Sparse(
             self.mesh.mesh,
             indActive=self.active_cells,
-            mapping=wires.p,
+            mapping=maps.IdentityMap(nP=self.n_cells),
             gradientType=self.params.gradient_type,
             alpha_s=self.params.alpha_s,
             alpha_x=self.params.alpha_x,
@@ -212,49 +213,15 @@ class GravityDriver:
             alpha_z=self.params.alpha_z,
             norms=self.params.model_norms(),
         )
-        reg_p.cell_weights = wires.p * wr
-        reg_p.mref = self.reference_model.model
-
-        reg_s = regularization.Sparse(
-            self.mesh.mesh,
-            indActive=self.active_cells,
-            mapping=wires.s,
-            gradientType=self.params.gradient_type,
-            alpha_s=self.params.alpha_s,
-            alpha_x=self.params.alpha_x,
-            alpha_y=self.params.alpha_y,
-            alpha_z=self.params.alpha_z,
-            norms=self.params.model_norms(),
-        )
-
-        reg_s.cell_weights = wires.s * wr
-        reg_s.mref = self.reference_model.model
-
-        reg_t = regularization.Sparse(
-            self.mesh.mesh,
-            indActive=self.active_cells,
-            mapping=wires.t,
-            gradientType=self.params.gradient_type,
-            alpha_s=self.params.alpha_s,
-            alpha_x=self.params.alpha_x,
-            alpha_y=self.params.alpha_y,
-            alpha_z=self.params.alpha_z,
-            norms=self.params.model_norms(),
-        )
-
-        reg_t.cell_weights = wires.t * wr
-        reg_t.mref = self.reference_model.model
-
-        # Assemble the 3-component regularizations
-        reg = reg_p + reg_s + reg_t
+        reg.cell_weights = wr
         reg.mref = self.reference_model.model
 
         # Specify how the optimization will proceed, set susceptibility bounds to inf
         print("active", sum(self.active_cells))
         opt = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
-            lower=self.params.lower_bound,
-            upper=self.params.upper_bound,
+            lower=self.lower_bound.model,
+            upper=self.upper_bound.model,
             maxIterLS=20,
             maxIterCG=self.params.max_cg_iterations,
             tolCG=self.params.tol_cg,
@@ -266,10 +233,11 @@ class GravityDriver:
         prob = inverse_problem.BaseInvProblem(
             global_misfit, reg, opt, beta=self.params.initial_beta
         )
+
         # Add a list of directives to the inversion
         directiveList = []
 
-        if vector_property:
+        if self.is_vector:
             directiveList.append(
                 directives.VectorInversion(
                     chifact_target=self.params.chi_factor * 2,
@@ -310,48 +278,47 @@ class GravityDriver:
         # Save model
         if self.params.geoh5 is not None:
 
-            model_type = "mvi_model"
-
             channels = ["model"]
-            if vector_property:
+            if self.is_vector:
                 channels = ["amplitude", "theta", "phi"]
             outmesh = self.fetch("mesh").copy(
                 parent=self.out_group, copy_children=False
             )
-            # outmesh = treemesh_2_octree(
-            #     self.workspace, self.mesh, parent=self.out_group
-            # )
-            # outmesh.rotation = self.rotation["angle"]
 
             directiveList.append(
                 directives.SaveIterationsGeoH5(
                     h5_object=outmesh,
                     channels=channels,
                     mapping=self.active_cells_map,
-                    attribute_type="mvi_angles",
+                    attribute_type="mvi_angles" if self.is_vector else "model",
                     association="CELL",
                     sorting=self.mesh.mesh._ubc_order,
                 )
             )
 
-            rxLoc = self.survey.receiver_locations
-            xy_rot = rotate_xy(
-                rxLoc[:, :2],
-                self.mesh.rotation["origin"],
-                self.mesh.rotation["angle"],
-            )
-            xy_rot = np.c_[xy_rot, rxLoc[:, 2]]
+            rx_locs = self.survey.receiver_locations
+            if self.is_rotated:
+                rx_locs[:, :2] = rotate_xy(
+                    rx_locs[:, :2],
+                    self.window["center"],
+                    self.mesh.rotation["angle"],
+                )
             point_object = Points.create(
                 self.workspace,
                 name=f"Predicted",
-                vertices=xy_rot,
+                vertices=rx_locs,
                 parent=self.out_group,
             )
+            comps, norms = self.survey.components, self.data.normalizations
+            for ii, (comp, norm) in enumerate(zip(comps, norms)):
+                val = norm * self.survey.dobs[ii :: len(comps)]
+                point_object.add_data({f"Observed_{comp}": {"values": val}})
+
             directiveList.append(
                 directives.SaveIterationsGeoH5(
                     h5_object=point_object,
                     channels=self.survey.components,
-                    mapping=np.hstack(self.data.normalization),
+                    mapping=np.hstack(self.data.normalizations),
                     attribute_type="predicted",
                     sorting=tuple(self.sorting),
                     save_objective_function=True,
@@ -444,7 +411,21 @@ class GravityDriver:
 
         return tiles
 
-    def write_data(self, normalization, model_map, wr):
+    def localize_survey(self, local_index, locations):
+
+        receivers = magnetics.receivers.Point(
+            locations, components=self.survey.components
+        )
+        srcField = magnetics.sources.SourceField(
+            receiver_list=[receivers], parameters=self.survey.source_field.parameters
+        )
+        local_survey = magnetics.survey.Survey(srcField)
+        local_survey.dobs = self.survey.dobs[local_index]
+        local_survey.std = self.survey.std[local_index]
+
+        return local_survey
+
+    def write_data(self, normalizations, model_map, wr):
 
         # self.out_group.add_comment(json.dumps(input_dict, indent=4).strip(), author="input")
         if self.window is not None:
@@ -474,7 +455,7 @@ class GravityDriver:
         )
 
         for ii, (component, norm) in enumerate(
-            zip(self.survey.components, normalization)
+            zip(self.survey.components, normalizations)
         ):
             val = norm * self.survey.dobs[ii :: len(self.survey.components)]
             point_object.add_data({"Observed_" + component: {"values": val}})
@@ -495,7 +476,7 @@ class GravityDriver:
 
             dpred = np.hstack(dpred)
             for ind, (comp, norm) in enumerate(
-                zip(self.survey.components, normalization)
+                zip(self.survey.components, normalizations)
             ):
                 val = norm * dpred[ind :: len(self.survey.components)]
 

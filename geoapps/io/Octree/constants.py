@@ -9,9 +9,7 @@ from uuid import UUID
 
 from geoh5py.workspace import Workspace
 
-required_parameters = [
-    "inversion_type",
-]
+required_parameters = []
 defaults = {}
 
 default_ui_json = {
