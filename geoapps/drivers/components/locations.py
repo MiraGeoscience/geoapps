@@ -26,9 +26,6 @@ class InversionLocations:
         self.angle = None
         self.is_rotated = False
         self.locs = None
-        self._initialize()
-
-    def _initialize(self):
 
         if self.mesh.rotation is not None:
             self.origin = self.mesh.rotation["origin"]
@@ -67,6 +64,11 @@ class InversionLocations:
             locs = data_object.centroids
         else:
             locs = data_object.vertices
+
+        if locs is None:
+            msg = f"Workspace object {data_object} 'vertices' attribute is None."
+            msg += " Object type should be Grid2D or point-like."
+            raise (ValueError(msg))
 
         return locs
 
