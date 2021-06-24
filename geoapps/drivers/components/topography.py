@@ -46,7 +46,5 @@ class InversionTopography(InversionLocations):
 
     def active_cells(self):
         active_cells = active_from_xyz(self.mesh.mesh, self.locs, grid_reference="N")
-        nc = int(active_cells.sum())
-        map = maps.InjectActiveCells(self.mesh.mesh, active_cells, 0)
 
         return active_cells

@@ -5,11 +5,14 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
 from copy import deepcopy
 from typing import Dict, Tuple
 
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
+from SimPEG import maps
+from SimPEG.utils.drivers import create_nested_mesh
 
 from geoapps.utils import calculate_2D_trend, filter_xy
 
@@ -209,7 +212,7 @@ class InversionData(InversionLocations):
         return d
 
     def get_survey(self, local_index=None):
-        """ Populates SimPEG.LinearSurvey object with workspace data """
+        """ Generates SimPEG survey object. """
 
         survey_factory = SurveyFactory(self.params)
         survey = survey_factory.build(
@@ -218,12 +221,50 @@ class InversionData(InversionLocations):
 
         return survey
 
+    def get_simulation(self, local_index=None, tile_id=None):
+        """ Generates SimPEG simulation object."""
 
-class SurveyFactory:
-    """ Build SimPEG survey instances based on inversion type. """
+        simulation_factory = SimulationFactory(self.params)
+        survey = self.get_survey(local_index)
+        if local_index is None:
+            mesh = self.mesh.mesh
+            active_cells = self.topography.active_cells()
+        else:
+            mesh = create_nested_mesh(survey.receiver_locations, self.mesh.mesh)
+            map = maps.TileMap(self.mesh.mesh, self.topography.active_cells(), mesh)
+            active_cells = map.local_active
+
+        sim = simulation_factory.build(survey, mesh, active_cells, tile_id)
+
+        return sim, map
+
+
+class SimPEGFactory:
+    """ Build SimPEG objects based on inversion type. """
 
     def __init__(self, params):
         self.params = params
+        if self.params.inversion_type == "mvi":
+            from SimPEG.potential_fields import magnetics as data_module
+
+            self.data_module = data_module
+        elif self.params.inversion_type == "gravity":
+            from SimPEG.potential_fields import gravity as data_module
+
+            self.data_module = data_module
+        else:
+            msg = f"Inversion type: {self.params.inversion_type} not implemented yet."
+            raise NotImplementedError(msg)
+
+    def build(self):
+        pass
+
+
+class SurveyFactory(SimPEGFactory):
+    """ Build SimPEG survey instances based on inversion type. """
+
+    def __init__(self, params):
+        super().__init__(params)
 
     def build(self, locs, data, uncertainties, local_index=None):
 
@@ -235,24 +276,18 @@ class SurveyFactory:
         local_index = np.tile(local_index, n_channels)
 
         if self.params.inversion_type == "mvi":
-            from SimPEG.potential_fields import magnetics as data_module
-
             parameters = self.params.inducing_field_aid()
+
         elif self.params.inversion_type == "gravity":
-            from SimPEG.potential_fields import gravity as data_module
-
             parameters = None
-        else:
-            msg = f"Inversion type: {self.params.inversion_type} not implemented yet."
-            raise NotImplementedError(msg)
 
-        receivers = data_module.receivers.Point(
+        receivers = self.data_module.receivers.Point(
             locs[local_index], components=list(data.keys())
         )
-        source = data_module.sources.SourceField(
+        source = self.data_module.sources.SourceField(
             receiver_list=[receivers], parameters=parameters
         )
-        survey = data_module.survey.Survey(source)
+        survey = self.data_module.survey.Survey(source)
 
         survey.dobs = self.stack_channels(data)[local_index]
         survey.std = self.stack_channels(uncertainties)[local_index]
@@ -261,3 +296,30 @@ class SurveyFactory:
 
     def stack_channels(self, channel_data: Dict[str, np.ndarray]):
         return np.vstack(channel_data.values()).ravel()
+
+
+class SimulationFactory(SimPEGFactory):
+    def __init__(self, params):
+        super().__init__(params)
+
+    def build(self, survey, mesh, active_cells, tile_id=None):
+
+        out_dir = os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
+
+        if tile_id is None:
+            sens_path = out_dir + "Tile.zarr"
+        else:
+            sens_path = out_dir + "Tile" + str(tile_id) + ".zarr"
+
+        sim = self.data_module.simulation.Simulation3DIntegral(
+            survey=survey,
+            mesh=mesh,
+            rhoMap=maps.IdentityMap(nP=int(active_cells.sum())),
+            actInd=active_cells,
+            sensitivity_path=sens_path,
+            chunk_format="row",
+            store_sensitivities="disk",
+            max_chunk_size=self.params.max_chunk_size,
+        )
+
+        return sim

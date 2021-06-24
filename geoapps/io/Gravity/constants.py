@@ -761,9 +761,9 @@ default_ui_json = {
         "value": None,
     },
     "run_command": {
-        "default": None,
+        "default": "geoapps.drivers.grav_inversion",
         "enabled": False,
-        "value": None,
+        "value": "geoapps.drivers.grav_inversion",
     },
     "run_command_boolean": {
         "default": False,
