@@ -7,7 +7,6 @@
 
 import re
 import sys
-import uuid
 from os import path
 
 import matplotlib.pyplot as plt
@@ -101,19 +100,32 @@ class PeakFinder(ObjectDataSelection):
 
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.all_anomalies = []
-        self.data_channels = {}
+        self.active_channels = {}
         self.data_channel_options = {}
         self.pause_plot_refresh = False
         self._survey = None
         self._time_groups = {}
         self.groups_panel = VBox([])
         self.group_auto.observe(self.create_default_groups, names="value")
-
-        super().__init__(**kwargs)
-
+        self.objects.observe(self.objects_change, names="value")
         self.system_panel = VBox([self.system_panel_option])
         self.groups_widget = VBox([self.groups_setter])
         self.decay_panel = VBox([self.show_decay])
+        self.tem_box = HBox(
+            [
+                self.tem_checkbox,
+                self.system_panel,
+                self.groups_widget,
+                self.decay_panel,
+            ]
+        )
+        self.data.observe(self.set_data, names="value")
+        self.system.observe(self.system_observer, names="value")
+        super().__init__(**kwargs)
+
+        self.pause_plot_refresh = False
+        self.previous_line = self.lines.lines.value
+
         self.scale_panel = VBox([self.scale_button, self.scale_value])
         self.plotting = interactive_output(
             self.plot_data_selection,
@@ -148,29 +160,16 @@ class PeakFinder(ObjectDataSelection):
             },
         )
         self.show_decay.observe(self.show_decay_trigger, names="value")
-        self.tem_box = HBox(
-            [
-                self.tem_checkbox,
-                self.system_panel,
-                self.groups_widget,
-                self.decay_panel,
-            ]
-        )
-
-        # Set up interactions
         self.system_panel_option.observe(self.system_panel_trigger)
-        self.objects.observe(self.objects_change, names="value")
-        self.data.observe(self.set_data, names="value")
-        self.system.observe(self.system_observer, names="value")
         self.tem_checkbox.observe(self.objects_change, names="value")
         self.groups_setter.observe(self.groups_trigger)
-        self.previous_line = self.lines.lines.value
+
         self.scale_button.observe(self.scale_update)
         self.channel_selection.observe(self.channel_panel_update, names="value")
         self.channels.observe(self.edit_group, names="value")
-        self.group_list.observe(self.highlight_selection, names="value")
+        # self.group_list.observe(self.highlight_selection, names="value")
         self.flip_sign.observe(self.set_data, names="value")
-        self.highlight_selection(None)
+        # self.highlight_selection(None)
         self.channel_panel = VBox(
             [
                 self.channel_selection,
@@ -215,21 +214,32 @@ class PeakFinder(ObjectDataSelection):
                 self.trigger_panel,
             ]
         )
-        self.objects_change(None)
 
     def __populate__(self, **kwargs):
         super().__populate__(**kwargs)
 
-        group_list = []
+        prop_groups = {}
+        count = 0
         for label, params in self.params.groups.items():
             obj_list = self.workspace.get_entity(self.objects.value)
             if params["data"] is not None and any(obj_list):
                 prop_group = [
                     pg for pg in obj_list.property_groups if pg.uid == params["data"]
                 ]
+                if any(prop_group):
+                    count += 1
+                    prop_groups[prop_group] = {
+                        "name": prop_group.name,
+                        "color": params["color"],
+                        "label": [count],
+                    }
 
-                group_list += [self.add_group_widget(label, params)]
-                self._time_groups[prop_group] = {"color": params["color"]}
+        if len(prop_groups) > 1:
+            self._time_groups = prop_groups
+
+        group_list = []
+        for pg, params in self._time_groups.items():
+            group_list += [self.add_group_widget(pg, params)]
 
         self.groups_panel.children = group_list
 
@@ -242,7 +252,7 @@ class PeakFinder(ObjectDataSelection):
                     HBox(
                         [
                             VBox(
-                                [self.data_panel, self.group_auto, self.flip_sign],
+                                [self.data_panel, self.flip_sign],
                                 layout=Layout(width="50%"),
                             ),
                             Box(
@@ -882,47 +892,46 @@ class PeakFinder(ObjectDataSelection):
 
         return self._x_label
 
-    def add_group_widget(self, label: str, params: dict):
+    def add_group_widget(self, property_group, params: dict):
         """
         Add a group from dictionary
         """
-        widget_list = [Label(label.capitalize())]
-        for key, value in params.items():
-            attr_name = (label + f"{key}").title()
 
-            if "data" in key:
-                try:
-                    value = uuid.UUID(value)
-                except (ValueError, TypeError):
-                    value = None
+        setattr(
+            self,
+            f"Property Group {property_group.name} Data",
+            Dropdown(
+                description="Group",
+                options=self.data.options,
+            ),
+        )
 
-                setattr(
-                    self,
-                    attr_name,
-                    Dropdown(
-                        description=key.capitalize(),
-                        options=self.objects.options,
-                    ),
-                )
+        try:
+            getattr(
+                self, f"Property Group {property_group.name} Data"
+            ).value = property_group.uid
+        except TraitError:
+            pass
 
-                try:
-                    getattr(self, attr_name).value = value
-                except TraitError:
-                    pass
+        setattr(
+            self,
+            f"Property Group {property_group.name} Color",
+            ColorPicker(),
+        )
+        try:
+            getattr(self, f"Property Group {property_group.name} Color").value = str(
+                params["color"]
+            )
+        except TraitError:
+            pass
 
-            elif "color" in key:
-                setattr(
-                    self,
-                    attr_name,
-                    ColorPicker(description=key.capitalize()),
-                )
-                try:
-                    getattr(self, attr_name).value = str(value)
-                except TraitError:
-                    pass
-            widget_list += [getattr(self, attr_name, None)]
-
-        return VBox(widget_list, layout=Layout(border="solid"))
+        return VBox(
+            [
+                getattr(self, f"Property Group {property_group.name} Data"),
+                getattr(self, f"Property Group {property_group.name} Color"),
+            ],
+            layout=Layout(border="solid"),
+        )
 
     def channel_panel_update(self, _):
         """
@@ -943,36 +952,60 @@ class PeakFinder(ObjectDataSelection):
         """
         if getattr(self, "survey", None) is not None and self.data.value is not None:
             self.pause_plot_refresh = True
-            groups = [[p_g.name, p_g.uid] for p_g in self.survey.property_groups]
-            # channels = []
 
-            # # Add all selected data channels | groups once
-            # if self.data.value in groups:
-            #     for prop in self.survey.find_or_create_property_group(
-            #         name=self.data.uid_name_map[self.data.value]
-            #     ).properties:
-            #         name = self.workspace.get_entity(prop)[0].name
-            #         if prop not in channels:
-            #             channels.append(name)
-            # else:
-            #     channels.append(self.data.value)
+            self.active_channels = {}
+            if self.tem_checkbox.value:
+                for group in self.time_groups.keys():
+                    for channel in group.properties:
+                        obj = self.workspace.get_entity(channel)[0]
+                        self.active_channels[obj] = {}
+            else:
+                data_group = [
+                    p_g
+                    for p_g in self.survey.property_groups
+                    if p_g.uid == self.data.value
+                ]
+                if any(data_group):
+                    for channel in data_group[0].properties:
+                        obj = self.workspace.get_entity(channel)[0]
+                        self.active_channels[obj] = {}
 
-            self.channels.options = groups
-            for group in groups:
-                # if self.survey.get_data(channel):
-                for channel in group.properties:
-                    obj = self.workspace.get_entity(channel)[0]
-                    self.data_channels[obj.name] = obj
-
-            # Generate default groups
-            # self.reset_groups()
-
+            channel_options = [obj.name for obj in self.active_channels.keys()]
             if self.tem_checkbox.value:
                 for key, widget in self.data_channel_options.items():
-                    widget.children[0].options = groups
-                    widget.children[0].value = find_value(groups, [key])
+                    widget.children[0].options = channel_options
+                    widget.children[0].value = find_value(channel_options, [key])
+
+            d_min, d_max = np.inf, -np.inf
+            thresh_value = np.inf
+            for obj, params in self.active_channels.items():
+
+                try:
+                    if self.tem_checkbox.value:
+                        gate = int(re.findall(r"\d+", obj.name)[-1])
+                        params["time"] = (
+                            self.data_channel_options[f"[{gate}]"].children[1].value
+                        )
+                    params["values"] = (
+                        -1.0
+                    ) ** self.flip_sign.value * obj.values.copy()
+
+                except KeyError:
+                    continue
+                thresh_value = np.min(
+                    [thresh_value, np.percentile(np.abs(params["values"]), 95)]
+                )
+                d_min = np.min([d_min, params["values"].min()])
+                d_max = np.max([d_max, params["values"].max()])
+
             self.pause_plot_refresh = False
             self.plot_trigger.value = False
+
+            if d_max > -np.inf:
+                self.plot_trigger.value = False
+                self.min_value.value = d_min
+                self.scale_value.value = thresh_value
+
             self.plot_trigger.value = True
 
     def objects_change(self, _):
@@ -983,7 +1016,7 @@ class PeakFinder(ObjectDataSelection):
             self._survey = self.workspace.get_entity(self.objects.value)[0]
             self.update_data_list(None)
             not_tem = True
-            self.active_channels = []
+            self.active_channels = {}
             if self.tem_checkbox.value:
                 not_tem = False
                 for aem_system, specs in self.em_system_specs.items():
@@ -1065,7 +1098,11 @@ class PeakFinder(ObjectDataSelection):
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
         if self.groups_setter.value:
-            self.groups_widget.children = [self.groups_setter, self.groups_panel]
+            self.groups_widget.children = [
+                self.groups_setter,
+                self.group_auto,
+                self.groups_panel,
+            ]
         else:
             self.groups_widget.children = [self.groups_setter]
 
@@ -1164,18 +1201,18 @@ class PeakFinder(ObjectDataSelection):
     #     # Append all lines
     #
 
-    def highlight_selection(self, _):
-        """
-        Observer of :obj:`geoapps.processing.PeakFinder.`:: Highlight the time group data selection
-        """
-        for group in self.time_groups.values():
-            if group["name"] == self.group_list.value:
-                self.group_color.value = group["color"]
-                self.channels.value = group["channels"]
-                if "+" in group["name"]:
-                    self.channels.disabled = True
-                else:
-                    self.channels.disabled = False
+    # def highlight_selection(self, _):
+    #     """
+    #     Observer of :obj:`geoapps.processing.PeakFinder.`:: Highlight the time group data selection
+    #     """
+    #     for group, param in self.time_groups.items():
+    #         if group.name == self.group_list.value:
+    #             self.group_color.value = param["color"]
+    #             self.channels.value = group.properties
+    #             if "+" in group.name:
+    #                 self.channels.disabled = True
+    #             else:
+    #                 self.channels.disabled = False
 
     def plot_data_selection(
         self,
@@ -1202,30 +1239,24 @@ class PeakFinder(ObjectDataSelection):
         if self.pause_plot_refresh:
             return
 
-        self.line_update()
-
         if (
             getattr(self, "survey", None) is None
-            or getattr(self.lines, "profile", None) is None
             or self.plot_trigger.value is False
             or len(self.active_channels) == 0
         ):
             return
 
-        center = self.center.value
-        width = self.width.value
-
         axs = None
         if (
-            residual != self.lines.profile.residual
-            or smoothing != self.lines.profile.smoothing
+            getattr(self.lines, "profile", None) is not None
+            and smoothing != self.lines.profile.smoothing
         ):
-            self.lines.profile.residual = residual
             self.lines.profile.smoothing = smoothing
-            self.line_update()
 
-        if not self.tem_checkbox:
-            self.regroup()
+        self.line_update()
+
+        # if not self.tem_checkbox:
+        #     self.regroup()
 
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
@@ -1241,7 +1272,7 @@ class PeakFinder(ObjectDataSelection):
             return
 
         locs = self.lines.profile.locations_resampled
-        for cc, channel in enumerate(self.active_channels):
+        for cc, (obj, channel) in enumerate(self.active_channels.items()):
             if axs is None:
                 self.figure = plt.figure(figsize=(12, 6))
                 axs = plt.subplot()
@@ -1417,7 +1448,7 @@ class PeakFinder(ObjectDataSelection):
             if group is not None and group["linear_fit"] is not None:
                 times = [
                     channel["time"]
-                    for ii, channel in enumerate(self.active_channels)
+                    for ii, channel in enumerate(self.active_channels.values())
                     if ii in list(group["channels"])
                 ]
             if any(times):
@@ -1562,81 +1593,48 @@ class PeakFinder(ObjectDataSelection):
         return indices
 
     def create_default_groups(self, _):
+        if self.group_auto.value:
+            obj = self.workspace.get_entity(self.objects.value)[0]
+            group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
 
-        obj = self.workspace.get_entity(self.objects.value)[0]
-        group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
+            if any(group):
+                data_list = [
+                    self.workspace.get_entity(uid)[0] for uid in group[0].properties
+                ]
 
-        if any(group):
-            data_list = [
-                self.workspace.get_entity(uid)[0] for uid in group[0].properties
-            ]
+                start = 0
+                end = len(data_list)
+                block = int((end - start) / 3)
+                ranges = {
+                    "early": np.arange(start, start + block).tolist(),
+                    "middle": np.arange(start + block, start + 2 * block).tolist(),
+                    "late": np.arange(start + 2 * block, end).tolist(),
+                }
 
-            # start = self.em_system_specs[self.system.value]["channel_start_index"]
-            # end = (
-            #         len(self.em_system_specs[self.system.value]["channels"].keys()) + 1
-            # )
-            # _default_time_groups = {
-            #     "early": {"label": ["early"], "color": "#0000FF", "channels": []},
-            #     "middle": {"label": ["middle"], "color": "#FFFF00", "channels": []},
-            #     "late": {"label": ["late"], "color": "#FF0000", "channels": []},
-            #     "early + middle": {
-            #         "label": ["early", "middle"],
-            #         "color": "#00FFFF",
-            #         "channels": [],
-            #     },
-            #     "early + middle + late": {
-            #         "label": ["early", "middle", "late"],
-            #         "color": "#008000",
-            #         "channels": [],
-            #     },
-            #     "middle + late": {
-            #         "label": ["middle", "late"],
-            #         "color": "#FFA500",
-            #         "channels": [],
-            #     },
-            # }
-            # Divide channels in three equal blocks
-            start = 0
-            end = len(data_list)
-            block = int((end - start) / 3)
-            ranges = {
-                "early": np.arange(start, start + block).tolist(),
-                "middle": np.arange(start + block, start + 2 * block).tolist(),
-                "late": np.arange(start + 2 * block, end).tolist(),
-            }
+                time_groups = {}
+                for key, default in self._default_time_groups.items():
+                    prop_group = obj.find_or_create_property_group(name=key)
+                    for prop in prop_group.properties:
+                        prop_group.remove(prop)
 
-            time_groups = {}
-            for key, default in self._default_time_groups.items():
-                prop_group = obj.find_or_create_property_group(name=key)
-                for prop in prop_group.properties:
-                    prop_group.remove(prop)
+                    for val in default["label"]:
+                        for ind in ranges[val]:
+                            prop_group.properties += [data_list[ind].uid]
 
-                for val in default["label"]:
-                    for ind in ranges[val]:
-                        prop_group.properties += [data_list[ind].uid]
+                    time_groups[prop_group] = {
+                        "name": prop_group,
+                        "color": default["color"],
+                        "label": [
+                            ii
+                            for ii, key in enumerate(ranges)
+                            if key in default["label"]
+                        ],
+                    }
 
-                time_groups[prop_group] = {"color": default["color"]}
-
-            self._time_groups = time_groups
-            #
-            # gates_list = [[], [], []]
-            # try:
-            #     for channel in self.data.value:
-            #         [
-            #             gates_list[ii].append(channel)
-            #             for ii, block in enumerate([early, mid, late])
-            #             if int(re.findall(r"\d+", channel)[-1]) in block
-            #         ]
-            #
-            #     for key, gates in enumerate(gates_list):
-            #         self.time_groups[key]["channels"] = gates
-            #
-            # except IndexError:
-            #     print(
-            #         "Could not find a time channel for the given list of time channels. "
-            #         "Switching to non-tem mode."
-            #     )
-            #     self.tem_checkbox.value = False
+                self._time_groups = time_groups
+                self.update_data_list(None)
+                self.set_data(None)
+        self.group_auto.value = False
 
     def reset_groups(self, gates={}):
         if gates:
@@ -1688,41 +1686,13 @@ class PeakFinder(ObjectDataSelection):
         #             "channels": [channel],
         #         }
 
-        channels = []
-        for group in self.time_groups.values():
-            [
-                channels.append(channel)
-                for channel in group["channels"]
-                if channel not in channels
-            ]
-
-        self.active_channels = [{"name": c} for c in channels]
-        d_min, d_max = np.inf, -np.inf
-        thresh_value = np.inf
-        for channel in self.active_channels:
-
-            try:
-                if self.tem_checkbox.value:
-                    gate = int(re.findall(r"\d+", channel["name"])[-1])
-                    channel["time"] = (
-                        self.data_channel_options[f"[{gate}]"].children[1].value
-                    )
-                channel["values"] = (-1.0) ** self.flip_sign.value * self.data_channels[
-                    channel["name"]
-                ].values.copy()
-
-            except KeyError:
-                continue
-            thresh_value = np.min(
-                [thresh_value, np.percentile(np.abs(channel["values"]), 95)]
-            )
-            d_min = np.min([d_min, channel["values"].min()])
-            d_max = np.max([d_max, channel["values"].max()])
-
-        if d_max > -np.inf:
-            self.plot_trigger.value = False
-            self.min_value.value = d_min
-            self.scale_value.value = thresh_value
+        # channels = []
+        # for group in self.time_groups.values():
+        #     [
+        #         channels.append(channel)
+        #         for channel in group["channels"]
+        #         if channel not in channels
+        #     ]
 
     @classmethod
     def run(cls, params):
@@ -2067,10 +2037,15 @@ def find_anomalies(
         "group": [],
         "time_group": [],
     }
-    for cc, channel in enumerate(channels):
-        if "values" not in list(channel.keys()):
+
+    data_uid = [data.uid for data in channels.keys()]
+    property_groups = [pg for pg in time_groups.keys()]
+
+    for cc, (obj, params) in enumerate(channels.items()):
+        if "values" not in list(params.keys()):
             continue
-        values = channel["values"][line_indices].copy()
+
+        values = params["values"][line_indices].copy()
         profile.values = values
         values = profile.values_resampled
 
@@ -2142,9 +2117,11 @@ def find_anomalies(
                 anomalies["end"] += [end]
                 anomalies["group"] += [-1]
                 anomalies["time_group"] += [
-                    key
-                    for key, time_group in time_groups.items()
-                    if channel["name"] in time_group["channels"]
+                    [
+                        key
+                        for key, time_group in enumerate(time_groups.keys())
+                        if obj.uid in time_group.properties
+                    ]
                 ]
 
     if len(anomalies["peak"]) == 0:
@@ -2157,6 +2134,9 @@ def find_anomalies(
 
     # Re-cast as numpy arrays
     for key, values in anomalies.items():
+        if key == "time_group":
+            continue
+
         anomalies[key] = np.hstack(values)
 
     group_id = -1
@@ -2173,7 +2153,7 @@ def find_anomalies(
         # Find anomalies across channels within horizontal range
         near = np.where((dist < max_migration) & (anomalies["group"] == -1))[0]
 
-        # Reject from group if channel gap >1
+        # Reject from group if channel gap > 1
         u_gates, u_count = np.unique(anomalies["channel"][near], return_counts=True)
         if len(u_gates) > 1 and np.any((u_gates[1:] - u_gates[:-1]) > 2):
 
@@ -2191,33 +2171,19 @@ def find_anomalies(
             near = near[mask, ...]
 
         # Keep largest overlapping time group
-        in_gate, count = np.unique(anomalies["time_group"][near], return_counts=True)
+        in_gate, count = np.unique(
+            np.hstack([anomalies["time_group"][ii] for ii in near]), return_counts=True
+        )
         in_gate = in_gate[(count >= min_channels) & (in_gate != -1)].tolist()
-
-        time_group = [
-            ii
-            for ii, group in enumerate(time_groups.values())
-            if all([(gate in in_gate) for gate in group["label"]])
-        ]
-
-        if len(time_group) > 0:
-            time_group = np.max(time_group)
-        else:
-            continue
+        time_group = property_groups[in_gate[np.argmax(count)]]
 
         # Remove anomalies not in group
-        channel_list = [
-            time_groups[ii]["channels"] for ii in time_groups[time_group]["label"]
-        ]
         mask = [
-            ii
-            for ii, id in enumerate(near)
-            if channels[anomalies["channel"][id]] not in channel_list
+            data_uid[anomalies["channel"][id]] in time_group.properties for id in near
         ]
         near = near[mask, ...]
 
         anomalies["group"][near] = group_id
-
         gates = anomalies["channel"][near]
         cox = anomalies["peak"][near]
         inflx_dwn = anomalies["inflx_dwn"][near]
@@ -2247,7 +2213,7 @@ def find_anomalies(
         amplitude = np.sum(anomalies["amplitude"][near])
         times = [
             channel["time"]
-            for ii, channel in enumerate(channels)
+            for ii, channel in enumerate(channels.values())
             if (ii in list(gates) and "time" in channel.keys())
         ]
         linear_fit = None
