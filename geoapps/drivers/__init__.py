@@ -5,4 +5,4 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from . import components, grav_inversion, mt_inversion, mvi_inversion, pf_inversion
+from . import components, grav_inversion, mvi_inversion, pf_inversion
