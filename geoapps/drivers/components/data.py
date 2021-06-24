@@ -9,25 +9,19 @@ from copy import deepcopy
 from typing import Dict, Tuple
 
 import numpy as np
-from geoh5py.objects import Grid2D, Points
 from scipy.interpolate import LinearNDInterpolator
 
-from geoapps.utils import filter_xy, rotate_xy
+from geoapps.utils import filter_xy
+
+from .locations import InversionLocations
 
 
-class InversionData:
+class InversionData(InversionLocations):
     """ Retrieve data from workspace and apply transformations. """
 
     def __init__(self, workspace, params, mesh, topography, window):
-        self.workspace = workspace
-        self.params = params
-        self.mesh = mesh
+        super().__init__(workspace, params, mesh, window)
         self.topography = topography
-        self.window = window
-        self.mask = None
-        self.origin = None
-        self.angle = None
-        self.is_rotated = False
         self.resolution = None
         self.offset = None
         self.radar = None
@@ -36,28 +30,11 @@ class InversionData:
         self.detrend_order = None
         self.detrend_type = None
         self.components = None
-        self.locs = None
         self.data = {}
         self.uncertainties = {}
         self.normalization = []
         self.survey = None
         self._initialize()
-
-    @property
-    def mask(self):
-        return self._mask
-
-    @mask.setter
-    def mask(self, v):
-        if v is None:
-            self._mask = v
-            return
-        if np.all([n in [0, 1] for n in np.unique(v)]):
-            v = np.array(v, dtype=bool)
-        else:
-            msg = f"Badly formed mask array {v}"
-            raise (ValueError(msg))
-        self._mask = v
 
     def _initialize(self):
         """ Extract data from params class. """
@@ -65,13 +42,8 @@ class InversionData:
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.data, self.uncertainties = self.get_data()
 
-        self.locs = self.get_locs()
+        self.locs = super().get_locs(self.params.data_object)
         self.mask = np.ones(len(self.locs), dtype=bool)
-
-        if self.mesh.rotation is not None:
-            self.origin = self.mesh.rotation["origin"]
-            self.angle = -self.mesh.rotation["angle"]
-            self.is_rotated = True
 
         if self.window is not None:
             self.mask = filter_xy(
@@ -91,9 +63,9 @@ class InversionData:
                 mask=self.mask,
             )
 
-        self.locs = self.filter(self.locs)
-        self.data = self.filter(self.data)
-        self.uncertainties = self.filter(self.uncertainties)
+        self.locs = super().filter(self.locs)
+        self.data = super().filter(self.data)
+        self.uncertainties = super().filter(self.uncertainties)
 
         self.offset, self.radar = self.params.offset()
         if self.offset is not None:
@@ -187,30 +159,6 @@ class InversionData:
 
         return unc
 
-    def get_locs(self):
-        """ Returns locations of data object centroids or vertices. """
-
-        data_object = self.workspace.get_entity(self.params.data_object)[0]
-
-        if isinstance(data_object, Grid2D):
-            locs = data_object.centroids
-        else:
-            locs = data_object.vertices
-
-        return locs
-
-    def filter(self, a):
-        """ Apply accumulated self.mask to array, or dict of arrays. """
-        if isinstance(a, dict):
-            return {k: v[self.mask] for k, v in a.items()}
-        else:
-            return a[self.mask]
-
-    def rotate(self, locs):
-        """ Un-rotate data using origin and angle assigned to inversion mesh. """
-        xy = rotate_xy(locs[:, :2], self.origin, self.angle)
-        return np.c_[xy, locs[:, 2]]
-
     def displace(self, locs, offset):
         """ Offset data locations in all three dimensions. """
         return locs + offset if offset is not None else 0
@@ -219,12 +167,13 @@ class InversionData:
         """ Drape data locations using radar channel. """
         xyz = locs.copy()
         radar_offset = self.workspace.get_entity(self.radar)[0].values
-        topo_interpolator = LinearNDInterpolator(self.topo[:, :2], self.topo[:, 2])
+        topo_locs = self.topography.locs
+        topo_interpolator = LinearNDInterpolator(topo_locs[:, :2], topo_locs[:, 2])
         z_topo = topo_interpolator(xyz[:, :2])
         if np.any(np.isnan(z_topo)):
-            tree = cKDTree(self.topo[:, :2])
+            tree = cKDTree(topo_locs[:, :2])
             _, ind = tree.query(xyz[np.isnan(z_topo), :2])
-            z_topo[np.isnan(z_topo)] = self.topo[ind, 2]
+            z_topo[np.isnan(z_topo)] = topo_locs[ind, 2]
         xyz[:, 2] = z_topo
 
         radar_offset_pad = np.zeros((len(radar_offset), 3))
