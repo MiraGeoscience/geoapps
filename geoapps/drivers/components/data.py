@@ -33,15 +33,16 @@ class InversionData(InversionLocations):
         self.detrend_order = None
         self.detrend_type = None
         self.components = None
+        self.vector = None
         self.data = {}
         self.uncertainties = {}
         self.normalizations = []
-        self.survey = None
         self._initialize()
 
     def _initialize(self):
         """ Extract data from params class. """
 
+        self.vector = True if self.params.inversion_type == "mvi" else False
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.data, self.uncertainties = self.get_data()
 
@@ -211,7 +212,7 @@ class InversionData(InversionLocations):
         self.normalizations = normalizations
         return d
 
-    def get_survey(self, local_index=None):
+    def survey(self, local_index=None):
         """ Generates SimPEG survey object. """
 
         survey_factory = SurveyFactory(self.params)
@@ -221,17 +222,20 @@ class InversionData(InversionLocations):
 
         return survey
 
-    def get_simulation(self, local_index=None, tile_id=None):
+    def simulation(self, local_index=None, tile_id=None):
         """ Generates SimPEG simulation object."""
 
         simulation_factory = SimulationFactory(self.params)
-        survey = self.get_survey(local_index)
+        survey = self.survey(local_index)
         if local_index is None:
             mesh = self.mesh.mesh
             active_cells = self.topography.active_cells()
         else:
             mesh = create_nested_mesh(survey.receiver_locations, self.mesh.mesh)
-            map = maps.TileMap(self.mesh.mesh, self.topography.active_cells(), mesh)
+            args = {"components": 3} if self.vector else {}
+            map = maps.TileMap(
+                self.mesh.mesh, self.topography.active_cells(), mesh, **args
+            )
             active_cells = map.local_active
 
         sim = simulation_factory.build(survey, mesh, active_cells, tile_id)
@@ -244,16 +248,18 @@ class SimPEGFactory:
 
     def __init__(self, params):
         self.params = params
-        if self.params.inversion_type == "mvi":
+        self.inversion_type = params.inversion_type
+
+        if self.inversion_type == "mvi":
             from SimPEG.potential_fields import magnetics as data_module
 
             self.data_module = data_module
-        elif self.params.inversion_type == "gravity":
+        elif self.inversion_type == "gravity":
             from SimPEG.potential_fields import gravity as data_module
 
             self.data_module = data_module
         else:
-            msg = f"Inversion type: {self.params.inversion_type} not implemented yet."
+            msg = f"Inversion type: {self.inversion_type} not implemented yet."
             raise NotImplementedError(msg)
 
     def build(self):
@@ -275,10 +281,10 @@ class SurveyFactory(SimPEGFactory):
 
         local_index = np.tile(local_index, n_channels)
 
-        if self.params.inversion_type == "mvi":
+        if self.inversion_type == "mvi":
             parameters = self.params.inducing_field_aid()
 
-        elif self.params.inversion_type == "gravity":
+        elif self.inversion_type == "gravity":
             parameters = None
 
         receivers = self.data_module.receivers.Point(
@@ -295,7 +301,7 @@ class SurveyFactory(SimPEGFactory):
         return survey
 
     def stack_channels(self, channel_data: Dict[str, np.ndarray]):
-        return np.vstack(channel_data.values()).ravel()
+        return np.vstack([list(channel_data.values())]).ravel()
 
 
 class SimulationFactory(SimPEGFactory):
@@ -304,6 +310,37 @@ class SimulationFactory(SimPEGFactory):
 
     def build(self, survey, mesh, active_cells, tile_id=None):
 
+        sens_path = self.get_sens_path(tile_id)
+        data_dependent_args = self.get_args(active_cells)
+
+        sim = self.data_module.simulation.Simulation3DIntegral(
+            survey=survey,
+            mesh=mesh,
+            actInd=active_cells,
+            sensitivity_path=sens_path,
+            chunk_format="row",
+            store_sensitivities="disk",
+            max_chunk_size=self.params.max_chunk_size,
+            **data_dependent_args,
+        )
+
+        return sim
+
+    def get_args(self, active_cells):
+
+        if self.inversion_type == "mvi":
+            args = {
+                "chiMap": maps.IdentityMap(nP=int(active_cells.sum()) * 3),
+                "modelType": "vector",
+            }
+
+        elif self.inversion_type == "gravity":
+            args = {"rhoMap": maps.IdentityMap(nP=int(active_cells.sum()))}
+
+        return args
+
+    def get_sens_path(self, tile_id):
+
         out_dir = os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
 
         if tile_id is None:
@@ -311,15 +348,4 @@ class SimulationFactory(SimPEGFactory):
         else:
             sens_path = out_dir + "Tile" + str(tile_id) + ".zarr"
 
-        sim = self.data_module.simulation.Simulation3DIntegral(
-            survey=survey,
-            mesh=mesh,
-            rhoMap=maps.IdentityMap(nP=int(active_cells.sum())),
-            actInd=active_cells,
-            sensitivity_path=sens_path,
-            chunk_format="row",
-            store_sensitivities="disk",
-            max_chunk_size=self.params.max_chunk_size,
-        )
-
-        return sim
+        return sens_path
