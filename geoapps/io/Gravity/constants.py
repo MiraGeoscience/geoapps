@@ -4,7 +4,11 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
 
 from uuid import UUID
 
@@ -18,55 +22,16 @@ defaults = {}
 
 default_ui_json = {
     "inversion_type": {
-        "default": "mvi",
+        "default": "gravity",
         "visible": False,
         "enabled": False,
-        "value": "mvi",
+        "value": "gravity",
     },
     "forward_only": {
         "default": False,
         "main": True,
         "label": "forward model only?",
         "value": False,
-    },
-    "inducing_field_strength": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": 50000.0,
-        "min": 0.0,
-        "main": True,
-        "group": "Inducing Field",
-        "isValue": True,
-        "label": "Strength",
-        "parent": "data_object",
-        "property": None,
-        "value": 50000.0,
-    },
-    "inducing_field_inclination": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": 90.0,
-        "min": 0.0,
-        "main": True,
-        "group": "Inducing Field",
-        "isValue": True,
-        "label": "Inclination",
-        "parent": "data_object",
-        "property": None,
-        "value": 90.0,
-    },
-    "inducing_field_declination": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": 0.0,
-        "min": 0.0,
-        "main": True,
-        "group": "Inducing Field",
-        "isValue": True,
-        "parent": "data_object",
-        "label": "Declination",
-        "property": None,
-        "value": 0.0,
     },
     "topography_object": {
         "default": None,
@@ -108,7 +73,7 @@ default_ui_json = {
         ],
         "value": None,
     },
-    "tmi_channel": {
+    "gz_channel": {
         "association": "Cell",
         "dataType": "Float",
         "default": None,
@@ -120,10 +85,10 @@ default_ui_json = {
         "parent": "data_object",
         "value": None,
     },
-    "tmi_uncertainty": {
+    "gz_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 1.0,
+        "default": 1e-2,
         "group": "Data",
         "main": True,
         "dependency": "forward_only",
@@ -132,7 +97,7 @@ default_ui_json = {
         "label": "Uncertainty",
         "parent": "data_object",
         "property": None,
-        "value": 1.0,
+        "value": 1e-2,
     },
     "starting_model_object": {
         "default": None,
@@ -146,30 +111,6 @@ default_ui_json = {
         "label": "starting model object",
         "value": None,
     },
-    "starting_inclination_object": {
-        "default": None,
-        "group": "Starting Model",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-        ],
-        "label": "starting inclination object",
-        "value": None,
-    },
-    "starting_declination_object": {
-        "default": None,
-        "group": "Starting Model",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-        ],
-        "label": "starting declination object",
-        "value": None,
-    },
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
@@ -179,29 +120,7 @@ default_ui_json = {
         "parent": "starting_model_object",
         "label": "starting model value",
         "property": None,
-        "value": 0.0,
-    },
-    "starting_inclination": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": None,
-        "group": "Starting Model",
-        "isValue": False,
-        "parent": "starting_inclination_object",
-        "label": "starting inclination value",
-        "property": None,
-        "value": 0.0,
-    },
-    "starting_declination": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": None,
-        "group": "Starting Model",
-        "isValue": False,
-        "parent": "starting_declination_object",
-        "label": "starting declination value",
-        "property": None,
-        "value": 0.0,
+        "value": 0.05,
     },
     "tile_spatial": {
         "association": "Cell",
@@ -539,22 +458,22 @@ default_ui_json = {
         "value": 1.0,
     },
     "max_iterations": {
-        "default": 10,
+        "default": 20,
         "min": 0,
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "max iteration count",
-        "value": 10,
+        "value": 20,
     },
     "max_cg_iterations": {
-        "default": 30,
+        "default": 10,
         "min": 0,
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "max conjugate gradient iteration count",
-        "value": 30,
+        "value": 10,
     },
     "max_global_iterations": {
         "default": 100,
@@ -566,7 +485,7 @@ default_ui_json = {
         "value": 100,
     },
     "initial_beta_ratio": {
-        "default": 1e2,
+        "default": 1e1,
         "min": 0.0,
         "group": "Optimization",
         "optional": True,
@@ -574,7 +493,7 @@ default_ui_json = {
         "dependency": "initial_beta",
         "dependencyType": "disabled",
         "label": "initial beta ratio",
-        "value": 1e2,
+        "value": 1e1,
     },
     "initial_beta": {
         "default": None,
@@ -588,13 +507,13 @@ default_ui_json = {
         "value": 0.0,
     },
     "tol_cg": {
-        "default": 1e-4,
+        "default": 1e-16,
         "min": 0,
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "conjugate gradient tolerance",
-        "value": 1e-4,
+        "value": 1e-16,
     },
     "alpha_s": {
         "default": 1.0,
@@ -687,36 +606,6 @@ default_ui_json = {
         ],
         "value": None,
     },
-    "reference_inclination_object": {
-        "default": None,
-        "group": "Models",
-        "visible": False,
-        "dependency": "forward_only",
-        "dependencyType": "hide",
-        "label": "reference inclination object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-        ],
-        "value": None,
-    },
-    "reference_declination_object": {
-        "default": None,
-        "group": "Models",
-        "visible": False,
-        "dependency": "forward_only",
-        "dependencyType": "hide",
-        "label": "reference declination object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-        ],
-        "value": None,
-    },
     "reference_model": {
         "association": "Cell",
         "dataType": "Float",
@@ -728,34 +617,6 @@ default_ui_json = {
         "dependencyType": "hide",
         "label": "reference model value",
         "parent": "reference_model_object",
-        "property": None,
-        "value": 0.0,
-    },
-    "reference_inclination": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": 0.0,
-        "group": "Models",
-        "isValue": False,
-        "visible": False,
-        "dependency": "forward_only",
-        "dependencyType": "hide",
-        "label": "reference inclination value",
-        "parent": "reference_inclination_object",
-        "property": None,
-        "value": 0.0,
-    },
-    "reference_declination": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": 0.0,
-        "group": "Models",
-        "isValue": False,
-        "visible": False,
-        "dependency": "forward_only",
-        "dependencyType": "hide",
-        "label": "reference declination value",
-        "parent": "reference_declination_object",
         "property": None,
         "value": 0.0,
     },
@@ -786,7 +647,7 @@ default_ui_json = {
     "lower_bound": {
         "association": "Cell",
         "dataType": "Float",
-        "default": -np.inf,
+        "default": -1,
         "group": "Regularization",
         "isValue": True,
         "visible": True,
@@ -795,7 +656,7 @@ default_ui_json = {
         "label": "lower bound on model",
         "parent": "lower_bound_object",
         "property": None,
-        "value": -np.inf,
+        "value": -1,
     },
     "upper_bound_object": {
         "default": None,
@@ -815,7 +676,7 @@ default_ui_json = {
     "upper_bound": {
         "association": "Cell",
         "dataType": "Float",
-        "default": np.inf,
+        "default": 1,
         "group": "Regularization",
         "isValue": True,
         "visible": True,
@@ -824,7 +685,7 @@ default_ui_json = {
         "label": "upper bound on model",
         "parent": "upper_bound_object",
         "property": None,
-        "value": np.inf,
+        "value": 1,
     },
     "parallelized": {
         "default": True,
@@ -900,9 +761,9 @@ default_ui_json = {
         "value": None,
     },
     "run_command": {
-        "default": None,
+        "default": "geoapps.drivers.grav_inversion",
         "enabled": False,
-        "value": None,
+        "value": "geoapps.drivers.grav_inversion",
     },
     "run_command_boolean": {
         "default": False,
@@ -918,27 +779,13 @@ required_parameters = []
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["mvi", "mvic"],
-        "reqs": [
-            ("mvi", "inducing_field_strength"),
-            ("mvi", "inducing_field_inclination"),
-            ("mvi", "inducing_field_declination"),
-        ],
+        "values": ["gravity"],
     },
     "forward_only": {
         "types": [bool],
         "reqs": [
             (True, "starting_model"),
         ],
-    },
-    "inducing_field_strength": {
-        "types": [int, float],
-    },
-    "inducing_field_inclination": {
-        "types": [int, float],
-    },
-    "inducing_field_declination": {
-        "types": [int, float],
     },
     "topography_object": {
         "types": [str, UUID],
@@ -950,29 +797,17 @@ validations = {
         "uuid": ["topography_object"],
     },
     "data_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
-    "tmi_channel": {"types": [str], "reqs": [("data_object")]},
-    "tmi_uncertainty": {
+    "gz_channel": {"types": [str, UUID], "reqs": [("data_object")]},
+    "gz_uncertainty": {
         "types": [str, int, float],
     },
     "starting_model_object": {
-        "types": [str],
-    },
-    "starting_inclination_object": {
-        "types": [str],
-    },
-    "starting_declination_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "starting_model": {
-        "types": [str, int, float],
-    },
-    "starting_inclination": {
-        "types": [str, int, float],
-    },
-    "starting_declination": {
-        "types": [str, int, float],
+        "types": [str, UUID, int, float],
     },
     "tile_spatial": {
         "types": [str, int, float],
@@ -1123,23 +958,9 @@ validations = {
     "reference_model_object": {
         "types": [str],
     },
-    "reference_inclination_object": {
-        "types": [str],
-    },
-    "reference_declination_object": {
-        "types": [str],
-    },
     "reference_model": {
         "types": [str, int, float],
         "reqs": [("reference_model_object")],
-    },
-    "reference_inclination": {
-        "types": [str, int, float],
-        "reqs": [("reference_inclination_object")],
-    },
-    "reference_declination": {
-        "types": [str, int, float],
-        "reqs": [("reference_declination_object")],
     },
     "gradient_type": {
         "types": [str],

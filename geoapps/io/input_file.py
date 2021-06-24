@@ -126,7 +126,6 @@ class InputFile:
                     out[k] = v
 
         out_file = self.filepath
-
         if name is not None:
             out_file = op.join(op.dirname(self.filepath), name + ".ui.json")
 

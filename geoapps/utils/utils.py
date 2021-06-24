@@ -9,6 +9,7 @@ import gc
 import json
 import os
 import re
+from typing import Dict, Tuple
 
 import dask
 import dask.array as da
@@ -23,7 +24,7 @@ from geoh5py.objects import BlockModel, Grid2D, Octree, Surface
 from geoh5py.workspace import Workspace
 from osgeo import gdal
 from scipy.interpolate import interp1d
-from scipy.spatial import cKDTree
+from scipy.spatial import ConvexHull, cKDTree
 from shapely.geometry import LineString, mapping
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
@@ -307,6 +308,95 @@ def export_curve_2_shapefile(
                 c.write(res)
 
 
+def calculate_2D_trend(points, values, order=0, method="all"):
+    """
+    detrend2D(points, values, order=0, method='all')
+
+    Function to remove a trend from 2D scatter points with values
+
+    Parameters:
+    ----------
+
+    points: ndarray or floats, shape(npoints, 2)
+        Coordinates of input points
+
+    values: ndarray of floats, shape(npoints,)
+        Values to be detrended
+
+    order: int
+        Order of the polynomial to be used
+
+    method: str
+        Method to be used for the detrending
+            "all": USe all points
+            "corners": Only use points on the convex hull
+
+
+    Returns
+    -------
+
+    trend: ndarray of floats, shape(npoints,)
+        Calculated trend
+
+    coefficients: ndarray of floats, shape(order+1)
+        Coefficients for the polynomial describing the trend
+        trend = c[0] + points[:, 0] * c[1] +  points[:, 1] * c[2]
+
+    """
+
+    assert method in ["all", "corners"], "method must be 'all', or 'corners'"
+
+    assert order in [0, 1, 2], "order must be 0, 1, or 2"
+
+    if method == "corners":
+        hull = ConvexHull(points[:, :2])
+        # Extract only those points that make the ConvexHull
+        pts = np.c_[points[hull.vertices, :2], values[hull.vertices]]
+    else:
+        # Extract all points
+        pts = np.c_[points[:, :2], values]
+
+    if order == 0:
+        data_trend = np.mean(pts[:, 2]) * np.ones(points[:, 0].shape)
+        print("Removed data mean: {:.6g}".format(data_trend[0]))
+        C = np.r_[0, 0, data_trend]
+
+    elif order == 1:
+        # best-fit linear plane
+        A = np.c_[pts[:, 0], pts[:, 1], np.ones(pts.shape[0])]
+        C, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)  # coefficients
+
+        # evaluate at all data locations
+        data_trend = C[0] * points[:, 0] + C[1] * points[:, 1] + C[2]
+        print("Removed linear trend with mean: {:.6g}".format(np.mean(data_trend)))
+
+    elif order == 2:
+        # best-fit quadratic curve
+        A = np.c_[
+            np.ones(pts.shape[0]),
+            pts[:, :2],
+            np.prod(pts[:, :2], axis=1),
+            pts[:, :2] ** 2,
+        ]
+        C, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)
+
+        # evaluate at all data locations
+        data_trend = np.dot(
+            np.c_[
+                np.ones(points[:, 0].shape),
+                points[:, 0],
+                points[:, 1],
+                points[:, 0] * points[:, 1],
+                points[:, 0] ** 2,
+                points[:, 1] ** 2,
+            ],
+            C,
+        ).reshape(points[:, 0].shape)
+
+        print("Removed polynomial trend with mean: {:.6g}".format(np.mean(data_trend)))
+    return data_trend, C
+
+
 def weighted_average(
     xyz_in: np.ndarray,
     xyz_out: np.ndarray,
@@ -361,27 +451,38 @@ def weighted_average(
     return avg_values
 
 
-def filter_xy(
-    x: np.array, y: np.array, distance: float, window: dict = None
-) -> np.array:
+def window_xy(
+    x: np.ndarray, y: np.ndarray, window: Dict[str, float], mask: np.array = None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Function to extract and down-sample xy locations based on minimum distance and window parameters.
+    Window x, y coordinates with window limits built from center and size.
 
-    :param x: Easting coordinates
-    :param y: Northing coordinates
-    :param distance: Minimum distance between neighbours
+    Notes
+    -----
+    This formulation is restricted to window outside of a north-south,
+    east-west oriented box.  If the data you wish to window has an
+    orientation other than this, then consider using the filter_xy
+    function which includes an optional rotation parameter.
+
+    :param x: Easting coordinates, as vector or meshgrid-like array.
+    :param y: Northing coordinates, as vector or meshgrid-like array.
     :param window: Window parameters describing a domain of interest.
         Must contain the following keys and values:
         window = {
             "center": [X: float, Y: float],
-            "size": [width: float, height: float],
-            "azimuth": float
+            "size": [width: float, height: float]
         }
+    :param mask: Optionally provide an existing mask and return the union
+        of the two masks and it's effect on x and y.
 
-    :return selection: Array of 'bool' of shape(x)
+    :return: mask: Boolean mask that was applied to x, and y.
+    :return: x[mask]: Masked input array x.
+    :return: y[mask]: Masked input array y.
+
+
     """
-    mask = np.ones_like(x, dtype="bool")
-    if window is not None:
+
+    if ("center" in window.keys()) & ("size" in window.keys()):
         x_lim = [
             window["center"][0] - window["size"][0] / 2,
             window["center"][0] + window["size"][0] / 2,
@@ -390,44 +491,173 @@ def filter_xy(
             window["center"][1] - window["size"][1] / 2,
             window["center"][1] + window["size"][1] / 2,
         ]
-        xy_rot = rotate_xy(
-            np.c_[x.ravel(), y.ravel()], window["center"], window["azimuth"]
-        )
-        mask = (
-            (xy_rot[:, 0] > x_lim[0])
-            * (xy_rot[:, 0] < x_lim[1])
-            * (xy_rot[:, 1] > y_lim[0])
-            * (xy_rot[:, 1] < y_lim[1])
-        ).reshape(x.shape)
-
-    if x.ndim == 1:
-        filter_xy = np.ones_like(x, dtype="bool")
-        if distance > 0:
-            mask_ind = np.where(mask)[0]
-            xy = np.c_[x[mask], y[mask]]
-            tree = cKDTree(xy)
-
-            nstn = xy.shape[0]
-            # Initialize the filter
-            for ii in range(nstn):
-                if filter_xy[mask_ind[ii]]:
-                    ind = tree.query_ball_point(xy[ii, :2], distance)
-                    filter_xy[mask_ind[ind]] = False
-                    filter_xy[mask_ind[ii]] = True
-
-    elif distance > 0:
-        filter_xy = np.zeros_like(x, dtype="bool")
-        d_l = np.max(
-            [
-                np.linalg.norm(np.c_[x[0, 0] - x[0, 1], y[0, 0] - y[0, 1]]),
-                np.linalg.norm(np.c_[x[0, 0] - x[1, 0], y[0, 0] - y[1, 0]]),
-            ]
-        )
-        dwn = int(np.ceil(distance / d_l))
-        filter_xy[::dwn, ::dwn] = True
     else:
-        filter_xy = np.ones_like(x, dtype="bool")
-    return filter_xy * mask
+        msg = f"Missing window keys: 'center' and 'size'."
+        raise KeyError(msg)
+
+    window_mask = x >= x_lim[0]
+    window_mask &= x <= x_lim[1]
+    window_mask &= y >= y_lim[0]
+    window_mask &= y <= y_lim[1]
+
+    if mask is not None:
+        window_mask &= mask
+
+    return window_mask, x[window_mask], y[window_mask]
+
+
+def downsample_xy(
+    x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray = None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+
+    """
+    Downsample locations to approximate a grid with defined spacing.
+
+    :param x: Easting coordinates, as a 1-dimensional vector.
+    :param y: Northing coordinates, as a 1-dimensional vector.
+    :param distance: Desired coordinate spacing.
+    :param mask: Optionally provide an existing mask and return the union
+        of the two masks and it's effect on x and y.
+
+    :return: mask: Boolean mask that was applied to x, and y.
+    :return: x[mask]: Masked input array x.
+    :return: y[mask]: Masked input array y.
+
+    """
+
+    downsample_mask = np.ones_like(x, dtype=bool)
+    xy = np.c_[x.ravel(), y.ravel()]
+    tree = cKDTree(xy)
+
+    mask_ind = np.where(downsample_mask)[0]
+    nstn = xy.shape[0]
+    for ii in range(nstn):
+        if downsample_mask[mask_ind[ii]]:
+            ind = tree.query_ball_point(xy[ii, :2], distance)
+            downsample_mask[mask_ind[ind]] = False
+            downsample_mask[mask_ind[ii]] = True
+
+    if mask is not None:
+        downsample_mask &= mask
+
+    xy = xy[downsample_mask]
+    return downsample_mask, xy[:, 0], xy[:, 1]
+
+
+def downsample_grid(
+    xg: np.ndarray, yg: np.ndarray, distance: float, mask: np.ndarray = None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Downsample grid locations to approximate spacing provided by 'distance'.
+
+    Notes
+    -----
+    This implementation is more efficient than the 'downsample_xy' function
+    for locations on a regular grid.
+
+    :param xg: Meshgrid-like array of Easting coordinates.
+    :param yg: Meshgrid-like array of Northing coordinates.
+    :param distance: Desired coordinate spacing.
+    :param mask: Optionally provide an existing mask and return the union
+        of the two masks and it's effect on xg and yg.
+
+    :return: mask: Boolean mask that was applied to xg, and yg.
+    :return: xg[mask]: Masked input array xg.
+    :return: yg[mask]: Masked input array yg.
+
+    """
+
+    u_diff = lambda u: np.unique(np.diff(u, axis=1))[0]
+    v_diff = lambda v: np.unique(np.diff(v, axis=0))[0]
+
+    du = np.linalg.norm(np.c_[u_diff(xg), u_diff(yg)])
+    dv = np.linalg.norm(np.c_[v_diff(xg), v_diff(yg)])
+    u_ds = int(np.rint(distance / du))
+    v_ds = int(np.rint(distance / dv))
+
+    downsample_mask = np.zeros_like(xg, dtype=bool)
+    downsample_mask[::v_ds, ::u_ds] = True
+
+    if mask is not None:
+        downsample_mask &= mask
+
+    return downsample_mask, xg[downsample_mask], yg[downsample_mask]
+
+
+def filter_xy(
+    x: np.array,
+    y: np.array,
+    distance: float = None,
+    window: dict = None,
+    angle: float = None,
+    mask: np.ndarray = None,
+) -> np.array:
+    """
+    Window and down-sample locations based on distance and window parameters.
+
+    :param x: Easting coordinates, as vector or meshgrid-like array
+    :param y: Northing coordinates, as vector or meshgrid-like array
+    :param distance: Desired coordinate spacing.
+    :param window: Window parameters describing a domain of interest.
+        Must contain the following keys and values:
+        window = {
+            "center": [X: float, Y: float],
+            "size": [width: float, height: float]
+        }
+        May also contain an "azimuth" in the case of rotated x and y.
+    :param angle: Angle through which the locations must be rotated
+        to take on a east-west, north-south orientation.  Supersedes
+        the 'azimuth' key/value pair in the window dictionary if it
+        exists.
+    :param mask: Boolean mask to be combined with filter_xy masks via
+        logical 'and' operation.
+
+    :return mask: Boolean mask to be applied input arrays x and y.
+    """
+
+    if mask is None:
+        mask = np.ones_like(x, dtype=bool)
+
+    azim = None
+    if angle is not None:
+        azim = angle
+    elif window is not None:
+        if "azimuth" in window.keys():
+            azim = window["azimuth"]
+
+    is_rotated = False if (azim is None) | (azim == 0) else True
+    if is_rotated:
+        xy_locs = rotate_xy(np.c_[x.ravel(), y.ravel()], window["center"], azim)
+        xr = xy_locs[:, 0].reshape(x.shape)
+        yr = xy_locs[:, 1].reshape(y.shape)
+
+    if window is not None:
+
+        if is_rotated:
+            mask, _, _ = window_xy(xr, yr, window, mask=mask)
+        else:
+            mask, _, _ = window_xy(x, y, window, mask=mask)
+
+    if distance not in [None, 0]:
+
+        is_grid = False
+        if x.ndim > 1:
+
+            if is_rotated:
+                u_diff = np.unique(np.round(np.diff(xr, axis=1), 8))
+                v_diff = np.unique(np.round(np.diff(yr, axis=0), 8))
+            else:
+                u_diff = np.unique(np.round(np.diff(x, axis=1), 8))
+                v_diff = np.unique(np.round(np.diff(y, axis=0), 8))
+
+            is_grid = (len(u_diff) == 1) & (len(v_diff) == 1)
+
+        if is_grid:
+            mask, _, _ = downsample_grid(x, y, distance, mask=mask)
+        else:
+            mask, _, _ = downsample_xy(x, y, distance, mask=mask)
+
+    return mask
 
 
 def rotate_xy(xyz: np.ndarray, center: list, angle: float):
@@ -850,7 +1080,7 @@ def block_model_2_tensor(block_model, models=[]):
     return tensor, out
 
 
-def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
+def treemesh_2_octree(workspace, treemesh, **kwargs):
 
     indArr, levels = treemesh._ubc_indArr
     ubc_order = treemesh._ubc_order
@@ -862,7 +1092,6 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
     origin[2] += treemesh.h[2].size * treemesh.h[2][0]
     mesh_object = Octree.create(
         workspace,
-        name=name,
         origin=origin,
         u_count=treemesh.h[0].size,
         v_count=treemesh.h[1].size,
@@ -871,7 +1100,7 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
         v_cell_size=treemesh.h[1][0],
         w_cell_size=-treemesh.h[2][0],
         octree_cells=np.c_[indArr, levels],
-        parent=parent,
+        **kwargs,
     )
 
     return mesh_object
@@ -880,7 +1109,6 @@ def treemesh_2_octree(workspace, treemesh, name="Mesh", parent=None):
 def octree_2_treemesh(mesh):
     """
     Convert a geoh5 Octree mesh to discretize.TreeMesh
-
     Modified code from module discretize.TreeMesh.readUBC function.
     """
 
@@ -892,9 +1120,10 @@ def octree_2_treemesh(mesh):
 
     nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
 
-    h1, h2, h3 = [np.ones(nr) * np.abs(sz) for nr, sz in zip(nCunderMesh, smallCell)]
-
-    x0 = tswCorn - np.array([0, 0, np.sum(h3)])
+    cell_sizes = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
+    u_shift, v_shift, w_shift = [np.sum(h[h < 0]) for h in cell_sizes]
+    h1, h2, h3 = [np.abs(h) for h in cell_sizes]
+    x0 = tswCorn + np.array([u_shift, v_shift, w_shift])
 
     ls = np.log2(nCunderMesh).astype(int)
     if ls[0] == ls[1] and ls[1] == ls[2]:

@@ -28,14 +28,14 @@ class InversionModel:
 
     def __init__(
         self,
-        inversion_mesh: InversionMesh,
-        model_type: str,
-        params: Params,
         workspace: Workspace,
+        params: Params,
+        mesh: InversionMesh,
+        model_type: str,
     ):
         """
 
-        :param inversion_mesh: Inversion mesh object
+        :param mesh: Inversion mesh object
         :param model_type: Type of inversion model, can be any of "starting", "reference",
             "lower_bound", "upper_bound".
         :param params: Params object containing param with model data string in attribute
@@ -43,12 +43,13 @@ class InversionModel:
         :param workspace: Workspace object possibly containing model data addressed by
             UUID stored in the params object.
         """
-        self.inversion_mesh = inversion_mesh
+        self.mesh = mesh
         self.model_type = model_type
         self.params = params
         self.workspace = workspace
         self.model = None
-        self.vector = None
+        self.is_vector = None
+        self.n_blocks = None
         self._initialize()
 
     def _initialize(self):
@@ -60,29 +61,28 @@ class InversionModel:
         inducing field.
         """
 
-        self.vector = True if self.params.inversion_type == "mvi" else False
+        self.is_vector = True if self.params.inversion_type == "mvi" else False
+        self.nblocks = 3 if self.params.inversion_type == "mvi" else 1
 
         if self.model_type in ["starting", "reference"]:
 
             model = self.get(self.model_type + "_model")
 
-            if self.vector:
+            if self.is_vector:
 
                 inclination = self.get(self.model_type + "_inclination")
                 declination = self.get(self.model_type + "_declination")
 
                 if inclination is None:
                     inclination = (
-                        np.ones(self.inversion_mesh.nC)
-                        * self.params.inducing_field_inclination
+                        np.ones(self.mesh.nC) * self.params.inducing_field_inclination
                     )
 
                 if declination is None:
                     declination = (
-                        np.ones(self.inversion_mesh.nC)
-                        * self.params.inducing_field_declination
+                        np.ones(self.mesh.nC) * self.params.inducing_field_declination
                     )
-                    declination += self.inversion_mesh.rotation["angle"]
+                    declination += self.mesh.rotation["angle"]
 
                 field_vecs = dip_azimuth2cartesian(
                     dip=inclination,
@@ -95,7 +95,12 @@ class InversionModel:
 
             model = self.get(self.model_type)
 
-        self.model = mkvc(model)
+        if model is not None:
+            self.model = mkvc(model)
+
+    def remove_air(self, active_cells):
+        """ Use active cells vector to remove air cells from model """
+        self.model = self.model[np.tile(active_cells, self.nblocks)]
 
     def permute_2_octree(self):
         """
@@ -104,7 +109,7 @@ class InversionModel:
 
         :return: Vector of model values reordered for Octree mesh.
         """
-        return self.model[self.inversion_mesh.octree_permutation]
+        return self.model[self.mesh.octree_permutation]
 
     def permute_2_treemesh(self, model):
         """
@@ -114,7 +119,7 @@ class InversionModel:
         :param model: Octree sorted model
         :return: Vector of model values reordered for TreeMesh.
         """
-        return model[np.argsort(self.inversion_mesh.octree_permutation)]
+        return model[np.argsort(self.mesh.octree_permutation)]
 
     def get(self, name: str):
         """
@@ -148,7 +153,7 @@ class InversionModel:
             the number of cells in the inversion mesh.
         """
 
-        nc = self.inversion_mesh.nC
+        nc = self.mesh.nC
         if isinstance(model, (int, float)):
             model *= np.ones(nc)
 
@@ -196,7 +201,7 @@ class InversionModel:
         else:
             xyz_in = parent.vertices
 
-        xyz_out = self.inversion_mesh.original_cc()
+        xyz_out = self.mesh.original_cc()
 
         return weighted_average(xyz_in, xyz_out, [obj])[0]
 

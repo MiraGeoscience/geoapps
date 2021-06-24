@@ -5,7 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 from uuid import UUID
 
 from ..input_file import InputFile
@@ -14,9 +14,11 @@ from ..validators import InputValidator
 from .constants import default_ui_json, required_parameters, validations
 
 
-class GravParams(Params):
-    def __init__(self):
-        super().__init__()
+class GravityParams(Params):
+
+    _default_ui_json = default_ui_json
+
+    def __init__(self, **kwargs):
 
         self.validations: Dict[str, Any] = validations
         self.validator: InputValidator = InputValidator(
@@ -27,14 +29,10 @@ class GravParams(Params):
         self.topography_object: UUID = None
         self.topography = None
         self.data_object = None
-        self.tmi_channel = None
-        self.tmi_uncertainty = None
+        self.gz_channel = None
+        self.gz_uncertainty = None
         self.starting_model_object = None
-        self.starting_inclination_object = None
-        self.starting_declination_object = None
         self.starting_model = None
-        self.starting_inclination = None
-        self.starting_declination = None
         self.tile_spatial = None
         self.receivers_radar_drape = None
         self.receivers_offset_x = None
@@ -83,11 +81,7 @@ class GravParams(Params):
         self.y_norm = None
         self.z_norm = None
         self.reference_model_object = None
-        self.reference_inclination_object = None
-        self.reference_declination_object = None
         self.reference_model = None
-        self.reference_inclination = None
-        self.reference_declination = None
         self.gradient_type = None
         self.lower_bound = None
         self.upper_bound = None
@@ -97,21 +91,21 @@ class GravParams(Params):
         self.inversion_type = None
         self.out_group = None
         self.no_data_value = None
-        self._ifile = InputFile()
+        self._input_file = InputFile()
 
-        self._set_defaults()
+        super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
         """ Wraps Params._set_defaults """
-        return super()._set_defaults(default_ui_json)
+        return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
         """ Wraps Params.default. """
-        return super().default(default_ui_json, param)
+        return super().default(self.default_ui_json, param)
 
     def components(self) -> List[str]:
         """ Retrieve component names used to index channel, uncertainty data. """
-        return [k.split("_")[0] for k in self.active() if "channel" in k]
+        return [k.split("_")[0] for k in self.active_set() if "channel" in k]
 
     def uncertainty(self, component: str) -> float:
         """ Returns uncertainty for chosen data component. """
@@ -143,14 +137,6 @@ class GravParams(Params):
         is_offset = any([(k != 0) for k in offsets])
         offsets = offsets if is_offset else None
         return offsets, self.receivers_radar_drape
-
-    def inducing_field_aid(self) -> List[float]:
-        """ Returns inducing field components as a list. """
-        return [
-            self.inducing_field_strength,
-            self.inducing_field_inclination,
-            self.inducing_field_declination,
-        ]
 
     def model_norms(self) -> List[float]:
         """ Returns model norm components as a list. """
@@ -190,53 +176,6 @@ class GravParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._forward_only = val
-
-    @property
-    def inducing_field_strength(self):
-        return self._inducing_field_strength
-
-    @inducing_field_strength.setter
-    def inducing_field_strength(self, val):
-        if val is None:
-            self._inducing_field_strength = val
-            return
-        p = "inducing_field_strength"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        if val <= 0:
-            raise ValueError("inducing_field_strength must be greater than 0.")
-        self._inducing_field_strength = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def inducing_field_inclination(self):
-        return self._inducing_field_inclination
-
-    @inducing_field_inclination.setter
-    def inducing_field_inclination(self, val):
-        if val is None:
-            self._inducing_field_inclination = val
-            return
-        p = "inducing_field_inclination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inducing_field_inclination = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def inducing_field_declination(self):
-        return self._inducing_field_declination
-
-    @inducing_field_declination.setter
-    def inducing_field_declination(self, val):
-        if val is None:
-            self._inducing_field_declination = val
-            return
-        p = "inducing_field_declination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inducing_field_declination = UUID(val) if isinstance(val, str) else val
 
     @property
     def topography_object(self):
@@ -284,34 +223,34 @@ class GravParams(Params):
         self._data_object = UUID(val) if isinstance(val, str) else val
 
     @property
-    def tmi_channel(self):
-        return self._tmi_channel
+    def gz_channel(self):
+        return self._gz_channel
 
-    @tmi_channel.setter
-    def tmi_channel(self, val):
+    @gz_channel.setter
+    def gz_channel(self, val):
         if val is None:
-            self._tmi_channel = val
+            self._gz_channel = val
             return
-        p = "tmi_channel"
+        p = "gz_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._tmi_channel = UUID(val) if isinstance(val, str) else val
+        self._gz_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def tmi_uncertainty(self):
-        return self._tmi_uncertainty
+    def gz_uncertainty(self):
+        return self._gz_uncertainty
 
-    @tmi_uncertainty.setter
-    def tmi_uncertainty(self, val):
+    @gz_uncertainty.setter
+    def gz_uncertainty(self, val):
         if val is None:
-            self._tmi_uncertainty = val
+            self._gz_uncertainty = val
             return
-        p = "tmi_uncertainty"
+        p = "gz_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._tmi_uncertainty = UUID(val) if isinstance(val, str) else val
+        self._gz_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
     def starting_model_object(self):
@@ -329,36 +268,6 @@ class GravParams(Params):
         self._starting_model_object = UUID(val) if isinstance(val, str) else val
 
     @property
-    def starting_inclination_object(self):
-        return self._starting_inclination_object
-
-    @starting_inclination_object.setter
-    def starting_inclination_object(self, val):
-        if val is None:
-            self._starting_inclination_object = val
-            return
-        p = "starting_inclination_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._starting_inclination_object = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def starting_declination_object(self):
-        return self._starting_declination_object
-
-    @starting_declination_object.setter
-    def starting_declination_object(self, val):
-        if val is None:
-            self._starting_declination_object = val
-            return
-        p = "starting_declination_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._starting_declination_object = UUID(val) if isinstance(val, str) else val
-
-    @property
     def starting_model(self):
         return self._starting_model
 
@@ -372,36 +281,6 @@ class GravParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._starting_model = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def starting_inclination(self):
-        return self._starting_inclination
-
-    @starting_inclination.setter
-    def starting_inclination(self, val):
-        if val is None:
-            self._starting_inclination = val
-            return
-        p = "starting_inclination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._starting_inclination = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def starting_declination(self):
-        return self._starting_declination
-
-    @starting_declination.setter
-    def starting_declination(self, val):
-        if val is None:
-            self._starting_declination = val
-            return
-        p = "starting_declination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._starting_declination = UUID(val) if isinstance(val, str) else val
 
     @property
     def tile_spatial(self):
@@ -1124,36 +1003,6 @@ class GravParams(Params):
         self._reference_model_object = UUID(val) if isinstance(val, str) else val
 
     @property
-    def reference_inclination_object(self):
-        return self._reference_inclination_object
-
-    @reference_inclination_object.setter
-    def reference_inclination_object(self, val):
-        if val is None:
-            self._reference_inclination_object = val
-            return
-        p = "reference_inclination_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_inclination_object = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def reference_declination_object(self):
-        return self._reference_declination_object
-
-    @reference_declination_object.setter
-    def reference_declination_object(self, val):
-        if val is None:
-            self._reference_declination_object = val
-            return
-        p = "reference_declination_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_declination_object = UUID(val) if isinstance(val, str) else val
-
-    @property
     def reference_model(self):
         return self._reference_model
 
@@ -1167,36 +1016,6 @@ class GravParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._reference_model = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def reference_inclination(self):
-        return self._reference_inclination
-
-    @reference_inclination.setter
-    def reference_inclination(self, val):
-        if val is None:
-            self._reference_inclination = val
-            return
-        p = "reference_inclination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_inclination = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def reference_declination(self):
-        return self._reference_declination
-
-    @reference_declination.setter
-    def reference_declination(self, val):
-        if val is None:
-            self._reference_declination = val
-            return
-        p = "reference_declination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_declination = UUID(val) if isinstance(val, str) else val
 
     @property
     def gradient_type(self):

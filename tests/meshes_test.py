@@ -7,27 +7,33 @@
 
 import numpy as np
 from discretize import TreeMesh
+from geoh5py.workspace import Workspace
 
 from geoapps.drivers.components import InversionMesh
-from geoapps.io import InputFile
 from geoapps.io.MVI import MVIParams
 from geoapps.io.MVI.constants import default_ui_json
+from geoapps.utils.testing import Geoh5Tester
 
-input_file = InputFile()
-input_file.default(default_ui_json)
-input_file.data["geoh5"] = "./FlinFlon.geoh5"
-params = MVIParams.from_input_file(input_file)
-params.mesh = "{e334f687-df71-4538-ad28-264e420210b8}"
-ws = params.workspace
+workspace = Workspace("./FlinFlon.geoh5")
 
 
-def test_initialize():
-    inversion_mesh = InversionMesh(params, ws)
+def setup_params(tmp):
+    geotest = Geoh5Tester(workspace, tmp, "test.geoh5", default_ui_json, MVIParams)
+    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    return geotest.make()
+
+
+def test_initialize(tmp_path):
+
+    ws, params = setup_params(tmp_path)
+    inversion_mesh = InversionMesh(ws, params)
     assert isinstance(inversion_mesh.mesh, TreeMesh)
     assert inversion_mesh.rotation["angle"] == 20
 
 
-def test_original_cc():
-    inversion_mesh = InversionMesh(params, ws)
+def test_original_cc(tmp_path):
+
+    ws, params = setup_params(tmp_path)
+    inversion_mesh = InversionMesh(ws, params)
     msh = ws.get_entity(params.mesh)[0]
-    assert np.all((msh.centroids - inversion_mesh.original_cc()) < 1e-14)
+    np.testing.assert_allclose(msh.centroids, inversion_mesh.original_cc())
