@@ -269,7 +269,7 @@ class ObjectDataSelection(BaseApplication):
 
             if self.select_multiple and any([val in options for val in value]):
                 self.data.value = [val for val in value if val in options]
-            elif value in options:
+            elif value in dict(options).values():
                 self.data.value = value
             elif self.find_label:
                 self.data.value = utils.find_value(self.data.options, self.find_label)
