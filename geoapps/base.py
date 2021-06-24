@@ -10,6 +10,7 @@ import time
 import uuid
 from os import mkdir, path
 from shutil import copyfile, move
+from typing import Optional
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.shared import Entity
@@ -17,6 +18,7 @@ from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
 
+from geoapps.io.params import Params
 from geoapps.utils.formatters import string_name
 
 
@@ -28,25 +30,24 @@ class BaseApplication:
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
     }
+    _geoh5 = None
+    _h5file = None
+    _main = None
+    _workspace = None
+    _working_directory = None
+    _workspace_geoh5 = None
+    _monitoring_directory = None
+    _ga_group_name = None
+    _ga_group = None
+    _trigger = None
+    _figure = None
+    _refresh = None
+    _params: Optional[Params] = None
 
     def __init__(self, **kwargs):
-
-        kwargs = self.apply_defaults(**kwargs)
+        self.defaults = self.update_defaults(**kwargs)
         self.plot_result = False
-        self._h5file = None
-        self._workspace = None
-        self._working_directory = None
-        self._workspace_geoh5 = None
-        self._monitoring_directory = None
-        self.figure = None
         self._file_browser = FileChooser()
-        self._ga_group_name = Text(
-            value="",
-            description="Group:",
-            continuous_update=False,
-            style={"description_width": "initial"},
-        )
-        self._ga_group = None
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
         self._copy_trigger = Button(
@@ -75,14 +76,6 @@ class BaseApplication:
         self._export_directory = FileChooser(show_only_dirs=True)
         self._export_directory._select.on_click(self.export_browser_change)
         self.live_link_panel = VBox([self.live_link])
-        self._refresh = ToggleButton(value=False)
-        self._trigger = Button(
-            description="Compute",
-            button_style="danger",
-            tooltip="Run computation",
-            icon="check",
-        )
-
         self.output_panel = VBox(
             [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
         )
@@ -92,17 +85,16 @@ class BaseApplication:
                 self.export_directory,
             ]
         )
-        self.__populate__(**kwargs)
 
         def ga_group_name_update(_):
             self.ga_group_name_update()
 
         self.ga_group_name.observe(ga_group_name_update)
 
-        self._main = VBox([self.project_panel, self.output_panel])
+        self.__populate__(**self.defaults)
 
     def __call__(self):
-        return self._main
+        return self.main
 
     def __populate__(self, **kwargs):
         for key, value in kwargs.items():
@@ -132,7 +124,7 @@ class BaseApplication:
                 except:
                     pass
 
-    def apply_defaults(self, **kwargs):
+    def update_defaults(self, **kwargs):
         """
         Add defaults to the kwargs
         """
@@ -149,11 +141,11 @@ class BaseApplication:
         if not self.file_browser._select.disabled:
             _, extension = path.splitext(self.file_browser.selected)
 
-            if extension == ".json":
-                # params = load_json_params(self.file_browser.selected)
-                with open(self.file_browser.selected) as f:
-                    params = json.load(f)
-                self.__populate__(**params)
+            if extension == ".json" and getattr(self, "_param_class", None) is not None:
+                self.params = getattr(self, "_param_class").from_path(
+                    self.file_browser.selected
+                )
+                self.__populate__(**self.params.__dict__)
 
             elif extension == ".geoh5":
                 self.h5file = self.file_browser.selected
@@ -202,6 +194,9 @@ class BaseApplication:
                 live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
                 self.monitoring_directory = live_path
 
+            if getattr(self, "_params", None) is not None:
+                setattr(self.params, "monitoring_directory", self.monitoring_directory)
+
             self.live_link_panel.children = [self.live_link, self.monitoring_panel]
         else:
             self.live_link_panel.children = [self.live_link]
@@ -211,6 +206,9 @@ class BaseApplication:
         """
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
         """
+        if self._main is None:
+            self._main = VBox([self.project_panel, self.output_panel])
+
         return self._main
 
     @property
@@ -276,22 +274,34 @@ class BaseApplication:
         return self._ga_group
 
     @property
-    def ga_group_name(self):
+    def ga_group_name(self) -> Text:
         """
-        Default group name to export to
+        Widget to assign a group name to export to
         """
+        if getattr(self, "_ga_group_name", None) is None:
+            self._ga_group_name = Text(
+                value="",
+                description="Group:",
+                continuous_update=False,
+                style={"description_width": "initial"},
+            )
         return self._ga_group_name
 
     @property
     def geoh5(self):
         """
-        Mirror of h5file
+        Alias for workspace or h5file property
         """
-        return self.h5file
+        return self._geoh5
 
     @geoh5.setter
     def geoh5(self, value):
-        self.h5file = value
+        if isinstance(value, Workspace):
+            self.workspace = value
+        elif isinstance(value, str):
+            self.h5file = value
+        else:
+            raise ValueError
 
     @property
     def h5file(self):
@@ -335,10 +345,27 @@ class BaseApplication:
         return self._export_directory
 
     @property
+    def params(self) -> Params:
+        """
+        Application parameters
+        """
+        return self._params
+
+    @params.setter
+    def params(self, params: Params):
+        assert isinstance(
+            params, Params
+        ), f"Input parameters must be an instance of {Params}"
+
+        self._params = params
+
+    @property
     def refresh(self):
         """
-        :obj:`ipywidgets.ToggleButton`: Switch to refresh the plot
+        Generic toggle button to control a refresh of the application
         """
+        if getattr(self, "_refresh", None) is None:
+            self._refresh = ToggleButton(value=False)
         return self._refresh
 
     def save_json_params(self, file_name: str, out_dict: dict):
@@ -363,10 +390,17 @@ class BaseApplication:
         return out_dict
 
     @property
-    def trigger(self):
+    def trigger(self) -> Button:
         """
-        :obj:`ipywidgets.ToggleButton`: Trigger some computation and output.
+        Widget for generic trigger of computations.
         """
+        if getattr(self, "_trigger", None) is None:
+            self._trigger = Button(
+                description="Compute",
+                button_style="danger",
+                tooltip="Run computation",
+                icon="check",
+            )
         return self._trigger
 
     @property

@@ -29,11 +29,11 @@ class InversionMesh:
     """
 
     def __init__(
-        self, params: Params, workspace: Workspace, window: List[float] = None
+        self, workspace: Workspace, params: Params, window: List[float] = None
     ) -> None:
 
-        self.params = params
         self.workspace = workspace
+        self.params = params
         self.window = window
         self.mesh = None
         self.nC = None
@@ -64,13 +64,15 @@ class InversionMesh:
             if self.mesh.rotation:
                 origin = self.mesh.origin.tolist()
                 angle = self.mesh.rotation[0]
+                self.rotation = {"origin": origin, "angle": angle}
             else:
-                if window is not None:
-                    origin = self.window["center"]
-                    angle = self.window["azimuth"]
+                if self.window is not None:
+                    if "azimuth" in self.window.keys():
+                        origin = self.window["center"]
+                        angle = self.window["azimuth"]
+                        self.rotation = {"origin": origin, "angle": angle}
 
             self.mesh = octree_2_treemesh(self.mesh)
-            self.rotation = {"origin": origin, "angle": angle}
             self.octree_permutation = self.mesh._ubc_order
 
     def original_cc(self):
