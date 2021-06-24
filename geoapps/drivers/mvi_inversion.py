@@ -41,7 +41,12 @@ from SimPEG.utils.drivers import create_nested_mesh
 from geoapps.io.MVI import MVIParams
 from geoapps.utils import filter_xy, rotate_xy, treemesh_2_octree
 
-from .components import InversionData, InversionMesh, InversionModel, get_topography
+from .components import (
+    InversionData,
+    InversionMesh,
+    InversionModel,
+    InversionTopography,
+)
 
 
 def start_inversion(filepath=None):
@@ -89,9 +94,9 @@ class InversionDriver:
         cluster = LocalCluster(processes=False)
         client = Client(cluster)
 
-        self.mesh = InversionMesh(self.params, self.workspace, self.window)
+        self.mesh = InversionMesh(self.workspace, self.params, self.window)
         self.window["azimuth"] = -self.mesh.rotation["angle"]
-        self.topo, self.topo_interp_function = get_topography(
+        self.topography = InversionTopography(
             self.workspace, self.params, self.mesh, self.window
         )
         self.starting_model = InversionModel(
@@ -102,7 +107,7 @@ class InversionDriver:
         )
 
         self.activeCells = active_from_xyz(
-            self.mesh.mesh, self.topo, grid_reference="N"
+            self.mesh.mesh, self.topography.locs, grid_reference="N"
         )
         self.no_data_value = 0
         self.activeCellsMap = maps.InjectActiveCells(
@@ -583,111 +588,6 @@ class InversionDriver:
                 "SensWeights.mod",
                 (self.activeCellsMap * model_map * global_weights)[: self.mesh.nC],
             )
-
-    def get_survey(self):
-        """ Populates SimPEG.LinearSurvey object with workspace data """
-
-        components = self.params.components()
-        data = []
-        uncertainties = []
-        for comp in components:
-            data.append(self.fetch(self.params.channel(comp)))
-            unc = self.params.uncertainty(comp)
-            if isinstance(unc, (int, float)):
-                uncertainties.append([unc] * len(data[-1]))
-            else:
-                uncertainties.append(self.fetch(unc))
-
-        data = np.vstack(data).T
-        uncertainties = np.vstack(uncertainties).T
-
-        if self.params.ignore_values is not None:
-            igvals = self.params.ignore_values
-            if igvals is not None:
-                if "<" in igvals:
-                    uncertainties[data <= float(igvals.split("<")[1])] = np.inf
-                elif ">" in igvals:
-                    uncertainties[data >= float(igvals.split(">")[1])] = np.inf
-                else:
-                    uncertainties[data == float(igvals)] = np.inf
-
-        data_object = self.fetch(self.params.data_object)
-        if isinstance(data_object, Grid2D):
-            data_locs = data_object.centroids
-        else:
-            data_locs = data_object.vertices
-
-        window_ind = filter_xy(
-            data_locs[:, 0], data_locs[:, 1], self.params.resolution, window=self.window
-        )
-
-        if self.mesh.rotation["angle"] is not None:
-
-            xy_rot = rotate_xy(
-                data_locs[window_ind, :2],
-                self.mesh.rotation["origin"],
-                -self.mesh.rotation["angle"],
-            )
-
-            xyz_loc = np.c_[xy_rot, data_locs[window_ind, 2]]
-        else:
-            xyz_loc = data_locs[window_ind, :]
-
-        offset, radar = self.params.offset()
-        if radar is not None:
-
-            F = LinearNDInterpolator(self.topo[:, :2], self.topo[:, 2])
-            z_topo = F(xyz_loc[:, :2])
-
-            if np.any(np.isnan(z_topo)):
-                tree = cKDTree(self.topo[:, :2])
-                _, ind = tree.query(xyz_loc[np.isnan(z_topo), :2])
-                z_topo[np.isnan(z_topo)] = self.topo[ind, 2]
-
-            xyz_loc[:, 2] = z_topo
-            radar_offset = self.fetch(radar)
-            xyz_loc[:, 2] += radar_offset[window_ind]
-
-        xyz_loc += offset if offset is not None else 0
-
-        if self.window is not None:
-            self.params.inducing_field_declination += float(self.mesh.rotation["angle"])
-
-        receivers = magnetics.receivers.Point(xyz_loc, components=components)
-        source = magnetics.sources.SourceField(
-            receiver_list=[receivers], parameters=self.params.inducing_field_aid()
-        )
-        survey = magnetics.survey.Survey(source)
-
-        survey.dobs = data[window_ind, :].ravel()
-        survey.std = uncertainties[window_ind, :].ravel()
-
-        if self.params.detrend_data:
-
-            data_trend, _ = utils.matutils.calculate_2D_trend(
-                survey.rxLoc,
-                survey.dobs,
-                self.params.detrend_order,
-                self.params.detrend_type,
-            )
-
-            survey.dobs -= data_trend
-
-        if survey.std is None:
-            survey.std = survey.dobs * 0 + 1  # Default
-
-        print(f"Minimum uncertainty found: {survey.std.min():.6g} nT")
-
-        normalization = []
-        for ind, comp in enumerate(survey.components):
-            if "gz" == comp:
-                print(f"Sign flip for {comp} component")
-                normalization.append(-1.0)
-                survey.dobs[ind :: len(survey.components)] *= -1
-            else:
-                normalization.append(1.0)
-
-        return survey, normalization
 
 
 if __name__ == "__main__":
