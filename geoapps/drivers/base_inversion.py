@@ -129,7 +129,7 @@ class InversionDriver:
         # Create regularization
         wr = np.zeros(self.n_cells * self.n_blocks)
         norm = np.tile(
-            self.mesh.mesh.cell_volumes[self.activeCells] ** 2.0, self.n_blocks
+            self.mesh.mesh.cell_volumes[self.active_cells] ** 2.0, self.n_blocks
         )
 
         for ii, dmisfit in enumerate(global_misfit.objfcts):
@@ -294,6 +294,8 @@ class InversionDriver:
         else:
             dpred = global_misfit.survey.dpred(mrec).compute()
 
+        return dpred
+
     def save_residuals(self, obj, dpred):
         for ii, component in enumerate(self.survey.components):
             obj.add_data(
@@ -421,7 +423,7 @@ class InversionDriver:
 
     def calculate_tile_misfits(self, tiles):
 
-        local_misfits, sorting = [], []
+        local_misfits, self.sorting = [], []
         for tile_id, local_index in enumerate(tiles):
             lsurvey = self.data.survey(local_index)
             lsim, lmap = self.data.simulation(local_index, tile_id)
@@ -429,7 +431,7 @@ class InversionDriver:
                 data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
             )
             lmisfit = data_misfit.L2DataMisfit(
-                data=ldat,
+                data=ldat[0],
                 simulation=lsim,
                 model_map=lmap,
             )
