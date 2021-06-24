@@ -13,11 +13,8 @@ from typing import Union
 from uuid import UUID
 
 import numpy as np
-import scipy.sparse as sp
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster
-from discretize import TreeMesh
-from discretize.utils import active_from_xyz
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Points
 from SimPEG import (
@@ -32,19 +29,16 @@ from SimPEG import (
     regularization,
     utils,
 )
-from SimPEG.potential_fields import gravity
 from SimPEG.utils import tile_locations
-from SimPEG.utils.drivers import create_nested_mesh
 
 from geoapps.io.Gravity import GravityParams
-from geoapps.utils import rotate_xy, treemesh_2_octree
+from geoapps.utils import rotate_xy
 
 from .components import (
     InversionData,
     InversionMesh,
     InversionModel,
     InversionTopography,
-    SurveyFactory,
 )
 
 
@@ -67,21 +61,6 @@ class GravityDriver:
         self.outDir = (
             os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
         )
-        # self.results = Workspace(params.output_geoh5)
-
-    def fetch(self, p: Union[str, UUID]):
-        """ Fetch the object addressed by uuid from the workspace. """
-
-        if isinstance(p, str):
-            try:
-                p = UUID(p)
-            except:
-                p = self.params.__getattribute__(p)
-
-        try:
-            return self.workspace.get_entity(p)[0].values
-        except AttributeError:
-            return self.workspace.get_entity(p)[0]
 
     def get_components(self):
 
@@ -134,7 +113,6 @@ class GravityDriver:
         self.active_cells_map = maps.InjectActiveCells(
             self.mesh.mesh, self.active_cells, 0
         )
-
         for model in self.models():
             model.remove_air(self.active_cells)
 
@@ -153,19 +131,7 @@ class GravityDriver:
         local_misfits, dpreds, self.sorting = [], [], []
         for tile_id, local_index in enumerate(self.tiles):
             lsurvey = self.data.get_survey(local_index)
-            locs = lsurvey.receiver_locations
-            lmesh = create_nested_mesh(locs, self.mesh.mesh)
-            lmap = maps.TileMap(self.mesh.mesh, self.active_cells, lmesh)
-            lsim = gravity.simulation.Simulation3DIntegral(
-                survey=lsurvey,
-                mesh=lmesh,
-                rhoMap=maps.IdentityMap(nP=int(lmap.local_active.sum())),
-                actInd=lmap.local_active,
-                sensitivity_path=self.outDir + "Tile" + str(tile_id) + ".zarr",
-                chunk_format="row",
-                store_sensitivities="disk",
-                max_chunk_size=self.params.max_chunk_size,
-            )
+            lsim, lmap = self.data.get_simulation(local_index, tile_id)
 
             if self.params.forward_only:
                 d = simulation.fields(utils.mkvc(self.starting_model.model))
@@ -194,12 +160,8 @@ class GravityDriver:
         for ii, dmisfit in enumerate(global_misfit.objfcts):
             wr += dmisfit.getJtJdiag(self.starting_model.model) / norm
 
-        # wr += np.percentile(wr, 40)
-        # wr *= norm
         wr **= 0.5
         wr = wr / wr.max()
-
-        # self.write_data(sorting, self.data.normalizations, model_map, wr)
 
         # Create a regularization
         reg = regularization.Sparse(
@@ -237,6 +199,7 @@ class GravityDriver:
         # Add a list of directives to the inversion
         directiveList = []
 
+        # MVI or not
         if self.is_vector:
             directiveList.append(
                 directives.VectorInversion(
@@ -265,6 +228,7 @@ class GravityDriver:
             )
         )
 
+        # Beta estimate
         if self.params.initial_beta is None:
             directiveList.append(
                 directives.BetaEstimate_ByEig(
@@ -281,6 +245,7 @@ class GravityDriver:
             channels = ["model"]
             if self.is_vector:
                 channels = ["amplitude", "theta", "phi"]
+
             outmesh = self.fetch("mesh").copy(
                 parent=self.out_group, copy_children=False
             )
@@ -309,10 +274,15 @@ class GravityDriver:
                 vertices=rx_locs,
                 parent=self.out_group,
             )
+
             comps, norms = self.survey.components, self.data.normalizations
+            data_type = {}
             for ii, (comp, norm) in enumerate(zip(comps, norms)):
                 val = norm * self.survey.dobs[ii :: len(comps)]
-                point_object.add_data({f"Observed_{comp}": {"values": val}})
+                data_object = point_object.add_data(
+                    {f"Observed_{comp}": {"values": val}}
+                )
+                data_type[comp] = data_object.entity_type
 
             directiveList.append(
                 directives.SaveIterationsGeoH5(
@@ -320,6 +290,7 @@ class GravityDriver:
                     channels=self.survey.components,
                     mapping=np.hstack(self.data.normalizations),
                     attribute_type="predicted",
+                    data_type=data_type,
                     sorting=tuple(self.sorting),
                     save_objective_function=True,
                 )
@@ -425,124 +396,19 @@ class GravityDriver:
 
         return local_survey
 
-    def write_data(self, normalizations, model_map, wr):
+    def fetch(self, p: Union[str, UUID]):
+        """ Fetch the object addressed by uuid from the workspace. """
 
-        # self.out_group.add_comment(json.dumps(input_dict, indent=4).strip(), author="input")
-        if self.window is not None:
-            rxLoc = self.survey.receiver_locations
-            xy_rot = rotate_xy(
-                rxLoc[:, :2],
-                self.mesh.rotation["origin"],
-                self.mesh.rotation["angle"],
-            )
-            xy_rot = np.c_[xy_rot, rxLoc[:, 2]]
+        if isinstance(p, str):
+            try:
+                p = UUID(p)
+            except:
+                p = self.params.__getattribute__(p)
 
-            origin_rot = rotate_xy(
-                self.mesh.mesh.x0[:2].reshape((1, 2)),
-                self.mesh.rotation["origin"],
-                self.mesh.rotation["angle"],
-            )
-
-            dxy = (origin_rot - self.mesh.mesh.x0[:2]).ravel()
-
-        else:
-            rotation = 0
-            dxy = [0, 0]
-            xy_rot = rxLoc[:, :3]
-
-        point_object = Points.create(
-            self.workspace, name=f"Predicted", vertices=xy_rot, parent=self.out_group
-        )
-
-        for ii, (component, norm) in enumerate(
-            zip(self.survey.components, normalizations)
-        ):
-            val = norm * self.survey.dobs[ii :: len(self.survey.components)]
-            point_object.add_data({"Observed_" + component: {"values": val}})
-
-        output_mesh = treemesh_2_octree(
-            self.workspace, self.mesh.mesh, parent=self.out_group
-        )
-        output_mesh.rotation = self.mesh.rotation["angle"]
-
-        # mesh_object.origin = (
-        #         np.r_[mesh_object.origin.tolist()] + np.r_[dxy, np.sum(self.mesh.h[2])]
-        # )
-        output_mesh.origin = self.mesh.rotation["origin"]
-
-        self.workspace.finalize()
-
-        if self.params.forward_only:
-
-            dpred = np.hstack(dpred)
-            for ind, (comp, norm) in enumerate(
-                zip(self.survey.components, normalizations)
-            ):
-                val = norm * dpred[ind :: len(self.survey.components)]
-
-                point_object.add_data(
-                    {"Forward_" + comp: {"values": val[self.sorting]}}
-                )
-
-            utils.io_utils.writeUBCmagneticsObservations(
-                self.outDir + "/Obs.mag", self.survey, dpred
-            )
-            mesh_object.add_data(
-                {
-                    "Starting_model": {
-                        "values": np.linalg.norm(
-                            (
-                                self.active_cells_map
-                                * model_map
-                                * self.starting_model.model
-                            ).reshape((3, -1)),
-                            axis=0,
-                        )[self.mesh.mesh._ubc_order],
-                        "association": "CELL",
-                    }
-                }
-            )
-
-            # Run exits here if forward_only
-            return None
-
-        self.sorting = np.argsort(np.hstack(self.sorting))
-
-        if self.n_blocks > 1:
-            self.active_cells_map.P = sp.block_diag(
-                [self.active_cells_map.P for ii in range(self.n_blocks)]
-            )
-            self.active_cells_map.valInactive = np.kron(
-                np.ones(self.n_blocks), self.active_cells_map.valInactive
-            )
-
-        if self.params.output_geoh5 is not None:
-            self.fetch("mesh").add_data(
-                {
-                    "SensWeights": {
-                        "values": (self.active_cells_map * wr)[: self.mesh.nC][
-                            self.mesh.mesh._ubc_order
-                        ],
-                        "association": "CELL",
-                    }
-                }
-            )
-        elif isinstance(self.mesh.mesh, TreeMesh):
-            TreeMesh.writeUBC(
-                self.mesh.mesh,
-                self.outDir + "OctreeMeshGlobal.msh",
-                models={
-                    self.outDir
-                    + "SensWeights.mod": (
-                        self.active_cells_map * model_map * global_weights
-                    )[: self.mesh.nC]
-                },
-            )
-        else:
-            self.mesh.mesh.writeModelUBC(
-                "SensWeights.mod",
-                (self.active_cells_map * model_map * global_weights)[: self.mesh.nC],
-            )
+        try:
+            return self.workspace.get_entity(p)[0].values
+        except AttributeError:
+            return self.workspace.get_entity(p)[0]
 
 
 if __name__ == "__main__":
