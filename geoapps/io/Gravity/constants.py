@@ -772,6 +772,7 @@ default_ui_json = {
         "tooltip": "Warning: launches process to run python model on save",
         "main": True,
     },
+    "conda_environment": {"default": "geoapps", "enabled": False, "value": "geoapps"},
 }
 
 required_parameters = []

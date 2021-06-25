@@ -94,6 +94,19 @@ class GravityDriver:
         # Collect window parameters into dictionary
         self.window = self.params.window()
 
+        if self.window["center"][0] is None:
+
+            data_locs = self.workspace.get_entity(self.params.data_object)[0].centroids
+
+            xmin = np.min(data_locs[:, 0])
+            xmax = np.max(data_locs[:, 0])
+            ymin = np.min(data_locs[:, 1])
+            ymax = np.max(data_locs[:, 1])
+            self.window = {
+                "center": [np.mean([xmin, xmax]), np.mean([ymin, ymax])],
+                "size": [xmax - xmin, ymax - ymin],
+            }
+
         # Build inversion components from params
         (
             self.mesh,
