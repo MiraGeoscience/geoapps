@@ -296,7 +296,7 @@ class SurveyFactory(SimPEGFactory):
         return survey
 
     def stack_channels(self, channel_data: Dict[str, np.ndarray]):
-        return np.vstack(channel_data.values()).ravel()
+        return np.vstack([list(channel_data.values())]).ravel()
 
 
 class SimulationFactory(SimPEGFactory):
