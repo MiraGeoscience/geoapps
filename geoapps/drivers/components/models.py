@@ -62,7 +62,7 @@ class InversionModel:
         """
 
         self.is_vector = True if self.params.inversion_type == "mvi" else False
-        self.nblocks = 3 if self.params.inversion_type == "mvi" else 1
+        self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
 
         if self.model_type in ["starting", "reference"]:
 
@@ -95,12 +95,16 @@ class InversionModel:
 
             model = self.get(self.model_type)
 
+            if self.is_vector:
+
+                model = np.tile(model, self.n_blocks)
+
         if model is not None:
             self.model = mkvc(model)
 
     def remove_air(self, active_cells):
         """ Use active cells vector to remove air cells from model """
-        self.model = self.model[np.tile(active_cells, self.nblocks)]
+        self.model = self.model[np.tile(active_cells, self.n_blocks)]
 
     def permute_2_octree(self):
         """

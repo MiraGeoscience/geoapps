@@ -25,7 +25,7 @@ class MVIDriver(InversionDriver):
         super().__init__(params)
 
     def run(self):
-        super.run()
+        super().run()
 
 
 if __name__ == "__main__":
