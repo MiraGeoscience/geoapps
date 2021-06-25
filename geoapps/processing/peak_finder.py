@@ -8,6 +8,7 @@
 import re
 import sys
 from os import path
+from time import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -92,7 +93,7 @@ class PeakFinder(ObjectDataSelection):
                 if key == "h5file":
                     key = "geoh5"
                 try:
-                    default_dict[key] = arg
+                    default_dict[key]["value"] = arg
                 except KeyError:
                     continue
 
@@ -609,9 +610,9 @@ class PeakFinder(ObjectDataSelection):
                 max=1000.0,
                 step=1.0,
                 continuous_update=False,
-                description="Maximum peak migration (m)",
+                description="Max Peak Migration",
                 style={"description_width": "initial"},
-                disabled=True,
+                disabled=False,
             )
 
         return self._max_migration
@@ -1254,7 +1255,6 @@ class PeakFinder(ObjectDataSelection):
             self.lines.profile.smoothing = smoothing
 
         self.line_update()
-
         # if not self.tem_checkbox:
         #     self.regroup()
 
@@ -1270,8 +1270,15 @@ class PeakFinder(ObjectDataSelection):
 
         if getattr(self.survey, "line_indices", None) is None:
             return
-
+        full_ct = time()
         locs = self.lines.profile.locations_resampled
+
+        peak_markers_x, peak_markers_y, peak_markers_c = [], [], []
+        end_markers_x, end_markers_y = [], []
+        start_markers_x, start_markers_y = [], []
+        up_markers_x, up_markers_y = [], []
+        dwn_markers_x, dwn_markers_y = [], []
+
         for cc, (obj, channel) in enumerate(self.active_channels.items()):
             if axs is None:
                 self.figure = plt.figure(figsize=(12, 6))
@@ -1313,44 +1320,23 @@ class PeakFinder(ObjectDataSelection):
                     ori = "left"
 
                 if markers:
-                    axs.scatter(
-                        locs[group["peak"][ii]],
-                        values[group["peak"][ii]],
-                        s=200,
-                        c=self.time_groups[group["time_group"]]["color"],
-                        marker=self.marker[ori],
-                    )
+                    ct = time()
 
-                    axs.scatter(
-                        locs[group["start"][ii]],
-                        values[group["start"][ii]],
-                        s=100,
-                        color=np.c_[0, 0, 0, 0],
-                        edgecolors="b",
-                        marker="o",
-                    )
-                    axs.scatter(
-                        locs[group["end"][ii]],
-                        values[group["end"][ii]],
-                        s=100,
-                        color=np.c_[0, 0, 0, 0],
-                        edgecolors="c",
-                        marker="o",
-                    )
-                    axs.scatter(
-                        locs[group["inflx_up"][ii]],
-                        values[group["inflx_up"][ii]],
-                        color="k",
-                        marker="1",
-                        s=100,
-                    )
-                    axs.scatter(
-                        locs[group["inflx_dwn"][ii]],
-                        values[group["inflx_dwn"][ii]],
-                        color="k",
-                        marker="2",
-                        s=100,
-                    )
+                    peak_markers_x += [locs[group["peak"][ii]]]
+                    peak_markers_y += [values[group["peak"][ii]]]
+                    peak_markers_c += [self.time_groups[group["time_group"]]["color"]]
+
+                    start_markers_x += [locs[group["start"][ii]]]
+                    start_markers_y += [values[group["start"][ii]]]
+
+                    end_markers_x += [locs[group["end"][ii]]]
+                    end_markers_y += [values[group["end"][ii]]]
+
+                    up_markers_x += [locs[group["inflx_up"][ii]]]
+                    up_markers_y += [values[group["inflx_up"][ii]]]
+
+                    dwn_markers_x += [locs[group["inflx_dwn"][ii]]]
+                    dwn_markers_y += [values[group["inflx_dwn"][ii]]]
 
             if residual:
                 raw = self.lines.profile._values_resampled_raw
@@ -1361,6 +1347,48 @@ class PeakFinder(ObjectDataSelection):
                     locs, values, raw, where=raw < values, color=[0, 0, 1, 0.5]
                 )
 
+        if markers:
+            ct = time()
+            axs.scatter(
+                peak_markers_x,
+                peak_markers_y,
+                s=100,
+                c=peak_markers_c,
+                marker="v",
+            )
+
+            axs.scatter(
+                start_markers_x,
+                start_markers_y,
+                s=100,
+                color=np.c_[0, 0, 0, 0],
+                edgecolors="k",
+                marker=">",
+            )
+            axs.scatter(
+                end_markers_x,
+                end_markers_y,
+                s=100,
+                color=np.c_[0, 0, 0, 0],
+                edgecolors="k",
+                marker="<",
+            )
+            axs.scatter(
+                up_markers_x,
+                up_markers_y,
+                color="k",
+                marker="1",
+                s=100,
+            )
+            axs.scatter(
+                dwn_markers_x,
+                dwn_markers_y,
+                color="k",
+                marker="2",
+                s=100,
+            )
+            print(f"scatters {time() - ct}")
+        print(f"plot lines {time() - full_ct}")
         if scale == "symlog":
             plt.yscale("symlog", linthresh=scale_value)
 
@@ -1371,7 +1399,7 @@ class PeakFinder(ObjectDataSelection):
         axs.set_xlim(x_lims)
         axs.set_ylim([np.max([y_min, min_value]), y_max])
         axs.set_ylabel("Data")
-
+        ct = time()
         axs.scatter(center, (y_min + y_max) / 2, s=100, c="k", marker="d")
         if x_label == "Easting":
             axs.text(
@@ -1415,7 +1443,7 @@ class PeakFinder(ObjectDataSelection):
                 bbox={"edgecolor": "r"},
             )
             axs.set_xlabel("Distance (m)")
-
+        print(f"change layout {time() - ct}")
         axs.grid(True)
 
     def plot_decay_curve(self, ind, smoothing, residual, center, groups, plot_trigger):
@@ -1523,6 +1551,7 @@ class PeakFinder(ObjectDataSelection):
         if line_indices is None:
             return
         self.survey.line_indices = line_indices
+        ct = time()
         result = find_anomalies(
             self.survey.vertices,
             line_indices,
@@ -1537,7 +1566,7 @@ class PeakFinder(ObjectDataSelection):
             min_channels=self.min_channels.value,
             return_profile=True,
         )
-
+        print(f"peak finder {time()-ct}")
         if len(result) > 0:
             self.lines.anomalies, self.lines.profile = result
         else:
@@ -2117,11 +2146,13 @@ def find_anomalies(
                 anomalies["end"] += [end]
                 anomalies["group"] += [-1]
                 anomalies["time_group"] += [
-                    [
-                        key
-                        for key, time_group in enumerate(time_groups.keys())
-                        if obj.uid in time_group.properties
-                    ]
+                    np.min(
+                        [
+                            key
+                            for key, time_group in enumerate(time_groups.keys())
+                            if obj.uid in time_group.properties
+                        ]
+                    )
                 ]
 
     if len(anomalies["peak"]) == 0:
@@ -2134,9 +2165,6 @@ def find_anomalies(
 
     # Re-cast as numpy arrays
     for key, values in anomalies.items():
-        if key == "time_group":
-            continue
-
         anomalies[key] = np.hstack(values)
 
     group_id = -1
@@ -2156,9 +2184,8 @@ def find_anomalies(
         # Reject from group if channel gap > 1
         u_gates, u_count = np.unique(anomalies["channel"][near], return_counts=True)
         if len(u_gates) > 1 and np.any((u_gates[1:] - u_gates[:-1]) > 2):
-
             cutoff = u_gates[np.where((u_gates[1:] - u_gates[:-1]) > 2)[0][0]]
-            near = near[anomalies["channel"][near] > cutoff, ...]  # Remove after cutoff
+            near = near[anomalies["channel"][near] <= cutoff]  # Remove after cutoff
 
         # Check for multiple nearest peaks on single channel
         # and keep the nearest
@@ -2168,21 +2195,26 @@ def find_anomalies(
             sub_ind = anomalies["channel"][near] == gate
             sub_ind[np.where(sub_ind)[0][np.argmin(dist[near][sub_ind])]] = False
             mask[sub_ind] = False
-            near = near[mask, ...]
+            near = near[mask]
 
         # Keep largest overlapping time group
-        in_gate, count = np.unique(
-            np.hstack([anomalies["time_group"][ii] for ii in near]), return_counts=True
-        )
+        in_gate, count = np.unique(anomalies["time_group"][near], return_counts=True)
         in_gate = in_gate[(count >= min_channels) & (in_gate != -1)].tolist()
-        time_group = property_groups[in_gate[np.argmax(count)]]
+
+        counter = []
+        for t_g in time_groups.values():
+            matches = np.r_[[label in in_gate for label in t_g["label"]]]
+            counter += [np.sum(matches) - np.sum(~matches)]
+
+        time_group = property_groups[np.argmax(counter)]
 
         # Remove anomalies not in group
         mask = [
             data_uid[anomalies["channel"][id]] in time_group.properties for id in near
         ]
         near = near[mask, ...]
-
+        if len(near) == 0:
+            continue
         anomalies["group"][near] = group_id
         gates = anomalies["channel"][near]
         cox = anomalies["peak"][near]
