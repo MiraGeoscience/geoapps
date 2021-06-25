@@ -33,6 +33,7 @@ class InversionData(InversionLocations):
         self.detrend_order = None
         self.detrend_type = None
         self.components = None
+        self.locs = None
         self.data = {}
         self.uncertainties = {}
         self.normalizations = []
