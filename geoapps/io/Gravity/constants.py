@@ -116,7 +116,7 @@ default_ui_json = {
         "dataType": "Float",
         "default": None,
         "group": "Starting Model",
-        "isValue": False,
+        "isValue": True,
         "parent": "starting_model_object",
         "label": "starting model value",
         "property": None,
@@ -594,7 +594,7 @@ default_ui_json = {
     "reference_model_object": {
         "default": None,
         "group": "Models",
-        "visible": False,
+        "visible": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "reference model object",
@@ -611,8 +611,8 @@ default_ui_json = {
         "dataType": "Float",
         "default": 0.0,
         "group": "Models",
-        "isValue": False,
-        "visible": False,
+        "isValue": True,
+        "visible": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "reference model value",
@@ -760,11 +760,7 @@ default_ui_json = {
         "enabled": False,
         "value": None,
     },
-    "run_command": {
-        "default": "geoapps.drivers.grav_inversion",
-        "enabled": False,
-        "value": "geoapps.drivers.grav_inversion",
-    },
+    "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": {
         "default": False,
         "value": False,
@@ -772,11 +768,7 @@ default_ui_json = {
         "tooltip": "Warning: launches process to run python model on save",
         "main": True,
     },
-    "conda_environment": {
-        "default": "geoapps",
-        "enabed": False,
-        "value": "geoapps",
-    },
+    "conda_environment": "geoapps",
 }
 
 required_parameters = []
