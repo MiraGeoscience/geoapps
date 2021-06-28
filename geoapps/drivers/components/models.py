@@ -18,6 +18,15 @@ from geoapps.utils import weighted_average
 from . import InversionMesh
 
 
+class InversionModelCollection:
+    model_types = ["starting", "reference", "lower_bound", "upper_bound"]
+
+    def __init__(self, workspace, params, mesh):
+        self.workspace = workspace
+        self.params = params
+        self.mesh = mesh
+
+
 class InversionModel:
     """
     A class for constructing and storing models defined on the cell centers
