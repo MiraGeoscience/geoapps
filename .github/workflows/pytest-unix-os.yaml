@@ -2,6 +2,7 @@ name: pytest on Unix OS
 
 on:
   pull_request:
+    branches:
       - main
       - hotfix/**
       - release/**

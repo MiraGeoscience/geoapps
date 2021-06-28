@@ -33,7 +33,7 @@ def setup_params(path):
 def test_initialize(tmp_path):
 
     ws, params = setup_params(tmp_path)
-    inversion_mesh = InversionMesh(params, ws)
+    inversion_mesh = InversionMesh(ws, params)
     starting_model = InversionModel(inversion_mesh, "starting", params, ws)
     assert len(starting_model.model) == 3 * inversion_mesh.nC
     assert len(np.unique(starting_model.model)) == 3
@@ -42,7 +42,7 @@ def test_initialize(tmp_path):
 def test_model_from_object(tmp_path):
     # Test behaviour when loading model from Points object with non-matching mesh
     ws, params = setup_params(tmp_path)
-    inversion_mesh = InversionMesh(params, ws)
+    inversion_mesh = InversionMesh(ws, params)
     cc = inversion_mesh.mesh.cell_centers[0].reshape(1, 3)
     point_object = Points.create(ws, name=f"test_point", vertices=cc)
     point_object.add_data({"test_data": {"values": np.array([3.0])}})
@@ -59,7 +59,7 @@ def test_permute_2_octree(tmp_path):
 
     ws, params = setup_params(tmp_path)
     params.lower_bound = 0.0
-    inversion_mesh = InversionMesh(params, ws)
+    inversion_mesh = InversionMesh(ws, params)
     lower_bound = InversionModel(inversion_mesh, "lower_bound", params, ws)
     cc = inversion_mesh.mesh.cell_centers
     center = np.mean(cc, axis=0)
@@ -114,7 +114,7 @@ def test_permute_2_treemesh(tmp_path):
     octree_mesh.add_data({"test_model": {"values": model}})
     params.upper_bound = ws.get_entity("test_model")[0].uid
     params.associations[params.upper_bound] = octree_mesh.uid
-    inversion_mesh = InversionMesh(params, ws)
+    inversion_mesh = InversionMesh(ws, params)
     upper_bound = InversionModel(inversion_mesh, "upper_bound", params, ws)
     locs = inversion_mesh.mesh.cell_centers
     locs_rot = rotate_xy(
