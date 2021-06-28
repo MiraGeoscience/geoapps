@@ -46,34 +46,75 @@ class InversionDriver:
         self.params = params
         self.workspace = params.workspace
         self.inversion_type = params.inversion_type
+        self._initialize()
+
+    @property
+    def window(self):
+        return self.inversion_window.window
+
+    @property
+    def mesh(self):
+        return self.inversion_mesh.mesh
+
+    @property
+    def starting_model(self):
+        return self.inversion_starting_model.model
+
+    @property
+    def reference_model(self):
+        return self.inversion_reference_model.model
+
+    @property
+    def lower_bound(self):
+        return self.inversion_lower_bound_model.model
+
+    @property
+    def data(self):
+        return self.inversion_data.data
+
+    def _initialize(self):
+
+        self.inversion_window = InversionWindow(self.workspace, self.params)
+
+        self.inversion_mesh = InversionMesh(
+            self.workspace, self.params, self.inversion_window
+        )
+
+        self.inversion_topography = InversionTopography(
+            self.workspace, self.params, self.inversion_mesh, self.inversion_window
+        )
+
+        self.inversion_starting_model = InversionModel(
+            self.workspace, self.params, self.inversion_mesh, "starting"
+        )
+
+        self.inversion_reference_model = InversionModel(
+            self.workspace, self.params, self.inversion_mesh, "reference"
+        )
+
+        self.inversion_lower_bound_model = InversionModel(
+            self.workspace, self.params, self.inversion_mesh, "lower_bound"
+        )
+
+        self.inversion_upper_bound_model = InversionModel(
+            self.workspace, self.params, self.inversion_mesh, "upper_bound"
+        )
+
+        self.inversion_data = InversionData(
+            self.workspace,
+            self.params,
+            self.inversion_mesh,
+            self.inversion_topo,
+            self.inversion_window,
+        )
+
         self.out_group = ContainerGroup.create(
             self.workspace, name=self.params.out_group
         )
+
         self.outDir = (
             os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
         )
-
-    def get_components(self):
-
-        mesh = InversionMesh(self.workspace, self.params, self.window)
-        topo = InversionTopography(self.workspace, self.params, mesh, self.window)
-        mstart = InversionModel(self.workspace, self.params, mesh, "starting")
-        mref = InversionModel(self.workspace, self.params, mesh, "reference")
-        lbound = InversionModel(self.workspace, self.params, mesh, "lower_bound")
-        ubound = InversionModel(self.workspace, self.params, mesh, "upper_bound")
-        data = InversionData(self.workspace, self.params, mesh, topo, self.window)
-
-        return mesh, topo, mstart, mref, lbound, ubound, data
-
-    def models(self):
-        """ Return all models with data """
-        models = [
-            self.starting_model,
-            self.reference_model,
-            self.lower_bound,
-            self.upper_bound,
-        ]
-        return [m for m in models if m.model is not None]
 
     def run(self):
         """ Run inversion from params """
@@ -82,22 +123,8 @@ class InversionDriver:
         cluster = LocalCluster(processes=False)
         client = Client(cluster)
 
-        # Collect window parameters into dictionary
-        self.window = self.params.window()
-
-        # Build inversion components from params
-        (
-            self.mesh,
-            self.topography,
-            self.starting_model,
-            self.reference_model,
-            self.lower_bound,
-            self.upper_bound,
-            self.data,
-        ) = self.get_components()
-
         # Create SimPEG Survey object
-        self.survey = self.data.survey()
+        self.survey = self.inversion_data.survey()
 
         # Build active cells array and reduce models active set
         self.active_cells = self.topography.active_cells()
@@ -439,6 +466,15 @@ class InversionDriver:
             self.sorting.append(local_index)
 
         return local_misfits
+
+    def models(self):
+        """ Return all models with data """
+        return [
+            self.inversion_starting_model,
+            self.inversion_reference_model,
+            self.inversion_lower_bound,
+            self.inversion_upper_bound,
+        ]
 
     def fetch(self, p: Union[str, UUID]):
         """ Fetch the object addressed by uuid from the workspace. """
