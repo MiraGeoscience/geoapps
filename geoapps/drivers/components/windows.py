@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import numpy as np
 from geoh5py.objects import Grid2D
 
 
@@ -41,7 +42,8 @@ class InversionWindow:
             }
 
     def is_empty(self):
-        center_x_null = True if self.window["center"][0] is none else False
-        center_y_null = True if self.window["center"][1] is none else False
-        size_x_null = True if self.window["size"][0] is none else False
-        size_y_null = True if self.window["size"][1] is none else False
+        center_x_null = True if self.window["center"][0] is None else False
+        center_y_null = True if self.window["center"][1] is None else False
+        size_x_null = True if self.window["size"][0] is None else False
+        size_y_null = True if self.window["size"][1] is None else False
+        return center_x_null & center_y_null & size_x_null & size_y_null

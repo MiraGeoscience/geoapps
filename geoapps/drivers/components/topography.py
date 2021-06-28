@@ -19,8 +19,8 @@ from .locations import InversionLocations
 class InversionTopography(InversionLocations):
     """ Retrieve topography data from workspace and apply transformations. """
 
-    def __init__(self, workspace, params, mesh, window):
-        super().__init__(workspace, params, mesh, window)
+    def __init__(self, workspace, params, window):
+        super().__init__(workspace, params, window)
         self._initialize()
 
     def _initialize(self):
@@ -43,7 +43,7 @@ class InversionTopography(InversionLocations):
         if self.is_rotated:
             self.locs = super().rotate(self.locs)
 
-    def active_cells(self):
-        active_cells = active_from_xyz(self.mesh.mesh, self.locs, grid_reference="N")
+    def active_cells(self, mesh):
+        active_cells = active_from_xyz(mesh, self.locs, grid_reference="N")
 
         return active_cells

@@ -16,10 +16,9 @@ from geoapps.utils import rotate_xy
 class InversionLocations:
     """ Retrieve topography data from workspace and apply transformations. """
 
-    def __init__(self, workspace, params, mesh, window):
+    def __init__(self, workspace, params, window):
         self.workspace = workspace
         self.params = params
-        self.mesh = mesh
         self.window = window
         self.mask = None
         self.origin = None
@@ -27,9 +26,10 @@ class InversionLocations:
         self.is_rotated = False
         self.locs = None
 
-        if self.mesh.rotation is not None:
-            self.origin = self.mesh.rotation["origin"]
-            self.angle = -self.mesh.rotation["angle"]
+        mesh = workspace.get_entity(params.mesh)[0]
+        if mesh.rotation is not None:
+            self.origin = mesh.rotation["origin"]
+            self.angle = mesh.rotation["angle"]
             self.is_rotated = True
 
     @property
