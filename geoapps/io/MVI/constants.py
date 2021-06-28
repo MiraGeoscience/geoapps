@@ -954,29 +954,29 @@ validations = {
         "uuid": ["topography_object"],
     },
     "data_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
-    "tmi_channel": {"types": [str], "reqs": [("data_object")]},
+    "tmi_channel": {"types": [str, UUID], "reqs": [("data_object")]},
     "tmi_uncertainty": {
         "types": [str, int, float],
     },
     "starting_model_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "starting_inclination_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "starting_declination_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "starting_model": {
-        "types": [str, int, float],
+        "types": [str, UUID, int, float],
     },
     "starting_inclination": {
-        "types": [str, int, float],
+        "types": [str, UUID, int, float],
     },
     "starting_declination": {
-        "types": [str, int, float],
+        "types": [str, UUID, int, float],
     },
     "tile_spatial": {
         "types": [str, int, float],
