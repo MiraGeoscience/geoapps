@@ -1567,8 +1567,7 @@ class PeakFinder(ObjectDataSelection):
                 time_groups = {}
                 for key, default in self._default_time_groups.items():
                     prop_group = obj.find_or_create_property_group(name=key)
-                    for prop in prop_group.properties:
-                        prop_group.remove(prop)
+                    prop_group.properties = []
 
                     for val in default["label"]:
                         for ind in ranges[val]:
