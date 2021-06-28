@@ -167,11 +167,11 @@ class InversionData(InversionLocations):
         """ Offset data locations in all three dimensions. """
         return locs + offset if offset is not None else 0
 
-    def drape(self, locs):
+    def drape(self, topography, locs):
         """ Drape data locations using radar channel. """
         xyz = locs.copy()
         radar_offset = self.workspace.get_entity(self.radar)[0].values
-        topo_locs = self.topography.locs
+        topo_locs = topography.locs
         topo_interpolator = LinearNDInterpolator(topo_locs[:, :2], topo_locs[:, 2])
         z_topo = topo_interpolator(xyz[:, :2])
         if np.any(np.isnan(z_topo)):
@@ -222,16 +222,16 @@ class InversionData(InversionLocations):
 
         return survey
 
-    def simulation(self, local_index=None, tile_id=None):
+    def simulation(self, mesh, topography, local_index=None, tile_id=None):
         """ Generates SimPEG simulation object."""
 
         simulation_factory = SimulationFactory(self.params)
         survey = self.survey(local_index)
         if local_index is None:
-            mesh = self.mesh.mesh
+            mesh = mesh.copy()
             active_cells = self.topography.active_cells()
         else:
-            mesh = create_nested_mesh(survey.receiver_locations, self.mesh.mesh)
+            mesh = create_nested_mesh(survey.receiver_locations, mesh)
             args = {"components": 3} if self.vector else {}
             map = maps.TileMap(
                 self.mesh.mesh, self.topography.active_cells(), mesh, **args
