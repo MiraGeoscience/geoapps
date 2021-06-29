@@ -65,6 +65,11 @@ class InversionLocations:
         else:
             locs = data_object.vertices
 
+        if locs is None:
+            msg = f"Workspace object {data_object} 'vertices' attribute is None."
+            msg += " Object type should be Grid2D or point-like."
+            raise (ValueError(msg))
+
         return locs
 
     def filter(self, a):
