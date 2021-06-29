@@ -15,15 +15,15 @@ from SimPEG.utils.drivers import create_nested_mesh
 
 from geoapps.utils import calculate_2D_trend, filter_xy
 
+from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
 
 
 class InversionData(InversionLocations):
     """ Retrieve data from workspace and apply transformations. """
 
-    def __init__(self, workspace, params, mesh, topography, window):
-        super().__init__(workspace, params, mesh, window)
-        self.topography = topography
+    def __init__(self, workspace, params, window):
+        super().__init__(workspace, params, window)
         self.resolution = None
         self.offset = None
         self.radar = None
@@ -222,22 +222,27 @@ class InversionData(InversionLocations):
 
         return survey
 
-    def simulation(self, mesh, topography, local_index=None, tile_id=None):
-        """ Generates SimPEG simulation object."""
+    def simulation(self, mesh, active_cells, local_index=None, tile_id=None):
+        """ Generates SimPEG simulation object. """
 
         simulation_factory = SimulationFactory(self.params)
         survey = self.survey(local_index)
-        if local_index is None:
-            mesh = mesh.copy()
-            active_cells = self.topography.active_cells()
-        else:
-            mesh = create_nested_mesh(survey.receiver_locations, mesh)
-            args = {"components": 3} if self.vector else {}
-            map = maps.TileMap(
-                self.mesh.mesh, self.topography.active_cells(), mesh, **args
-            )
-            active_cells = map.local_active
 
-        sim = simulation_factory.build(survey, mesh, active_cells, tile_id)
+        if local_index is None:
+
+            sim = simulation_factory.build(survey, mesh, active_cells)
+            n_blocks = 3 if self.vector else 1
+            map = Maps.IdentityMap(nP=n_blocks * mesh.nC)
+
+        else:
+
+            nested_mesh = create_nested_mesh(survey.receiver_locations, mesh)
+            args = {"components": 3} if self.vector else {}
+            map = maps.TileMap(mesh, active_cells, nested_mesh, **args)
+            local_active_cells = map.local_active
+
+            sim = simulation_factory.build(
+                survey, nested_mesh, local_active_cells, tile_id
+            )
 
         return sim, map

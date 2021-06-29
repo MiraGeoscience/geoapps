@@ -19,12 +19,85 @@ from . import InversionMesh
 
 
 class InversionModelCollection:
+
     model_types = ["starting", "reference", "lower_bound", "upper_bound"]
 
     def __init__(self, workspace, params, mesh):
         self.workspace = workspace
         self.params = params
         self.mesh = mesh
+        self.is_vector = None
+        self.n_blocks = None
+        self._starting = None
+        self._reference = None
+        self._lower_bound = None
+        self._upper_bound = None
+        self._initialize()
+
+    @property
+    def starting(self):
+        return self._starting.model
+
+    @starting.setter
+    def starting(self, v):
+        self._starting.model = v
+
+    @property
+    def reference(self):
+        return self._reference.model
+
+    @reference.setter
+    def reference(self, v):
+        self._reference.model = v
+
+    @property
+    def lower_bound(self):
+        return self._lower_bound.model
+
+    @lower_bound.setter
+    def lower_bound(self, v):
+        self._lower_bound.model = v
+
+    @property
+    def upper_bound(self):
+        return self._upper_bound.model
+
+    @upper_bound.setter
+    def upper_bound(self, v):
+        self._upper_bound.model = v
+
+    def _model_method_wrapper(self, method, **kwargs):
+        """ wraps individual model's specific method and applies in loop over model types. """
+        for mtype in self.model_types:
+            model = self.__getattribute__(f"_{mtype}")
+            if model.model is not None:
+                f = getattr(model, method)
+                f(**kwargs)
+
+    def remove_air(self, active_cells):
+        self._model_method_wrapper("remove_air", active_cells=active_cells)
+
+    def permute_2_octree(self):
+        self._model_method_wrapper("permute_2_octree")
+
+    def permute_2_treemesh(self, model):
+        self._model_method_wrapper("permute_2_treemesh", model=model)
+
+    def _initialize(self):
+        self.is_vector = True if self.params.inversion_type == "mvi" else False
+        self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
+        self._starting = InversionModel(
+            self.workspace, self.params, self.mesh, "starting"
+        )
+        self._reference = InversionModel(
+            self.workspace, self.params, self.mesh, "reference"
+        )
+        self._lower_bound = InversionModel(
+            self.workspace, self.params, self.mesh, "lower_bound"
+        )
+        self._upper_bound = InversionModel(
+            self.workspace, self.params, self.mesh, "upper_bound"
+        )
 
 
 class InversionModel:
@@ -65,7 +138,7 @@ class InversionModel:
         """
         Build the model vector from params data.
 
-        If params.inversion_type is "mvi" and no inclindation/declination
+        If params.inversion_type is "mvi" and no inclination/declination
         are provided, then values are projected onto the direction of the
         inducing field.
         """
@@ -98,7 +171,8 @@ class InversionModel:
                     azm_N=declination,
                 )
 
-                model = (field_vecs.T * model).T
+                if model is not None:
+                    model = (field_vecs.T * model).T
 
         else:
 
