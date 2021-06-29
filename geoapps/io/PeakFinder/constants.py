@@ -15,6 +15,8 @@ from uuid import UUID
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from ...utils.geophysical_systems import parameters
+
 required_parameters = []
 defaults = {}
 
@@ -41,6 +43,12 @@ default_ui_json = {
         "parent": "objects",
         "value": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}",
     },
+    "flip_sign": {
+        "main": True,
+        "group": "Data",
+        "label": "Flip sign",
+        "value": False,
+    },
     "line_field": {
         "association": "Vertex",
         "dataType": "Float",
@@ -49,6 +57,19 @@ default_ui_json = {
         "label": "Line Field",
         "parent": "objects",
         "value": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}",
+    },
+    "tem_checkbox": {
+        "main": True,
+        "label": "TEM type",
+        "value": True,
+    },
+    "system": {
+        "choiceList": list(parameters().keys()),
+        "main": True,
+        "label": "TEM system",
+        "dependency": "tem_checkbox",
+        "dependencyType": "enabled",
+        "value": "",
     },
     "smoothing": {
         "group": "Detection Parameters",
@@ -86,40 +107,22 @@ default_ui_json = {
         "value": 1,
         "main": True,
     },
-    "tem_checkbox": {
-        "main": True,
-        "label": "TEM type",
-        "value": True,
-    },
     "ga_group_name": {
         "visible": True,
         "enabled": True,
         "label": "Save As",
         "value": "PeakFinder",
     },
+    "structural_markers": {
+        "main": True,
+        "group": "Data",
+        "label": "Export all markers",
+        "value": False,
+    },
     "line_id": 6073400.0,
     "group_auto": {
         "label": "Auto-group",
         "value": True,
-    },
-    "Property Group A Data": {
-        "association": "Vertex",
-        "dataType": "Float",
-        "group": "Property Group A",
-        "dataGroupType": "Multi-element",
-        "label": "Property Group A",
-        "parent": "objects",
-        "dependency": "group_auto",
-        "dependencyType": "disabled",
-        "value": "",
-    },
-    "Property Group A Color": {
-        "dataType": "Text",
-        "group": "Property Group A",
-        "label": "Property Group A Color",
-        "dependency": "group_auto",
-        "dependencyType": "disabled",
-        "value": "",
     },
     "center": {
         "group": "Window",
@@ -134,6 +137,25 @@ default_ui_json = {
         "value": 1000,
         "default": 1000,
         "visible": False,
+    },
+    "Property Group Data": {
+        "association": "Vertex",
+        "dataType": "Float",
+        "group": "Property Group",
+        "dataGroupType": "Multi-element",
+        "label": "Property Group",
+        "parent": "objects",
+        "dependency": "group_auto",
+        "dependencyType": "disabled",
+        "value": "",
+    },
+    "Property Group Color": {
+        "dataType": "Text",
+        "group": "Property Group",
+        "label": "Color",
+        "dependency": "group_auto",
+        "dependencyType": "disabled",
+        "value": "",
     },
     "run_command": ("geoapps.processing.peak_finder"),
     "conda_environment": "geoapps",
@@ -158,6 +180,12 @@ validations = {
         "reqs": [("objects")],
         "property_groups": ["objects"],
     },
+    "flip_sign": {
+        "types": [bool],
+    },
+    "structural_markers": {
+        "types": [bool],
+    },
     "group_auto": {
         "types": [bool],
     },
@@ -171,6 +199,10 @@ validations = {
     },
     "tem_checkbox": {
         "types": [bool],
+    },
+    "system": {
+        "types": [str],
+        "values": list(parameters().keys()),
     },
     "line_field": {
         "types": [str, UUID, int, float],

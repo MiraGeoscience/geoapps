@@ -78,6 +78,14 @@ class PeakFinderParams(Params):
         self.setter_validator("data", val)
 
     @property
+    def flip_sign(self):
+        return self._flip_sign
+
+    @flip_sign.setter
+    def flip_sign(self, val):
+        self.setter_validator("flip_sign", val)
+
+    @property
     def ga_group_name(self):
         return self._ga_group_name
 
@@ -158,6 +166,22 @@ class PeakFinderParams(Params):
     @smoothing.setter
     def smoothing(self, val):
         self.setter_validator("smoothing", val)
+
+    @property
+    def structural_markers(self):
+        return self._structural_markers
+
+    @structural_markers.setter
+    def structural_markers(self, val):
+        self.setter_validator("structural_markers", val)
+
+    @property
+    def system(self):
+        return self._system
+
+    @system.setter
+    def system(self, val):
+        self.setter_validator("system", val)
 
     @property
     def tem_checkbox(self):
