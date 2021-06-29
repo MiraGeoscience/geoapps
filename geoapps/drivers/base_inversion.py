@@ -5,7 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
 from multiprocessing.pool import ThreadPool
 from typing import Union
 from uuid import UUID
@@ -25,7 +24,6 @@ from SimPEG import (
     objective_function,
     optimization,
     regularization,
-    utils,
 )
 from SimPEG.utils import tile_locations
 
@@ -35,8 +33,9 @@ from geoapps.utils import rotate_xy
 from .components import (
     InversionData,
     InversionMesh,
-    InversionModel,
+    InversionModelCollection,
     InversionTopography,
+    InversionWindow,
 )
 
 
@@ -46,6 +45,13 @@ class InversionDriver:
         self.params = params
         self.workspace = params.workspace
         self.inversion_type = params.inversion_type
+        self.inversion_window = None
+        self.inversion_data = None
+        self.inversion_topography = None
+        self.inversion_mesh = None
+        self.inversion_models = None
+        self.survey = None
+        self.active_cells = None
         self._initialize()
 
     @property
@@ -53,91 +59,72 @@ class InversionDriver:
         return self.inversion_window.window
 
     @property
+    def data(self):
+        return self.inversion_data.data
+
+    @property
+    def topography(self):
+        return self.inversion_topography.topography
+
+    @property
     def mesh(self):
         return self.inversion_mesh.mesh
 
     @property
     def starting_model(self):
-        return self.inversion_starting_model.model
+        return self.models.starting
 
     @property
     def reference_model(self):
-        return self.inversion_reference_model.model
+        return self.models.reference
 
     @property
     def lower_bound(self):
-        return self.inversion_lower_bound_model.model
+        return self.models.lower_bound
 
     @property
-    def data(self):
-        return self.inversion_data.data
+    def upper_bound(self):
+        return self.models.upper_bound
 
     def _initialize(self):
 
         self.inversion_window = InversionWindow(self.workspace, self.params)
 
-        self.inversion_mesh = InversionMesh(
-            self.workspace, self.params, self.inversion_window
-        )
-
-        self.inversion_topography = InversionTopography(
-            self.workspace, self.params, self.inversion_mesh, self.inversion_window
-        )
-
-        self.inversion_starting_model = InversionModel(
-            self.workspace, self.params, self.inversion_mesh, "starting"
-        )
-
-        self.inversion_reference_model = InversionModel(
-            self.workspace, self.params, self.inversion_mesh, "reference"
-        )
-
-        self.inversion_lower_bound_model = InversionModel(
-            self.workspace, self.params, self.inversion_mesh, "lower_bound"
-        )
-
-        self.inversion_upper_bound_model = InversionModel(
-            self.workspace, self.params, self.inversion_mesh, "upper_bound"
-        )
-
         self.inversion_data = InversionData(
             self.workspace,
             self.params,
-            self.inversion_mesh,
-            self.inversion_topo,
-            self.inversion_window,
+            self.window,
         )
 
-        self.out_group = ContainerGroup.create(
-            self.workspace, name=self.params.out_group
+        self.inversion_topography = InversionTopography(
+            self.workspace, self.params, self.window
         )
 
-        self.outDir = (
-            os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
-        )
+        self.inversion_mesh = InversionMesh(self.workspace, self.params, self.window)
 
-    def run(self):
-        """ Run inversion from params """
+        self.models = InversionModelCollection(
+            self.workspace, self.params, self.inversion_mesh
+        )
 
         self.configure_dask()
         cluster = LocalCluster(processes=False)
         client = Client(cluster)
 
+    def run(self):
+        """ Run inversion from params """
+
         # Create SimPEG Survey object
         self.survey = self.inversion_data.survey()
 
         # Build active cells array and reduce models active set
-        self.active_cells = self.topography.active_cells()
-        self.active_cells_map = maps.InjectActiveCells(
-            self.mesh.mesh, self.active_cells, 0
-        )
-        for model in self.models():
-            model.remove_air(self.active_cells)
+        self.active_cells = self.inversion_topography.active_cells(self.mesh)
+        self.models.remove_air(self.active_cells)
+        self.active_cells_map = maps.InjectActiveCells(self.mesh, self.active_cells, 0)
 
         self.n_cells = int(np.sum(self.active_cells))
-        self.is_vector = self.starting_model.is_vector
+        self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1
-        self.is_rotated = False if self.mesh.rotation is None else True
+        self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
         ###############################################################################
         # Processing
@@ -146,6 +133,8 @@ class InversionDriver:
         self.tiles = self.get_tiles()
         self.nTiles = len(self.tiles)
         print("Number of tiles:" + str(self.nTiles))
+
+        # Build tiled misfits and combine to form global misfit
         local_misfits = self.calculate_tile_misfits(self.tiles)
         global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
 
@@ -154,25 +143,15 @@ class InversionDriver:
             local.simulation.Jmatrix
 
         # Create regularization
-        wr = np.zeros(self.n_cells * self.n_blocks)
-        norm = np.tile(
-            self.mesh.mesh.cell_volumes[self.active_cells] ** 2.0, self.n_blocks
-        )
-
-        for ii, dmisfit in enumerate(global_misfit.objfcts):
-            wr += dmisfit.getJtJdiag(self.starting_model.model) / norm
-
-        wr **= 0.5
-        wr = wr / wr.max()
-
+        wr = self.calculate_weighting_matrix(global_misfit)
         reg = self.get_regularization(wr)
 
-        # Specify how the optimization will proceed, set susceptibility bounds to inf
+        # Specify optimization algorithm and set parameters
         print("active", sum(self.active_cells))
         opt = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
-            lower=self.lower_bound.model,
-            upper=self.upper_bound.model,
+            lower=self.models.lower_bound,
+            upper=self.models.upper_bound,
             maxIterLS=20,
             maxIterCG=self.params.max_cg_iterations,
             tolCG=self.params.tol_cg,
@@ -235,9 +214,11 @@ class InversionDriver:
             if self.inversion_type == "mvi":
                 channels = ["amplitude", "theta", "phi"]
 
-            outmesh = self.fetch("mesh").copy(
-                parent=self.out_group, copy_children=False
+            out_group = ContainerGroup.create(
+                self.workspace, name=self.params.out_group
             )
+
+            outmesh = self.fetch("mesh").copy(parent=out_group, copy_children=False)
 
             directiveList.append(
                 directives.SaveIterationsGeoH5(
@@ -246,7 +227,7 @@ class InversionDriver:
                     mapping=self.active_cells_map,
                     attribute_type="mvi_angles" if self.is_vector else "model",
                     association="CELL",
-                    sorting=self.mesh.mesh._ubc_order,
+                    sorting=self.mesh._ubc_order,
                 )
             )
 
@@ -255,16 +236,16 @@ class InversionDriver:
                 rx_locs[:, :2] = rotate_xy(
                     rx_locs[:, :2],
                     self.window["center"],
-                    self.mesh.rotation["angle"],
+                    self.inversion_mesh.rotation["angle"],
                 )
             predicted_data_object = Points.create(
                 self.workspace,
                 name=f"Predicted",
                 vertices=rx_locs,
-                parent=self.out_group,
+                parent=out_group,
             )
 
-            comps, norms = self.survey.components, self.data.normalizations
+            comps, norms = self.survey.components, self.inversion_data.normalizations
             data_type = {}
             for ii, (comp, norm) in enumerate(zip(comps, norms)):
                 val = norm * self.survey.dobs[ii :: len(comps)]
@@ -277,7 +258,7 @@ class InversionDriver:
                 directives.SaveIterationsGeoH5(
                     h5_object=predicted_data_object,
                     channels=self.survey.components,
-                    mapping=np.hstack(self.data.normalizations),
+                    mapping=np.hstack(self.inversion_data.normalizations),
                     attribute_type="predicted",
                     data_type=data_type,
                     sorting=tuple(self.sorting),
@@ -290,10 +271,28 @@ class InversionDriver:
 
         # Run the inversion
         self.start_inversion_message()
-        mrec = inv.run(self.starting_model.model)
+        mrec = inv.run(self.starting_model)
         dpred = self.collect_predicted_data(global_misfit, mrec)
         self.save_residuals(predicted_data_object, dpred)
         self.finish_inversion_message(dpred)
+
+    def calculate_weighting_matrix(self, global_misfit):
+        """Calculate diagonal weighting matrix for regularization.
+        :param global_misfit: global misfit function.
+        :return: wr: Diagonal weighting matrix.
+
+        """
+
+        wr = np.zeros(self.n_cells * self.n_blocks)
+        norm = np.tile(self.mesh.cell_volumes[self.active_cells] ** 2.0, self.n_blocks)
+
+        for ii, dmisfit in enumerate(global_misfit.objfcts):
+            wr += dmisfit.getJtJdiag(self.starting_model) / norm
+
+        wr **= 0.5
+        wr = wr / wr.max()
+
+        return wr
 
     def start_inversion_message(self):
 
@@ -368,7 +367,7 @@ class InversionDriver:
             )
 
             reg_p = regularization.Sparse(
-                self.mesh.mesh,
+                self.mesh,
                 indActive=self.active_cells,
                 mapping=wires.p,
                 gradientType=self.params.gradient_type,
@@ -379,10 +378,10 @@ class InversionDriver:
                 norms=self.params.model_norms(),
             )
             reg_p.cell_weights = wires.p * wr
-            reg_p.mref = self.reference_model.model
+            reg_p.mref = self.reference_model
 
             reg_s = regularization.Sparse(
-                self.mesh.mesh,
+                self.mesh,
                 indActive=self.active_cells,
                 mapping=wires.s,
                 gradientType=self.params.gradient_type,
@@ -394,10 +393,10 @@ class InversionDriver:
             )
 
             reg_s.cell_weights = wires.s * wr
-            reg_s.mref = self.reference_model.model
+            reg_s.mref = self.reference_model
 
             reg_t = regularization.Sparse(
-                self.mesh.mesh,
+                self.mesh,
                 indActive=self.active_cells,
                 mapping=wires.t,
                 gradientType=self.params.gradient_type,
@@ -409,16 +408,16 @@ class InversionDriver:
             )
 
             reg_t.cell_weights = wires.t * wr
-            reg_t.mref = self.reference_model.model
+            reg_t.mref = self.reference_model
 
             # Assemble the 3-component regularizations
             reg = reg_p + reg_s + reg_t
-            reg.mref = self.reference_model.model
+            reg.mref = self.reference_model
 
         else:
 
             reg = regularization.Sparse(
-                self.mesh.mesh,
+                self.mesh,
                 indActive=self.active_cells,
                 mapping=maps.IdentityMap(nP=self.n_cells),
                 gradientType=self.params.gradient_type,
@@ -429,7 +428,7 @@ class InversionDriver:
                 norms=self.params.model_norms(),
             )
             reg.cell_weights = wr
-            reg.mref = self.reference_model.model
+            reg.mref = self.reference_model
 
         return reg
 
@@ -452,8 +451,10 @@ class InversionDriver:
 
         local_misfits, self.sorting = [], []
         for tile_id, local_index in enumerate(tiles):
-            lsurvey = self.data.survey(local_index)
-            lsim, lmap = self.data.simulation(local_index, tile_id)
+            lsurvey = self.inversion_data.survey(local_index)
+            lsim, lmap = self.inversion_data.simulation(
+                self.mesh, self.active_cells, local_index, tile_id
+            )
             ldat = (
                 data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
             )

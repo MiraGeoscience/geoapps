@@ -9,7 +9,6 @@ from copy import deepcopy
 
 import numpy as np
 from discretize.utils import active_from_xyz
-from SimPEG import maps
 
 from geoapps.utils import filter_xy
 
@@ -26,6 +25,10 @@ class InversionTopography(InversionLocations):
     def _initialize(self):
 
         self.locs = super().get_locs(self.params.topography_object)
+        elev = self.workspace.get_entity(self.params.topography)[0].values
+        if not np.all(self.locs[:, 2] == elev):
+            self.locs[:, 2] = elev
+
         self.mask = np.ones(len(self.locs), dtype=bool)
 
         topo_window = deepcopy(self.window)
