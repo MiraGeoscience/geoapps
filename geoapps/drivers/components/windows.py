@@ -5,17 +5,40 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from typing import Dict
+
 import numpy as np
 from geoh5py.objects import Grid2D
 
 
 class InversionWindow:
+    """
+    Retrieve window from workspace.
+
+    Methods
+    -------
+    is_empty: Check if window data is empty.
+
+    Notes
+    -----
+    If params contains no window data, the window will initialize with from the
+    data extents.
+
+    """
+
     def __init__(self, workspace, params):
+        """
+        :param: workspace: Geoh5py workspace object containing window data.
+        :param: params: Params object containing window parameters.
+        :param: window: Center and size defining window for data, topography, etc.
+        """
         self.workspace = workspace
         self.params = params
+        self.window: Dict[str, float] = None
         self._initialize()
 
-    def _initialize(self):
+    def _initialize(self) -> None:
+        """ Extract data from workspace using params data. """
 
         self.window = self.params.window()
 
@@ -41,7 +64,8 @@ class InversionWindow:
                 "size": [xmax - xmin, ymax - ymin],
             }
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
+        """ Check if window data is empty. """
         center_x_null = True if self.window["center"][0] is None else False
         center_y_null = True if self.window["center"][1] is None else False
         size_x_null = True if self.window["size"][0] is None else False
