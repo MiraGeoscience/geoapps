@@ -77,7 +77,7 @@ def test_model_from_object(tmp_path):
     params.lower_bound = data_object.uid
     lower_bound = InversionModel(ws, params, inversion_mesh, "lower_bound")
     assert np.all((lower_bound.model - 3) < 1e-10)
-    assert len(lower_bound.model) == inversion_mesh.nC
+    assert len(lower_bound.model) == 3 * inversion_mesh.nC
 
 
 def test_permute_2_octree(tmp_path):
@@ -101,7 +101,7 @@ def test_permute_2_octree(tmp_path):
     yind = (cc[:, 1] > ymin) & (cc[:, 1] < ymax)
     zind = (cc[:, 2] > zmin) & (cc[:, 2] < zmax)
     ind = xind & yind & zind
-    lower_bound.model[ind] = 1
+    lower_bound.model[np.tile(ind, 3)] = 1
     lb_perm = lower_bound.permute_2_octree()
     octree_mesh = ws.get_entity(params.mesh)[0]
     locs_perm = octree_mesh.centroids[lb_perm == 1, :]
@@ -134,8 +134,8 @@ def test_permute_2_treemesh(tmp_path):
     yind = (cc[:, 1] > ymin) & (cc[:, 1] < ymax)
     zind = (cc[:, 2] > zmin) & (cc[:, 2] < zmax)
     ind = xind & yind & zind
-    model = np.zeros(octree_mesh.n_cells, dtype=float)
-    model[ind] = 1
+    model = np.zeros(3 * octree_mesh.n_cells, dtype=float)
+    model[np.tile(ind, 3)] = 1
     octree_mesh.add_data({"test_model": {"values": model}})
     params.upper_bound = ws.get_entity("test_model")[0].uid
     params.associations[params.upper_bound] = octree_mesh.uid
@@ -145,7 +145,7 @@ def test_permute_2_treemesh(tmp_path):
     locs_rot = rotate_xy(
         locs, inversion_mesh.rotation["origin"], inversion_mesh.rotation["angle"]
     )
-    locs_rot = locs_rot[upper_bound.model == 1, :]
+    locs_rot = locs_rot[upper_bound.model[: inversion_mesh.mesh.nC] == 1, :]
     assert xmin <= locs_rot[:, 0].min()
     assert xmax >= locs_rot[:, 0].max()
     assert ymin <= locs_rot[:, 1].min()

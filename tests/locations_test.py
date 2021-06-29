@@ -28,7 +28,7 @@ def test_mask(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
-    locations = InversionLocations(ws, params, mesh, window)
+    locations = InversionLocations(ws, params, window)
     test_mask = [0, 1, 1, 0]
     locations.mask = test_mask
     assert isinstance(locations.mask, np.ndarray)
@@ -45,7 +45,7 @@ def test_get_locs(tmp_path):
     window = params.window()
     locs = np.ones((10, 3), dtype=float)
     points_object = Points.create(ws, name="test-data", vertices=locs)
-    locations = InversionLocations(ws, params, mesh, window)
+    locations = InversionLocations(ws, params, window)
     dlocs = locations.get_locs(points_object.uid)
     np.testing.assert_allclose(locs, dlocs)
 
@@ -69,7 +69,7 @@ def test_filter(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
-    locations = InversionLocations(ws, params, mesh, window)
+    locations = InversionLocations(ws, params, window)
     test_data = np.array([0, 1, 2, 3, 4, 5])
     locations.mask = np.array([0, 0, 1, 1, 1, 0])
     filtered_data = locations.filter(test_data)
@@ -85,7 +85,7 @@ def test_rotate(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
-    locations = InversionLocations(ws, params, mesh, window)
+    locations = InversionLocations(ws, params, window)
     test_locs = np.array([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [6.0, 7.0, 8.0]])
     locs_rot = locations.rotate(test_locs)
     assert locs_rot.shape == test_locs.shape
