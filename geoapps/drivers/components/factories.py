@@ -6,16 +6,27 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
-from typing import Dict
+from typing import Any, Dict
 
 import numpy as np
 from SimPEG import maps
 
 
 class SimPEGFactory:
-    """ Build SimPEG objects based on inversion type. """
+    """
+    Build SimPEG objects based on inversion type.
+
+    Methods
+    -------
+    build: Generate SimPEG object.
+    """
 
     def __init__(self, params):
+        """
+        :param params: Params object containing SimPEG object parameters.
+        :param inversion_type: Type of inversion.
+
+        """
         self.params = params
         self.inversion_type = params.inversion_type
 
@@ -32,16 +43,44 @@ class SimPEGFactory:
             raise NotImplementedError(msg)
 
     def build(self):
-        pass
+        """ To be over-ridden in factory implementations. """
 
 
 class SurveyFactory(SimPEGFactory):
-    """ Build SimPEG survey instances based on inversion type. """
+    """
+    Build SimPEG survey instances based on inversion type.
+
+    Methods
+    -------
+    build: Build SimPEG survey instances based on inversion type.
+
+    """
 
     def __init__(self, params):
+        """
+        :param params: Params object containing SimPEG object parameters.
+        :param inversion_type: Type of inversion.
+
+        """
         super().__init__(params)
 
-    def build(self, locs, data, uncertainties, local_index=None):
+    def build(
+        self,
+        locs: np.ndarray,
+        data: Dict[str, np.ndarray],
+        uncertainties: Dict[str, np.ndarray],
+        local_index: np.ndarray = None,
+    ):
+        """
+        Build SimPEG survey instances based on inversion type.
+
+        :param locs: XYZ locations of survey points.
+        :param data: Dictionary of components and data arrays.
+        :param uncertainties: Dictionary of components and uncertainty arrays.
+        :param local_index: Indices of survey points belonging to particular tile.
+        :return: survey: SimPEG survey object.
+
+        """
 
         n_channels = len(data.keys())
 
@@ -64,23 +103,48 @@ class SurveyFactory(SimPEGFactory):
         )
         survey = self.data_module.survey.Survey(source)
 
-        survey.dobs = self.stack_channels(data)[local_index]
-        survey.std = self.stack_channels(uncertainties)[local_index]
+        survey.dobs = self._stack_channels(data)[local_index]
+        survey.std = self._stack_channels(uncertainties)[local_index]
 
         return survey
 
-    def stack_channels(self, channel_data: Dict[str, np.ndarray]):
+    def _stack_channels(self, channel_data: Dict[str, np.ndarray]):
+        """ Convert dictionary of data/uncertainties to stacked array. """
         return np.vstack([list(channel_data.values())]).ravel()
 
 
 class SimulationFactory(SimPEGFactory):
+    """
+    Build SimPEG simulation instances based on inversion type.
+
+    Methods
+    -------
+    build: Build SimPEG simulation instances based on inversion type.
+
+
+    """
+
     def __init__(self, params):
+        """
+        :param params: Params object containing SimPEG object parameters.
+        :param inversion_type: Type of inversion.
+
+        """
         super().__init__(params)
 
-    def build(self, survey, mesh, active_cells, tile_id=None):
+    def build(self, survey, mesh, active_cells: np.ndarray, tile_id: int = None):
+        """
+        Build SimPEG simulation object.
 
-        sens_path = self.get_sens_path(tile_id)
-        data_dependent_args = self.get_args(active_cells)
+        :param: survey: SimPEG survey object containing data locations.
+        :param: mesh: Inversion mesh.
+        :param: active_cells: Active cells mask.
+        :param: tile_id: Identification number of a particular tile.
+
+        """
+
+        sens_path = self._get_sens_path(tile_id)
+        data_dependent_args = self._get_args(active_cells)
 
         sim = self.data_module.simulation.Simulation3DIntegral(
             survey=survey,
@@ -95,7 +159,8 @@ class SimulationFactory(SimPEGFactory):
 
         return sim
 
-    def get_args(self, active_cells):
+    def _get_args(self, active_cells: np.ndarray) -> Dict[str, Any]:
+        """ Return inversion type specific kwargs dict for simulation object. """
 
         if self.inversion_type == "mvi":
             args = {
@@ -108,8 +173,8 @@ class SimulationFactory(SimPEGFactory):
 
         return args
 
-    def get_sens_path(self, tile_id):
-
+    def _get_sens_path(self, tile_id: int) -> str:
+        """ Build path to destination of on-disk sensitivities. """
         out_dir = os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
 
         if tile_id is None:

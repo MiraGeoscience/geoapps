@@ -17,13 +17,41 @@ from geoapps.utils import calculate_2D_trend, filter_xy
 
 from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
+from .meshes import InversionMesh
 
 
 class InversionData(InversionLocations):
-    """ Retrieve data from workspace and apply transformations. """
+    """
+    Retrieve data from workspace and apply transformations.
+
+    Methods
+    -------
+
+
+    """
 
     def __init__(self, workspace, params, window):
+        """
+        :param: resolution: Desired data grid spacing.
+        :param: offset: Static receivers location offsets.
+        :param: radar: Radar channel address used to drape receiver
+            locations over topography.
+        :param: ignore_value: Data value to ignore (infinity uncertainty).
+        :param: ignore_type: Type of ignore value (<, >, =).
+        :param: detrend_order: Polynomial degree for detrending (0, 1, or 2).
+        :param: detrend_type: Detrend type option. 'all': use all data,
+            'corners': use the convex hull only.
+        :param: components: Component names.
+        :param: locs: Data locations.
+        :param: vector: True if models are vector valued.
+        :param: n_blocks: Number of blocks if vector.
+        :param: data: Components and associated data.
+        :param: uncertainties: Components and associated uncertainties.
+        :param: normalizations: Data normalizations.
+
+        """
         super().__init__(workspace, params, window)
+
         self.resolution = None
         self.offset = None
         self.radar = None
@@ -34,15 +62,17 @@ class InversionData(InversionLocations):
         self.components = None
         self.locs = None
         self.vector = None
+        self.n_blocks = None
         self.data = {}
         self.uncertainties = {}
         self.normalizations = []
         self._initialize()
 
-    def _initialize(self):
-        """ Extract data from params class. """
+    def _initialize(self) -> None:
+        """ Extract data from workspace using params data. """
 
         self.vector = True if self.params.inversion_type == "mvi" else False
+        self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.data, self.uncertainties = self.get_data()
 
@@ -75,7 +105,11 @@ class InversionData(InversionLocations):
         if self.offset is not None:
             self.locs = self.displace(self.locs, self.offset)
         if self.radar is not None:
-            self.locs = self.drape(self.locs)
+            topo = super().get_locs(self.params.topography_object)
+            elev = self.workspace.get_entity(self.params.topography)[0].values
+            if not np.all(topo[:, 2] == elev):
+                topo[:, 2] = elev
+            self.locs = self.drape(topo, self.locs)
 
         if self.is_rotated:
             self.locs = self.rotate(self.locs)
@@ -112,13 +146,13 @@ class InversionData(InversionLocations):
 
         return list(data.keys()), data, uncertainties
 
-    def get_data_component(self, component):
+    def get_data_component(self, component: str) -> np.ndarray:
         """ Get data component (channel) from params data. """
         channel = self.params.channel(component)
         data = self.workspace.get_entity(channel)[0].values
         return data
 
-    def get_uncertainty_component(self, component):
+    def get_uncertainty_component(self, component: str) -> np.ndarray:
         """ Get uncertainty component (channel) from params data. """
         unc = self.params.uncertainty(component)
         if isinstance(unc, (int, float)):
@@ -130,7 +164,7 @@ class InversionData(InversionLocations):
         else:
             return workspace.get_entity(unc)[0].values
 
-    def parse_ignore_values(self):
+    def parse_ignore_values(self) -> Tuple[float, str]:
         """ Returns an ignore value and type ('<', '>', or '=') from params data. """
         ignore_values = self.params.ignore_values
         if ignore_values is not None:
@@ -145,7 +179,9 @@ class InversionData(InversionLocations):
         else:
             return None, None
 
-    def set_infinity_uncertainties(self, uncertainties, data):
+    def set_infinity_uncertainties(
+        self, uncertainties: np.ndarray, data: np.ndarray
+    ) -> np.ndarray:
         """ Use self.ignore_value self.ignore_type to set uncertainties to infinity. """
 
         unc = uncertainties.copy()
@@ -163,21 +199,20 @@ class InversionData(InversionLocations):
 
         return unc
 
-    def displace(self, locs, offset):
+    def displace(self, locs: np.ndarray, offset: np.ndarray) -> np.ndarray:
         """ Offset data locations in all three dimensions. """
         return locs + offset if offset is not None else 0
 
-    def drape(self, topography, locs):
+    def drape(self, topo: np.ndarray, locs: np.ndarray) -> np.ndarray:
         """ Drape data locations using radar channel. """
         xyz = locs.copy()
         radar_offset = self.workspace.get_entity(self.radar)[0].values
-        topo_locs = topography.locs
-        topo_interpolator = LinearNDInterpolator(topo_locs[:, :2], topo_locs[:, 2])
+        topo_interpolator = LinearNDInterpolator(topo[:, :2], topo[:, 2])
         z_topo = topo_interpolator(xyz[:, :2])
         if np.any(np.isnan(z_topo)):
-            tree = cKDTree(topo_locs[:, :2])
+            tree = cKDTree(topo[:, :2])
             _, ind = tree.query(xyz[np.isnan(z_topo), :2])
-            z_topo[np.isnan(z_topo)] = topo_locs[ind, 2]
+            z_topo[np.isnan(z_topo)] = topo[ind, 2]
         xyz[:, 2] = z_topo
 
         radar_offset_pad = np.zeros((len(radar_offset), 3))
@@ -185,7 +220,7 @@ class InversionData(InversionLocations):
 
         return self.displace(xyz, radar_offset_pad)
 
-    def detrend(self):
+    def detrend(self) -> np.ndarray:
         """ Remove trend from data. """
         d = self.data.copy()
         for comp in self.components:
@@ -198,8 +233,8 @@ class InversionData(InversionLocations):
             d[comp] -= data_trend
         return d
 
-    def normalize(self, data):
-        """ Apply normalization to data. """
+    def normalize(self, data: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+        """ Apply data type specific normalizations to data. """
         d = deepcopy(data)
         normalizations = []
         for comp in self.components:
@@ -212,7 +247,7 @@ class InversionData(InversionLocations):
         self.normalizations = normalizations
         return d
 
-    def survey(self, local_index=None):
+    def survey(self, local_index: np.ndarray = None):
         """ Generates SimPEG survey object. """
 
         survey_factory = SurveyFactory(self.params)
@@ -222,7 +257,13 @@ class InversionData(InversionLocations):
 
         return survey
 
-    def simulation(self, mesh, active_cells, local_index=None, tile_id=None):
+    def simulation(
+        self,
+        mesh: InversionMesh,
+        active_cells: np.ndarray,
+        local_index: np.ndarray = None,
+        tile_id: int = None,
+    ):
         """ Generates SimPEG simulation object. """
 
         simulation_factory = SimulationFactory(self.params)
@@ -231,8 +272,7 @@ class InversionData(InversionLocations):
         if local_index is None:
 
             sim = simulation_factory.build(survey, mesh, active_cells)
-            n_blocks = 3 if self.vector else 1
-            map = Maps.IdentityMap(nP=n_blocks * mesh.nC)
+            map = Maps.IdentityMap(nP=self.n_blocks * mesh.nC)
 
         else:
 

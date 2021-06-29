@@ -14,9 +14,28 @@ from geoapps.utils import rotate_xy
 
 
 class InversionLocations:
-    """ Retrieve topography data from workspace and apply transformations. """
+    """
+    Retrieve topography data from workspace and apply transformations.
+
+    Methods
+    -------
+    get_locs: Returns locations of data object centroids or vertices.
+    filter: Apply accumulated self.mask to array, or dict of arrays.
+    rotate: Un-rotate data using origin and angle assigned to inversion mesh.
+
+    """
 
     def __init__(self, workspace, params, window):
+        """
+        :param: workspace: Geoh5py workspace object containing location based data.
+        :param: params: Params object containing location based data parameters.
+        :param: window: Center and size defining window for data, topography, etc.
+        :param: mask: Mask that stores cumulative filtering actions.
+        :param: origin: Rotation origin.
+        :param: angle: Rotation angle.
+        :param: is_rotated: True if locations have been rotated.
+        :param: locs: xyz locations.
+        """
         self.workspace = workspace
         self.params = params
         self.window = window
@@ -79,7 +98,7 @@ class InversionLocations:
         else:
             return a[self.mask]
 
-    def rotate(self, locs):
+    def rotate(self, locs: np.ndarray) -> np.ndarray:
         """ Un-rotate data using origin and angle assigned to inversion mesh. """
         xy = rotate_xy(locs[:, :2], self.origin, self.angle)
         return np.c_[xy, locs[:, 2]]
