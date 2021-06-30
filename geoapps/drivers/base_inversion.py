@@ -235,7 +235,7 @@ class InversionDriver:
             if self.is_rotated:
                 rx_locs[:, :2] = rotate_xy(
                     rx_locs[:, :2],
-                    self.window["center"],
+                    self.inversion_mesh.rotation["origin"],
                     self.inversion_mesh.rotation["angle"],
                 )
             predicted_data_object = Points.create(
