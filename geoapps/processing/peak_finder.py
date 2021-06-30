@@ -53,6 +53,27 @@ from geoapps.utils.utils import (
 from ..io.PeakFinder import PeakFinderParams
 from ..io.PeakFinder.constants import default_ui_json
 
+_default_time_groups = {
+    "early": {"label": ["early"], "color": "#0000FF", "channels": []},
+    "middle": {"label": ["middle"], "color": "#FFFF00", "channels": []},
+    "late": {"label": ["late"], "color": "#FF0000", "channels": []},
+    "early + middle": {
+        "label": ["early", "middle"],
+        "color": "#00FFFF",
+        "channels": [],
+    },
+    "early + middle + late": {
+        "label": ["early", "middle", "late"],
+        "color": "#008000",
+        "channels": [],
+    },
+    "middle + late": {
+        "label": ["middle", "late"],
+        "color": "#FFA500",
+        "channels": [],
+    },
+}
+
 
 class PeakFinder(ObjectDataSelection):
     """
@@ -65,26 +86,6 @@ class PeakFinder(ObjectDataSelection):
     _group_auto = None
     decay_figure = None
     marker = {"left": "<", "right": ">"}
-    _default_time_groups = {
-        "early": {"label": ["early"], "color": "#0000FF", "channels": []},
-        "middle": {"label": ["middle"], "color": "#FFFF00", "channels": []},
-        "late": {"label": ["late"], "color": "#FF0000", "channels": []},
-        "early + middle": {
-            "label": ["early", "middle"],
-            "color": "#00FFFF",
-            "channels": [],
-        },
-        "early + middle + late": {
-            "label": ["early", "middle", "late"],
-            "color": "#008000",
-            "channels": [],
-        },
-        "middle + late": {
-            "label": ["middle", "late"],
-            "color": "#FFA500",
-            "channels": [],
-        },
-    }
 
     def __init__(self, ui_json=None, **kwargs):
 
@@ -1441,8 +1442,8 @@ class PeakFinder(ObjectDataSelection):
                 self.set_data(None)
         self.group_auto.value = False
 
-    @classmethod
-    def default_groups_from_property_group(cls, property_group):
+    @staticmethod
+    def default_groups_from_property_group(property_group):
         parent = property_group.parent
 
         data_list = [
@@ -1459,7 +1460,7 @@ class PeakFinder(ObjectDataSelection):
         }
 
         time_groups = {}
-        for key, default in cls._default_time_groups.items():
+        for key, default in _default_time_groups.items():
             prop_group = parent.find_or_create_property_group(name=key)
             prop_group.properties = []
 
@@ -1520,8 +1521,8 @@ class PeakFinder(ObjectDataSelection):
         self.params.write_input_file(name=self.params.ga_group_name)
         self.run(self.params, output_group=self.ga_group)
 
-    @classmethod
-    def run(cls, params, output_group=None):
+    @staticmethod
+    def run(params, output_group=None):
         """
         Create an octree mesh from input values
         """
@@ -1543,7 +1544,7 @@ class PeakFinder(ObjectDataSelection):
         lines = np.unique(line_field.values)
 
         if params.group_auto and any(prop_group):
-            time_groups = cls.default_groups_from_property_group(prop_group[0])
+            time_groups = PeakFinder.default_groups_from_property_group(prop_group[0])
         else:
             count = 0
             time_groups = {}
@@ -1583,7 +1584,7 @@ class PeakFinder(ObjectDataSelection):
                     channel_params["time"] = system["channels"][channel[0]]
                 else:
                     continue
-            channel_params["values"] = obj.values.copy() * (-(1.0 ** params.flip_sign))
+            channel_params["values"] = obj.values.copy() * (-1.0) ** params.flip_sign
 
         vertices = survey.vertices
         channels = active_channels
@@ -1821,7 +1822,7 @@ class PeakFinder(ObjectDataSelection):
                     parent=output_group,
                 )
 
-        params.workspace.finalize()
+        workspace.finalize()
 
         if params.monitoring_directory is not None and path.exists(
             params.monitoring_directory
@@ -2069,7 +2070,7 @@ def find_anomalies(
 
         migration = np.abs(locs[cox[cox_sort[-1]]] - locs[cox[cox_sort[0]]])
         skew = (locs[cox][cox_sort[0]] - locs[inflx_up][cox_sort]) / (
-            locs[inflx_dwn][cox_sort] - locs[cox][cox_sort[0]]
+            locs[inflx_dwn][cox_sort] - locs[cox][cox_sort[0]] + 1e-8
         )
         skew[azimuth_near[cox_sort] > 180] = 1.0 / (
             skew[azimuth_near[cox_sort] > 180] + 1e-2
