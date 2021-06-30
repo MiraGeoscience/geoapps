@@ -107,13 +107,13 @@ class PeakFinder(ObjectDataSelection):
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.all_anomalies = []
         self.active_channels = {}
-        self.pause_plot_refresh = False
+        self.pause_refresh = False
         self._survey = None
         self._time_groups = {}
         self.groups_panel = VBox([])
         self.group_auto.observe(self.create_default_groups, names="value")
         self.objects.observe(self.objects_change, names="value")
-        self.groups_widget = VBox([self.groups_setter])
+        self.groups_widget = HBox([self.group_auto, self.groups_setter])
         self.decay_panel = VBox([self.show_decay])
         self.tem_box = HBox(
             [
@@ -126,27 +126,25 @@ class PeakFinder(ObjectDataSelection):
         self.system.observe(self.set_data, names="value")
         super().__init__(**kwargs)
 
-        self.pause_plot_refresh = False
+        self.pause_refresh = False
         self.previous_line = self.lines.lines.value
-
+        self.smoothing.observe(self.line_update, names="value")
+        self.max_migration.observe(self.line_update, names="value")
+        self.min_channels.observe(self.line_update, names="value")
+        self.min_amplitude.observe(self.line_update, names="value")
+        self.min_value.observe(self.line_update, names="value")
+        self.min_width.observe(self.line_update, names="value")
+        self.lines.lines.observe(self.line_update, names="value")
         self.scale_panel = VBox([self.scale_button, self.scale_value])
         self.plotting = interactive_output(
             self.plot_data_selection,
             {
-                "ind": self.lines.lines,
-                "smoothing": self.smoothing,
-                "max_migration": self.max_migration,
-                "min_channels": self.min_channels,
-                "min_amplitude": self.min_amplitude,
-                "min_value": self.min_value,
-                "min_width": self.min_width,
                 "residual": self.residual,
                 "markers": self.markers,
                 "scale": self.scale_button,
                 "scale_value": self.scale_value,
                 "center": self.center,
                 "width": self.width,
-                "groups": self.group_list,
                 "plot_trigger": self.plot_trigger,
                 "x_label": self.x_label,
             },
@@ -154,11 +152,8 @@ class PeakFinder(ObjectDataSelection):
         self.decay = interactive_output(
             self.plot_decay_curve,
             {
-                "ind": self.lines.lines,
-                "smoothing": self.smoothing,
                 "residual": self.residual,
                 "center": self.center,
-                "groups": self.group_list,
                 "plot_trigger": self.plot_trigger,
             },
         )
@@ -200,6 +195,8 @@ class PeakFinder(ObjectDataSelection):
                 self.trigger_panel,
             ]
         )
+
+        self.line_update(self)
 
     def __populate__(self, **kwargs):
         super().__populate__(**kwargs)
@@ -255,6 +252,7 @@ class PeakFinder(ObjectDataSelection):
                         ],
                     ),
                     self.tem_box,
+                    Label("Groups"),
                     self.groups_widget,
                     self.plotting,
                     HBox(
@@ -330,7 +328,7 @@ class PeakFinder(ObjectDataSelection):
         """
         if getattr(self, "_group_auto", None) is None:
             self._group_auto = ToggleButton(
-                description="Use default groups", value=False
+                description="Use/Create Default", value=False
             )
 
         return self._group_auto
@@ -359,7 +357,7 @@ class PeakFinder(ObjectDataSelection):
         """
         if getattr(self, "_groups_setter", None) is None:
             self._groups_setter = ToggleButton(
-                description="Select Time Groups", value=False
+                description="Group Settings", value=False
             )
 
         return self._groups_setter
@@ -669,6 +667,12 @@ class PeakFinder(ObjectDataSelection):
         self.update_objects_list()
         self.lines._workspace = workspace
 
+        self._file_browser.reset(
+            path=self.working_directory,
+            filename=path.basename(self._h5file),
+        )
+        self._file_browser._apply_selection()
+
     @property
     def x_label(self):
         """
@@ -737,26 +741,28 @@ class PeakFinder(ObjectDataSelection):
         Observer of :obj:`geoapps.processing.PeakFinder.`: Change channels associated with groups
         """
         widget = caller["owner"]
+        if not self.pause_refresh:
+            if isinstance(widget, Dropdown):
+                obj, _ = self.get_selected_entities()
 
-        if isinstance(widget, Dropdown):
-            obj, _ = self.get_selected_entities()
+                group = {
+                    "color": getattr(self, f"Property Group {widget.name} Color").value
+                }
+                if widget.value in [pg.uid for pg in obj.property_groups]:
+                    prop_group = [
+                        pg for pg in obj.property_groups if pg.uid == widget.value
+                    ]
+                    group["data"] = prop_group[0].uid
+                    group["properties"] = prop_group[0].properties
+                else:
+                    group["data"] = None
+                    group["properties"] = []
 
-            group = {"color": self._time_groups[widget.name]["color"]}
-            if widget.value in [pg.uid for pg in obj.property_groups]:
-                prop_group = [
-                    pg for pg in obj.property_groups if pg.uid == widget.value
-                ]
-                group["data"] = prop_group[0].uid
-                group["properties"] = prop_group[0].properties
+                self._time_groups[widget.name] = group
             else:
-                group["data"] = None
-                group["properties"] = []
+                self._time_groups[widget.name]["color"] = widget.value
 
-            self._time_groups[widget.name] = group
-        else:
-            self._time_groups[widget.name]["color"] = widget.value
-
-        self.set_data(None)
+            self.set_data(None)
 
     def set_data(self, _):
         """
@@ -764,24 +770,24 @@ class PeakFinder(ObjectDataSelection):
         Populate the list of available channels and refresh groups
         """
         if getattr(self, "survey", None) is not None and self.data.value is not None:
-            self.pause_plot_refresh = True
+            self.pause_refresh = True
 
             self.active_channels = {}
-            if self.tem_checkbox.value:
-                for group in self.time_groups.values():
-                    for channel in group["properties"]:
-                        obj = self.workspace.get_entity(channel)[0]
-                        self.active_channels[channel] = {"name": obj.name}
-            else:
-                data_group = [
-                    p_g
-                    for p_g in self.survey.property_groups
-                    if p_g.uid == self.data.value
-                ]
-                if any(data_group):
-                    for channel in data_group[0].properties:
-                        obj = self.workspace.get_entity(channel)[0]
-                        self.active_channels[channel] = {"name": obj.name}
+            # if self.tem_checkbox.value:
+            for group in self.time_groups.values():
+                for channel in group["properties"]:
+                    obj = self.workspace.get_entity(channel)[0]
+                    self.active_channels[channel] = {"name": obj.name}
+            # else:
+            #     data_group = [
+            #         p_g
+            #         for p_g in self.survey.property_groups
+            #         if p_g.uid == self.data.value
+            #     ]
+            #     if any(data_group):
+            #         for channel in data_group[0].properties:
+            #             obj = self.workspace.get_entity(channel)[0]
+            #             self.active_channels[channel] = {"name": obj.name}
             d_min, d_max = np.inf, -np.inf
             thresh_value = np.inf
             if self.tem_checkbox.value:
@@ -812,7 +818,7 @@ class PeakFinder(ObjectDataSelection):
                 d_min = np.min([d_min, params["values"].min()])
                 d_max = np.max([d_max, params["values"].max()])
 
-            self.pause_plot_refresh = False
+            self.pause_refresh = False
             self.plot_trigger.value = False
 
             if d_max > -np.inf:
@@ -820,7 +826,7 @@ class PeakFinder(ObjectDataSelection):
                 self.min_value.value = d_min
                 self.scale_value.value = thresh_value
 
-            self.plot_trigger.value = True
+            self.line_update(None)
 
     def objects_change(self, _):
         """
@@ -831,29 +837,34 @@ class PeakFinder(ObjectDataSelection):
             self.update_data_list(None)
             not_tem = True
             self.active_channels = {}
-            if self.tem_checkbox.value:
-                not_tem = False
-                for aem_system, specs in self.em_system_specs.items():
-                    if any(
-                        [
-                            specs["flag"] in channel
-                            for channel in self._survey.get_data_list()
-                        ]
-                    ):
-                        if aem_system in self.system.options:
-                            self.system.value = aem_system
-                            # not_tem = False
-                            break
+            self.time_groups = {}
+            for child in self.groups_panel.children:
+                child.children[0].options = self.data.options
+
+            for aem_system, specs in self.em_system_specs.items():
+                if any(
+                    [
+                        specs["flag"] in channel
+                        for channel in self._survey.get_data_list()
+                    ]
+                ):
+                    if aem_system in self.system.options:
+                        self.system.value = aem_system
+                        not_tem = False
+                        break
 
             if not_tem:
+                self.tem_checkbox.value = False
                 self.min_channels.disabled = True
-                self.system.disabled = True
                 self.show_decay.value = False
                 self.system.disabled = True
             else:
+                self.tem_checkbox.value = True
                 self.min_channels.disabled = False
                 self.system.disabled = False
-                self.system.disabled = False
+
+            if self.group_auto:
+                self.create_default_groups(None)
 
             self.set_data(None)
 
@@ -863,53 +874,38 @@ class PeakFinder(ObjectDataSelection):
         """
         if self.groups_setter.value:
             self.groups_widget.children = [
-                self.groups_setter,
                 self.group_auto,
+                self.groups_setter,
                 self.groups_panel,
             ]
         else:
-            self.groups_widget.children = [self.groups_setter]
+            self.groups_widget.children = [self.group_auto, self.groups_setter]
 
     def plot_data_selection(
         self,
-        ind,
-        smoothing,
-        max_migration,
-        min_channels,
-        min_amplitude,
-        min_value,
-        min_width,
         residual,
         markers,
         scale,
         scale_value,
         center,
         width,
-        groups,
         plot_trigger,
         x_label,
     ):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
-        if self.pause_plot_refresh:
-            return
-
+        self.figure = plt.figure(figsize=(12, 6))
+        axs = plt.subplot()
         if (
-            getattr(self, "survey", None) is None
+            self.pause_refresh
+            or getattr(self, "survey", None) is None
             or self.plot_trigger.value is False
             or len(self.active_channels) == 0
+            or getattr(self.survey, "line_indices", None) is None
+            or len(self.survey.line_indices) < 2
         ):
             return
-
-        axs = None
-        if (
-            getattr(self.lines, "profile", None) is not None
-            and smoothing != self.lines.profile.smoothing
-        ):
-            self.lines.profile.smoothing = smoothing
-
-        self.line_update()
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
             [
@@ -919,13 +915,6 @@ class PeakFinder(ObjectDataSelection):
         )
         sub_ind = np.arange(lims[0], lims[1])
         y_min, y_max = np.inf, -np.inf
-
-        if (
-            getattr(self.survey, "line_indices", None) is None
-            or len(self.survey.line_indices) < 2
-        ):
-            return
-
         locs = self.lines.profile.locations_resampled
         peak_markers_x, peak_markers_y, peak_markers_c = [], [], []
         end_markers_x, end_markers_y = [], []
@@ -934,9 +923,6 @@ class PeakFinder(ObjectDataSelection):
         dwn_markers_x, dwn_markers_y = [], []
 
         for cc, (uid, channel) in enumerate(self.active_channels.items()):
-            if axs is None:
-                self.figure = plt.figure(figsize=(12, 6))
-                axs = plt.subplot()
 
             if "values" not in channel.keys():
                 continue
@@ -974,6 +960,15 @@ class PeakFinder(ObjectDataSelection):
                     ori = "left"
 
                 if markers:
+                    if ii == 0:
+                        axs.scatter(
+                            locs[group["peak"][ii]],
+                            values[group["peak"][ii]],
+                            s=200,
+                            c="k",
+                            marker=self.marker[ori],
+                            zorder=10,
+                        )
                     peak_markers_x += [locs[group["peak"][ii]]]
                     peak_markers_y += [values[group["peak"][ii]]]
                     peak_markers_c += [group["time_group"]["color"]]
@@ -999,30 +994,45 @@ class PeakFinder(ObjectDataSelection):
                     locs, values, raw, where=raw < values, color=[0, 0, 1, 0.5]
                 )
 
+        if np.isinf(y_min):
+            return
+
+        if scale == "symlog":
+            plt.yscale("symlog", linthresh=scale_value)
+
+        x_lims = [
+            center - width / 2.0,
+            center + width / 2.0,
+        ]
+        y_lims = [np.max([y_min, self.min_value.value]), y_max]
+
+        axs.set_xlim(x_lims)
+        axs.set_ylim(y_lims)
+        axs.set_ylabel("Data")
+        axs.scatter(center, (y_min + y_max) / 2, s=100, c="k", marker="d")
+
         if markers:
             axs.scatter(
                 peak_markers_x,
                 peak_markers_y,
-                s=100,
+                s=50,
                 c=peak_markers_c,
-                marker="v",
+                marker="o",
             )
 
             axs.scatter(
                 start_markers_x,
                 start_markers_y,
                 s=100,
-                color=np.c_[0, 0, 0, 0],
-                edgecolors="k",
-                marker=">",
+                color="k",
+                marker="4",
             )
             axs.scatter(
                 end_markers_x,
                 end_markers_y,
                 s=100,
-                color=np.c_[0, 0, 0, 0],
-                edgecolors="k",
-                marker="<",
+                color="k",
+                marker="3",
             )
             axs.scatter(
                 up_markers_x,
@@ -1039,21 +1049,10 @@ class PeakFinder(ObjectDataSelection):
                 s=100,
             )
 
-        if scale == "symlog":
-            plt.yscale("symlog", linthresh=scale_value)
-
-        x_lims = [
-            center - width / 2.0,
-            center + width / 2.0,
-        ]
-        axs.set_xlim(x_lims)
-        axs.set_ylim([np.max([y_min, min_value]), y_max])
-        axs.set_ylabel("Data")
-        axs.scatter(center, (y_min + y_max) / 2, s=100, c="k", marker="d")
         if x_label == "Easting":
             axs.text(
                 center,
-                y_min,
+                y_lims[0],
                 f"{self.lines.profile.interp_x(center):.0f} m E",
                 va="top",
                 ha="center",
@@ -1069,7 +1068,7 @@ class PeakFinder(ObjectDataSelection):
         elif x_label == "Northing":
             axs.text(
                 center,
-                y_min,
+                y_lims[0],
                 f"{self.lines.profile.interp_y(center):.0f} m N",
                 va="top",
                 ha="center",
@@ -1095,11 +1094,11 @@ class PeakFinder(ObjectDataSelection):
 
         axs.grid(True)
 
-    def plot_decay_curve(self, ind, smoothing, residual, center, groups, plot_trigger):
+    def plot_decay_curve(self, residual, center, plot_trigger):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
-        if self.pause_plot_refresh:
+        if self.pause_refresh:
             return
 
         if (
@@ -1181,17 +1180,16 @@ class PeakFinder(ObjectDataSelection):
         else:
             self.scale_panel.children = [self.scale_button]
 
-    def line_update(self):
+    def line_update(self, _):
         """
         Re-compute derivatives
         """
 
-        if getattr(self, "survey", None) is None:
-            return
-
         if (
-            len(self.workspace.get_entity(self.lines.data.value)) == 0
+            getattr(self, "survey", None) is None
+            or len(self.workspace.get_entity(self.lines.data.value)) == 0
             or self.lines.lines.value == ""
+            or len(self.time_groups) == 0
         ):
             return
 
@@ -1199,8 +1197,9 @@ class PeakFinder(ObjectDataSelection):
 
         if line_indices is None:
             return
-        self.survey.line_indices = line_indices
 
+        self.plot_trigger.value = False
+        self.survey.line_indices = line_indices
         result = find_anomalies(
             self.survey.vertices,
             line_indices,
@@ -1221,7 +1220,7 @@ class PeakFinder(ObjectDataSelection):
         else:
             return
 
-        self.pause_plot_refresh = True
+        self.pause_refresh = True
 
         if self.previous_line != self.lines.lines.value:
             end = self.lines.profile.locations_resampled[-1]
@@ -1245,7 +1244,8 @@ class PeakFinder(ObjectDataSelection):
                 self.width.max = end
 
         self.previous_line = self.lines.lines.value
-        self.pause_plot_refresh = False
+        self.pause_refresh = False
+        self.plot_trigger.value = True
 
     def get_line_indices(self, line_id):
         """
@@ -1279,6 +1279,13 @@ class PeakFinder(ObjectDataSelection):
                 time_groups = self.default_groups_from_property_group(group[0])
 
                 self._time_groups = time_groups
+                self.pause_refresh = True
+                for name, group in self._time_groups.items():
+                    if hasattr(self, f"Property Group {name} Data"):
+                        getattr(self, f"Property Group {name} Data").value = group[
+                            "data"
+                        ]
+
                 self.update_data_list(None)
                 self.set_data(None)
         self.group_auto.value = False
@@ -1367,6 +1374,7 @@ class PeakFinder(ObjectDataSelection):
         """
         Create an octree mesh from input values
         """
+        print("Reading parameters...")
         try:
             client = get_client()
         except ValueError:
@@ -1431,6 +1439,8 @@ class PeakFinder(ObjectDataSelection):
         channels = active_channels
         time_groups = time_groups
         anomalies = []
+
+        print("Starting Parallel Process...")
         for line_id in list(lines):
             line_indices = line_field.values == line_id
 
@@ -1453,7 +1463,7 @@ class PeakFinder(ObjectDataSelection):
                 )
             ]
 
-        all_anomalies = anomalies
+        all_anomalies = client.gather(anomalies)
 
         (
             time_group,
@@ -1664,11 +1674,17 @@ class PeakFinder(ObjectDataSelection):
                 )
 
         workspace.finalize()
+        print("Process completed.")
+        print(f"Result exported to: {workspace.h5file}")
 
         if params.monitoring_directory is not None and path.exists(
             params.monitoring_directory
         ):
             BaseApplication.live_link_output(params.monitoring_directory, output_group)
+            print(f"Live link activated!")
+            print(
+                f"Check your current ANALYST session for results stored in group {output_group.name}."
+            )
 
     def show_decay_trigger(self, _):
         """
@@ -2009,5 +2025,4 @@ def find_anomalies(
 
 if __name__ == "__main__":
     params = PeakFinderParams.from_path(sys.argv[1])
-    print(params.geoh5)
     PeakFinder.run(params)

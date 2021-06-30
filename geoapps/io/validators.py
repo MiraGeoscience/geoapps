@@ -261,7 +261,7 @@ class InputValidator:
 
         if parent is not None:
             parent_obj = workspace.get_entity(parent)[0]
-            if value not in [pg.name for pg in parent_obj.property_groups]:
+            if value not in [pg.uid for pg in parent_obj.property_groups]:
                 msg += f" Property Group must exist for {parent}."
 
     @staticmethod

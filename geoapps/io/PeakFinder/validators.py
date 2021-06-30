@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 from typing import Any, Dict, List
+from uuid import UUID
 
 from geoh5py.workspace import Workspace
 
@@ -38,6 +39,11 @@ class PeakFinderValidator(InputValidator):
                         group = k.lower().replace(param, "").lstrip()
                         if group not in list(groups.keys()):
                             groups[group] = {}
+
+                        try:
+                            v = UUID(v)
+                        except (ValueError, TypeError):
+                            pass
 
                         groups[group][param] = v
                         validator = self.validations[f"property_group_{param}"]

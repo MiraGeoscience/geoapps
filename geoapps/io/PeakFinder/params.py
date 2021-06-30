@@ -75,7 +75,7 @@ class PeakFinderParams(Params):
 
     @data.setter
     def data(self, val):
-        self.setter_validator("data", val)
+        self.setter_validator("data", val, fun=lambda x: UUID(x))
 
     @property
     def flip_sign(self):
