@@ -135,7 +135,7 @@ class InversionDriver:
         print("Number of tiles:" + str(self.nTiles))
 
         # Build tiled misfits and combine to form global misfit
-        local_misfits = self.calculate_tile_misfits(self.tiles)
+        local_misfits = self.get_tile_misfits(self.tiles)
         global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
 
         # Trigger sensitivity calcs
@@ -143,7 +143,7 @@ class InversionDriver:
             local.simulation.Jmatrix
 
         # Create regularization
-        wr = self.calculate_weighting_matrix(global_misfit)
+        wr = self.get_weighting_matrix(global_misfit)
         reg = self.get_regularization(wr)
 
         # Specify optimization algorithm and set parameters
@@ -276,7 +276,7 @@ class InversionDriver:
         self.save_residuals(predicted_data_object, dpred)
         self.finish_inversion_message(dpred)
 
-    def calculate_weighting_matrix(self, global_misfit):
+    def get_weighting_matrix(self, global_misfit):
         """Calculate diagonal weighting matrix for regularization.
         :param global_misfit: global misfit function.
         :return: wr: Diagonal weighting matrix.
@@ -447,7 +447,7 @@ class InversionDriver:
 
         return tiles
 
-    def calculate_tile_misfits(self, tiles):
+    def get_tile_misfits(self, tiles):
 
         local_misfits, self.sorting = [], []
         for tile_id, local_index in enumerate(tiles):
