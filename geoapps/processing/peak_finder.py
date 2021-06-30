@@ -10,8 +10,10 @@ from os import path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from dask import delayed
 from dask.distributed import Client, get_client
 from geoh5py.data import ReferencedData
+from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
 from geoh5py.workspace import Workspace
 from ipywidgets import (
@@ -39,6 +41,7 @@ from ipywidgets.widgets.widget_selection import TraitError
 from geoapps.base import BaseApplication
 from geoapps.selection import LineOptions, ObjectDataSelection
 from geoapps.utils import geophysical_systems
+from geoapps.utils.formatters import string_name
 from geoapps.utils.utils import (
     LineDataDerivatives,
     colors,
@@ -229,10 +232,11 @@ class PeakFinder(ObjectDataSelection):
                 ]
                 if any(prop_group):
                     count += 1
-                    prop_groups[prop_group] = {
+                    prop_groups[prop_group.name] = {
                         "data": prop_group.uid,
                         "color": params["color"],
                         "label": [count],
+                        "properties": prop_group.properties,
                     }
 
         if len(prop_groups) > 1:
@@ -769,7 +773,7 @@ class PeakFinder(ObjectDataSelection):
 
         setattr(
             self,
-            f"Property Group {property_group.name} Data",
+            f"Property Group {property_group} Data",
             Dropdown(
                 description="Group",
                 options=self.data.options,
@@ -777,19 +781,19 @@ class PeakFinder(ObjectDataSelection):
         )
 
         try:
-            getattr(
-                self, f"Property Group {property_group.name} Data"
-            ).value = property_group.uid
+            getattr(self, f"Property Group {property_group} Data").value = params[
+                "data"
+            ]
         except TraitError:
             pass
 
         setattr(
             self,
-            f"Property Group {property_group.name} Color",
+            f"Property Group {property_group} Color",
             ColorPicker(),
         )
         try:
-            getattr(self, f"Property Group {property_group.name} Color").value = str(
+            getattr(self, f"Property Group {property_group} Color").value = str(
                 params["color"]
             )
         except TraitError:
@@ -797,8 +801,8 @@ class PeakFinder(ObjectDataSelection):
 
         return VBox(
             [
-                getattr(self, f"Property Group {property_group.name} Data"),
-                getattr(self, f"Property Group {property_group.name} Color"),
+                getattr(self, f"Property Group {property_group} Data"),
+                getattr(self, f"Property Group {property_group} Color"),
             ],
             layout=Layout(border="solid"),
         )
@@ -825,10 +829,10 @@ class PeakFinder(ObjectDataSelection):
 
             self.active_channels = {}
             if self.tem_checkbox.value:
-                for group in self.time_groups.keys():
-                    for channel in group.properties:
+                for group in self.time_groups.values():
+                    for channel in group["properties"]:
                         obj = self.workspace.get_entity(channel)[0]
-                        self.active_channels[obj] = {}
+                        self.active_channels[channel] = {"name": obj.name}
             else:
                 data_group = [
                     p_g
@@ -838,7 +842,7 @@ class PeakFinder(ObjectDataSelection):
                 if any(data_group):
                     for channel in data_group[0].properties:
                         obj = self.workspace.get_entity(channel)[0]
-                        self.active_channels[obj] = {}
+                        self.active_channels[channel] = {"name": obj.name}
 
             # channel_options = [obj.name for obj in self.active_channels.keys()]
             # if self.tem_checkbox.value:
@@ -851,12 +855,14 @@ class PeakFinder(ObjectDataSelection):
             if self.tem_checkbox.value:
                 system = self.em_system_specs[self.system.value]
 
-            for obj, params in self.active_channels.items():
-
+            for uid, params in self.active_channels.items():
+                obj = self.workspace.get_entity(uid)[0]
                 try:
                     if self.tem_checkbox.value:
                         channel = [
-                            ch for ch in system["channels"].keys() if ch in obj.name
+                            ch
+                            for ch in system["channels"].keys()
+                            if ch in params["name"]
                         ]
                         if any(channel):
                             params["time"] = system["channels"][channel[0]]
@@ -1085,7 +1091,7 @@ class PeakFinder(ObjectDataSelection):
         up_markers_x, up_markers_y = [], []
         dwn_markers_x, dwn_markers_y = [], []
 
-        for cc, (obj, channel) in enumerate(self.active_channels.items()):
+        for cc, (uid, channel) in enumerate(self.active_channels.items()):
             if axs is None:
                 self.figure = plt.figure(figsize=(12, 6))
                 axs = plt.subplot()
@@ -1117,7 +1123,7 @@ class PeakFinder(ObjectDataSelection):
                 axs.plot(
                     locs[start:end],
                     values[start:end],
-                    color=self.time_groups[group["time_group"]]["color"],
+                    color=group["time_group"]["color"],
                 )
 
                 if group["azimuth"] < 180:
@@ -1128,7 +1134,7 @@ class PeakFinder(ObjectDataSelection):
                 if markers:
                     peak_markers_x += [locs[group["peak"][ii]]]
                     peak_markers_y += [values[group["peak"][ii]]]
-                    peak_markers_c += [self.time_groups[group["time_group"]]["color"]]
+                    peak_markers_c += [group["time_group"]["color"]]
 
                     start_markers_x += [locs[group["start"][ii]]]
                     start_markers_y += [values[group["start"][ii]]]
@@ -1308,7 +1314,7 @@ class PeakFinder(ObjectDataSelection):
                     times,
                     group["peak_values"],
                     s=100,
-                    color=self.time_groups[group["time_group"]]["color"],
+                    color=group["time_group"]["color"],
                     marker="^",
                     edgecolors="k",
                 )
@@ -1461,12 +1467,13 @@ class PeakFinder(ObjectDataSelection):
                 for ind in ranges[val]:
                     prop_group.properties += [data_list[ind].uid]
 
-            time_groups[prop_group] = {
+            time_groups[prop_group.name] = {
                 "data": prop_group.uid,
                 "color": default["color"],
                 "label": [
                     ii for ii, key in enumerate(ranges) if key in default["label"]
                 ],
+                "properties": prop_group.properties,
             }
             parent.workspace.finalize()
 
@@ -1483,52 +1490,55 @@ class PeakFinder(ObjectDataSelection):
         self.params._groups = {}
         self.params.input_file.input_dict = default_ui_json.copy()
         for group, values in self.time_groups.items():
-            self.params.input_file.data[f"Property Group {group.name} Data"] = values[
-                "data"
-            ]
-            self.params.input_file.data[f"Property Group {group.name} Color"] = values[
+            self.params.input_file.data[f"Property Group {group} Data"] = values["data"]
+            self.params.input_file.data[f"Property Group {group} Color"] = values[
                 "color"
             ]
-            self.params.groups[group.name] = {
+            self.params.groups[group] = {
                 "data": values["data"],
                 "color": values["color"],
             }
             self.params.input_file.input_dict[
-                f"Property Group {group.name} Data"
+                f"Property Group {group} Data"
             ] = default_ui_json[f"Property Group Data"].copy()
-            self.params.input_file.input_dict[f"Property Group {group.name} Data"][
+            self.params.input_file.input_dict[f"Property Group {group} Data"][
                 "group"
-            ] = group.name
+            ] = group
             self.params.input_file.input_dict[
-                f"Property Group {group.name} Color"
+                f"Property Group {group} Color"
             ] = default_ui_json[f"Property Group Color"].copy()
-            self.params.input_file.input_dict[f"Property Group {group.name} Color"][
+            self.params.input_file.input_dict[f"Property Group {group} Color"][
                 "group"
-            ] = group.name
+            ] = group
 
         del self.params.input_file.input_dict[f"Property Group Data"]
         del self.params.input_file.input_dict[f"Property Group Color"]
-        del self.params.input_file.data[f"Property Group Data"]
-        del self.params.input_file.data[f"Property Group Color"]
+        if "Property Group Data" in self.params.input_file.data.keys():
+            del self.params.input_file.data[f"Property Group Data"]
+            del self.params.input_file.data[f"Property Group Color"]
         self.params.group_auto = False
         self.params.write_input_file(name=self.params.ga_group_name)
-        self.run(self.params)
+        self.run(self.params, output_group=self.ga_group)
 
     @classmethod
-    def run(cls, params):
+    def run(cls, params, output_group=None):
         """
         Create an octree mesh from input values
         """
-
         try:
             client = get_client()
         except ValueError:
             client = Client()
 
         workspace = params.workspace
-
         survey = workspace.get_entity(params.objects)[0]
         prop_group = [pg for pg in survey.property_groups if pg.uid == params.data]
+
+        if output_group is None:
+            output_group = ContainerGroup.create(
+                workspace, name=string_name(params.ga_group_name)
+            )
+
         line_field = workspace.get_entity(params.line_field)[0]
         lines = np.unique(line_field.values)
 
@@ -1546,60 +1556,62 @@ class PeakFinder(ObjectDataSelection):
                     ]
                     if any(prop_group):
                         count += 1
-                        time_groups[prop_group[0]] = {
-                            "name": prop_group[0].name,
+                        time_groups[prop_group[0].name] = {
+                            "data": prop_group[0].uid,
                             "color": group_params["color"],
                             "label": [count],
+                            "properties": prop_group[0].properties,
                         }
 
         active_channels = {}
-        for group in time_groups.keys():
-            for channel in group.properties:
+        for group in time_groups.values():
+            for channel in group["properties"]:
                 obj = workspace.get_entity(channel)[0]
-                active_channels[obj] = {}
+                active_channels[channel] = {"name": obj.name}
 
         if params.tem_checkbox:
             system = geophysical_systems.parameters()[params.system]
-            normalization = system["normalization"] + [-(1.0 ** params.flip_sign)]
+            normalization = system["normalization"]
         else:
-            normalization = [-(1.0 ** params.flip_sign)]
+            normalization = [1]
 
-        for obj, channel_params in active_channels.items():
-
+        for uid, channel_params in active_channels.items():
+            obj = workspace.get_entity(uid)[0]
             if params.tem_checkbox:
                 channel = [ch for ch in system["channels"].keys() if ch in obj.name]
                 if any(channel):
                     channel_params["time"] = system["channels"][channel[0]]
                 else:
                     continue
-            channel_params["values"] = obj.values.copy()
+            channel_params["values"] = obj.values.copy() * (-(1.0 ** params.flip_sign))
 
-        vertices = client.scatter(survey.vertices)
-        channels = client.scatter(active_channels)
-        time_groups = client.scatter(time_groups)
+        vertices = survey.vertices
+        channels = active_channels
+        time_groups = time_groups
         anomalies = []
         for line_id in list(lines):
             line_indices = line_field.values == line_id
 
             anomalies += [
-                client.compute(
-                    find_anomalies(
-                        vertices,
-                        line_indices,
-                        channels,
-                        time_groups,
-                        smoothing=params.smoothing,
-                        min_amplitude=params.min_amplitude,
-                        min_value=params.min_value,
-                        min_width=params.min_width,
-                        max_migration=params.max_migration,
-                        min_channels=params.min_channels,
-                        minimal_output=True,
-                    )
+                # client.compute(
+                find_anomalies(
+                    vertices,
+                    line_indices,
+                    channels,
+                    time_groups,
+                    data_normalization=normalization,
+                    smoothing=params.smoothing,
+                    min_amplitude=params.min_amplitude,
+                    min_value=params.min_value,
+                    min_width=params.min_width,
+                    max_migration=params.max_migration,
+                    min_channels=params.min_channels,
+                    minimal_output=True,
                 )
+                # )
             ]
 
-        all_anomalies = client.gather(anomalies)
+        all_anomalies = anomalies
 
         (
             time_group,
@@ -1618,8 +1630,8 @@ class PeakFinder(ObjectDataSelection):
 
         for line in all_anomalies:
             for group in line:
-                if "time_group" in list(group.keys()) and len(group["cox"]) > 0:
-                    time_group += time_groups[group["time_group"]]["label"]
+                if "time_group" in group.keys() and len(group["cox"]) > 0:
+                    time_group += group["time_group"]["label"]
 
                     if group["linear_fit"] is None:
                         tau += [0]
@@ -1637,7 +1649,7 @@ class PeakFinder(ObjectDataSelection):
                     peaks += [group["peaks"]]
 
         if cox:
-            time_group = np.hstack(time_group) + 1  # Start count at 1
+            time_group = np.hstack(time_group)  # Start count at 1
 
             # Create reference values and color_map
             group_map, color_map = {}, []
@@ -1652,7 +1664,7 @@ class PeakFinder(ObjectDataSelection):
                 params.workspace,
                 name="PointMarkers",
                 vertices=np.vstack(cox),
-                parent=params.ga_group,
+                parent=output_group,
             )
             points.entity_type.name = params.ga_group_name
             migration = np.hstack(migration)
@@ -1742,7 +1754,7 @@ class PeakFinder(ObjectDataSelection):
                         cells=np.arange(len(markers) * 4, dtype="uint32").reshape(
                             (-1, 2)
                         ),
-                        parent=params.ga_group,
+                        parent=output_group,
                     )
                     time_group_data = curves.add_data(
                         {
@@ -1761,7 +1773,7 @@ class PeakFinder(ObjectDataSelection):
                     params.workspace,
                     name="Inflections_Up",
                     vertices=np.vstack(inflx_up),
-                    parent=params.ga_group,
+                    parent=output_group,
                 )
                 time_group_data = inflx_pts.add_data(
                     {
@@ -1782,7 +1794,7 @@ class PeakFinder(ObjectDataSelection):
                     params.workspace,
                     name="Inflections_Down",
                     vertices=np.vstack(inflx_dwn),
-                    parent=params.ga_group,
+                    parent=output_group,
                 )
                 time_group_data.copy(parent=inflx_pts)
 
@@ -1790,7 +1802,7 @@ class PeakFinder(ObjectDataSelection):
                     params.workspace,
                     name="Starts",
                     vertices=np.vstack(start),
-                    parent=params.ga_group,
+                    parent=output_group,
                 )
                 time_group_data.copy(parent=start_pts)
 
@@ -1798,28 +1810,23 @@ class PeakFinder(ObjectDataSelection):
                     params.workspace,
                     name="Ends",
                     vertices=np.vstack(end),
-                    parent=params.ga_group,
+                    parent=output_group,
                 )
                 time_group_data.copy(parent=end_pts)
 
-                peak_pts = Points.create(
+                Points.create(
                     params.workspace,
                     name="Peaks",
                     vertices=np.vstack(peaks),
-                    parent=params.ga_group,
+                    parent=output_group,
                 )
+
+        params.workspace.finalize()
 
         if params.monitoring_directory is not None and path.exists(
             params.monitoring_directory
         ):
-            BaseApplication.live_link_output(params.monitoring_directory, octree)
-
-            if params.structural_markers:
-                BaseApplication.live_link_output(params.monitoring_directory, curves)
-
-        params.workspace.finalize()
-
-        print(f"Selected object {survey}")
+            BaseApplication.live_link_output(params.monitoring_directory, output_group)
 
     def show_decay_trigger(self, _):
         """
@@ -1833,6 +1840,7 @@ class PeakFinder(ObjectDataSelection):
             self.show_decay.description = "Show decay curve"
 
 
+# @delayed
 def find_anomalies(
     locations,
     line_indices,
@@ -1892,10 +1900,10 @@ def find_anomalies(
         "time_group": [],
     }
 
-    data_uid = [data.uid for data in channels.keys()]
-    property_groups = [pg for pg in time_groups.keys()]
-
-    for cc, (obj, params) in enumerate(channels.items()):
+    data_uid = list(channels.keys())
+    property_groups = [pg for pg in time_groups.values()]
+    group_prop_size = np.r_[[len(grp["properties"]) for grp in time_groups.values()]]
+    for cc, (uid, params) in enumerate(channels.items()):
         if "values" not in list(params.keys()):
             continue
 
@@ -1971,13 +1979,11 @@ def find_anomalies(
                 anomalies["end"] += [end]
                 anomalies["group"] += [-1]
                 anomalies["time_group"] += [
-                    np.min(
-                        [
-                            key
-                            for key, time_group in enumerate(time_groups.keys())
-                            if obj.uid in time_group.properties
-                        ]
-                    )
+                    [
+                        key
+                        for key, time_group in enumerate(time_groups.values())
+                        if uid in time_group["properties"]
+                    ]
                 ]
 
     if len(anomalies["peak"]) == 0:
@@ -1990,6 +1996,9 @@ def find_anomalies(
 
     # Re-cast as numpy arrays
     for key, values in anomalies.items():
+        if key == "time_group":
+            continue
+
         anomalies[key] = np.hstack(values)
 
     group_id = -1
@@ -2022,20 +2031,26 @@ def find_anomalies(
             mask[sub_ind] = False
             near = near[mask]
 
-        # Keep largest overlapping time group
-        in_gate, count = np.unique(anomalies["time_group"][near], return_counts=True)
-        in_gate = in_gate[(count >= min_channels) & (in_gate != -1)].tolist()
+        score = np.zeros(len(time_groups))
+        for ids in near:
+            score[anomalies["time_group"][ids]] += 1
 
-        counter = []
-        for t_g in time_groups.values():
-            matches = np.r_[[label in in_gate for label in t_g["label"]]]
-            counter += [np.sum(matches) - np.sum(~matches)]
+        # Find groups with largest channel overlap
+        max_scores = np.where(score == score.max())[0]
 
-        time_group = property_groups[np.argmax(counter)]
+        # Keep the group with less properties
+        in_group = max_scores[
+            np.argmax(score[max_scores] / group_prop_size[max_scores])
+        ]
+        if score[in_group] < min_channels:
+            continue
+
+        time_group = property_groups[in_group]
 
         # Remove anomalies not in group
         mask = [
-            data_uid[anomalies["channel"][id]] in time_group.properties for id in near
+            data_uid[anomalies["channel"][id]] in time_group["properties"]
+            for id in near
         ]
         near = near[mask, ...]
         if len(near) == 0:
