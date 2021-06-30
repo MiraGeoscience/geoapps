@@ -4,11 +4,6 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
 
 from uuid import UUID
 
@@ -134,6 +129,13 @@ default_ui_json = {
         "parent": "data_object",
         "property": None,
         "value": 1,
+    },
+    "z_from_topo": {
+        "default": True,
+        "main": True,
+        "group": "Receivers Options",
+        "label": "Take z from topography?",
+        "value": True,
     },
     "receivers_radar_drape": {
         "association": "Cell",
@@ -730,11 +732,11 @@ default_ui_json = {
         "value": None,
     },
     "out_group": {
-        "default": "MVIInversion",
+        "default": "GravInversion",
         "visible": True,
         "enabled": True,
         "label": "results group name",
-        "value": "MVIInversion",
+        "value": "GravInversion",
     },
     "no_data_value": {
         "default": 0,
@@ -809,6 +811,7 @@ validations = {
     "tile_spatial": {
         "types": [str, int, float],
     },
+    "z_from_topo": {"types": [bool]},
     "receivers_radar_drape": {"types": [str], "reqs": [("data_object")]},
     "receivers_offset_x": {
         "types": [int, float],

@@ -9,6 +9,7 @@ from uuid import UUID
 
 import numpy as np
 from geoh5py.objects import Grid2D
+from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.utils import rotate_xy
 
@@ -89,6 +90,12 @@ class InversionLocations:
             msg += " Object type should be Grid2D or point-like."
             raise (ValueError(msg))
 
+        if data_object.uid == self.params.topography_object:
+            if self.params.topography is not None:
+                elev = self.workspace.get_entity(self.params.topography)[0].values
+                if not np.all(locs[:, 2] == elev):
+                    locs[:, 2] = elev
+
         return locs
 
     def filter(self, a):
@@ -102,3 +109,19 @@ class InversionLocations:
         """ Un-rotate data using origin and angle assigned to inversion mesh. """
         xy = rotate_xy(locs[:, :2], self.origin, self.angle)
         return np.c_[xy, locs[:, 2]]
+
+    def z_from_topo(self, locs: np.ndarray):
+        """ interpolate locations z data from topography. """
+
+        topo = self.get_locs(self.params.topography_object)
+
+        xyz = locs.copy()
+        topo_interpolator = LinearNDInterpolator(topo[:, :2], topo[:, 2])
+        z_topo = topo_interpolator(xyz[:, :2])
+        if np.any(np.isnan(z_topo)):
+            tree = cKDTree(topo[:, :2])
+            _, ind = tree.query(xyz[np.isnan(z_topo), :2])
+            z_topo[np.isnan(z_topo)] = topo[ind, 2]
+        xyz[:, 2] = z_topo
+
+        return xyz

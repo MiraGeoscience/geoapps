@@ -9,7 +9,6 @@ from copy import deepcopy
 from typing import Dict, Tuple
 
 import numpy as np
-from scipy.interpolate import LinearNDInterpolator
 from SimPEG import maps
 from SimPEG.utils.drivers import create_nested_mesh
 
@@ -77,6 +76,8 @@ class InversionData(InversionLocations):
         self.components, self.data, self.uncertainties = self.get_data()
 
         self.locs = super().get_locs(self.params.data_object)
+        self.locs = super().z_from_topo(self.locs)
+
         self.mask = np.ones(len(self.locs), dtype=bool)
 
         if self.window is not None:
@@ -102,14 +103,13 @@ class InversionData(InversionLocations):
         self.uncertainties = super().filter(self.uncertainties)
 
         self.offset, self.radar = self.params.offset()
+
         if self.offset is not None:
             self.locs = self.displace(self.locs, self.offset)
+
         if self.radar is not None:
-            topo = super().get_locs(self.params.topography_object)
-            elev = self.workspace.get_entity(self.params.topography)[0].values
-            if not np.all(topo[:, 2] == elev):
-                topo[:, 2] = elev
-            self.locs = self.drape(topo, self.locs)
+            radar_offset = self.workspace.get_entity(self.radar)[0].values
+            self.locs = self.drape(self.locs, radar_offset)
 
         if self.is_rotated:
             self.locs = self.rotate(self.locs)
@@ -203,22 +203,13 @@ class InversionData(InversionLocations):
         """ Offset data locations in all three dimensions. """
         return locs + offset if offset is not None else 0
 
-    def drape(self, topo: np.ndarray, locs: np.ndarray) -> np.ndarray:
+    def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
         """ Drape data locations using radar channel. """
-        xyz = locs.copy()
-        radar_offset = self.workspace.get_entity(self.radar)[0].values
-        topo_interpolator = LinearNDInterpolator(topo[:, :2], topo[:, 2])
-        z_topo = topo_interpolator(xyz[:, :2])
-        if np.any(np.isnan(z_topo)):
-            tree = cKDTree(topo[:, :2])
-            _, ind = tree.query(xyz[np.isnan(z_topo), :2])
-            z_topo[np.isnan(z_topo)] = topo[ind, 2]
-        xyz[:, 2] = z_topo
 
         radar_offset_pad = np.zeros((len(radar_offset), 3))
         radar_offset_pad[:, 2] = radar_offset
 
-        return self.displace(xyz, radar_offset_pad)
+        return self.displace(locs, radar_offset_pad)
 
     def detrend(self) -> np.ndarray:
         """ Remove trend from data. """

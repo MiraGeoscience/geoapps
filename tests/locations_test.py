@@ -21,12 +21,12 @@ workspace = Workspace("./FlinFlon.geoh5")
 def setup_params(tmp):
     geotest = Geoh5Tester(workspace, tmp, "test.geoh5", default_ui_json, MVIParams)
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     return geotest.make()
 
 
 def test_mask(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
     locations = InversionLocations(ws, params, window)
     test_mask = [0, 1, 1, 0]
@@ -41,7 +41,6 @@ def test_mask(tmp_path):
 
 def test_get_locs(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
     locs = np.ones((10, 3), dtype=float)
     points_object = Points.create(ws, name="test-data", vertices=locs)
@@ -67,7 +66,6 @@ def test_get_locs(tmp_path):
 
 def test_filter(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
     locations = InversionLocations(ws, params, window)
     test_data = np.array([0, 1, 2, 3, 4, 5])
@@ -83,9 +81,17 @@ def test_filter(tmp_path):
 def test_rotate(tmp_path):
     # Basic test since rotate_xy already tested
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
     locations = InversionLocations(ws, params, window)
     test_locs = np.array([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [6.0, 7.0, 8.0]])
     locs_rot = locations.rotate(test_locs)
     assert locs_rot.shape == test_locs.shape
+
+
+def test_z_from_topo(tmp_path):
+    ws, params = setup_params(tmp_path)
+    window = params.window()
+    locations = InversionLocations(ws, params, window)
+    locations.locs = np.array([[315674, 6070832, 0]])
+    locs = locations.z_from_topo(locations.locs)
+    assert locs[0, 2] == 326
