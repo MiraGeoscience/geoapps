@@ -107,14 +107,12 @@ class PeakFinder(ObjectDataSelection):
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.all_anomalies = []
         self.active_channels = {}
-        # self.data_channel_options = {}
         self.pause_plot_refresh = False
         self._survey = None
         self._time_groups = {}
         self.groups_panel = VBox([])
         self.group_auto.observe(self.create_default_groups, names="value")
         self.objects.observe(self.objects_change, names="value")
-        # self.system_panel = VBox([self.system_panel_option])
         self.groups_widget = VBox([self.groups_setter])
         self.decay_panel = VBox([self.show_decay])
         self.tem_box = HBox(
@@ -165,27 +163,10 @@ class PeakFinder(ObjectDataSelection):
             },
         )
         self.show_decay.observe(self.show_decay_trigger, names="value")
-        # self.system_panel_option.observe(self.system_panel_trigger)
         self.tem_checkbox.observe(self.objects_change, names="value")
         self.groups_setter.observe(self.groups_trigger)
-
         self.scale_button.observe(self.scale_update)
-        # self.channel_selection.observe(self.channel_panel_update, names="value")
-        # self.channels.observe(self.edit_group, names="value")
-        # self.group_list.observe(self.highlight_selection, names="value")
         self.flip_sign.observe(self.set_data, names="value")
-        # self.highlight_selection(None)
-        # self.channel_panel = VBox(
-        #     [
-        #         self.channel_selection,
-        #     ]
-        # )
-        # self.system_options = VBox(
-        #     [
-        #         self.system,
-        #         self.channel_panel,
-        #     ]
-        # )
         self.trigger.description = "Process All Lines"
         self.trigger_panel = VBox(
             [
@@ -327,46 +308,6 @@ class PeakFinder(ObjectDataSelection):
 
         return self._center
 
-    # @property
-    # def channels(self):
-    #     """
-    #     :obj:`ipywidgets.SelectMultiple`: Selection of data channels
-    #     """
-    #     if getattr(self, "_channels", None) is None:
-    #         self._channels = SelectMultiple(description="Channels")
-    #
-    #     return self._channels
-
-    @property
-    def channel_selection(self):
-        """
-        :obj:`ipywidgets.Dropdown`: Selection of data channels expected from the selected em system
-        """
-        if getattr(self, "_channel_selection", None) is None:
-            self._channel_selection = Dropdown(
-                description="Time Gate",
-                options=self.em_system_specs[self.system.value]["channels"].keys(),
-            )
-
-        return self._channel_selection
-
-    @property
-    def data(self):
-        """
-        :obj:`ipywidgets.SelectMultiple`: Data selection used by the application
-        """
-        if getattr(self, "_data", None) is None:
-            self.data = Dropdown(description="Data: ")
-
-        return self._data
-
-    @data.setter
-    def data(self, value):
-        assert isinstance(
-            value, (Dropdown, SelectMultiple)
-        ), f"'Objects' must be of type {Dropdown} or {SelectMultiple}"
-        self._data = value
-
     @property
     def em_system_specs(self):
         return geophysical_systems.parameters()
@@ -380,7 +321,6 @@ class PeakFinder(ObjectDataSelection):
             self._flip_sign = ToggleButton(
                 description="Flip Y (-1x)", button_style="warning"
             )
-
         return self._flip_sign
 
     @property
@@ -390,22 +330,10 @@ class PeakFinder(ObjectDataSelection):
         """
         if getattr(self, "_group_auto", None) is None:
             self._group_auto = ToggleButton(
-                description="Default (3) groups", value=False
+                description="Use default groups", value=False
             )
 
         return self._group_auto
-
-    @property
-    def group_color(self):
-        """
-        :obj:`ipywidgets.ColorPicker`: Assign a color to the selected group
-        """
-        if getattr(self, "_group_color", None) is None:
-            self._group_color = ColorPicker(
-                concise=False, description="Color", value="blue", disabled=False
-            )
-
-        return self._group_color
 
     @property
     def group_list(self):
@@ -679,18 +607,6 @@ class PeakFinder(ObjectDataSelection):
             )
         return self._system
 
-    # @property
-    # def system_panel_option(self):
-    #     """
-    #     :obj:`ipywidgets.ToggleButton`: Display system options
-    #     """
-    #     if getattr(self, "_system_panel_option", None) is None:
-    #         self._system_panel_option = ToggleButton(
-    #             description="Select TEM System", value=False
-    #         )
-    #
-    #     return self._system_panel_option
-
     @property
     def tem_checkbox(self):
         """
@@ -776,11 +692,11 @@ class PeakFinder(ObjectDataSelection):
             self,
             f"Property Group {property_group} Data",
             Dropdown(
-                description="Group",
+                description="Group Name:",
                 options=self.data.options,
             ),
         )
-
+        getattr(self, f"Property Group {property_group} Data").name = property_group
         try:
             getattr(self, f"Property Group {property_group} Data").value = params[
                 "data"
@@ -791,14 +707,22 @@ class PeakFinder(ObjectDataSelection):
         setattr(
             self,
             f"Property Group {property_group} Color",
-            ColorPicker(),
+            ColorPicker(description="Color"),
         )
+        getattr(self, f"Property Group {property_group} Color").name = property_group
         try:
             getattr(self, f"Property Group {property_group} Color").value = str(
                 params["color"]
             )
         except TraitError:
             pass
+
+        getattr(self, f"Property Group {property_group} Data").observe(
+            self.edit_group, names="value"
+        )
+        getattr(self, f"Property Group {property_group} Color").observe(
+            self.edit_group, names="value"
+        )
 
         return VBox(
             [
@@ -808,17 +732,31 @@ class PeakFinder(ObjectDataSelection):
             layout=Layout(border="solid"),
         )
 
-    # def channel_panel_update(self, _):
-    #     """
-    #     Observer of :obj:`geoapps.processing.PeakFinder.channel_selection`: Change data channel panel
-    #     """
-    #     try:
-    #         self.channel_panel.children = [
-    #             self.channel_selection,
-    #             self.data_channel_options[self.channel_selection.value],
-    #         ]
-    #     except KeyError:
-    #         self.channel_panel.children = [self.channel_selection]
+    def edit_group(self, caller):
+        """
+        Observer of :obj:`geoapps.processing.PeakFinder.`: Change channels associated with groups
+        """
+        widget = caller["owner"]
+
+        if isinstance(widget, Dropdown):
+            obj, _ = self.get_selected_entities()
+
+            group = {"color": self._time_groups[widget.name]["color"]}
+            if widget.value in [pg.uid for pg in obj.property_groups]:
+                prop_group = [
+                    pg for pg in obj.property_groups if pg.uid == widget.value
+                ]
+                group["data"] = prop_group[0].uid
+                group["properties"] = prop_group[0].properties
+            else:
+                group["data"] = None
+                group["properties"] = []
+
+            self._time_groups[widget.name] = group
+        else:
+            self._time_groups[widget.name]["color"] = widget.value
+
+        self.set_data(None)
 
     def set_data(self, _):
         """
@@ -844,13 +782,6 @@ class PeakFinder(ObjectDataSelection):
                     for channel in data_group[0].properties:
                         obj = self.workspace.get_entity(channel)[0]
                         self.active_channels[channel] = {"name": obj.name}
-
-            # channel_options = [obj.name for obj in self.active_channels.keys()]
-            # if self.tem_checkbox.value:
-            #     for key, widget in self.data_channel_options.items():
-            #         widget.children[0].options = channel_options
-            #         widget.children[0].value = find_value(channel_options, [key])
-
             d_min, d_max = np.inf, -np.inf
             thresh_value = np.inf
             if self.tem_checkbox.value:
@@ -926,52 +857,6 @@ class PeakFinder(ObjectDataSelection):
 
             self.set_data(None)
 
-    # def system_panel_trigger(self, _):
-    #     """
-    #     Observer of :obj:`geoapps.processing.PeakFinder.`:
-    #     """
-    #     if self.system_panel_option.value:
-    #         self.system_panel.children = [self.system_panel_option, self.system_options]
-    #     else:
-    #         self.system_panel.children = [self.system_panel_option]
-
-    # def system_observer(self, _):
-    #     """
-    #     Observer of :obj:`geoapps.processing.PeakFinder.`:
-    #     """
-    #
-    #     def channel_setter(caller):
-    #         channel = caller["owner"]
-    #         data_widget = self.data_channel_options[channel.header]
-    #         data_widget.children[0].value = find_value(
-    #             data_widget.children[0].options, [channel.header]
-    #         )
-    #
-    #     system_specs = {}
-    #     for key, time_gate in self.em_system_specs[self.system.value][
-    #         "channels"
-    #     ].items():
-    #         system_specs[key] = f"{time_gate:.5e}"
-    #
-    #     self.channel_selection.options = self.em_system_specs[self.system.value][
-    #         "channels"
-    #     ].keys()
-    #
-    #     self.data_channel_options = {}
-    #     for ind, (key, value) in enumerate(system_specs.items()):
-    #         channel_selection = Dropdown(
-    #             description="Channel",
-    #             style={"description_width": "initial"},
-    #             options=self.channels.options,
-    #             value=find_value(self.channels.options, [key]),
-    #         )
-    #         channel_selection.header = key
-    #         channel_selection.observe(channel_setter, names="value")
-    #
-    #         channel_time = FloatText(description="Time (s)", value=value)
-    #
-    #         self.data_channel_options[key] = VBox([channel_selection, channel_time])
-
     def groups_trigger(self, _):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
@@ -984,46 +869,6 @@ class PeakFinder(ObjectDataSelection):
             ]
         else:
             self.groups_widget.children = [self.groups_setter]
-
-    def edit_group(self, _):
-        """
-        Observer of :obj:`geoapps.processing.PeakFinder.`: Change channels associated with groups
-        """
-        gates = {}
-        for key, group in self.time_groups.items():
-            if group["name"] == self.group_list.value and group["channels"] != list(
-                self.channels.value
-            ):
-                gates[key] = list(self.channels.value)
-
-        self.plot_trigger.value = False
-        self.plot_trigger.value = True
-
-    def regroup(self):
-        group_id = -1
-        for group in self.lines.anomalies:
-
-            channels = group["channels"].tolist()
-
-            labels = [self.active_channels[ii]["name"] for ii in channels]
-            match = False
-            for key, time_group in self.time_groups.items():
-                if labels == time_group["channels"]:
-                    group["time_group"] = key
-                    match = True
-                    print("matchfound:", key)
-
-                    break
-
-            if match:
-                continue
-            group_id += 1
-            self.time_groups[group_id] = {}
-            self.time_groups[group_id]["channels"] = labels
-            self.time_groups[group_id]["name"] = "-".join(labels)
-            self.time_groups[group_id]["color"] = colors[group_id]
-
-            group["time_group"] = group_id
 
     def plot_data_selection(
         self,
@@ -1065,9 +910,6 @@ class PeakFinder(ObjectDataSelection):
             self.lines.profile.smoothing = smoothing
 
         self.line_update()
-        # if not self.tem_checkbox:
-        #     self.regroup()
-
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
             [
@@ -1085,7 +927,6 @@ class PeakFinder(ObjectDataSelection):
             return
 
         locs = self.lines.profile.locations_resampled
-
         peak_markers_x, peak_markers_y, peak_markers_c = [], [], []
         end_markers_x, end_markers_y = [], []
         start_markers_x, start_markers_y = [], []
@@ -1594,22 +1435,22 @@ class PeakFinder(ObjectDataSelection):
             line_indices = line_field.values == line_id
 
             anomalies += [
-                # client.compute(
-                find_anomalies(
-                    vertices,
-                    line_indices,
-                    channels,
-                    time_groups,
-                    data_normalization=normalization,
-                    smoothing=params.smoothing,
-                    min_amplitude=params.min_amplitude,
-                    min_value=params.min_value,
-                    min_width=params.min_width,
-                    max_migration=params.max_migration,
-                    min_channels=params.min_channels,
-                    minimal_output=True,
+                client.compute(
+                    delayed(find_anomalies)(
+                        vertices,
+                        line_indices,
+                        channels,
+                        time_groups,
+                        data_normalization=normalization,
+                        smoothing=params.smoothing,
+                        min_amplitude=params.min_amplitude,
+                        min_value=params.min_value,
+                        min_width=params.min_width,
+                        max_migration=params.max_migration,
+                        min_channels=params.min_channels,
+                        minimal_output=True,
+                    )
                 )
-                # )
             ]
 
         all_anomalies = anomalies
