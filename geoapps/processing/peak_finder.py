@@ -9,6 +9,7 @@ import sys
 from os import path
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 from dask import delayed
 from dask.distributed import Client, get_client
@@ -1009,7 +1010,7 @@ class PeakFinder(ObjectDataSelection):
         axs.set_xlim(x_lims)
         axs.set_ylim(y_lims)
         axs.set_ylabel("Data")
-        axs.scatter(center, (y_min + y_max) / 2, s=100, c="k", marker="d")
+        axs.plot([center, center], [y_min, y_max], "k--")
 
         if markers:
             axs.scatter(
@@ -1049,6 +1050,9 @@ class PeakFinder(ObjectDataSelection):
                 s=100,
             )
 
+        ticks_loc = axs.get_xticks().tolist()
+        axs.set_xticks(ticks_loc)
+
         if x_label == "Easting":
             axs.text(
                 center,
@@ -1058,11 +1062,9 @@ class PeakFinder(ObjectDataSelection):
                 ha="center",
                 bbox={"edgecolor": "r"},
             )
-            xlbl = [
-                f"{self.lines.profile.interp_x(label):.0f}"
-                for label in axs.get_xticks()
-            ]
-            axs.set_xticklabels(xlbl)
+            axs.set_xticklabels(
+                [f"{self.lines.profile.interp_x(label):.0f}" for label in ticks_loc]
+            )
             axs.set_xlabel("Easting (m)")
 
         elif x_label == "Northing":
@@ -1074,11 +1076,9 @@ class PeakFinder(ObjectDataSelection):
                 ha="center",
                 bbox={"edgecolor": "r"},
             )
-            xlbl = [
-                f"{self.lines.profile.interp_y(label):.0f}"
-                for label in axs.get_xticks()
-            ]
-            axs.set_xticklabels(xlbl)
+            axs.set_xticklabels(
+                [f"{self.lines.profile.interp_y(label):.0f}" for label in ticks_loc]
+            )
             axs.set_xlabel("Northing (m)")
 
         else:

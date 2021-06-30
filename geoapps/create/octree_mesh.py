@@ -365,5 +365,4 @@ class OctreeMesh(ObjectDataSelection):
 
 if __name__ == "__main__":
     params = OctreeParams.from_path(sys.argv[1])
-    print(params.geoh5)
     OctreeMesh.run(params)
