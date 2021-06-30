@@ -26,6 +26,8 @@ class InversionData(InversionLocations):
     Methods
     -------
 
+    survey: Generates SimPEG survey object.
+    simulation: Generates SimPEG simulation object.
 
     """
 
@@ -204,7 +206,7 @@ class InversionData(InversionLocations):
         return locs + offset if offset is not None else 0
 
     def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
-        """ Drape data locations using radar channel. """
+        """ Drape data locations using radar channel offsets. """
 
         radar_offset_pad = np.zeros((len(radar_offset), 3))
         radar_offset_pad[:, 2] = radar_offset
