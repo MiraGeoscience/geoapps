@@ -232,9 +232,12 @@ class InversionModel:
 
             model = self._get(self.model_type)
 
+            if model is None:
+                bound = -np.inf if self.model_type == "lower_bound" else np.inf
+                model = np.full(self.mesh.nC, bound)
+
             if self.is_vector:
-                if model is not None:
-                    model = np.tile(model, self.n_blocks)
+                model = np.tile(model, self.n_blocks)
 
         if model is not None:
             self.model = mkvc(model)
