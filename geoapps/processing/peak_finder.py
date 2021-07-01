@@ -744,7 +744,7 @@ class PeakFinder(ObjectDataSelection):
         }
 
         channel_groups = {}
-        for key, default in _default_channel_groups.items():
+        for ii, (key, default) in enumerate(_default_channel_groups.items()):
             prop_group = parent.find_or_create_property_group(name=key)
             prop_group.properties = []
 
@@ -755,9 +755,7 @@ class PeakFinder(ObjectDataSelection):
             channel_groups[prop_group.name] = {
                 "data": prop_group.uid,
                 "color": default["color"],
-                "label": [
-                    ii for ii, key in enumerate(ranges) if key in default["label"]
-                ],
+                "label": [ii + 1],
                 "properties": prop_group.properties,
             }
             parent.workspace.finalize()
@@ -1447,7 +1445,7 @@ class PeakFinder(ObjectDataSelection):
 
             # Create reference values and color_map
             group_map, color_map = {}, []
-            for ind, (name, group) in enumerate(params.groups.items()):
+            for ind, (name, group) in enumerate(channel_groups.items()):
                 group_map[ind + 1] = name
                 color_map += [[ind + 1] + hex_to_rgb(group["color"]) + [1]]
 
