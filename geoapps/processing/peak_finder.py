@@ -91,7 +91,10 @@ class PeakFinder(ObjectDataSelection):
                 if key == "h5file":
                     key = "geoh5"
                 try:
-                    default_dict[key]["value"] = arg
+                    if isinstance(default_dict[key], dict):
+                        default_dict[key]["value"] = arg
+                    else:
+                        default_dict[key] = arg
                 except KeyError:
                     continue
 
@@ -143,11 +146,11 @@ class PeakFinder(ObjectDataSelection):
         self.decay = interactive_output(
             self.plot_decay_curve,
             {
-                "residual": self.residual,
                 "center": self.center,
                 "plot_trigger": self.plot_trigger,
             },
         )
+        self.group_display.observe(self.update_center, names="value")
         self.show_decay.observe(self.show_decay_trigger, names="value")
         self.tem_checkbox.observe(self.objects_change, names="value")
         self.groups_setter.observe(self.groups_trigger)
@@ -163,6 +166,7 @@ class PeakFinder(ObjectDataSelection):
         self.ga_group_name.description = "Save As"
         self.visual_parameters = VBox(
             [
+                self.group_display,
                 self.center,
                 self.width,
                 self.x_label,
@@ -200,11 +204,11 @@ class PeakFinder(ObjectDataSelection):
                 ]
                 if any(prop_group):
                     count += 1
-                    prop_groups[prop_group.name] = {
-                        "data": prop_group.uid,
+                    prop_groups[prop_group[0].name] = {
+                        "data": prop_group[0].uid,
                         "color": params["color"],
                         "label": [count],
-                        "properties": prop_group.properties,
+                        "properties": prop_group[0].properties,
                     }
 
         if len(prop_groups) > 1:
@@ -321,8 +325,18 @@ class PeakFinder(ObjectDataSelection):
                     "late",
                 ],
             )
-
         return self._group_list
+
+    @property
+    def group_display(self) -> IntSlider:
+        """
+        List of groups to chose from for display
+        """
+        if getattr(self, "_group_display", None) is None:
+            self._group_display = IntSlider(
+                description="View Group", continuous_update=False
+            )
+        return self._group_display
 
     @property
     def groups_setter(self) -> ToggleButton:
@@ -861,10 +875,10 @@ class PeakFinder(ObjectDataSelection):
         if len(result) > 0:
             self.lines.anomalies, self.lines.profile = result
         else:
+            self.group_display.disabled = True
             return
 
         self.pause_refresh = True
-
         if self.previous_line != self.lines.lines.value:
             end = self.lines.profile.locations_resampled[-1]
             mid = self.lines.profile.locations_resampled[-1] * 0.5
@@ -872,20 +886,18 @@ class PeakFinder(ObjectDataSelection):
             if self.center.value >= end:
                 self.center.value = 0
                 self.center.max = end
-                self.center.value = mid
-            else:
-                self.center.max = end
-
-        if self.previous_line != self.lines.lines.value:
-            end = self.lines.profile.locations_resampled[-1]
-            mid = self.lines.profile.locations_resampled[-1] * 0.5
-            if self.width.value >= end:
                 self.width.value = 0
                 self.width.max = end
                 self.width.value = mid
             else:
+                self.center.max = end
                 self.width.max = end
 
+        self.group_display.max = len(self.lines.anomalies) - 1
+        peaks = np.sort(np.r_[[group["peak"][0] for group in self.lines.anomalies]])
+        self.group_display.value = np.argmin(
+            np.abs(self.lines.profile.locations_resampled[peaks] - self.center.value)
+        )
         self.previous_line = self.lines.lines.value
         self.pause_refresh = False
         self.plot_trigger.value = True
@@ -1132,7 +1144,7 @@ class PeakFinder(ObjectDataSelection):
             axs.set_xlabel("Distance (m)")
         axs.grid(True)
 
-    def plot_decay_curve(self, residual, center, plot_trigger):
+    def plot_decay_curve(self, center, plot_trigger):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
@@ -1145,17 +1157,22 @@ class PeakFinder(ObjectDataSelection):
             and self.tem_checkbox.value
         ):
 
-            center = self.center.value
-            # Loop through groups and find nearest to cursor
-            dist = np.inf
+            if self.decay_figure is None:
+                self.decay_figure = plt.figure(figsize=(8, 8))
+
+            else:
+                plt.figure(self.decay_figure.number)
+
+            axs = plt.subplot()
+            # Find nearest decay to cursor
             group = None
-            for anomaly in self.lines.anomalies:
-                delta_x = np.abs(
-                    center - self.lines.profile.locations_resampled[anomaly["peak"][0]]
-                )
-                if delta_x < dist and anomaly["linear_fit"] is not None:
-                    dist = delta_x
-                    group = anomaly
+            if getattr(self.lines, "anomalies", None) is not None:
+                peaks = np.r_[[group["peak"][0] for group in self.lines.anomalies]]
+                group = self.lines.anomalies[
+                    np.argmin(
+                        np.abs(self.lines.profile.locations_resampled[peaks] - center)
+                    )
+                ]
 
             # Get the times of the group and plot the linear regression
             times = []
@@ -1167,14 +1184,6 @@ class PeakFinder(ObjectDataSelection):
                 ]
             if any(times):
                 times = np.hstack(times)
-
-                if self.decay_figure is None:
-                    self.decay_figure = plt.figure(figsize=(8, 8))
-
-                else:
-                    plt.figure(self.decay_figure.number)
-
-                axs = plt.subplot()
                 y = np.exp(times * group["linear_fit"][1] + group["linear_fit"][0])
                 axs.plot(
                     times,
@@ -1200,11 +1209,13 @@ class PeakFinder(ObjectDataSelection):
                 axs.grid(True)
 
                 plt.yscale("log")
-                axs.yaxis.set_label_position("right")
-                axs.yaxis.tick_right()
                 axs.set_ylabel("log(V)")
                 axs.set_xlabel("Time (sec)")
                 axs.set_title("Decay - MADTau")
+            else:
+                axs.set_ylabel("log(V)")
+                axs.set_xlabel("Time (sec)")
+                axs.set_title("Too few channels")
 
     def scale_update(self, _):
         """
@@ -1311,6 +1322,17 @@ class PeakFinder(ObjectDataSelection):
         self.params.group_auto = False
         self.params.write_input_file(name=self.params.ga_group_name)
         self.run(self.params, output_group=self.ga_group)
+
+    def update_center(self, _):
+        """
+        Update the center view on group selection
+        """
+
+        if hasattr(self.lines, "anomalies"):
+            peaks = np.sort(np.r_[[group["peak"][0] for group in self.lines.anomalies]])
+            self.center.value = self.lines.profile.locations_resampled[
+                peaks[self.group_display.value]
+            ]
 
     @staticmethod
     def run(params, output_group=None):
