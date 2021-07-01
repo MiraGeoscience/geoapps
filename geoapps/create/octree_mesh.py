@@ -47,7 +47,10 @@ class OctreeMesh(ObjectDataSelection):
                     key = "geoh5"
                 try:
                     if isinstance(default_dict[key], dict):
-                        default_dict[key]["value"] = arg
+                        if isinstance(arg, dict):
+                            default_dict[key] = arg
+                        else:
+                            default_dict[key]["value"] = arg
                     else:
                         default_dict[key] = arg
                 except KeyError:

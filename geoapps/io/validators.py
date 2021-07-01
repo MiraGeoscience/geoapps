@@ -137,7 +137,7 @@ class InputValidator:
                 if k not in pvalidations.keys():
                     exclusions = ["values", "types", "shapes", "reqs", "uuid"]
                     vkeys = [k for k in pvalidations.keys() if k not in exclusions]
-                    msg = self.iterable_validation_msg(param, "keys", k, vkeys)
+                    msg = self._iterable_validation_msg(param, "keys", k, vkeys)
                     raise KeyError(msg)
                 self.validate(k, v, pvalidations[k], workspace, associations)
 
