@@ -5,13 +5,16 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
 from copy import deepcopy
 from typing import Dict, Tuple
 
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
+from SimPEG import maps
+from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.utils import filter_xy
+from geoapps.utils import calculate_2D_trend, filter_xy
 
 from .locations import InversionLocations
 
@@ -30,9 +33,10 @@ class InversionData(InversionLocations):
         self.detrend_order = None
         self.detrend_type = None
         self.components = None
+        self.locs = None
         self.data = {}
         self.uncertainties = {}
-        self.normalization = []
+        self.normalizations = []
         self.survey = None
         self._initialize()
 
@@ -79,7 +83,7 @@ class InversionData(InversionLocations):
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
-            self.data = self.detrend(self.data)
+            self.data = self.detrend()
 
         self.data = self.normalize(self.data)
 
@@ -185,7 +189,7 @@ class InversionData(InversionLocations):
         """ Remove trend from data. """
         d = self.data.copy()
         for comp in self.components:
-            data_trend, _ = utils.matutils.calculate_2D_trend(
+            data_trend, _ = calculate_2D_trend(
                 self.locs,
                 d[comp],
                 self.params.detrend_order,
@@ -197,52 +201,126 @@ class InversionData(InversionLocations):
     def normalize(self, data):
         """ Apply normalization to data. """
         d = deepcopy(data)
-        normalization = []
+        normalizations = []
         for comp in self.components:
             if comp == "gz":
-                normalization.append(-1.0)
+                normalizations.append(-1.0)
                 d[comp] *= -1.0
                 print(f"Sign flip for {comp} component")
             else:
-                normalization.append(1.0)
-        self.normalization = normalization
+                normalizations.append(1.0)
+        self.normalizations = normalizations
         return d
 
-    def get_survey(self):
-        """ Populates SimPEG.LinearSurvey object with workspace data """
+    def get_survey(self, local_index=None):
+        """ Generates SimPEG survey object. """
 
         survey_factory = SurveyFactory(self.params)
-        survey = survey_factory.build(self.locs, self.data, self.uncertainties)
+        survey = survey_factory.build(
+            self.locs, self.data, self.uncertainties, local_index
+        )
 
         return survey
 
+    def get_simulation(self, local_index=None, tile_id=None):
+        """ Generates SimPEG simulation object."""
 
-class SurveyFactory:
-    """ Build SimPEG survey instances based on inversion type. """
+        simulation_factory = SimulationFactory(self.params)
+        survey = self.get_survey(local_index)
+        if local_index is None:
+            mesh = self.mesh.mesh
+            active_cells = self.topography.active_cells()
+        else:
+            mesh = create_nested_mesh(survey.receiver_locations, self.mesh.mesh)
+            map = maps.TileMap(self.mesh.mesh, self.topography.active_cells(), mesh)
+            active_cells = map.local_active
+
+        sim = simulation_factory.build(survey, mesh, active_cells, tile_id)
+
+        return sim, map
+
+
+class SimPEGFactory:
+    """ Build SimPEG objects based on inversion type. """
 
     def __init__(self, params):
         self.params = params
-
-    def build(self, locs, data, uncertainties):
-
         if self.params.inversion_type == "mvi":
+            from SimPEG.potential_fields import magnetics as data_module
 
-            from SimPEG.potential_fields import magnetics
+            self.data_module = data_module
+        elif self.params.inversion_type == "gravity":
+            from SimPEG.potential_fields import gravity as data_module
 
-            receivers = magnetics.receivers.Point(locs, components=list(data.keys()))
-            source = magnetics.sources.SourceField(
-                receiver_list=[receivers], parameters=self.params.inducing_field_aid()
-            )
-            survey = magnetics.survey.Survey(source)
-
-            data = np.vstack(data.values()).T
-            uncertainties = np.vstack(uncertainties.values()).T
-
-            survey.dobs = data.ravel()
-            survey.std = uncertainties.ravel()
-
-            return survey
-
+            self.data_module = data_module
         else:
             msg = f"Inversion type: {self.params.inversion_type} not implemented yet."
             raise NotImplementedError(msg)
+
+    def build(self):
+        pass
+
+
+class SurveyFactory(SimPEGFactory):
+    """ Build SimPEG survey instances based on inversion type. """
+
+    def __init__(self, params):
+        super().__init__(params)
+
+    def build(self, locs, data, uncertainties, local_index=None):
+
+        n_channels = len(data.keys())
+
+        if local_index is None:
+            local_index = np.arange(len(locs))
+
+        local_index = np.tile(local_index, n_channels)
+
+        if self.params.inversion_type == "mvi":
+            parameters = self.params.inducing_field_aid()
+
+        elif self.params.inversion_type == "gravity":
+            parameters = None
+
+        receivers = self.data_module.receivers.Point(
+            locs[local_index], components=list(data.keys())
+        )
+        source = self.data_module.sources.SourceField(
+            receiver_list=[receivers], parameters=parameters
+        )
+        survey = self.data_module.survey.Survey(source)
+
+        survey.dobs = self.stack_channels(data)[local_index]
+        survey.std = self.stack_channels(uncertainties)[local_index]
+
+        return survey
+
+    def stack_channels(self, channel_data: Dict[str, np.ndarray]):
+        return np.vstack([list(channel_data.values())]).ravel()
+
+
+class SimulationFactory(SimPEGFactory):
+    def __init__(self, params):
+        super().__init__(params)
+
+    def build(self, survey, mesh, active_cells, tile_id=None):
+
+        out_dir = os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
+
+        if tile_id is None:
+            sens_path = out_dir + "Tile.zarr"
+        else:
+            sens_path = out_dir + "Tile" + str(tile_id) + ".zarr"
+
+        sim = self.data_module.simulation.Simulation3DIntegral(
+            survey=survey,
+            mesh=mesh,
+            rhoMap=maps.IdentityMap(nP=int(active_cells.sum())),
+            actInd=active_cells,
+            sensitivity_path=sens_path,
+            chunk_format="row",
+            store_sensitivities="disk",
+            max_chunk_size=self.params.max_chunk_size,
+        )
+
+        return sim
