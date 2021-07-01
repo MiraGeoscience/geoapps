@@ -7,6 +7,7 @@
 
 import sys
 from os import path
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,6 +16,7 @@ from dask.distributed import Client, get_client
 from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
+from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from ipywidgets import (
     Box,
@@ -215,7 +217,7 @@ class PeakFinder(ObjectDataSelection):
         self.groups_panel.children = group_list
 
     @property
-    def main(self):
+    def main(self) -> VBox:
         if getattr(self, "_main", None) is None:
             self._main = VBox(
                 [
@@ -263,9 +265,9 @@ class PeakFinder(ObjectDataSelection):
         return self._main
 
     @property
-    def center(self):
+    def center(self) -> FloatSlider:
         """
-        :obj:`ipywidgets.FloatSlider`: Adjust the data plot center position along line
+        Adjust the data plot center position along line
         """
         if getattr(self, "_center", None) is None:
             self._center = FloatSlider(
@@ -280,7 +282,7 @@ class PeakFinder(ObjectDataSelection):
         return self._center
 
     @property
-    def em_system_specs(self):
+    def em_system_specs(self) -> dict:
         return geophysical_systems.parameters()
 
     @property
@@ -306,9 +308,9 @@ class PeakFinder(ObjectDataSelection):
         return self._group_auto
 
     @property
-    def group_list(self):
+    def group_list(self) -> Dropdown:
         """
-        :obj:`ipywidgets.Dropdown`: List of default time data groups
+        List of default time data groups
         """
         if getattr(self, "_group_list", None) is None:
             self._group_list = Dropdown(
@@ -323,9 +325,9 @@ class PeakFinder(ObjectDataSelection):
         return self._group_list
 
     @property
-    def groups_setter(self):
+    def groups_setter(self) -> ToggleButton:
         """
-        :obj:`ipywidgets.ToggleButton`: Display the group options panel
+        Display the group options panel
         """
         if getattr(self, "_groups_setter", None) is None:
             self._groups_setter = ToggleButton(
@@ -335,23 +337,23 @@ class PeakFinder(ObjectDataSelection):
         return self._groups_setter
 
     @property
-    def line_field(self):
+    def line_field(self) -> Dropdown:
         """
         Alias of lines.data widget
         """
         return self.lines.data
 
     @property
-    def line_id(self):
+    def line_id(self) -> Dropdown:
         """
         Alias of lines.lines widget
         """
         return self.lines.lines
 
     @property
-    def lines(self):
+    def lines(self) -> LineOptions:
         """
-        :obj:`geoapps.selection.LineOptions`: Line selection widget defining the profile used for plotting.
+        Line selection defining the profile used for plotting.
         """
         if getattr(self, "_lines", None) is None:
             self._lines = LineOptions(
@@ -361,9 +363,9 @@ class PeakFinder(ObjectDataSelection):
         return self._lines
 
     @property
-    def markers(self):
+    def markers(self) -> ToggleButton:
         """
-        :obj:`ipywidgets.ToggleButton`: Display markers on the data plot
+        Display markers on the data plot
         """
         if getattr(self, "_markers", None) is None:
             self._markers = ToggleButton(description="Show markers", value=True)
@@ -371,9 +373,9 @@ class PeakFinder(ObjectDataSelection):
         return self._markers
 
     @property
-    def max_migration(self):
+    def max_migration(self) -> FloatSlider:
         """
-        :obj:`ipywidgets.FloatSlider`: Filter anomalies based on maximum horizontal migration of peaks.
+        Filter anomalies based on maximum horizontal migration of peaks.
         """
         if getattr(self, "_max_migration", None) is None:
             self._max_migration = FloatSlider(
@@ -390,9 +392,9 @@ class PeakFinder(ObjectDataSelection):
         return self._max_migration
 
     @property
-    def min_amplitude(self):
+    def min_amplitude(self) -> IntSlider:
         """
-        :obj:`ipywidgets.IntSlider`: Filter small anomalies based on amplitude ratio
+        Filter small anomalies based on amplitude ratio
         between peaks and lows.
         """
         if getattr(self, "_min_amplitude", None) is None:
@@ -408,9 +410,9 @@ class PeakFinder(ObjectDataSelection):
         return self._min_amplitude
 
     @property
-    def min_channels(self):
+    def min_channels(self) -> IntSlider:
         """
-        :obj:`ipywidgets.IntSlider`: Filter peak groups based on minimum number of data channels overlap.
+        Filter peak groups based on minimum number of data channels overlap.
         """
         if getattr(self, "_min_channels", None) is None:
             self._min_channels = IntSlider(
@@ -426,9 +428,9 @@ class PeakFinder(ObjectDataSelection):
         return self._min_channels
 
     @property
-    def min_value(self):
+    def min_value(self) -> FloatText:
         """
-        :obj:`ipywidgets.FloatText`: Filter out small data values.
+        Filter out small data values.
         """
         if getattr(self, "_min_value", None) is None:
             self._min_value = FloatText(
@@ -441,9 +443,9 @@ class PeakFinder(ObjectDataSelection):
         return self._min_value
 
     @property
-    def min_width(self):
+    def min_width(self) -> FloatSlider:
         """
-        :obj:`ipywidgets.FloatSlider`: Filter small anomalies based on width
+        Filter small anomalies based on width
         between lows.
         """
         if getattr(self, "_min_width", None) is None:
@@ -460,9 +462,9 @@ class PeakFinder(ObjectDataSelection):
         return self._min_width
 
     @property
-    def plot_trigger(self):
+    def plot_trigger(self) -> ToggleButton:
         """
-        :obj:`ipywidgets.ToggleButton`: Trigger refresh of all plots
+        Trigger refresh of all plots
         """
         if getattr(self, "_plot_trigger", None) is None:
             self._plot_trigger = ToggleButton(
@@ -471,9 +473,9 @@ class PeakFinder(ObjectDataSelection):
         return self._plot_trigger
 
     @property
-    def residual(self):
+    def residual(self) -> Checkbox:
         """
-        :obj:`ipywidgets.Checkbox`: Use the residual between the original and smoothed data profile
+        Use the residual between the original and smoothed data profile
         """
         if getattr(self, "_residual", None) is None:
             self._residual = Checkbox(description="Show residual", value=False)
@@ -481,9 +483,9 @@ class PeakFinder(ObjectDataSelection):
         return self._residual
 
     @property
-    def scale_button(self):
+    def scale_button(self) -> ToggleButtons:
         """
-        :obj:`ipywidgets.ToggleButtons`: Scale the vertical axis of the data plot
+        Scale the vertical axis of the data plot
         """
         if getattr(self, "_scale_button", None) is None:
             self._scale_button = ToggleButtons(
@@ -498,9 +500,9 @@ class PeakFinder(ObjectDataSelection):
         return self._scale_button
 
     @property
-    def scale_value(self):
+    def scale_value(self) -> FloatLogSlider:
         """
-        :obj:`ipywidgets.FloatLogSlider`: Threshold value used by th symlog scaling
+        Threshold value used by th symlog scaling
         """
         if getattr(self, "_scale_value", None) is None:
             self._scale_value = FloatLogSlider(
@@ -517,9 +519,9 @@ class PeakFinder(ObjectDataSelection):
         return self._scale_value
 
     @property
-    def show_decay(self):
+    def show_decay(self) -> ToggleButton:
         """
-        :obj:`ipywidgets.ToggleButton`: Display the decay curve plot
+        Display the decay curve plot
         """
         if getattr(self, "_show_decay", None) is None:
             self._show_decay = ToggleButton(description="Show decay", value=False)
@@ -527,9 +529,9 @@ class PeakFinder(ObjectDataSelection):
         return self._show_decay
 
     @property
-    def smoothing(self):
+    def smoothing(self) -> IntSlider:
         """
-        :obj:`ipywidgets.IntSlider`: Number of neighboring data points used for the running mean smoothing
+        Number of neighboring data points used for the running mean smoothing
         """
         if getattr(self, "_smoothing", None) is None:
             self._smoothing = IntSlider(
@@ -543,9 +545,9 @@ class PeakFinder(ObjectDataSelection):
         return self._smoothing
 
     @property
-    def structural_markers(self):
+    def structural_markers(self) -> Checkbox:
         """
-        :obj:`ipywidgets.Checkbox`: Export peaks as structural markers
+        Export peaks as structural markers
         """
         if getattr(self, "_structural_markers", None) is None:
             self._structural_markers = Checkbox(description="All Markers")
@@ -553,16 +555,16 @@ class PeakFinder(ObjectDataSelection):
         return self._structural_markers
 
     @property
-    def survey(self):
+    def survey(self) -> Optional[Entity]:
         """
         Selected curve object
         """
         return self._survey
 
     @property
-    def system(self):
+    def system(self) -> Dropdown:
         """
-        :obj:`ipywidgets.Dropdown`: Selection of a TEM system
+        Selection of a TEM system
         """
         if getattr(self, "_system", None) is None:
             self._system = Dropdown(
@@ -577,7 +579,7 @@ class PeakFinder(ObjectDataSelection):
         return self._system
 
     @property
-    def tem_checkbox(self):
+    def tem_checkbox(self) -> Checkbox:
         """
         :obj:`ipywidgets.Checkbox`: Enable options specific to TEM data groups
         """
@@ -587,7 +589,7 @@ class PeakFinder(ObjectDataSelection):
         return self._tem_checkbox
 
     @property
-    def channel_groups(self):
+    def channel_groups(self) -> dict:
         """
         Dict of time groups used to classify peaks
         """
@@ -598,9 +600,9 @@ class PeakFinder(ObjectDataSelection):
         self._channel_groups = groups
 
     @property
-    def width(self):
+    def width(self) -> FloatSlider:
         """
-        :obj:`ipywidgets.FloatSlider`: Adjust the length of data displayed on the data plot
+        Adjust the length of data displayed on the data plot
         """
         if getattr(self, "_width", None) is None:
             self._width = FloatSlider(
@@ -616,7 +618,7 @@ class PeakFinder(ObjectDataSelection):
         return self._width
 
     @property
-    def workspace(self):
+    def workspace(self) -> Workspace:
         """
         Target geoh5py workspace
         """
@@ -644,9 +646,9 @@ class PeakFinder(ObjectDataSelection):
         self._file_browser._apply_selection()
 
     @property
-    def x_label(self):
+    def x_label(self) -> ToggleButtons:
         """
-        :obj:`ipywidgets.ToggleButtons`: Units of distance displayed on the data plot
+        Units of distance displayed on the data plot
         """
         if getattr(self, "_x_label", None) is None:
             self._x_label = ToggleButtons(
@@ -997,7 +999,7 @@ class PeakFinder(ObjectDataSelection):
                 axs.plot(
                     locs[start:end],
                     values[start:end],
-                    color=group["time_group"]["color"],
+                    color=group["channel_group"]["color"],
                 )
 
                 if group["azimuth"] < 180:
@@ -1017,7 +1019,7 @@ class PeakFinder(ObjectDataSelection):
                         )
                     peak_markers_x += [locs[group["peak"][ii]]]
                     peak_markers_y += [values[group["peak"][ii]]]
-                    peak_markers_c += [group["time_group"]["color"]]
+                    peak_markers_c += [group["channel_group"]["color"]]
                     start_markers_x += [locs[group["start"][ii]]]
                     start_markers_y += [values[group["start"][ii]]]
                     end_markers_x += [locs[group["end"][ii]]]
@@ -1193,7 +1195,7 @@ class PeakFinder(ObjectDataSelection):
                     times,
                     group["peak_values"],
                     s=100,
-                    color=group["time_group"]["color"],
+                    color=group["channel_group"]["color"],
                     marker="^",
                     edgecolors="k",
                 )
@@ -1405,9 +1407,8 @@ class PeakFinder(ObjectDataSelection):
             ]
 
         all_anomalies = client.gather(anomalies)
-
         (
-            time_group,
+            channel_group,
             tau,
             migration,
             azimuth,
@@ -1423,8 +1424,8 @@ class PeakFinder(ObjectDataSelection):
 
         for line in all_anomalies:
             for group in line:
-                if "time_group" in group.keys() and len(group["cox"]) > 0:
-                    time_group += group["time_group"]["label"]
+                if "channel_group" in group.keys() and len(group["cox"]) > 0:
+                    channel_group += group["channel_group"]["label"]
 
                     if group["linear_fit"] is None:
                         tau += [0]
@@ -1442,7 +1443,7 @@ class PeakFinder(ObjectDataSelection):
                     peaks += [group["peaks"]]
 
         if cox:
-            time_group = np.hstack(time_group)  # Start count at 1
+            channel_group = np.hstack(channel_group)  # Start count at 1
 
             # Create reference values and color_map
             group_map, color_map = {}, []
@@ -1481,16 +1482,16 @@ class PeakFinder(ObjectDataSelection):
                     }
                 )
 
-            time_group_data = points.add_data(
+            channel_group_data = points.add_data(
                 {
-                    "time_group": {
+                    "channel_group": {
                         "type": "referenced",
-                        "values": np.hstack(time_group),
+                        "values": np.hstack(channel_group),
                         "value_map": group_map,
                     }
                 }
             )
-            time_group_data.entity_type.color_map = {
+            channel_group_data.entity_type.color_map = {
                 "name": "Time Groups",
                 "values": color_map,
             }
@@ -1549,16 +1550,16 @@ class PeakFinder(ObjectDataSelection):
                         ),
                         parent=output_group,
                     )
-                    time_group_data = curves.add_data(
+                    channel_group_data = curves.add_data(
                         {
-                            "time_group": {
+                            "channel_group": {
                                 "type": "referenced",
-                                "values": np.kron(np.hstack(time_group), np.ones(4)),
+                                "values": np.kron(np.hstack(channel_group), np.ones(4)),
                                 "value_map": group_map,
                             }
                         }
                     )
-                    time_group_data.entity_type.color_map = {
+                    channel_group_data.entity_type.color_map = {
                         "name": "Time Groups",
                         "values": color_map,
                     }
@@ -1568,18 +1569,19 @@ class PeakFinder(ObjectDataSelection):
                     vertices=np.vstack(inflx_up),
                     parent=output_group,
                 )
-                time_group_data = inflx_pts.add_data(
+                channel_group_data = inflx_pts.add_data(
                     {
-                        "time_group": {
+                        "channel_group": {
                             "type": "referenced",
                             "values": np.repeat(
-                                np.hstack(time_group), [ii.shape[0] for ii in inflx_up]
+                                np.hstack(channel_group),
+                                [ii.shape[0] for ii in inflx_up],
                             ),
                             "value_map": group_map,
                         }
                     }
                 )
-                time_group_data.entity_type.color_map = {
+                channel_group_data.entity_type.color_map = {
                     "name": "Time Groups",
                     "values": color_map,
                 }
@@ -1589,7 +1591,7 @@ class PeakFinder(ObjectDataSelection):
                     vertices=np.vstack(inflx_dwn),
                     parent=output_group,
                 )
-                time_group_data.copy(parent=inflx_pts)
+                channel_group_data.copy(parent=inflx_pts)
 
                 start_pts = Points.create(
                     params.workspace,
@@ -1597,7 +1599,7 @@ class PeakFinder(ObjectDataSelection):
                     vertices=np.vstack(start),
                     parent=output_group,
                 )
-                time_group_data.copy(parent=start_pts)
+                channel_group_data.copy(parent=start_pts)
 
                 end_pts = Points.create(
                     params.workspace,
@@ -1605,7 +1607,7 @@ class PeakFinder(ObjectDataSelection):
                     vertices=np.vstack(end),
                     parent=output_group,
                 )
-                time_group_data.copy(parent=end_pts)
+                channel_group_data.copy(parent=end_pts)
 
                 Points.create(
                     params.workspace,
@@ -1658,7 +1660,7 @@ def find_anomalies(
     """
     Find all anomalies along a line profile of data.
     Anomalies are detected based on the lows, inflection points and a peaks.
-    Neighbouring anomalies are then grouped and assigned a time_group label.
+    Neighbouring anomalies are then grouped and assigned a channel_group label.
 
     :param: :obj:`geoh5py.objects.Curve`
         Curve object containing data.
@@ -1695,7 +1697,7 @@ def find_anomalies(
         "end": [],
         "amplitude": [],
         "group": [],
-        "time_group": [],
+        "channel_group": [],
     }
     data_uid = list(channels.keys())
     property_groups = [pg for pg in channel_groups.values()]
@@ -1770,11 +1772,11 @@ def find_anomalies(
                 anomalies["amplitude"] += [amplitude]
                 anomalies["end"] += [end]
                 anomalies["group"] += [-1]
-                anomalies["time_group"] += [
+                anomalies["channel_group"] += [
                     [
                         key
-                        for key, time_group in enumerate(channel_groups.values())
-                        if uid in time_group["properties"]
+                        for key, channel_group in enumerate(channel_groups.values())
+                        if uid in channel_group["properties"]
                     ]
                 ]
 
@@ -1788,7 +1790,7 @@ def find_anomalies(
 
     # Re-cast as numpy arrays
     for key, values in anomalies.items():
-        if key == "time_group":
+        if key == "channel_group":
             continue
 
         anomalies[key] = np.hstack(values)
@@ -1821,7 +1823,7 @@ def find_anomalies(
 
         score = np.zeros(len(channel_groups))
         for ids in near:
-            score[anomalies["time_group"][ids]] += 1
+            score[anomalies["channel_group"][ids]] += 1
 
         # Find groups with largest channel overlap
         max_scores = np.where(score == score.max())[0]
@@ -1832,10 +1834,10 @@ def find_anomalies(
         if score[in_group] < min_channels:
             continue
 
-        time_group = property_groups[in_group]
+        channel_group = property_groups[in_group]
         # Remove anomalies not in group
         mask = [
-            data_uid[anomalies["channel"][id]] in time_group["properties"]
+            data_uid[anomalies["channel"][id]] in channel_group["properties"]
             for id in near
         ]
         near = near[mask, ...]
@@ -1902,7 +1904,7 @@ def find_anomalies(
             "azimuth": dip_direction,
             "migration": migration,
             "amplitude": amplitude,
-            "time_group": time_group,
+            "channel_group": channel_group,
             "linear_fit": linear_fit,
         }
         if minimal_output:
