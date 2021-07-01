@@ -110,9 +110,10 @@ class BaseApplication:
                         except (ValueError, AttributeError):
                             pass
 
-                        setattr(getattr(self, key), "value", value)
-                        if hasattr(getattr(self, key), "style"):
-                            getattr(self, key).style = {"description_width": "initial"}
+                        widget = getattr(self, key)
+                        setattr(widget, "value", value)
+                        if hasattr(widget, "style"):
+                            widget.style = {"description_width": "initial"}
 
                     elif isinstance(value, BaseApplication) and isinstance(
                         getattr(self, "_" + key, None), BaseApplication
@@ -446,7 +447,7 @@ class BaseApplication:
 
     @workspace_geoh5.setter
     def workspace_geoh5(self, file_path):
-        self.h5file = path.abspath(file_path)
+        self._workspace_geoh5 = path.abspath(file_path)
 
     def create_copy(self, _):
         if self.h5file is not None:

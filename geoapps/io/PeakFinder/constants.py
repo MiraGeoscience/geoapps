@@ -110,12 +110,14 @@ default_ui_json = {
     "ga_group_name": {
         "visible": True,
         "enabled": True,
+        "main": True,
+        "group": "Python run preferences",
         "label": "Save As",
         "value": "PeakFinder",
     },
     "structural_markers": {
         "main": True,
-        "group": "Data",
+        "group": "Python run preferences",
         "label": "Export all markers",
         "value": False,
     },
