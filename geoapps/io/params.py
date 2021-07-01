@@ -192,7 +192,7 @@ class Params:
         """ Returns parent id of provided child id. """
         return self.associations[child_id]
 
-    def active(self) -> List[str]:
+    def active_set(self) -> List[str]:
         """ Retrieve active parameter set (value not None). """
         return [k[1:] for k, v in self.__dict__.items() if v is not None]
 
