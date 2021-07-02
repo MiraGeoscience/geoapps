@@ -43,7 +43,7 @@ def test_peak_finder_app():
             objects=str(curve.uid),
             data=str(curve.find_or_create_property_group(name="obs").uid),
             line_field=str(line.uid),
-            line_id=0,
+            line_id=1.0,
             width=10,
             center=1,
             min_amplitude=1e-2,
