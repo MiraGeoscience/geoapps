@@ -28,7 +28,7 @@ from .locations import InversionLocations
 
 class InversionData(InversionLocations):
     """
-    Retrieve and store data from workspace and apply transformations.
+    Retrieve and store data from the workspace and apply transformations.
 
     Parameters
     ---------
@@ -102,7 +102,7 @@ class InversionData(InversionLocations):
         self._initialize()
 
     def _initialize(self) -> None:
-        """ Extract data from workspace using params data. """
+        """ Extract data from the workspace using params data. """
 
         self.vector = True if self.params.inversion_type == "mvi" else False
         self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
