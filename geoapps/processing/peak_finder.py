@@ -193,7 +193,7 @@ class PeakFinder(ObjectDataSelection):
                 self.trigger_panel,
             ]
         )
-        self.line_update(self)
+        self.line_update(None)
 
     def __populate__(self, **kwargs):
         super().__populate__(**kwargs)
@@ -331,14 +331,12 @@ class PeakFinder(ObjectDataSelection):
         return self._group_list
 
     @property
-    def group_display(self) -> IntSlider:
+    def group_display(self) -> Dropdown:
         """
         List of groups to chose from for display
         """
         if getattr(self, "_group_display", None) is None:
-            self._group_display = IntSlider(
-                description="View Group", continuous_update=False
-            )
+            self._group_display = Dropdown(description="Select Peak")
         return self._group_display
 
     @property
@@ -896,11 +894,17 @@ class PeakFinder(ObjectDataSelection):
                 self.center.max = end
                 self.width.max = end
 
-        self.group_display.max = len(self.lines.anomalies) - 1
-        peaks = np.sort(np.r_[[group["peak"][0] for group in self.lines.anomalies]])
-        self.group_display.value = np.argmin(
-            np.abs(self.lines.profile.locations_resampled[peaks] - self.center.value)
-        )
+        if len(self.lines.anomalies) > 0:
+            peaks = np.sort(
+                self.lines.profile.locations_resampled[
+                    [group["peak"][0] for group in self.lines.anomalies]
+                ]
+            )
+            current = self.center.value
+            self.group_display.options = np.round(peaks, decimals=1)
+            self.group_display.value = self.group_display.options[
+                np.argmin(np.abs(peaks - current))
+            ]
         self.previous_line = self.lines.lines.value
         self.pause_refresh = False
         self.plot_trigger.value = True
@@ -978,6 +982,9 @@ class PeakFinder(ObjectDataSelection):
             ],
         )
         sub_ind = np.arange(lims[0], lims[1])
+        if len(sub_ind) == 0:
+            return
+
         y_min, y_max = np.inf, -np.inf
         locs = self.lines.profile.locations_resampled
         peak_markers_x, peak_markers_y, peak_markers_c = [], [], []
@@ -1171,11 +1178,14 @@ class PeakFinder(ObjectDataSelection):
             group = None
             if getattr(self.lines, "anomalies", None) is not None:
                 peaks = np.r_[[group["peak"][0] for group in self.lines.anomalies]]
-                group = self.lines.anomalies[
-                    np.argmin(
-                        np.abs(self.lines.profile.locations_resampled[peaks] - center)
-                    )
-                ]
+                if len(peaks) > 0:
+                    group = self.lines.anomalies[
+                        np.argmin(
+                            np.abs(
+                                self.lines.profile.locations_resampled[peaks] - center
+                            )
+                        )
+                    ]
 
             # Get the times of the group and plot the linear regression
             times = []
@@ -1261,14 +1271,9 @@ class PeakFinder(ObjectDataSelection):
                         ]
                         if any(channel):
                             params["time"] = system["channels"][channel[0]]
-                        else:
-                            continue
-                    params["values"] = (
-                        -1.0
-                    ) ** self.flip_sign.value * obj.values.copy()
-
                 except KeyError:
                     continue
+                params["values"] = (-1.0) ** self.flip_sign.value * obj.values.copy()
                 thresh_value = np.min(
                     [thresh_value, np.percentile(np.abs(params["values"]), 95)]
                 )
@@ -1330,12 +1335,8 @@ class PeakFinder(ObjectDataSelection):
         """
         Update the center view on group selection
         """
-
         if hasattr(self.lines, "anomalies"):
-            peaks = np.sort(np.r_[[group["peak"][0] for group in self.lines.anomalies]])
-            self.center.value = self.lines.profile.locations_resampled[
-                peaks[self.group_display.value]
-            ]
+            self.center.value = self.group_display.value
 
     @staticmethod
     def run(params, output_group=None):
@@ -1815,7 +1816,6 @@ def find_anomalies(
     for key, values in anomalies.items():
         if key == "channel_group":
             continue
-
         anomalies[key] = np.hstack(values)
 
     group_id = -1
@@ -1875,7 +1875,10 @@ def find_anomalies(
         azimuth_near = azimuth[cox]
         dip_direction = azimuth[cox[0]]
 
-        if cox_sort[-1] < cox_sort[0]:
+        if (
+            anomalies["peak_values"][near][cox_sort][0]
+            < anomalies["peak_values"][near][cox_sort][-1]
+        ):
             dip_direction = (dip_direction + 180) % 360.0
 
         migration = np.abs(locs[cox[cox_sort[-1]]] - locs[cox[cox_sort[0]]])
