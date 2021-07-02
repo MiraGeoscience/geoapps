@@ -119,7 +119,7 @@ class InversionModelCollection:
         if name is not None:
             return returned_items[name]
 
-    def remove_air(self, active_cells):
+    def remove_air(self, active_cells: np.ndarray):
         """ Use active cells vector to remove air cells from model """
         self._model_method_wrapper("remove_air", active_cells=active_cells)
 

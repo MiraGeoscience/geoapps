@@ -5,7 +5,15 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from uuid import UUID
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Union
+
+if TYPE_CHECKING:
+    from uuid import UUID
+    from geoh5py.workspace import Workspace
+    from geoapps.io.params import Params
 
 import numpy as np
 from geoh5py.objects import Grid2D
@@ -18,38 +26,50 @@ class InversionLocations:
     """
     Retrieve topography data from workspace and apply transformations.
 
+    Parameters
+    ----------
+    mask :
+        Mask that stores cumulative filtering actions.
+    origin :
+        Rotation origin.
+    angle :
+        Rotation angle.
+    is_rotated :
+        True if locations have been rotated.
+    locations :
+        xyz locations.
+
     Methods
     -------
-    get_locs: Returns locations of data object centroids or vertices.
-    filter: Apply accumulated self.mask to array, or dict of arrays.
-    rotate: Un-rotate data using origin and angle assigned to inversion mesh.
+    get_locations() :
+        Returns locations of data object centroids or vertices.
+    filter() :
+        Apply accumulated self.mask to array, or dict of arrays.
+    rotate() :
+        Un-rotate data using origin and angle assigned to inversion mesh.
 
     """
 
-    def __init__(self, workspace, params, window):
+    def __init__(self, workspace: Workspace, params: Params, window: Dict[str, Any]):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
         :param: window: Center and size defining window for data, topography, etc.
-        :param: mask: Mask that stores cumulative filtering actions.
-        :param: origin: Rotation origin.
-        :param: angle: Rotation angle.
-        :param: is_rotated: True if locations have been rotated.
-        :param: locs: xyz locations.
+
         """
         self.workspace = workspace
         self.params = params
         self.window = window
-        self.mask = None
-        self.origin = None
-        self.angle = None
-        self.is_rotated = False
-        self.locs = None
+        self.mask: np.ndarray = None
+        self.origin: List[float] = None
+        self.angle: float = None
+        self.is_rotated: bool = False
+        self.locations: np.ndarray = None
 
         mesh = workspace.get_entity(params.mesh)[0]
         if mesh.rotation is not None:
             self.origin = np.asarray(mesh.origin.tolist())
-            self.angle = -mesh.rotation[0]
+            self.angle = -1 * mesh.rotation[0]
             self.is_rotated = True
 
     @property
@@ -68,13 +88,13 @@ class InversionLocations:
             raise (ValueError(msg))
         self._mask = v
 
-    def get_locs(self, uid: UUID) -> np.ndarray:
+    def get_locations(self, uid: UUID) -> np.ndarray:
         """
         Returns locations of data object centroids or vertices.
 
         :param: uid: UUID of geoh5py object containing centroid or
             vertex location data
-        :returns: locs: N by 3 array of x, y, z location data
+        :return: locs: N by 3 array of x, y, z location data
 
         """
 
@@ -98,15 +118,31 @@ class InversionLocations:
 
         return locs
 
-    def filter(self, a):
-        """ Apply accumulated self.mask to array, or dict of arrays. """
+    def filter(self, a: Union[Dict[str, np.ndarray], np.ndarray]):
+        """
+        Apply accumulated self.mask to array, or dict of arrays.
+
+        If argument a is a dictionary filter will be applied to all key/values.
+
+        :param: a: Object containing dat ato filter.
+
+        :return: Filtered data.
+
+        """
         if isinstance(a, dict):
             return {k: v[self.mask] for k, v in a.items()}
         else:
             return a[self.mask]
 
     def rotate(self, locs: np.ndarray) -> np.ndarray:
-        """ Un-rotate data using origin and angle assigned to inversion mesh. """
+        """
+        Rotate data using origin and angle assigned to inversion mesh.
+
+        Since rotation attribute is stored with a negative sign the applied
+        rotation will restore locations to an East-West, North-South orientation.
+
+        :param: locs: Array of xyz locations.
+        """
         xy = rotate_xy(locs[:, :2], self.origin, self.angle)
         return np.c_[xy, locs[:, 2]]
 

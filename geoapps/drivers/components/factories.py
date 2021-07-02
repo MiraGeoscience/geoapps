@@ -5,8 +5,16 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Dict
+
+if TYPE_CHECKING:
+    from geoapps.io.params import Params
+    from discretize import TreeMesh
+    from SimPEG.survey import BaseSurvey
+
 import os
-from typing import Any, Dict
 
 import numpy as np
 from SimPEG import maps
@@ -16,15 +24,22 @@ class SimPEGFactory:
     """
     Build SimPEG objects based on inversion type.
 
+    Parameters
+    ----------
+    inversion_type :
+        Type of inversion used to identify what to build.
+    data_module :
+        SimPEG module that Objects will be imported from.
+
     Methods
     -------
-    build: Generate SimPEG object.
+    build():
+        Generate SimPEG object.
     """
 
-    def __init__(self, params):
+    def __init__(self, params: Params):
         """
         :param params: Params object containing SimPEG object parameters.
-        :param inversion_type: Type of inversion.
 
         """
         self.params = params
@@ -50,16 +65,23 @@ class SurveyFactory(SimPEGFactory):
     """
     Build SimPEG survey instances based on inversion type.
 
+    Parameters
+    ----------
+    inversion_type :
+        Type of inversion used to identify what to build.
+    data_module :
+        SimPEG module that Objects will be imported from.
+
     Methods
     -------
-    build: Build SimPEG survey instances based on inversion type.
+    build() :
+        Build SimPEG survey instances based on inversion type.
 
     """
 
-    def __init__(self, params):
+    def __init__(self, params: Params):
         """
         :param params: Params object containing SimPEG object parameters.
-        :param inversion_type: Type of inversion.
 
         """
         super().__init__(params)
@@ -78,6 +100,7 @@ class SurveyFactory(SimPEGFactory):
         :param data: Dictionary of components and data arrays.
         :param uncertainties: Dictionary of components and uncertainty arrays.
         :param local_index: Indices of survey points belonging to particular tile.
+
         :return: survey: SimPEG survey object.
 
         """
@@ -117,22 +140,35 @@ class SimulationFactory(SimPEGFactory):
     """
     Build SimPEG simulation instances based on inversion type.
 
+    Parameters
+    ----------
+    inversion_type :
+        Type of inversion used to identify what to build.
+    data_module :
+        SimPEG module that Objects will be imported from.
+
     Methods
     -------
-    build: Build SimPEG simulation instances based on inversion type.
+    build() :
+        Build SimPEG simulation instances based on inversion type.
 
 
     """
 
-    def __init__(self, params):
+    def __init__(self, params: Params):
         """
         :param params: Params object containing SimPEG object parameters.
-        :param inversion_type: Type of inversion.
 
         """
         super().__init__(params)
 
-    def build(self, survey, mesh, active_cells: np.ndarray, tile_id: int = None):
+    def build(
+        self,
+        survey: BaseSurvey,
+        mesh: TreeMesh,
+        active_cells: np.ndarray,
+        tile_id: int = None,
+    ):
         """
         Build SimPEG simulation object.
 
