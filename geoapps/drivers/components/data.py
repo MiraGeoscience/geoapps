@@ -5,8 +5,16 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
+
+if TYPE_CHECKING:
+    from geoh5py.workspace import Workspace
+    from geoapps.io import Params
+    from . import InversionMesh
+
 from copy import deepcopy
-from typing import Dict, Tuple
 
 import numpy as np
 from SimPEG import maps
@@ -16,57 +24,81 @@ from geoapps.utils import calculate_2D_trend, filter_xy
 
 from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
-from .meshes import InversionMesh
 
 
 class InversionData(InversionLocations):
     """
-    Retrieve data from workspace and apply transformations.
+    Retrieve and store data from workspace and apply transformations.
+
+    Parameters
+    ---------
+
+    resolution :
+        Desired data grid spacing.
+    offset :
+        Static receivers location offsets.
+    radar :
+        Radar channel address used to drape receiver locations over topography.
+    ignore_value :
+        Data value to ignore (infinity uncertainty).
+    ignore_type :
+        Type of ignore value (<, >, =).
+    detrend_order :
+        Polynomial degree for detrending (0, 1, or 2).
+    detrend_type :
+        Detrend type option. 'all': use all data, 'corners': use the convex
+        hull only.
+    locations :
+        Data locations.
+    mask :
+        Mask accumulated by windowing and downsampling operations and applied
+        to locations and data on initialization.
+    vector :
+        True if models are vector valued.
+    n_blocks :
+        Number of blocks if vector.
+    components :
+        Component names.
+    data :
+        Components and associated geophysical data.
+    uncertainties :
+        Components and associated data uncertainties.
+    normalizations :
+        Data normalizations.
 
     Methods
     -------
 
-    survey: Generates SimPEG survey object.
-    simulation: Generates SimPEG simulation object.
+    survey(local_index=None) :
+        Generates SimPEG survey object.
+    simulation(mesh, active_cells, local_index=None, tile_id=None) :
+        Generates SimPEG simulation object.
 
     """
 
-    def __init__(self, workspace, params, window):
+    def __init__(self, workspace: Workspace, params: Params, window: Dict[str, Any]):
         """
-        :param: resolution: Desired data grid spacing.
-        :param: offset: Static receivers location offsets.
-        :param: radar: Radar channel address used to drape receiver
-            locations over topography.
-        :param: ignore_value: Data value to ignore (infinity uncertainty).
-        :param: ignore_type: Type of ignore value (<, >, =).
-        :param: detrend_order: Polynomial degree for detrending (0, 1, or 2).
-        :param: detrend_type: Detrend type option. 'all': use all data,
-            'corners': use the convex hull only.
-        :param: components: Component names.
-        :param: locs: Data locations.
-        :param: vector: True if models are vector valued.
-        :param: n_blocks: Number of blocks if vector.
-        :param: data: Components and associated data.
-        :param: uncertainties: Components and associated uncertainties.
-        :param: normalizations: Data normalizations.
-
+        :param: workspace: Geoh5py workspace object containing location based data.
+        :param: params: Params object containing location based data parameters.
+        :param: window: Center and size defining window for data, topography, etc.
         """
         super().__init__(workspace, params, window)
 
-        self.resolution = None
-        self.offset = None
-        self.radar = None
-        self.ignore_value = None
-        self.ignore_type = None
-        self.detrend_order = None
-        self.detrend_type = None
-        self.components = None
-        self.locs = None
-        self.vector = None
-        self.n_blocks = None
-        self.data = {}
-        self.uncertainties = {}
-        self.normalizations = []
+        self.resolution: int = None
+        self.offset: List[float] = None
+        self.radar: np.ndarray = None
+        self.ignore_value: float = None
+        self.ignore_type: str = None
+        self.detrend_order: float = None
+        self.detrend_type: str = None
+        self.locations: np.ndarray = None
+        self.mask: np.ndarray = None
+        self.vector: bool = None
+        self.n_blocks: int = None
+        self.components: List[str] = None
+        self.data: Dict[str, np.ndarray] = {}
+        self.uncertainties: Dict[str, np.ndarray] = {}
+        self.normalizations: List[float] = []
         self._initialize()
 
     def _initialize(self) -> None:
@@ -77,15 +109,14 @@ class InversionData(InversionLocations):
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.data, self.uncertainties = self.get_data()
 
-        self.locs = super().get_locs(self.params.data_object)
-        self.locs = super().z_from_topo(self.locs)
-
-        self.mask = np.ones(len(self.locs), dtype=bool)
+        self.locations = super().get_locations(self.params.data_object)
+        self.locations = super().z_from_topo(self.locations)
+        self.mask = np.ones(len(self.locations), dtype=bool)
 
         if self.window is not None:
             self.mask = filter_xy(
-                self.locs[:, 0],
-                self.locs[:, 1],
+                self.locations[:, 0],
+                self.locations[:, 1],
                 window=self.window,
                 angle=self.angle,
                 mask=self.mask,
@@ -94,27 +125,25 @@ class InversionData(InversionLocations):
         if self.params.resolution is not None:
             self.resolution = self.params.resolution
             self.mask = filter_xy(
-                self.locs[:, 0],
-                self.locs[:, 1],
+                self.locations[:, 0],
+                self.locations[:, 1],
                 distance=self.resolution,
                 mask=self.mask,
             )
 
-        self.locs = super().filter(self.locs)
+        self.locations = super().filter(self.locations)
         self.data = super().filter(self.data)
         self.uncertainties = super().filter(self.uncertainties)
 
         self.offset, self.radar = self.params.offset()
-
         if self.offset is not None:
-            self.locs = self.displace(self.locs, self.offset)
-
+            self.locations = self.displace(self.locations, self.offset)
         if self.radar is not None:
             radar_offset = self.workspace.get_entity(self.radar)[0].values
-            self.locs = self.drape(self.locs, radar_offset)
+            self.locations = self.drape(self.locations, radar_offset)
 
         if self.is_rotated:
-            self.locs = self.rotate(self.locs)
+            self.locations = self.rotate(self.locations)
 
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
@@ -127,10 +156,10 @@ class InversionData(InversionLocations):
         """
         Get all data and uncertainty components and possibly set infinite uncertainties.
 
-        :returns: components: list of data components sorted in the
+        :return: components: list of data components sorted in the
             order of self.data.keys().
-        :returns: data: Dictionary of components and associated data
-        :returns: uncertainties: Dictionary of components and
+        :return: data: Dictionary of components and associated data
+        :return: uncertainties: Dictionary of components and
             associated uncertainties with infinite uncertainty set on
             ignored data (specified by self.ignore_type and
             self.ignore_value).
@@ -218,7 +247,7 @@ class InversionData(InversionLocations):
         d = self.data.copy()
         for comp in self.components:
             data_trend, _ = calculate_2D_trend(
-                self.locs,
+                self.locations,
                 d[comp],
                 self.params.detrend_order,
                 self.params.detrend_type,
@@ -227,7 +256,16 @@ class InversionData(InversionLocations):
         return d
 
     def normalize(self, data: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
-        """ Apply data type specific normalizations to data. """
+        """
+        Apply data type specific normalizations to data.
+
+        Calling normalize will apply the normalization to the data AND append
+        to the normalizations attribute list the value applied to the data.
+
+        :param: data: Components and associated geophysical data.
+
+        :return: d: Normalized data.
+        """
         d = deepcopy(data)
         normalizations = []
         for comp in self.components:
@@ -241,11 +279,19 @@ class InversionData(InversionLocations):
         return d
 
     def survey(self, local_index: np.ndarray = None):
-        """ Generates SimPEG survey object. """
+        """
+        Generates SimPEG survey object.
+
+        :param: local_index (Optional): Indices of the data belonging to a
+            particular tile in case of a tiled inversion.
+
+        :return: survey: SimPEG Survey class that covers all data or optionally
+            the portion of the data indexed by the local_index argument.
+        """
 
         survey_factory = SurveyFactory(self.params)
         survey = survey_factory.build(
-            self.locs, self.data, self.uncertainties, local_index
+            self.locations, self.data, self.uncertainties, local_index
         )
 
         return survey
@@ -257,7 +303,23 @@ class InversionData(InversionLocations):
         local_index: np.ndarray = None,
         tile_id: int = None,
     ):
-        """ Generates SimPEG simulation object. """
+        """
+        Generates SimPEG simulation object.
+
+        :param: mesh: Inversion mesh.
+        :param: active_cells: Mask that reduces model to active (earth) cells.
+        :param: local_index (Optional): Indices of the data belonging to a
+            particular tile in case of a tiled inversion.
+        :param: tile_id (Optional): Id associated with the tile being indexed
+            by the local_index argument in case of a tiled inversion.
+
+        :return: sim: SimPEG simulation object for full data or optionally
+            the portion of the data indexed by the local_index argument.
+        :return: map: If local_index and tile_id is provided, the returned
+            map will maps from local to global data.  If no local_index or
+            tile_id is provided map will simply be an identity map with no
+            effect of the data.
+        """
 
         simulation_factory = SimulationFactory(self.params)
         survey = self.survey(local_index)
