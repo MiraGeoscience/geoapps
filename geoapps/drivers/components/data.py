@@ -140,6 +140,7 @@ class InversionData(InversionLocations):
             self.locations = self.displace(self.locations, self.offset)
         if self.radar is not None:
             radar_offset = self.workspace.get_entity(self.radar)[0].values
+            radar_offset = super().filter(radar_offset)
             self.locations = self.drape(self.locations, radar_offset)
 
         if self.is_rotated:

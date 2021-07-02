@@ -93,7 +93,6 @@ class InversionDriver:
         self.inversion_data = InversionData(
             self.workspace,
             self.params,
-            self.window,
         )
 
         self.inversion_topography = InversionTopography(
