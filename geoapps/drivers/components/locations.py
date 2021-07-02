@@ -149,7 +149,7 @@ class InversionLocations:
     def z_from_topo(self, locs: np.ndarray):
         """ interpolate locations z data from topography. """
 
-        topo = self.get_locs(self.params.topography_object)
+        topo = self.get_locations(self.params.topography_object)
 
         xyz = locs.copy()
         topo_interpolator = LinearNDInterpolator(topo[:, :2], topo[:, 2])
