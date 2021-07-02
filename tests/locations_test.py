@@ -39,14 +39,14 @@ def test_mask(tmp_path):
     assert "Badly formed" in str(excinfo.value)
 
 
-def test_get_locs(tmp_path):
+def test_get_locations(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
     locs = np.ones((10, 3), dtype=float)
     points_object = Points.create(ws, name="test-data", vertices=locs)
     locations = InversionLocations(ws, params, window)
-    dlocs = locations.get_locs(points_object.uid)
+    dlocs = locations.get_locations(points_object.uid)
     np.testing.assert_allclose(locs, dlocs)
 
     xg, yg = np.meshgrid(np.arange(5) + 0.5, np.arange(5) + 0.5)
@@ -61,7 +61,7 @@ def test_get_locs(tmp_path):
         rotation=0.0,
         dip=0.0,
     )
-    dlocs = locations.get_locs(grid_object.uid)
+    dlocs = locations.get_locations(grid_object.uid)
     np.testing.assert_allclose(dlocs, locs)
 
 
