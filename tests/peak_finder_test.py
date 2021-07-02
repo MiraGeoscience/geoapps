@@ -35,7 +35,7 @@ def test_peak_finder_app():
             curve.add_data_to_group(c, name="obs")
             y = np.sin((ii + 1) * x)
 
-        line = curve.add_data({"line_id": {"values": curve.parts}})
+        line = curve.add_data({"line_id": {"values": np.ones_like(x)}})
         curve.add_data_to_group(line, name="Line")
 
         app = PeakFinder(
