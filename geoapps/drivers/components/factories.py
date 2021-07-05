@@ -57,7 +57,7 @@ class SimPEGFactory:
             msg = f"Inversion type: {self.inversion_type} not implemented yet."
             raise NotImplementedError(msg)
 
-    def build(self):
+    def build(self, *args, **kwargs):
         """ To be over-ridden in factory implementations. """
 
 
