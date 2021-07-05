@@ -903,11 +903,7 @@ default_ui_json = {
         "enabled": False,
         "value": None,
     },
-    "run_command": {
-        "default": "geoapps.drivers.grav_inversion",
-        "enabled": False,
-        "value": "geoapps.drivers.grav_inversion",
-    },
+    "run_command": "geoapps.drivers.mvi_inversion",
     "run_command_boolean": {
         "default": False,
         "value": False,
@@ -915,7 +911,7 @@ default_ui_json = {
         "tooltip": "Warning: launches process to run python model on save",
         "main": True,
     },
-    "conda_environment": {"default": "geoapps", "enabled": False, "value": "geoapps"},
+    "conda_environment": "geoapps",
 }
 
 required_parameters = []
