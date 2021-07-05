@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -52,9 +52,9 @@ class InversionLocations:
 
     def __init__(self, workspace: Workspace, params: Params, window: Dict[str, Any]):
         """
-        :param: workspace: Geoh5py workspace object containing location based data.
-        :param: params: Params object containing location based data parameters.
-        :param: window: Center and size defining window for data, topography, etc.
+        :param workspace: Geoh5py workspace object containing location based data.
+        :param params: Params object containing location based data parameters.
+        :param window: Center and size defining window for data, topography, etc.
 
         """
         self.workspace = workspace
@@ -92,9 +92,10 @@ class InversionLocations:
         """
         Returns locations of data object centroids or vertices.
 
-        :param: uid: UUID of geoh5py object containing centroid or
+        :param uid: UUID of geoh5py object containing centroid or
             vertex location data
-        :return: locs: N by 3 array of x, y, z location data
+
+        :return: Array shape(*, 3) of x, y, z location data
 
         """
 
@@ -124,7 +125,7 @@ class InversionLocations:
 
         If argument a is a dictionary filter will be applied to all key/values.
 
-        :param: a: Object containing dat ato filter.
+        :param a: Object containing data to filter.
 
         :return: Filtered data.
 
@@ -141,7 +142,7 @@ class InversionLocations:
         Since rotation attribute is stored with a negative sign the applied
         rotation will restore locations to an East-West, North-South orientation.
 
-        :param: locs: Array of xyz locations.
+        :param locs: Array of xyz locations.
         """
         xy = rotate_xy(locs[:, :2], self.origin, self.angle)
         return np.c_[xy, locs[:, 2]]
