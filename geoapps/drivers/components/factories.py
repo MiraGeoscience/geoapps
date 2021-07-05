@@ -188,7 +188,7 @@ class SimulationFactory(SimPEGFactory):
             actInd=active_cells,
             sensitivity_path=sens_path,
             chunk_format="row",
-            store_sensitivities="disk",
+            store_sensitivities="forward_only" if self.params.forward_only else "disk",
             max_chunk_size=self.params.max_chunk_size,
             **data_dependent_args,
         )

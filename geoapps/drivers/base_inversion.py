@@ -90,10 +90,7 @@ class InversionDriver:
 
         self.inversion_window = InversionWindow(self.workspace, self.params)
 
-        self.inversion_data = InversionData(
-            self.workspace,
-            self.params,
-        )
+        self.inversion_data = InversionData(self.workspace, self.params, self.window)
 
         self.inversion_topography = InversionTopography(
             self.workspace, self.params, self.window
@@ -454,6 +451,9 @@ class InversionDriver:
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, local_index, tile_id
             )
+            if self.params.forward_only:
+                d = lsim.dpred(self.starting_model).compute()
+                return None, d
             ldat = (
                 data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
             )
@@ -465,7 +465,7 @@ class InversionDriver:
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
 
-        return local_misfits
+        return local_misfits, None
 
     def models(self):
         """ Return all models with data """
