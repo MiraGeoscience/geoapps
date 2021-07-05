@@ -5,9 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
 import sys
 
-from geoapps.io.MVI import MVIParams
+from geoapps.io.Gravity import GravityParams
 
 from .base_inversion import InversionDriver
 
@@ -15,13 +16,13 @@ from .base_inversion import InversionDriver
 def start_inversion(filepath=None):
     """ Starts inversion with parameters defined in input file. """
 
-    params = MVIParams.from_path(filepath)
-    driver = MVIDriver(params)
+    params = GravityParams.from_path(filepath)
+    driver = GravityDriver(params)
     driver.run()
 
 
-class MVIDriver(InversionDriver):
-    def __init__(self, params: MVIParams):
+class GravityDriver(InversionDriver):
+    def __init__(self, params: GravityParams):
         super().__init__(params)
 
     def run(self):

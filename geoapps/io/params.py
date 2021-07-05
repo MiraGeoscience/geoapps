@@ -33,7 +33,7 @@ class Params:
     ----------
     workspace :
         Path to geoh5 file workspace object.
-    geoh5:
+    geoh5 :
         Path to geoh5 file results workspace object.
     workpath :
         Path to working directory.
@@ -44,14 +44,14 @@ class Params:
 
     Methods
     -------
-    is_uuid(p)
+    is_uuid(p) :
         Returns True if string is valid uuid.
-    parent(child_id)
-        Returns parent id for provided child id
-    active()
-        Returns parameters that are not None
-    default(default_ui, param)
-        return default value for param stored in default_ui
+    parent(child_id) :
+        Returns parent id for provided child id.
+    active() :
+        Returns parameters that are not None.
+    default(default_ui, param) :
+        return default value for param stored in default_ui.
 
     Constructors
     ------------
@@ -192,7 +192,7 @@ class Params:
         """ Returns parent id of provided child id. """
         return self.associations[child_id]
 
-    def active(self) -> List[str]:
+    def active_set(self) -> List[str]:
         """ Retrieve active parameter set (value not None). """
         return [k[1:] for k, v in self.__dict__.items() if v is not None]
 
