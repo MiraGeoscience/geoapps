@@ -115,10 +115,6 @@ class MVIParams(Params):
         """ Wraps Params.default. """
         return super().default(self.default_ui_json, param)
 
-    def components(self) -> List[str]:
-        """ Retrieve component names used to index channel, uncertainty data. """
-        return [k.split("_")[0] for k in self.active_set() if "channel" in k]
-
     def uncertainty(self, component: str) -> float:
         """ Returns uncertainty for chosen data component. """
         return self.__getattribute__("_".join([component, "uncertainty"]))
@@ -126,6 +122,14 @@ class MVIParams(Params):
     def channel(self, component: str) -> UUID:
         """ Returns channel uuid for chosen data component. """
         return self.__getattribute__("_".join([component, "channel"]))
+
+    def components(self) -> List[str]:
+        """ Retrieve component names used to index channel and uncertainty data. """
+        comps = []
+        for k, v in self.__dict__.items():
+            if ("channel_bool" in k) & (v == True):
+                comps.append(k.split("_")[1])
+        return comps
 
     def window(self) -> Dict[str, float]:
         """ Returns window dictionary """
@@ -290,6 +294,21 @@ class MVIParams(Params):
         self._data_object = UUID(val) if isinstance(val, str) else val
 
     @property
+    def tmi_channel_bool(self):
+        return self._tmi_channel_bool
+
+    @tmi_channel_bool.setter
+    def tmi_channel_bool(self, val):
+        if val is None:
+            self._tmi_channel_bool = val
+            return
+        p = "tmi_channel_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._tmi_channel_bool = val
+
+    @property
     def tmi_channel(self):
         return self._tmi_channel
 
@@ -318,6 +337,141 @@ class MVIParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._tmi_uncertainty = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def bx_channel_bool(self):
+        return self._bx_channel_bool
+
+    @bx_channel_bool.setter
+    def bx_channel_bool(self, val):
+        if val is None:
+            self._bx_channel_bool = val
+            return
+        p = "bx_channel_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._bx_channel_bool = val
+
+    @property
+    def bx_channel(self):
+        return self._bx_channel
+
+    @bx_channel.setter
+    def bx_channel(self, val):
+        if val is None:
+            self._bx_channel = val
+            return
+        p = "bx_channel"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._bx_channel = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def bx_uncertainty(self):
+        return self._bx_uncertainty
+
+    @bx_uncertainty.setter
+    def bx_uncertainty(self, val):
+        if val is None:
+            self._bx_uncertainty = val
+            return
+        p = "bx_uncertainty"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._bx_uncertainty = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def by_channel_bool(self):
+        return self._by_channel_bool
+
+    @by_channel_bool.setter
+    def by_channel_bool(self, val):
+        if val is None:
+            self._by_channel_bool = val
+            return
+        p = "by_channel_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._by_channel_bool = val
+
+    @property
+    def by_channel(self):
+        return self._by_channel
+
+    @by_channel.setter
+    def by_channel(self, val):
+        if val is None:
+            self._by_channel = val
+            return
+        p = "by_channel"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._by_channel = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def by_uncertainty(self):
+        return self._by_uncertainty
+
+    @by_uncertainty.setter
+    def by_uncertainty(self, val):
+        if val is None:
+            self._by_uncertainty = val
+            return
+        p = "by_uncertainty"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._by_uncertainty = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def bz_channel_bool(self):
+        return self._bz_channel_bool
+
+    @bz_channel_bool.setter
+    def bz_channel_bool(self, val):
+        if val is None:
+            self._bz_channel_bool = val
+            return
+        p = "bz_channel_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._bz_channel_bool = val
+
+    @property
+    def bz_channel(self):
+        return self._bz_channel
+
+    @bz_channel.setter
+    def bz_channel(self, val):
+        if val is None:
+            self._bz_channel = val
+            return
+        p = "bz_channel"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._bz_channel = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def bz_uncertainty(self):
+        return self._bz_uncertainty
+
+    @bz_uncertainty.setter
+    def bz_uncertainty(self, val):
+        if val is None:
+            self._bz_uncertainty = val
+            return
+        p = "bz_uncertainty"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._bz_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
     def starting_model_object(self):
