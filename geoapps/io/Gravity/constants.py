@@ -68,6 +68,13 @@ default_ui_json = {
         ],
         "value": None,
     },
+    "gz_channel_bool": {
+        "default": False,
+        "group": "Data",
+        "main": True,
+        "label": "use Gz?",
+        "value": False,
+    },
     "gz_channel": {
         "association": "Cell",
         "dataType": "Float",
@@ -798,10 +805,12 @@ validations = {
     "data_object": {
         "types": [str, UUID],
     },
-    "gz_channel": {"types": [str, UUID], "reqs": [("data_object")]},
-    "gz_uncertainty": {
-        "types": [str, int, float],
+    "gz_channel_bool": {"types": [bool]},
+    "gz_channel": {
+        "types": [str, UUID],
+        "reqs": [("data_object"), (True, "gz_channel_bool")],
     },
+    "gz_uncertainty": {"types": [str, int, float], "reqs": [(True, "gz_channel_bool")]},
     "starting_model_object": {
         "types": [str, UUID],
     },

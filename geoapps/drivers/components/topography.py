@@ -57,9 +57,7 @@ class InversionTopography(InversionLocations):
     def _initialize(self):
 
         self.locations = super().get_locations(self.params.topography_object)
-        elev = self.workspace.get_entity(self.params.topography)[0].values
-        if not np.all(self.locations[:, 2] == elev):
-            self.locations[:, 2] = elev
+        self._update_elevations()
 
         self.mask = np.ones(len(self.locations), dtype=bool)
 
@@ -89,3 +87,12 @@ class InversionTopography(InversionLocations):
         active_cells = active_from_xyz(mesh, self.locations, grid_reference="N")
 
         return active_cells
+
+    def _update_elevations(self):
+        """ Update topography object locations with topography channel. """
+
+        elev = self.workspace.get_entity(self.params.topography)
+        if elev:
+            elev = elev[0].values
+            if not np.all(self.locations[:, 2] == elev):
+                self.locations[:, 2] = elev

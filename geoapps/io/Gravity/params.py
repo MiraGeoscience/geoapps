@@ -104,10 +104,6 @@ class GravityParams(Params):
         """ Wraps Params.default. """
         return super().default(self.default_ui_json, param)
 
-    def components(self) -> List[str]:
-        """ Retrieve component names used to index channel, uncertainty data. """
-        return [k.split("_")[0] for k in self.active_set() if "channel" in k]
-
     def uncertainty(self, component: str) -> float:
         """ Returns uncertainty for chosen data component. """
         return self.__getattribute__("_".join([component, "uncertainty"]))
@@ -115,6 +111,14 @@ class GravityParams(Params):
     def channel(self, component: str) -> UUID:
         """ Returns channel uuid for chosen data component. """
         return self.__getattribute__("_".join([component, "channel"]))
+
+    def components(self) -> List[str]:
+        """ Retrieve component names used to index channel and uncertainty data. """
+        comps = []
+        for k, v in self.__dict__.item():
+            if ("channel_bool" in k) & (v == True):
+                comps.append(k.split("_")[1])
+        return comps
 
     def window(self) -> Dict[str, float]:
         """ Returns window dictionary """
@@ -222,6 +226,21 @@ class GravityParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._data_object = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def gz_channel_bool(self):
+        return self._gz_channel_bool
+
+    @gz_channel_bool.setter
+    def gz_channel_bool(self, val):
+        if val is None:
+            self._gz_channel_bool = val
+            return
+        p = "gz_channel_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._gz_channel_bool = val
 
     @property
     def gz_channel(self):
