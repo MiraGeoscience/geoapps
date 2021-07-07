@@ -206,4 +206,7 @@ validations = {
     "conda_environment_boolean": {
         "types": [bool],
     },
+    "workspace": {
+        "types": [str, Workspace],
+    },
 }

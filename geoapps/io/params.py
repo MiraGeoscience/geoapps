@@ -223,12 +223,9 @@ class Params:
         if val is None:
             self._workspace = val
             return
-        p = "workspace"
-        self.validator.validate(p, val, validations[p])
-        if isinstance(val, str):
-            self._workspace = Workspace(val)
-        else:
-            self._workspace = val
+        self.setter_validator(
+            "workspace", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
+        )
 
     @property
     def geoh5(self):
@@ -239,9 +236,7 @@ class Params:
         if val is None:
             self._geoh5 = val
             return
-        p = "geoh5"
-        self.validator.validate(p, val, validations[p])
-        self._geoh5 = val
+        self.setter_validator("geoh5", val)
 
     @property
     def input_file(self):
