@@ -1188,26 +1188,6 @@ class InversionApp(PlotSelection2D):
             self.write.button_style = "warning"
             self.trigger.button_style = "danger"
 
-    def get_data_list(self, entity):
-        groups = [p_g.uid for p_g in entity.property_groups]
-        data_list = []
-        if self.data.value is not None:
-            for component in self.data.value:
-                if component in groups:
-                    data_list += [
-                        [self.workspace.get_entity(uid)[0].name, uid]
-                        for uid in entity.find_or_create_property_group(
-                            name=self.data.uid_name_map[component]
-                        ).properties
-                    ]
-                else:
-                    data_list += [
-                        [child.name, child.uid]
-                        for child in entity.children
-                        if child.uid == component
-                    ]
-        return data_list
-
     def update_component_panel(self, _):
         if self.workspace.get_entity(self.objects.value):
             _, data_list = self.get_selected_entities()
