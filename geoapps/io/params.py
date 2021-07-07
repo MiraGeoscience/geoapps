@@ -123,8 +123,22 @@ class Params:
         return p
 
     @classmethod
-    def from_dict(cls, ui_json: dict) -> "Params":
+    def from_dict(cls, ui_json: dict, **kwargs) -> "Params":
         p = cls()
+        for key, arg in kwargs.items():
+            if key == "h5file":
+                key = "geoh5"
+            try:
+                if isinstance(ui_json[key], dict):
+                    if isinstance(arg, dict):
+                        ui_json[key] = arg
+                    else:
+                        ui_json[key]["value"] = arg
+                else:
+                    ui_json[key] = arg
+            except KeyError:
+                continue
+
         p.init_from_dict(ui_json)
         return p
 
