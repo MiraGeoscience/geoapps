@@ -147,7 +147,7 @@ class InversionLocations:
         xy = rotate_xy(locs[:, :2], self.origin, self.angle)
         return np.c_[xy, locs[:, 2]]
 
-    def z_from_topo(self, locs: np.ndarray):
+    def set_z_from_topo(self, locs: np.ndarray):
         """ interpolate locations z data from topography. """
 
         topo = self.get_locations(self.params.topography_object)
