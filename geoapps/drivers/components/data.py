@@ -110,7 +110,8 @@ class InversionData(InversionLocations):
         self.components, self.data, self.uncertainties = self.get_data()
 
         self.locations = super().get_locations(self.params.data_object)
-        self.locations = super().z_from_topo(self.locations)
+        if self.params.z_from_topo:
+            self.locations = super().set_z_from_topo(self.locations)
         self.mask = np.ones(len(self.locations), dtype=bool)
 
         if self.window is not None:
