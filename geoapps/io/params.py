@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
+from copy import deepcopy
 from typing import Any, Dict, List, Union
 from uuid import UUID
 
@@ -72,8 +73,11 @@ class Params:
     def __init__(self, **kwargs):
 
         self.workpath: str = os.path.abspath(".")
-
-        self._set_defaults()
+        ui = deepcopy(self.default_ui_json)
+        ui.update(kwargs)
+        ifile = InputFile()
+        ifile.input_from_dict(ui)
+        self._init_params(ifile)
 
         for key, value in kwargs.items():
             try:
@@ -170,7 +174,7 @@ class Params:
             self.geoh5 = Workspace(inputfile.data["geoh5"])
 
         self.validator.workspace = self.workspace
-        self.validator.input = inputfile
+        self.validator.input = inputfile  # Triggers validations
 
         for param, value in inputfile.data.items():
             try:
