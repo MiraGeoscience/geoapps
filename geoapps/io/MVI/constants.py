@@ -8,6 +8,7 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
 required_parameters = [
@@ -129,7 +130,7 @@ default_ui_json = {
     "tmi_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 1.0,
+        "default": None,
         "group": "Data",
         "main": True,
         "dependency": "forward_only",
@@ -138,7 +139,7 @@ default_ui_json = {
         "label": "TMI uncertainty",
         "parent": "data_object",
         "property": None,
-        "value": 1.0,
+        "value": None,
     },
     "bx_channel_bool": {
         "default": False,
@@ -162,7 +163,7 @@ default_ui_json = {
     "bx_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 1.0,
+        "default": None,
         "group": "Data",
         "main": True,
         "dependency": "forward_only",
@@ -171,7 +172,7 @@ default_ui_json = {
         "label": "Bx uncertainty",
         "parent": "data_object",
         "property": None,
-        "value": 1.0,
+        "value": None,
     },
     "starting_model_object": {
         "default": None,
@@ -1239,7 +1240,7 @@ validations = {
     "output_geoh5": {
         "types": [str, Workspace],
     },
-    "out_group": {"types": [str]},
+    "out_group": {"types": [str, ContainerGroup]},
     "no_data_value": {
         "types": [int, float],
     },

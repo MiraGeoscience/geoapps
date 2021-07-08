@@ -8,6 +8,7 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
 required_parameters = [
@@ -90,7 +91,7 @@ default_ui_json = {
     "gz_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 1e-2,
+        "default": None,
         "group": "Data",
         "main": True,
         "dependency": "forward_only",
@@ -99,7 +100,7 @@ default_ui_json = {
         "label": "Uncertainty",
         "parent": "data_object",
         "property": None,
-        "value": 1e-2,
+        "value": None,
     },
     "starting_model_object": {
         "default": None,
@@ -1002,7 +1003,7 @@ validations = {
     "output_geoh5": {
         "types": [str, Workspace],
     },
-    "out_group": {"types": [str]},
+    "out_group": {"types": [str, ContainerGroup]},
     "no_data_value": {
         "types": [int, float],
     },

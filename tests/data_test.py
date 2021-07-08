@@ -31,30 +31,10 @@ def setup_params(tmp):
     return geotest.make()
 
 
-# input_file = InputFile()
-# input_file.default(default_ui_json)
-# input_file.data["geoh5"] = "./FlinFlon.geoh5"
-# params = MVIParams.from_input_file(input_file)
-# params.topography = "{a603a762-f6cb-4b21-afda-3160e725bf7d}"
-# ws = params.workspace
-# mesh = InversionMesh(params, ws)
-# window = params.window()
-# topo = get_topography(ws, params, mesh, window)
-
-
 def test_get_uncertainty_component(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, window)
     params.tmi_uncertainty = 1
-    data = InversionData(ws, params, window)
-    unc = data.get_uncertainty_component("tmi")
-    assert len(np.unique(unc)) == 1
-    assert np.unique(unc)[0] == 1
-    assert len(unc) == len(data.mask)
-
-    params.tmi_uncertainty = None
     data = InversionData(ws, params, window)
     unc = data.get_uncertainty_component("tmi")
     assert len(np.unique(unc)) == 1
