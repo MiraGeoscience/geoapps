@@ -154,7 +154,12 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
     except ValueError:
         pass
 
-    assert getattr(params, param) == value
+    pval = getattr(params, param)
+
+    if param == "out_group":
+        pval = pval.name
+
+    assert pval == value
 
 
 ######################  Tests  ###########################

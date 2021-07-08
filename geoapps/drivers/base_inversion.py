@@ -60,7 +60,7 @@ class InversionDriver:
 
     @property
     def data(self):
-        return self.inversion_data.data
+        return self.inversion_data.observed
 
     @property
     def topography(self):
@@ -124,6 +124,13 @@ class InversionDriver:
 
         ###############################################################################
         # Processing
+
+        # If forward only is true simulate fields, save to workspace and exit.
+        if self.params.forward_only:
+            self.inversion_data.simulate(
+                self.mesh, self.starting_model, self.active_cells, save=True
+            )
+            return
 
         # Tile locations
         self.tiles = self.get_tiles()
@@ -210,11 +217,9 @@ class InversionDriver:
             if self.inversion_type == "mvi":
                 channels = ["amplitude", "theta", "phi"]
 
-            out_group = ContainerGroup.create(
-                self.workspace, name=self.params.out_group
+            outmesh = self.fetch("mesh").copy(
+                parent=self.params.out_group, copy_children=False
             )
-
-            outmesh = self.fetch("mesh").copy(parent=out_group, copy_children=False)
 
             directiveList.append(
                 directives.SaveIterationsGeoH5(
@@ -238,7 +243,7 @@ class InversionDriver:
                 self.workspace,
                 name=f"Predicted",
                 vertices=rx_locs,
-                parent=out_group,
+                parent=self.params.out_group,
             )
 
             comps, norms = self.survey.components, self.inversion_data.normalizations
@@ -445,15 +450,13 @@ class InversionDriver:
 
     def get_tile_misfits(self, tiles):
 
-        local_misfits, self.sorting = [], []
+        local_misfits, self.sorting, dpreds = [], [], []
         for tile_id, local_index in enumerate(tiles):
             lsurvey = self.inversion_data.survey(local_index)
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, local_index, tile_id
             )
-            if self.params.forward_only:
-                d = lsim.dpred(self.starting_model).compute()
-                return None, d
+
             ldat = (
                 data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
             )
@@ -462,10 +465,11 @@ class InversionDriver:
                 simulation=lsim,
                 model_map=lmap,
             )
+
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
 
-        return local_misfits, None
+        return local_misfits, dpreds
 
     def models(self):
         """ Return all models with data """

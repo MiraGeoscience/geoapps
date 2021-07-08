@@ -96,7 +96,8 @@ class InversionData(InversionLocations):
         self.vector: bool = None
         self.n_blocks: int = None
         self.components: List[str] = None
-        self.data: Dict[str, np.ndarray] = {}
+        self.observed: Dict[str, np.ndarray] = {}
+        self.predicted: Dict[str, np.ndarray] = {}
         self.uncertainties: Dict[str, np.ndarray] = {}
         self.normalizations: List[float] = []
         self._initialize()
@@ -107,7 +108,7 @@ class InversionData(InversionLocations):
         self.vector = True if self.params.inversion_type == "mvi" else False
         self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
-        self.components, self.data, self.uncertainties = self.get_data()
+        self.components, self.observed, self.uncertainties = self.get_data()
 
         self.locations = super().get_locations(self.params.data_object)
         self.locations = super().z_from_topo(self.locations)
@@ -132,7 +133,7 @@ class InversionData(InversionLocations):
             )
 
         self.locations = super().filter(self.locations)
-        self.data = super().filter(self.data)
+        self.observed = super().filter(self.observed)
         self.uncertainties = super().filter(self.uncertainties)
 
         self.offset, self.radar = self.params.offset()
@@ -149,9 +150,9 @@ class InversionData(InversionLocations):
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
-            self.data = self.detrend()
+            self.observed = self.detrend(self.observed)
 
-        self.data = self.normalize(self.data)
+        self.observed = self.normalize(self.observed)
 
     def get_data(self) -> Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray]:
         """
@@ -181,20 +182,21 @@ class InversionData(InversionLocations):
     def get_data_component(self, component: str) -> np.ndarray:
         """ Get data component (channel) from params data. """
         channel = self.params.channel(component)
-        data = self.workspace.get_entity(channel)[0].values
-        return data
+        return None if channel is None else self.workspace.get_entity(channel)[0].values
 
     def get_uncertainty_component(self, component: str) -> np.ndarray:
         """ Get uncertainty component (channel) from params data. """
         unc = self.params.uncertainty(component)
-        if isinstance(unc, (int, float)):
+        if unc is None:
+            return None
+        elif isinstance(unc, (int, float)):
             d = self.get_data_component(component)
             return np.array([unc] * len(d))
         elif unc is None:
             d = self.get_data_component(component)
             return d * 0.0 + 1.0  # Default
         else:
-            return workspace.get_entity(unc)[0].values
+            return self.workspace.get_entity(unc)[0].values
 
     def parse_ignore_values(self) -> Tuple[float, str]:
         """ Returns an ignore value and type ('<', '>', or '=') from params data. """
@@ -215,6 +217,9 @@ class InversionData(InversionLocations):
         self, uncertainties: np.ndarray, data: np.ndarray
     ) -> np.ndarray:
         """ Use self.ignore_value self.ignore_type to set uncertainties to infinity. """
+
+        if uncertainties is None:
+            return None
 
         unc = uncertainties.copy()
         if self.ignore_value is None:
@@ -243,9 +248,9 @@ class InversionData(InversionLocations):
 
         return self.displace(locs, radar_offset_pad)
 
-    def detrend(self) -> np.ndarray:
+    def detrend(self, data) -> np.ndarray:
         """ Remove trend from data. """
-        d = self.data.copy()
+        d = data.copy()
         for comp in self.components:
             data_trend, _ = calculate_2D_trend(
                 self.locations,
@@ -292,14 +297,14 @@ class InversionData(InversionLocations):
 
         survey_factory = SurveyFactory(self.params)
         survey = survey_factory.build(
-            self.locations, self.data, self.uncertainties, local_index
+            self.locations, self.observed, self.uncertainties, local_index
         )
 
         return survey
 
     def simulation(
         self,
-        mesh: InversionMesh,
+        mesh: TreeMesh,
         active_cells: np.ndarray,
         local_index: np.ndarray = None,
         tile_id: int = None,
@@ -328,7 +333,7 @@ class InversionData(InversionLocations):
         if local_index is None:
 
             sim = simulation_factory.build(survey, mesh, active_cells)
-            map = Maps.IdentityMap(nP=self.n_blocks * mesh.nC)
+            map = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
 
         else:
 
@@ -342,3 +347,39 @@ class InversionData(InversionLocations):
             )
 
         return sim, map
+
+    def simulate(
+        self,
+        mesh: TreeMesh,
+        model: np.ndarray,
+        active_cells: np.ndarray,
+        save: bool = True,
+    ) -> np.ndarray:
+        """ Simulate fields for a particular model. """
+
+        sim, _ = self.simulation(mesh, active_cells)
+        d = sim.dpred(model)
+        d = d.compute()
+        for i, c in enumerate(self.components):
+            self.predicted[c] = d[i]
+
+        if save:
+            if self.is_rotated:
+                locs = self.locations.copy()
+                locs[:, :2] = rotate_xy(
+                    locs[:, :2],
+                    self.window["center"],
+                    self.angle,
+                )
+
+            predicted_data_object = Points.create(
+                self.workspace,
+                name=f"Predicted",
+                vertices=locs,
+                parent=self.params.out_group,
+            )
+
+            comps, norms = self.components, self.normalizations
+            for ii, (comp, norm) in enumerate(zip(comps, norms)):
+                val = norm * self.predicted[comp]
+                predicted_data_object.add_data({f"Predicted_{comp}": {"values": val}})

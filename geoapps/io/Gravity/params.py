@@ -8,6 +8,8 @@
 from typing import Any, Dict, List, Tuple, Union
 from uuid import UUID
 
+from geoh5py.groups import ContainerGroup
+
 from ..input_file import InputFile
 from ..params import Params
 from ..validators import InputValidator
@@ -1155,7 +1157,7 @@ class GravityParams(Params):
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._out_group = val
+        self._out_group = ContainerGroup.create(self.workspace, name=val)
 
     @property
     def no_data_value(self):
