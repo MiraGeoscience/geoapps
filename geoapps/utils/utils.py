@@ -34,20 +34,29 @@ def find_value(labels: list, keywords: list, default=None) -> list:
     """
     Find matching keywords within a list of labels.
 
-    :param labels: List of labels that may contain the keywords.
+    :param labels: List of labels or list of [key, value] that may contain the keywords.
     :param keywords: List of keywords to search for.
     :param default: Default value be returned if none of the keywords are found.
 
     :return matching_labels: List of labels containing any of the keywords.
     """
     value = None
-    for string in keywords:
-        for name in labels:
+    for entry in labels:
+        for string in keywords:
+
+            if isinstance(entry, list):
+                name = entry[0]
+            else:
+                name = entry
+
             if isinstance(string, str) and (
                 (string.lower() in name.lower()) or (name.lower() in string.lower())
             ):
-                value = name
-                break
+                if isinstance(entry, list):
+                    value = entry[1]
+                else:
+                    value = name
+
     if value is None:
         value = default
     return value
@@ -444,7 +453,8 @@ def weighted_average(
             w = 1.0 / (rad[:, ii] + threshold)
             weight = np.nansum([weight, w], axis=0)
 
-        avg_values += [values_interp / weight]
+        values_interp[weight > 0] = values_interp[weight > 0] / weight[weight > 0]
+        avg_values += [values_interp]
 
     if return_indices:
         return avg_values, ind
@@ -573,8 +583,8 @@ def downsample_grid(
 
     du = np.linalg.norm(np.c_[u_diff(xg), u_diff(yg)])
     dv = np.linalg.norm(np.c_[v_diff(xg), v_diff(yg)])
-    u_ds = int(np.rint(distance / du))
-    v_ds = int(np.rint(distance / dv))
+    u_ds = np.max([int(np.rint(distance / du)), 1])
+    v_ds = np.max([int(np.rint(distance / dv)), 1])
 
     downsample_mask = np.zeros_like(xg, dtype=bool)
     downsample_mask[::v_ds, ::u_ds] = True
@@ -1049,25 +1059,13 @@ def block_model_2_tensor(block_model, models=[]):
         ],
         x0="CC0",
     )
-
     tensor.x0 = [
         block_model.origin["x"] + block_model.u_cells[block_model.u_cells < 0].sum(),
         block_model.origin["y"] + block_model.v_cells[block_model.v_cells < 0].sum(),
         block_model.origin["z"] + block_model.z_cells[block_model.z_cells < 0].sum(),
     ]
-
-    print(
-        tensor.x0,
-        [
-            block_model.origin["x"]
-            + block_model.u_cells[block_model.u_cells < 0].sum(),
-            block_model.origin["y"]
-            + block_model.v_cells[block_model.v_cells < 0].sum(),
-            block_model.origin["z"]
-            + block_model.z_cells[block_model.z_cells < 0].sum(),
-        ],
-    )
     out = []
+
     for model in models:
         values = model.copy().reshape((tensor.nCz, tensor.nCx, tensor.nCy), order="F")
 
@@ -1170,12 +1168,11 @@ def object_2_dataframe(entity, fields=[], inplace=False, vertices=True, index=No
 
     d_f = pd.DataFrame(data_dict, columns=list(data_dict.keys()))
     for field in fields:
-        if entity.get_data(field):
-            obj = entity.get_data(field)[0]
-            if obj.values.shape[0] == locs.shape[0]:
-                d_f[field] = obj.values.copy()[index]
+        for data in entity.workspace.get_entity(field):
+            if (data in entity.children) and (data.values.shape[0] == locs.shape[0]):
+                d_f[data.name] = data.values.copy()[index]
                 if inplace:
-                    obj.values = None
+                    data.values = None
 
     return d_f
 

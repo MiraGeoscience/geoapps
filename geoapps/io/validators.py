@@ -137,7 +137,7 @@ class InputValidator:
                 if k not in pvalidations.keys():
                     exclusions = ["values", "types", "shapes", "reqs", "uuid"]
                     vkeys = [k for k in pvalidations.keys() if k not in exclusions]
-                    msg = self.iterable_validation_msg(param, "keys", k, vkeys)
+                    msg = self._iterable_validation_msg(param, "keys", k, vkeys)
                     raise KeyError(msg)
                 self.validate(k, v, pvalidations[k], workspace, associations)
 
@@ -147,6 +147,7 @@ class InputValidator:
             else:
                 return
 
+        ws = self.workspace if workspace is None else workspace
         if "values" in pvalidations.keys():
             self._validate_parameter_val(param, value, pvalidations["values"])
         if "types" in pvalidations.keys():
@@ -157,13 +158,18 @@ class InputValidator:
             for req in pvalidations["reqs"]:
                 self._validate_parameter_req(param, value, req)
         if "uuid" in pvalidations.keys():
-            ws = self.workspace if workspace is None else workspace
             try:
                 child_uuid = UUID(value) if isinstance(value, str) else value
                 parent = associations[child_uuid]
-            except:
+            except (KeyError, TypeError):
                 parent = None
             self._validate_parameter_uuid(param, value, ws, parent)
+        if "property_groups" in pvalidations.keys():
+            try:
+                parent = associations[value]
+            except (KeyError, TypeError):
+                parent = None
+            self._validate_parameter_property_groups(param, value, ws, parent)
 
     def _validate_parameter_val(
         self, param: str, value: Any, vvals: List[Union[float, str]]
@@ -248,7 +254,18 @@ class InputValidator:
                 msg += f" Object must be a child of {parent}."
                 raise IndexError(msg)
 
-    def _general_validation_msg(self, param: str, type: str, value: Any) -> str:
+    def _validate_parameter_property_groups(
+        self, param: str, value: str, workspace: Workspace = None, parent: UUID = None
+    ) -> None:
+        msg = self._general_validation_msg(param, "property_groups", value)
+
+        if parent is not None:
+            parent_obj = workspace.get_entity(parent)[0]
+            if value not in [pg.uid for pg in parent_obj.property_groups]:
+                msg += f" Property Group must exist for {parent}."
+
+    @staticmethod
+    def _general_validation_msg(param: str, type: str, value: Any) -> str:
         """ Generate base error message: "Invalid '{param}' {type}: {value}.". """
         return f"Invalid '{param}' {type}: '{value}'."
 

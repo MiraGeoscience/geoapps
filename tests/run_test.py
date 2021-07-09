@@ -21,8 +21,8 @@ from geoapps.processing import (
     CoordinateTransformation,
     DataInterpolation,
     EdgeDetectionApp,
-    PeakFinder,
 )
+from geoapps.processing.peak_finder import PeakFinder
 from geoapps.utils.testing import Geoh5Tester
 
 project = "FlinFlon.geoh5"
@@ -83,12 +83,6 @@ def test_inversion(tmp_path):
     )
     app.write.value = True
     app.run.value = True
-
-
-def test_peak_finder():
-    app = PeakFinder(h5file=project)
-    app.run_all.click()
-    app.trigger.click()
 
 
 def test_iso_surface():
