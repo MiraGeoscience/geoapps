@@ -970,6 +970,7 @@ def inversion(input_file):
             mapping=data_mapping,
             attribute="predicted",
             channels=channels,
+            group=True,
             save_objective_function=True,
         )
     )
