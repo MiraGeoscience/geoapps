@@ -111,12 +111,6 @@ class InversionLocations:
             msg += " Object type should be Grid2D or point-like."
             raise (ValueError(msg))
 
-        if data_object.uid == self.params.topography_object:
-            if self.params.topography is not None:
-                elev = self.workspace.get_entity(self.params.topography)[0].values
-                if not np.all(locs[:, 2] == elev):
-                    locs[:, 2] = elev
-
         return locs
 
     def filter(self, a: Union[Dict[str, np.ndarray], np.ndarray]):
