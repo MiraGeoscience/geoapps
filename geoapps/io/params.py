@@ -74,16 +74,14 @@ class Params:
 
         self.workpath: str = os.path.abspath(".")
         ui = deepcopy(self.default_ui_json)
-        ui.update(kwargs)
-        ifile = InputFile()
-        ifile.input_from_dict(ui)
-        self._init_params(ifile)
 
-        for key, value in kwargs.items():
-            try:
-                setattr(self, key, value)
-            except AttributeError:
-                continue
+        if kwargs.keys():
+            ui.update({k: v for k, v in kwargs if k in ui})
+            ifile = InputFile()
+            ifile.input_from_dict(ui)
+            self._init_params(ifile)
+        else:
+            self._set_defaults(ui)
 
     @property
     def default_ui_json(self):
@@ -102,7 +100,7 @@ class Params:
         if not input_file.is_loaded:
             input_file.read_ui_json()
 
-        p = cls(**kwargs)
+        p = cls()
         p._ifile = input_file
         p.workpath = input_file.workpath
         p.associations = input_file.associations
@@ -122,7 +120,7 @@ class Params:
         """
 
         input_file = InputFile(file_path)
-        p = cls.from_input_file(input_file, **kwargs)
+        p = cls.from_input_file(input_file)
 
         return p
 
@@ -165,6 +163,7 @@ class Params:
         validations: Dict[str, Any] = validations,
     ) -> None:
         """ Overrides default parameter values with input file values. """
+
         if getattr(self, "workspace", None) is None:
             self.workspace = Workspace(inputfile.data["geoh5"])
 
