@@ -34,6 +34,7 @@ class GravityParams(Params):
         self.starting_model_object = None
         self.starting_model = None
         self.tile_spatial = None
+        self.z_from_topo = None
         self.receivers_radar_drape = None
         self.receivers_offset_x = None
         self.receivers_offset_y = None
@@ -296,6 +297,21 @@ class GravityParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._tile_spatial = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def z_from_topo(self):
+        return self._z_from_topo
+
+    @z_from_topo.setter
+    def z_from_topo(self, val):
+        if val is None:
+            self._z_from_topo = val
+            return
+        p = "z_from_topo"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._z_from_topo = val
 
     @property
     def receivers_radar_drape(self):

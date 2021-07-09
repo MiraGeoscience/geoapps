@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 import numpy as np
 from geoh5py.objects import Grid2D
+from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.utils import rotate_xy
 
@@ -139,3 +140,19 @@ class InversionLocations:
         """
         xy = rotate_xy(locs[:, :2], self.origin, self.angle)
         return np.c_[xy, locs[:, 2]]
+
+    def set_z_from_topo(self, locs: np.ndarray):
+        """ interpolate locations z data from topography. """
+
+        topo = self.get_locations(self.params.topography_object)
+
+        xyz = locs.copy()
+        topo_interpolator = LinearNDInterpolator(topo[:, :2], topo[:, 2])
+        z_topo = topo_interpolator(xyz[:, :2])
+        if np.any(np.isnan(z_topo)):
+            tree = cKDTree(topo[:, :2])
+            _, ind = tree.query(xyz[np.isnan(z_topo), :2])
+            z_topo[np.isnan(z_topo)] = topo[ind, 2]
+        xyz[:, 2] = z_topo
+
+        return xyz

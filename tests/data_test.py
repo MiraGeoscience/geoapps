@@ -147,26 +147,11 @@ def test_displace(tmp_path):
 def test_drape(tmp_path):
     ws, params = setup_params(tmp_path)
     window = params.window()
-    topo = InversionTopography(ws, params, window)
     data = InversionData(ws, params, window)
-
-    # create radar object with z channel an set uid to data.radar
     test_locs = np.array([[1.0, 2.0, 1.0], [2.0, 1.0, 1.0], [8.0, 9.0, 1.0]])
     radar_ch = np.array([1.0, 2.0, 3.0])
-    drape_object = Points.create(ws, name="test_drape", vertices=test_locs)
-    test_drape = drape_object.add_data({"z": {"values": radar_ch}})
-    data.radar = test_drape.uid
-
-    # create topography and set data.topo
-    xg, yg = np.meshgrid(np.linspace(0, 10, 11), np.linspace(0, 10, 11))
-    x = xg.ravel()
-    y = yg.ravel()
-    z = np.ones(x.shape)
-    z[(x > 5) & (y > 5)] = 2
-    topo.locs = np.c_[x, y, z]
-
-    expected_locs = np.array([[1.0, 2.0, 2.0], [2.0, 1.0, 3.0], [8.0, 9.0, 5.0]])
-    draped_locs = data.drape(topo.locs, test_locs)
+    expected_locs = np.array([[1.0, 2.0, 2.0], [2.0, 1.0, 3.0], [8.0, 9.0, 4.0]])
+    draped_locs = data.drape(radar_ch, test_locs)
 
     assert np.all(draped_locs == expected_locs)
 
