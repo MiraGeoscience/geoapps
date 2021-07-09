@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 from copy import deepcopy
 
 import numpy as np
-from scipy.interpolate import LinearNDInterpolator
 from SimPEG import maps
 from SimPEG.utils.drivers import create_nested_mesh
 
@@ -29,7 +28,7 @@ from .locations import InversionLocations
 
 class InversionData(InversionLocations):
     """
-    Retrieve and store data from workspace and apply transformations.
+    Retrieve and store data from the workspace and apply transformations.
 
     Parameters
     ---------
@@ -103,7 +102,7 @@ class InversionData(InversionLocations):
         self._initialize()
 
     def _initialize(self) -> None:
-        """ Extract data from workspace using params data. """
+        """ Extract data from the workspace using params data. """
 
         self.vector = True if self.params.inversion_type == "mvi" else False
         self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
@@ -111,6 +110,8 @@ class InversionData(InversionLocations):
         self.components, self.data, self.uncertainties = self.get_data()
 
         self.locations = super().get_locations(self.params.data_object)
+        if self.params.z_from_topo:
+            self.locations = super().set_z_from_topo(self.locations)
         self.mask = np.ones(len(self.locations), dtype=bool)
 
         if self.window is not None:
@@ -139,11 +140,9 @@ class InversionData(InversionLocations):
         if self.offset is not None:
             self.locations = self.displace(self.locations, self.offset)
         if self.radar is not None:
-            topo = super().get_locations(self.params.topography_object)
-            elev = self.workspace.get_entity(self.params.topography)[0].values
-            if not np.all(topo[:, 2] == elev):
-                topo[:, 2] = elev
-            self.locations = self.drape(topo, self.locations)
+            radar_offset = self.workspace.get_entity(self.radar)[0].values
+            radar_offset = super().filter(radar_offset)
+            self.locations = self.drape(self.locations, radar_offset)
 
         if self.is_rotated:
             self.locations = self.rotate(self.locations)
@@ -237,22 +236,13 @@ class InversionData(InversionLocations):
         """ Offset data locations in all three dimensions. """
         return locs + offset if offset is not None else 0
 
-    def drape(self, topo: np.ndarray, locs: np.ndarray) -> np.ndarray:
-        """ Drape data locations using radar channel. """
-        xyz = locs.copy()
-        radar_offset = self.workspace.get_entity(self.radar)[0].values
-        topo_interpolator = LinearNDInterpolator(topo[:, :2], topo[:, 2])
-        z_topo = topo_interpolator(xyz[:, :2])
-        if np.any(np.isnan(z_topo)):
-            tree = cKDTree(topo[:, :2])
-            _, ind = tree.query(xyz[np.isnan(z_topo), :2])
-            z_topo[np.isnan(z_topo)] = topo[ind, 2]
-        xyz[:, 2] = z_topo
+    def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
+        """ Drape data locations using radar channel offsets. """
 
         radar_offset_pad = np.zeros((len(radar_offset), 3))
         radar_offset_pad[:, 2] = radar_offset
 
-        return self.displace(xyz, radar_offset_pad)
+        return self.displace(locs, radar_offset_pad)
 
     def detrend(self) -> np.ndarray:
         """ Remove trend from data. """
