@@ -36,22 +36,12 @@ class OctreeMesh(ObjectDataSelection):
     _vertical_padding = None
 
     def __init__(self, ui_json=None, **kwargs):
-
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class.from_path(ui_json)
         else:
-
-            default_dict = self._param_class._default_ui_json
-            for key, arg in kwargs.items():
-                if key == "h5file":
-                    key = "geoh5"
-                try:
-                    default_dict[key] = arg
-                except KeyError:
-                    continue
-
-            self.params = self._param_class.from_dict(default_dict)
-
+            self.params = self._param_class.from_dict(
+                self._param_class._default_ui_json, **kwargs
+            )
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.refinement_list = VBox([])
 
@@ -89,36 +79,7 @@ class OctreeMesh(ObjectDataSelection):
                 getattr(self, obj).style = {"description_width": "initial"}
 
     def __populate__(self, **kwargs):
-
-        for key, value in kwargs.items():
-            if key[0] == "_":
-                key = key[1:]
-
-            if hasattr(self, "_" + key) or hasattr(self, key):
-
-                if isinstance(value, dict) and "value" in list(value.keys()):
-                    value = value["value"]
-
-                try:
-                    if isinstance(getattr(self, key, None), Widget) and not isinstance(
-                        value, Widget
-                    ):
-                        try:
-                            value = uuid.UUID(value)
-                        except:
-                            pass
-                        setattr(getattr(self, key), "value", value)
-                        if hasattr(getattr(self, key), "style"):
-                            getattr(self, key).style = {"description_width": "initial"}
-
-                    elif isinstance(value, BaseApplication) and isinstance(
-                        getattr(self, "_" + key, None), BaseApplication
-                    ):
-                        setattr(self, "_" + key, value)
-                    else:
-                        setattr(self, key, value)
-                except:
-                    pass
+        super().__populate__(**kwargs)
 
         refinement_list = []
         for label, params in self.params.refinements.items():
@@ -394,5 +355,4 @@ class OctreeMesh(ObjectDataSelection):
 
 if __name__ == "__main__":
     params = OctreeParams.from_path(sys.argv[1])
-    print(params.geoh5)
     OctreeMesh.run(params)

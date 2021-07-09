@@ -24,7 +24,7 @@ from geoh5py.objects import BlockModel, Grid2D, Octree, Surface
 from geoh5py.workspace import Workspace
 from osgeo import gdal
 from scipy.interpolate import interp1d
-from scipy.spatial import cKDTree
+from scipy.spatial import ConvexHull, cKDTree
 from shapely.geometry import LineString, mapping
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
@@ -34,19 +34,30 @@ def find_value(labels: list, keywords: list, default=None) -> list:
     """
     Find matching keywords within a list of labels.
 
-    :param labels: List of labels that may contain the keywords.
+    :param labels: List of labels or list of [key, value] that may contain the keywords.
     :param keywords: List of keywords to search for.
     :param default: Default value be returned if none of the keywords are found.
 
     :return matching_labels: List of labels containing any of the keywords.
     """
     value = None
-    for name in labels:
+
+    for entry in labels:
         for string in keywords:
+
+            if isinstance(entry, list):
+                name = entry[0]
+            else:
+                name = entry
+
             if isinstance(string, str) and (
                 (string.lower() in name.lower()) or (name.lower() in string.lower())
             ):
-                value = name
+                if isinstance(entry, list):
+                    value = entry[1]
+                else:
+                    value = name
+
     if value is None:
         value = default
     return value
@@ -308,6 +319,95 @@ def export_curve_2_shapefile(
                 c.write(res)
 
 
+def calculate_2D_trend(points, values, order=0, method="all"):
+    """
+    detrend2D(points, values, order=0, method='all')
+
+    Function to remove a trend from 2D scatter points with values
+
+    Parameters:
+    ----------
+
+    points: ndarray or floats, shape(npoints, 2)
+        Coordinates of input points
+
+    values: ndarray of floats, shape(npoints,)
+        Values to be detrended
+
+    order: int
+        Order of the polynomial to be used
+
+    method: str
+        Method to be used for the detrending
+            "all": USe all points
+            "corners": Only use points on the convex hull
+
+
+    Returns
+    -------
+
+    trend: ndarray of floats, shape(npoints,)
+        Calculated trend
+
+    coefficients: ndarray of floats, shape(order+1)
+        Coefficients for the polynomial describing the trend
+        trend = c[0] + points[:, 0] * c[1] +  points[:, 1] * c[2]
+
+    """
+
+    assert method in ["all", "corners"], "method must be 'all', or 'corners'"
+
+    assert order in [0, 1, 2], "order must be 0, 1, or 2"
+
+    if method == "corners":
+        hull = ConvexHull(points[:, :2])
+        # Extract only those points that make the ConvexHull
+        pts = np.c_[points[hull.vertices, :2], values[hull.vertices]]
+    else:
+        # Extract all points
+        pts = np.c_[points[:, :2], values]
+
+    if order == 0:
+        data_trend = np.mean(pts[:, 2]) * np.ones(points[:, 0].shape)
+        print("Removed data mean: {:.6g}".format(data_trend[0]))
+        C = np.r_[0, 0, data_trend]
+
+    elif order == 1:
+        # best-fit linear plane
+        A = np.c_[pts[:, 0], pts[:, 1], np.ones(pts.shape[0])]
+        C, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)  # coefficients
+
+        # evaluate at all data locations
+        data_trend = C[0] * points[:, 0] + C[1] * points[:, 1] + C[2]
+        print("Removed linear trend with mean: {:.6g}".format(np.mean(data_trend)))
+
+    elif order == 2:
+        # best-fit quadratic curve
+        A = np.c_[
+            np.ones(pts.shape[0]),
+            pts[:, :2],
+            np.prod(pts[:, :2], axis=1),
+            pts[:, :2] ** 2,
+        ]
+        C, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)
+
+        # evaluate at all data locations
+        data_trend = np.dot(
+            np.c_[
+                np.ones(points[:, 0].shape),
+                points[:, 0],
+                points[:, 1],
+                points[:, 0] * points[:, 1],
+                points[:, 0] ** 2,
+                points[:, 1] ** 2,
+            ],
+            C,
+        ).reshape(points[:, 0].shape)
+
+        print("Removed polynomial trend with mean: {:.6g}".format(np.mean(data_trend)))
+    return data_trend, C
+
+
 def weighted_average(
     xyz_in: np.ndarray,
     xyz_out: np.ndarray,
@@ -354,7 +454,8 @@ def weighted_average(
             w = 1.0 / (rad[:, ii] + threshold)
             weight = np.nansum([weight, w], axis=0)
 
-        avg_values += [values_interp / weight]
+        values_interp[weight > 0] = values_interp[weight > 0] / weight[weight > 0]
+        avg_values += [values_interp]
 
     if return_indices:
         return avg_values, ind
@@ -483,8 +584,8 @@ def downsample_grid(
 
     du = np.linalg.norm(np.c_[u_diff(xg), u_diff(yg)])
     dv = np.linalg.norm(np.c_[v_diff(xg), v_diff(yg)])
-    u_ds = int(np.rint(distance / du))
-    v_ds = int(np.rint(distance / dv))
+    u_ds = np.max([int(np.rint(distance / du)), 1])
+    v_ds = np.max([int(np.rint(distance / dv)), 1])
 
     downsample_mask = np.zeros_like(xg, dtype=bool)
     downsample_mask[::v_ds, ::u_ds] = True
@@ -959,25 +1060,13 @@ def block_model_2_tensor(block_model, models=[]):
         ],
         x0="CC0",
     )
-
     tensor.x0 = [
         block_model.origin["x"] + block_model.u_cells[block_model.u_cells < 0].sum(),
         block_model.origin["y"] + block_model.v_cells[block_model.v_cells < 0].sum(),
         block_model.origin["z"] + block_model.z_cells[block_model.z_cells < 0].sum(),
     ]
-
-    print(
-        tensor.x0,
-        [
-            block_model.origin["x"]
-            + block_model.u_cells[block_model.u_cells < 0].sum(),
-            block_model.origin["y"]
-            + block_model.v_cells[block_model.v_cells < 0].sum(),
-            block_model.origin["z"]
-            + block_model.z_cells[block_model.z_cells < 0].sum(),
-        ],
-    )
     out = []
+
     for model in models:
         values = model.copy().reshape((tensor.nCz, tensor.nCx, tensor.nCy), order="F")
 
@@ -1080,12 +1169,11 @@ def object_2_dataframe(entity, fields=[], inplace=False, vertices=True, index=No
 
     d_f = pd.DataFrame(data_dict, columns=list(data_dict.keys()))
     for field in fields:
-        if entity.get_data(field):
-            obj = entity.get_data(field)[0]
-            if obj.values.shape[0] == locs.shape[0]:
-                d_f[field] = obj.values.copy()[index]
+        for data in entity.workspace.get_entity(field):
+            if (data in entity.children) and (data.values.shape[0] == locs.shape[0]):
+                d_f[data.name] = data.values.copy()[index]
                 if inplace:
-                    obj.values = None
+                    data.values = None
 
     return d_f
 
