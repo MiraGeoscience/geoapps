@@ -36,7 +36,7 @@ class Calculator(ObjectDataSelection):
 
         super().__init__(**self.defaults)
 
-        self.trigger.on_click(self.click_trigger)
+        self.trigger.on_click(self.trigger_click)
         self._data_panel = VBox([self.objects, HBox([self.data, self.use])])
         self.output_panel = VBox([self.trigger, self.live_link_panel])
 
@@ -103,14 +103,14 @@ class Calculator(ObjectDataSelection):
         """
         Add the data channel to the list of variables and expression window
         """
-        for name in self.data.value:
-            if name not in self.var.keys():
-                obj = self.workspace.get_entity(self.objects.value)[0]
-                self.var[name] = obj.get_data(name)[0].values
+        for uid in self.data.value:
+            name = self.data.uid_name_map[uid]
+            if self.data.uid_name_map[uid] not in self.var.keys():
+                self.var[name] = self.workspace.get_entity(uid)[0].values
 
             self.equation.value = self.equation.value + "{" + name + "}"
 
-    def click_trigger(self, _):
+    def trigger_click(self, _):
         """
         Evaluate the expression and output the result to geoh5
         """
@@ -120,19 +120,24 @@ class Calculator(ObjectDataSelection):
 
         out_var = out_var.strip()[1:-1]
 
+        if getattr(obj, "vertices", None) is not None:
+            xyz = obj.vertices
+        else:
+            xyz = obj.centroids
+
+        if out_var not in obj.get_data_list():
+            obj.add_data({out_var: {"values": numpy.zeros(xyz.shape[0])}})
+
         for name in re.findall("{(.*?)}", equation):
             if name in obj.get_data_list():
                 if name not in list(self.var.keys()):
                     self.var[name] = obj.get_data(name)[0].values
+            elif name in "XYZ":
+                if name not in list(self.var.keys()):
+                    self.var[name] = xyz[:, "XYZ".index(name)]
             else:
                 print(f"Variable {name} not in object data list. Please revise")
                 return
-
-        if out_var not in obj.get_data_list():
-            if getattr(obj, "vertices", None) is not None:
-                obj.add_data({out_var: {"values": numpy.zeros(obj.n_vertices)}})
-            else:
-                obj.add_data({out_var: {"values": numpy.zeros(obj.n_cells)}})
 
         equation = re.sub(r"{", "var['", equation)
         equation = re.sub(r"}", "']", equation).strip()
@@ -150,8 +155,10 @@ class Calculator(ObjectDataSelection):
         self.workspace.finalize()
 
         choice = self.data.value
-        self.data.options = obj.get_data_list()
+        self.data.options = [[child.name, child.uid] for child in obj.children]
         self.data.value = choice
+
+        self.update_uid_name_map()
 
         if self.plot_result:
             out = plot_plan_data_selection(obj, data)
