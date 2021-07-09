@@ -978,7 +978,6 @@ def inversion(input_file):
             channels=channels,
             group=True,
             save_objective_function=True,
-            group_output=True,
         )
     )
     inv = Inversion.BaseInversion(
