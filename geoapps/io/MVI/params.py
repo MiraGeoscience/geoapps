@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Tuple, Union
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
+from geoh5py.workspace import Workspace
 
 from ..input_file import InputFile
 from ..params import Params
@@ -1467,7 +1468,7 @@ class MVIParams(Params):
 
     @property
     def out_group(self):
-        return self._out_group
+        return ContainerGroup.create(self.workspace, name=self._out_group)
 
     @out_group.setter
     def out_group(self, val):
@@ -1478,7 +1479,7 @@ class MVIParams(Params):
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._out_group = ContainerGroup.create(self.workspace, name=val)
+        self._out_group = val
 
     @property
     def no_data_value(self):
@@ -1495,6 +1496,6 @@ class MVIParams(Params):
         )
         self._no_data_value = val
 
-    def _init_params(self, inputfile: InputFile) -> None:
+    def _init_params(self, inputfile: InputFile, workspace: Workspace = None) -> None:
         """ Wraps Params._init_params. """
-        super()._init_params(inputfile, required_parameters, validations)
+        super()._init_params(inputfile, required_parameters, validations, workspace)

@@ -81,7 +81,7 @@ class Params:
             ifile.input_from_dict(ui)
             self._init_params(ifile)
         else:
-            self._set_defaults(ui)
+            self._set_defaults()
 
     @property
     def default_ui_json(self):
@@ -89,7 +89,9 @@ class Params:
         return self._default_ui_json
 
     @classmethod
-    def from_input_file(cls, input_file: InputFile, **kwargs) -> "Params":
+    def from_input_file(
+        cls, input_file: InputFile, workspace: Workspace = None
+    ) -> "Params":
         """Construct Params object from InputFile instance.
 
         Parameters
@@ -104,12 +106,12 @@ class Params:
         p._ifile = input_file
         p.workpath = input_file.workpath
         p.associations = input_file.associations
-        p._init_params(input_file)
+        p._init_params(input_file, workspace=workspace)
 
         return p
 
     @classmethod
-    def from_path(cls, file_path: str, **kwargs) -> "Params":
+    def from_path(cls, file_path: str, workspace: Workspace = None) -> "Params":
         """
         Construct Params object from path to input file.
 
@@ -120,7 +122,7 @@ class Params:
         """
 
         input_file = InputFile(file_path)
-        p = cls.from_input_file(input_file)
+        p = cls.from_input_file(input_file, workspace)
 
         return p
 
@@ -161,8 +163,11 @@ class Params:
         inputfile: InputFile,
         required_parameters: List[str] = required_parameters,
         validations: Dict[str, Any] = validations,
+        workspace: Workspace = None,
     ) -> None:
         """ Overrides default parameter values with input file values. """
+
+        self.workspace = workspace
 
         if getattr(self, "workspace", None) is None:
             self.workspace = Workspace(inputfile.data["geoh5"])
