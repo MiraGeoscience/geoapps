@@ -212,7 +212,7 @@ class InversionModel:
         self._model_type = v
 
     def fetch(self, p):
-        """ Fetch the object addressed by uuid from the workspace. """
+        """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):
             try:

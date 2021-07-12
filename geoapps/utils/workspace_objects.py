@@ -15,7 +15,7 @@ class WorkspaceObject:
         self.param = param
 
     def fetch(self, p: Union[str, UUID]):
-        """ Fetch the object addressed by uuid from the workspace. """
+        """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):
             try:
