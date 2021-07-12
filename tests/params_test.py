@@ -91,16 +91,16 @@ def catch_invalid_generator(
             param,
             "value",
             str(invalid_value),
-            *[str(v) for v in pvalidations],
+            *(str(v) for v in pvalidations),
         ]
     elif validation_type == "type":
         err = TypeError
         types = set(pvalidations + [type(invalid_value)])
-        assertions = ["Must be", param, "type", *[t.__name__ for t in types]]
+        assertions = ["Must be", param, "type", *(t.__name__ for t in types)]
     elif validation_type == "shape":
         err = ValueError
         shapes = set(pvalidations + [np.array(invalid_value).shape])
-        assertions = ["Must be", param, "shape", *[str(s) for s in shapes]]
+        assertions = ["Must be", param, "shape", *(str(s) for s in shapes)]
     elif validation_type == "reqs":
         err = KeyError
         assertions = ["Unsatisfied", param]
