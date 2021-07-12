@@ -704,7 +704,7 @@ default_ui_json = {
         "value": True,
     },
     "n_cpu": {
-        "default": 1,
+        "default": None,
         "min": 1,
         "group": "Compute",
         "dependency": "parallelized",
@@ -712,7 +712,7 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "label": "number of cpu",
-        "value": 1,
+        "value": None,
     },
     "max_ram": {
         "default": 2,

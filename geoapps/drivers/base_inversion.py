@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import multiprocessing
 from multiprocessing.pool import ThreadPool
 from typing import Union
 from uuid import UUID
@@ -12,7 +13,6 @@ from uuid import UUID
 import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster
-from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Points
 from SimPEG import (
     data,
@@ -37,6 +37,9 @@ from .components import (
     InversionTopography,
     InversionWindow,
 )
+
+cluster = LocalCluster(processes=False)
+client = Client(cluster)
 
 
 class InversionDriver:
@@ -88,6 +91,8 @@ class InversionDriver:
 
     def _initialize(self):
 
+        self.configure_dask()
+
         self.inversion_window = InversionWindow(self.workspace, self.params)
 
         self.inversion_data = InversionData(self.workspace, self.params, self.window)
@@ -101,10 +106,6 @@ class InversionDriver:
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh
         )
-
-        self.configure_dask()
-        cluster = LocalCluster(processes=False)
-        client = Client(cluster)
 
     def run(self):
         """ Run inversion from params """
@@ -498,7 +499,7 @@ class InversionDriver:
 
         if self.params.parallelized:
             if self.params.n_cpu is None:
-                self.params.n_cpu = multiprocessing.cpu_count() / 2
+                self.params.n_cpu = int(multiprocessing.cpu_count() / 2)
 
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
