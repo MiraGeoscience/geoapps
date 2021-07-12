@@ -137,6 +137,7 @@ def catch_invalid_generator(
 def param_test_generator(tmp_path, param, value, workspace=workspace):
     filepath = tmpfile(tmp_path)
     ifile = InputFile(filepath)
+    wrkstr = workspace.h5file
     ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)

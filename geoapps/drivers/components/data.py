@@ -17,10 +17,12 @@ if TYPE_CHECKING:
 from copy import deepcopy
 
 import numpy as np
+from discretize import TreeMesh
+from geoh5py.objects import Points
 from SimPEG import maps
 from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.utils import calculate_2D_trend, filter_xy
+from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
 from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
@@ -59,8 +61,10 @@ class InversionData(InversionLocations):
         Number of blocks if vector.
     components :
         Component names.
-    data :
-        Components and associated geophysical data.
+    observed :
+        Components and associated observed geophysical data.
+    predicted :
+        Components and associated predicted geophysical data.
     uncertainties :
         Components and associated data uncertainties.
     normalizations :
@@ -360,6 +364,10 @@ class InversionData(InversionLocations):
         sim, _ = self.simulation(mesh, active_cells)
         d = sim.dpred(model)
         d = d.compute()
+
+        if np.array(d).ndim == 1:
+            d = [d]
+
         for i, c in enumerate(self.components):
             self.predicted[c] = d[i]
 
@@ -368,8 +376,8 @@ class InversionData(InversionLocations):
                 locs = self.locations.copy()
                 locs[:, :2] = rotate_xy(
                     locs[:, :2],
-                    self.window["center"],
-                    self.angle,
+                    self.origin,
+                    -1 * self.angle,
                 )
 
             predicted_data_object = Points.create(
@@ -382,4 +390,4 @@ class InversionData(InversionLocations):
             comps, norms = self.components, self.normalizations
             for ii, (comp, norm) in enumerate(zip(comps, norms)):
                 val = norm * self.predicted[comp]
-                predicted_data_object.add_data({f"Predicted_{comp}": {"values": val}})
+                predicted_data_object.add_data({f"{comp}": {"values": val}})
