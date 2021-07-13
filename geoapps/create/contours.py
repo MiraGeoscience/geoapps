@@ -50,7 +50,7 @@ class ContourValues(PlotSelection2D):
         )
 
         self.trigger.on_click(self.trigger_click)
-        self.trigger.description = "Export to GA"
+        self.trigger.description = "Export"
         self.trigger.button_style = "danger"
 
     @property

@@ -67,7 +67,7 @@ class BaseApplication:
             ]
         )
         self._live_link = Checkbox(
-            description="GA Pro - Live link",
+            description="Geoscience ANALYST Pro - Live link",
             value=False,
             indent=False,
             style={"description_width": "initial"},
