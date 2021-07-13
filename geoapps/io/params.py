@@ -143,7 +143,7 @@ class Params:
         self._init_params(self._input_file)
 
     def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
-        """ Populate parameters with default values stored in default_ui. """
+        """Populate parameters with default values stored in default_ui."""
         for key, value in default_ui.items():
             try:
                 if isinstance(default_ui[key], dict):
@@ -160,7 +160,7 @@ class Params:
         required_parameters: List[str] = required_parameters,
         validations: Dict[str, Any] = validations,
     ) -> None:
-        """ Overrides default parameter values with input file values. """
+        """Overrides default parameter values with input file values."""
         if getattr(self, "workspace", None) is None:
             self.workspace = Workspace(inputfile.data["geoh5"])
 
@@ -181,7 +181,7 @@ class Params:
                 continue
 
     def is_uuid(self, p: str) -> bool:
-        """ Return true if string contains valid UUID. """
+        """Return true if string contains valid UUID."""
         if isinstance(p, str):
             private_attr = self.__getattribue__("_" + p)
             return True if isinstance(private_attr, UUID) else False
@@ -189,15 +189,15 @@ class Params:
             pass
 
     def parent(self, child_id: Union[str, UUID]) -> Union[str, UUID]:
-        """ Returns parent id of provided child id. """
+        """Returns parent id of provided child id."""
         return self.associations[child_id]
 
     def active_set(self) -> List[str]:
-        """ Retrieve active parameter set (value not None). """
+        """Retrieve active parameter set (value not None)."""
         return [k[1:] for k, v in self.__dict__.items() if v is not None]
 
     def default(self, default_ui: Dict[str, Any], param: str) -> Any:
-        """ Return default value of parameter stored in default_ui_json. """
+        """Return default value of parameter stored in default_ui_json."""
         return default_ui[param]["default"]
 
     @property
