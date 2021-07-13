@@ -6,11 +6,11 @@ default_stages: [commit,push]
 fail_fast: false
 repos:
 -   repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 21.6b0
     hooks:
     -   id: black
 -   repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.6.4
+    rev: v5.9.2
     hooks:
     -   id: isort
         additional_dependencies: [toml] # to read config from pyproject.toml
@@ -23,7 +23,7 @@ repos:
 #    hooks:
 #    -   id: flake8
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v2.7.4
+    rev: v2.21.0
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
@@ -47,13 +47,13 @@ repos:
         types: [python]
         exclude: (^setup.py$|(docs|assets)/)
 -   repo: https://github.com/codespell-project/codespell
-    rev: v1.17.1
+    rev: v2.1.0
     hooks:
     -   id: codespell
         exclude: (\.ipynb$)
         entry: codespell -I .codespellignore
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.3.0
+    rev: v4.0.1
     hooks:
     -   id: trailing-whitespace
         exclude: \.mdj$
@@ -77,6 +77,6 @@ repos:
         language: python
         additional_dependencies: [rstcheck, sphinx]
 -   repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.7.0
+    rev: v1.9.0
     hooks:
     -   id: rst-backticks
