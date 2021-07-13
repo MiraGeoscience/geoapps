@@ -46,16 +46,16 @@ def test_get_uncertainty_component(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, mesh, window)
+    topo = InversionTopography(ws, params, window)
     params.tmi_uncertainty = 1
-    data = InversionData(ws, params, mesh, topo, window)
+    data = InversionData(ws, params, window)
     unc = data.get_uncertainty_component("tmi")
     assert len(np.unique(unc)) == 1
     assert np.unique(unc)[0] == 1
     assert len(unc) == len(data.mask)
 
     params.tmi_uncertainty = None
-    data = InversionData(ws, params, mesh, topo, window)
+    data = InversionData(ws, params, window)
     unc = data.get_uncertainty_component("tmi")
     assert len(np.unique(unc)) == 1
     assert np.unique(unc)[0] == 1
@@ -66,21 +66,21 @@ def test_parse_ignore_values(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, mesh, window)
+    topo = InversionTopography(ws, params, window)
     params.ignore_values = "<99"
-    data = InversionData(ws, params, mesh, topo, window)
+    data = InversionData(ws, params, window)
     val, type = data.parse_ignore_values()
     assert val == 99
     assert type == "<"
 
     params.ignore_values = ">99"
-    data = InversionData(ws, params, mesh, topo, window)
+    data = InversionData(ws, params, window)
     val, type = data.parse_ignore_values()
     assert val == 99
     assert type == ">"
 
     params.ignore_values = "99"
-    data = InversionData(ws, params, mesh, topo, window)
+    data = InversionData(ws, params, window)
     val, type = data.parse_ignore_values()
     assert val == 99
     assert type == "="
@@ -90,8 +90,8 @@ def test_set_infinity_uncertainties(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, mesh, window)
-    data = InversionData(ws, params, mesh, topo, window)
+    topo = InversionTopography(ws, params, window)
+    data = InversionData(ws, params, window)
     test_data = np.array([0, 1, 2, 3, 4, 5])
     test_unc = np.array([0.1] * 6)
     data.ignore_value = 3
@@ -125,8 +125,8 @@ def test_displace(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, mesh, window)
-    data = InversionData(ws, params, mesh, topo, window)
+    topo = InversionTopography(ws, params, window)
+    data = InversionData(ws, params, window)
     test_locs = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]])
     test_offset = np.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
     expected_locs = np.array([[2.0, 2.0, 3.0], [5.0, 5.0, 6.0], [8.0, 8.0, 9.0]])
@@ -146,28 +146,12 @@ def test_displace(tmp_path):
 
 def test_drape(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, mesh, window)
-    data = InversionData(ws, params, mesh, topo, window)
-
-    # create radar object with z channel an set uid to data.radar
+    data = InversionData(ws, params, window)
     test_locs = np.array([[1.0, 2.0, 1.0], [2.0, 1.0, 1.0], [8.0, 9.0, 1.0]])
     radar_ch = np.array([1.0, 2.0, 3.0])
-    drape_object = Points.create(ws, name="test_drape", vertices=test_locs)
-    test_drape = drape_object.add_data({"z": {"values": radar_ch}})
-    data.radar = test_drape.uid
-
-    # create topography and set data.topo
-    xg, yg = np.meshgrid(np.linspace(0, 10, 11), np.linspace(0, 10, 11))
-    x = xg.ravel()
-    y = yg.ravel()
-    z = np.ones(x.shape)
-    z[(x > 5) & (y > 5)] = 2
-    topo.locs = np.c_[x, y, z]
-
-    expected_locs = np.array([[1.0, 2.0, 2.0], [2.0, 1.0, 3.0], [8.0, 9.0, 5.0]])
-    draped_locs = data.drape(test_locs)
+    expected_locs = np.array([[1.0, 2.0, 2.0], [2.0, 1.0, 3.0], [8.0, 9.0, 4.0]])
+    draped_locs = data.drape(radar_ch, test_locs)
 
     assert np.all(draped_locs == expected_locs)
 
@@ -176,8 +160,8 @@ def test_normalize(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, mesh, window)
-    data = InversionData(ws, params, mesh, topo, window)
+    topo = InversionTopography(ws, params, window)
+    data = InversionData(ws, params, window)
     data.data = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
     data.components = list(data.data.keys())
     test_data = data.normalize(data.data)
@@ -189,7 +173,7 @@ def test_get_survey(tmp_path):
     ws, params = setup_params(tmp_path)
     mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, mesh, window)
-    data = InversionData(ws, params, mesh, topo, window)
-    survey = data.get_survey()
+    topo = InversionTopography(ws, params, window)
+    data = InversionData(ws, params, window)
+    survey = data.survey()
     assert isinstance(survey, SimPEG.potential_fields.magnetics.Survey)
