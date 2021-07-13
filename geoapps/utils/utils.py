@@ -41,7 +41,6 @@ def find_value(labels: list, keywords: list, default=None) -> list:
     :return matching_labels: List of labels containing any of the keywords.
     """
     value = None
-
     for entry in labels:
         for string in keywords:
 
