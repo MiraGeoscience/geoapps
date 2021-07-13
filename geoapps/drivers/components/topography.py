@@ -56,8 +56,7 @@ class InversionTopography(InversionLocations):
 
     def _initialize(self):
 
-        self.locations = super().get_locations(self.params.topography_object)
-        self._update_elevations()
+        self.locations = self.get_locations(self.params.topography_object)
 
         self.mask = np.ones(len(self.locations), dtype=bool)
 
@@ -88,11 +87,22 @@ class InversionTopography(InversionLocations):
 
         return active_cells
 
-    def _update_elevations(self):
-        """ Update topography object locations with topography channel. """
+    def get_locations(self, uid: UUID) -> np.ndarray:
+        """
+        Returns locations of data object centroids or vertices.
 
-        elev = self.workspace.get_entity(self.params.topography)
-        if elev:
-            elev = elev[0].values
-            if not np.all(self.locations[:, 2] == elev):
-                self.locations[:, 2] = elev
+        :param uid: UUID of geoh5py object containing centroid or
+            vertex location data
+
+        :return: Array shape(*, 3) of x, y, z location data
+
+        """
+
+        locs = super().get_locations(uid)
+
+        if self.params.topography is not None:
+            elev = self.workspace.get_entity(self.params.topography)[0].values
+            if not np.all(locs[:, 2] == elev):
+                locs[:, 2] = elev
+
+        return locs
