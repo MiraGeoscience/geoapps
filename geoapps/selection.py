@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import ipywidgets as widgets
 import numpy as np
 from geoh5py.data import FloatData, IntegerData, ReferencedData
@@ -218,16 +220,15 @@ class ObjectDataSelection(BaseApplication):
 
             data = []
             for value in values:
-                if obj.get_data(value):
-                    data += obj.get_data(value)
-
-                elif any([pg.name == value for pg in obj.property_groups]):
+                if any([pg.uid == value for pg in obj.property_groups]):
                     data += [
                         self.workspace.get_entity(prop)[0]
                         for prop in obj.find_or_create_property_group(
-                            name=value
+                            name=self.data.uid_name_map[value]
                         ).properties
                     ]
+                elif self.workspace.get_entity(value):
+                    data += self.workspace.get_entity(value)
 
             return obj, data
         else:
@@ -245,39 +246,37 @@ class ObjectDataSelection(BaseApplication):
             if getattr(obj, "get_data_list", None) is None:
                 return
 
-            options = [""]
+            options = [["", None]]
 
             if (self.add_groups or self.add_groups == "only") and obj.property_groups:
                 options = (
                     options
-                    + ["-- Groups --"]
-                    + [p_g.name for p_g in obj.property_groups]
+                    + [["-- Groups --", None]]
+                    + [[p_g.name, p_g.uid] for p_g in obj.property_groups]
                 )
 
             if self.add_groups != "only":
-                data_list = obj.get_data_list()
-                options = (
-                    options
-                    + ["--- Channels ---"]
-                    + [
-                        obj.get_data(uid)[0].name
-                        for uid in data_list
-                        if isinstance(obj.get_data(uid)[0], (IntegerData, FloatData))
-                    ]
-                    + ["Z"]
-                )
+                options += [["--- Channels ---", None]]
+                for child in obj.children:
+                    if isinstance(child, (IntegerData, FloatData)):
+                        options += [[child.name, child.uid]]
+
+                options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
 
             value = self.data.value
             self.data.options = options
 
+            self.update_uid_name_map()
+
             if self.select_multiple and any([val in options for val in value]):
                 self.data.value = [val for val in value if val in options]
-            elif value in options:
+            elif value in dict(options).values():
                 self.data.value = value
             elif self.find_label:
                 self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
             self.data.options = []
+            self.data.uid_name_map = {}
 
         self.refresh.value = True
 
@@ -304,6 +303,18 @@ class ObjectDataSelection(BaseApplication):
                 self._objects.observe(self.update_data_list, names="value")
             else:
                 self.objects.options = options
+
+    def update_uid_name_map(self):
+        """
+        Update the dictionary that maps uuid to name.
+        """
+        uid_name = {}
+        for key, value in self.data.options:
+            if isinstance(value, UUID):
+                uid_name[value] = key
+            elif isinstance(value, str) and value in "XYZ":
+                uid_name[value] = value
+        self.data.uid_name_map = uid_name
 
 
 class LineOptions(ObjectDataSelection):

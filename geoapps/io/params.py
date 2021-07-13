@@ -125,8 +125,22 @@ class Params:
         return p
 
     @classmethod
-    def from_dict(cls, ui_json: dict) -> Params:
+    def from_dict(cls, ui_json: dict, **kwargs) -> Params:
         p = cls()
+        for key, arg in kwargs.items():
+            if key == "h5file":
+                key = "geoh5"
+            try:
+                if isinstance(ui_json[key], dict):
+                    if isinstance(arg, dict):
+                        ui_json[key] = arg
+                    else:
+                        ui_json[key]["value"] = arg
+                else:
+                    ui_json[key] = arg
+            except KeyError:
+                continue
+
         p.init_from_dict(ui_json)
         return p
 
@@ -225,12 +239,9 @@ class Params:
         if val is None:
             self._workspace = val
             return
-        p = "workspace"
-        self.validator.validate(p, val, validations[p])
-        if isinstance(val, str):
-            self._workspace = Workspace(val)
-        else:
-            self._workspace = val
+        self.setter_validator(
+            "workspace", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
+        )
 
     @property
     def geoh5(self):
@@ -241,13 +252,21 @@ class Params:
         if val is None:
             self._geoh5 = val
             return
-        p = "geoh5"
-        self.validator.validate(p, val, validations[p])
-        self._geoh5 = val
+        self.setter_validator("geoh5", val)
 
     @property
     def input_file(self):
         return self._input_file
+
+    def setter_validator(self, key: str, value, fun=lambda x: x):
+        if value is None:
+            setattr(self, f"_{key}", value)
+            return
+
+        self.validator.validate(
+            key, value, self.validations[key], self.workspace, self.associations
+        )
+        setattr(self, f"_{key}", fun(value))
 
     def write_input_file(self, name: str = None):
         """Write out a ui.json with the current state of parameters"""
