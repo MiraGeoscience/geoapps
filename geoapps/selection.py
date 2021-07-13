@@ -5,7 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Optional, Union
+from __future__ import annotations
 
 import ipywidgets as widgets
 import numpy as np
@@ -49,7 +49,7 @@ class ObjectDataSelection(BaseApplication):
         self._add_groups = value
 
     @property
-    def data(self) -> Union[Dropdown, SelectMultiple]:
+    def data(self) -> Dropdown | SelectMultiple:
         """
         Data selector
         """
@@ -180,7 +180,7 @@ class ObjectDataSelection(BaseApplication):
             self._data = Dropdown(description="Data: ", options=options)
 
     @property
-    def workspace(self) -> Optional[Workspace]:
+    def workspace(self) -> Workspace | None:
         """
         Target geoh5py workspace
         """

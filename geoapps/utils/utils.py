@@ -5,11 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import gc
 import json
 import os
 import re
-from typing import Dict, Tuple
 
 import dask
 import dask.array as da
@@ -452,8 +453,8 @@ def weighted_average(
 
 
 def window_xy(
-    x: np.ndarray, y: np.ndarray, window: Dict[str, float], mask: np.array = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    x: np.ndarray, y: np.ndarray, window: dict[str, float], mask: np.array = None
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Window x, y coordinates with window limits built from center and size.
 
@@ -508,7 +509,7 @@ def window_xy(
 
 def downsample_xy(
     x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     """
     Downsample locations to approximate a grid with defined spacing.
@@ -546,7 +547,7 @@ def downsample_xy(
 
 def downsample_grid(
     xg: np.ndarray, yg: np.ndarray, distance: float, mask: np.ndarray = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Downsample grid locations to approximate spacing provided by 'distance'.
 

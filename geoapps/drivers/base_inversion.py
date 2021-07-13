@@ -5,8 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from multiprocessing.pool import ThreadPool
-from typing import Union
 from uuid import UUID
 
 import numpy as np
@@ -473,7 +474,7 @@ class InversionDriver:
             self.inversion_upper_bound,
         ]
 
-    def fetch(self, p: Union[str, UUID]):
+    def fetch(self, p: str | UUID):
         """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):

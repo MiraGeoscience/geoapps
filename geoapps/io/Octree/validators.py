@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List
+from __future__ import annotations
+
+from typing import Any
 
 from geoh5py.workspace import Workspace
 
@@ -19,8 +21,8 @@ class OctreeValidator(InputValidator):
 
     def __init__(
         self,
-        requirements: List[str],
-        validations: Dict[str, Any],
+        requirements: list[str],
+        validations: dict[str, Any],
         workspace: Workspace = None,
         input=None,
     ):

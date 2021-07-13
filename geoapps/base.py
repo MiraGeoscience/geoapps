@@ -5,12 +5,13 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
 import time
 import uuid
 from os import mkdir, path
 from shutil import copyfile, move
-from typing import Optional
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.shared import Entity
@@ -42,7 +43,7 @@ class BaseApplication:
     _trigger = None
     _figure = None
     _refresh = None
-    _params: Optional[Params] = None
+    _params: Params | None = None
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
