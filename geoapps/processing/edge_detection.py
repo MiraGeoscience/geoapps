@@ -114,7 +114,7 @@ class EdgeDetectionApp(PlotSelection2D):
         super().__init__(**self.defaults)
 
         # Make changes to trigger warning color
-        self.trigger.description = "Save to GA"
+        self.trigger.description = "Export"
         self.trigger.on_click(self.trigger_click)
         self.trigger.button_style = "success"
 
