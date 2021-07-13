@@ -67,7 +67,7 @@ class InputFile:
             self._filepath = f
 
     def default(self, default_ui) -> None:
-        """ defaults InputFile data using 'default' field of default_ui"""
+        """defaults InputFile data using 'default' field of default_ui"""
 
         for k, v in default_ui.items():
             if isinstance(v, dict):

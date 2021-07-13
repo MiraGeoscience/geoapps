@@ -107,7 +107,7 @@ class InversionDriver:
         client = Client(cluster)
 
     def run(self):
-        """ Run inversion from params """
+        """Run inversion from params"""
 
         # Create SimPEG Survey object
         self.survey = self.inversion_data.survey()
@@ -465,7 +465,7 @@ class InversionDriver:
         return local_misfits
 
     def models(self):
-        """ Return all models with data """
+        """Return all models with data"""
         return [
             self.inversion_starting_model,
             self.inversion_reference_model,
@@ -474,7 +474,7 @@ class InversionDriver:
         ]
 
     def fetch(self, p: Union[str, UUID]):
-        """ Fetch the object addressed by uuid from the workspace. """
+        """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):
             try:

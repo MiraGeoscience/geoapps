@@ -97,27 +97,27 @@ class GravityParams(Params):
         super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
-        """ Wraps Params._set_defaults """
+        """Wraps Params._set_defaults"""
         return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
-        """ Wraps Params.default. """
+        """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
 
     def components(self) -> List[str]:
-        """ Retrieve component names used to index channel, uncertainty data. """
+        """Retrieve component names used to index channel, uncertainty data."""
         return [k.split("_")[0] for k in self.active_set() if "channel" in k]
 
     def uncertainty(self, component: str) -> float:
-        """ Returns uncertainty for chosen data component. """
+        """Returns uncertainty for chosen data component."""
         return self.__getattribute__("_".join([component, "uncertainty"]))
 
     def channel(self, component: str) -> UUID:
-        """ Returns channel uuid for chosen data component. """
+        """Returns channel uuid for chosen data component."""
         return self.__getattribute__("_".join([component, "channel"]))
 
     def window(self) -> Dict[str, float]:
-        """ Returns window dictionary """
+        """Returns window dictionary"""
         win = {
             "center_x": self.window_center_x,
             "center_y": self.window_center_y,
@@ -129,7 +129,7 @@ class GravityParams(Params):
         return win if any([v is not None for v in win.values()]) else None
 
     def offset(self) -> Tuple[List[float], UUID]:
-        """ Returns offset components as list and drape data. """
+        """Returns offset components as list and drape data."""
         offsets = [
             self.receivers_offset_x,
             self.receivers_offset_y,
@@ -140,7 +140,7 @@ class GravityParams(Params):
         return offsets, self.receivers_radar_drape
 
     def model_norms(self) -> List[float]:
-        """ Returns model norm components as a list. """
+        """Returns model norm components as a list."""
         return [
             self.smallness_norm,
             self.x_norm,
@@ -1154,5 +1154,5 @@ class GravityParams(Params):
         self._no_data_value = val
 
     def _init_params(self, inputfile: InputFile) -> None:
-        """ Wraps Params._init_params. """
+        """Wraps Params._init_params."""
         super()._init_params(inputfile, required_parameters, validations)

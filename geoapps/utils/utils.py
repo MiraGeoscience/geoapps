@@ -358,7 +358,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
 
     if order == 0:
         data_trend = np.mean(pts[:, 2]) * np.ones(points[:, 0].shape)
-        print("Removed data mean: {:.6g}".format(data_trend[0]))
+        print(f"Removed data mean: {data_trend[0]:.6g}")
         C = np.r_[0, 0, data_trend]
 
     elif order == 1:
@@ -368,7 +368,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
 
         # evaluate at all data locations
         data_trend = C[0] * points[:, 0] + C[1] * points[:, 1] + C[2]
-        print("Removed linear trend with mean: {:.6g}".format(np.mean(data_trend)))
+        print(f"Removed linear trend with mean: {np.mean(data_trend):.6g}")
 
     elif order == 2:
         # best-fit quadratic curve
@@ -393,7 +393,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
             C,
         ).reshape(points[:, 0].shape)
 
-        print("Removed polynomial trend with mean: {:.6g}".format(np.mean(data_trend)))
+        print(f"Removed polynomial trend with mean: {np.mean(data_trend):.6g}")
     return data_trend, C
 
 
@@ -1121,8 +1121,8 @@ def octree_2_treemesh(mesh):
     nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
 
     cell_sizes = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
-    u_shift, v_shift, w_shift = [np.sum(h[h < 0]) for h in cell_sizes]
-    h1, h2, h3 = [np.abs(h) for h in cell_sizes]
+    u_shift, v_shift, w_shift = (np.sum(h[h < 0]) for h in cell_sizes)
+    h1, h2, h3 = (np.abs(h) for h in cell_sizes)
     x0 = tswCorn + np.array([u_shift, v_shift, w_shift])
 
     ls = np.log2(nCunderMesh).astype(int)
