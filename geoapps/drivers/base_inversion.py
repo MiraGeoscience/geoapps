@@ -496,6 +496,7 @@ class InversionDriver:
             return self.workspace.get_entity(p)[0]
 
     def configure_dask(self):
+        """ Sets Dask config settings. """
 
         if self.params.parallelized:
             if self.params.n_cpu is None:
