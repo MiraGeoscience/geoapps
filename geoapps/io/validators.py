@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List, Tuple, Union
+from __future__ import annotations
+
+from typing import Any
 from uuid import UUID
 
 import numpy as np
@@ -36,8 +38,8 @@ class InputValidator:
 
     def __init__(
         self,
-        requirements: List[str],
-        validations: Dict[str, Any],
+        requirements: list[str],
+        validations: dict[str, Any],
         workspace: Workspace = None,
         input=None,
     ):
@@ -103,9 +105,9 @@ class InputValidator:
         self,
         param: str,
         value: Any,
-        pvalidations: Dict[str, List[Any]],
+        pvalidations: dict[str, list[Any]],
         workspace: Workspace = None,
-        associations: Dict[Union[str, UUID], Union[str, UUID]] = None,
+        associations: dict[str | UUID, str | UUID] = None,
     ) -> None:
         """
         Validates parameter values, types, shapes, and requirements.
@@ -166,7 +168,7 @@ class InputValidator:
             self._validate_parameter_uuid(param, value, ws, parent)
 
     def _validate_parameter_val(
-        self, param: str, value: Any, vvals: List[Union[float, str]]
+        self, param: str, value: Any, vvals: list[float | str]
     ) -> None:
         """Raise ValueError if parameter value is invalid."""
         if value not in vvals:
@@ -174,7 +176,7 @@ class InputValidator:
             raise ValueError(msg)
 
     def _validate_parameter_type(
-        self, param: str, value: Any, vtypes: List[type]
+        self, param: str, value: Any, vtypes: list[type]
     ) -> None:
         """Raise TypeError if parameter type is invalid."""
         isiter = self._isiterable(value)
@@ -186,7 +188,7 @@ class InputValidator:
             raise TypeError(msg)
 
     def _validate_parameter_shape(
-        self, param: str, value: Any, vshape: List[Tuple[int]]
+        self, param: str, value: Any, vshape: list[tuple[int]]
     ) -> None:
         """Raise ValueError if parameter shape is invalid."""
         pshape = np.array(value).shape
@@ -253,7 +255,7 @@ class InputValidator:
         return f"Invalid '{param}' {type}: '{value}'."
 
     def _iterable_validation_msg(
-        self, param: str, type: str, value: Any, validations: List[Any]
+        self, param: str, type: str, value: Any, validations: list[Any]
     ) -> str:
         """Append possibly iterable validations: "Must be (one of): {validations}."."""
 
@@ -267,7 +269,7 @@ class InputValidator:
         return msg
 
     def _validate_requirements(
-        self, input: Dict[str, Any], requirements: List[str] = None
+        self, input: dict[str, Any], requirements: list[str] = None
     ) -> None:
         """
         Ensures that all required input file keys are present.

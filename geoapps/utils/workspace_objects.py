@@ -4,7 +4,10 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-from typing import UUID, Union
+
+from __future__ import annotations
+
+from typing import UUID
 from uuid import UUID
 
 
@@ -14,7 +17,7 @@ class WorkspaceObject:
         self.target = target
         self.param = param
 
-    def fetch(self, p: Union[str, UUID]):
+    def fetch(self, p: str | UUID):
         """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):

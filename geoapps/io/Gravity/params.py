@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List, Tuple, Union
+from __future__ import annotations
+
+from typing import Any
 from uuid import UUID
 
 from ..input_file import InputFile
@@ -20,11 +22,11 @@ class GravityParams(Params):
 
     def __init__(self, **kwargs):
 
-        self.validations: Dict[str, Any] = validations
+        self.validations: dict[str, Any] = validations
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
-        self.associations: Dict[Union[str, UUID], Union[str, UUID]] = None
+        self.associations: dict[str | UUID, str | UUID] = None
         self.forward_only: bool = None
         self.topography_object: UUID = None
         self.topography = None
@@ -104,7 +106,7 @@ class GravityParams(Params):
         """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
 
-    def components(self) -> List[str]:
+    def components(self) -> list[str]:
         """Retrieve component names used to index channel, uncertainty data."""
         return [k.split("_")[0] for k in self.active_set() if "channel" in k]
 
@@ -116,7 +118,7 @@ class GravityParams(Params):
         """Returns channel uuid for chosen data component."""
         return self.__getattribute__("_".join([component, "channel"]))
 
-    def window(self) -> Dict[str, float]:
+    def window(self) -> dict[str, float]:
         """Returns window dictionary"""
         win = {
             "center_x": self.window_center_x,
@@ -128,7 +130,7 @@ class GravityParams(Params):
         }
         return win if any([v is not None for v in win.values()]) else None
 
-    def offset(self) -> Tuple[List[float], UUID]:
+    def offset(self) -> tuple[list[float], UUID]:
         """Returns offset components as list and drape data."""
         offsets = [
             self.receivers_offset_x,
@@ -139,7 +141,7 @@ class GravityParams(Params):
         offsets = offsets if is_offset else None
         return offsets, self.receivers_radar_drape
 
-    def model_norms(self) -> List[float]:
+    def model_norms(self) -> list[float]:
         """Returns model norm components as a list."""
         return [
             self.smallness_norm,

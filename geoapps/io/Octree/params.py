@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 from uuid import UUID
 
 from geoapps.io.Octree import (
@@ -25,7 +27,7 @@ class OctreeParams(Params):
 
     def __init__(self, **kwargs):
 
-        self.validations: Dict[str, Any] = validations
+        self.validations: dict[str, Any] = validations
         self.validator: OctreeValidator = OctreeValidator(
             required_parameters, validations
         )
