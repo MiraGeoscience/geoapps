@@ -795,6 +795,7 @@ class SaveIterationsGeoH5(InversionDirective):
     data_type = {}
     replace_values = False
     no_data_value = None
+    group = False
     reg_fun = ["phi_ms", "phi_msx", "phi_msy", "phi_msz"]
 
     def initialize(self):
@@ -817,6 +818,9 @@ class SaveIterationsGeoH5(InversionDirective):
 
         prop = self.check_mvi_format(prop)
 
+        if self.group:
+            group_name = "Iteration_0"
+
         for ii, channel in enumerate(self.channels):
 
             attr = prop[ii :: len(self.channels)]
@@ -832,8 +836,9 @@ class SaveIterationsGeoH5(InversionDirective):
             )
 
             data.entity_type.name = channel
-            self.data_type[channel] = data.entity_type
 
+            if self.group:
+                self.h5_object.add_data_to_group(data, group_name)
 
         if self.save_objective_function:
             # Save the data.
@@ -874,6 +879,13 @@ class SaveIterationsGeoH5(InversionDirective):
             prop = self.mapping * prop
 
         prop = self.check_mvi_format(prop)
+        if self.group_output:
+            group = self.h5_object.find_or_create_property_group(
+                name=f"Iteration_{self.opt.iter-1}"
+            )
+
+        if self.group:
+            group_name = f"Iteration_{self.opt.iter}"
 
         for ii, channel in enumerate(self.channels):
             attr = prop[ii :: len(self.channels)]
@@ -890,7 +902,7 @@ class SaveIterationsGeoH5(InversionDirective):
                 data.name = f"Iteration_{self.opt.iter}_" + channel
                 data.values = attr
             else:
-                self.h5_object.add_data(
+                data = self.h5_object.add_data(
                     {
                         f"Iteration_{self.opt.iter}_"
                         + channel: {
@@ -900,6 +912,9 @@ class SaveIterationsGeoH5(InversionDirective):
                         }
                     }
                 )
+
+            if self.group:
+                self.h5_object.add_data_to_group(data, group_name)
 
         if self.save_objective_function:
             # Save objective function.
