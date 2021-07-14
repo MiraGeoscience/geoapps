@@ -88,15 +88,23 @@ class InversionDriver:
 
     def _initialize(self):
 
+        out_group = ContainerGroup.create(self.workspace, name=self.params.out_group)
+
         self.inversion_window = InversionWindow(self.workspace, self.params)
 
-        self.inversion_data = InversionData(self.workspace, self.params, self.window)
+        self.inversion_data = InversionData(
+            self.workspace, self.params, self.window, out_group
+        )
 
         self.inversion_topography = InversionTopography(
             self.workspace, self.params, self.window
         )
 
         self.inversion_mesh = InversionMesh(self.workspace, self.params)
+        if self.params.mesh_from_params:
+            self.inversion_mesh.build_from_params(
+                self.inversion_data, self.inversion_topography
+            )
 
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh

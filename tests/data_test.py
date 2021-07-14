@@ -9,6 +9,7 @@
 import numpy as np
 import pytest
 import SimPEG
+from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Grid2D, Points
 from geoh5py.workspace import Workspace
 
@@ -31,22 +32,18 @@ def setup_params(tmp):
     return geotest.make()
 
 
-# input_file = InputFile()
-# input_file.default(default_ui_json)
-# input_file.data["geoh5"] = "./FlinFlon.geoh5"
-# params = MVIParams.from_input_file(input_file)
-# params.topography = "{a603a762-f6cb-4b21-afda-3160e725bf7d}"
-# ws = params.workspace
-# mesh = InversionMesh(params, ws)
-# window = params.window()
-# topo = get_topography(ws, params, mesh, window)
+def test_save_data(tmp_path):
+    ws, params = setup_params(tmp_path)
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
+    out_group = ContainerGroup.create(ws, name=params.out_group)
+    data = InversionData(ws, params, window, out_group)
+    data.save_data()
 
 
 def test_get_uncertainty_component(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, window)
     params.tmi_uncertainty = 1
     data = InversionData(ws, params, window)
     unc = data.get_uncertainty_component("tmi")

@@ -7,14 +7,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.io.params import Params
+    from geoapps.drivers.components import InversionData
     from discretize import TreeMesh
 
 import numpy as np
+from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.workspace import Workspace
 
 from geoapps.io import Params
@@ -55,7 +57,7 @@ class InversionMesh:
         self.params = params
         self.mesh: TreeMesh = None
         self.nC: int = None
-        self.rotation: Dict[str, float] = None
+        self.rotation: dict[str, float] = None
         self.octree_permutation: np.ndarray = None
         self._initialize()
 
@@ -70,9 +72,7 @@ class InversionMesh:
 
         if self.params.mesh_from_params:
 
-            # TODO implement the mesh_from_params option
-            msg = "Cannot currently mesh from parameters. Must provide mesh object."
-            raise NotImplementedError(msg)
+            return
 
         else:
 
@@ -92,3 +92,44 @@ class InversionMesh:
         cc = self.mesh.cell_centers
         cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
         return cc[self.octree_permutation]
+
+    def build_from_params(
+        self,
+        inversion_data: InversionData,
+        inversion_topography: InversionTopography,
+    ):
+
+        # from geoapps.create.octree_mesh import OctreeMesh
+        # octree_params = TODO
+        # OctreeMesh.run(octree_params)
+
+        # topography_locs = inversion_data.set_z_from_topo(inversion_data.locations)
+        print("Creating Global TreeMesh")
+        mesh = mesh_builder_xyz(
+            inversion_data.locations,
+            self.params.core_cell_size(),
+            padding_distance=self.params.padding_distance(),
+            mesh_type="TREE",
+            depth_core=self.params.depth_core,
+        )
+
+        mesh = refine_tree_xyz(
+            mesh,
+            inversion_topography.locations,
+            method="surface",
+            octree_levels=self.params.octree_levels_topo,
+            finalize=False,
+        )
+
+        mesh = refine_tree_xyz(
+            mesh,
+            inversion_data.locations,
+            method="surface",
+            octree_levels=self.params.octree_levels_obs,
+            max_distance=self.params.max_distance,
+            finalize=True,
+        )
+
+        self.mesh = mesh
+        self.nC = self.mesh.nC
+        self.octree_permutation = self.mesh._ubc_order

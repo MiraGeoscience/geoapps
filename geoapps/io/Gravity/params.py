@@ -116,6 +116,18 @@ class GravityParams(Params):
         """ Returns channel uuid for chosen data component. """
         return self.__getattribute__("_".join([component, "channel"]))
 
+    def core_cell_size(self):
+        """ Returns core cell size in all 3 dimensions. """
+        return [self.core_cell_size_x, self.core_cell_size_y, self.core_cell_size_z]
+
+    def padding_distance(self):
+        """ Returns padding distance in all 3 dimensions. """
+        return [
+            self.padding_distance_x,
+            self.padding_distance_y,
+            self.padding_distance_z,
+        ]
+
     def window(self) -> Dict[str, float]:
         """ Returns window dictionary """
         win = {
