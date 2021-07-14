@@ -110,7 +110,7 @@ class SurveyFactory(SimPEGFactory):
 
         if data.keys():
             n_channels = len(data.keys())
-            local_index = np.tile(local_index, n_channels)
+            tiled_local_index = np.tile(local_index, n_channels)
 
         if self.inversion_type == "mvi":
             parameters = self.params.inducing_field_aid()
@@ -127,8 +127,8 @@ class SurveyFactory(SimPEGFactory):
         survey = self.data_module.survey.Survey(source)
 
         if not self.params.forward_only:
-            survey.dobs = self._stack_channels(data)[local_index]
-            survey.std = self._stack_channels(uncertainties)[local_index]
+            survey.dobs = self._stack_channels(data)[tiled_local_index]
+            survey.std = self._stack_channels(uncertainties)[tiled_local_index]
 
         return survey
 

@@ -365,12 +365,10 @@ class InversionData(InversionLocations):
         sim, _ = self.simulation(mesh, active_cells)
         d = sim.dpred(model)
         d = d.compute()
-
-        if np.array(d).ndim == 1:
-            d = [d]
+        d = d.reshape((int(len(d) / len(self.components)), len(self.components)))
 
         for i, c in enumerate(self.components):
-            self.predicted[c] = d[i]
+            self.predicted[c] = d[:, i]
 
         if save:
             if self.is_rotated:
