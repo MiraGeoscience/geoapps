@@ -82,7 +82,7 @@ def octree_2_treemesh(mesh):
 
     nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
 
-    h1, h2, h3 = [np.ones(nr) * np.abs(sz) for nr, sz in zip(nCunderMesh, smallCell)]
+    h1, h2, h3 = (np.ones(nr) * np.abs(sz) for nr, sz in zip(nCunderMesh, smallCell))
 
     x0 = tswCorn - np.array([0, 0, np.sum(h3)])
 
