@@ -4,6 +4,10 @@ default_language_version:
 exclude: (docs/(conf.py|_ext/)|(^geoapps/simpeg(PF|EM1D)/))
 default_stages: [commit,push]
 fail_fast: false
+
+ci:
+    skip: [pylint]
+
 repos:
 -   repo: https://github.com/psf/black
     rev: 21.6b0
@@ -33,11 +37,11 @@ repos:
 #    -   id: mypy
 #        args: ["--ignore-missing-imports", "--scripts-are-modules", "--show-error-context",
 #               "--show-column-numbers"]
-#-   repo: https://github.com/pre-commit/mirrors-pylint
-#    rev: v2.6.0
-#    hooks:
-#    -   id: pylint
-#        exclude: (devtools|docs)/
+-   repo: https://github.com/pre-commit/mirrors-pylint
+    rev: v2.6.0
+    hooks:
+    -   id: pylint
+        exclude: (devtools|docs)/
 -   repo: local
     hooks:
     -   id: check-copyright
