@@ -5,8 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
-from typing import Any, Dict, List, Union
+from typing import Any
 from uuid import UUID
 
 from geoh5py.workspace import Workspace
@@ -63,7 +65,7 @@ class Params:
     """
 
     _default_ui_json = {}
-    associations: Dict[Union[str, UUID], Union[str, UUID]] = None
+    associations: dict[str | UUID, str | UUID] = None
     _workspace: Workspace = None
     _output_geoh5: str = None
     _validator: InputValidator = None
@@ -87,7 +89,7 @@ class Params:
         return self._default_ui_json
 
     @classmethod
-    def from_input_file(cls, input_file: InputFile, **kwargs) -> "Params":
+    def from_input_file(cls, input_file: InputFile, **kwargs) -> Params:
         """Construct Params object from InputFile instance.
 
         Parameters
@@ -107,7 +109,7 @@ class Params:
         return p
 
     @classmethod
-    def from_path(cls, file_path: str, **kwargs) -> "Params":
+    def from_path(cls, file_path: str, **kwargs) -> Params:
         """
         Construct Params object from path to input file.
 
@@ -123,7 +125,7 @@ class Params:
         return p
 
     @classmethod
-    def from_dict(cls, ui_json: dict, **kwargs) -> "Params":
+    def from_dict(cls, ui_json: dict, **kwargs) -> Params:
         p = cls()
         for key, arg in kwargs.items():
             if key == "h5file":
@@ -156,8 +158,8 @@ class Params:
         self.associations = self._input_file.associations
         self._init_params(self._input_file)
 
-    def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
-        """ Populate parameters with default values stored in default_ui. """
+    def _set_defaults(self, default_ui: dict[str, Any]) -> None:
+        """Populate parameters with default values stored in default_ui."""
         for key, value in default_ui.items():
             try:
                 if isinstance(default_ui[key], dict):
@@ -171,10 +173,10 @@ class Params:
     def _init_params(
         self,
         inputfile: InputFile,
-        required_parameters: List[str] = required_parameters,
-        validations: Dict[str, Any] = validations,
+        required_parameters: list[str] = required_parameters,
+        validations: dict[str, Any] = validations,
     ) -> None:
-        """ Overrides default parameter values with input file values. """
+        """Overrides default parameter values with input file values."""
         if getattr(self, "workspace", None) is None:
             self.workspace = Workspace(inputfile.data["geoh5"])
 
@@ -195,23 +197,23 @@ class Params:
                 continue
 
     def is_uuid(self, p: str) -> bool:
-        """ Return true if string contains valid UUID. """
+        """Return true if string contains valid UUID."""
         if isinstance(p, str):
             private_attr = self.__getattribue__("_" + p)
             return True if isinstance(private_attr, UUID) else False
         else:
             pass
 
-    def parent(self, child_id: Union[str, UUID]) -> Union[str, UUID]:
-        """ Returns parent id of provided child id. """
+    def parent(self, child_id: str | UUID) -> str | UUID:
+        """Returns parent id of provided child id."""
         return self.associations[child_id]
 
-    def active_set(self) -> List[str]:
-        """ Retrieve active parameter set (value not None). """
+    def active_set(self) -> list[str]:
+        """Retrieve active parameter set (value not None)."""
         return [k[1:] for k, v in self.__dict__.items() if v is not None]
 
-    def default(self, default_ui: Dict[str, Any], param: str) -> Any:
-        """ Return default value of parameter stored in default_ui_json. """
+    def default(self, default_ui: dict[str, Any], param: str) -> Any:
+        """Return default value of parameter stored in default_ui_json."""
         return default_ui[param]["default"]
 
     @property

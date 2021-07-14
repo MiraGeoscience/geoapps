@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 from uuid import UUID
 
 from geoapps.io.Octree import (
@@ -25,7 +27,7 @@ class OctreeParams(Params):
 
     def __init__(self, **kwargs):
 
-        self.validations: Dict[str, Any] = validations
+        self.validations: dict[str, Any] = validations
         self.validator: OctreeValidator = OctreeValidator(
             required_parameters, validations
         )
@@ -50,11 +52,11 @@ class OctreeParams(Params):
         super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
-        """ Wraps Params._set_defaults """
+        """Wraps Params._set_defaults"""
         return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
-        """ Wraps Params.default. """
+        """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
 
     @property
@@ -121,5 +123,5 @@ class OctreeParams(Params):
         return self._refinements
 
     def _init_params(self, inputfile: InputFile) -> None:
-        """ Wraps Params._init_params. """
+        """Wraps Params._init_params."""
         super()._init_params(inputfile, required_parameters, validations)
