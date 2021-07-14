@@ -108,9 +108,8 @@ class SurveyFactory(SimPEGFactory):
         if local_index is None:
             local_index = np.arange(len(locs))
 
-        if data.keys():
-            n_channels = len(data.keys())
-            tiled_local_index = np.tile(local_index, n_channels)
+        n_channels = len(data.keys())
+        tiled_local_index = np.tile(local_index, n_channels)
 
         if self.inversion_type == "mvi":
             parameters = self.params.inducing_field_aid()
