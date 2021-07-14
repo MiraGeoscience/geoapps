@@ -13,7 +13,7 @@ from .base_inversion import InversionDriver
 
 
 def start_inversion(filepath=None):
-    """ Starts inversion with parameters defined in input file. """
+    """Starts inversion with parameters defined in input file."""
 
     params = MVIParams.from_path(filepath)
     driver = MVIDriver(params)

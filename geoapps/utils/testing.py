@@ -19,7 +19,7 @@ from geoapps.io import InputFile
 
 
 class Geoh5Tester:
-    """ Create temp workspace, copy entities, and setup params class. """
+    """Create temp workspace, copy entities, and setup params class."""
 
     def __init__(self, workspace, path, name, ui=None, params_class=None):
 

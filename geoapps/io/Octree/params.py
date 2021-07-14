@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 from uuid import UUID
 
 from geoapps.io.Octree import (
@@ -25,7 +27,7 @@ class OctreeParams(Params):
 
     def __init__(self, **kwargs):
 
-        self.validations: Dict[str, Any] = validations
+        self.validations: dict[str, Any] = validations
         self.validator: OctreeValidator = OctreeValidator(
             required_parameters, validations
         )
@@ -50,11 +52,11 @@ class OctreeParams(Params):
         super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
-        """ Wraps Params._set_defaults """
+        """Wraps Params._set_defaults"""
         return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
-        """ Wraps Params.default. """
+        """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
 
     @property
@@ -63,15 +65,7 @@ class OctreeParams(Params):
 
     @objects.setter
     def objects(self, val):
-        if val is None:
-            self._objects = val
-            return
-
-        p = "objects"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._objects = UUID(val)
+        self.setter_validator("objects", val, fun=lambda x: UUID(x))
 
     @property
     def u_cell_size(self):
@@ -79,14 +73,7 @@ class OctreeParams(Params):
 
     @u_cell_size.setter
     def u_cell_size(self, val):
-        if val is None:
-            self._u_cell_size = val
-            return
-        p = "u_cell_size"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._u_cell_size = val
+        self.setter_validator("u_cell_size", val)
 
     @property
     def v_cell_size(self):
@@ -94,14 +81,7 @@ class OctreeParams(Params):
 
     @v_cell_size.setter
     def v_cell_size(self, val):
-        if val is None:
-            self._v_cell_size = val
-            return
-        p = "v_cell_size"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._v_cell_size = val
+        self.setter_validator("v_cell_size", val)
 
     @property
     def w_cell_size(self):
@@ -109,14 +89,7 @@ class OctreeParams(Params):
 
     @w_cell_size.setter
     def w_cell_size(self, val):
-        if val is None:
-            self._w_cell_size = val
-            return
-        p = "w_cell_size"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._w_cell_size = val
+        self.setter_validator("w_cell_size", val)
 
     @property
     def horizontal_padding(self):
@@ -124,14 +97,7 @@ class OctreeParams(Params):
 
     @horizontal_padding.setter
     def horizontal_padding(self, val):
-        if val is None:
-            self._horizontal_padding = val
-            return
-        p = "horizontal_padding"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._horizontal_padding = val
+        self.setter_validator("horizontal_padding", val)
 
     @property
     def vertical_padding(self):
@@ -139,14 +105,7 @@ class OctreeParams(Params):
 
     @vertical_padding.setter
     def vertical_padding(self, val):
-        if val is None:
-            self._vertical_padding = val
-            return
-        p = "vertical_padding"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._vertical_padding = val
+        self.setter_validator("vertical_padding", val)
 
     @property
     def depth_core(self):
@@ -154,14 +113,7 @@ class OctreeParams(Params):
 
     @depth_core.setter
     def depth_core(self, val):
-        if val is None:
-            self._depth_core = val
-            return
-        p = "depth_core"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._depth_core = val
+        self.setter_validator("depth_core", val)
 
     @property
     def refinements(self):
@@ -171,5 +123,5 @@ class OctreeParams(Params):
         return self._refinements
 
     def _init_params(self, inputfile: InputFile) -> None:
-        """ Wraps Params._init_params. """
+        """Wraps Params._init_params."""
         super()._init_params(inputfile, required_parameters, validations)

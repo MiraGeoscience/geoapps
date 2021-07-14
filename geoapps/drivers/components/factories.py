@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoapps.io.params import Params
@@ -58,7 +58,7 @@ class SimPEGFactory:
             raise NotImplementedError(msg)
 
     def build(self, *args, **kwargs):
-        """ To be over-ridden in factory implementations. """
+        """To be over-ridden in factory implementations."""
 
 
 class SurveyFactory(SimPEGFactory):
@@ -89,8 +89,8 @@ class SurveyFactory(SimPEGFactory):
     def build(
         self,
         locs: np.ndarray,
-        data: Dict[str, np.ndarray],
-        uncertainties: Dict[str, np.ndarray],
+        data: dict[str, np.ndarray],
+        uncertainties: dict[str, np.ndarray],
         local_index: np.ndarray = None,
     ):
         """
@@ -131,8 +131,8 @@ class SurveyFactory(SimPEGFactory):
 
         return survey
 
-    def _stack_channels(self, channel_data: Dict[str, np.ndarray]):
-        """ Convert dictionary of data/uncertainties to stacked array. """
+    def _stack_channels(self, channel_data: dict[str, np.ndarray]):
+        """Convert dictionary of data/uncertainties to stacked array."""
         return np.vstack([list(channel_data.values())]).ravel()
 
 
@@ -195,8 +195,8 @@ class SimulationFactory(SimPEGFactory):
 
         return sim
 
-    def _get_args(self, active_cells: np.ndarray) -> Dict[str, Any]:
-        """ Return inversion type specific kwargs dict for simulation object. """
+    def _get_args(self, active_cells: np.ndarray) -> dict[str, Any]:
+        """Return inversion type specific kwargs dict for simulation object."""
 
         if self.inversion_type == "mvi":
             args = {
@@ -210,7 +210,7 @@ class SimulationFactory(SimPEGFactory):
         return args
 
     def _get_sens_path(self, tile_id: int) -> str:
-        """ Build path to destination of on-disk sensitivities. """
+        """Build path to destination of on-disk sensitivities."""
         out_dir = os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
 
         if tile_id is None:

@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
@@ -52,11 +52,11 @@ class InversionWindow:
         """
         self.workspace = workspace
         self.params = params
-        self.window: Dict[str, Any] = None
+        self.window: dict[str, Any] = None
         self._initialize()
 
     def _initialize(self) -> None:
-        """ Extract data from workspace using params data. """
+        """Extract data from workspace using params data."""
 
         self.window = self.params.window()
 
@@ -83,7 +83,7 @@ class InversionWindow:
             }
 
     def is_empty(self) -> bool:
-        """ Check if window data is empty. """
+        """Check if window data is empty."""
         center_x_null = True if self.window["center"][0] is None else False
         center_y_null = True if self.window["center"][1] is None else False
         size_x_null = True if self.window["size"][0] is None else False
