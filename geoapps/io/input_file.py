@@ -127,7 +127,7 @@ class InputFile:
 
         out_file = self.filepath
         if name is not None:
-            out_file = op.join(op.dirname(self.filepath), name + ".ui.json")
+            out_file = op.join(self.workpath, name + ".ui.json")
 
         with open(out_file, "w") as f:
             json.dump(self._stringify(out), f, indent=4)
