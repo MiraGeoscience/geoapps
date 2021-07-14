@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
+    from geoh5py.groups import ContainerGroup
     from geoapps.io import Params
     from . import InversionMesh
 
@@ -76,13 +77,19 @@ class InversionData(InversionLocations):
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params, window: Dict[str, Any]):
+    def __init__(
+        self,
+        workspace: Workspace,
+        params: Params,
+        window: Dict[str, Any],
+        out_group: ContainerGroup,
+    ):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
         :param: window: Center and size defining window for data, topography, etc.
         """
-        super().__init__(workspace, params, window)
+        super().__init__(workspace, params, window, out_group)
 
         self.resolution: int = None
         self.offset: List[float] = None
@@ -153,6 +160,7 @@ class InversionData(InversionLocations):
             self.data = self.detrend()
 
         self.data = self.normalize(self.data)
+        self.save_data()
 
     def get_data(self) -> Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray]:
         """
@@ -178,6 +186,16 @@ class InversionData(InversionLocations):
             )
 
         return list(data.keys()), data, uncertainties
+
+    def save_data(self):
+
+        self.create_entity("Data", self.locations)
+
+        for comp in self.components:
+            dnorm = self.normalizations[comp] * self.data[comp]
+            observed_data = self.entity.add_data(
+                {f"Observed_{comp}": {"values": dnorm}}
+            )
 
     def get_data_component(self, component: str) -> np.ndarray:
         """ Get data component (channel) from params data. """
@@ -269,14 +287,14 @@ class InversionData(InversionLocations):
         :return: d: Normalized data.
         """
         d = deepcopy(data)
-        normalizations = []
+        normalizations = {}
         for comp in self.components:
             if comp == "gz":
-                normalizations.append(-1.0)
+                normalizations[comp] = -1.0
                 d[comp] *= -1.0
                 print(f"Sign flip for {comp} component")
             else:
-                normalizations.append(1.0)
+                normalizations[comp] = 1.0
         self.normalizations = normalizations
         return d
 

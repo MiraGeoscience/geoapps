@@ -278,6 +278,15 @@ default_ui_json = {
         "label": "build from parameters?",
         "value": False,
     },
+    "survey_orientation": {
+        "default": None,
+        "group": "Mesh",
+        "visible": False,
+        "dependency": "mesh_from_params",
+        "dependencyType": "show",
+        "label": "survey orientation",
+        "value": None,
+    },
     "core_cell_size_x": {
         "default": None,
         "min": 0.0,
@@ -853,7 +862,11 @@ validations = {
         "uuid": [],
         "types": [str, UUID],
     },
-    "mesh_from_params": {"types": [bool], "reqs": [(True, "core_cell_size_x")]},
+    "mesh_from_params": {
+        "types": [bool],
+        "reqs": [(True, "core_cell_size_x"), (True, "survey_orientation")],
+    },
+    "survey_orientation": {"types": [int, float]},
     "core_cell_size_x": {
         "types": [int, float],
     },
