@@ -76,7 +76,7 @@ class Params:
         ui = deepcopy(self.default_ui_json)
 
         if kwargs.keys():
-            ui.update({k: v for k, v in kwargs if k in ui})
+            ui.update({k: v for k, v in kwargs.items() if k in ui})
             ifile = InputFile()
             ifile.input_from_dict(ui)
             self._init_params(ifile)
@@ -272,6 +272,7 @@ class Params:
                 except KeyError:
                     continue
 
+            self.input_file.workpath = self.workpath
             self.input_file.write_ui_json(
                 input_dict,
                 name=name,
