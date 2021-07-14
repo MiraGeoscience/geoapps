@@ -26,7 +26,7 @@ default_ui_json = {
     "forward_only": {
         "default": False,
         "main": True,
-        "label": "forward model only?",
+        "label": "forward model only",
         "value": False,
     },
     "topography_object": {
@@ -75,7 +75,7 @@ default_ui_json = {
         "default": False,
         "group": "Data",
         "main": True,
-        "label": "use Gz?",
+        "label": "use Gz",
         "value": False,
     },
     "gz_channel": {
@@ -145,7 +145,7 @@ default_ui_json = {
         "default": True,
         "main": True,
         "group": "Receivers Options",
-        "label": "Take z from topography?",
+        "label": "Take z from topography",
         "value": True,
     },
     "receivers_radar_drape": {
@@ -265,7 +265,7 @@ default_ui_json = {
         "group": "Data Options",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "chunk by rows?",
+        "label": "chunk by rows",
         "value": False,
     },
     "output_tile_files": {
@@ -273,7 +273,7 @@ default_ui_json = {
         "group": "Data Options",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "output tile files?",
+        "label": "output tile files",
         "value": False,
     },
     "mesh": {
@@ -286,7 +286,7 @@ default_ui_json = {
     "mesh_from_params": {
         "default": False,
         "group": "Mesh",
-        "label": "build from parameters?",
+        "label": "build from parameters",
         "value": False,
     },
     "core_cell_size_x": {
@@ -296,7 +296,7 @@ default_ui_json = {
         "visible": False,
         "dependency": "mesh_from_params",
         "dependencyType": "show",
-        "label": "core cell size in x",
+        "label": "Core cell size in x",
         "value": 2.0,
     },
     "core_cell_size_y": {
@@ -306,7 +306,7 @@ default_ui_json = {
         "visible": False,
         "dependency": "mesh_from_params",
         "dependencyType": "show",
-        "label": "core cell size in y",
+        "label": "Core cell size in y",
         "value": 2.0,
     },
     "core_cell_size_z": {
@@ -316,7 +316,7 @@ default_ui_json = {
         "visible": False,
         "dependency": "mesh_from_params",
         "dependencyType": "show",
-        "label": "core cell size in z",
+        "label": "Core cell size in z",
         "value": 2.0,
     },
     "octree_levels_topo": {
@@ -327,7 +327,7 @@ default_ui_json = {
         "dependency": "mesh_from_params",
         "dependencyType": "show",
         "optional": True,
-        "label": "octree levels topography",
+        "label": "Octree levels topography",
         "value": [0, 1],
     },
     "octree_levels_obs": {
@@ -338,7 +338,7 @@ default_ui_json = {
         "dependency": "mesh_from_params",
         "dependencyType": "show",
         "optional": True,
-        "label": "octree levels observations",
+        "label": "Octree levels observations",
         "value": [5, 5],
     },
     "octree_levels_padding": {
@@ -349,7 +349,7 @@ default_ui_json = {
         "dependency": "mesh_from_params",
         "dependencyType": "show",
         "optional": True,
-        "label": "octree levels padding",
+        "label": "Octree levels padding",
         "value": [2, 2],
     },
     "depth_core": {
@@ -361,7 +361,7 @@ default_ui_json = {
         "dependency": "mesh_from_params",
         "dependencyType": "show",
         "optional": True,
-        "label": "depth of core refinement volume",
+        "label": "Depth of core refinement volume",
         "value": 100.0,
     },
     "max_distance": {
@@ -373,7 +373,7 @@ default_ui_json = {
         "dependency": "mesh_from_params",
         "dependencyType": "show",
         "optional": True,
-        "label": "maximum padding distance",
+        "label": "Maximum padding distance",
         "value": np.inf,
     },
     "padding_distance_x": {
@@ -383,7 +383,7 @@ default_ui_json = {
         "visible": False,
         "dependency": "mesh_from_params",
         "dependencyType": "show",
-        "label": "padding distance in x",
+        "label": "Padding distance in x",
         "optional": True,
         "value": [0, 0],
     },
@@ -394,7 +394,7 @@ default_ui_json = {
         "visible": False,
         "dependency": "mesh_from_params",
         "dependencyType": "show",
-        "label": "padding distance in y",
+        "label": "Padding distance in y",
         "optional": True,
         "value": [0, 0],
     },
@@ -405,7 +405,7 @@ default_ui_json = {
         "visible": False,
         "dependency": "mesh_from_params",
         "dependencyType": "show",
-        "label": "padding distance in z",
+        "label": "Padding distance in z",
         "optional": True,
         "value": [0, 0],
     },
@@ -414,7 +414,7 @@ default_ui_json = {
         "group": "window",
         "optional": True,
         "enabled": False,
-        "label": "window center easting",
+        "label": "Window center easting",
         "value": 0.0,
     },
     "window_center_y": {
@@ -422,7 +422,7 @@ default_ui_json = {
         "group": "window",
         "optional": True,
         "enabled": False,
-        "label": "window center northing",
+        "label": "Window center northing",
         "value": 0.0,
     },
     "window_width": {
@@ -431,7 +431,7 @@ default_ui_json = {
         "group": "window",
         "optional": True,
         "enabled": False,
-        "label": "window width",
+        "label": "Window width",
         "value": 0.0,
     },
     "window_height": {
@@ -440,7 +440,7 @@ default_ui_json = {
         "group": "window",
         "optional": True,
         "enabled": False,
-        "label": "window height",
+        "label": "Window height",
         "value": 0.0,
     },
     "window_azimuth": {
@@ -448,7 +448,7 @@ default_ui_json = {
         "group": "window",
         "visible": False,
         "enabled": False,
-        "label": "window azimuth",
+        "label": "Window azimuth",
         "value": 0.0,
     },
     "inversion_style": {
@@ -457,7 +457,7 @@ default_ui_json = {
         "default": "voxel",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "inversion style",
+        "label": "Inversion style",
         "value": "voxel",
     },
     "chi_factor": {
@@ -467,7 +467,7 @@ default_ui_json = {
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "chi factor",
+        "label": "Chi factor",
         "value": 1.0,
     },
     "max_iterations": {
@@ -476,7 +476,7 @@ default_ui_json = {
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "max iteration count",
+        "label": "Max iteration count",
         "value": 20,
     },
     "max_cg_iterations": {
@@ -485,7 +485,7 @@ default_ui_json = {
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "max conjugate gradient iteration count",
+        "label": "Max conjugate gradient iteration count",
         "value": 10,
     },
     "max_global_iterations": {
@@ -494,7 +494,7 @@ default_ui_json = {
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "max global iteration count",
+        "label": "Max global iteration count",
         "value": 100,
     },
     "initial_beta_ratio": {
@@ -505,7 +505,7 @@ default_ui_json = {
         "enabled": False,
         "dependency": "initial_beta",
         "dependencyType": "disabled",
-        "label": "initial beta ratio",
+        "label": "Initial beta ratio",
         "value": 1e1,
     },
     "initial_beta": {
@@ -516,7 +516,7 @@ default_ui_json = {
         "enabled": False,
         "dependency": "provide_beta",
         "dependencyType": "enabled",
-        "label": "initial beta",
+        "label": "Initial beta",
         "value": 0.0,
     },
     "tol_cg": {
@@ -525,7 +525,7 @@ default_ui_json = {
         "group": "Optimization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "conjugate gradient tolerance",
+        "label": "Conjugate gradient tolerance",
         "value": 1e-16,
     },
     "alpha_s": {
@@ -534,7 +534,7 @@ default_ui_json = {
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "smallness weight",
+        "label": "Smallness weight",
         "value": 1.0,
     },
     "alpha_x": {
@@ -543,7 +543,7 @@ default_ui_json = {
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "x-smoothness weight",
+        "label": "X-smoothness weight",
         "value": 1.0,
     },
     "alpha_y": {
@@ -552,7 +552,7 @@ default_ui_json = {
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "y-smoothness weight",
+        "label": "Y-smoothness weight",
         "value": 1.0,
     },
     "alpha_z": {
@@ -561,7 +561,7 @@ default_ui_json = {
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "z-smoothness weight",
+        "label": "Z-smoothness weight",
         "value": 1.0,
     },
     "smallness_norm": {
@@ -571,7 +571,7 @@ default_ui_json = {
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "smallness norm",
+        "label": "Smallness norm",
         "value": 2.0,
     },
     "x_norm": {
@@ -581,7 +581,7 @@ default_ui_json = {
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "x-smoothness norm",
+        "label": "X-smoothness norm",
         "value": 2.0,
     },
     "y_norm": {
@@ -591,7 +591,7 @@ default_ui_json = {
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "y-smoothness norm",
+        "label": "Y-smoothness norm",
         "value": 2.0,
     },
     "z_norm": {
@@ -601,7 +601,7 @@ default_ui_json = {
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "z-smoothness norm",
+        "label": "Y-smoothness norm",
         "value": 2.0,
     },
     "reference_model_object": {
@@ -610,7 +610,7 @@ default_ui_json = {
         "visible": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "reference model object",
+        "label": "Reference model object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
@@ -629,7 +629,7 @@ default_ui_json = {
         "visible": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "reference model value",
+        "label": "Reference model value",
         "parent": "reference_model_object",
         "property": None,
         "value": 0.0,
@@ -640,7 +640,7 @@ default_ui_json = {
         "group": "Regularization",
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "gradient type",
+        "label": "Gradient type",
         "value": "total",
     },
     "lower_bound_object": {
@@ -649,7 +649,7 @@ default_ui_json = {
         "visible": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "lower bound object",
+        "label": "Lower bound object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
@@ -668,7 +668,7 @@ default_ui_json = {
         "visible": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "lower bound on model",
+        "label": "Lower bound on model",
         "parent": "lower_bound_object",
         "property": None,
         "value": -1,
@@ -679,7 +679,7 @@ default_ui_json = {
         "visible": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "upper bound object",
+        "label": "Upper bound object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
@@ -698,7 +698,7 @@ default_ui_json = {
         "visible": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "label": "upper bound on model",
+        "label": "Upper bound on model",
         "parent": "upper_bound_object",
         "property": None,
         "value": 1,
@@ -706,7 +706,7 @@ default_ui_json = {
     "parallelized": {
         "default": True,
         "group": "Compute",
-        "label": "use parallelization",
+        "label": "Use parallelization",
         "value": True,
     },
     "n_cpu": {
@@ -717,7 +717,7 @@ default_ui_json = {
         "dependencyType": "enabled",
         "optional": True,
         "enabled": False,
-        "label": "number of cpu",
+        "label": "Number of cpu",
         "value": None,
     },
     "max_ram": {
@@ -728,28 +728,28 @@ default_ui_json = {
         "dependencyType": "enabled",
         "optional": True,
         "enabled": False,
-        "label": "set RAM limit",
+        "label": "Set RAM limit",
         "value": 2,
     },
     "workspace": {
         "default": None,
         "visible": False,
         "enabled": False,
-        "label": "path to workspace",
+        "label": "Path to workspace",
         "value": None,
     },
     "output_geoh5": {
         "default": None,
         "visible": False,
         "enabled": False,
-        "label": "path to results geoh5py file",
+        "label": "Path to results geoh5py file",
         "value": None,
     },
     "out_group": {
         "default": "GravInversion",
         "visible": True,
         "enabled": True,
-        "label": "results group name",
+        "label": "Results group name",
         "value": "GravInversion",
     },
     "no_data_value": {
@@ -758,7 +758,7 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "visible": False,
-        "label": "no data value",
+        "label": "No data value",
         "value": 0,
     },
     "monitoring_directory": {
