@@ -17,33 +17,51 @@ on:
       - hotfix/**
 
 jobs:
-  pre-commit:
-    name: pre-commit
+  pylint:
+    name: pylint
+    strategy:
+      fail-fast: false
+      matrix:
+        python_ver: [3.7]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python version
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.7
-    - name: set PY_HASH
-      run: echo "PY_HASH=$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')" >> $GITHUB_ENV
-    - name: Cache pre-commit tools
-      uses: actions/cache@v2
-      with:
-        path: ~/.cache/pre-commit
-        key: precommit-${{ env.PY_HASH }}-${{ hashFiles('.pre-commit-config.yaml') }}
-        restore-keys: |
-          precommit-${{ env.PY_HASH }}-
-          precommit-
-    - uses: pre-commit/action@v2.0.0
-    - name: Git show refs
-      run: git show-ref
-    - name: Run pre-commit hooks on modified files
-      if: github.event_name == 'pull_request'
-      run: >-
-        git diff --name-only refs/remotes/origin/${{github.base_ref}}... |
-        xargs pre-commit run --hook-stage push --files
-    - name: Run pre-commit hooks on all files
-      if: github.event_name == 'push'
-      run: pre-commit run --hook-stage push --all-files
+      - uses: actions/checkout@v2
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          # Increase this value to reset cache if environment.yml has not changed
+          CACHE_NUMBER: 2
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
+      - name: Setup conda env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: geoapps
+          python-version: ${{ matrix.python_ver }}
+          channel-priority: strict
+          environment-file: environment.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+      - name: Install pytest
+        shell: bash -l {0}
+        run: |
+          conda activate geoapps
+          python --version
+          conda install pytest pylint
+      - name: Run pylint on modified files
+        if: github.event_name == 'pull_request'
+        shell: bash -l {0}
+        run: >-
+          conda activate geoapps
+
+          pylint $(
+          git diff --diff-filter=AM --name-only refs/remotes/origin/${{github.base_ref}}... | grep -E '^(geoapps|tests)/.*\.py$'
+          || echo 'geoapps/__init__.py'
+          )
+      - name: Run pylint on all files
+        if: github.event_name == 'push'
+        shell: bash -l {0}
+        run: |
+          conda activate geoapps
+          pylint geoapps tests
