@@ -54,11 +54,11 @@ class PeakFinderParams(Params):
         super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
-        """ Wraps Params._set_defaults """
+        """Wraps Params._set_defaults"""
         return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
-        """ Wraps Params.default. """
+        """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
 
     @property
@@ -207,5 +207,5 @@ class PeakFinderParams(Params):
         return self._groups
 
     def _init_params(self, inputfile: InputFile) -> None:
-        """ Wraps Params._init_params. """
+        """Wraps Params._init_params."""
         super()._init_params(inputfile, required_parameters, validations)

@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
@@ -55,7 +55,7 @@ class InversionMesh:
         self.params = params
         self.mesh: TreeMesh = None
         self.nC: int = None
-        self.rotation: Dict[str, float] = None
+        self.rotation: dict[str, float] = None
         self.octree_permutation: np.ndarray = None
         self._initialize()
 
@@ -88,7 +88,7 @@ class InversionMesh:
             self.octree_permutation = self.mesh._ubc_order
 
     def original_cc(self) -> np.ndarray:
-        """ Returns the cell centers of the original Octree mesh type. """
+        """Returns the cell centers of the original Octree mesh type."""
         cc = self.mesh.cell_centers
         cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
         return cc[self.octree_permutation]
