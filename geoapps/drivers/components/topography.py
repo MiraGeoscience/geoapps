@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
@@ -43,7 +43,7 @@ class InversionTopography(InversionLocations):
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params, window: Dict[str, Any]):
+    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.

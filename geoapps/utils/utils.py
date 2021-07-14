@@ -5,11 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import gc
 import json
 import os
 import re
-from typing import Dict, Tuple
 
 import dask
 import dask.array as da
@@ -368,7 +369,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
 
     if order == 0:
         data_trend = np.mean(pts[:, 2]) * np.ones(points[:, 0].shape)
-        print("Removed data mean: {:.6g}".format(data_trend[0]))
+        print(f"Removed data mean: {data_trend[0]:.6g}")
         C = np.r_[0, 0, data_trend]
 
     elif order == 1:
@@ -378,7 +379,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
 
         # evaluate at all data locations
         data_trend = C[0] * points[:, 0] + C[1] * points[:, 1] + C[2]
-        print("Removed linear trend with mean: {:.6g}".format(np.mean(data_trend)))
+        print(f"Removed linear trend with mean: {np.mean(data_trend):.6g}")
 
     elif order == 2:
         # best-fit quadratic curve
@@ -403,7 +404,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
             C,
         ).reshape(points[:, 0].shape)
 
-        print("Removed polynomial trend with mean: {:.6g}".format(np.mean(data_trend)))
+        print(f"Removed polynomial trend with mean: {np.mean(data_trend):.6g}")
     return data_trend, C
 
 
@@ -463,8 +464,8 @@ def weighted_average(
 
 
 def window_xy(
-    x: np.ndarray, y: np.ndarray, window: Dict[str, float], mask: np.array = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    x: np.ndarray, y: np.ndarray, window: dict[str, float], mask: np.array = None
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Window x, y coordinates with window limits built from center and size.
 
@@ -519,7 +520,7 @@ def window_xy(
 
 def downsample_xy(
     x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     """
     Downsample locations to approximate a grid with defined spacing.
@@ -557,7 +558,7 @@ def downsample_xy(
 
 def downsample_grid(
     xg: np.ndarray, yg: np.ndarray, distance: float, mask: np.ndarray = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Downsample grid locations to approximate spacing provided by 'distance'.
 
@@ -1120,8 +1121,8 @@ def octree_2_treemesh(mesh):
     nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
 
     cell_sizes = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
-    u_shift, v_shift, w_shift = [np.sum(h[h < 0]) for h in cell_sizes]
-    h1, h2, h3 = [np.abs(h) for h in cell_sizes]
+    u_shift, v_shift, w_shift = (np.sum(h[h < 0]) for h in cell_sizes)
+    h1, h2, h3 = (np.abs(h) for h in cell_sizes)
     x0 = tswCorn + np.array([u_shift, v_shift, w_shift])
 
     ls = np.log2(nCunderMesh).astype(int)

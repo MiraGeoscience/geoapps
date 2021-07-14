@@ -214,7 +214,7 @@ class InputFile:
             raise Exception("Input file must have '.json' extension.")
 
     def create_work_path(self):
-        """ Creates absolute path to input file. """
+        """Creates absolute path to input file."""
         dsep = os.path.sep
         workDir = dsep.join(os.path.dirname(os.path.abspath(self.filename)).split(dsep))
         if len(workDir) > 0:
@@ -225,7 +225,7 @@ class InputFile:
         return workDir
 
     def load(self):
-        """ Loads input file contents to dictionary. """
+        """Loads input file contents to dictionary."""
         with open(self.filename) as f:
             input_dict = json.load(f)
 
@@ -233,7 +233,7 @@ class InputFile:
 
 
 def start_inversion(input_file):
-    """ Starts inversion with parameters defined in input file. """
+    """Starts inversion with parameters defined in input file."""
     inversion(input_file)
 
 

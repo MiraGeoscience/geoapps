@@ -5,8 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from multiprocessing.pool import ThreadPool
-from typing import Union
 from uuid import UUID
 
 import numpy as np
@@ -107,7 +108,7 @@ class InversionDriver:
         client = Client(cluster)
 
     def run(self):
-        """ Run inversion from params """
+        """Run inversion from params"""
 
         # Create SimPEG Survey object
         self.survey = self.inversion_data.survey()
@@ -465,7 +466,7 @@ class InversionDriver:
         return local_misfits
 
     def models(self):
-        """ Return all models with data """
+        """Return all models with data"""
         return [
             self.inversion_starting_model,
             self.inversion_reference_model,
@@ -473,8 +474,8 @@ class InversionDriver:
             self.inversion_upper_bound,
         ]
 
-    def fetch(self, p: Union[str, UUID]):
-        """ Fetch the object addressed by uuid from the workspace. """
+    def fetch(self, p: str | UUID):
+        """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):
             try:
