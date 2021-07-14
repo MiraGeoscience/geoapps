@@ -256,6 +256,7 @@ good-names=i,
            z,
            ex,
            Run,
+           id,
            _
 
 # Include a hint for the correct naming format with invalid-name.
