@@ -294,7 +294,7 @@ class ObjectDataSelection(BaseApplication):
                 obj_list = self._workspace.objects
 
             options = [["", None]] + [
-                [obj.parent.name + "." + obj.name, obj.uid] for obj in obj_list
+                [obj.parent.name + "/" + obj.name, obj.uid] for obj in obj_list
             ]
 
             if value in list(dict(options).values()):  # Silent update
