@@ -879,10 +879,6 @@ class SaveIterationsGeoH5(InversionDirective):
             prop = self.mapping * prop
 
         prop = self.check_mvi_format(prop)
-        if self.group_output:
-            group = self.h5_object.find_or_create_property_group(
-                name=f"Iteration_{self.opt.iter-1}"
-            )
 
         if self.group:
             group_name = f"Iteration_{self.opt.iter}"
