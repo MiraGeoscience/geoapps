@@ -12,9 +12,9 @@ from uuid import UUID
 
 import numpy as np
 from dask import config as dconf
-from dask.distributed import Client, LocalCluster
 from geoh5py.objects import Points
 from SimPEG import (
+    dask,
     data,
     data_misfit,
     directives,
@@ -38,13 +38,9 @@ from .components import (
     InversionWindow,
 )
 
-cluster = LocalCluster(processes=False)
-client = Client(cluster)
-
 
 class InversionDriver:
     def __init__(self, params: Params):
-
         self.params = params
         self.workspace = params.workspace
         self.inversion_type = params.inversion_type
