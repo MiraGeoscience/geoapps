@@ -7,6 +7,8 @@
 
 import sys
 
+from dask.distributed import Client, LocalCluster
+
 from geoapps.io.MVI import MVIParams
 
 from .base_inversion import InversionDriver
@@ -14,6 +16,9 @@ from .base_inversion import InversionDriver
 
 def start_inversion(filepath=None):
     """ Starts inversion with parameters defined in input file. """
+
+    cluster = LocalCluster(processes=False)
+    client = Client(cluster)
 
     params = MVIParams.from_path(filepath)
     driver = MVIDriver(params)

@@ -44,6 +44,7 @@ class SimPEGFactory:
         """
         self.params = params
         self.inversion_type = params.inversion_type
+        from SimPEG import dask
 
         if self.inversion_type == "mvi":
             from SimPEG.potential_fields import magnetics as data_module
@@ -179,10 +180,8 @@ class SimulationFactory(SimPEGFactory):
         :param: tile_id: Identification number of a particular tile.
 
         """
-
         sens_path = self._get_sens_path(tile_id)
         data_dependent_args = self._get_args(active_cells)
-
         sim = self.data_module.simulation.Simulation3DIntegral(
             survey=survey,
             mesh=mesh,
