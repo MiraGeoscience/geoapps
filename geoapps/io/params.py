@@ -5,9 +5,11 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 from copy import deepcopy
-from typing import Any, Dict, List, Union
+from typing import Any
 from uuid import UUID
 
 from geoh5py.workspace import Workspace
@@ -64,7 +66,7 @@ class Params:
     """
 
     _default_ui_json = {}
-    associations: Dict[Union[str, UUID], Union[str, UUID]] = None
+    associations: dict[str | UUID, str | UUID] = None
     _workspace: Workspace = None
     _output_geoh5: str = None
     _validator: InputValidator = None
@@ -91,7 +93,7 @@ class Params:
     @classmethod
     def from_input_file(
         cls, input_file: InputFile, workspace: Workspace = None
-    ) -> "Params":
+    ) -> Params:
         """Construct Params object from InputFile instance.
 
         Parameters
@@ -111,7 +113,7 @@ class Params:
         return p
 
     @classmethod
-    def from_path(cls, file_path: str, workspace: Workspace = None) -> "Params":
+    def from_path(cls, file_path: str, workspace: Workspace = None) -> Params:
         """
         Construct Params object from path to input file.
 
@@ -127,7 +129,7 @@ class Params:
         return p
 
     @classmethod
-    def from_dict(cls, ui_json: dict) -> "Params":
+    def from_dict(cls, ui_json: dict) -> Params:
         p = cls()
         p.init_from_dict(ui_json)
         return p
@@ -146,8 +148,8 @@ class Params:
         self.associations = self._input_file.associations
         self._init_params(self._input_file)
 
-    def _set_defaults(self, default_ui: Dict[str, Any]) -> None:
-        """ Populate parameters with default values stored in default_ui. """
+    def _set_defaults(self, default_ui: dict[str, Any]) -> None:
+        """Populate parameters with default values stored in default_ui."""
         for key, value in default_ui.items():
             try:
                 if isinstance(default_ui[key], dict):
@@ -161,14 +163,13 @@ class Params:
     def _init_params(
         self,
         inputfile: InputFile,
-        required_parameters: List[str] = required_parameters,
-        validations: Dict[str, Any] = validations,
+        required_parameters: list[str] = required_parameters,
+        validations: dict[str, Any] = validations,
         workspace: Workspace = None,
     ) -> None:
-        """ Overrides default parameter values with input file values. """
+        """Overrides default parameter values with input file values."""
 
         self.workspace = workspace
-
         if getattr(self, "workspace", None) is None:
             self.workspace = Workspace(inputfile.data["geoh5"])
 
@@ -189,23 +190,23 @@ class Params:
                 continue
 
     def is_uuid(self, p: str) -> bool:
-        """ Return true if string contains valid UUID. """
+        """Return true if string contains valid UUID."""
         if isinstance(p, str):
             private_attr = self.__getattribue__("_" + p)
             return True if isinstance(private_attr, UUID) else False
         else:
             pass
 
-    def parent(self, child_id: Union[str, UUID]) -> Union[str, UUID]:
-        """ Returns parent id of provided child id. """
+    def parent(self, child_id: str | UUID) -> str | UUID:
+        """Returns parent id of provided child id."""
         return self.associations[child_id]
 
-    def active_set(self) -> List[str]:
-        """ Retrieve active parameter set (value not None). """
+    def active_set(self) -> list[str]:
+        """Retrieve active parameter set (value not None)."""
         return [k[1:] for k, v in self.__dict__.items() if v is not None]
 
-    def default(self, default_ui: Dict[str, Any], param: str) -> Any:
-        """ Return default value of parameter stored in default_ui_json. """
+    def default(self, default_ui: dict[str, Any], param: str) -> Any:
+        """Return default value of parameter stored in default_ui_json."""
         return default_ui[param]["default"]
 
     @property
@@ -231,12 +232,9 @@ class Params:
         if val is None:
             self._workspace = val
             return
-        p = "workspace"
-        self.validator.validate(p, val, validations[p])
-        if isinstance(val, str):
-            self._workspace = Workspace(val)
-        else:
-            self._workspace = val
+        self.setter_validator(
+            "workspace", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
+        )
 
     @property
     def geoh5(self):
@@ -247,13 +245,21 @@ class Params:
         if val is None:
             self._geoh5 = val
             return
-        p = "geoh5"
-        self.validator.validate(p, val, validations[p])
-        self._geoh5 = val
+        self.setter_validator("geoh5", val)
 
     @property
     def input_file(self):
         return self._input_file
+
+    def setter_validator(self, key: str, value, fun=lambda x: x):
+        if value is None:
+            setattr(self, f"_{key}", value)
+            return
+
+        self.validator.validate(
+            key, value, self.validations[key], self.workspace, self.associations
+        )
+        setattr(self, f"_{key}", fun(value))
 
     def write_input_file(self, name: str = None):
         """Write out a ui.json with the current state of parameters"""

@@ -34,7 +34,7 @@ class DataInterpolation(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-        "data": ["Iteration_7_model"],
+        "data": ["{f3e36334-be0a-4210-b13e-06933279de25}"],
         "core_cell_size": "50, 50, 50",
         "depth_core": 500,
         "expansion_fact": 1.05,
@@ -124,11 +124,6 @@ class DataInterpolation(ObjectDataSelection):
         )
         self.method.observe(self.method_update)
         self.out_mode.observe(self.out_update)
-
-        def interpolate_call(_):
-            self.interpolate_call()
-            self.update_objects_choices()
-
         self.parameters = {
             "Method": self.method_panel,
             "Scaling": self.space,
@@ -159,7 +154,7 @@ class DataInterpolation(ObjectDataSelection):
             self.topography.main,
             self.max_depth,
         ]
-        self.trigger.on_click(interpolate_call)
+        self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Interpolate"
 
     @property
@@ -372,7 +367,7 @@ class DataInterpolation(ObjectDataSelection):
         else:
             self.destination_panel.children = [self.out_mode, self.new_grid_panel]
 
-    def interpolate_call(self):
+    def trigger_click(self, _):
 
         for entity in self._workspace.get_entity(self.objects.value):
             if isinstance(entity, ObjectBase):
@@ -473,9 +468,15 @@ class DataInterpolation(ObjectDataSelection):
 
         values, sign, dtype = {}, {}, {}
         for field in self.data.value:
-            model_in = object_from.get_data(field)[0]
-            values[field] = np.asarray(model_in.values, dtype=float).copy()
-            dtype[field] = model_in.values.dtype
+
+            if isinstance(field, str) and field in "XYZ":
+                values[field] = xyz[:, "XYZ".index(field)]
+                dtype[field] = values[field].dtype
+            else:
+                model_in = self.workspace.get_entity(field)[0]
+                values[field] = np.asarray(model_in.values, dtype=float).copy()
+                dtype[field] = model_in.values.dtype
+
             values[field][values[field] == self.no_data_value.value] = np.nan
             if self.space.value == "Log":
                 sign[field] = np.sign(values[field])
@@ -552,8 +553,10 @@ class DataInterpolation(ObjectDataSelection):
             else:
                 topo = topo_obj.centroids
 
-            if self.topography.data.value != "Z":
-                topo[:, 2] = topo_obj.get_data(self.topography.data.value)[0].values
+            if self.topography.data.uid_name_map[self.topography.data.value] != "Z":
+                topo[:, 2] = self.workspace.get_entity(self.topography.data.value)[
+                    0
+                ].values
 
             lin_interp = LinearNDInterpolator(topo[:, :2], topo[:, 2])
             z_interp = lin_interp(xyz_out_orig[:, :2])
@@ -611,13 +614,17 @@ class DataInterpolation(ObjectDataSelection):
                 vals = values_interp[key].astype(dtype[field])
 
             self.object_out.add_data(
-                {key + self.ga_group_name.value: {"values": vals, "type": primitive}}
+                {
+                    self.data.uid_name_map[key]
+                    + self.ga_group_name.value: {"values": vals, "type": primitive}
+                }
             )
 
         if self.live_link.value:
             self.live_link_output(self.export_directory.selected_path, self.object_out)
 
         self.workspace.finalize()
+        self.update_objects_choices()
 
     def object_pick(self, _):
         if self.objects.value in list(dict(self.xy_reference.options).values()):

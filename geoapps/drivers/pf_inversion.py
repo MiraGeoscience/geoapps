@@ -214,7 +214,7 @@ class InputFile:
             raise Exception("Input file must have '.json' extension.")
 
     def create_work_path(self):
-        """ Creates absolute path to input file. """
+        """Creates absolute path to input file."""
         dsep = os.path.sep
         workDir = dsep.join(os.path.dirname(os.path.abspath(self.filename)).split(dsep))
         if len(workDir) > 0:
@@ -225,7 +225,7 @@ class InputFile:
         return workDir
 
     def load(self):
-        """ Loads input file contents to dictionary. """
+        """Loads input file contents to dictionary."""
         with open(self.filename) as f:
             input_dict = json.load(f)
 
@@ -233,7 +233,7 @@ class InputFile:
 
 
 def start_inversion(input_file):
-    """ Starts inversion with parameters defined in input file. """
+    """Starts inversion with parameters defined in input file."""
     inversion(input_file)
 
 
@@ -327,8 +327,10 @@ def inversion(input_file):
         uncertainties = []
         components = []
         for channel, props in input_dict["data"]["channels"].items():
-            if entity.get_data(props["name"]):
-                data.append(entity.get_data(props["name"])[0].values)
+
+            uid = uuid.UUID(props["name"])
+            if uid in [child.uid for child in entity.children]:
+                data.append(workspace.get_entity(uid)[0].values)
             else:
                 assert False, (
                     f"Data {props['name']} could not be found associated with "
@@ -516,8 +518,8 @@ def inversion(input_file):
                         topo = topo_entity.vertices
 
                     if input_dict["topography"]["GA_object"]["data"] != "Z":
-                        data = topo_entity.get_data(
-                            input_dict["topography"]["GA_object"]["data"]
+                        data = workspace.get_entity(
+                            uuid.UUID(input_dict["topography"]["GA_object"]["data"])
                         )[0]
                         topo[:, 2] = data.values
 
@@ -573,11 +575,15 @@ def inversion(input_file):
                 )
                 locations[:, 2] = z_topo
 
-                if entity.get_data(input_dict["receivers_offset"]["radar_drape"][3]):
-                    z_channel = entity.get_data(
-                        input_dict["receivers_offset"]["radar_drape"][3]
-                    )[0].values
-                    locations[:, 2] += z_channel[window_ind]
+                try:
+                    radar_drape = workspace.get_entity(
+                        uuid.UUID(input_dict["receivers_offset"]["radar_drape"][3])
+                    )
+                    if radar_drape:
+                        z_channel = radar_drape[0].values
+                        locations[:, 2] += z_channel[window_ind]
+                except (ValueError, TypeError):
+                    pass
 
             for ind, offset in enumerate(bird_offset):
                 locations[:, ind] += offset
@@ -712,8 +718,6 @@ def inversion(input_file):
             else:
                 input_mesh = octree_2_treemesh(input_mesh)
 
-            # input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2]]
-            print("converting", input_mesh.x0)
         else:
             starting_model = np.r_[input_dict["starting_model"]["value"]]
             assert (
@@ -1066,7 +1070,9 @@ def inversion(input_file):
             workspace = Workspace(input_dict["save_to_geoh5"])
             input_mesh = workspace.get_entity(uuid.UUID(list(input_value.keys())[0]))[0]
 
-            input_model = input_mesh.get_data(list(input_value.values())[0])[0].values
+            input_model = workspace.get_entity(
+                uuid.UUID(list(input_value.values())[0])
+            )[0].values
 
             # Remove null values
             active = ((input_model > 1e-38) * (input_model < 2e-38)) == 0

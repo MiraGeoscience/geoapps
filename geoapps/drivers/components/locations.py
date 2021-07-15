@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -50,7 +50,7 @@ class InversionLocations:
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params, window: Dict[str, Any]):
+    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
         """
         :param workspace: Geoh5py workspace object containing location based data.
         :param params: Params object containing location based data parameters.
@@ -61,7 +61,7 @@ class InversionLocations:
         self.params = params
         self.window = window
         self.mask: np.ndarray = None
-        self.origin: List[float] = None
+        self.origin: list[float] = None
         self.angle: float = None
         self.is_rotated: bool = False
         self.locations: np.ndarray = None
@@ -113,7 +113,7 @@ class InversionLocations:
 
         return locs
 
-    def filter(self, a: Union[Dict[str, np.ndarray], np.ndarray]):
+    def filter(self, a: dict[str, np.ndarray] | np.ndarray):
         """
         Apply accumulated self.mask to array, or dict of arrays.
 
@@ -152,7 +152,7 @@ class InversionLocations:
         return np.c_[xy, locs[:, 2]]
 
     def set_z_from_topo(self, locs: np.ndarray):
-        """ interpolate locations z data from topography. """
+        """interpolate locations z data from topography."""
 
         topo = self.get_locations(self.params.topography_object)
 

@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoapps.io.params import Params
@@ -59,7 +59,7 @@ class SimPEGFactory:
             raise NotImplementedError(msg)
 
     def build(self, *args, **kwargs):
-        """ To be over-ridden in factory implementations. """
+        """To be over-ridden in factory implementations."""
 
 
 class SurveyFactory(SimPEGFactory):
@@ -90,8 +90,8 @@ class SurveyFactory(SimPEGFactory):
     def build(
         self,
         locs: np.ndarray,
-        data: Dict[str, np.ndarray],
-        uncertainties: Dict[str, np.ndarray],
+        data: dict[str, np.ndarray],
+        uncertainties: dict[str, np.ndarray],
         local_index: np.ndarray = None,
     ):
         """
@@ -109,9 +109,8 @@ class SurveyFactory(SimPEGFactory):
         if local_index is None:
             local_index = np.arange(len(locs))
 
-        if data.keys():
-            n_channels = len(data.keys())
-            local_index = np.tile(local_index, n_channels)
+        n_channels = len(data.keys())
+        tiled_local_index = np.tile(local_index, n_channels)
 
         if self.inversion_type == "mvi":
             parameters = self.params.inducing_field_aid()
@@ -128,13 +127,13 @@ class SurveyFactory(SimPEGFactory):
         survey = self.data_module.survey.Survey(source)
 
         if not self.params.forward_only:
-            survey.dobs = self._stack_channels(data)[local_index]
-            survey.std = self._stack_channels(uncertainties)[local_index]
+            survey.dobs = self._stack_channels(data)[tiled_local_index]
+            survey.std = self._stack_channels(uncertainties)[tiled_local_index]
 
         return survey
 
-    def _stack_channels(self, channel_data: Dict[str, np.ndarray]):
-        """ Convert dictionary of data/uncertainties to stacked array. """
+    def _stack_channels(self, channel_data: dict[str, np.ndarray]):
+        """Convert dictionary of data/uncertainties to stacked array."""
         return np.vstack([list(channel_data.values())]).ravel()
 
 
@@ -195,8 +194,8 @@ class SimulationFactory(SimPEGFactory):
 
         return sim
 
-    def _get_args(self, active_cells: np.ndarray) -> Dict[str, Any]:
-        """ Return inversion type specific kwargs dict for simulation object. """
+    def _get_args(self, active_cells: np.ndarray) -> dict[str, Any]:
+        """Return inversion type specific kwargs dict for simulation object."""
 
         if self.inversion_type == "mvi":
             args = {
@@ -210,7 +209,7 @@ class SimulationFactory(SimPEGFactory):
         return args
 
     def _get_sens_path(self, tile_id: int) -> str:
-        """ Build path to destination of on-disk sensitivities. """
+        """Build path to destination of on-disk sensitivities."""
         out_dir = os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
 
         if tile_id is None:
