@@ -26,7 +26,6 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
         ],
         "value": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-        "default": "{656acd40-25de-4865-814c-cb700f6ee51a}",
     },
     "u_cell_size": {
         "enabled": True,
@@ -34,7 +33,6 @@ default_ui_json = {
         "label": "Easting (m)",
         "main": True,
         "value": 25,
-        "default": 25,
     },
     "v_cell_size": {
         "enabled": True,
@@ -42,7 +40,6 @@ default_ui_json = {
         "label": "Northing (m)",
         "main": True,
         "value": 25,
-        "default": 25,
     },
     "w_cell_size": {
         "enabled": True,
@@ -50,7 +47,6 @@ default_ui_json = {
         "label": "Vertical (m)",
         "main": True,
         "value": 25,
-        "default": 25,
     },
     "horizontal_padding": {
         "enabled": True,
@@ -58,7 +54,6 @@ default_ui_json = {
         "label": "Horizontal (m)",
         "main": True,
         "value": 1000.0,
-        "default": 1000.0,
     },
     "vertical_padding": {
         "enabled": True,
@@ -66,7 +61,6 @@ default_ui_json = {
         "label": "Vertical (m)",
         "main": True,
         "value": 1000.0,
-        "default": 1000.0,
     },
     "depth_core": {
         "enabled": True,
@@ -74,14 +68,12 @@ default_ui_json = {
         "label": "Minimum Depth (m)",
         "main": True,
         "value": 500.0,
-        "default": 500.0,
     },
     "ga_group_name": {
         "enabled": True,
         "group": "",
         "label": "Name:",
         "value": "Octree_Mesh",
-        "default": "Octree_Mesh",
     },
     "Refinement A Object": {
         "enabled": True,
@@ -93,14 +85,12 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
         ],
         "value": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-        "default": "{656acd40-25de-4865-814c-cb700f6ee51a}",
     },
     "Refinement A Levels": {
         "enabled": True,
         "group": "Refinement A",
         "label": "Levels",
         "value": "4,4,4",
-        "default": "4,4,4",
     },
     "Refinement A Type": {
         "choiceList": ["surface", "radial"],
@@ -108,14 +98,12 @@ default_ui_json = {
         "group": "Refinement A",
         "label": "Type",
         "value": "radial",
-        "default": "radial",
     },
     "Refinement A Distance": {
         "enabled": True,
         "group": "Refinement A",
         "label": "Distance",
         "value": 1000.0,
-        "default": 1000.0,
     },
     "Refinement B Object": {
         "enabled": True,
@@ -127,14 +115,12 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
         ],
         "value": "",
-        "default": "",
     },
     "Refinement B Levels": {
         "enabled": True,
         "group": "Refinement B",
         "label": "Levels",
         "value": "0,0,2",
-        "default": "0,0,2",
     },
     "Refinement B Type": {
         "choiceList": ["surface", "radial"],
@@ -142,14 +128,12 @@ default_ui_json = {
         "group": "Refinement B",
         "label": "Type",
         "value": "surface",
-        "default": "surface",
     },
     "Refinement B Distance": {
         "enabled": True,
         "group": "Refinement B",
         "label": "Distance",
         "value": 1000.0,
-        "default": 1000.0,
     },
     "run_command": ("geoapps.create.octree_mesh"),
     "monitoring_directory": "",
@@ -221,5 +205,8 @@ validations = {
     },
     "conda_environment_boolean": {
         "types": [bool],
+    },
+    "workspace": {
+        "types": [str, Workspace],
     },
 }

@@ -5,9 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import multiprocessing
 from multiprocessing.pool import ThreadPool
-from typing import Union
 from uuid import UUID
 
 import numpy as np
@@ -104,7 +105,7 @@ class InversionDriver:
         )
 
     def run(self):
-        """ Run inversion from params """
+        """Run inversion from params"""
 
         # Create SimPEG Survey object
         self.survey = self.inversion_data.survey()
@@ -453,7 +454,6 @@ class InversionDriver:
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, local_index, tile_id
             )
-
             ldat = (
                 data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
             )
@@ -462,14 +462,13 @@ class InversionDriver:
                 simulation=lsim,
                 model_map=lmap,
             )
-
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
 
         return local_misfits, dpreds
 
     def models(self):
-        """ Return all models with data """
+        """Return all models with data"""
         return [
             self.inversion_starting_model,
             self.inversion_reference_model,
@@ -477,8 +476,8 @@ class InversionDriver:
             self.inversion_upper_bound,
         ]
 
-    def fetch(self, p: Union[str, UUID]):
-        """ Fetch the object addressed by uuid from the workspace. """
+    def fetch(self, p: str | UUID):
+        """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):
             try:
@@ -492,7 +491,7 @@ class InversionDriver:
             return self.workspace.get_entity(p)[0]
 
     def configure_dask(self):
-        """ Sets Dask config settings. """
+        """Sets Dask config settings."""
 
         if self.params.parallelized:
             if self.params.n_cpu is None:

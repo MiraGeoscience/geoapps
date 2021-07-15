@@ -25,6 +25,7 @@ dependencies:
   - requests
   - empymod
   - ipyfilechooser
+  - mkl=2020.4
   - pip:
     - git+https://github.com/MiraGeoscience/simpeg.git@feature/tiled-simulations
     - geoh5py==0.1.3

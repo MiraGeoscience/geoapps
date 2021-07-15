@@ -15,7 +15,7 @@ from .base_inversion import InversionDriver
 
 
 def start_inversion(filepath=None):
-    """ Starts inversion with parameters defined in input file. """
+    """Starts inversion with parameters defined in input file."""
 
     cluster = LocalCluster(processes=False)
     client = Client(cluster)
