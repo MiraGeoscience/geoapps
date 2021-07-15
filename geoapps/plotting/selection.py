@@ -284,7 +284,7 @@ class PlotSelection2D(ObjectDataSelection):
                     "colorbar": colorbar,
                 },
             )
-
+            plt.show()
             self.indices = ind_filter
             self.contours.contour_set = contour_set
             self.data_count.value = f"Data Count: {ind_filter.sum()}"
