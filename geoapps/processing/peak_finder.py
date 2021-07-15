@@ -950,8 +950,7 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
-        self.figure = plt.figure(figsize=(12, 6))
-        axs = plt.subplot()
+
         if (
             self.pause_refresh
             or getattr(self, "survey", None) is None
@@ -961,6 +960,8 @@ class PeakFinder(ObjectDataSelection):
             or len(self.survey.line_indices) < 2
         ):
             return
+        self.figure = plt.figure(figsize=(12, 6))
+        axs = plt.subplot()
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
             [
@@ -1140,6 +1141,7 @@ class PeakFinder(ObjectDataSelection):
             )
             axs.set_xlabel("Distance (m)")
         axs.grid(True)
+        plt.show()
 
     def plot_decay_curve(self, center, plot_trigger):
         """
@@ -1216,6 +1218,7 @@ class PeakFinder(ObjectDataSelection):
                 axs.set_ylabel("log(V)")
                 axs.set_xlabel("Time (sec)")
                 axs.set_title("Too few channels")
+        plt.show()
 
     def scale_update(self, _):
         """
