@@ -285,16 +285,17 @@ class ObjectDataSelection(BaseApplication):
             value = self.objects.value
 
             if len(self.object_types) > 0:
-                options = [["", None]] + [
-                    [obj.name, obj.uid]
+                obj_list = [
+                    obj
                     for obj in self._workspace.objects
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                options = [["", None]] + [
-                    [value, uid]
-                    for uid, value in self._workspace.list_objects_name.items()
-                ]
+                obj_list = self._workspace.objects
+
+            options = [["", None]] + [
+                [obj.parent.name + "." + obj.name, obj.uid] for obj in obj_list
+            ]
 
             if value in list(dict(options).values()):  # Silent update
                 self.objects.unobserve(self.update_data_list, names="value")
