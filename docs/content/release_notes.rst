@@ -1,5 +1,25 @@
 Release Notes
 =============
+Release 0.5.0 - 2021/07/15
+--------------------------
+
+(Major Release)
+
+**New Application** - Octree Mesh Creation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+New application for the creation of octree meshes with arbitrary refinements around entities.
+
+Application Updates
+^^^^^^^^^^^^^^^^^^^
+
+- Major update to the Peak Finder algorithm and application. New selection panel for the query of channel groups. Faster plotting.
+- Implementation of the ui.json for Peak Finder and Octree Mesh Creation. Parameters can be re-loaded in the
+  Notebook app from the Project Panel.
+- Object and Data selection widgets now use the entities uuid as reference.
+  The name of Objects is displayed with the parent group to facilitate the sorting/selection.
+- Zonge (8 Hz) added to the list of airborne EM systems.
+
 
 Release 0.4.1 - 2021/04/07
 --------------------------
