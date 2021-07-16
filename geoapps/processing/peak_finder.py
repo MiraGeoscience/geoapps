@@ -81,6 +81,7 @@ class PeakFinder(ObjectDataSelection):
     _group_auto = None
     decay_figure = None
     marker = {"left": "<", "right": ">"}
+    plot_result = True
 
     def __init__(self, ui_json=None, **kwargs):
         if ui_json is not None and path.exists(ui_json):
@@ -958,6 +959,7 @@ class PeakFinder(ObjectDataSelection):
             or len(self.active_channels) == 0
             or getattr(self.survey, "line_indices", None) is None
             or len(self.survey.line_indices) < 2
+            or not self.plot_result
         ):
             return
         self.figure = plt.figure(figsize=(12, 6))
@@ -1147,7 +1149,7 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
-        if self.pause_refresh:
+        if self.pause_refresh or not self.plot_result:
             return
 
         if (
