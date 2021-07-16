@@ -44,10 +44,10 @@ class BaseApplication:
     _figure = None
     _refresh = None
     _params: Params | None = None
+    plot_result = False
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
-        self.plot_result = False
         self._file_browser = FileChooser()
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
