@@ -1049,9 +1049,11 @@ def inversion(input_file):
             workspace, name=f"Predicted", vertices=xy_rot, parent=out_group
         )
 
+        data_types = {}
         for ii, (component, norm) in enumerate(zip(survey.components, normalization)):
             val = norm * survey.dobs[ii :: len(survey.components)]
-            point_object.add_data({"Observed_" + component: {"values": val}})
+            obj = point_object.add_data({"Observed_" + component: {"values": val}})
+            data_types[component] = obj.entity_type
 
         mesh_object = treemesh_2_octree(workspace, mesh, parent=out_group)
         mesh_object.rotation = rotation
@@ -1525,6 +1527,7 @@ def inversion(input_file):
                 channels=survey.components,
                 mapping=np.hstack(normalization * rxLoc.shape[0]),
                 attribute="predicted",
+                data_type=data_types,
                 sorting=sorting,
                 save_objective_function=True,
             )

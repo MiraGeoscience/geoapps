@@ -828,14 +828,26 @@ class SaveIterationsGeoH5(InversionDirective):
             if self.sorting is not None:
                 attr = attr[self.sorting]
 
-            data = self.h5_object.add_data(
-                {
-                    f"Iteration_0_"
-                    + channel: {"association": self.association, "values": attr}
-                }
-            )
-
-            data.entity_type.name = channel
+            if channel not in list(self.data_type.keys()):
+                data = self.h5_object.add_data(
+                    {
+                        f"Iteration_0_"
+                        + channel: {"association": self.association, "values": attr}
+                    }
+                )
+                data.entity_type.name = channel
+                self.data_type[channel] = data.entity_type
+            else:
+                data = self.h5_object.add_data(
+                    {
+                        f"Iteration_0_"
+                        + channel: {
+                            "association": self.association,
+                            "values": attr,
+                            "entity_type": self.data_type[channel],
+                        }
+                    }
+                )
 
             if self.group:
                 self.h5_object.add_data_to_group(data, group_name)
