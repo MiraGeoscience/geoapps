@@ -29,7 +29,6 @@ class Geoh5Tester:
         if None not in [ui, params_class]:
 
             self.input_file = InputFile()
-            self.input_file.default(ui)
             self.input_file.data["geoh5"] = None
             self.input_file.data["workspace"] = None
             self.params = params_class.from_input_file(

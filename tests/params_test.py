@@ -14,12 +14,10 @@ import numpy as np
 import pytest
 from geoh5py.workspace import Workspace
 
-from geoapps.io import InputFile, Params
-from geoapps.io.Gravity import GravityParams
+from geoapps.io import InputFile
 from geoapps.io.MVI import MVIParams
 from geoapps.io.MVI.constants import default_ui_json as MVI_defaults
 from geoapps.io.MVI.constants import validations as MVI_validations
-from geoapps.io.Octree import OctreeParams
 from geoapps.utils.testing import Geoh5Tester
 
 workspace = Workspace("./FlinFlon.geoh5")
@@ -120,6 +118,7 @@ def catch_invalid_generator(
             str(invalid_value),
             *(str(v) for v in pvalidations),
         ]
+
     elif validation_type == "type":
         err = TypeError
         types = set(pvalidations + [type(invalid_value)])
@@ -135,6 +134,7 @@ def catch_invalid_generator(
         hasval = len(req) > 1
         preq = req[1] if hasval else req[0]
         ui[preq]["value"] = None
+        ui[preq]["enabled"] = False
         assertions += [str(k) for k in req]
     elif validation_type == "uuid":
         err = (ValueError, IndexError)
@@ -234,7 +234,7 @@ def test_validate_inversion_type(tmp_path):
     newval = "mvic"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "em", "value", workspace=workspace)
-    catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
+    # catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
 
 
 def test_validate_forward_only(tmp_path):
