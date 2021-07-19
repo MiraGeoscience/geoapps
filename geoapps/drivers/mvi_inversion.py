@@ -45,7 +45,7 @@ from .components import InversionMesh, InversionModel
 
 
 def start_inversion(filepath=None):
-    """ Starts inversion with parameters defined in input file. """
+    """Starts inversion with parameters defined in input file."""
 
     params = MVIParams.from_path(filepath)
     driver = InversionDriver(params)
@@ -68,7 +68,7 @@ class InversionDriver:
         # self.results = Workspace(params.output_geoh5)
 
     def fetch(self, p: Union[str, UUID]):
-        """ Fetch the object addressed by uuid from the workspace. """
+        """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):
             try:
@@ -82,7 +82,7 @@ class InversionDriver:
             return self.workspace.get_entity(p)[0]
 
     def run(self):
-        """ Run inversion from params """
+        """Run inversion from params"""
 
         self.configure_dask()
         cluster = LocalCluster(processes=False)
@@ -110,7 +110,7 @@ class InversionDriver:
             self._run_mvi()
 
     def _run_mvi(self):
-        """ Drive mvi inversion from params """
+        """Drive mvi inversion from params"""
 
         # Set some run options
         vector_property = True
@@ -580,7 +580,7 @@ class InversionDriver:
             )
 
     def get_survey(self):
-        """ Populates SimPEG.LinearSurvey object with workspace data """
+        """Populates SimPEG.LinearSurvey object with workspace data"""
 
         components = self.params.components()
         data = []
