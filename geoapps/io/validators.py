@@ -71,8 +71,6 @@ class InputValidator:
     @input.setter
     def input(self, val):
         self._input = val
-        if val is not None:
-            self.validate_input(val)
 
     def validate_input(self, input) -> None:
         """
@@ -91,6 +89,7 @@ class InputValidator:
         it's value/type/shape/requirement validations.
         """
 
+        self.input = input
         self._validate_requirements(input.data)
 
         for k, v in input.data.items():
