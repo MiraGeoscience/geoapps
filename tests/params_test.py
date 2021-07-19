@@ -15,8 +15,33 @@ import pytest
 from geoh5py.workspace import Workspace
 
 from geoapps.io import InputFile, Params
+from geoapps.io.Gravity import GravityParams
 from geoapps.io.MVI import MVIParams
-from geoapps.io.MVI.constants import default_ui_json, validations
+from geoapps.io.MVI.constants import default_ui_json as MVI_defaults
+from geoapps.io.MVI.constants import validations as MVI_validations
+from geoapps.io.Octree import OctreeParams
+from geoapps.utils.testing import Geoh5Tester
+
+workspace = Workspace("./FlinFlon.geoh5")
+
+
+def setup_params(tmp, ui, params_class):
+    geotest = Geoh5Tester(workspace, tmp, "test.geoh5", ui, params_class)
+    geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
+    geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
+    geotest.set_param("gz_channel", "{6de9177a-8277-4e17-b76c-2b8b05dcf23c}")
+    geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
+    geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
+    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    return geotest
+
+
+# def test_inversion_type(tmp_path):
+#     geotest = setup_params(tmp_path, MVI_defaults, MVIParams)
+#     geotest.set_param("inversion_type", "nogood")
+#     ws, params = geotest.make()
+#     assert True
+
 
 ######################  Setup  ###########################
 
@@ -32,12 +57,13 @@ def tmp_input_file(filepath, idict):
 
 def default_test_generator(tmp_path, param, newval):
 
-    d_u_j = deepcopy(default_ui_json)
+    d_u_j = deepcopy(MVI_defaults)
     params = MVIParams()
     assert getattr(params, param) == d_u_j[param]["default"]
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
+    ifile = InputFile()
+    ifile.filepath = filepath
+    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
     params = MVIParams.from_path(filepath, workspace=workspace)
     assert getattr(params, param) == d_u_j[param]["default"]
     with open(filepath) as f:
@@ -73,10 +99,11 @@ def catch_invalid_generator(
         "reqs": "reqs",
         "uuid": "uuid",
     }
-    pvalidations = validations[param][key_map[validation_type]]
+    pvalidations = MVI_validations[param][key_map[validation_type]]
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
+    ifile = InputFile()
+    ifile.filepath = filepath
+    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
     ui[param]["value"] = invalid_value
@@ -136,9 +163,10 @@ def catch_invalid_generator(
 
 def param_test_generator(tmp_path, param, value, workspace=workspace):
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
+    ifile = InputFile()
+    ifile.filepath = filepath
     wrkstr = workspace.h5file
-    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
+    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
     ui[param]["isValue"] = True
@@ -166,10 +194,16 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
 ######################  Tests  ###########################
 
 
+def test_params_initialize():
+    params = MVIParams(core_cell_size=9999, validate=True)
+    assert params.core_cell_size == 9999
+
+
 def test_params_constructors(tmp_path):
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ui = default_ui_json.copy()
+    ifile = InputFile()
+    ifile.filepath = filepath
+    ui = deepcopy(MVI_defaults)
     ui["geoh5"] = wrkstr
     ifile.write_ui_json(ui, default=True)
     params1 = MVIParams.from_path(filepath, workspace=workspace)
@@ -184,6 +218,15 @@ def test_default_generator(tmp_path):
     newval = "mvic"
 
     default_test_generator(tmp_path, param, newval)
+
+
+def test_param_names():
+    assert np.all(MVIParams.param_names == list(MVI_defaults.keys()))
+
+
+def test_active_set():
+    params = MVIParams(workspace=workspace, inversion_type="mvi", core_cell_size=2)
+    params.active_set()
 
 
 def test_validate_inversion_type(tmp_path):

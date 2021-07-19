@@ -20,7 +20,6 @@ from ...utils.geophysical_systems import parameters
 required_parameters = []
 defaults = {}
 
-
 default_ui_json = {
     "title": "Peak Finder Parameters",
     "geoh5": "../../assets/FlinFlon.geoh5",
@@ -69,7 +68,7 @@ default_ui_json = {
         "label": "TEM system",
         "dependency": "tem_checkbox",
         "dependencyType": "enabled",
-        "value": "",
+        "value": None,
     },
     "smoothing": {
         "group": "Detection Parameters",
@@ -86,7 +85,7 @@ default_ui_json = {
     "min_value": {
         "group": "Detection Parameters",
         "label": "Minimum Value",
-        "value": "",
+        "value": None,
         "main": True,
     },
     "min_width": {
@@ -149,7 +148,7 @@ default_ui_json = {
         "parent": "objects",
         "dependency": "group_auto",
         "dependencyType": "disabled",
-        "value": "",
+        "value": None,
     },
     "Property Group Color": {
         "dataType": "Text",
@@ -157,11 +156,11 @@ default_ui_json = {
         "label": "Color",
         "dependency": "group_auto",
         "dependencyType": "disabled",
-        "value": "",
+        "value": None,
     },
     "run_command": ("geoapps.processing.peak_finder"),
     "conda_environment": "geoapps",
-    "monitoring_directory": "",
+    "monitoring_directory": None,
 }
 
 required_parameters = []
@@ -204,7 +203,7 @@ validations = {
     },
     "system": {
         "types": [str],
-        "values": list(parameters().keys()),
+        "values": list(parameters().keys()) + [None],
     },
     "line_field": {
         "types": [str, UUID, int, float],

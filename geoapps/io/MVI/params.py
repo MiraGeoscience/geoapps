@@ -22,10 +22,12 @@ from .constants import default_ui_json, required_parameters, validations
 class MVIParams(Params):
 
     _default_ui_json = default_ui_json
+    _required_parameters = required_parameters
+    _validations = validations
+    param_names = list(default_ui_json.keys())
 
-    def __init__(self, **kwargs):
+    def __init__(self, validate=True, **kwargs):
 
-        self.validations: dict[str, Any] = validations
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
@@ -37,8 +39,18 @@ class MVIParams(Params):
         self.topography_object: UUID = None
         self.topography = None
         self.data_object = None
+        self.tmi_channel_bool = None
         self.tmi_channel = None
         self.tmi_uncertainty = None
+        self.bx_channel_bool = None
+        self.bx_channel = None
+        self.bx_uncertainty = None
+        self.by_channel_bool = None
+        self.by_channel = None
+        self.by_uncertainty = None
+        self.bz_channel_bool = None
+        self.bz_channel = None
+        self.bz_uncertainty = None
         self.starting_model_object = None
         self.starting_inclination_object = None
         self.starting_declination_object = None
@@ -110,7 +122,7 @@ class MVIParams(Params):
         self.no_data_value = None
         self._input_file = InputFile()
 
-        super().__init__(**kwargs)
+        super().__init__(validate, **kwargs)
 
     def _set_defaults(self) -> None:
         """Wraps Params._set_defaults"""
@@ -1470,7 +1482,7 @@ class MVIParams(Params):
 
     @property
     def out_group(self):
-        return ContainerGroup.create(self.workspace, name=self._out_group)
+        return self._out_group
 
     @out_group.setter
     def out_group(self, val):
@@ -1481,7 +1493,7 @@ class MVIParams(Params):
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._out_group = val
+        self._out_group = ContainerGroup.create(self.workspace, name=val)
 
     @property
     def no_data_value(self):

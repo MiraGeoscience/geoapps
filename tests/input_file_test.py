@@ -14,7 +14,8 @@ import numpy as np
 import pytest
 
 from geoapps.io import InputFile
-from geoapps.io.MVI.constants import default_ui_json
+from geoapps.io.MVI.constants import default_ui_json, required_parameters, validations
+from geoapps.io.validators import InputValidator
 
 ######################  Setup  ###########################
 
@@ -39,17 +40,27 @@ def test_filepath_extension():
     assert str(excinfo.value) == msg
 
 
-def test_default():
+def test_blank_construction():
 
-    ifile = InputFile("test.ui.json")
-    ifile.default(default_ui_json)
-    ifile.data
+    ifile = InputFile()
+    assert ifile.is_loaded is False
+
+
+def test_default_construction(tmp_path):
+    ifile = InputFile()
+    ifile.filepath = os.path.join(tmp_path, "test.ui.json")
+    ifile.write_ui_json(default_ui_json, default=True)
+    validator = InputValidator(required_parameters, validations)
+    ifile = InputFile(ifile.filepath, validator)
+    assert ifile.is_loaded
+    assert ifile.is_formatted
+    assert ifile.data["inversion_type"] == "mvi"
 
 
 def test_dict_mapper():
 
     tdict = {"key1": {"key2": {"key3": "yargh"}}}
-    ifile = InputFile("test.ui.json")
+    ifile = InputFile()
     f = lambda y, x: x[:-1] if x == "yargh" else x
     for k, v in tdict.items():
         v = ifile._dict_mapper(k, v, [f])
@@ -62,7 +73,7 @@ def test_stringify():
     tdict = {"test_n": None, "test_l": [1, 2], "test_i": np.inf}
     tdict.update({"test_i2": -np.inf, "choiceList": [1, 2]})
     tdict.update({"meshType": ["asdfas", "dafsdf"]})
-    ifile = InputFile("test.ui.json")
+    ifile = InputFile()
     sdict = ifile._stringify(tdict)
     assert sdict["test_n"] == ""
     assert sdict["test_l"] == "1, 2"
@@ -76,7 +87,7 @@ def test_numify():
 
     tdict = {"test_i": "inf", "test_i2": "-inf", "test_n": ""}
     tdict.update({"test_l": "1, 2", "test_l2": "1,"})
-    ifile = InputFile("test.ui.json")
+    ifile = InputFile()
     ndict = ifile._numify(tdict)
     assert ndict["test_i"] == np.inf
     assert ndict["test_i2"] == -np.inf
@@ -96,15 +107,15 @@ def test_ui_2_py():
     tdict.update({"topography": {"isValue": True, "property": "yep", "value": 2}})
     tdict.update({"topography2": {"isValue": False, "property": "yep", "value": 2}})
     tdict.update({"tmi_channel": {"value": "ldskfjsld"}})
-    ifile = InputFile("test.ui.json")
-    ifile._ui_2_py(tdict)
-    assert ifile.data["run_command"] == "blah"
-    assert ifile.data["inversion_type"] == "mvi"
-    assert ifile.data["detrend_order"] == 0
-    assert ifile.data["detrend_type"] == "all"
-    assert ifile.data["topography"] == 2
-    assert ifile.data["topography2"] == "yep"
-    assert ifile.data["tmi_channel"] == "ldskfjsld"
+    ifile = InputFile()
+    data = ifile._ui_2_py(tdict)
+    assert data["run_command"] == "blah"
+    assert data["inversion_type"] == "mvi"
+    assert data["detrend_order"] == 0
+    assert data["detrend_type"] == "all"
+    assert data["topography"] == 2
+    assert data["topography2"] == "yep"
+    assert data["tmi_channel"] == "ldskfjsld"
 
 
 def test_set_associations():
@@ -128,7 +139,7 @@ def test_set_associations():
             }
         }
     )
-    ifile = InputFile("test.ui.json")
+    ifile = InputFile()
     ifile._set_associations(tdict)
     assert ifile.associations[UUID(f_uuid)] == UUID(o_uuid)
     assert ifile.associations[UUID(f_uuid2)] == UUID(o_uuid2)
@@ -138,19 +149,22 @@ def test_set_associations():
 
 def test_ui_json_io(tmp_path):
 
-    ifile = InputFile(os.path.join(tmp_path, "test.ui.json"))
-    assert not ifile.is_loaded
-    assert not ifile.is_formatted
+    ifile = InputFile()
+    ifile.filepath = os.path.join(tmp_path, "test.ui.json")
     ifile.write_ui_json(default_ui_json, default=True)
-    ifile.read_ui_json(reformat=False)
-    assert ifile.data == d_u_j
-    assert ifile.is_loaded
-    assert not ifile.is_formatted
-    ifile.read_ui_json(reformat=True)
-    assert ifile.is_formatted
-    ifile.data["inversion_type"] = "gravity"
-    ifile.data["forward_only"] = True
+    validator = InputValidator(required_parameters, validations)
+    ifile = InputFile(ifile.filepath, validator)
+    for k, v in d_u_j.items():
+        if isinstance(v, dict):
+            assert ifile.data[k] == v["default"]
+        else:
+            assert ifile.data[k] == v
+    ifile.data["inducing_field_strength"] = 99
     ifile.write_ui_json(default_ui_json, default=False)
-    ifile.read_ui_json(reformat=True)
+    ifile = InputFile(ifile.filepath, validator)
+    assert ifile.data["inducing_field_strength"] == 99
     assert ifile.data["inversion_type"] == "mvi"
-    assert ifile.data["forward_only"] == True
+
+
+def test_validations(tmp_path):
+    assert True

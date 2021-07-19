@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import os
+import warnings
 from copy import deepcopy
 from typing import Any
 from uuid import UUID
@@ -72,23 +72,17 @@ class Params:
     _validator: InputValidator = None
     _ifile: InputFile = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, validate=True, **kwargs):
+        self.update(self.default_ui_json)
+        if kwargs:
+            self.update(kwargs)
+            if validate:
+                ifile = InputFile.from_dict(self.to_dict(), self.validator)
+            else:
+                ifile = InputFile.from_dict(self.to_dict())
 
-        self.workpath: str = os.path.abspath(".")
-        ui = deepcopy(self.default_ui_json)
-
-        if kwargs.keys():
-            ui.update({k: v for k, v in kwargs.items() if k in ui})
-            ifile = InputFile()
-            ifile.input_from_dict(ui)
-            self._init_params(ifile)
-        else:
-            self._set_defaults()
-
-    @property
-    def default_ui_json(self):
-        """Dictionary of default values structured in ANALYST ui.json format"""
-        return self._default_ui_json
+            cls = self.from_input_file(ifile)
+            self.__dict__.update(cls.__dict__)
 
     @classmethod
     def from_input_file(
@@ -101,14 +95,25 @@ class Params:
         input_file : InputFile
             class instance to handle loading input file
         """
-        if not input_file.is_loaded:
-            input_file.read_ui_json()
 
         p = cls()
-        p._ifile = input_file
+        p._input_file = input_file
         p.workpath = input_file.workpath
         p.associations = input_file.associations
-        p._init_params(input_file, workspace=workspace)
+
+        for v in ["geoh5", "workspace"]:
+            if v in input_file.data.keys():
+                if input_file.data[v] is not None:
+                    p.workspace = Workspace(input_file.data[v])
+                    p.geoh5 = Workspace(input_file.data[v])
+            input_file.data.pop(v, None)
+
+        if workspace is not None:
+            p.workspace = (
+                Workspace(workspace) if isinstance(workspace, str) else workspace
+            )
+
+        p.update(input_file.data)
 
         return p
 
@@ -122,42 +127,45 @@ class Params:
         file_path : str
             path to input file.
         """
-
-        input_file = InputFile(file_path)
+        p = cls()
+        input_file = InputFile(file_path, p.validator, workspace)
         p = cls.from_input_file(input_file, workspace)
 
         return p
 
-    @classmethod
-    def from_dict(cls, ui_json: dict) -> Params:
-        p = cls()
-        p.init_from_dict(ui_json)
-        return p
+    @property
+    def default_ui_json(self):
+        """Dictionary of default values structured in ANALYST ui.json format"""
+        return self._default_ui_json
 
-    def init_from_dict(self, ui_json: dict) -> None:
-        """
-        Construct Params object from a dictionary.
+    @property
+    def required_parameters(self):
+        """Parameters required on initialization."""
+        return self._required_parameters
 
-        Parameters
-        ----------
-        ui_json: Dictionary of parameters store in ui.json format
-        """
-        self._input_file = InputFile()
-        self._input_file.input_from_dict(ui_json, required_parameters, validations)
-        self.workpath = self._input_file.workpath
-        self.associations = self._input_file.associations
-        self._init_params(self._input_file)
+    @property
+    def validations(self):
+        """Encoded parameter validator type and associated validations."""
+        return self._validations
 
-    def _set_defaults(self, default_ui: dict[str, Any]) -> None:
-        """Populate parameters with default values stored in default_ui."""
-        for key, value in default_ui.items():
+    def update(self, params_dict: Dict[str, Any], default: bool = False):
+        """Update parameters with dictionary contents."""
+        for key, value in params_dict.items():
             try:
-                if isinstance(default_ui[key], dict):
-                    self.__setattr__(key, value["default"])
+                if isinstance(value, dict):
+                    field = "value"
+                    if default:
+                        field = "default"
+                    elif "isValue" in value.values():
+                        if not value["isValue"]:
+                            field = "property"
+                    setattr(self, key, value[field])
                 else:
-                    self.__setattr__(key, value)
-            except KeyError:
-
+                    setattr(self, key, value)
+            except AttributeError:
+                warnings.warn(
+                    f"Skipping dictionary entry: {key}.  Not a valid attribute."
+                )
                 continue
 
     def _init_params(
@@ -189,6 +197,30 @@ class Params:
             except KeyError:
                 continue
 
+    def to_dict(self, ui_json_format=True):
+        """Return params and values dictionary."""
+
+        if ui_json_format:
+            ui_json = deepcopy(self._default_ui_json)
+            for k in self.param_names:
+                if isinstance(ui_json[k], dict):
+                    field = "value"
+                    if "isValue" in ui_json[k].keys():
+                        if ui_json[k]["isValue"] is False:
+                            field = "property"
+                    ui_json[k][field] = getattr(self, k)
+                else:
+                    ui_json[k] = getattr(self, k)
+
+            return ui_json
+
+        else:
+            return {k: getattr(self, k) for k in self.param_names}
+
+    def active_set(self):
+        """Return list of parameters with non-null entries."""
+        return [k for k, v in self.to_dict().items() if v is not None]
+
     def is_uuid(self, p: str) -> bool:
         """Return true if string contains valid UUID."""
         if isinstance(p, str):
@@ -200,10 +232,6 @@ class Params:
     def parent(self, child_id: str | UUID) -> str | UUID:
         """Returns parent id of provided child id."""
         return self.associations[child_id]
-
-    def active_set(self) -> list[str]:
-        """Retrieve active parameter set (value not None)."""
-        return [k[1:] for k, v in self.__dict__.items() if v is not None]
 
     def default(self, default_ui: dict[str, Any], param: str) -> Any:
         """Return default value of parameter stored in default_ui_json."""
@@ -263,25 +291,30 @@ class Params:
 
     def write_input_file(self, name: str = None):
         """Write out a ui.json with the current state of parameters"""
-        if getattr(self, "input_file", None) is not None:
-            input_dict = self.default_ui_json
-            if self.input_file.input_dict is not None:
-                input_dict = self.input_file.input_dict
 
-            params = {}
-            for key in self.input_file.data.keys():
-                try:
-                    value = getattr(self, key)
-                    if hasattr(value, "h5file"):
-                        value = value.h5file
-                    params[key] = value
-                except KeyError:
-                    continue
-
-            self.input_file.workpath = self.workpath
-            self.input_file.write_ui_json(
-                input_dict,
-                name=name,
-                param_dict=params,
-                workspace=self.workspace.h5file,
-            )
+        ifile = InputFile.from_dict(
+            self.to_dict(), self.required_parameters, self.validations
+        )
+        ifile.write_ui_json(self.default_ui_json, default=False, name=name)
+        # if getattr(self, "input_file", None) is not None:
+        #     input_dict = self.default_ui_json
+        #     if self.input_file.input_dict is not None:
+        #         input_dict = self.input_file.input_dict
+        #
+        #     params = {}
+        #     for key in self.input_file.data.keys():
+        #         try:
+        #             value = getattr(self, key)
+        #             if hasattr(value, "h5file"):
+        #                 value = value.h5file
+        #             params[key] = value
+        #         except KeyError:
+        #             continue
+        #
+        #     self.input_file.workpath = self.workpath
+        #     self.input_file.write_ui_json(
+        #         input_dict,
+        #         name=name,
+        #         param_dict=params,
+        #         workspace=self.workspace.h5file,
+        #     )
