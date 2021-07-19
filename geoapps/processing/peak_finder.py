@@ -86,9 +86,12 @@ class PeakFinder(ObjectDataSelection):
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class.from_path(ui_json)
         else:
-            self.params = self._param_class.from_dict(
-                self._param_class._default_ui_json, **kwargs
-            )
+            if "h5file" in kwargs.keys():
+                kwargs["workspace"] = kwargs.pop("h5file")
+                kwargs["geoh5"] = kwargs["workspace"]
+
+            self.params = self._param_class(**kwargs)
+
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.all_anomalies = []
         self.active_channels = {}

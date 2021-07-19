@@ -5,7 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict
+from typing import Any
 from uuid import UUID
 
 from ..input_file import InputFile
@@ -17,10 +17,12 @@ from .validators import PeakFinderValidator
 class PeakFinderParams(Params):
 
     _default_ui_json = default_ui_json
+    _required_parameters = required_parameters
+    _validations = validations
+    param_names = list(default_ui_json.keys())
 
-    def __init__(self, **kwargs):
+    def __init__(self, validate=True, **kwargs):
 
-        self.validations: Dict[str, Any] = validations
         self.validator: PeakFinderValidator = PeakFinderValidator(
             required_parameters, validations
         )
@@ -40,18 +42,14 @@ class PeakFinderParams(Params):
         self.min_channels = None
         self.max_migration = None
         self.smoothing = None
+        self.system = None
         self.tem_checkbox = None
 
         self.run_command = None
         self.conda_environment = None
-        self._input_file = InputFile()
-        self._input_file.input_from_dict(
-            self.default_ui_json,
-            required_parameters=required_parameters,
-            validations=validations,
-        )
         self._groups = None
-        super().__init__(**kwargs)
+
+        super().__init__(validate, **kwargs)
 
     def _set_defaults(self) -> None:
         """Wraps Params._set_defaults"""

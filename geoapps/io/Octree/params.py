@@ -24,10 +24,12 @@ from ..params import Params
 class OctreeParams(Params):
 
     _default_ui_json = default_ui_json
+    _required_parameters = required_parameters
+    _validations = validations
+    param_names = list(default_ui_json.keys())
 
-    def __init__(self, **kwargs):
+    def __init__(self, validate=True, **kwargs):
 
-        self.validations: dict[str, Any] = validations
         self.validator: OctreeValidator = OctreeValidator(
             required_parameters, validations
         )
@@ -47,9 +49,8 @@ class OctreeParams(Params):
         self.conda_environment = None
         self.conda_environment_boolean = None
         self._refinements = None
-        self._input_file = InputFile()
 
-        super().__init__(**kwargs)
+        super().__init__(validate, **kwargs)
 
     def _set_defaults(self) -> None:
         """Wraps Params._set_defaults"""

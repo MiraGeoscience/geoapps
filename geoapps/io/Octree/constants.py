@@ -71,7 +71,7 @@ default_ui_json = {
     },
     "ga_group_name": {
         "enabled": True,
-        "group": "",
+        "group": None,
         "label": "Name:",
         "value": "Octree_Mesh",
     },
@@ -114,7 +114,7 @@ default_ui_json = {
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
         ],
-        "value": "",
+        "value": None,
     },
     "Refinement B Levels": {
         "enabled": True,
@@ -136,7 +136,7 @@ default_ui_json = {
         "value": 1000.0,
     },
     "run_command": ("geoapps.create.octree_mesh"),
-    "monitoring_directory": "",
+    "monitoring_directory": None,
     "conda_environment": "geoapps",
 }
 
