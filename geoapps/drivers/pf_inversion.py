@@ -375,6 +375,18 @@ def inversion(input_file):
         else:
             xyz_loc = vertices[window_ind, :]
 
+        data = data[window_ind, :]
+        uncertainties = uncertainties[window_ind, :]
+
+        row_full = np.all(np.isnan(data), axis=1) == False
+        xyz_loc = xyz_loc[row_full, :]
+        data = data[row_full, :].ravel()
+        uncertainties = uncertainties[row_full, :].ravel()
+
+        isnan = np.isnan(data)
+        data[isnan] = 0
+        uncertainties[isnan] = np.inf
+
         if "gravity" in input_dict["inversion_type"]:
             receivers = PF.BaseGrav.RxObs(xyz_loc)
             source = PF.BaseGrav.SrcField([receivers])
@@ -386,8 +398,8 @@ def inversion(input_file):
             source = PF.BaseMag.SrcField([receivers], param=inducing_field)
             survey = PF.BaseMag.LinearSurvey(source)
 
-        survey.dobs = data[window_ind, :].ravel()
-        survey.std = uncertainties[window_ind, :].ravel()
+        survey.dobs = data
+        survey.std = uncertainties
         survey.components = components
 
         normalization = []
@@ -791,13 +803,7 @@ def inversion(input_file):
         vector_property = False
         n_blocks = 1
 
-    if "no_data_value" in list(input_dict.keys()):
-        no_data_value = input_dict["no_data_value"]
-    else:
-        if vector_property:
-            no_data_value = 0
-        else:
-            no_data_value = 0
+    no_data_value = np.nan
 
     if "parallelized" in list(input_dict.keys()):
         parallelized = input_dict["parallelized"]
