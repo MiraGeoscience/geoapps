@@ -117,7 +117,3 @@ class OctreeParams(Params):
             self._refinements = self.validator.refinements
 
         return self._refinements
-
-    def _init_params(self, inputfile: InputFile) -> None:
-        """Wraps Params._init_params."""
-        super()._init_params(inputfile, required_parameters, validations)

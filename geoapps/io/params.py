@@ -73,9 +73,9 @@ class Params:
     _ifile: InputFile = None
 
     def __init__(self, validate=True, **kwargs):
-        self.update(self.default_ui_json)
+        self.update(self.default_ui_json, validate=False)
         if kwargs:
-            self.update(kwargs)
+            self.update(kwargs, validate=False)
             if validate:
                 ifile = InputFile.from_dict(self.to_dict(), self.validator)
             else:
@@ -148,10 +148,20 @@ class Params:
         """Encoded parameter validator type and associated validations."""
         return self._validations
 
-    def update(self, params_dict: Dict[str, Any], default: bool = False):
+    def update(self, params_dict: Dict[str, Any], default: bool = False, validate=True):
         """Update parameters with dictionary contents."""
+
         for key, value in params_dict.items():
-            try:
+
+            if not validate:
+                key = f"_{key}"
+
+            if getattr(self, key, "invalid_param") == "invalid_param":
+                warnings.warn(
+                    f"Skipping dictionary entry: {key}.  Not a valid attribute."
+                )
+                continue
+            else:
                 if isinstance(value, dict):
                     field = "value"
                     if default:
@@ -162,40 +172,6 @@ class Params:
                     setattr(self, key, value[field])
                 else:
                     setattr(self, key, value)
-            except AttributeError:
-                warnings.warn(
-                    f"Skipping dictionary entry: {key}.  Not a valid attribute."
-                )
-                continue
-
-    def _init_params(
-        self,
-        inputfile: InputFile,
-        required_parameters: list[str] = required_parameters,
-        validations: dict[str, Any] = validations,
-        workspace: Workspace = None,
-    ) -> None:
-        """Overrides default parameter values with input file values."""
-
-        self.workspace = workspace
-        if getattr(self, "workspace", None) is None:
-            self.workspace = Workspace(inputfile.data["geoh5"])
-
-        if inputfile.data["geoh5"] is None:
-            self.output_geoh5 = self.workspace
-        else:
-            self.geoh5 = Workspace(inputfile.data["geoh5"])
-
-        self.validator.workspace = self.workspace
-        self.validator.input = inputfile  # Triggers validations
-
-        for param, value in inputfile.data.items():
-            try:
-                if param in ["workspace", "geoh5"]:
-                    continue
-                self.__setattr__(param, value)
-            except KeyError:
-                continue
 
     def to_dict(self, ui_json_format=True):
         """Return params and values dictionary."""

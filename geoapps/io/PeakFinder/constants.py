@@ -160,6 +160,12 @@ default_ui_json = {
     },
     "run_command": ("geoapps.processing.peak_finder"),
     "conda_environment": "geoapps",
+    "property_group_data": None,
+    "property_group_color": None,
+    "workspace_geoh5": None,
+    "run_command_boolean": None,
+    "conda_environment_boolean": None,
+    "workspace": None,
     "monitoring_directory": None,
 }
 
@@ -184,19 +190,10 @@ validations = {
     "flip_sign": {
         "types": [bool],
     },
-    "structural_markers": {
-        "types": [bool],
-    },
-    "group_auto": {
-        "types": [bool],
-    },
-    "property_group_data": {
-        "types": [str, UUID],
+    "line_field": {
+        "types": [str, UUID, int, float],
         "reqs": [("objects")],
-        "property_groups": ["objects"],
-    },
-    "property_group_color": {
-        "types": [str],
+        "uuid": ["objects"],
     },
     "tem_checkbox": {
         "types": [bool],
@@ -204,14 +201,6 @@ validations = {
     "system": {
         "types": [str],
         "values": list(parameters().keys()) + [None],
-    },
-    "line_field": {
-        "types": [str, UUID, int, float],
-        "reqs": [("objects")],
-        "uuid": ["objects"],
-    },
-    "line_id": {
-        "types": [int, float],
     },
     "smoothing": {
         "types": [int, float],
@@ -231,29 +220,46 @@ validations = {
     "min_channels": {
         "types": [int, float],
     },
+    "ga_group_name": {
+        "types": [str],
+    },
+    "structural_markers": {
+        "types": [bool],
+    },
+    "line_id": {
+        "types": [int, float],
+    },
+    "group_auto": {
+        "types": [bool],
+    },
     "center": {
         "types": [int, float],
     },
     "width": {
         "types": [int, float],
     },
-    "ga_group_name": {
+    "run_command": {
+        "types": [str],
+    },
+    "conda_environment": {
         "types": [str],
     },
     "monitoring_directory": {
         "types": [str],
     },
+    "property_group_data": {
+        "types": [str, UUID],
+        "reqs": [("objects")],
+        "property_groups": ["objects"],
+    },
+    "property_group_color": {
+        "types": [str],
+    },
     "workspace_geoh5": {
         "types": [str, Workspace],
     },
-    "run_command": {
-        "types": [str],
-    },
     "run_command_boolean": {
         "types": [bool],
-    },
-    "conda_environment": {
-        "types": [str],
     },
     "conda_environment_boolean": {
         "types": [bool],

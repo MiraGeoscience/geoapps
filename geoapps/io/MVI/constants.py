@@ -94,7 +94,7 @@ default_ui_json = {
         "label": "Elevation",
         "parent": "topography_object",
         "property": None,
-        "value": 0.0,
+        "value": None,
     },
     "data_object": {
         "default": None,
@@ -561,14 +561,6 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "label": "Window height",
-        "value": 0.0,
-    },
-    "window_azimuth": {
-        "default": None,
-        "group": "window",
-        "visible": False,
-        "enabled": False,
-        "label": "Window azimuth",
         "value": 0.0,
     },
     "inversion_style": {
@@ -1145,9 +1137,6 @@ validations = {
     "window_height": {
         "types": [int, float],
     },
-    "window_azimuth": {
-        "types": [int, float],
-    },
     "inversion_style": {
         "types": [str],
         "values": ["voxel"],
@@ -1224,13 +1213,13 @@ validations = {
         "values": ["total", "components"],
     },
     "lower_bound_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "lower_bound": {
         "types": [str, int, float, UUID],
     },
     "upper_bound_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "upper_bound": {
         "types": [str, int, float, UUID],
