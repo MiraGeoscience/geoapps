@@ -1178,7 +1178,3 @@ class GravityParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._no_data_value = val
-
-    def _init_params(self, inputfile: InputFile, workspace: Workspace = None) -> None:
-        """Wraps Params._init_params."""
-        super()._init_params(inputfile, required_parameters, validations, workspace)

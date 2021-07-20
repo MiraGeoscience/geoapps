@@ -112,14 +112,24 @@ class MVIParams(Params):
         self.reference_inclination = None
         self.reference_declination = None
         self.gradient_type = None
+        self.lower_bound_object = None
         self.lower_bound = None
+        self.upper_bound_object = None
         self.upper_bound = None
         self.parallelized = None
         self.n_cpu = None
         self.max_ram = None
         self.inversion_type = None
         self.out_group = None
+        self.output_geoh5 = None
         self.no_data_value = None
+        self.monitoring_directory = None
+        self.workspace_geoh5 = None
+        self.geoh5 = None
+        self.run_command = None
+        self.run_command_boolean = None
+        self.conda_environment = None
+        self.conda_environment_boolean = None
         self._input_file = InputFile()
 
         super().__init__(validate, **kwargs)
@@ -1406,6 +1416,21 @@ class MVIParams(Params):
         self._gradient_type = val
 
     @property
+    def lower_bound_object(self):
+        return self._lower_bound_object
+
+    @lower_bound_object.setter
+    def lower_bound_object(self, val):
+        if val is None:
+            self._lower_bound_object = val
+            return
+        p = "lower_bound_object"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._lower_bound_object = UUID(val) if isinstance(val, str) else val
+
+    @property
     def lower_bound(self):
         return self._lower_bound
 
@@ -1419,6 +1444,21 @@ class MVIParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._lower_bound = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def upper_bound_object(self):
+        return self._upper_bound_object
+
+    @upper_bound_object.setter
+    def upper_bound_object(self, val):
+        if val is None:
+            self._upper_bound_object = val
+            return
+        p = "upper_bound_object"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._upper_bound_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def upper_bound(self):
@@ -1496,6 +1536,21 @@ class MVIParams(Params):
         self._out_group = ContainerGroup.create(self.workspace, name=val)
 
     @property
+    def output_geoh5(self):
+        return self._output_geoh5
+
+    @output_geoh5.setter
+    def output_geoh5(self, val):
+        if val is None:
+            self._output_geoh5 = val
+            return
+        p = "output_geoh5"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._output_geoh5 = val
+
+    @property
     def no_data_value(self):
         return self._no_data_value
 
@@ -1510,6 +1565,107 @@ class MVIParams(Params):
         )
         self._no_data_value = val
 
-    def _init_params(self, inputfile: InputFile, workspace: Workspace = None) -> None:
-        """Wraps Params._init_params."""
-        super()._init_params(inputfile, required_parameters, validations, workspace)
+    @property
+    def monitoring_directory(self):
+        return self._monitoring_directory
+
+    @monitoring_directory.setter
+    def monitoring_directory(self, val):
+        if val is None:
+            self._monitoring_directory = val
+            return
+        p = "monitoring_directory"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._monitoring_directory = val
+
+    @property
+    def workspace_geoh5(self):
+        return self._workspace_geoh5
+
+    @workspace_geoh5.setter
+    def workspace_geoh5(self, val):
+        if val is None:
+            self._workspace_geoh5 = val
+            return
+        p = "workspace_geoh5"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._workspace_geoh5 = val
+
+    @property
+    def geoh5(self):
+        return self._geoh5
+
+    @geoh5.setter
+    def geoh5(self, val):
+        if val is None:
+            self._geoh5 = val
+            return
+        p = "geoh5"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._geoh5 = val
+
+    @property
+    def run_command(self):
+        return self._run_command
+
+    @run_command.setter
+    def run_command(self, val):
+        if val is None:
+            self._run_command = val
+            return
+        p = "run_command"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._run_command = val
+
+    @property
+    def run_command_boolean(self):
+        return self._run_command_boolean
+
+    @run_command_boolean.setter
+    def run_command_boolean(self, val):
+        if val is None:
+            self._run_command_boolean = val
+            return
+        p = "run_command_boolean"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._run_command_boolean = val
+
+    @property
+    def conda_environment(self):
+        return self._conda_environment
+
+    @conda_environment.setter
+    def conda_environment(self, val):
+        if val is None:
+            self._conda_environment = val
+            return
+        p = "conda_environment"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._conda_environment = val
+
+    @property
+    def conda_environment_boolean(self):
+        return self._conda_environment_boolean
+
+    @conda_environment_boolean.setter
+    def conda_environment_boolean(self, val):
+        if val is None:
+            self._conda_environment_boolean = val
+            return
+        p = "conda_environment_boolean"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._conda_environment_boolean = val

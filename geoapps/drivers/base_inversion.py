@@ -13,9 +13,9 @@ from uuid import UUID
 
 import numpy as np
 from dask import config as dconf
+from dask.distributed import Client, LocalCluster
 from geoh5py.objects import Points
 from SimPEG import (
-    dask,
     data,
     data_misfit,
     directives,
@@ -88,6 +88,8 @@ class InversionDriver:
 
     def _initialize(self):
 
+        cluster = LocalCluster(processes=False)
+        client = Client(cluster)
         self.configure_dask()
 
         self.inversion_window = InversionWindow(self.workspace, self.params)
@@ -498,4 +500,4 @@ class InversionDriver:
                 self.params.n_cpu = int(multiprocessing.cpu_count() / 2)
 
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
-            dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
+            dconf.set(scheduler="threads", pool=ThreadPool(2 * self.params.n_cpu))

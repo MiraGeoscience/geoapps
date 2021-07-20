@@ -27,26 +27,29 @@ class PeakFinderParams(Params):
             required_parameters, validations
         )
 
+        self.title = None
         self.geoh5 = None
         self.objects = None
         self.data = None
-        self.ga_group_name = None
-
+        self.flip_sign = None
         self.line_field = None
+        self.tem_checkbox = None
+        self.system = None
+        self.smoothing = None
+        self.min_amplitude = None
+        self.min_value = None
+        self.min_width = None
+        self.max_migration = None
+        self.min_channels = None
+        self.ga_group_name = None
+        self.structural_markers = None
         self.line_id = None
-        self.monitoring_directory = None
+        self.group_auto = None
         self.center = None
         self.width = None
-        self.min_width = None
-        self.min_amplitude = None
-        self.min_channels = None
-        self.max_migration = None
-        self.smoothing = None
-        self.system = None
-        self.tem_checkbox = None
-
         self.run_command = None
         self.conda_environment = None
+        self.monitoring_directory = None
         self._groups = None
 
         super().__init__(validate, **kwargs)
@@ -58,6 +61,14 @@ class PeakFinderParams(Params):
     def default(self, param) -> Any:
         """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, val):
+        self.setter_validator("title", val)
 
     @property
     def center(self):
@@ -203,7 +214,3 @@ class PeakFinderParams(Params):
             self._groups = self.validator.groups
 
         return self._groups
-
-    def _init_params(self, inputfile: InputFile) -> None:
-        """Wraps Params._init_params."""
-        super()._init_params(inputfile, required_parameters, validations)
