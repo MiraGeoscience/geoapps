@@ -12,12 +12,10 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.io import Params
-    from . import InversionMesh
 
 from copy import deepcopy
 
 import numpy as np
-from dask.distributed import get_client
 from discretize import TreeMesh
 from geoh5py.objects import Points
 from SimPEG import maps
@@ -365,15 +363,12 @@ class InversionData(InversionLocations):
 
         sim, _ = self.simulation(mesh, active_cells)
         prediction = sim.dpred(model)
+        d = prediction.compute()
 
-        client = get_client()
-        d = client.gather(client.compute(prediction))
-
-        if np.array(d).ndim == 1:
-            d = [d]
+        d = d.reshape((int(len(d) / len(self.components)), len(self.components)))
 
         for i, c in enumerate(self.components):
-            self.predicted[c] = d[i]
+            self.predicted[c] = d[:, i]
 
         if save:
             if self.is_rotated:
