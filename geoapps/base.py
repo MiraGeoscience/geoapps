@@ -324,6 +324,7 @@ class BaseApplication:
     def h5file(self, value):
         self._h5file = value
         self._workspace_geoh5 = value
+        self._working_directory = None
         self._file_browser.reset(
             path=self.working_directory,
             filename=path.basename(self._h5file),
