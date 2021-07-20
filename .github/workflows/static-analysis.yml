@@ -48,7 +48,7 @@ jobs:
         run: |
           conda activate geoapps
           python --version
-          conda install pytest pylint
+          conda install --file dev-extra-requirements.txt
       - name: Run pylint on modified files
         if: github.event_name == 'pull_request'
         shell: bash -l {0}
