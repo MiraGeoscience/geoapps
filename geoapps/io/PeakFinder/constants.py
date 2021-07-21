@@ -22,17 +22,19 @@ defaults = {}
 
 default_ui_json = {
     "title": "Peak Finder Parameters",
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": None,
     "objects": {
+        "default": None,
         "main": True,
         "group": "Data",
         "label": "Object",
         "meshType": [
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
         ],
-        "value": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+        "value": None,
     },
     "data": {
+        "default": None,
         "association": "Vertex",
         "dataType": "Float",
         "group": "Data",
@@ -40,29 +42,33 @@ default_ui_json = {
         "dataGroupType": "Multi-element",
         "label": "Channels",
         "parent": "objects",
-        "value": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}",
+        "value": None,
     },
     "flip_sign": {
+        "default": False,
         "main": True,
         "group": "Data",
         "label": "Flip sign",
         "value": False,
     },
     "line_field": {
+        "default": None,
         "association": "Vertex",
         "dataType": "Float",
         "group": "Data",
         "main": True,
         "label": "Line Field",
         "parent": "objects",
-        "value": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}",
+        "value": None,
     },
     "tem_checkbox": {
+        "default": True,
         "main": True,
         "label": "TEM type",
         "value": True,
     },
     "system": {
+        "default": None,
         "choiceList": list(parameters().keys()),
         "main": True,
         "label": "TEM system",
@@ -71,42 +77,49 @@ default_ui_json = {
         "value": None,
     },
     "smoothing": {
+        "default": 6,
         "group": "Detection Parameters",
         "label": "Smoothing window",
         "main": True,
         "value": 6,
     },
     "min_amplitude": {
+        "default": 1,
         "group": "Detection Parameters",
         "label": "Minimum Amplitude (%)",
         "value": 1,
         "main": True,
     },
     "min_value": {
+        "default": None,
         "group": "Detection Parameters",
         "label": "Minimum Value",
         "value": None,
         "main": True,
     },
     "min_width": {
+        "default": 100,
         "group": "Detection Parameters",
         "label": "Minimum Width (m)",
         "value": 100,
         "main": True,
     },
     "max_migration": {
+        "default": 25,
         "group": "Detection Parameters",
         "label": "Maximum Peak Migration (m)",
         "value": 25,
         "main": True,
     },
     "min_channels": {
+        "default": 1,
         "group": "Detection Parameters",
         "label": "Minimum # Channels",
         "value": 1,
         "main": True,
     },
     "ga_group_name": {
+        "default": "PeakFinder",
         "visible": True,
         "enabled": True,
         "main": True,
@@ -115,28 +128,30 @@ default_ui_json = {
         "value": "PeakFinder",
     },
     "structural_markers": {
+        "default": False,
         "main": True,
         "group": "Python run preferences",
         "label": "Export all markers",
         "value": False,
     },
-    "line_id": 6073400.0,
+    "line_id": None,
     "group_auto": {
+        "default": True,
         "label": "Auto-group",
         "value": True,
     },
     "center": {
+        "default": None,
         "group": "Window",
         "label": "Window center",
-        "value": 4050,
-        "default": 4050,
+        "value": None,
         "visible": False,
     },
     "width": {
+        "default": None,
         "group": "Window",
         "label": "Window width",
-        "value": 1000,
-        "default": 1000,
+        "value": None,
         "visible": False,
     },
     "Property Group Data": {
@@ -159,12 +174,12 @@ default_ui_json = {
         "value": None,
     },
     "run_command": ("geoapps.processing.peak_finder"),
+    "run_command_boolean": None,
     "conda_environment": "geoapps",
+    "conda_environment_boolean": None,
     "property_group_data": None,
     "property_group_color": None,
     "workspace_geoh5": None,
-    "run_command_boolean": None,
-    "conda_environment_boolean": None,
     "workspace": None,
     "monitoring_directory": None,
 }
@@ -241,11 +256,14 @@ validations = {
     "run_command": {
         "types": [str],
     },
+    "run_command_boolean": {
+        "types": [bool],
+    },
     "conda_environment": {
         "types": [str],
     },
-    "monitoring_directory": {
-        "types": [str],
+    "conda_environment_boolean": {
+        "types": [bool],
     },
     "property_group_data": {
         "types": [str, UUID],
@@ -258,13 +276,20 @@ validations = {
     "workspace_geoh5": {
         "types": [str, Workspace],
     },
-    "run_command_boolean": {
-        "types": [bool],
-    },
-    "conda_environment_boolean": {
-        "types": [bool],
-    },
     "workspace": {
         "types": [str, Workspace],
     },
+    "monitoring_directory": {
+        "types": [str],
+    },
+}
+
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+    "data": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}",
+    "line_field": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}",
+    "line_id": 6073400.0,
+    "center": 4050,
+    "width": 1000,
 }

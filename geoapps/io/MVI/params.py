@@ -130,7 +130,6 @@ class MVIParams(Params):
         self.run_command_boolean = None
         self.conda_environment = None
         self.conda_environment_boolean = None
-        self._input_file = InputFile()
 
         super().__init__(validate, **kwargs)
 

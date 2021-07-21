@@ -16,6 +16,7 @@ from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
+from geoapps.io.Octree.constants import app_initializer
 from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
 from geoapps.utils.utils import string_2_list, treemesh_2_octree
@@ -36,15 +37,15 @@ class OctreeMesh(ObjectDataSelection):
     _vertical_padding = None
 
     def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class.from_path(ui_json)
         else:
-            if "h5file" in kwargs.keys():
-                path = kwargs.pop("h5file")
-                if "geoh5" not in kwargs.keys():
-                    kwargs["geoh5"] = path
+            if "h5file" in app_initializer.keys():
+                app_initializer["workspace"] = app_initializer.pop("h5file")
+                app_initializer["geoh5"] = app_initializer["workspace"]
 
-            self.params = self._param_class(**kwargs)
+            self.params = self._param_class(**app_initializer)
 
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.refinement_list = VBox([])

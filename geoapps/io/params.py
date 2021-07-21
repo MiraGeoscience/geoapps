@@ -81,6 +81,12 @@ class Params:
             else:
                 ifile = InputFile.from_dict(self.to_dict())
 
+            if "workspace" in kwargs:
+                ifile.data["workspace"] = kwargs["workspace"]
+            if "geoh5" in kwargs:
+                ifile.data["workspace"] = kwargs["geoh5"]
+
+            self._input_file = ifile
             cls = self.from_input_file(ifile)
             self.__dict__.update(cls.__dict__)
 
@@ -104,8 +110,10 @@ class Params:
         for v in ["geoh5", "workspace"]:
             if v in input_file.data.keys():
                 if input_file.data[v] is not None:
-                    p.workspace = Workspace(input_file.data[v])
-                    p.geoh5 = Workspace(input_file.data[v])
+                    ws_param = input_file.data[v]
+                    ws = Workspace(ws_param) if isinstance(ws_param, str) else ws_param
+                    p.workspace = ws
+                    p.geoh5 = ws
             input_file.data.pop(v, None)
 
         if workspace is not None:
@@ -153,6 +161,9 @@ class Params:
 
         for key, value in params_dict.items():
 
+            if " " in key:
+                continue
+
             if not validate:
                 key = f"_{key}"
 
@@ -179,14 +190,20 @@ class Params:
         if ui_json_format:
             ui_json = deepcopy(self._default_ui_json)
             for k in self.param_names:
+                if " " in k:
+                    continue
+                newval = getattr(self, k)
                 if isinstance(ui_json[k], dict):
                     field = "value"
                     if "isValue" in ui_json[k].keys():
                         if ui_json[k]["isValue"] is False:
                             field = "property"
-                    ui_json[k][field] = getattr(self, k)
+                    if ui_json[k][field] != newval:
+                        ui_json[k]["enabled"] = True
+                        ui_json[k]["visible"] = True
+                    ui_json[k][field] = newval
                 else:
-                    ui_json[k] = getattr(self, k)
+                    ui_json[k] = newval
 
             return ui_json
 
@@ -255,7 +272,8 @@ class Params:
     def input_file(self):
         return self._input_file
 
-    def setter_validator(self, key: str, value, fun=lambda x: x):
+    def setter_validator(self, key: str, value, promote_type=None, fun=lambda x: x):
+
         if value is None:
             setattr(self, f"_{key}", value)
             return
@@ -263,7 +281,11 @@ class Params:
         self.validator.validate(
             key, value, self.validations[key], self.workspace, self.associations
         )
-        setattr(self, f"_{key}", fun(value))
+        if promote_type is not None:
+            if isinstance(value, promote_type):
+                value = fun(value)
+
+        setattr(self, f"_{key}", value)
 
     def write_input_file(self, name: str = None):
         """Write out a ui.json with the current state of parameters"""

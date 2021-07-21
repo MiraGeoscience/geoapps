@@ -46,7 +46,7 @@ from geoapps.utils.formatters import string_name
 from geoapps.utils.utils import LineDataDerivatives, hex_to_rgb, running_mean
 
 from ..io.PeakFinder import PeakFinderParams
-from ..io.PeakFinder.constants import default_ui_json
+from ..io.PeakFinder.constants import app_initializer, default_ui_json
 
 _default_channel_groups = {
     "early": {"label": ["early"], "color": "#0000FF", "channels": []},
@@ -83,14 +83,15 @@ class PeakFinder(ObjectDataSelection):
     marker = {"left": "<", "right": ">"}
 
     def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class.from_path(ui_json)
         else:
-            if "h5file" in kwargs.keys():
-                kwargs["workspace"] = kwargs.pop("h5file")
-                kwargs["geoh5"] = kwargs["workspace"]
+            if "h5file" in app_initializer.keys():
+                app_initializer["workspace"] = app_initializer.pop("h5file")
+                app_initializer["geoh5"] = app_initializer["workspace"]
 
-            self.params = self._param_class(**kwargs)
+            self.params = self._param_class(**app_initializer)
 
         self.defaults = self.update_defaults(**self.params.__dict__)
         self.all_anomalies = []
