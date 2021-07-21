@@ -218,9 +218,9 @@ default_ui_json = {
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 0.0,
         "group": "Starting Model",
-        "isValue": False,
+        "isValue": True,
         "parent": "starting_model_object",
         "label": "Starting model value",
         "property": None,
@@ -229,9 +229,9 @@ default_ui_json = {
     "starting_inclination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 0.0,
         "group": "Starting Model",
-        "isValue": False,
+        "isValue": True,
         "parent": "starting_inclination_object",
         "label": "Starting inclination value",
         "property": None,
@@ -240,9 +240,9 @@ default_ui_json = {
     "starting_declination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 0.0,
         "group": "Starting Model",
-        "isValue": False,
+        "isValue": True,
         "parent": "starting_declination_object",
         "label": "Starting declination value",
         "property": None,
@@ -310,7 +310,7 @@ default_ui_json = {
     "gps_receivers_offset": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 0.0,
         "group": "Receivers Options",
         "enabled": False,
         "visible": False,
@@ -334,7 +334,7 @@ default_ui_json = {
     },
     "resolution": {
         "min": 0.0,
-        "default": None,
+        "default": 0.0,
         "group": "Data Options",
         "optional": True,
         "enabled": False,
@@ -410,7 +410,7 @@ default_ui_json = {
         "value": False,
     },
     "core_cell_size_x": {
-        "default": None,
+        "default": 2.0,
         "min": 0.0,
         "group": "Mesh",
         "visible": False,
@@ -420,7 +420,7 @@ default_ui_json = {
         "value": 2.0,
     },
     "core_cell_size_y": {
-        "default": None,
+        "default": 2.0,
         "min": 0.0,
         "group": "Mesh",
         "visible": False,
@@ -430,7 +430,7 @@ default_ui_json = {
         "value": 2.0,
     },
     "core_cell_size_z": {
-        "default": None,
+        "default": 2.0,
         "min": 0.0,
         "group": "Mesh",
         "visible": False,
@@ -473,7 +473,7 @@ default_ui_json = {
         "value": [2, 2],
     },
     "depth_core": {
-        "default": 100,
+        "default": 100.0,
         "min": 0,
         "group": "Mesh",
         "enabled": False,
@@ -530,7 +530,7 @@ default_ui_json = {
         "value": [0, 0],
     },
     "window_center_x": {
-        "default": None,
+        "default": 0.0,
         "group": "window",
         "optional": True,
         "enabled": False,
@@ -538,7 +538,7 @@ default_ui_json = {
         "value": 0.0,
     },
     "window_center_y": {
-        "default": None,
+        "default": 0.0,
         "group": "window",
         "optional": True,
         "enabled": False,
@@ -546,7 +546,7 @@ default_ui_json = {
         "value": 0.0,
     },
     "window_width": {
-        "default": None,
+        "default": 0.0,
         "min": 0.0,
         "group": "window",
         "optional": True,
@@ -555,7 +555,7 @@ default_ui_json = {
         "value": 0.0,
     },
     "window_height": {
-        "default": None,
+        "default": 0.0,
         "min": 0.0,
         "group": "window",
         "optional": True,
@@ -621,7 +621,7 @@ default_ui_json = {
         "value": 1e2,
     },
     "initial_beta": {
-        "default": None,
+        "default": 0.0,
         "min": 0.0,
         "group": "Optimization",
         "optional": True,

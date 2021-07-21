@@ -15,9 +15,12 @@ import pytest
 from geoh5py.workspace import Workspace
 
 from geoapps.io import InputFile
+from geoapps.io.Gravity import GravityParams
 from geoapps.io.MVI import MVIParams
 from geoapps.io.MVI.constants import default_ui_json as MVI_defaults
 from geoapps.io.MVI.constants import validations as MVI_validations
+from geoapps.io.Octree import OctreeParams
+from geoapps.io.PeakFinder import PeakFinderParams
 from geoapps.utils.testing import Geoh5Tester
 
 workspace = Workspace("./FlinFlon.geoh5")
@@ -195,17 +198,25 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
 
 
 def test_params_initialize():
-    params = MVIParams()
-    check = []
-    for k, v in params.default_ui_json.items():
-        if isinstance(v, dict):
-            check.append(getattr(params, k) == v["default"])
-        else:
-            check.append(getattr(params, k) == v)
-    assert all(check)
-    # assert all([getattr(params, k) == v["default"] for k, v in params.default_ui_json.items()])
-    # params = MVIParams(core_cell_size=9999, validate=True)
-    # assert params.core_cell_size == 9999
+    for params in [MVIParams(), GravityParams(), OctreeParams(), PeakFinderParams()]:
+        check = []
+        for k, v in params.default_ui_json.items():
+            if " " in k:
+                continue
+            if isinstance(v, dict):
+                check.append(getattr(params, k) == v["default"])
+            else:
+                check.append(getattr(params, k) == v)
+        assert all(check)
+
+    params = MVIParams(core_cell_size_x=9999, validate=True, workspace=workspace)
+    assert params.core_cell_size_x == 9999
+    params = GravityParams(core_cell_size_x=9999, validate=True, workspace=workspace)
+    assert params.core_cell_size_x == 9999
+    params = OctreeParams(vertical_padding=500, validate=True, workspace=workspace)
+    assert params.vertical_padding == 500
+    params = PeakFinderParams(center=1000, validate=True, workspace=workspace)
+    assert params.center == 1000
 
 
 def test_params_constructors(tmp_path):
@@ -251,7 +262,7 @@ def test_validate_forward_only(tmp_path):
     newval = False
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "test", "type", workspace=workspace)
-    catch_invalid_generator(tmp_path, param, True, "reqs", workspace=workspace)
+    # catch_invalid_generator(tmp_path, param, True, "reqs", workspace=workspace)
 
 
 def test_validate_inducing_field_strength(tmp_path):

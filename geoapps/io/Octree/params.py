@@ -28,6 +28,7 @@ class OctreeParams(Params):
         self.validator: OctreeValidator = OctreeValidator(
             required_parameters, validations
         )
+        self.title = None
         self.geoh5 = None
         self.objects = None
         self.u_cell_size = None
@@ -37,12 +38,13 @@ class OctreeParams(Params):
         self.vertical_padding = None
         self.depth_core = None
         self.ga_group_name = None
-        self.monitoring_directory = None
-        self.workspace_geoh5 = None
         self.run_command = None
         self.run_command_boolean = None
+        self.monitoring_directory = None
+        self.workspace_geoh5 = None
         self.conda_environment = None
         self.conda_environment_boolean = None
+        self.workspace = None
         self._refinements = None
 
         super().__init__(validate, **kwargs)
@@ -56,12 +58,28 @@ class OctreeParams(Params):
         return super().default(self.default_ui_json, param)
 
     @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, val):
+        self.setter_validator("title", val)
+
+    @property
+    def geoh5(self):
+        return self._geoh5
+
+    @geoh5.setter
+    def geoh5(self, val):
+        self.setter_validator("geoh5", val)
+
+    @property
     def objects(self):
         return self._objects
 
     @objects.setter
     def objects(self, val):
-        self.setter_validator("objects", val, fun=lambda x: UUID(x))
+        self.setter_validator("objects", val, promote_type=str, fun=lambda x: UUID(x))
 
     @property
     def u_cell_size(self):
@@ -110,6 +128,70 @@ class OctreeParams(Params):
     @depth_core.setter
     def depth_core(self, val):
         self.setter_validator("depth_core", val)
+
+    @property
+    def ga_group_name(self):
+        return self._ga_group_name
+
+    @ga_group_name.setter
+    def ga_group_name(self, val):
+        self.setter_validator("ga_group_name", val)
+
+    @property
+    def run_command(self):
+        return self._run_command
+
+    @run_command.setter
+    def run_command(self, val):
+        self.setter_validator("run_command", val)
+
+    @property
+    def run_command_boolean(self):
+        return self._run_command_boolean
+
+    @run_command_boolean.setter
+    def run_command_boolean(self, val):
+        self.setter_validator("run_command_boolean", val)
+
+    @property
+    def monitoring_directory(self):
+        return self._monitoring_directory
+
+    @monitoring_directory.setter
+    def monitoring_directory(self, val):
+        self.setter_validator("monitoring_directory", val)
+
+    @property
+    def workspace_geoh5(self):
+        return self._workspace_geoh5
+
+    @workspace_geoh5.setter
+    def workspace_geoh5(self, val):
+        self.setter_validator("workspace_geoh5", val)
+
+    @property
+    def conda_environment(self):
+        return self._conda_environment
+
+    @conda_environment.setter
+    def conda_environment(self, val):
+        self.setter_validator("conda_environment", val)
+
+    @property
+    def conda_environment_boolean(self):
+        return self._conda_environment_boolean
+
+    @conda_environment_boolean.setter
+    def conda_environment_boolean(self, val):
+        self.setter_validator("conda_environment_boolean", val)
+
+    @property
+    def workspace(self):
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, val):
+        self.setter_validator("workspace", val)
 
     @property
     def refinements(self):
