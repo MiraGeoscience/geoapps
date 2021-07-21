@@ -195,8 +195,17 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
 
 
 def test_params_initialize():
-    params = MVIParams(core_cell_size=9999, validate=True)
-    assert params.core_cell_size == 9999
+    params = MVIParams()
+    check = []
+    for k, v in params.default_ui_json.items():
+        if isinstance(v, dict):
+            check.append(getattr(params, k) == v["default"])
+        else:
+            check.append(getattr(params, k) == v)
+    assert all(check)
+    # assert all([getattr(params, k) == v["default"] for k, v in params.default_ui_json.items()])
+    # params = MVIParams(core_cell_size=9999, validate=True)
+    # assert params.core_cell_size == 9999
 
 
 def test_params_constructors(tmp_path):
