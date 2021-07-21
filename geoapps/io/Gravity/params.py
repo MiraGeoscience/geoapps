@@ -110,6 +110,7 @@ class GravityParams(Params):
         self.run_command = None
         self.run_command_boolean = None
         self.conda_environment = None
+        self.conda_environment_boolean = None
 
         super().__init__(validate, **kwargs)
 
@@ -132,8 +133,8 @@ class GravityParams(Params):
     def components(self) -> List[str]:
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
-        for k, v in self.__dict__.item():
-            if ("channel_bool" in k) & (v == True):
+        for k, v in self.__dict__.items():
+            if ("channel_bool" in k) & (v is True):
                 comps.append(k.split("_")[1])
         return comps
 
@@ -1336,3 +1337,18 @@ class GravityParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._conda_environment = val
+
+    @property
+    def conda_environment_boolean(self):
+        return self._conda_environment_boolean
+
+    @conda_environment_boolean.setter
+    def conda_environment_boolean(self, val):
+        if val is None:
+            self._conda_environment_boolean = val
+            return
+        p = "conda_environment_boolean"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._conda_environment_boolean = val
