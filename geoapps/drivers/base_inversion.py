@@ -16,6 +16,7 @@ from dask import config as dconf
 from dask.distributed import Client, LocalCluster
 from geoh5py.objects import Points
 from SimPEG import (
+    dask,
     data,
     data_misfit,
     directives,
@@ -38,6 +39,9 @@ from .components import (
     InversionTopography,
     InversionWindow,
 )
+
+cluster = LocalCluster(processes=False)
+client = Client(cluster)
 
 
 class InversionDriver:
@@ -88,8 +92,6 @@ class InversionDriver:
 
     def _initialize(self):
 
-        cluster = LocalCluster(processes=False)
-        client = Client(cluster)
         self.configure_dask()
 
         self.inversion_window = InversionWindow(self.workspace, self.params)
@@ -450,7 +452,10 @@ class InversionDriver:
 
     def get_tile_misfits(self, tiles):
 
-        local_misfits, self.sorting, dpreds = [], [], []
+        local_misfits, self.sorting, = (
+            [],
+            [],
+        )
         for tile_id, local_index in enumerate(tiles):
             lsurvey = self.inversion_data.survey(local_index)
             lsim, lmap = self.inversion_data.simulation(
@@ -467,7 +472,7 @@ class InversionDriver:
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
 
-        return local_misfits, dpreds
+        return local_misfits
 
     def models(self):
         """Return all models with data"""
