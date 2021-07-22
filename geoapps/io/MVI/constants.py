@@ -132,7 +132,7 @@ default_ui_json = {
     "tmi_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 0.0,
         "group": "Data",
         "main": True,
         "dependency": "forward_only",
@@ -141,7 +141,7 @@ default_ui_json = {
         "label": "TMI uncertainty",
         "parent": "data_object",
         "property": None,
-        "value": None,
+        "value": 0.0,
     },
     "bx_channel_bool": {
         "default": False,
@@ -165,7 +165,7 @@ default_ui_json = {
     "bx_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 0.0,
         "group": "Data",
         "main": True,
         "dependency": "forward_only",
@@ -174,7 +174,7 @@ default_ui_json = {
         "label": "Bx uncertainty",
         "parent": "data_object",
         "property": None,
-        "value": None,
+        "value": 0.0,
     },
     "starting_model_object": {
         "default": None,
@@ -834,16 +834,17 @@ default_ui_json = {
     "lower_bound": {
         "association": "Cell",
         "dataType": "Float",
-        "default": -np.inf,
+        "default": 0,
         "group": "Regularization",
         "isValue": True,
         "visible": True,
+        "optional": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "Lower bound on model",
         "parent": "lower_bound_object",
         "property": None,
-        "value": -np.inf,
+        "value": 0,
     },
     "upper_bound_object": {
         "default": None,
