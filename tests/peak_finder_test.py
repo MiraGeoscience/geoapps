@@ -46,6 +46,7 @@ def test_peak_finder_app(tmp_path):
         min_amplitude=1e-2,
         min_width=1e-2,
         max_migration=1,
+        plot_result=False,
     )
     anomalies = app.lines.anomalies
 

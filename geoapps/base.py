@@ -44,10 +44,10 @@ class BaseApplication:
     _figure = None
     _refresh = None
     _params: Params | None = None
+    plot_result = False
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
-        self.plot_result = False
         self._file_browser = FileChooser()
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
@@ -68,7 +68,7 @@ class BaseApplication:
             ]
         )
         self._live_link = Checkbox(
-            description="GA Pro - Live link",
+            description="Geoscience ANALYST Pro - Live link",
             value=False,
             indent=False,
             style={"description_width": "initial"},
@@ -324,6 +324,7 @@ class BaseApplication:
     def h5file(self, value):
         self._h5file = value
         self._workspace_geoh5 = value
+        self._working_directory = None
         self._file_browser.reset(
             path=self.working_directory,
             filename=path.basename(self._h5file),

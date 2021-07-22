@@ -81,6 +81,7 @@ class PeakFinder(ObjectDataSelection):
     _group_auto = None
     decay_figure = None
     marker = {"left": "<", "right": ">"}
+    plot_result = True
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -954,8 +955,7 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
-        self.figure = plt.figure(figsize=(12, 6))
-        axs = plt.subplot()
+
         if (
             self.pause_refresh
             or getattr(self, "survey", None) is None
@@ -963,8 +963,11 @@ class PeakFinder(ObjectDataSelection):
             or len(self.active_channels) == 0
             or getattr(self.survey, "line_indices", None) is None
             or len(self.survey.line_indices) < 2
+            or not self.plot_result
         ):
             return
+        self.figure = plt.figure(figsize=(12, 6))
+        axs = plt.subplot()
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
             [
@@ -1144,12 +1147,13 @@ class PeakFinder(ObjectDataSelection):
             )
             axs.set_xlabel("Distance (m)")
         axs.grid(True)
+        plt.show()
 
     def plot_decay_curve(self, center, plot_trigger):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
-        if self.pause_refresh:
+        if self.pause_refresh or not self.plot_result:
             return
 
         if (
@@ -1220,6 +1224,7 @@ class PeakFinder(ObjectDataSelection):
                 axs.set_ylabel("log(V)")
                 axs.set_xlabel("Time (sec)")
                 axs.set_title("Too few channels")
+        plt.show()
 
     def scale_update(self, _):
         """
