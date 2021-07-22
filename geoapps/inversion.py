@@ -412,9 +412,6 @@ class InversionOptions(BaseApplication):
             value="<0",
             description="Data (i.e. <0 = no negatives)",
         )
-        self._air_values = widgets.FloatText(
-            value=0, description="Air cells fill value"
-        )
         self._max_iterations = IntText(value=10, description="Max beta Iterations")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
@@ -475,7 +472,7 @@ class InversionOptions(BaseApplication):
             ),
             "upper-lower bounds": self.bound_panel,
             "mesh": self.mesh.main,
-            "ignore values": VBox([self._ignore_values, self._air_values]),
+            "ignore values": VBox([self._ignore_values]),
             "optimization": self._optimization,
         }
         self.option_choices = widgets.Dropdown(
@@ -515,10 +512,6 @@ class InversionOptions(BaseApplication):
     @property
     def alphas(self):
         return self._alphas
-
-    @property
-    def air_values(self):
-        return self._air_values
 
     @property
     def beta_start(self):
@@ -988,8 +981,6 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.lower_bound.value = ""
             self.inversion_parameters.upper_bound.value = ""
             self.inversion_parameters.ignore_values.value = "-99999"
-            self.inversion_parameters.air_values.disabled = False
-            self.inversion_parameters.air_values.value = 0
 
         else:
             tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
@@ -1033,8 +1024,6 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.lower_bound.value = "1e-5"
             self.inversion_parameters.upper_bound.value = "10"
             self.inversion_parameters.ignore_values.value = "<0"
-            self.inversion_parameters.air_values.disabled = True
-            self.inversion_parameters.air_values.value = 1e-8
 
             # Switch mesh options
             self.inversion_parameters._mesh = self.mesh_1D
@@ -1336,7 +1325,6 @@ class InversionApp(PlotSelection2D):
 
         input_dict["tol_cg"] = self.inversion_parameters.tol_cg.value
         input_dict["ignore_values"] = self.inversion_parameters.ignore_values.value
-        input_dict["no_data_value"] = self.inversion_parameters.air_values.value
         input_dict["resolution"] = self.resolution.value
         input_dict["window"] = {
             "center_x": self.center_x.value,

@@ -292,9 +292,7 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
     )
 
     # Pre-build a list of blocks
-    export_ga = widgets.ToggleButton(
-        value=False, description="Export to GA", icon="check"
-    )
+    export_ga = widgets.ToggleButton(value=False, description="Export", icon="check")
 
     def export_trigger(_):
         if getattr(export_ga, "data", None) is not None and export_ga.value:
