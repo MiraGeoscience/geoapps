@@ -23,7 +23,7 @@ Installation
 	    :width: 50%
 
 - Run ``Install_Update.bat``. The same batch file can be used to update the package dependencies.
-  A conda environment named ``geoapps`` will be create to prevent conflicts with other software that may rely on Python.
+  A conda environment named ``geoapps`` will be created to prevent conflicts with other software that may rely on Python.
 
 	.. figure:: ../images/run_install.png
 	    :align: center

@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List, Tuple, Union
+from __future__ import annotations
+
+from typing import Any
 from uuid import UUID
 
 from ..input_file import InputFile
@@ -20,11 +22,11 @@ class MVIParams(Params):
 
     def __init__(self, **kwargs):
 
-        self.validations: Dict[str, Any] = validations
+        self.validations: dict[str, Any] = validations
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
-        self.associations: Dict[Union[str, UUID], Union[str, UUID]] = None
+        self.associations: dict[str | UUID, str | UUID] = None
         self.forward_only: bool = None
         self.inducing_field_strength: float = None
         self.inducing_field_inclination: float = None
@@ -41,6 +43,7 @@ class MVIParams(Params):
         self.starting_inclination = None
         self.starting_declination = None
         self.tile_spatial = None
+        self.z_from_topo = None
         self.receivers_radar_drape = None
         self.receivers_offset_x = None
         self.receivers_offset_y = None
@@ -107,27 +110,27 @@ class MVIParams(Params):
         super().__init__(**kwargs)
 
     def _set_defaults(self) -> None:
-        """ Wraps Params._set_defaults """
+        """Wraps Params._set_defaults"""
         return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
-        """ Wraps Params.default. """
+        """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
 
-    def components(self) -> List[str]:
-        """ Retrieve component names used to index channel, uncertainty data. """
-        return [k.split("_")[0] for k in self.active() if "channel" in k]
+    def components(self) -> list[str]:
+        """Retrieve component names used to index channel, uncertainty data."""
+        return [k.split("_")[0] for k in self.active_set() if "channel" in k]
 
     def uncertainty(self, component: str) -> float:
-        """ Returns uncertainty for chosen data component. """
+        """Returns uncertainty for chosen data component."""
         return self.__getattribute__("_".join([component, "uncertainty"]))
 
     def channel(self, component: str) -> UUID:
-        """ Returns channel uuid for chosen data component. """
+        """Returns channel uuid for chosen data component."""
         return self.__getattribute__("_".join([component, "channel"]))
 
-    def window(self) -> Dict[str, float]:
-        """ Returns window dictionary """
+    def window(self) -> dict[str, float]:
+        """Returns window dictionary"""
         win = {
             "center_x": self.window_center_x,
             "center_y": self.window_center_y,
@@ -138,8 +141,8 @@ class MVIParams(Params):
         }
         return win if any([v is not None for v in win.values()]) else None
 
-    def offset(self) -> Tuple[List[float], UUID]:
-        """ Returns offset components as list and drape data. """
+    def offset(self) -> tuple[list[float], UUID]:
+        """Returns offset components as list and drape data."""
         offsets = [
             self.receivers_offset_x,
             self.receivers_offset_y,
@@ -149,16 +152,16 @@ class MVIParams(Params):
         offsets = offsets if is_offset else None
         return offsets, self.receivers_radar_drape
 
-    def inducing_field_aid(self) -> List[float]:
-        """ Returns inducing field components as a list. """
+    def inducing_field_aid(self) -> list[float]:
+        """Returns inducing field components as a list."""
         return [
             self.inducing_field_strength,
             self.inducing_field_inclination,
             self.inducing_field_declination,
         ]
 
-    def model_norms(self) -> List[float]:
-        """ Returns model norm components as a list. """
+    def model_norms(self) -> list[float]:
+        """Returns model norm components as a list."""
         return [
             self.smallness_norm,
             self.x_norm,
@@ -422,6 +425,21 @@ class MVIParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._tile_spatial = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def z_from_topo(self):
+        return self._z_from_topo
+
+    @z_from_topo.setter
+    def z_from_topo(self, val):
+        if val is None:
+            self._z_from_topo = val
+            return
+        p = "z_from_topo"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._z_from_topo = val
 
     @property
     def receivers_radar_drape(self):
@@ -1324,5 +1342,5 @@ class MVIParams(Params):
         self._no_data_value = val
 
     def _init_params(self, inputfile: InputFile) -> None:
-        """ Wraps Params._init_params. """
+        """Wraps Params._init_params."""
         super()._init_params(inputfile, required_parameters, validations)

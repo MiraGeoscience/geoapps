@@ -214,7 +214,7 @@ class InputFile:
             raise Exception("Input file must have '.json' extension.")
 
     def create_work_path(self):
-        """ Creates absolute path to input file. """
+        """Creates absolute path to input file."""
         dsep = os.path.sep
         workDir = dsep.join(os.path.dirname(os.path.abspath(self.filename)).split(dsep))
         if len(workDir) > 0:
@@ -225,7 +225,7 @@ class InputFile:
         return workDir
 
     def load(self):
-        """ Loads input file contents to dictionary. """
+        """Loads input file contents to dictionary."""
         with open(self.filename) as f:
             input_dict = json.load(f)
 
@@ -233,7 +233,7 @@ class InputFile:
 
 
 def start_inversion(input_file):
-    """ Starts inversion with parameters defined in input file. """
+    """Starts inversion with parameters defined in input file."""
     inversion(input_file)
 
 
@@ -327,8 +327,10 @@ def inversion(input_file):
         uncertainties = []
         components = []
         for channel, props in input_dict["data"]["channels"].items():
-            if entity.get_data(props["name"]):
-                data.append(entity.get_data(props["name"])[0].values)
+
+            uid = uuid.UUID(props["name"])
+            if uid in [child.uid for child in entity.children]:
+                data.append(workspace.get_entity(uid)[0].values)
             else:
                 assert False, (
                     f"Data {props['name']} could not be found associated with "
@@ -373,6 +375,18 @@ def inversion(input_file):
         else:
             xyz_loc = vertices[window_ind, :]
 
+        data = data[window_ind, :]
+        uncertainties = uncertainties[window_ind, :]
+
+        row_full = np.all(np.isnan(data), axis=1) == False
+        xyz_loc = xyz_loc[row_full, :]
+        data = data[row_full, :].ravel()
+        uncertainties = uncertainties[row_full, :].ravel()
+
+        isnan = np.isnan(data)
+        data[isnan] = 0
+        uncertainties[isnan] = np.inf
+
         if "gravity" in input_dict["inversion_type"]:
             receivers = PF.BaseGrav.RxObs(xyz_loc)
             source = PF.BaseGrav.SrcField([receivers])
@@ -384,8 +398,8 @@ def inversion(input_file):
             source = PF.BaseMag.SrcField([receivers], param=inducing_field)
             survey = PF.BaseMag.LinearSurvey(source)
 
-        survey.dobs = data[window_ind, :].ravel()
-        survey.std = uncertainties[window_ind, :].ravel()
+        survey.dobs = data
+        survey.std = uncertainties
         survey.components = components
 
         normalization = []
@@ -516,8 +530,8 @@ def inversion(input_file):
                         topo = topo_entity.vertices
 
                     if input_dict["topography"]["GA_object"]["data"] != "Z":
-                        data = topo_entity.get_data(
-                            input_dict["topography"]["GA_object"]["data"]
+                        data = workspace.get_entity(
+                            uuid.UUID(input_dict["topography"]["GA_object"]["data"])
                         )[0]
                         topo[:, 2] = data.values
 
@@ -573,11 +587,15 @@ def inversion(input_file):
                 )
                 locations[:, 2] = z_topo
 
-                if entity.get_data(input_dict["receivers_offset"]["radar_drape"][3]):
-                    z_channel = entity.get_data(
-                        input_dict["receivers_offset"]["radar_drape"][3]
-                    )[0].values
-                    locations[:, 2] += z_channel[window_ind]
+                try:
+                    radar_drape = workspace.get_entity(
+                        uuid.UUID(input_dict["receivers_offset"]["radar_drape"][3])
+                    )
+                    if radar_drape:
+                        z_channel = radar_drape[0].values
+                        locations[:, 2] += z_channel[window_ind]
+                except (ValueError, TypeError):
+                    pass
 
             for ind, offset in enumerate(bird_offset):
                 locations[:, ind] += offset
@@ -712,8 +730,6 @@ def inversion(input_file):
             else:
                 input_mesh = octree_2_treemesh(input_mesh)
 
-            # input_mesh.x0 = np.r_[input_mesh.x0[:2], input_mesh.x0[2]]
-            print("converting", input_mesh.x0)
         else:
             starting_model = np.r_[input_dict["starting_model"]["value"]]
             assert (
@@ -787,13 +803,7 @@ def inversion(input_file):
         vector_property = False
         n_blocks = 1
 
-    if "no_data_value" in list(input_dict.keys()):
-        no_data_value = input_dict["no_data_value"]
-    else:
-        if vector_property:
-            no_data_value = 0
-        else:
-            no_data_value = 0
+    no_data_value = np.nan
 
     if "parallelized" in list(input_dict.keys()):
         parallelized = input_dict["parallelized"]
@@ -1045,9 +1055,11 @@ def inversion(input_file):
             workspace, name=f"Predicted", vertices=xy_rot, parent=out_group
         )
 
+        data_types = {}
         for ii, (component, norm) in enumerate(zip(survey.components, normalization)):
             val = norm * survey.dobs[ii :: len(survey.components)]
-            point_object.add_data({"Observed_" + component: {"values": val}})
+            obj = point_object.add_data({"Observed_" + component: {"values": val}})
+            data_types[component] = obj.entity_type
 
         mesh_object = treemesh_2_octree(workspace, mesh, parent=out_group)
         mesh_object.rotation = rotation
@@ -1066,7 +1078,9 @@ def inversion(input_file):
             workspace = Workspace(input_dict["save_to_geoh5"])
             input_mesh = workspace.get_entity(uuid.UUID(list(input_value.keys())[0]))[0]
 
-            input_model = input_mesh.get_data(list(input_value.values())[0])[0].values
+            input_model = workspace.get_entity(
+                uuid.UUID(list(input_value.values())[0])
+            )[0].values
 
             # Remove null values
             active = ((input_model > 1e-38) * (input_model < 2e-38)) == 0
@@ -1519,6 +1533,7 @@ def inversion(input_file):
                 channels=survey.components,
                 mapping=np.hstack(normalization * rxLoc.shape[0]),
                 attribute="predicted",
+                data_type=data_types,
                 sorting=sorting,
                 save_objective_function=True,
             )

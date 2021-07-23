@@ -5,12 +5,13 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
 import time
 import uuid
 from os import mkdir, path
 from shutil import copyfile, move
-from typing import Optional
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.shared import Entity
@@ -42,11 +43,11 @@ class BaseApplication:
     _trigger = None
     _figure = None
     _refresh = None
-    _params: Optional[Params] = None
+    _params: Params | None = None
+    plot_result = False
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
-        self.plot_result = False
         self._file_browser = FileChooser()
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
@@ -67,7 +68,7 @@ class BaseApplication:
             ]
         )
         self._live_link = Checkbox(
-            description="GA Pro - Live link",
+            description="Geoscience ANALYST Pro - Live link",
             value=False,
             indent=False,
             style={"description_width": "initial"},
@@ -85,12 +86,8 @@ class BaseApplication:
                 self.export_directory,
             ]
         )
-
-        def ga_group_name_update(_):
-            self.ga_group_name_update()
-
-        self.ga_group_name.observe(ga_group_name_update)
-
+        self.trigger.on_click(self.trigger_click)
+        self.ga_group_name.observe(self.ga_group_name_update)
         self.__populate__(**self.defaults)
 
     def __call__(self):
@@ -98,6 +95,9 @@ class BaseApplication:
 
     def __populate__(self, **kwargs):
         for key, value in kwargs.items():
+            if key[0] == "_":
+                key = key[1:]
+
             if hasattr(self, "_" + key) or hasattr(self, key):
                 try:
                     if isinstance(getattr(self, key, None), Widget) and not isinstance(
@@ -111,9 +111,10 @@ class BaseApplication:
                         except (ValueError, AttributeError):
                             pass
 
-                        setattr(getattr(self, key), "value", value)
-                        if hasattr(getattr(self, key), "style"):
-                            getattr(self, key).style = {"description_width": "initial"}
+                        widget = getattr(self, key)
+                        setattr(widget, "value", value)
+                        if hasattr(widget, "style"):
+                            widget.style = {"description_width": "initial"}
 
                     elif isinstance(value, BaseApplication) and isinstance(
                         getattr(self, "_" + key, None), BaseApplication
@@ -323,6 +324,7 @@ class BaseApplication:
     def h5file(self, value):
         self._h5file = value
         self._workspace_geoh5 = value
+        self._working_directory = None
         self._file_browser.reset(
             path=self.working_directory,
             filename=path.basename(self._h5file),
@@ -447,15 +449,30 @@ class BaseApplication:
 
     @workspace_geoh5.setter
     def workspace_geoh5(self, file_path):
-        self.h5file = path.abspath(file_path)
+        self._workspace_geoh5 = path.abspath(file_path)
 
     def create_copy(self, _):
         if self.h5file is not None:
             value = working_copy(self.h5file)
             self.h5file = value
 
-    def ga_group_name_update(self):
+    def ga_group_name_update(self, _):
         self._ga_group = None
+
+    def trigger_click(self, _):
+        for key, value in self.__dict__.items():
+            try:
+                if isinstance(getattr(self, key), Widget):
+                    setattr(self.params, key, getattr(self, key).value)
+            except AttributeError:
+                continue
+
+        self.params.write_input_file(name=self.params.ga_group_name)
+        self.run(self.params)
+
+    @staticmethod
+    def run(cls, params):
+        ...
 
 
 def working_copy(h5file):

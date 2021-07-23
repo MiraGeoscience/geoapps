@@ -156,8 +156,9 @@ def inversion(input_file):
     channel_values = []
     offsets = {}
     for channel, parameters in input_param["data"]["channels"].items():
-        if entity.get_data(parameters["name"]):
-            data.append(entity.get_data(parameters["name"])[0].values)
+        uid = uuid.UUID(parameters["name"])
+        if uid in [child.uid for child in entity.children]:
+            data.append(workspace.get_entity(uid)[0].values)
         else:
             assert False, (
                 f"Data {parameters['name']} could not be found associated with "
@@ -213,9 +214,8 @@ def inversion(input_file):
                         topo = topo_entity.vertices
 
                     if input_param["topography"]["GA_object"]["data"] != "Z":
-
-                        data = topo_entity.get_data(
-                            input_param["topography"]["GA_object"]["data"]
+                        data = workspace.get_entity(
+                            uuid.UUID(input_param["topography"]["GA_object"]["data"])
                         )[0]
                         topo[:, 2] = data.values
 
@@ -241,8 +241,7 @@ def inversion(input_file):
     def offset_receivers_xy(locations, offsets):
 
         for key, values in selection.items():
-
-            line_data = entity.get_data(key)[0]
+            line_data = workspace.get_entity(uuid.UUID(key))[0]
             if isinstance(line_data, ReferencedData):
                 values = [
                     key
@@ -252,7 +251,7 @@ def inversion(input_file):
 
             for line in values:
 
-                line_ind = np.where(entity.get_data(key)[0].values == float(line))[0]
+                line_ind = np.where(line_data.values == float(line))[0]
 
                 if len(line_ind) < 2:
                     continue
@@ -310,13 +309,16 @@ def inversion(input_file):
 
             locations[:, 2] = z_topo + bird_offset[0, 2]
 
-            if "radar_drape" in list(
-                input_param["receivers_offset"].keys()
-            ) and entity.get_data(input_param["receivers_offset"]["radar_drape"][3]):
-                z_channel = entity.get_data(
-                    input_param["receivers_offset"]["radar_drape"][3]
-                )[0].values
-                locations[:, 2] += z_channel[win_ind]
+            if "radar_drape" in list(input_param["receivers_offset"].keys()):
+                try:
+                    radar_drape = workspace.get_entity(
+                        uuid.UUID(input_param["receivers_offset"]["radar_drape"][3])
+                    )
+                    if radar_drape:
+                        z_channel = radar_drape[0].values
+                        locations[:, 2] += z_channel[win_ind]
+                except (ValueError, TypeError):
+                    pass
 
     else:
         locations = locations[win_ind, :]
@@ -396,7 +398,7 @@ def inversion(input_file):
     pred_cells = []
     for key, values in selection.items():
 
-        line_data = entity.get_data(key)[0]
+        line_data = workspace.get_entity(uuid.UUID(key))[0]
         if isinstance(line_data, ReferencedData):
             values = [
                 key for key, value in line_data.value_map.map.items() if value in values
@@ -404,9 +406,7 @@ def inversion(input_file):
 
         for line in values:
 
-            line_ind = np.where(entity.get_data(key)[0].values[win_ind] == float(line))[
-                0
-            ]
+            line_ind = np.where(line_data.values[win_ind] == float(line))[0]
 
             n_sounding = len(line_ind)
             if n_sounding < 2:
@@ -504,7 +504,9 @@ def inversion(input_file):
             input_model = input_param["reference_model"]["model"]
             print(f"Interpolating reference model {input_model}")
             con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
-            con_model = con_object.get_data(list(input_model.values())[0])[0].values
+            con_model = workspace.get_entity(uuid.UUID(list(input_model.values())[0]))[
+                0
+            ].values
 
             if hasattr(con_object, "centroids"):
                 grid = con_object.centroids
@@ -531,7 +533,9 @@ def inversion(input_file):
 
             print(f"Interpolating starting model {input_model}")
             con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
-            con_model = con_object.get_data(list(input_model.values())[0])[0].values
+            con_model = workspace.get_entity(uuid.UUID(list(input_model.values())[0]))[
+                0
+            ].values
 
             if hasattr(con_object, "centroids"):
                 grid = con_object.centroids
@@ -554,8 +558,10 @@ def inversion(input_file):
 
             input_model = input_param["susceptibility_model"]["model"]
             print(f"Interpolating susceptibility model {input_model}")
-            sus_object = workspace.get_entity(list(input_model.keys())[0])[0]
-            sus_model = sus_object.get_data(list(input_model.values())[0])[0].values
+            sus_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
+            sus_model = workspace.get_entity(uuid.UUID(list(input_model.values())[0]))[
+                0
+            ].values
 
             if hasattr(sus_object, "centroids"):
                 grid = sus_object.centroids
@@ -616,7 +622,7 @@ def inversion(input_file):
 
     uncert = normalization * uncert
     dobs = data_mapping * normalization * dobs
-
+    data_types = {}
     for ind, channel in enumerate(channels):
         if channel in list(input_param["data"]["channels"].keys()):
             d_i = curve.add_data(
@@ -627,8 +633,8 @@ def inversion(input_file):
                     }
                 }
             )
-
             curve.add_data_to_group(d_i, f"Observed")
+            data_types[channel] = d_i.entity_type
 
     xyz = locations[stn_id, :]
     topo = np.c_[xyz[:, :2], dem[stn_id, 2]]
@@ -970,6 +976,8 @@ def inversion(input_file):
             mapping=data_mapping,
             attribute="predicted",
             channels=channels,
+            data_type=data_types,
+            group=True,
             save_objective_function=True,
         )
     )

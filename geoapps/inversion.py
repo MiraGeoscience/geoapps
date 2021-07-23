@@ -412,9 +412,6 @@ class InversionOptions(BaseApplication):
             value="<0",
             description="Data (i.e. <0 = no negatives)",
         )
-        self._air_values = widgets.FloatText(
-            value=0, description="Air cells fill value"
-        )
         self._max_iterations = IntText(value=10, description="Max beta Iterations")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
@@ -475,7 +472,7 @@ class InversionOptions(BaseApplication):
             ),
             "upper-lower bounds": self.bound_panel,
             "mesh": self.mesh.main,
-            "ignore values": VBox([self._ignore_values, self._air_values]),
+            "ignore values": VBox([self._ignore_values]),
             "optimization": self._optimization,
         }
         self.option_choices = widgets.Dropdown(
@@ -515,10 +512,6 @@ class InversionOptions(BaseApplication):
     @property
     def alphas(self):
         return self._alphas
-
-    @property
-    def air_values(self):
-        return self._air_values
 
     @property
     def beta_start(self):
@@ -713,7 +706,7 @@ class InversionApp(PlotSelection2D):
         "h5file": "../../assets/FlinFlon.geoh5",
         "inducing_field": "60000, 79, 11",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": ["Airborne_TMI"],
+        "data": ["{44822654-b6ae-45b0-8886-2d845f80f422}"],
         "resolution": 50,
         "center_x": 314600.0,
         "center_y": 6072200.0,
@@ -724,7 +717,7 @@ class InversionApp(PlotSelection2D):
         "topography": {
             "options": "Object",
             "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-            "data": "elevation",
+            "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
         },
         "sensor": {"offset": "0, 0, 60", "options": "topo + radar + (dx, dy, dz)"},
         "padding_distance": "1000, 1000, 1000, 1000, 0, 0",
@@ -750,9 +743,6 @@ class InversionApp(PlotSelection2D):
         self._inducing_field = widgets.Text(
             description="Inducing Field [Amp, Inc, Dec]",
         )
-        self._run = ToggleButton(
-            value=False, description="Run SimPEG", button_style="danger", icon="check"
-        )
         self._starting_channel = (IntText(value=None, description="Starting Channel"),)
         self._system = Dropdown(
             options=["MVI", "Magnetics", "Gravity"] + list(self.em_system_specs.keys()),
@@ -767,7 +757,7 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices = widgets.Dropdown()
         self.data_channel_panel = widgets.VBox([self.data_channel_choices])
         self.survey_type_panel = VBox([self.system])
-        self.run.observe(self.run_trigger, names="value")
+        self.trigger.observe(self.trigger_click, names="value")
         self.write.observe(self.write_trigger, names="value")
         self.system.observe(self.system_observer, names="value")
         self.mesh_octree = MeshOctreeOptions(**self.defaults)
@@ -785,7 +775,7 @@ class InversionApp(PlotSelection2D):
         for item in ["width", "height", "resolution"]:
             getattr(self, item).observe(self.update_octree_param, names="value")
 
-        self.output_panel = VBox([self.export_directory, self.write, self.run])
+        self.output_panel = VBox([self.export_directory, self.write, self.trigger])
 
         self.inversion_parameters.update_ref(None)
 
@@ -855,11 +845,6 @@ class InversionApp(PlotSelection2D):
                 ]
             )
         return self._main
-
-    @property
-    def run(self):
-        """"""
-        return self._run
 
     @property
     def sensor(self):
@@ -941,23 +926,21 @@ class InversionApp(PlotSelection2D):
         """"""
         return self._write
 
-    def run_trigger(self, _):
+    def trigger_click(self, _):
         """"""
-        if self.run.value:
-            if self.system.value in ["Gravity", "MVI", "Magnetics"]:
-                os.system(
-                    "start cmd.exe @cmd /k "
-                    + 'python -m geoapps.drivers.pf_inversion "'
-                    + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
-                )
-            else:
-                os.system(
-                    "start cmd.exe @cmd /k "
-                    + 'python -m geoapps.drivers.em1d_inversion "'
-                    + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
-                )
-            self.run.value = False
-            self.run.button_style = ""
+        if self.system.value in ["Gravity", "MVI", "Magnetics"]:
+            os.system(
+                "start cmd.exe @cmd /k "
+                + 'python -m geoapps.drivers.pf_inversion "'
+                + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
+            )
+        else:
+            os.system(
+                "start cmd.exe @cmd /k "
+                + 'python -m geoapps.drivers.em1d_inversion "'
+                + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
+            )
+        self.trigger.button_style = ""
 
     def system_observer(self, _):
         """
@@ -998,8 +981,6 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.lower_bound.value = ""
             self.inversion_parameters.upper_bound.value = ""
             self.inversion_parameters.ignore_values.value = "-99999"
-            self.inversion_parameters.air_values.disabled = False
-            self.inversion_parameters.air_values.value = 0
 
         else:
             tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
@@ -1043,8 +1024,6 @@ class InversionApp(PlotSelection2D):
             self.inversion_parameters.lower_bound.value = "1e-5"
             self.inversion_parameters.upper_bound.value = "10"
             self.inversion_parameters.ignore_values.value = "<0"
-            self.inversion_parameters.air_values.disabled = True
-            self.inversion_parameters.air_values.value = 1e-8
 
             # Switch mesh options
             self.inversion_parameters._mesh = self.mesh_1D
@@ -1078,14 +1057,16 @@ class InversionApp(PlotSelection2D):
             data_widget = self.data_channel_choices.data_channel_options[channel.header]
 
             entity = self.workspace.get_entity(self.objects.value)[0]
-            if channel.value is None or not entity.get_data(channel.value):
+            if channel.value is None or channel.value not in [
+                child.uid for child in entity.children
+            ]:
                 data_widget.children[0].value = False
                 if self.system.value in ["MVI", "Magnetics", "Gravity"]:
                     data_widget.children[3].value = "0, 1"
             else:
                 data_widget.children[0].value = True
                 if self.system.value in ["MVI", "Magnetics", "Gravity"]:
-                    values = entity.get_data(channel.value)[0].values
+                    values = self.workspace.get_entity(channel.value)[0].values
                     if values is not None and values.dtype in [
                         np.float32,
                         np.float64,
@@ -1156,7 +1137,7 @@ class InversionApp(PlotSelection2D):
             ]
 
         self.write.button_style = "warning"
-        self.run.button_style = "danger"
+        self.trigger.button_style = "danger"
 
         if self.system.value in ["MVI", "Magnetics"]:
             self.survey_type_panel.children = [self.system, self.inducing_field]
@@ -1168,14 +1149,18 @@ class InversionApp(PlotSelection2D):
         self.resolution.indices = None
 
         if self.workspace.get_entity(self.objects.value):
-            obj = self.workspace.get_entity(self.objects.value)[0]
-            data_list = obj.get_data_list()
+            self.update_data_list(None)
             self.sensor.update_data_list(None)
             self.lines.update_data_list(None)
             self.lines.update_line_list(None)
 
             for aem_system, specs in self.em_system_specs.items():
-                if any([specs["flag"] in channel for channel in data_list]):
+                if any(
+                    [
+                        specs["flag"] in channel
+                        for channel in self.data.uid_name_map.values()
+                    ]
+                ):
                     self.system.value = aem_system
 
             self.system_observer(None)
@@ -1190,37 +1175,19 @@ class InversionApp(PlotSelection2D):
                     data_widget.children[2].value = value
 
             self.write.button_style = "warning"
-            self.run.button_style = "danger"
-
-    def get_data_list(self, entity):
-        groups = [p_g.name for p_g in entity.property_groups]
-        data_list = []
-        if self.data.value is not None:
-            for component in self.data.value:
-                if component in groups:
-                    data_list += [
-                        self.workspace.get_entity(data)[0].name
-                        for data in entity.find_or_create_property_group(
-                            name=component
-                        ).properties
-                    ]
-                elif component in entity.get_data_list():
-                    data_list += [component]
-        return data_list
+            self.trigger.button_style = "danger"
 
     def update_component_panel(self, _):
         if self.workspace.get_entity(self.objects.value):
-            entity = self.workspace.get_entity(self.objects.value)[0]
-            data_list = self.get_data_list(entity)
-
+            _, data_list = self.get_selected_entities()
+            options = [[data.name, data.uid] for data in data_list]
             if hasattr(self.data_channel_choices, "data_channel_options"):
                 for (
                     key,
                     data_widget,
                 ) in self.data_channel_choices.data_channel_options.items():
-                    data_widget.children[2].options = data_list
-                    value = find_value(data_list, [key])
-                    data_widget.children[2].value = value
+                    data_widget.children[2].options = options
+                    data_widget.children[2].value = find_value(options, [key])
 
     def data_channel_choices_observer(self, _):
         if hasattr(
@@ -1237,17 +1204,18 @@ class InversionApp(PlotSelection2D):
                 self.workspace.get_entity(self.objects.value)
                 and data_widget.children[2].value is None
             ):
-                entity = self.workspace.get_entity(self.objects.value)[0]
-                data_list = self.get_data_list(entity)
-                value = find_value(data_list, [self.data_channel_choices.value])
-                data_widget.children[2].value = value
+                _, data_list = self.get_selected_entities()
+                options = [[data.name, data.uid] for data in data_list]
+                data_widget.children[2].value = find_value(
+                    options, [self.data_channel_choices.value]
+                )
 
             self.plotting_data = data_widget.children[2].value
             self.refresh.value = False
             self.refresh.value = True
 
         self.write.button_style = "warning"
-        self.run.button_style = "danger"
+        self.trigger.button_style = "danger"
 
     def spatial_option_change(self, _):
         self.spatial_panel.children = [
@@ -1255,7 +1223,7 @@ class InversionApp(PlotSelection2D):
             self.spatial_options[self.spatial_choices.value],
         ]
         self.write.button_style = "warning"
-        self.run.button_style = "danger"
+        self.trigger.button_style = "danger"
 
     def update_octree_param(self, _):
         dl = self.resolution.value
@@ -1280,7 +1248,7 @@ class InversionApp(PlotSelection2D):
         )
         self.resolution.indices = None
         self.write.button_style = "warning"
-        self.run.button_style = "danger"
+        self.trigger.button_style = "danger"
 
     def update_selection(self, _):
         self.highlight_selection = {self.lines.data.value: self.lines.lines.value}
@@ -1327,7 +1295,9 @@ class InversionApp(PlotSelection2D):
         else:
             input_dict["system"] = self.system.value
             input_dict["lines"] = {
-                self.lines.data.value: [str(line) for line in self.lines.lines.value]
+                str(self.lines.data.value): [
+                    str(line) for line in self.lines.lines.value
+                ]
             }
 
             input_dict["mesh 1D"] = [
@@ -1355,7 +1325,6 @@ class InversionApp(PlotSelection2D):
 
         input_dict["tol_cg"] = self.inversion_parameters.tol_cg.value
         input_dict["ignore_values"] = self.inversion_parameters.ignore_values.value
-        input_dict["no_data_value"] = self.inversion_parameters.air_values.value
         input_dict["resolution"] = self.resolution.value
         input_dict["window"] = {
             "center_x": self.center_x.value,
@@ -1371,9 +1340,9 @@ class InversionApp(PlotSelection2D):
         if ref_type == "model":
             input_dict["reference_model"] = {
                 ref_type: {
-                    str(
-                        self.inversion_parameters.reference_model.objects.value
-                    ): self.inversion_parameters.reference_model.data.value
+                    str(self.inversion_parameters.reference_model.objects.value): str(
+                        self.inversion_parameters.reference_model.data.value
+                    )
                 }
             }
         else:
@@ -1385,9 +1354,9 @@ class InversionApp(PlotSelection2D):
         if start_type == "model":
             input_dict["starting_model"] = {
                 start_type: {
-                    str(
-                        self.inversion_parameters.starting_model.objects.value
-                    ): self.inversion_parameters.starting_model.data.value
+                    str(self.inversion_parameters.starting_model.objects.value): str(
+                        self.inversion_parameters.starting_model.data.value
+                    )
                 }
             }
         else:
@@ -1405,7 +1374,9 @@ class InversionApp(PlotSelection2D):
                     susc_type: {
                         str(
                             self.inversion_parameters.susceptibility_model.objects.value
-                        ): self.inversion_parameters.susceptibility_model.data.value
+                        ): str(
+                            self.inversion_parameters.susceptibility_model.data.value
+                        )
                     }
                 }
             else:
@@ -1445,7 +1416,7 @@ class InversionApp(PlotSelection2D):
                     continue
 
                 channel_param[key] = {}
-                channel_param[key]["name"] = data_widget.children[2].value
+                channel_param[key]["name"] = str(data_widget.children[2].value)
                 channel_param[key]["uncertainties"] = string_2_list(
                     data_widget.children[3].value
                 )
@@ -1465,7 +1436,7 @@ class InversionApp(PlotSelection2D):
                     print(
                         f"Gradient data with rotated window is currently not supported"
                     )
-                    self.run.button_style = "danger"
+                    self.trigger.button_style = "danger"
                     return
 
             input_dict["data"]["channels"] = channel_param
@@ -1487,7 +1458,7 @@ class InversionApp(PlotSelection2D):
                 input_dict["topography"] = {
                     "GA_object": {
                         "name": str(self.topography.objects.value),
-                        "data": self.topography.data.value,
+                        "data": str(self.topography.data.value),
                     }
                 }
         elif self.topography.options.value == "Relative to Sensor":
@@ -1505,14 +1476,14 @@ class InversionApp(PlotSelection2D):
 
         if len(checks) > 0:
             print(f"Required value for {checks}")
-            self.run.button_style = "danger"
+            self.trigger.button_style = "danger"
         else:
             self.write.button_style = ""
             file = f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.output_name.value)}.json"
             with open(file, "w") as f:
                 json.dump(input_dict, f, indent=4)
-            self.run.button_style = "success"
+            self.trigger.button_style = "success"
 
         self.write.value = False
         self.write.button_style = ""
-        self.run.button_style = "success"
+        self.trigger.button_style = "success"
