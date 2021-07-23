@@ -4,11 +4,6 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
 
 from uuid import UUID
 
@@ -219,6 +214,13 @@ default_ui_json = {
         "parent": "data_object",
         "property": None,
         "value": 1,
+    },
+    "z_from_topo": {
+        "default": True,
+        "main": True,
+        "group": "Receivers Options",
+        "label": "Take z from topography?",
+        "value": True,
     },
     "receivers_radar_drape": {
         "association": "Cell",
@@ -903,11 +905,7 @@ default_ui_json = {
         "enabled": False,
         "value": None,
     },
-    "run_command": {
-        "default": None,
-        "enabled": False,
-        "value": None,
-    },
+    "run_command": "geoapps.drivers.mvi_inversion",
     "run_command_boolean": {
         "default": False,
         "value": False,
@@ -915,6 +913,7 @@ default_ui_json = {
         "tooltip": "Warning: launches process to run python model on save",
         "main": True,
     },
+    "conda_environment": "geoapps",
 }
 
 required_parameters = []
@@ -954,33 +953,34 @@ validations = {
         "uuid": ["topography_object"],
     },
     "data_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
-    "tmi_channel": {"types": [str], "reqs": [("data_object")]},
+    "tmi_channel": {"types": [str, UUID], "reqs": [("data_object")]},
     "tmi_uncertainty": {
         "types": [str, int, float],
     },
     "starting_model_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "starting_inclination_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "starting_declination_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "starting_model": {
-        "types": [str, int, float],
+        "types": [str, UUID, int, float],
     },
     "starting_inclination": {
-        "types": [str, int, float],
+        "types": [str, UUID, int, float],
     },
     "starting_declination": {
-        "types": [str, int, float],
+        "types": [str, UUID, int, float],
     },
     "tile_spatial": {
         "types": [str, int, float],
     },
+    "z_from_topo": {"types": [bool]},
     "receivers_radar_drape": {"types": [str], "reqs": [("data_object")]},
     "receivers_offset_x": {
         "types": [int, float],

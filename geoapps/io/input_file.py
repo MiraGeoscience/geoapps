@@ -5,10 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
 import os.path as op
 from copy import deepcopy
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 from uuid import UUID
 
 import numpy as np
@@ -67,7 +69,7 @@ class InputFile:
             self._filepath = f
 
     def default(self, default_ui) -> None:
-        """ defaults InputFile data using 'default' field of default_ui"""
+        """defaults InputFile data using 'default' field of default_ui"""
 
         for k, v in default_ui.items():
             if isinstance(v, dict):
@@ -83,7 +85,7 @@ class InputFile:
 
     def write_ui_json(
         self,
-        ui_dict: Dict[str, Any],
+        ui_dict: dict[str, Any],
         default: bool = False,
         name: str = None,
         param_dict: dict = None,
@@ -126,7 +128,6 @@ class InputFile:
                     out[k] = v
 
         out_file = self.filepath
-
         if name is not None:
             out_file = op.join(op.dirname(self.filepath), name + ".ui.json")
 
@@ -135,8 +136,8 @@ class InputFile:
 
     def read_ui_json(
         self,
-        required_parameters: List[str] = None,
-        validations: Dict[str, Any] = None,
+        required_parameters: list[str] = None,
+        validations: dict[str, Any] = None,
         reformat: bool = True,
     ) -> None:
         """
@@ -161,8 +162,8 @@ class InputFile:
     def input_from_dict(
         self,
         input_dict: dict,
-        required_parameters: List[str] = None,
-        validations: Dict[str, Any] = None,
+        required_parameters: list[str] = None,
+        validations: dict[str, Any] = None,
         reformat: bool = True,
     ):
         """
@@ -181,7 +182,7 @@ class InputFile:
         self.input_dict = input_dict
         self.is_loaded = True
 
-    def _ui_2_py(self, ui_dict: Dict[str, Any]) -> None:
+    def _ui_2_py(self, ui_dict: dict[str, Any]) -> None:
         """
         Flatten ui.json format to simple key/value structure.
 
@@ -207,7 +208,7 @@ class InputFile:
             else:
                 self.data[k] = v
 
-    def _stringify(self, d: Dict[str, Any]) -> Dict[str, Any]:
+    def _stringify(self, d: dict[str, Any]) -> dict[str, Any]:
         """
         Convert inf, none, and list types to strings within a dictionary
 
@@ -244,7 +245,7 @@ class InputFile:
 
         return d
 
-    def _numify(self, d: Dict[str, Any]) -> Dict[str, Any]:
+    def _numify(self, d: dict[str, Any]) -> dict[str, Any]:
         """
         Convert inf, none and list strings to numerical types within a dictionary
 
@@ -305,7 +306,7 @@ class InputFile:
                 val = f(key, val)
             return val
 
-    def _set_associations(self, d: Dict[str, Any]) -> None:
+    def _set_associations(self, d: dict[str, Any]) -> None:
         """
         Set parent/child associations for ui.json fields.
 
@@ -325,9 +326,12 @@ class InputFile:
                     if v["parent"] is not None:
                         try:
                             self.associations[k] = v["parent"]
-                            child_uuid = UUID(v[field])
+                            try:
+                                child_key = UUID(v[field])
+                            except (ValueError, TypeError):
+                                child_key = v[field]
                             parent_uuid = UUID(d[v["parent"]]["value"])
-                            self.associations[child_uuid] = parent_uuid
+                            self.associations[child_key] = parent_uuid
                         except:
                             continue
 

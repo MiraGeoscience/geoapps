@@ -25,8 +25,9 @@ class PlotSelection2D(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "Airborne_TMI",
+        "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
     }
+    plot_result = True
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
@@ -227,7 +228,7 @@ class PlotSelection2D(ObjectDataSelection):
         refresh,
         colorbar,
     ):
-        if not refresh:
+        if not refresh or not self.plot_result:
             return
 
         # Parse the contours string
@@ -246,13 +247,12 @@ class PlotSelection2D(ObjectDataSelection):
             else:
                 data_channel = data_name
 
-        if entity.get_data(data_channel):
-            data_obj = entity.get_data(data_channel)[0]
-        elif data_channel == "Z":
-            data_obj = "Z"
+        if isinstance(data_channel, str) and (data_channel in "XYZ"):
+            data_obj = data_channel
+        elif self.workspace.get_entity(data_channel):
+            data_obj = self.workspace.get_entity(data_channel)[0]
 
         if isinstance(entity, (Grid2D, Surface, Points, Curve)):
-
             self.figure = plt.figure(figsize=(10, 10))
             self.axis = plt.subplot()
             corners = np.r_[
@@ -285,7 +285,7 @@ class PlotSelection2D(ObjectDataSelection):
                     "colorbar": colorbar,
                 },
             )
-
+            plt.show()
             self.indices = ind_filter
             self.contours.contour_set = contour_set
             self.data_count.value = f"Data Count: {ind_filter.sum()}"
