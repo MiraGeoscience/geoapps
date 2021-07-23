@@ -56,39 +56,6 @@ def tmp_input_file(filepath, idict):
         json.dump(idict, f)
 
 
-def default_test_generator(tmp_path, param, newval):
-
-    d_u_j = deepcopy(MVI_defaults)
-    params = MVIParams()
-    assert getattr(params, param) == d_u_j[param]["default"]
-    filepath = tmpfile(tmp_path)
-    ifile = InputFile()
-    ifile.filepath = filepath
-    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
-    params = MVIParams.from_path(filepath, workspace=workspace)
-    assert getattr(params, param) == d_u_j[param]["default"]
-    with open(filepath) as f:
-        ui = json.load(f)
-    ui[param]["isValue"] = True
-    ui[param]["value"] = newval
-    ui[param]["visible"] = True
-    ui[param]["enabled"] = False
-    with open(filepath, "w") as f:
-        json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath, workspace=workspace)
-    assert getattr(params, param) == d_u_j[param]["default"]
-    with open(filepath) as f:
-        ui = json.load(f)
-    ui[param]["isValue"] = True
-    ui[param]["value"] = newval
-    ui[param]["visible"] = False
-    ui[param]["enabled"] = True
-    with open(filepath, "w") as f:
-        json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath, workspace=workspace)
-    assert getattr(params, param) == d_u_j[param]["default"]
-
-
 def catch_invalid_generator(
     tmp_path, param, invalid_value, validation_type, workspace=None, parent=None
 ):
@@ -107,10 +74,13 @@ def catch_invalid_generator(
     ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
-    ui[param]["value"] = invalid_value
-    ui[param]["visible"] = True
-    ui[param]["enabled"] = True
-    ui[param]["isValue"] = True
+    if isinstance(ui[param], dict):
+        ui[param]["value"] = invalid_value
+        ui[param]["visible"] = True
+        ui[param]["enabled"] = True
+        ui[param]["isValue"] = True
+    else:
+        ui[param] = invalid_value
     ui["geoh5"] = None
     if validation_type == "value":
         err = ValueError
@@ -172,10 +142,13 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
     ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
-    ui[param]["isValue"] = True
-    ui[param]["value"] = value
-    ui[param]["visible"] = True
-    ui[param]["enabled"] = True
+    if isinstance(ui[param], dict):
+        ui[param]["isValue"] = True
+        ui[param]["value"] = value
+        ui[param]["visible"] = True
+        ui[param]["enabled"] = True
+    else:
+        ui[param] = value
     ui["geoh5"] = None
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
@@ -225,16 +198,6 @@ def test_params_constructors(tmp_path):
     ifile.write_ui_json(ui, default=True)
     params1 = MVIParams.from_path(filepath, workspace=workspace)
     params2 = MVIParams.from_input_file(ifile, workspace=workspace)
-
-
-def test_default_generator(tmp_path):
-    """
-    ### test default behaviour ###
-    """
-    param = "inversion_type"
-    newval = "mvic"
-
-    default_test_generator(tmp_path, param, newval)
 
 
 def test_param_names():

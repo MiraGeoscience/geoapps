@@ -94,7 +94,9 @@ class PeakFinder(ObjectDataSelection):
 
             self.params = self._param_class(**app_initializer)
 
-        self.defaults = self.update_defaults(**self.params.__dict__)
+        self.default.update(
+            self.params.to_dict()
+        )  # self.update_defaults(**self.params.__dict__)
         self.all_anomalies = []
         self.active_channels = {}
         self.pause_refresh = False

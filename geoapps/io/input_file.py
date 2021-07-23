@@ -210,10 +210,12 @@ class InputFile:
                     field = "value" if v["isValue"] else "property"
                 if "enabled" in v.keys():
                     if not v["enabled"]:
-                        field = "default"
+                        data[k] = None
+                        continue
                 if "visible" in v.keys():
                     if not v["visible"]:
-                        field = "default"
+                        data[k] = None
+                        continue
                 data[k] = v[field]
             else:
                 data[k] = v
