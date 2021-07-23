@@ -111,8 +111,8 @@ def test_ui_2_py():
     data = ifile._ui_2_py(tdict)
     assert data["run_command"] == "blah"
     assert data["inversion_type"] == "mvi"
-    assert data["detrend_order"] == 0
-    assert data["detrend_type"] == "all"
+    assert data["detrend_order"] is None
+    assert data["detrend_type"] is None
     assert data["topography"] == 2
     assert data["topography2"] == "yep"
     assert data["tmi_channel"] == "ldskfjsld"
@@ -156,7 +156,14 @@ def test_ui_json_io(tmp_path):
     ifile = InputFile(ifile.filepath, validator)
     for k, v in d_u_j.items():
         if isinstance(v, dict):
-            assert ifile.data[k] == v["default"]
+            check_default = True
+            for field in ["enabled", "visible"]:
+                if field in v.keys():
+                    if not v[field]:
+                        assert ifile.data[k] is None
+                        check_default = False
+            if check_default:
+                assert ifile.data[k] == v["default"]
         else:
             assert ifile.data[k] == v
     ifile.data["inducing_field_strength"] = 99
