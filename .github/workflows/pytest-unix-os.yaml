@@ -3,9 +3,11 @@ name: pytest on Unix OS
 on:
   pull_request:
     branches:
+      - develop
       - main
-      - hotfix/**
       - release/**
+      - feature/**
+      - hotfix/**
   push:
     branches:
       - develop
