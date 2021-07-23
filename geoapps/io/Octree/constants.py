@@ -10,7 +10,34 @@ from uuid import UUID
 from geoh5py.workspace import Workspace
 
 required_parameters = []
-defaults = {}
+
+defaults = {
+    "title": "Octree Mesh Creator",
+    "geoh5": None,
+    "objects": None,
+    "u_cell_size": 25,
+    "v_cell_size": 25,
+    "w_cell_size": 25,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "depth_core": 500.0,
+    "ga_group_name": "Octree_Mesh",
+    "Refinement A Object": None,
+    "Refinement A Levels": [4, 4, 4],
+    "Refinement A Type": "radial",
+    "Refinement A Distance": 1000.0,
+    "Refinement B Object": None,
+    "Refinement B Levels": [0, 0, 2],
+    "Refinement B Type": "surface",
+    "Refinement B Distance": 1000.0,
+    "run_command": ("geoapps.create.octree_mesh"),
+    "run_command_boolean": False,
+    "monitoring_directory": None,
+    "workspace_geoh5": None,
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": False,
+    "workspace": None,
+}
 
 default_ui_json = {
     "title": "Octree Mesh Creator",

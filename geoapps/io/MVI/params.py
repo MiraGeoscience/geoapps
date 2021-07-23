@@ -16,11 +16,12 @@ from geoh5py.workspace import Workspace
 from ..input_file import InputFile
 from ..params import Params
 from ..validators import InputValidator
-from .constants import default_ui_json, required_parameters, validations
+from .constants import default_ui_json, defaults, required_parameters, validations
 
 
 class MVIParams(Params):
 
+    defaults = defaults
     _default_ui_json = default_ui_json
     _required_parameters = required_parameters
     _validations = validations

@@ -18,7 +18,40 @@ from geoh5py.workspace import Workspace
 from ...utils.geophysical_systems import parameters
 
 required_parameters = []
-defaults = {}
+
+defaults = {
+    "title": "Peak Finder Parameters",
+    "geoh5": None,
+    "objects": None,
+    "data": None,
+    "flip_sign": False,
+    "line_field": None,
+    "tem_checkbox": True,
+    "system": None,
+    "smoothing": 6,
+    "min_amplitude": 1,
+    "min_value": None,
+    "min_width": 100,
+    "max_migration": 25,
+    "min_channels": 1,
+    "ga_group_name": "PeakFinder",
+    "structural_markers": False,
+    "line_id": None,
+    "group_auto": True,
+    "center": None,
+    "width": None,
+    "Property Group Data": None,
+    "Property Group Color": None,
+    "run_command": ("geoapps.processing.peak_finder"),
+    "run_command_boolean": None,
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": None,
+    "property_group_data": None,
+    "property_group_color": None,
+    "workspace_geoh5": None,
+    "workspace": None,
+    "monitoring_directory": None,
+}
 
 default_ui_json = {
     "title": "Peak Finder Parameters",
@@ -183,8 +216,6 @@ default_ui_json = {
     "workspace": None,
     "monitoring_directory": None,
 }
-
-required_parameters = []
 
 validations = {
     "title": {
