@@ -200,12 +200,9 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
 def test_params_initialize():
     for params in [MVIParams(), GravityParams(), OctreeParams(), PeakFinderParams()]:
         check = []
-        for k, v in params.default_ui_json.items():
+        for k, v in params.defaults.items():
             if " " in k:
                 continue
-            if isinstance(v, dict):
-                check.append(getattr(params, k) == v["default"])
-            else:
                 check.append(getattr(params, k) == v)
         assert all(check)
 

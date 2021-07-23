@@ -65,6 +65,7 @@ class Params:
 
     """
 
+    defaults = {}
     _default_ui_json = {}
     associations: dict[str | UUID, str | UUID] = None
     _workspace: Workspace = None
@@ -73,7 +74,7 @@ class Params:
     _ifile: InputFile = None
 
     def __init__(self, validate=True, **kwargs):
-        self.update(self.default_ui_json, validate=False)
+        self.update(self.defaults, validate=False)
         if kwargs:
             self.update(kwargs, validate=False)
             if validate:
@@ -188,7 +189,7 @@ class Params:
         """Return params and values dictionary."""
 
         if ui_json_format:
-            ui_json = deepcopy(self._default_ui_json)
+            ui_json = deepcopy(self.default_ui_json)
             for k in self.param_names:
                 if " " in k:
                     continue
@@ -294,25 +295,3 @@ class Params:
             self.to_dict(), self.required_parameters, self.validations
         )
         ifile.write_ui_json(self.default_ui_json, default=False, name=name)
-        # if getattr(self, "input_file", None) is not None:
-        #     input_dict = self.default_ui_json
-        #     if self.input_file.input_dict is not None:
-        #         input_dict = self.input_file.input_dict
-        #
-        #     params = {}
-        #     for key in self.input_file.data.keys():
-        #         try:
-        #             value = getattr(self, key)
-        #             if hasattr(value, "h5file"):
-        #                 value = value.h5file
-        #             params[key] = value
-        #         except KeyError:
-        #             continue
-        #
-        #     self.input_file.workpath = self.workpath
-        #     self.input_file.write_ui_json(
-        #         input_dict,
-        #         name=name,
-        #         param_dict=params,
-        #         workspace=self.workspace.h5file,
-        #     )

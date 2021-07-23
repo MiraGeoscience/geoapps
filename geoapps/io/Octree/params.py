@@ -12,12 +12,13 @@ from uuid import UUID
 
 from ..input_file import InputFile
 from ..params import Params
-from . import default_ui_json, required_parameters, validations
+from . import default_ui_json, defaults, required_parameters, validations
 from .validators import OctreeValidator
 
 
 class OctreeParams(Params):
 
+    defaults = defaults
     _default_ui_json = default_ui_json
     _required_parameters = required_parameters
     _validations = validations
