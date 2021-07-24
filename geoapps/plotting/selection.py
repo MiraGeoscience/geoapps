@@ -27,6 +27,7 @@ class PlotSelection2D(ObjectDataSelection):
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
     }
+    plot_result = True
 
     def __init__(self, **kwargs):
         self.defaults = self.update_defaults(**kwargs)
@@ -227,7 +228,7 @@ class PlotSelection2D(ObjectDataSelection):
         refresh,
         colorbar,
     ):
-        if not refresh:
+        if not refresh or not self.plot_result:
             return
 
         # Parse the contours string
@@ -284,7 +285,7 @@ class PlotSelection2D(ObjectDataSelection):
                     "colorbar": colorbar,
                 },
             )
-
+            plt.show()
             self.indices = ind_filter
             self.contours.contour_set = contour_set
             self.data_count.value = f"Data Count: {ind_filter.sum()}"

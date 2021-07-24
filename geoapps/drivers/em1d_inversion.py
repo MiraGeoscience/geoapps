@@ -622,7 +622,7 @@ def inversion(input_file):
 
     uncert = normalization * uncert
     dobs = data_mapping * normalization * dobs
-
+    data_types = {}
     for ind, channel in enumerate(channels):
         if channel in list(input_param["data"]["channels"].keys()):
             d_i = curve.add_data(
@@ -633,8 +633,8 @@ def inversion(input_file):
                     }
                 }
             )
-
             curve.add_data_to_group(d_i, f"Observed")
+            data_types[channel] = d_i.entity_type
 
     xyz = locations[stn_id, :]
     topo = np.c_[xyz[:, :2], dem[stn_id, 2]]
@@ -976,6 +976,7 @@ def inversion(input_file):
             mapping=data_mapping,
             attribute="predicted",
             channels=channels,
+            data_type=data_types,
             group=True,
             save_objective_function=True,
         )

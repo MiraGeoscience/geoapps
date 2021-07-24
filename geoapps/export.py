@@ -398,9 +398,10 @@ class Export(ObjectDataSelection):
         self.epsg_code.observe(self.set_wkt, names="value")
 
     def update_name(self, _):
-        self.export_as.value = [
-            key for key, value in self.objects.options if value == self.objects.value
-        ][0]
+        if self._workspace.get_entity(self.objects.value):
+            self.export_as.value = self._workspace.get_entity(self.objects.value)[
+                0
+            ].name
 
     def update_options(self, _):
         if self.file_type.value in ["ESRI shapefile"]:
