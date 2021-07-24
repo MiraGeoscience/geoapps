@@ -17,12 +17,12 @@ from geoh5py.workspace import Workspace
 from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
 from osgeo import gdal, osr
 
-from geoapps.base import BaseApplication
 from geoapps.plotting import plot_plan_data_selection
+from geoapps.selection import ObjectDataSelection
 from geoapps.utils.utils import export_grid_2_geotiff, geotiff_2_grid
 
 
-class CoordinateTransformation(BaseApplication):
+class CoordinateTransformation(ObjectDataSelection):
     """"""
 
     defaults = {
@@ -223,22 +223,6 @@ class CoordinateTransformation(BaseApplication):
         self._workspace = workspace
         self._h5file = workspace.h5file
         self.update_objects_list()
-
-    def update_objects_list(self):
-        if getattr(self, "_workspace", None) is not None:
-
-            if len(self.object_types) > 0:
-                options = [["", None]] + [
-                    [obj.name, obj.uid]
-                    for obj in self._workspace.objects
-                    if isinstance(obj, self.object_types)
-                ]
-            else:
-                options = [["", None]] + [
-                    [value, uid]
-                    for uid, value in self._workspace.list_objects_name.items()
-                ]
-            self.objects.options = options
 
     def set_wkt_in(self, _):
         datasetSRS = osr.SpatialReference()
