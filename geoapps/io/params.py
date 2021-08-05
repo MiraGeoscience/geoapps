@@ -115,20 +115,26 @@ class Params:
         p.workpath = input_file.workpath
         p.associations = input_file.associations
 
-        for v in ["geoh5", "workspace"]:
-            if v in input_file.data.keys():
-                if input_file.data[v] is not None:
-                    ws_param = input_file.data[v]
-                    ws = Workspace(ws_param) if isinstance(ws_param, str) else ws_param
-                    p.workspace = ws
-                    p.geoh5 = ws
-            input_file.data.pop(v, None)
-
         if workspace is not None:
             p.workspace = (
                 Workspace(workspace) if isinstance(workspace, str) else workspace
             )
+        elif isinstance(input_file.workspace, Workspace):
+            p.workspace = input_file.workspace
 
+        for v in ["geoh5", "workspace"]:
+            if v in input_file.data.keys():
+                if (
+                    input_file.data[v] is not None
+                    and getattr(p, "workspace", None) is None
+                ):
+                    ws_param = input_file.data[v]
+                    ws = Workspace(ws_param) if isinstance(ws_param, str) else ws_param
+                    p.workspace = ws
+
+            input_file.data.pop(v, None)
+
+        p.geoh5 = p.workspace
         p.update(input_file.data)
 
         return p
@@ -346,7 +352,5 @@ class Params:
     def write_input_file(self, name: str = None):
         """Write out a ui.json with the current state of parameters"""
 
-        ifile = InputFile.from_dict(
-            self.to_dict(), self.required_parameters, self.validations
-        )
+        ifile = InputFile.from_dict(self.to_dict(), self.validator)
         ifile.write_ui_json(self.default_ui_json, default=False, name=name)

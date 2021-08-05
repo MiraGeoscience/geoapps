@@ -87,16 +87,12 @@ class InputFile:
 
         self.data = self._ui_2_py(input_dict)
 
-        if self.workspace is None:
-            for p in ["geoh5", "workspace"]:
-                if p in self.data.keys():
-                    if self.data[p] is not None:
-                        if validator is not None:
-                            validator.validate(
-                                p, self.data[p], validator.validations[p]
-                            )
-                        self.workspace = Workspace(self.data[p])
-                        self.geoh5 = Workspace(self.data[p])
+        for p in ["geoh5", "workspace"]:
+            if p in self.data.keys() and self.workspace is None:
+                if self.data[p] is not None:
+                    if validator is not None:
+                        validator.validate(p, self.data[p], validator.validations[p])
+                    self.workspace = Workspace(self.data[p])
 
         if validator is not None:
             validator.workspace = self.workspace
