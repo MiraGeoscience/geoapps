@@ -39,7 +39,7 @@ class Surface2D(ObjectDataSelection):
     _object_types = (Curve,)
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._z_option = RadioButtons(
             options=["elevation", "depth"],
             description="Vertical Reference:",

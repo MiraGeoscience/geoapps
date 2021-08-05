@@ -47,7 +47,7 @@ class BaseApplication:
     plot_result = False
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._file_browser = FileChooser()
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
@@ -124,16 +124,6 @@ class BaseApplication:
                         setattr(self, key, value)
                 except:
                     pass
-
-    def update_defaults(self, **kwargs):
-        """
-        Add defaults to the kwargs
-        """
-        for key, value in self.defaults.copy().items():
-            if key not in kwargs.keys():
-                kwargs[key] = value
-
-        return kwargs
 
     def file_browser_change(self, _):
         """

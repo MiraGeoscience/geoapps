@@ -49,7 +49,7 @@ class Export(ObjectDataSelection):
     _select_multiple = True
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._file_type = Dropdown(
             options=["ESRI shapefile", "csv", "geotiff", "UBC format"],
             value="csv",

@@ -107,7 +107,7 @@ class SensorOptions(ObjectDataSelection):
     _options = None
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._offset = Text(description="(dx, dy, dz) (+ve up)", value="0, 0, 0")
         self._constant = FloatText(
             description="Constant elevation (m)",
@@ -385,7 +385,7 @@ class InversionOptions(BaseApplication):
     defaults = {}
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._output_name = widgets.Text(
             value="Inversion_", description="Save to:", disabled=False
         )
@@ -732,8 +732,7 @@ class InversionApp(PlotSelection2D):
     _spatial_options = None
 
     def __init__(self, **kwargs):
-
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
