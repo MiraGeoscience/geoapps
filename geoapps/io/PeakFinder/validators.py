@@ -18,6 +18,8 @@ class PeakFinderValidator(InputValidator):
     Validations for Octree driver parameters.
     """
 
+    _groups = {}
+
     def __init__(
         self,
         requirements: List[str],
@@ -26,7 +28,6 @@ class PeakFinderValidator(InputValidator):
         input=None,
     ):
         super().__init__(requirements, validations, workspace=workspace, input=input)
-        self.groups = {}
 
     def validate_input(self, input) -> None:
         self._validate_requirements(input.data)
@@ -63,4 +64,8 @@ class PeakFinderValidator(InputValidator):
                     "Property Groups must contain one of each" + f"{ref_params_list}"
                 )
 
-        self.groups = groups
+        self._groups = groups
+
+    @property
+    def groups(self):
+        return self._groups
