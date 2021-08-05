@@ -29,23 +29,15 @@ class OctreeParams(Params):
         self.validator: OctreeValidator = OctreeValidator(
             required_parameters, validations
         )
-        self.title = None
-        self.geoh5 = None
-        self.objects = None
-        self.u_cell_size = None
-        self.v_cell_size = None
-        self.w_cell_size = None
-        self.horizontal_padding = None
-        self.vertical_padding = None
-        self.depth_core = None
-        self.ga_group_name = None
-        self.run_command = None
-        self.run_command_boolean = None
-        self.monitoring_directory = None
-        self.workspace_geoh5 = None
-        self.conda_environment = None
-        self.conda_environment_boolean = None
-        self.workspace = None
+        self._title = None
+        self._objects = None
+        self._u_cell_size = None
+        self._v_cell_size = None
+        self._w_cell_size = None
+        self._horizontal_padding = None
+        self._vertical_padding = None
+        self._depth_core = None
+        self._ga_group_name = None
         self._refinements = None
 
         super().__init__(validate, **kwargs)
@@ -137,54 +129,6 @@ class OctreeParams(Params):
     @ga_group_name.setter
     def ga_group_name(self, val):
         self.setter_validator("ga_group_name", val)
-
-    @property
-    def run_command(self):
-        return self._run_command
-
-    @run_command.setter
-    def run_command(self, val):
-        self.setter_validator("run_command", val)
-
-    @property
-    def run_command_boolean(self):
-        return self._run_command_boolean
-
-    @run_command_boolean.setter
-    def run_command_boolean(self, val):
-        self.setter_validator("run_command_boolean", val)
-
-    @property
-    def monitoring_directory(self):
-        return self._monitoring_directory
-
-    @monitoring_directory.setter
-    def monitoring_directory(self, val):
-        self.setter_validator("monitoring_directory", val)
-
-    @property
-    def workspace_geoh5(self):
-        return self._workspace_geoh5
-
-    @workspace_geoh5.setter
-    def workspace_geoh5(self, val):
-        self.setter_validator("workspace_geoh5", val)
-
-    @property
-    def conda_environment(self):
-        return self._conda_environment
-
-    @conda_environment.setter
-    def conda_environment(self, val):
-        self.setter_validator("conda_environment", val)
-
-    @property
-    def conda_environment_boolean(self):
-        return self._conda_environment_boolean
-
-    @conda_environment_boolean.setter
-    def conda_environment_boolean(self, val):
-        self.setter_validator("conda_environment_boolean", val)
 
     @property
     def workspace(self):
