@@ -89,14 +89,12 @@ class PeakFinder(ObjectDataSelection):
             self.params = self._param_class.from_path(ui_json)
         else:
             if "h5file" in app_initializer.keys():
-                app_initializer["workspace"] = app_initializer.pop("h5file")
-                app_initializer["geoh5"] = app_initializer["workspace"]
+                app_initializer["geoh5"] = app_initializer.pop("h5file")
+                # app_initializer["geoh5"] = app_initializer["workspace"]
 
             self.params = self._param_class(**app_initializer)
 
-        self.default.update(
-            self.params.to_dict()
-        )  # self.update_defaults(**self.params.__dict__)
+        self.defaults.update(self.params.to_dict(ui_json_format=False))
         self.all_anomalies = []
         self.active_channels = {}
         self.pause_refresh = False
@@ -116,7 +114,7 @@ class PeakFinder(ObjectDataSelection):
         )
         self.data.observe(self.set_data, names="value")
         self.system.observe(self.set_data, names="value")
-        super().__init__(**kwargs)
+        super().__init__()
         self.pause_refresh = False
         self.previous_line = self.lines.lines.value
         self.smoothing.observe(self.line_update, names="value")
