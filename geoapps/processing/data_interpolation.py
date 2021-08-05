@@ -62,7 +62,7 @@ class DataInterpolation(ObjectDataSelection):
     def __init__(self, use_defaults=True, **kwargs):
 
         if use_defaults:
-            self.defaults = self.update_defaults(**kwargs)
+            self.defaults.update(**kwargs)
 
         self._core_cell_size = Text(
             description="Smallest cells",

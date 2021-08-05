@@ -47,8 +47,7 @@ class OctreeMesh(ObjectDataSelection):
 
             self.params = self._param_class(**app_initializer)
 
-        # self.defaults = self.update_defaults(**self.params.__dict__)
-        self.defaults.update(self.params.to_dict())
+        self.defaults.update(self.params.to_dict(ui_json_format=False))
 
         self.refinement_list = VBox([])
 

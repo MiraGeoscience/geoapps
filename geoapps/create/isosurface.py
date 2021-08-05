@@ -33,7 +33,7 @@ class IsoSurface(ObjectDataSelection):
     _select_multiple = False
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._topography = TopographyOptions()
         self._max_distance = FloatText(
             description="Max Interpolation Distance (m):",
