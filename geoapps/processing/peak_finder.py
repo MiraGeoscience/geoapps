@@ -95,6 +95,8 @@ class PeakFinder(ObjectDataSelection):
             self.params = self._param_class(**app_initializer)
 
         self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.pop("workspace", None)
+
         self.all_anomalies = []
         self.active_channels = {}
         self.pause_refresh = False
@@ -717,10 +719,8 @@ class PeakFinder(ObjectDataSelection):
         if self.group_auto.value:
             obj = self.workspace.get_entity(self.objects.value)[0]
             group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
-
             if any(group):
                 channel_groups = self.default_groups_from_property_group(group[0])
-
                 self._channel_groups = channel_groups
                 self.pause_refresh = True
                 for name, group in self._channel_groups.items():
@@ -728,20 +728,19 @@ class PeakFinder(ObjectDataSelection):
                         getattr(self, f"Property Group {name} Data").value = group[
                             "data"
                         ]
-
                 self.update_data_list(None)
                 self.set_data(None)
         self.group_auto.value = False
 
     @staticmethod
-    def default_groups_from_property_group(property_group):
+    def default_groups_from_property_group(property_group, start_index=0):
         parent = property_group.parent
 
         data_list = [
             parent.workspace.get_entity(uid)[0] for uid in property_group.properties
         ]
 
-        start = 0
+        start = start_index
         end = len(data_list)
         block = int((end - start) / 3)
         ranges = {
@@ -765,7 +764,6 @@ class PeakFinder(ObjectDataSelection):
                 "label": [ii + 1],
                 "properties": prop_group.properties,
             }
-            parent.workspace.finalize()
 
         return channel_groups
 
@@ -1249,14 +1247,16 @@ class PeakFinder(ObjectDataSelection):
             for group in self.channel_groups.values():
                 for channel in group["properties"]:
                     obj = self.workspace.get_entity(channel)[0]
-                    self.active_channels[channel] = {"name": obj.name}
+
+                    if getattr(obj, "values", None) is not None:
+                        self.active_channels[channel] = {"name": obj.name}
 
             d_min, d_max = np.inf, -np.inf
             thresh_value = np.inf
             if self.tem_checkbox.value:
                 system = self.em_system_specs[self.system.value]
 
-            for uid, params in self.active_channels.items():
+            for uid, params in self.active_channels.copy().items():
                 obj = self.workspace.get_entity(uid)[0]
                 try:
                     if self.tem_checkbox.value:
@@ -1266,15 +1266,27 @@ class PeakFinder(ObjectDataSelection):
                             if ch in params["name"]
                         ]
                         if any(channel):
-                            params["time"] = system["channels"][channel[0]]
+                            self.active_channels[uid]["time"] = system["channels"][
+                                channel[0]
+                            ]
+                        else:
+                            del self.active_channels[uid]
+
+                    self.active_channels[uid]["values"] = (
+                        -1.0
+                    ) ** self.flip_sign.value * obj.values.copy()
+                    thresh_value = np.min(
+                        [
+                            thresh_value,
+                            np.percentile(
+                                np.abs(self.active_channels[uid]["values"]), 95
+                            ),
+                        ]
+                    )
+                    d_min = np.min([d_min, self.active_channels[uid]["values"].min()])
+                    d_max = np.max([d_max, self.active_channels[uid]["values"].max()])
                 except KeyError:
                     continue
-                params["values"] = (-1.0) ** self.flip_sign.value * obj.values.copy()
-                thresh_value = np.min(
-                    [thresh_value, np.percentile(np.abs(params["values"]), 95)]
-                )
-                d_min = np.min([d_min, params["values"].min()])
-                d_max = np.max([d_max, params["values"].max()])
 
             self.pause_refresh = False
             self.plot_trigger.value = False
@@ -1349,6 +1361,12 @@ class PeakFinder(ObjectDataSelection):
         survey = workspace.get_entity(params.objects)[0]
         prop_group = [pg for pg in survey.property_groups if pg.uid == params.data]
 
+        if params.tem_checkbox:
+            system = geophysical_systems.parameters()[params.system]
+            normalization = system["normalization"]
+        else:
+            normalization = [1]
+
         if output_group is None:
             output_group = ContainerGroup.create(
                 workspace, name=string_name(params.ga_group_name)
@@ -1385,12 +1403,6 @@ class PeakFinder(ObjectDataSelection):
             for channel in group["properties"]:
                 obj = workspace.get_entity(channel)[0]
                 active_channels[channel] = {"name": obj.name}
-
-        if params.tem_checkbox:
-            system = geophysical_systems.parameters()[params.system]
-            normalization = system["normalization"]
-        else:
-            normalization = [1]
 
         for uid, channel_params in active_channels.items():
             obj = workspace.get_entity(uid)[0]
