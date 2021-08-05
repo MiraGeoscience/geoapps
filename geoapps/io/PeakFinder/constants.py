@@ -273,7 +273,7 @@ validations = {
         "types": [bool],
     },
     "line_id": {
-        "types": [int, float],
+        "types": [int, float, str],
     },
     "group_auto": {
         "types": [bool],
