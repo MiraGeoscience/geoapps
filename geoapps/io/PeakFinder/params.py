@@ -30,35 +30,27 @@ class PeakFinderParams(Params):
             required_parameters, validations
         )
 
-        self.title = None
-        self.geoh5 = None
-        self.objects = None
-        self.data = None
-        self.flip_sign = None
-        self.line_field = None
-        self.tem_checkbox = None
-        self.system = None
-        self.smoothing = None
-        self.min_amplitude = None
-        self.min_value = None
-        self.min_width = None
-        self.max_migration = None
-        self.min_channels = None
-        self.ga_group_name = None
-        self.structural_markers = None
-        self.line_id = None
-        self.group_auto = None
-        self.center = None
-        self.width = None
-        self.run_command = None
-        self.run_command_boolean = None
-        self.conda_environment = None
-        self.conda_environment_boolean = None
-        self.property_group_data = None
-        self.property_group_color = None
-        self.workspace_geoh5 = None
-        self.workspace = None
-        self.monitoring_directory = None
+        self._title = None
+        self._objects = None
+        self._data = None
+        self._flip_sign = None
+        self._line_field = None
+        self._tem_checkbox = None
+        self._system = None
+        self._smoothing = None
+        self._min_amplitude = None
+        self._min_value = None
+        self._min_width = None
+        self._max_migration = None
+        self._min_channels = None
+        self._ga_group_name = None
+        self._structural_markers = None
+        self._line_id = None
+        self._group_auto = None
+        self._center = None
+        self._width = None
+        self._property_group_data = None
+        self._property_group_color = None
         self._groups = None
 
         super().__init__(validate, **kwargs)
@@ -260,12 +252,12 @@ class PeakFinderParams(Params):
         self.setter_validator("conda_environment", val)
 
     @property
-    def conda_environment_bool(self):
-        return self._conda_environment_bool
+    def conda_environment_boolean(self):
+        return self._conda_environment_boolean
 
-    @conda_environment_bool.setter
-    def conda_environment_bool(self, val):
-        self.setter_validator("conda_environment_bool", val)
+    @conda_environment_boolean.setter
+    def conda_environment_boolean(self, val):
+        self.setter_validator("conda_environment_boolean", val)
 
     @property
     def property_group_data(self):

@@ -69,9 +69,16 @@ class Params:
     _default_ui_json = {}
     associations: dict[str | UUID, str | UUID] = None
     _workspace: Workspace = None
+    _geoh5: Workspace = None
     _output_geoh5: str = None
     _validator: InputValidator = None
     _ifile: InputFile = None
+    _run_command = None
+    _run_command_boolean = None
+    _conda_environment = None
+    _conda_environment_boolean = None
+    _monitoring_directory = None
+    _workspace_geoh5 = None
 
     def __init__(self, validate=True, **kwargs):
         self.update(self.defaults, validate=False)
@@ -209,7 +216,7 @@ class Params:
             return ui_json
 
         else:
-            return {k: getattr(self, k) for k in self.param_names}
+            return {k: getattr(self, k) for k in self.param_names if hasattr(self, k)}
 
     def active_set(self):
         """Return list of parameters with non-null entries."""
@@ -268,6 +275,54 @@ class Params:
             self._geoh5 = val
             return
         self.setter_validator("geoh5", val)
+
+    @property
+    def run_command(self):
+        return self._run_command
+
+    @run_command.setter
+    def run_command(self, val):
+        self.setter_validator("run_command", val)
+
+    @property
+    def run_command_boolean(self):
+        return self._run_command_boolean
+
+    @run_command_boolean.setter
+    def run_command_boolean(self, val):
+        self.setter_validator("run_command_boolean", val)
+
+    @property
+    def monitoring_directory(self):
+        return self._monitoring_directory
+
+    @monitoring_directory.setter
+    def monitoring_directory(self, val):
+        self.setter_validator("monitoring_directory", val)
+
+    @property
+    def workspace_geoh5(self):
+        return self._workspace_geoh5
+
+    @workspace_geoh5.setter
+    def workspace_geoh5(self, val):
+        self.setter_validator("workspace_geoh5", val)
+
+    @property
+    def conda_environment(self):
+        return self._conda_environment
+
+    @conda_environment.setter
+    def conda_environment(self, val):
+        self.setter_validator("conda_environment", val)
+
+    @property
+    def conda_environment_boolean(self):
+        return self._conda_environment_boolean
+
+    @conda_environment_boolean.setter
+    def conda_environment_boolean(self, val):
+        self.setter_validator("conda_environment_boolean", val)
 
     @property
     def input_file(self):
