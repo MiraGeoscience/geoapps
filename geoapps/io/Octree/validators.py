@@ -19,6 +19,8 @@ class OctreeValidator(InputValidator):
     Validations for Octree driver parameters.
     """
 
+    _refinements = {}
+
     def __init__(
         self,
         requirements: list[str],
@@ -27,7 +29,6 @@ class OctreeValidator(InputValidator):
         input=None,
     ):
         super().__init__(requirements, validations, workspace=workspace, input=input)
-        self.refinements = {}
 
     def validate_input(self, input) -> None:
         """
@@ -79,4 +80,8 @@ class OctreeValidator(InputValidator):
                     + f"{ref_params_list}"
                 )
 
-        self.refinements = refinements
+        self._refinements = refinements
+
+    @property
+    def requirements(self):
+        return self._refinements
