@@ -45,6 +45,8 @@ class InputFile:
 
     """
 
+    _workpath: str = None
+
     def __init__(
         self,
         filepath: str = None,
@@ -54,9 +56,6 @@ class InputFile:
         self.filepath = filepath
         self.validator = validator
         self.workspace = workspace
-        self.workpath: str = (
-            op.dirname(op.abspath(filepath)) + op.sep if filepath else None
-        )
         self.data: dict[str, Any] = {}
         self.associations: dict[str | UUID, str | UUID] = {}
         self.is_loaded: bool = False
@@ -109,11 +108,26 @@ class InputFile:
     def filepath(self, f: str):
         if f is None:
             self._filepath = f
+            self._workpath = None
             return
         if ".".join(f.split(".")[-2:]) != "ui.json":
             raise OSError("Input file must have 'ui.json' extension.")
         else:
             self._filepath = f
+            self._workpath = None
+
+    @property
+    def workpath(self):
+        if getattr(self, "_workpath", None) is None:
+            path = None
+            if getattr(self, "_filepath", None) is not None:
+                path = self.filepath
+            elif getattr(self, "workspace", None) is not None:
+                path = self.workspace.h5file
+
+            if path is not None:
+                self._workpath: str = op.dirname(op.abspath(path)) + op.sep
+        return self._workpath
 
     # def default(self, default_ui) -> None:
     #     """defaults InputFile data using 'default' field of default_ui"""

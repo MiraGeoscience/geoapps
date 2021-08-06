@@ -22,11 +22,11 @@ required_parameters = []
 defaults = {
     "title": "Peak Finder Parameters",
     "geoh5": None,
+    "tem_checkbox": False,
     "objects": None,
     "data": None,
     "flip_sign": False,
     "line_field": None,
-    "tem_checkbox": True,
     "system": None,
     "smoothing": 6,
     "min_amplitude": 1,
@@ -40,14 +40,14 @@ defaults = {
     "group_auto": True,
     "center": None,
     "width": None,
-    "Property Group Data": None,
-    "Property Group Color": None,
+    "Template Data": None,
+    "Template Color": None,
     "run_command": ("geoapps.processing.peak_finder"),
     "run_command_boolean": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": None,
-    "property_group_data": None,
-    "property_group_color": None,
+    "template_data": None,
+    "template_color": None,
     "workspace_geoh5": None,
     "workspace": None,
     "monitoring_directory": None,
@@ -56,6 +56,12 @@ defaults = {
 default_ui_json = {
     "title": "Peak Finder Parameters",
     "geoh5": None,
+    "tem_checkbox": {
+        "default": False,
+        "main": True,
+        "label": "TEM type",
+        "value": False,
+    },
     "objects": {
         "default": None,
         "main": True,
@@ -93,12 +99,6 @@ default_ui_json = {
         "label": "Line Field",
         "parent": "objects",
         "value": None,
-    },
-    "tem_checkbox": {
-        "default": True,
-        "main": True,
-        "label": "TEM type",
-        "value": True,
     },
     "system": {
         "default": None,
@@ -187,7 +187,7 @@ default_ui_json = {
         "value": None,
         "visible": False,
     },
-    "Property Group Data": {
+    "Template Data": {
         "association": "Vertex",
         "dataType": "Float",
         "group": "Property Group",
@@ -198,7 +198,7 @@ default_ui_json = {
         "dependencyType": "disabled",
         "value": None,
     },
-    "Property Group Color": {
+    "Template Color": {
         "dataType": "Text",
         "group": "Property Group",
         "label": "Color",
@@ -210,8 +210,8 @@ default_ui_json = {
     "run_command_boolean": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": None,
-    "property_group_data": None,
-    "property_group_color": None,
+    "template_data": None,
+    "template_color": None,
     "workspace_geoh5": None,
     "workspace": None,
     "monitoring_directory": None,
@@ -223,6 +223,9 @@ validations = {
     },
     "geoh5": {
         "types": [str, Workspace],
+    },
+    "tem_checkbox": {
+        "types": [bool],
     },
     "objects": {
         "types": [str, UUID],
@@ -240,9 +243,6 @@ validations = {
         "types": [str, UUID, int, float],
         "reqs": [("objects")],
         "uuid": ["objects"],
-    },
-    "tem_checkbox": {
-        "types": [bool],
     },
     "system": {
         "types": [str],
@@ -296,12 +296,12 @@ validations = {
     "conda_environment_boolean": {
         "types": [bool],
     },
-    "property_group_data": {
+    "template_data": {
         "types": [str, UUID],
         "reqs": [("objects")],
         "property_groups": ["objects"],
     },
-    "property_group_color": {
+    "template_color": {
         "types": [str],
     },
     "workspace_geoh5": {
