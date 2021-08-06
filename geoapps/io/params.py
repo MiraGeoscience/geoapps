@@ -79,6 +79,7 @@ class Params:
     _conda_environment_boolean = None
     _monitoring_directory = None
     _workspace_geoh5 = None
+    _free_param_keys: list[str] = None
 
     def __init__(self, validate=True, **kwargs):
         self.update(self.defaults, validate=False)
@@ -198,26 +199,27 @@ class Params:
                 else:
                     setattr(self, key, value)
 
-    def to_dict(self, ui_json_format=True):
+    def to_dict(self, ui_json: dict = None, ui_json_format=True):
         """Return params and values dictionary."""
-
         if ui_json_format:
-            ui_json = deepcopy(self.default_ui_json)
+            if ui_json is None:
+                ui_json = deepcopy(self.default_ui_json)
+
             for k in self.param_names:
-                if " " in k:
+                if k not in ui_json.keys() or not hasattr(self, k):
                     continue
-                newval = getattr(self, k)
+                new_val = getattr(self, k)
                 if isinstance(ui_json[k], dict):
                     field = "value"
                     if "isValue" in ui_json[k].keys():
                         if ui_json[k]["isValue"] is False:
                             field = "property"
-                    if ui_json[k][field] != newval:
+                    if ui_json[k][field] != new_val:
                         ui_json[k]["enabled"] = True
                         ui_json[k]["visible"] = True
-                    ui_json[k][field] = newval
+                    ui_json[k][field] = new_val
                 else:
-                    ui_json[k] = newval
+                    ui_json[k] = new_val
 
             return ui_json
 
@@ -349,8 +351,36 @@ class Params:
 
         setattr(self, f"_{key}", value)
 
-    def write_input_file(self, name: str = None):
+    def write_input_file(self, ui_json: dict = None, name: str = None):
         """Write out a ui.json with the current state of parameters"""
 
-        ifile = InputFile.from_dict(self.to_dict(), self.validator)
-        ifile.write_ui_json(self.default_ui_json, default=False, name=name)
+        if ui_json is None:
+            ui_json = self.default_ui_json
+
+        ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
+        ifile.write_ui_json(ui_json, default=False, name=name)
+
+    @property
+    def free_params_dict(self):
+        if (
+            getattr(self, "_free_params_dict", None) is None
+            and getattr(self, "_free_param_keys", None) is not None
+        ):
+            free_params_dict = {}
+            for k, v in self.input_file.data.items():
+                if "template" in k.lower():
+                    for param in self._free_param_keys:
+                        if param in k.lower():
+                            group = k.lower().replace(param, "").lstrip()
+                            if group not in list(free_params_dict.keys()):
+                                free_params_dict[group] = {}
+                            try:
+                                v = UUID(v)
+                            except (ValueError, TypeError):
+                                pass
+
+                            free_params_dict[group][param] = v
+
+            self._free_params_dict = free_params_dict
+
+        return self._free_params_dict

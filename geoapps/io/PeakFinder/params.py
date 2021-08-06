@@ -12,8 +12,8 @@ from geoh5py.workspace import Workspace
 
 from ..input_file import InputFile
 from ..params import Params
+from ..validators import InputFreeformValidator
 from .constants import default_ui_json, defaults, required_parameters, validations
-from .validators import PeakFinderValidator
 
 
 class PeakFinderParams(Params):
@@ -23,11 +23,12 @@ class PeakFinderParams(Params):
     _required_parameters = required_parameters
     _validations = validations
     param_names = list(default_ui_json.keys())
+    _free_param_keys: list[str] = ["data", "color"]
 
     def __init__(self, validate=True, **kwargs):
 
-        self.validator: PeakFinderValidator = PeakFinderValidator(
-            required_parameters, validations
+        self.validator: InputFreeformValidator = InputFreeformValidator(
+            required_parameters, validations, free_params_keys=self._free_param_keys
         )
 
         self._title = None
@@ -49,9 +50,9 @@ class PeakFinderParams(Params):
         self._group_auto = None
         self._center = None
         self._width = None
-        self._property_group_data = None
-        self._property_group_color = None
-        self._groups = None
+        self._template_data = None
+        self._template_color = None
+        self._free_params_dict = None
 
         super().__init__(validate, **kwargs)
 
@@ -260,20 +261,20 @@ class PeakFinderParams(Params):
         self.setter_validator("conda_environment_boolean", val)
 
     @property
-    def property_group_data(self):
-        return self._property_group_data
+    def template_data(self):
+        return self._template_data
 
-    @property_group_data.setter
-    def property_group_data(self, val):
-        self.setter_validator("property_group_data", val)
+    @template_data.setter
+    def template_data(self, val):
+        self.setter_validator("template_data", val)
 
     @property
-    def property_group_color(self):
-        return self._property_group_color
+    def template_color(self):
+        return self._template_color
 
-    @property_group_color.setter
-    def property_group_color(self, val):
-        self.setter_validator("property_group_color", val)
+    @template_color.setter
+    def template_color(self, val):
+        self.setter_validator("template_color", val)
 
     @property
     def workspace_geoh5(self):
@@ -302,10 +303,3 @@ class PeakFinderParams(Params):
     @monitoring_directory.setter
     def monitoring_directory(self, val):
         self.setter_validator("monitoring_directory", val)
-
-    @property
-    def groups(self):
-        if getattr(self, "_groups", None) is None:
-            self._groups = self.validator.groups
-
-        return self._groups
