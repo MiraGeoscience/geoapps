@@ -12,8 +12,8 @@ from uuid import UUID
 
 from ..input_file import InputFile
 from ..params import Params
+from ..validators import InputFreeformValidator
 from . import default_ui_json, defaults, required_parameters, validations
-from .validators import OctreeValidator
 
 
 class OctreeParams(Params):
@@ -23,11 +23,12 @@ class OctreeParams(Params):
     _required_parameters = required_parameters
     _validations = validations
     param_names = list(default_ui_json.keys())
+    _free_param_keys = ["object", "levels", "type", "distance"]
 
     def __init__(self, validate=True, **kwargs):
 
-        self.validator: OctreeValidator = OctreeValidator(
-            required_parameters, validations
+        self.validator: InputFreeformValidator = InputFreeformValidator(
+            required_parameters, validations, free_params_keys=self._free_param_keys
         )
         self._title = None
         self._objects = None
@@ -38,7 +39,6 @@ class OctreeParams(Params):
         self._vertical_padding = None
         self._depth_core = None
         self._ga_group_name = None
-        self._refinements = None
 
         super().__init__(validate, **kwargs)
 
@@ -137,10 +137,3 @@ class OctreeParams(Params):
     @workspace.setter
     def workspace(self, val):
         self.setter_validator("workspace", val)
-
-    @property
-    def refinements(self):
-        if getattr(self, "_refinements", None) is None:
-            self._refinements = self.validator.refinements
-
-        return self._refinements

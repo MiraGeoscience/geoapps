@@ -22,14 +22,10 @@ defaults = {
     "vertical_padding": 1000.0,
     "depth_core": 500.0,
     "ga_group_name": "Octree_Mesh",
-    "Refinement A Object": None,
-    "Refinement A Levels": [4, 4, 4],
-    "Refinement A Type": "radial",
-    "Refinement A Distance": 1000.0,
-    "Refinement B Object": None,
-    "Refinement B Levels": [0, 0, 2],
-    "Refinement B Type": "surface",
-    "Refinement B Distance": 1000.0,
+    "Template A Object": None,
+    "Template A Levels": [4, 4, 4],
+    "Template A Type": "radial",
+    "Template A Distance": 1000.0,
     "run_command": ("geoapps.create.octree_mesh"),
     "run_command_boolean": False,
     "monitoring_directory": None,
@@ -110,7 +106,7 @@ default_ui_json = {
         "label": "Name:",
         "value": "Octree_Mesh",
     },
-    "Refinement A Object": {
+    "Template Object": {
         "default": None,
         "enabled": True,
         "group": "Refinement A",
@@ -122,14 +118,14 @@ default_ui_json = {
         ],
         "value": None,
     },
-    "Refinement A Levels": {
+    "Template Levels": {
         "default": "4,4,4",
         "enabled": True,
         "group": "Refinement A",
         "label": "Levels",
         "value": "4,4,4",
     },
-    "Refinement A Type": {
+    "Template Type": {
         "default": "radial",
         "choiceList": ["surface", "radial"],
         "enabled": True,
@@ -137,44 +133,10 @@ default_ui_json = {
         "label": "Type",
         "value": "radial",
     },
-    "Refinement A Distance": {
+    "Template Distance": {
         "default": 1000.0,
         "enabled": True,
         "group": "Refinement A",
-        "label": "Distance",
-        "value": 1000.0,
-    },
-    "Refinement B Object": {
-        "default": None,
-        "enabled": True,
-        "group": "Refinement B",
-        "label": "Object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-        ],
-        "value": None,
-    },
-    "Refinement B Levels": {
-        "default": "0,0,2",
-        "enabled": True,
-        "group": "Refinement B",
-        "label": "Levels",
-        "value": "0,0,2",
-    },
-    "Refinement B Type": {
-        "default": "surface",
-        "choiceList": ["surface", "radial"],
-        "enabled": True,
-        "group": "Refinement B",
-        "label": "Type",
-        "value": "surface",
-    },
-    "Refinement B Distance": {
-        "default": 1000.0,
-        "enabled": True,
-        "group": "Refinement B",
         "label": "Distance",
         "value": 1000.0,
     },
@@ -224,18 +186,18 @@ validations = {
     "depth_core": {
         "types": [int, float],
     },
-    "refinement_object": {
+    "template_object": {
         "types": [str, UUID],
         "uuid": [],
     },
-    "refinement_levels": {
+    "template_levels": {
         "types": [int, float],
     },
-    "refinement_type": {
+    "template_type": {
         "types": [str],
         "values": ["surface", "radial"],
     },
-    "refinement_distance": {
+    "template_distance": {
         "types": [int, float],
     },
     "ga_group_name": {
@@ -267,5 +229,16 @@ validations = {
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
     "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-    "Refinement A Object": "{656acd40-25de-4865-814c-cb700f6ee51a}",
+    "Refinement A": {
+        "object": "{656acd40-25de-4865-814c-cb700f6ee51a}",
+        "levels": [4.0, 4.0, 4.0],
+        "type": "radial",
+        "distance": 1000,
+    },
+    "Refinement B": {
+        "object": "",
+        "levels": [0.0, 0.0, 2.0],
+        "type": "surface",
+        "distance": 1000,
+    },
 }

@@ -371,15 +371,17 @@ class Params:
                 if "template" in k.lower():
                     for param in self._free_param_keys:
                         if param in k.lower():
-                            group = k.lower().replace(param, "").lstrip()
+                            group = k.lower().replace(param, "").lstrip().rstrip()
                             if group not in list(free_params_dict.keys()):
                                 free_params_dict[group] = {}
-                            try:
-                                v = UUID(v)
-                            except (ValueError, TypeError):
-                                pass
 
+                            if isinstance(v, str):
+                                try:
+                                    v = UUID(v)
+                                except ValueError:
+                                    pass
                             free_params_dict[group][param] = v
+                            break
 
             self._free_params_dict = free_params_dict
 
