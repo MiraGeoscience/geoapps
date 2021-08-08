@@ -16,7 +16,7 @@ from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
-from geoapps.io.Octree.constants import app_initializer
+from geoapps.io.Octree.constants import app_initializer, default_ui_json
 from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
 from geoapps.utils.utils import string_2_list, treemesh_2_octree
@@ -42,12 +42,28 @@ class OctreeMesh(ObjectDataSelection):
             self.params = self._param_class.from_path(ui_json)
         else:
             if "h5file" in app_initializer.keys():
-                app_initializer["workspace"] = app_initializer.pop("h5file")
-                app_initializer["geoh5"] = app_initializer["workspace"]
+                app_initializer["geoh5"] = app_initializer.pop("h5file")
 
             self.params = self._param_class(**app_initializer)
 
         self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.pop("workspace", None)
+
+        if not any(
+            [
+                key
+                for key in self.params.free_params_dict.keys()
+                if "refinement" in key.lower()
+            ]
+        ):
+            for key, params in app_initializer.items():
+                if "refinement" in key.lower():
+                    self.params.free_params_dict[key.lower()] = {}
+                    for arg, value in params.items():
+                        self.params.free_params_dict[key.lower()][arg] = value
+
+        if "template" in self.params.free_params_dict.keys():
+            del self.params.free_params_dict["template"]
 
         self.refinement_list = VBox([])
 
@@ -88,7 +104,7 @@ class OctreeMesh(ObjectDataSelection):
         super().__populate__(**kwargs)
 
         refinement_list = []
-        for label, params in self.params.refinements.items():
+        for label, params in self.params.free_params_dict.items():
             refinement_list += [self.add_refinement_widget(label, params)]
 
         self.refinement_list.children = refinement_list
@@ -214,15 +230,40 @@ class OctreeMesh(ObjectDataSelection):
             except AttributeError:
                 continue
 
-        for refinement, params_refinement in zip(
-            self.refinement_list.children, self.params.refinements.values()
-        ):
-            params_refinement["object"] = refinement.children[1].value
-            params_refinement["levels"] = string_2_list(refinement.children[2].value)
-            params_refinement["type"] = refinement.children[3].value
-            params_refinement["distance"] = refinement.children[4].value
+        self.params._free_params_dict = {}
+        ui_json = default_ui_json.copy()
+        for group, refinement in zip("ABCDFEGH", self.refinement_list.children):
+            self.params.free_params_dict[refinement.children[0].value] = {
+                "object": refinement.children[1].value,
+                "levels": string_2_list(refinement.children[2].value),
+                "type": refinement.children[3].value,
+                "distance": refinement.children[4].value,
+            }
+            ui_json[f"Refinement {group} Object"] = default_ui_json[
+                f"Template Object"
+            ].copy()
+            ui_json[f"Refinement {group} Object"]["group"] = f"Refinement {group}"
+            ui_json[f"Refinement {group} Levels"] = default_ui_json[
+                f"Template Levels"
+            ].copy()
+            ui_json[f"Refinement {group} Levels"]["group"] = f"Refinement {group}"
+            ui_json[f"Refinement {group} Type"] = default_ui_json[
+                f"Template Type"
+            ].copy()
+            ui_json[f"Refinement {group} Type"]["group"] = f"Refinement {group}"
+            ui_json[f"Refinement {group} Distance"] = default_ui_json[
+                f"Template Distance"
+            ].copy()
+            ui_json[f"Refinement {group} Distance"]["group"] = f"Refinement {group}"
 
-        self.params.write_input_file(name=self.params.ga_group_name)
+        del ui_json[f"Template Object"]
+        del ui_json[f"Template Levels"]
+        del ui_json[f"Template Type"]
+        del ui_json[f"Template Distance"]
+
+        self.params.param_names = list(ui_json.keys())
+
+        self.params.write_input_file(ui_json=ui_json, name=self.params.ga_group_name)
         self.run(self.params)
 
     @staticmethod
@@ -262,7 +303,7 @@ class OctreeMesh(ObjectDataSelection):
             depth_core=params.depth_core,
         )
 
-        for label, value in params.refinements.items():
+        for label, value in params.free_params_dict.items():
 
             try:
                 uid = (
@@ -306,9 +347,9 @@ class OctreeMesh(ObjectDataSelection):
         """
         Add a refinement from dictionary
         """
-        widget_list = [Label(label.capitalize())]
+        widget_list = [Label(label.replace("template", "refinement").title())]
         for key, value in params.items():
-            attr_name = (label + f"{key}").title()
+            attr_name = (label + f" {key}").title()
 
             if "object" in key:
                 try:

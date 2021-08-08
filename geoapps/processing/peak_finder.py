@@ -117,7 +117,6 @@ class PeakFinder(ObjectDataSelection):
         else:
             if "h5file" in app_initializer.keys():
                 app_initializer["geoh5"] = app_initializer.pop("h5file")
-                # app_initializer["geoh5"] = app_initializer["workspace"]
 
             self.params = self._param_class(**app_initializer)
 
@@ -707,7 +706,7 @@ class PeakFinder(ObjectDataSelection):
             getattr(self, f"Template {property_group} Data").value = params["data"]
         except TraitError:
             pass
-        if getattr(self, f"Template {property_group} Color", None is None):
+        if getattr(self, f"Template {property_group} Color", None) is None:
             setattr(
                 self,
                 f"Template {property_group} Color",
@@ -986,7 +985,7 @@ class PeakFinder(ObjectDataSelection):
             or len(self.active_channels) == 0
             or getattr(self.survey, "line_indices", None) is None
             or len(self.survey.line_indices) < 2
-            or not self.plot_result
+            or not self._plot_result
         ):
             return
         self.figure = plt.figure(figsize=(12, 6))
@@ -1176,7 +1175,7 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.PeakFinder.`:
         """
-        if self.pause_refresh or not self.plot_result:
+        if self.pause_refresh or not self._plot_result:
             return
 
         if (

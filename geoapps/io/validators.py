@@ -352,16 +352,12 @@ class InputFreeformValidator(InputValidator):
         self._validate_requirements(input.data)
         free_params_dict = {}
         for k, v in input.data.items():
-            if "template" in k.lower():
+            if " " in k:
                 for param in self.free_params_keys:
                     if param in k.lower():
                         group = k.lower().replace(param, "").lstrip()
                         if group not in list(free_params_dict.keys()):
                             free_params_dict[group] = {}
-                        try:
-                            v = UUID(v)
-                        except (ValueError, TypeError):
-                            pass
 
                         free_params_dict[group][param] = v
                         validator = self.validations[f"template_{param}"]
