@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from typing import Any
 from uuid import UUID
 
@@ -23,7 +25,7 @@ class PeakFinderParams(Params):
     _required_parameters = required_parameters
     _validations = validations
     param_names = list(default_ui_json.keys())
-    _free_param_keys: list[str] = ["data", "color"]
+    _free_param_keys: list = ["data", "color"]
 
     def __init__(self, validate=True, **kwargs):
 
