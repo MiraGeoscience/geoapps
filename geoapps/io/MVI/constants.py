@@ -681,7 +681,7 @@ default_ui_json = {
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "Max iteration count",
-        "value": 10,
+        "value": 25,
     },
     "max_cg_iterations": {
         "default": 30,
