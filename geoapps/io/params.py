@@ -79,7 +79,7 @@ class Params:
     _conda_environment_boolean = None
     _monitoring_directory = None
     _workspace_geoh5 = None
-    _free_param_keys: list[str] = None
+    _free_param_keys: list = None
 
     def __init__(self, validate=True, **kwargs):
         self.update(self.defaults, validate=False)
