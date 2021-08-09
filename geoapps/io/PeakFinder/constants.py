@@ -215,6 +215,7 @@ default_ui_json = {
     "workspace_geoh5": None,
     "workspace": None,
     "monitoring_directory": None,
+    "plot_result": True,
 }
 
 validations = {
@@ -312,6 +313,9 @@ validations = {
     },
     "monitoring_directory": {
         "types": [str],
+    },
+    "plot_result": {
+        "types": [bool],
     },
 }
 
