@@ -166,7 +166,7 @@ class InputFile:
             Parameters to insert in ui_dict values.
             Defaults to the :obj:`InputFile.data` is not provided.
         workspace : optional
-            Provide a workspace_geoh5 path to simulate auto-generated field in GA.
+            Provide a workspace_geoh5 path to simulate auto-generated field in Geoscience ANALYST.
         """
 
         out = deepcopy(ui_dict)

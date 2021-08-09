@@ -24,7 +24,7 @@ from geoapps.utils.utils import string_2_list, treemesh_2_octree
 
 class OctreeMesh(ObjectDataSelection):
     """
-    Widget used for the creation of an octree meshes
+    Widget used for the creation of an octree mesh
     """
 
     _param_class = OctreeParams
