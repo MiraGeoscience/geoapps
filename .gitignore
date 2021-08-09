@@ -27,8 +27,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-.conda-env
-
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -154,3 +152,4 @@ dmypy.json
 /tests/SimPEG_PFInversion/Tile0.zarr/.zarray
 /tests/SimPEG_PFInversion/Tile0.zarr/0.0
 /tests/SimPEG_PFInversion/Tile0.zarr/0.1
+/.conda-env/
