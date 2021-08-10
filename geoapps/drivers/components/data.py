@@ -164,7 +164,7 @@ class InversionData(InversionLocations):
         Get all data and uncertainty components and possibly set infinite uncertainties.
 
         :return: components: list of data components sorted in the
-            order of self.data.keys().
+            order of self.observed.keys().
         :return: data: Dictionary of components and associated data
         :return: uncertainties: Dictionary of components and
             associated uncertainties with infinite uncertainty set on
@@ -196,7 +196,10 @@ class InversionData(InversionLocations):
             return None
         elif isinstance(unc, (int, float)):
             d = self.get_data_component(component)
-            return np.array([unc] * len(d))
+            if d is None:
+                return None
+            else:
+                return np.array([unc] * len(d))
         elif unc is None:
             d = self.get_data_component(component)
             return d * 0.0 + 1.0  # Default
