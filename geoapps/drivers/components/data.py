@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 from copy import deepcopy
 
 import numpy as np
+from dask.distributed import get_client, progress
 from discretize import TreeMesh
 from geoh5py.objects import Points
 from SimPEG import maps
@@ -360,12 +361,11 @@ class InversionData(InversionLocations):
         save: bool = True,
     ) -> np.ndarray:
         """Simulate fields for a particular model."""
-
+        client = get_client()
         sim, _ = self.simulation(mesh, active_cells)
-        prediction = sim.dpred(model)
-        d = prediction.compute()
-
-        d = d.reshape((int(len(d) / len(self.components)), len(self.components)))
+        prediction = client.compute(sim.dpred(model))
+        progress(prediction)
+        d = np.asarray(prediction.result()).reshape((-1, len(self.components)))
 
         for i, c in enumerate(self.components):
             self.predicted[c] = d[:, i]
