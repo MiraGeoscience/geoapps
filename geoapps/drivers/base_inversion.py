@@ -124,9 +124,6 @@ class InversionDriver:
         self.n_blocks = 3 if self.is_vector else 1
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
-        ###############################################################################
-        # Processing
-
         # If forward only is true simulate fields, save to workspace and exit.
         if self.params.forward_only:
             self.inversion_data.simulate(
