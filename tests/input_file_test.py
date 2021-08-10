@@ -14,7 +14,12 @@ import numpy as np
 import pytest
 
 from geoapps.io import InputFile
-from geoapps.io.MVI.constants import default_ui_json, required_parameters, validations
+from geoapps.io.MVI.constants import (
+    default_ui_json,
+    defaults,
+    required_parameters,
+    validations,
+)
 from geoapps.io.validators import InputValidator
 
 ######################  Setup  ###########################
@@ -163,7 +168,7 @@ def test_ui_json_io(tmp_path):
                         assert ifile.data[k] is None
                         check_default = False
             if check_default:
-                assert ifile.data[k] == v["default"]
+                assert ifile.data[k] == defaults[k]
         else:
             assert ifile.data[k] == v
     ifile.data["inducing_field_strength"] = 99
