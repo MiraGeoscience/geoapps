@@ -154,8 +154,11 @@ class MVIParams(Params):
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
         for k, v in self.__dict__.items():
-            if ("channel_bool" in k) & (v == True):
+            if ("channel_bool" in k) & (v is True):
                 comps.append(k.split("_")[1])
+        if self.forward_only:
+            if len(comps) == 0:
+                comps = ["tmi"]
         return comps
 
     def window(self) -> dict[str, float]:

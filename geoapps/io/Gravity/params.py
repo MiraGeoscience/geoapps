@@ -136,9 +136,12 @@ class GravityParams(Params):
         for k, v in self.__dict__.items():
             if ("channel_bool" in k) & (v is True):
                 comps.append(k.split("_")[1])
+        if self.forward_only:
+            if len(comps) == 0:
+                comps = ["gz"]
         return comps
 
-    def window(self) -> Dict[str, float]:
+    def window(self) -> dict[str, float]:
         """Returns window dictionary"""
         win = {
             "center_x": self.window_center_x,

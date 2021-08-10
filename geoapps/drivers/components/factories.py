@@ -109,7 +109,8 @@ class SurveyFactory(SimPEGFactory):
         if local_index is None:
             local_index = np.arange(len(locs))
 
-        n_channels = len(data.keys())
+        components = list(data.keys())
+        n_channels = len(components)
         tiled_local_index = np.tile(local_index, n_channels)
 
         if self.inversion_type == "mvi":
@@ -119,7 +120,7 @@ class SurveyFactory(SimPEGFactory):
             parameters = None
 
         receivers = self.data_module.receivers.Point(
-            locs[local_index], components=list(data.keys())
+            locs[local_index], components=components
         )
         source = self.data_module.sources.SourceField(
             receiver_list=[receivers], parameters=parameters
