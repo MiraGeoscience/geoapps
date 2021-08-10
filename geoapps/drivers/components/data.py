@@ -285,7 +285,8 @@ class InversionData(InversionLocations):
         for comp in self.components:
             if comp == "gz":
                 normalizations.append(-1.0)
-                d[comp] *= -1.0
+                if d[comp] is not None:
+                    d[comp] *= -1.0
                 print(f"Sign flip for {comp} component")
             else:
                 normalizations.append(1.0)

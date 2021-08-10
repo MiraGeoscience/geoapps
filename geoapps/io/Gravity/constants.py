@@ -100,12 +100,7 @@ defaults = {
 }
 
 default_ui_json = {
-    "inversion_type": {
-        "default": "gravity",
-        "visible": False,
-        "enabled": False,
-        "value": "gravity",
-    },
+    "inversion_type": "gravity",
     "forward_only": {
         "default": False,
         "main": True,
@@ -176,16 +171,16 @@ default_ui_json = {
     "gz_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
+        "default": 0.0,
         "group": "Data",
         "main": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
         "isValue": True,
-        "label": "Uncertainty",
+        "label": "Gz Uncertainty",
         "parent": "data_object",
         "property": None,
-        "value": None,
+        "value": 0.0,
     },
     "starting_model_object": {
         "default": None,
@@ -337,7 +332,7 @@ default_ui_json = {
         "min": 0,
         "group": "Data Options",
         "optional": True,
-        "enabled": False,
+        "enabled": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
         "label": "maximum chunk size",
@@ -577,7 +572,7 @@ default_ui_json = {
         "min": 0.0,
         "group": "Optimization",
         "optional": True,
-        "enabled": False,
+        "enabled": True,
         "dependency": "initial_beta",
         "dependencyType": "disabled",
         "label": "Initial beta ratio",
