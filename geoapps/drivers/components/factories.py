@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoapps.io.params import Params
@@ -44,6 +44,7 @@ class SimPEGFactory:
         """
         self.params = params
         self.inversion_type = params.inversion_type
+        from SimPEG import dask
 
         if self.inversion_type == "mvi":
             from SimPEG.potential_fields import magnetics as data_module
@@ -58,7 +59,7 @@ class SimPEGFactory:
             raise NotImplementedError(msg)
 
     def build(self, *args, **kwargs):
-        """ To be over-ridden in factory implementations. """
+        """To be over-ridden in factory implementations."""
 
 
 class SurveyFactory(SimPEGFactory):
@@ -89,8 +90,8 @@ class SurveyFactory(SimPEGFactory):
     def build(
         self,
         locs: np.ndarray,
-        data: Dict[str, np.ndarray],
-        uncertainties: Dict[str, np.ndarray],
+        data: dict[str, np.ndarray],
+        uncertainties: dict[str, np.ndarray],
         local_index: np.ndarray = None,
     ):
         """
@@ -105,12 +106,12 @@ class SurveyFactory(SimPEGFactory):
 
         """
 
-        n_channels = len(data.keys())
-
         if local_index is None:
             local_index = np.arange(len(locs))
 
-        local_index = np.tile(local_index, n_channels)
+        components = list(data.keys())
+        n_channels = len(components)
+        tiled_local_index = np.tile(local_index, n_channels)
 
         if self.inversion_type == "mvi":
             parameters = self.params.inducing_field_aid()
@@ -119,20 +120,21 @@ class SurveyFactory(SimPEGFactory):
             parameters = None
 
         receivers = self.data_module.receivers.Point(
-            locs[local_index], components=list(data.keys())
+            locs[local_index], components=components
         )
         source = self.data_module.sources.SourceField(
             receiver_list=[receivers], parameters=parameters
         )
         survey = self.data_module.survey.Survey(source)
 
-        survey.dobs = self._stack_channels(data)[local_index]
-        survey.std = self._stack_channels(uncertainties)[local_index]
+        if not self.params.forward_only:
+            survey.dobs = self._stack_channels(data)[tiled_local_index]
+            survey.std = self._stack_channels(uncertainties)[tiled_local_index]
 
         return survey
 
-    def _stack_channels(self, channel_data: Dict[str, np.ndarray]):
-        """ Convert dictionary of data/uncertainties to stacked array. """
+    def _stack_channels(self, channel_data: dict[str, np.ndarray]):
+        """Convert dictionary of data/uncertainties to stacked array."""
         return np.vstack([list(channel_data.values())]).ravel()
 
 
@@ -178,25 +180,23 @@ class SimulationFactory(SimPEGFactory):
         :param: tile_id: Identification number of a particular tile.
 
         """
-
         sens_path = self._get_sens_path(tile_id)
         data_dependent_args = self._get_args(active_cells)
-
         sim = self.data_module.simulation.Simulation3DIntegral(
             survey=survey,
             mesh=mesh,
             actInd=active_cells,
             sensitivity_path=sens_path,
             chunk_format="row",
-            store_sensitivities="disk",
+            store_sensitivities="forward_only" if self.params.forward_only else "disk",
             max_chunk_size=self.params.max_chunk_size,
             **data_dependent_args,
         )
 
         return sim
 
-    def _get_args(self, active_cells: np.ndarray) -> Dict[str, Any]:
-        """ Return inversion type specific kwargs dict for simulation object. """
+    def _get_args(self, active_cells: np.ndarray) -> dict[str, Any]:
+        """Return inversion type specific kwargs dict for simulation object."""
 
         if self.inversion_type == "mvi":
             args = {
@@ -210,7 +210,7 @@ class SimulationFactory(SimPEGFactory):
         return args
 
     def _get_sens_path(self, tile_id: int) -> str:
-        """ Build path to destination of on-disk sensitivities. """
+        """Build path to destination of on-disk sensitivities."""
         out_dir = os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
 
         if tile_id is None:

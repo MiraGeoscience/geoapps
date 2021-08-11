@@ -4,6 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+from uuid import UUID
 
 import numpy as np
 import pandas as pd
@@ -38,21 +39,27 @@ class Clustering(ScatterPlots):
     defaults = {
         "h5file": r"../../assets/FlinFlon.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
-        "data": ["Al2O3", "CaO", "V", "MgO", "Ba"],
-        "x": "Al2O3",
+        "data": [
+            "{18c2560c-6161-468a-8571-5d9d59649535}",
+            "{41d51965-3670-43ba-8a10-d399070689e3}",
+            "{94a150e8-16d9-4784-a7aa-e6271df3a3ef}",
+            "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
+            "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
+        ],
+        "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
         "x_active": True,
-        "y": "CaO",
+        "y": "{18c2560c-6161-468a-8571-5d9d59649535}",
         "y_active": True,
-        "z": "Ba",
+        "z": "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
         "z_active": True,
         "color_active": True,
-        "size": "MgO",
+        "size": "{41d51965-3670-43ba-8a10-d399070689e3}",
         "size_active": True,
         "refresh": True,
     }
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.scalings = {}
         self.lower_bounds = {}
         self.upper_bounds = {}
@@ -121,7 +128,7 @@ class Clustering(ScatterPlots):
         self.clusters_panel = VBox([self.clusters_options, self.color_pickers[0]])
         self.clusters_options.observe(self.clusters_panel_change, names="value")
         self.n_clusters.observe(self.run_clustering, names="value")
-        self.trigger.on_click(self.save_cluster)
+        self.trigger.on_click(self.trigger_click)
 
         super().__init__(**self.defaults)
 
@@ -295,7 +302,7 @@ class Clustering(ScatterPlots):
         self.log_dict = {}
         self.histo_plots = {}
         self.box_plots = {}
-        self.channels_plot_options.options = []
+        self.channels_plot_options.options = None
         self.channels_plot_options.value = None
         self._mapping = None
         self.figure.data = []
@@ -332,7 +339,7 @@ class Clustering(ScatterPlots):
             vals[nns] = (
                 (vals[nns] - min(vals[nns]))
                 / (max(vals[nns]) - min(vals[nns]) + 1e-32)
-                * self.scalings[field].value
+                * self.scalings[dict(self.data.options)[field]].value
             )
             values += [vals]
 
@@ -395,7 +402,11 @@ class Clustering(ScatterPlots):
             and getattr(self, "dataframe", None) is not None
         ):
             field = self.channels_plot_options.value
-            plot = go.Histogram(x=self.dataframe[field], histnorm="percent", name=field)
+            plot = go.Histogram(
+                x=self.dataframe[self.data.uid_name_map[field]],
+                histnorm="percent",
+                name=self.data.uid_name_map[field],
+            )
 
             if field not in self.histo_plots.keys():
                 self.histo_plots[field] = go.FigureWidget()
@@ -452,7 +463,7 @@ class Clustering(ScatterPlots):
             self.box_plots[field].update_layout(
                 {
                     "xaxis": {"title": "Cluster #"},
-                    "yaxis": {"title": field},
+                    "yaxis": {"title": self.data.uid_name_map[field]},
                     "height": 600,
                     "width": 600,
                 }
@@ -548,7 +559,7 @@ class Clustering(ScatterPlots):
                 yaxis={"autorange": "reversed"},
             )
 
-    def save_cluster(self, _):
+    def trigger_click(self, _):
         """
         Write cluster groups to the target geoh5 object.
         """
@@ -561,11 +572,7 @@ class Clustering(ScatterPlots):
             cluster_values[self._inactive_set] = 0
             for ii in range(self.n_clusters.value):
                 colorpicker = self.color_pickers[ii]
-
                 color = colorpicker.value.lstrip("#")
-
-                # group_map, color_map = {}, []
-                # for ind, group in self.time_groups.items():
                 group_map[ii + 1] = f"Cluster_{ii}"
                 color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
 
@@ -683,8 +690,6 @@ class Clustering(ScatterPlots):
                     (vals < self.lower_bounds[field].value)
                     | (vals > self.upper_bounds[field].value)
                 ] = np.nan
-
-                vals[(vals > 1e-38) * (vals < 2e-38)] = np.nan
                 values += [vals]
 
             values = np.vstack(values).T
@@ -706,7 +711,7 @@ class Clustering(ScatterPlots):
             self._indices = active_set[samples]
             self.dataframe = pd.DataFrame(
                 values[self.indices, :],
-                columns=fields,
+                columns=[self.data.uid_name_map[field] for field in fields],
             )
             tree = cKDTree(self.dataframe.values)
             inactive_set = np.ones(self.n_values, dtype="bool")
@@ -724,7 +729,8 @@ class Clustering(ScatterPlots):
             self._mapping[inactive_set] = ind_out
             self._mapping[self.indices] = np.arange(self.indices.shape[0])
             self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
-            self.channels_plot_options.options = fields
+            options = [[self.data.uid_name_map[key], key] for key in fields]
+            self.channels_plot_options.options = options
 
         else:
             self.dataframe = None
@@ -734,3 +740,17 @@ class Clustering(ScatterPlots):
 
         self.update_axes(refresh_plot=refresh_plot)
         self.show_trigger(None)
+
+    def update_uid_name_map(self):
+        """
+        Update the dictionary that maps uuid to name.
+        """
+        uid_name = {}
+        for key, value in self.data.options:
+            if isinstance(value, UUID):
+                uid_name[value] = key
+            elif isinstance(value, str) and value in "XYZ":
+                uid_name[value] = value
+
+        uid_name["kmeans"] = "kmeans"
+        self.data.uid_name_map = uid_name

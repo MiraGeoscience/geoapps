@@ -5,16 +5,18 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
+import multiprocessing
 from multiprocessing.pool import ThreadPool
-from typing import Union
 from uuid import UUID
 
 import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster
-from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Points
 from SimPEG import (
+    dask,
     data,
     data_misfit,
     directives,
@@ -38,10 +40,12 @@ from .components import (
     InversionWindow,
 )
 
+cluster = LocalCluster(processes=False)
+client = Client(cluster)
+
 
 class InversionDriver:
     def __init__(self, params: Params):
-
         self.params = params
         self.workspace = params.workspace
         self.inversion_type = params.inversion_type
@@ -60,7 +64,7 @@ class InversionDriver:
 
     @property
     def data(self):
-        return self.inversion_data.data
+        return self.inversion_data.observed
 
     @property
     def topography(self):
@@ -88,34 +92,28 @@ class InversionDriver:
 
     def _initialize(self):
 
-        out_group = ContainerGroup.create(self.workspace, name=self.params.out_group)
+        self.configure_dask()
 
         self.inversion_window = InversionWindow(self.workspace, self.params)
 
-        self.inversion_data = InversionData(
-            self.workspace, self.params, self.window, out_group
-        )
+        self.inversion_data = InversionData(self.workspace, self.params, self.window)
 
         self.inversion_topography = InversionTopography(
             self.workspace, self.params, self.window
         )
-
-        self.inversion_mesh = InversionMesh(self.workspace, self.params)
         if self.params.mesh_from_params:
             self.inversion_mesh.build_from_params(
                 self.inversion_data, self.inversion_topography
             )
+        else:
+            self.inversion_mesh = InversionMesh(self.workspace, self.params)
 
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh
         )
 
-        self.configure_dask()
-        cluster = LocalCluster(processes=False)
-        client = Client(cluster)
-
     def run(self):
-        """ Run inversion from params """
+        """Run inversion from params"""
 
         # Create SimPEG Survey object
         self.survey = self.inversion_data.survey()
@@ -130,8 +128,12 @@ class InversionDriver:
         self.n_blocks = 3 if self.is_vector else 1
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
-        ###############################################################################
-        # Processing
+        # If forward only is true simulate fields, save to workspace and exit.
+        if self.params.forward_only:
+            self.inversion_data.simulate(
+                self.mesh, self.starting_model, self.active_cells, save=True
+            )
+            return
 
         # Tile locations
         self.tiles = self.get_tiles()
@@ -218,11 +220,9 @@ class InversionDriver:
             if self.inversion_type == "mvi":
                 channels = ["amplitude", "theta", "phi"]
 
-            out_group = ContainerGroup.create(
-                self.workspace, name=self.params.out_group
+            outmesh = self.fetch("mesh").copy(
+                parent=self.params.out_group, copy_children=False
             )
-
-            outmesh = self.fetch("mesh").copy(parent=out_group, copy_children=False)
 
             directiveList.append(
                 directives.SaveIterationsGeoH5(
@@ -246,7 +246,7 @@ class InversionDriver:
                 self.workspace,
                 name=f"Predicted",
                 vertices=rx_locs,
-                parent=out_group,
+                parent=self.params.out_group,
             )
 
             comps, norms = self.survey.components, self.inversion_data.normalizations
@@ -453,7 +453,10 @@ class InversionDriver:
 
     def get_tile_misfits(self, tiles):
 
-        local_misfits, self.sorting = [], []
+        local_misfits, self.sorting, = (
+            [],
+            [],
+        )
         for tile_id, local_index in enumerate(tiles):
             lsurvey = self.inversion_data.survey(local_index)
             lsim, lmap = self.inversion_data.simulation(
@@ -473,7 +476,7 @@ class InversionDriver:
         return local_misfits
 
     def models(self):
-        """ Return all models with data """
+        """Return all models with data"""
         return [
             self.inversion_starting_model,
             self.inversion_reference_model,
@@ -481,8 +484,8 @@ class InversionDriver:
             self.inversion_upper_bound,
         ]
 
-    def fetch(self, p: Union[str, UUID]):
-        """ Fetch the object addressed by uuid from the workspace. """
+    def fetch(self, p: str | UUID):
+        """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):
             try:
@@ -496,10 +499,11 @@ class InversionDriver:
             return self.workspace.get_entity(p)[0]
 
     def configure_dask(self):
+        """Sets Dask config settings."""
 
         if self.params.parallelized:
             if self.params.n_cpu is None:
-                self.params.n_cpu = multiprocessing.cpu_count() / 2
+                self.params.n_cpu = int(multiprocessing.cpu_count() / 2)
 
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
-            dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
+            dconf.set(scheduler="threads", pool=ThreadPool(2 * self.params.n_cpu))

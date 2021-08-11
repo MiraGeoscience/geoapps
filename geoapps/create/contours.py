@@ -24,14 +24,14 @@ class ContourValues(PlotSelection2D):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "Airborne_TMI",
+        "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
         "contours": "-400:2000:100,-240",
         "resolution": 50,
         "ga_group_name": "Contours",
     }
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._contours = Text(
             value="", description="Contours", disabled=False, continuous_update=False
         )
@@ -49,8 +49,8 @@ class ContourValues(PlotSelection2D):
             },
         )
 
-        self.trigger.on_click(self.save_selection)
-        self.trigger.description = "Export to GA"
+        self.trigger.on_click(self.trigger_click)
+        self.trigger.description = "Export"
         self.trigger.button_style = "danger"
 
     @property
@@ -134,15 +134,17 @@ class ContourValues(PlotSelection2D):
         Assign
         """
         if self.data.value is not None:
-            self.export_as.value = self.data.value + "_" + self.contours.value
+            self.export_as.value = (
+                self.data.uid_name_map[self.data.value] + "_" + self.contours.value
+            )
 
     def update_name(self, _):
         if self.data.value is not None:
-            self.export_as.value = self.data.value
+            self.export_as.value = self.data.uid_name_map[self.data.value]
         else:
             self.export_as.value = "Contours"
 
-    def save_selection(self, _):
+    def trigger_click(self, _):
         entity, _ = self.get_selected_entities()
 
         if getattr(self.contours, "contour_set", None) is not None:

@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Optional, Union
+from __future__ import annotations
+
+from uuid import UUID
 
 import ipywidgets as widgets
 import numpy as np
@@ -49,7 +51,7 @@ class ObjectDataSelection(BaseApplication):
         self._add_groups = value
 
     @property
-    def data(self) -> Union[Dropdown, SelectMultiple]:
+    def data(self) -> Dropdown | SelectMultiple:
         """
         Data selector
         """
@@ -180,7 +182,7 @@ class ObjectDataSelection(BaseApplication):
             self._data = Dropdown(description="Data: ", options=options)
 
     @property
-    def workspace(self) -> Optional[Workspace]:
+    def workspace(self) -> Workspace | None:
         """
         Target geoh5py workspace
         """
@@ -218,16 +220,15 @@ class ObjectDataSelection(BaseApplication):
 
             data = []
             for value in values:
-                if obj.get_data(value):
-                    data += obj.get_data(value)
-
-                elif any([pg.name == value for pg in obj.property_groups]):
+                if any([pg.uid == value for pg in obj.property_groups]):
                     data += [
                         self.workspace.get_entity(prop)[0]
                         for prop in obj.find_or_create_property_group(
-                            name=value
+                            name=self.data.uid_name_map[value]
                         ).properties
                     ]
+                elif self.workspace.get_entity(value):
+                    data += self.workspace.get_entity(value)
 
             return obj, data
         else:
@@ -245,39 +246,37 @@ class ObjectDataSelection(BaseApplication):
             if getattr(obj, "get_data_list", None) is None:
                 return
 
-            options = [""]
+            options = [["", None]]
 
             if (self.add_groups or self.add_groups == "only") and obj.property_groups:
                 options = (
                     options
-                    + ["-- Groups --"]
-                    + [p_g.name for p_g in obj.property_groups]
+                    + [["-- Groups --", None]]
+                    + [[p_g.name, p_g.uid] for p_g in obj.property_groups]
                 )
 
             if self.add_groups != "only":
-                data_list = obj.get_data_list()
-                options = (
-                    options
-                    + ["--- Channels ---"]
-                    + [
-                        obj.get_data(uid)[0].name
-                        for uid in data_list
-                        if isinstance(obj.get_data(uid)[0], (IntegerData, FloatData))
-                    ]
-                    + ["Z"]
-                )
+                options += [["--- Channels ---", None]]
+                for child in obj.children:
+                    if isinstance(child, (IntegerData, FloatData)):
+                        options += [[child.name, child.uid]]
+
+                options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
 
             value = self.data.value
             self.data.options = options
 
+            self.update_uid_name_map()
+
             if self.select_multiple and any([val in options for val in value]):
                 self.data.value = [val for val in value if val in options]
-            elif value in options:
+            elif value in dict(options).values():
                 self.data.value = value
             elif self.find_label:
                 self.data.value = utils.find_value(self.data.options, self.find_label)
         else:
             self.data.options = []
+            self.data.uid_name_map = {}
 
         self.refresh.value = True
 
@@ -286,16 +285,17 @@ class ObjectDataSelection(BaseApplication):
             value = self.objects.value
 
             if len(self.object_types) > 0:
-                options = [["", None]] + [
-                    [obj.name, obj.uid]
+                obj_list = [
+                    obj
                     for obj in self._workspace.objects
                     if isinstance(obj, self.object_types)
                 ]
             else:
-                options = [["", None]] + [
-                    [value, uid]
-                    for uid, value in self._workspace.list_objects_name.items()
-                ]
+                obj_list = self._workspace.objects
+
+            options = [["", None]] + [
+                [obj.parent.name + "/" + obj.name, obj.uid] for obj in obj_list
+            ]
 
             if value in list(dict(options).values()):  # Silent update
                 self.objects.unobserve(self.update_data_list, names="value")
@@ -304,6 +304,18 @@ class ObjectDataSelection(BaseApplication):
                 self._objects.observe(self.update_data_list, names="value")
             else:
                 self.objects.options = options
+
+    def update_uid_name_map(self):
+        """
+        Update the dictionary that maps uuid to name.
+        """
+        uid_name = {}
+        for key, value in self.data.options:
+            if isinstance(value, UUID):
+                uid_name[value] = key
+            elif isinstance(value, str) and value in "XYZ":
+                uid_name[value] = value
+        self.data.uid_name_map = uid_name
 
 
 class LineOptions(ObjectDataSelection):
@@ -316,7 +328,7 @@ class LineOptions(ObjectDataSelection):
 
     def __init__(self, **kwargs):
 
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
 
         super().__init__(**self.defaults)
 
@@ -379,7 +391,7 @@ class TopographyOptions(ObjectDataSelection):
     def __init__(
         self, option_list=["None", "Object", "Relative to Sensor", "Constant"], **kwargs
     ):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
         self._offset = FloatText(description="Vertical offset (+ve up)")
         self._constant = FloatText(

@@ -88,47 +88,17 @@ def test_create_octree_app():
 
         # Repeat the creation using the app
         refinements = {
-            "Refinement A Object": {
-                "group": "Refinement A",
-                "label": "Object",
-                "value": str(points.uid),
+            "Refinement A": {
+                "object": str(points.uid),
+                "levels": "".join([str(val) for val in refine_A]),
+                "type": "radial",
+                "distance": max_distance,
             },
-            "Refinement A Levels": {
-                "enabled": True,
-                "group": "Refinement A",
-                "label": "Levels",
-                "value": ",".join([str(val) for val in refine_A]),
-            },
-            "Refinement A Type": {
-                "group": "Refinement A",
-                "label": "Type",
-                "value": "radial",
-            },
-            "Refinement A Distance": {
-                "group": "Refinement A",
-                "label": "Max Distance",
-                "value": max_distance,
-            },
-            "Refinement B Object": {
-                "group": "Refinement B",
-                "label": "Object",
-                "value": str(topo.uid),
-            },
-            "Refinement B Levels": {
-                "enabled": True,
-                "group": "Refinement B",
-                "label": "Levels",
-                "value": ",".join([str(val) for val in refine_B]),
-            },
-            "Refinement B Type": {
-                "group": "Refinement B",
-                "label": "Type",
-                "value": "surface",
-            },
-            "Refinement B Distance": {
-                "group": "Refinement B",
-                "label": "Max Distance",
-                "value": max_distance,
+            "Refinement B": {
+                "object": str(topo.uid),
+                "levels": "".join([str(val) for val in refine_B]),
+                "type": "surface",
+                "distance": max_distance,
             },
         }
 

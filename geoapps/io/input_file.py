@@ -5,10 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
 import os.path as op
 from copy import deepcopy
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 from uuid import UUID
 
 import numpy as np
@@ -43,14 +45,60 @@ class InputFile:
 
     """
 
-    def __init__(self, filepath: str = None):
+    _workpath: str = None
+
+    def __init__(
+        self,
+        filepath: str = None,
+        validator: InputValidator = None,
+        workspace: Workspace = None,
+    ):
         self.filepath = filepath
-        self.workpath = op.dirname(op.abspath(filepath)) + op.sep if filepath else None
-        self.data = {}
-        self.associations = {}
-        self.is_loaded = False
-        self.is_formatted = False
-        self.input_dict = None
+        self.validator = validator
+        self.workspace = workspace
+        self.data: dict[str, Any] = {}
+        self.associations: dict[str | UUID, str | UUID] = {}
+        self.is_loaded: bool = False
+        self.is_formatted: bool = False
+        self._initialize()
+
+    def _initialize(self):
+        """Default construction behaviour."""
+
+        if self.filepath is not None:
+            with open(self.filepath) as f:
+                data = json.load(f)
+                self.load(data, self.validator)
+
+    @classmethod
+    def from_dict(cls, dict: dict[str, Any], validator: InputValidator):
+        ifile = cls()
+        ifile.load(dict, validator)
+        return ifile
+
+    def load(self, input_dict: dict[str, Any], validator: InputValidator = None):
+        """Load data from dictionary and validate."""
+
+        input_dict = self._numify(input_dict)
+        input_dict = self._demote(input_dict)
+        self._set_associations(input_dict)
+        self.input_dict = input_dict
+
+        self.data = self._ui_2_py(input_dict)
+
+        for p in ["geoh5", "workspace"]:
+            if p in self.data.keys() and self.workspace is None:
+                if self.data[p] is not None:
+                    if validator is not None:
+                        validator.validate(p, self.data[p], validator.validations[p])
+                    self.workspace = Workspace(self.data[p])
+
+        if validator is not None:
+            validator.workspace = self.workspace
+            validator.validate_input(self)
+
+        self.is_formatted = True
+        self.is_loaded = True
 
     @property
     def filepath(self):
@@ -60,33 +108,47 @@ class InputFile:
     def filepath(self, f: str):
         if f is None:
             self._filepath = f
+            self._workpath = None
             return
         if ".".join(f.split(".")[-2:]) != "ui.json":
             raise OSError("Input file must have 'ui.json' extension.")
         else:
             self._filepath = f
+            self._workpath = None
 
-    def default(self, default_ui) -> None:
-        """ defaults InputFile data using 'default' field of default_ui"""
+    @property
+    def workpath(self):
+        if getattr(self, "_workpath", None) is None:
+            path = None
+            if getattr(self, "_filepath", None) is not None:
+                path = self.filepath
+            elif getattr(self, "workspace", None) is not None:
+                path = self.workspace.h5file
 
-        for k, v in default_ui.items():
-            if isinstance(v, dict):
-                if "isValue" in v.keys():
-                    field = "value" if v["isValue"] else "property"
-                else:
-                    field = "value"
-                self.data[k] = v[field]
-            else:
-                self.data[k] = v
+            if path is not None:
+                self._workpath: str = op.dirname(op.abspath(path)) + op.sep
+        return self._workpath
 
-            self.is_loaded = True
+    # def default(self, default_ui) -> None:
+    #     """defaults InputFile data using 'default' field of default_ui"""
+    #
+    #     for k, v in default_ui.items():
+    #         if isinstance(v, dict):
+    #             if "isValue" in v.keys():
+    #                 field = "value" if v["isValue"] else "property"
+    #             else:
+    #                 field = "value"
+    #             self.data[k] = v[field]
+    #         else:
+    #             self.data[k] = v
+    #
+    #         self.is_loaded = True
 
     def write_ui_json(
         self,
-        ui_dict: Dict[str, Any],
+        ui_dict: dict[str, Any],
         default: bool = False,
         name: str = None,
-        param_dict: dict = None,
         workspace: Workspace = None,
     ) -> None:
         """
@@ -104,83 +166,42 @@ class InputFile:
             Parameters to insert in ui_dict values.
             Defaults to the :obj:`InputFile.data` is not provided.
         workspace : optional
-            Provide a workspace_geoh5 path to simulate auto-generated field in GA.
+            Provide a workspace_geoh5 path to simulate auto-generated field in Geoscience ANALYST.
         """
 
         out = deepcopy(ui_dict)
+
         if workspace is not None:
             out["workspace_geoh5"] = workspace
             out["geoh5"] = workspace
-        if not default:
-            if param_dict is None:
-                if self.is_loaded:
-                    param_dict = self.data
-                else:
-                    raise OSError("No data to write.")
 
-            for k, v in param_dict.items():
-                if isinstance(out[k], dict):
-                    out[k]["isValue"] = True
-                    out[k]["value"] = v
-                else:
-                    out[k] = v
+        if not default:
+            if self.is_loaded:
+                for k, v in self.data.items():
+                    if isinstance(out[k], dict):
+                        field = "value"
+                        if "isValue" in out[k].keys():
+                            if not out[k]["isValue"]:
+                                field = "property"
+                        out[k][field] = v
+                        if v is not None:
+                            out[k]["visible"] = True
+                            out[k]["enabled"] = True
+                    else:
+                        out[k] = v
+            else:
+                raise OSError("No data to write.")
 
         out_file = self.filepath
         if name is not None:
-            out_file = op.join(op.dirname(self.filepath), name + ".ui.json")
+            out_file = op.join(self.workpath, name + ".ui.json")
+        else:
+            out_file = self.filepath
 
         with open(out_file, "w") as f:
             json.dump(self._stringify(out), f, indent=4)
 
-    def read_ui_json(
-        self,
-        required_parameters: List[str] = None,
-        validations: Dict[str, Any] = None,
-        reformat: bool = True,
-    ) -> None:
-        """
-        Reads a ui.json formatted file into 'data' attribute dictionary.
-
-        Parameters
-        ----------
-        validations: optional
-            Provide validations dictionary to validate incoming data.
-        reformat: optional
-            Stores only 'value' fields from ui.json if True.
-        """
-        with open(self.filepath) as f:
-            param_dict = json.load(f)
-            self.input_from_dict(
-                param_dict,
-                required_parameters=required_parameters,
-                validations=validations,
-                reformat=reformat,
-            )
-
-    def input_from_dict(
-        self,
-        input_dict: dict,
-        required_parameters: List[str] = None,
-        validations: Dict[str, Any] = None,
-        reformat: bool = True,
-    ):
-        """
-        Parse the content of input parameters.
-        """
-        data = self._numify(input_dict)
-        self._set_associations(data)
-        if reformat:
-            self._ui_2_py(data)
-            self.is_formatted = True
-            if (validations is not None) or (required_parameters is not None):
-                InputValidator(required_parameters, validations, self.data)
-        else:
-            self.data = data
-
-        self.input_dict = input_dict
-        self.is_loaded = True
-
-    def _ui_2_py(self, ui_dict: Dict[str, Any]) -> None:
+    def _ui_2_py(self, ui_dict: dict[str, Any]) -> dict[str, Any]:
         """
         Flatten ui.json format to simple key/value structure.
 
@@ -191,6 +212,7 @@ class InputFile:
             dictionary containing all keys, values, fields of a ui.json formatted file
         """
 
+        data = {}
         for k, v in ui_dict.items():
             if isinstance(v, dict):
                 field = "value"
@@ -198,15 +220,19 @@ class InputFile:
                     field = "value" if v["isValue"] else "property"
                 if "enabled" in v.keys():
                     if not v["enabled"]:
-                        field = "default"
+                        data[k] = None
+                        continue
                 if "visible" in v.keys():
                     if not v["visible"]:
-                        field = "default"
-                self.data[k] = v[field]
+                        data[k] = None
+                        continue
+                data[k] = v[field]
             else:
-                self.data[k] = v
+                data[k] = v
 
-    def _stringify(self, d: Dict[str, Any]) -> Dict[str, Any]:
+        return data
+
+    def _stringify(self, d: dict[str, Any]) -> dict[str, Any]:
         """
         Convert inf, none, and list types to strings within a dictionary
 
@@ -243,7 +269,7 @@ class InputFile:
 
         return d
 
-    def _numify(self, d: Dict[str, Any]) -> Dict[str, Any]:
+    def _numify(self, d: dict[str, Any]) -> dict[str, Any]:
         """
         Convert inf, none and list strings to numerical types within a dictionary
 
@@ -281,6 +307,17 @@ class InputFile:
 
         return d
 
+    def _demote(self, d: dict[k, v]) -> dict[k, v]:
+        """Converts promoted parameter values to their string representations."""
+        uuid2str = lambda k, v: f"{{{str(v)}}}" if isinstance(v, UUID) else v
+        workspace2path = lambda k, v: v.h5file if isinstance(v, Workspace) else v
+        mappers = [uuid2str, workspace2path]
+        for k, v in d.items():
+            v = self._dict_mapper(k, v, mappers)
+            d[k] = v
+
+        return d
+
     def _dict_mapper(self, key: str, val: Any, string_funcs: Callable) -> None:
         """
         Recurses through nested dictionary and applies mapping funcs to all values
@@ -304,7 +341,7 @@ class InputFile:
                 val = f(key, val)
             return val
 
-    def _set_associations(self, d: Dict[str, Any]) -> None:
+    def _set_associations(self, d: dict[str, Any]) -> None:
         """
         Set parent/child associations for ui.json fields.
 
@@ -324,9 +361,12 @@ class InputFile:
                     if v["parent"] is not None:
                         try:
                             self.associations[k] = v["parent"]
-                            child_uuid = UUID(v[field])
+                            try:
+                                child_key = UUID(v[field])
+                            except (ValueError, TypeError):
+                                child_key = v[field]
                             parent_uuid = UUID(d[v["parent"]]["value"])
-                            self.associations[child_uuid] = parent_uuid
+                            self.associations[child_key] = parent_uuid
                         except:
                             continue
 

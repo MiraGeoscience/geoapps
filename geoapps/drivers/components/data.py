@@ -7,21 +7,22 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoh5py.groups import ContainerGroup
     from geoapps.io import Params
-    from . import InversionMesh
 
 from copy import deepcopy
 
 import numpy as np
+from dask.distributed import get_client, progress
+from discretize import TreeMesh
+from geoh5py.objects import Points
 from SimPEG import maps
 from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.utils import calculate_2D_trend, filter_xy
+from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
 from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
@@ -60,8 +61,10 @@ class InversionData(InversionLocations):
         Number of blocks if vector.
     components :
         Component names.
-    data :
-        Components and associated geophysical data.
+    observed :
+        Components and associated observed geophysical data.
+    predicted :
+        Components and associated predicted geophysical data.
     uncertainties :
         Components and associated data uncertainties.
     normalizations :
@@ -77,22 +80,16 @@ class InversionData(InversionLocations):
 
     """
 
-    def __init__(
-        self,
-        workspace: Workspace,
-        params: Params,
-        window: Dict[str, Any],
-        out_group: ContainerGroup,
-    ):
+    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
         :param: window: Center and size defining window for data, topography, etc.
         """
-        super().__init__(workspace, params, window, out_group)
+        super().__init__(workspace, params, window)
 
         self.resolution: int = None
-        self.offset: List[float] = None
+        self.offset: list[float] = None
         self.radar: np.ndarray = None
         self.ignore_value: float = None
         self.ignore_type: str = None
@@ -102,19 +99,20 @@ class InversionData(InversionLocations):
         self.mask: np.ndarray = None
         self.vector: bool = None
         self.n_blocks: int = None
-        self.components: List[str] = None
-        self.data: Dict[str, np.ndarray] = {}
-        self.uncertainties: Dict[str, np.ndarray] = {}
-        self.normalizations: List[float] = []
+        self.components: list[str] = None
+        self.observed: dict[str, np.ndarray] = {}
+        self.predicted: dict[str, np.ndarray] = {}
+        self.uncertainties: dict[str, np.ndarray] = {}
+        self.normalizations: list[float] = []
         self._initialize()
 
     def _initialize(self) -> None:
-        """ Extract data from the workspace using params data. """
+        """Extract data from the workspace using params data."""
 
         self.vector = True if self.params.inversion_type == "mvi" else False
         self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
-        self.components, self.data, self.uncertainties = self.get_data()
+        self.components, self.observed, self.uncertainties = self.get_data()
 
         self.locations = super().get_locations(self.params.data_object)
         if self.params.z_from_topo:
@@ -140,7 +138,7 @@ class InversionData(InversionLocations):
             )
 
         self.locations = super().filter(self.locations)
-        self.data = super().filter(self.data)
+        self.observed = super().filter(self.observed)
         self.uncertainties = super().filter(self.uncertainties)
 
         self.offset, self.radar = self.params.offset()
@@ -157,17 +155,16 @@ class InversionData(InversionLocations):
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
-            self.data = self.detrend()
+            self.observed = self.detrend(self.observed)
 
-        self.data = self.normalize(self.data)
-        self.save_data()
+        self.observed = self.normalize(self.observed)
 
-    def get_data(self) -> Tuple[Dict[str, np.ndarray], np.ndarray, np.ndarray]:
+    def get_data(self) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
         """
         Get all data and uncertainty components and possibly set infinite uncertainties.
 
         :return: components: list of data components sorted in the
-            order of self.data.keys().
+            order of self.observed.keys().
         :return: data: Dictionary of components and associated data
         :return: uncertainties: Dictionary of components and
             associated uncertainties with infinite uncertainty set on
@@ -187,36 +184,30 @@ class InversionData(InversionLocations):
 
         return list(data.keys()), data, uncertainties
 
-    def save_data(self):
-
-        self.create_entity("Data", self.locations)
-
-        for comp in self.components:
-            dnorm = self.normalizations[comp] * self.data[comp]
-            observed_data = self.entity.add_data(
-                {f"Observed_{comp}": {"values": dnorm}}
-            )
-
     def get_data_component(self, component: str) -> np.ndarray:
-        """ Get data component (channel) from params data. """
+        """Get data component (channel) from params data."""
         channel = self.params.channel(component)
-        data = self.workspace.get_entity(channel)[0].values
-        return data
+        return None if channel is None else self.workspace.get_entity(channel)[0].values
 
     def get_uncertainty_component(self, component: str) -> np.ndarray:
-        """ Get uncertainty component (channel) from params data. """
+        """Get uncertainty component (channel) from params data."""
         unc = self.params.uncertainty(component)
-        if isinstance(unc, (int, float)):
+        if unc is None:
+            return None
+        elif isinstance(unc, (int, float)):
             d = self.get_data_component(component)
-            return np.array([unc] * len(d))
+            if d is None:
+                return None
+            else:
+                return np.array([unc] * len(d))
         elif unc is None:
             d = self.get_data_component(component)
             return d * 0.0 + 1.0  # Default
         else:
-            return workspace.get_entity(unc)[0].values
+            return self.workspace.get_entity(unc)[0].values
 
-    def parse_ignore_values(self) -> Tuple[float, str]:
-        """ Returns an ignore value and type ('<', '>', or '=') from params data. """
+    def parse_ignore_values(self) -> tuple[float, str]:
+        """Returns an ignore value and type ('<', '>', or '=') from params data."""
         ignore_values = self.params.ignore_values
         if ignore_values is not None:
             ignore_type = [k for k in ignore_values if k in ["<", ">"]]
@@ -233,7 +224,10 @@ class InversionData(InversionLocations):
     def set_infinity_uncertainties(
         self, uncertainties: np.ndarray, data: np.ndarray
     ) -> np.ndarray:
-        """ Use self.ignore_value self.ignore_type to set uncertainties to infinity. """
+        """Use self.ignore_value self.ignore_type to set uncertainties to infinity."""
+
+        if uncertainties is None:
+            return None
 
         unc = uncertainties.copy()
         if self.ignore_value is None:
@@ -251,20 +245,20 @@ class InversionData(InversionLocations):
         return unc
 
     def displace(self, locs: np.ndarray, offset: np.ndarray) -> np.ndarray:
-        """ Offset data locations in all three dimensions. """
+        """Offset data locations in all three dimensions."""
         return locs + offset if offset is not None else 0
 
     def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
-        """ Drape data locations using radar channel offsets. """
+        """Drape data locations using radar channel offsets."""
 
         radar_offset_pad = np.zeros((len(radar_offset), 3))
         radar_offset_pad[:, 2] = radar_offset
 
         return self.displace(locs, radar_offset_pad)
 
-    def detrend(self) -> np.ndarray:
-        """ Remove trend from data. """
-        d = self.data.copy()
+    def detrend(self, data) -> np.ndarray:
+        """Remove trend from data."""
+        d = data.copy()
         for comp in self.components:
             data_trend, _ = calculate_2D_trend(
                 self.locations,
@@ -275,7 +269,7 @@ class InversionData(InversionLocations):
             d[comp] -= data_trend
         return d
 
-    def normalize(self, data: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    def normalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         """
         Apply data type specific normalizations to data.
 
@@ -287,14 +281,15 @@ class InversionData(InversionLocations):
         :return: d: Normalized data.
         """
         d = deepcopy(data)
-        normalizations = {}
+        normalizations = []
         for comp in self.components:
             if comp == "gz":
-                normalizations[comp] = -1.0
-                d[comp] *= -1.0
+                normalizations.append(-1.0)
+                if d[comp] is not None:
+                    d[comp] *= -1.0
                 print(f"Sign flip for {comp} component")
             else:
-                normalizations[comp] = 1.0
+                normalizations.append(1.0)
         self.normalizations = normalizations
         return d
 
@@ -311,14 +306,14 @@ class InversionData(InversionLocations):
 
         survey_factory = SurveyFactory(self.params)
         survey = survey_factory.build(
-            self.locations, self.data, self.uncertainties, local_index
+            self.locations, self.observed, self.uncertainties, local_index
         )
 
         return survey
 
     def simulation(
         self,
-        mesh: InversionMesh,
+        mesh: TreeMesh,
         active_cells: np.ndarray,
         local_index: np.ndarray = None,
         tile_id: int = None,
@@ -347,7 +342,7 @@ class InversionData(InversionLocations):
         if local_index is None:
 
             sim = simulation_factory.build(survey, mesh, active_cells)
-            map = Maps.IdentityMap(nP=self.n_blocks * mesh.nC)
+            map = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
 
         else:
 
@@ -361,3 +356,41 @@ class InversionData(InversionLocations):
             )
 
         return sim, map
+
+    def simulate(
+        self,
+        mesh: TreeMesh,
+        model: np.ndarray,
+        active_cells: np.ndarray,
+        save: bool = True,
+    ) -> np.ndarray:
+        """Simulate fields for a particular model."""
+        client = get_client()
+        sim, _ = self.simulation(mesh, active_cells)
+        prediction = client.compute(sim.dpred(model))
+        progress(prediction)
+        d = np.asarray(prediction.result()).reshape((-1, len(self.components)))
+
+        for i, c in enumerate(self.components):
+            self.predicted[c] = d[:, i]
+
+        if save:
+            if self.is_rotated:
+                locs = self.locations.copy()
+                locs[:, :2] = rotate_xy(
+                    locs[:, :2],
+                    self.origin,
+                    -1 * self.angle,
+                )
+
+            predicted_data_object = Points.create(
+                self.workspace,
+                name=f"Predicted",
+                vertices=locs,
+                parent=self.params.out_group,
+            )
+
+            comps, norms = self.components, self.normalizations
+            for ii, (comp, norm) in enumerate(zip(comps, norms)):
+                val = norm * self.predicted[comp]
+                predicted_data_object.add_data({f"{comp}": {"values": val}})

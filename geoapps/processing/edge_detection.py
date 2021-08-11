@@ -49,7 +49,7 @@ class EdgeDetectionApp(PlotSelection2D):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "Airborne_Gxx",
+        "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
         "resolution": 50,
         "sigma": 0.5,
         "window": {
@@ -60,7 +60,7 @@ class EdgeDetectionApp(PlotSelection2D):
     _object_types = (Grid2D,)
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._compute = Button(
             description="Compute",
             button_style="warning",
@@ -114,8 +114,8 @@ class EdgeDetectionApp(PlotSelection2D):
         super().__init__(**self.defaults)
 
         # Make changes to trigger warning color
-        self.trigger.description = "Save to GA"
-        self.trigger.on_click(self.save_trigger)
+        self.trigger.description = "Export"
+        self.trigger.on_click(self.trigger_click)
         self.trigger.button_style = "success"
 
         self.compute.click()
@@ -188,7 +188,7 @@ class EdgeDetectionApp(PlotSelection2D):
         """IntSlider"""
         return self._window_size
 
-    def save_trigger(self, _):
+    def trigger_click(self, _):
         entity, _ = self.get_selected_entities()
         if getattr(self.trigger, "vertices", None) is not None:
 
@@ -232,14 +232,14 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def update_name(self, _):
         if self.data.value is not None:
-            self.export_as.value = self.data.value
+            self.export_as.value = self.data.uid_name_map[self.data.value]
         else:
             self.export_as.value = "Edges"
 
     def compute_trigger(self, _):
         grid, data = self.get_selected_entities()
 
-        if grid is None:
+        if grid is None or len(data) == 0:
             return
 
         x = grid.centroids[:, 0].reshape(grid.shape, order="F")

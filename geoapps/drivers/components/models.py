@@ -108,7 +108,7 @@ class InversionModelCollection:
         )
 
     def _model_method_wrapper(self, method, name=None, **kwargs):
-        """ wraps individual model's specific method and applies in loop over model types. """
+        """wraps individual model's specific method and applies in loop over model types."""
         returned_items = {}
         for mtype in self.model_types:
             model = self.__getattribute__(f"_{mtype}")
@@ -120,7 +120,7 @@ class InversionModelCollection:
             return returned_items[name]
 
     def remove_air(self, active_cells: np.ndarray):
-        """ Use active cells vector to remove air cells from model """
+        """Use active cells vector to remove air cells from model"""
         self._model_method_wrapper("remove_air", active_cells=active_cells)
 
     def permute_2_octree(self, name):
@@ -243,7 +243,7 @@ class InversionModel:
             self.model = mkvc(model)
 
     def remove_air(self, active_cells):
-        """ Use active cells vector to remove air cells from model """
+        """Use active cells vector to remove air cells from model"""
 
         self.model = self.model[np.tile(active_cells, self.n_blocks)]
 
@@ -283,6 +283,9 @@ class InversionModel:
             if isinstance(model, UUID):
                 model = self._get_object(model)
             else:
+                if "reference" in name:
+                    if model is None:
+                        model = self._get_value(0)
                 model = self._get_value(model)
         else:
             model = None
@@ -362,7 +365,7 @@ class InversionModel:
         self._model_type = v
 
     def fetch(self, p):
-        """ Fetch the object addressed by uuid from the workspace. """
+        """Fetch the object addressed by uuid from the workspace."""
 
         if isinstance(p, str):
             try:
