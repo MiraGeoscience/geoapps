@@ -101,12 +101,12 @@ class InversionDriver:
         self.inversion_topography = InversionTopography(
             self.workspace, self.params, self.window
         )
+
+        self.inversion_mesh = InversionMesh(self.workspace, self.params)
         if self.params.mesh_from_params:
             self.inversion_mesh.build_from_params(
                 self.inversion_data, self.inversion_topography
             )
-        else:
-            self.inversion_mesh = InversionMesh(self.workspace, self.params)
 
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh
