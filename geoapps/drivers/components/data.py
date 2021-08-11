@@ -184,6 +184,16 @@ class InversionData(InversionLocations):
 
         return list(data.keys()), data, uncertainties
 
+    def save_data(self):
+
+        self.create_entity("Data", self.locations)
+
+        for comp in self.components:
+            dnorm = self.normalizations[comp] * self.data[comp]
+            observed_data = self.entity.add_data(
+                {f"Observed_{comp}": {"values": dnorm}}
+            )
+
     def get_data_component(self, component: str) -> np.ndarray:
         """Get data component (channel) from params data."""
         channel = self.params.channel(component)
