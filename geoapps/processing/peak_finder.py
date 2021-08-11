@@ -698,12 +698,15 @@ class PeakFinder(ObjectDataSelection):
                 f"Template {property_group} Data",
                 Dropdown(
                     description="Group Name:",
-                    options=self.data.options,
                 ),
             )
-        getattr(self, f"Template {property_group} Data").name = property_group
+        widget = getattr(self, f"Template {property_group} Data")
+        widget.name = property_group
+        widget.value = None
+        widget.options = self.data.options
+
         try:
-            getattr(self, f"Template {property_group} Data").value = params["data"]
+            widget.value = params["data"]
         except TraitError:
             pass
         if getattr(self, f"Template {property_group} Color", None) is None:
