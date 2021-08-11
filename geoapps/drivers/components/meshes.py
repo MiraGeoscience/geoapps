@@ -20,6 +20,7 @@ from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.workspace import Workspace
 
 from geoapps.io import Params
+from geoapps.io.Octree import OctreeParams
 from geoapps.utils import octree_2_treemesh, rotate_xy
 
 
@@ -93,21 +94,44 @@ class InversionMesh:
         cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
         return cc[self.octree_permutation]
 
+    def collect_mesh_params(self, params: Params) -> OctreeParams:
+        """Collect mesh params from inversion params set and return Octree Params object."""
+
+        mesh_param_names = [
+            "u_cell_size",
+            "v_cell_size",
+            "w_cell_size",
+            "octree_levels_topo",
+            "octree_levels_obs",
+            "depth_core",
+            "max_distance",
+            "horizontal_padding",
+            "vertical_padding",
+        ]
+        mesh_params_dict = params.to_dict(ui_json_format=False)
+        mesh_params_dict = {
+            k: v for k, v in mesh_params_dict.items() if k in mesh_param_names
+        }
+        # mesh_params_dict["Refinement A"] = {
+        #     "object": self.workspace.get_entity("observed")[0].uid()
+        #     "levels": self.
+        # }
+        return OctreeParams(mesh_params_dict)
+
     def build_from_params(
         self,
         inversion_data: InversionData,
         inversion_topography: InversionTopography,
     ):
-
-        # from geoapps.create.octree_mesh import OctreeMesh
-        # octree_params = TODO
+        octree_dict = params.to_dict(mesh_params=True)
+        # octree_params = OctreeParams(**octree_dict)
         # OctreeMesh.run(octree_params)
 
         # topography_locs = inversion_data.set_z_from_topo(inversion_data.locations)
         print("Creating Global TreeMesh")
         mesh = mesh_builder_xyz(
             inversion_data.locations,
-            self.params.core_cell_size(),
+            self.params.u_cell_size(),
             padding_distance=self.params.padding_distance(),
             mesh_type="TREE",
             depth_core=self.params.depth_core,
