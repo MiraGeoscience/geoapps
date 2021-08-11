@@ -27,10 +27,10 @@ class Surface2D(ObjectDataSelection):
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
-        "data": ["COND"],
+        "data": ["{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}"],
         "max_distance": 250,
-        "elevations": {"data": "ELEV"},
-        "lines": {"data": "Line"},
+        "elevations": {"data": "{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}"},
+        "lines": {"data": "{0be5374c-3ebb-4762-962a-97d99f3cb0e1}"},
         "topography": {},
     }
 
@@ -39,7 +39,7 @@ class Surface2D(ObjectDataSelection):
     _object_types = (Curve,)
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._z_option = RadioButtons(
             options=["elevation", "depth"],
             description="Vertical Reference:",
@@ -84,9 +84,9 @@ class Surface2D(ObjectDataSelection):
         self.data.description = "Model fields: "
         self.z_option.observe(self.z_options_change, names="value")
         self.depth_panel = HBox([self.z_option, self.elevations.data])
-        self.trigger.on_click(self.compute_trigger)
+        self.trigger.on_click(self.trigger_click)
 
-    def compute_trigger(self, _):
+    def trigger_click(self, _):
 
         if not self.workspace.get_entity(self.objects.value):
             return
@@ -111,9 +111,11 @@ class Surface2D(ObjectDataSelection):
 
                 topo_xy = vertices[:, :2]
 
-                if topo_obj.get_data(self.topography.data.value):
-                    topo_z = topo_obj.get_data(self.topography.data.value)[0].values
-                else:
+                try:
+                    topo_z = self.workspace.get_entity(self.topography.data.value)[
+                        0
+                    ].values
+                except IndexError:
                     topo_z = vertices[:, 2]
 
             else:
@@ -133,7 +135,7 @@ class Surface2D(ObjectDataSelection):
             tree_topo = cKDTree(topo_xy)
 
         if self.type.value == "Sections":
-            lines_id = obj.get_data(self.lines.data.value)[0].values
+            lines_id = self.workspace.get_entity(self.lines.data.value)[0].values
             lines = np.unique(lines_id).tolist()
             model_vertices = []
             model_cells = []
@@ -168,7 +170,7 @@ class Surface2D(ObjectDataSelection):
                     m_vals = []
                     for m in self.data.value:
                         prop = obj.find_or_create_property_group(
-                            name=string_name(m)
+                            name=string_name(self.data.uid_name_map[m])
                         ).properties[ind]
                         m_vals.append(
                             self.workspace.get_entity(prop)[0].values[line_ind]
@@ -308,11 +310,10 @@ class Surface2D(ObjectDataSelection):
             )
 
             if len(self.models) > 0:
-                for field, model in zip(self.data.value, self.models):
-
+                for uid, model in zip(self.data.value, self.models):
                     self.surface.add_data(
                         {
-                            field: {"values": model},
+                            self.data.uid_name_map[uid]: {"values": model},
                         }
                     )
         else:
@@ -344,7 +345,9 @@ class Surface2D(ObjectDataSelection):
     def data_change(self, _):
 
         if self.data.value:
-            self.export_as.value = self.data.value[0] + "_surface"
+            self.export_as.value = (
+                self.data.uid_name_map[self.data.value[0]] + "_surface"
+            )
 
     def z_options_change(self, _):
         if self.z_option.value == "depth":

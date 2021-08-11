@@ -5,8 +5,13 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List, Tuple, Union
+from __future__ import annotations
+
+from typing import Any
 from uuid import UUID
+
+from geoh5py.groups import ContainerGroup
+from geoh5py.workspace import Workspace
 
 from ..input_file import InputFile
 from ..params import Params
@@ -17,18 +22,22 @@ from .constants import default_ui_json, required_parameters, validations
 class GravityParams(Params):
 
     _default_ui_json = default_ui_json
+    _required_parameters = required_parameters
+    _validations = validations
+    param_names = list(default_ui_json.keys())
 
-    def __init__(self, **kwargs):
+    def __init__(self, validate=True, **kwargs):
 
-        self.validations: Dict[str, Any] = validations
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
-        self.associations: Dict[Union[str, UUID], Union[str, UUID]] = None
+        self.associations: dict[str | UUID, str | UUID] = None
+        self.inversion_type = None
         self.forward_only: bool = None
         self.topography_object: UUID = None
         self.topography = None
         self.data_object = None
+        self.gz_channel_bool = None
         self.gz_channel = None
         self.gz_uncertainty = None
         self.starting_model_object = None
@@ -70,8 +79,8 @@ class GravityParams(Params):
         self.max_iterations = None
         self.max_cg_iterations = None
         self.max_global_iterations = None
-        self.initial_beta = None
         self.initial_beta_ratio = None
+        self.initial_beta = None
         self.tol_cg = None
         self.alpha_s = None
         self.alpha_x = None
@@ -84,52 +93,68 @@ class GravityParams(Params):
         self.reference_model_object = None
         self.reference_model = None
         self.gradient_type = None
+        self.lower_bound_object = None
         self.lower_bound = None
+        self.upper_bound_object = None
         self.upper_bound = None
         self.parallelized = None
         self.n_cpu = None
         self.max_ram = None
-        self.inversion_type = None
+        self.workspace = None
+        self.output_geoh5 = None
         self.out_group = None
         self.no_data_value = None
-        self._input_file = InputFile()
+        self.monitoring_directory = None
+        self.workspace_geoh5 = None
+        self.geoh5 = None
+        self.run_command = None
+        self.run_command_boolean = None
+        self.conda_environment = None
+        self.conda_environment_boolean = None
 
-        super().__init__(**kwargs)
+        super().__init__(validate, **kwargs)
 
     def _set_defaults(self) -> None:
-        """ Wraps Params._set_defaults """
+        """Wraps Params._set_defaults"""
         return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
-        """ Wraps Params.default. """
+        """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
 
-    def components(self) -> List[str]:
-        """ Retrieve component names used to index channel, uncertainty data. """
-        return [k.split("_")[0] for k in self.active_set() if "channel" in k]
-
     def uncertainty(self, component: str) -> float:
-        """ Returns uncertainty for chosen data component. """
+        """Returns uncertainty for chosen data component."""
         return self.__getattribute__("_".join([component, "uncertainty"]))
 
     def channel(self, component: str) -> UUID:
-        """ Returns channel uuid for chosen data component. """
+        """Returns channel uuid for chosen data component."""
         return self.__getattribute__("_".join([component, "channel"]))
 
     def core_cell_size(self):
-        """ Returns core cell size in all 3 dimensions. """
+        """Returns core cell size in all 3 dimensions."""
         return [self.core_cell_size_x, self.core_cell_size_y, self.core_cell_size_z]
 
     def padding_distance(self):
-        """ Returns padding distance in all 3 dimensions. """
+        """Returns padding distance in all 3 dimensions."""
         return [
             self.padding_distance_x,
             self.padding_distance_y,
             self.padding_distance_z,
         ]
 
-    def window(self) -> Dict[str, float]:
-        """ Returns window dictionary """
+    def components(self) -> List[str]:
+        """Retrieve component names used to index channel and uncertainty data."""
+        comps = []
+        for k, v in self.__dict__.items():
+            if ("channel_bool" in k) & (v is True):
+                comps.append(k.split("_")[1])
+        if self.forward_only:
+            if len(comps) == 0:
+                comps = ["gz"]
+        return comps
+
+    def window(self) -> dict[str, float]:
+        """Returns window dictionary"""
         win = {
             "center_x": self.window_center_x,
             "center_y": self.window_center_y,
@@ -140,8 +165,8 @@ class GravityParams(Params):
         }
         return win if any([v is not None for v in win.values()]) else None
 
-    def offset(self) -> Tuple[List[float], UUID]:
-        """ Returns offset components as list and drape data. """
+    def offset(self) -> tuple[list[float], UUID]:
+        """Returns offset components as list and drape data."""
         offsets = [
             self.receivers_offset_x,
             self.receivers_offset_y,
@@ -151,8 +176,8 @@ class GravityParams(Params):
         offsets = offsets if is_offset else None
         return offsets, self.receivers_radar_drape
 
-    def model_norms(self) -> List[float]:
-        """ Returns model norm components as a list. """
+    def model_norms(self) -> list[float]:
+        """Returns model norm components as a list."""
         return [
             self.smallness_norm,
             self.x_norm,
@@ -234,6 +259,21 @@ class GravityParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._data_object = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def gz_channel_bool(self):
+        return self._gz_channel_bool
+
+    @gz_channel_bool.setter
+    def gz_channel_bool(self, val):
+        if val is None:
+            self._gz_channel_bool = val
+            return
+        p = "gz_channel_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._gz_channel_bool = val
 
     @property
     def gz_channel(self):
@@ -851,21 +891,6 @@ class GravityParams(Params):
         self._max_global_iterations = val
 
     @property
-    def initial_beta(self):
-        return self._initial_beta
-
-    @initial_beta.setter
-    def initial_beta(self, val):
-        if val is None:
-            self._initial_beta = val
-            return
-        p = "initial_beta"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._initial_beta = val
-
-    @property
     def initial_beta_ratio(self):
         return self._initial_beta_ratio
 
@@ -879,6 +904,21 @@ class GravityParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._initial_beta_ratio = val
+
+    @property
+    def initial_beta(self):
+        return self._initial_beta
+
+    @initial_beta.setter
+    def initial_beta(self, val):
+        if val is None:
+            self._initial_beta = val
+            return
+        p = "initial_beta"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._initial_beta = val
 
     @property
     def tol_cg(self):
@@ -1061,6 +1101,21 @@ class GravityParams(Params):
         self._gradient_type = val
 
     @property
+    def lower_bound_object(self):
+        return self._lower_bound_object
+
+    @lower_bound_object.setter
+    def lower_bound_object(self, val):
+        if val is None:
+            self._lower_bound_object = val
+            return
+        p = "lower_bound_object"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._lower_bound_object = UUID(val) if isinstance(val, str) else val
+
+    @property
     def lower_bound(self):
         return self._lower_bound
 
@@ -1074,6 +1129,21 @@ class GravityParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._lower_bound = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def upper_bound_object(self):
+        return self._upper_bound_object
+
+    @upper_bound_object.setter
+    def upper_bound_object(self, val):
+        if val is None:
+            self._upper_bound_object = val
+            return
+        p = "upper_bound_object"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._upper_bound_object = UUID(val) if isinstance(val, str) else val
 
     @property
     def upper_bound(self):
@@ -1136,6 +1206,34 @@ class GravityParams(Params):
         self._max_ram = val
 
     @property
+    def workspace(self):
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, val):
+        if val is None:
+            self._workspace = val
+            return
+        p = "workspace"
+        self.validator.validate(p, val, self.validations[p])
+        self._workspace = Workspace(val) if isinstance(val, str) else val
+
+    @property
+    def output_geoh5(self):
+        return self._output_geoh5
+
+    @output_geoh5.setter
+    def output_geoh5(self, val):
+        if val is None:
+            self._output_geoh5 = val
+            return
+        p = "output_geoh5"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._output_geoh5 = val
+
+    @property
     def out_group(self):
         return self._out_group
 
@@ -1148,7 +1246,7 @@ class GravityParams(Params):
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._out_group = val
+        self._out_group = ContainerGroup.create(self.workspace, name=val)
 
     @property
     def no_data_value(self):
@@ -1165,6 +1263,107 @@ class GravityParams(Params):
         )
         self._no_data_value = val
 
-    def _init_params(self, inputfile: InputFile) -> None:
-        """ Wraps Params._init_params. """
-        super()._init_params(inputfile, required_parameters, validations)
+    @property
+    def monitoring_directory(self):
+        return self._monitoring_directory
+
+    @monitoring_directory.setter
+    def monitoring_directory(self, val):
+        if val is None:
+            self._monitoring_directory = val
+            return
+        p = "monitoring_directory"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._monitoring_directory = val
+
+    @property
+    def workspace_geoh5(self):
+        return self._workspace_geoh5
+
+    @workspace_geoh5.setter
+    def workspace_geoh5(self, val):
+        if val is None:
+            self._workspace_geoh5 = val
+            return
+        p = "workspace_geoh5"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._workspace_geoh5 = Workspace(val) if isinstance(val, str) else val
+
+    @property
+    def geoh5(self):
+        return self._geoh5
+
+    @geoh5.setter
+    def geoh5(self, val):
+        if val is None:
+            self._geoh5 = val
+            return
+        p = "geoh5"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._geoh5 = Workspace(val) if isinstance(val, str) else val
+
+    @property
+    def run_command(self):
+        return self._run_command
+
+    @run_command.setter
+    def run_command(self, val):
+        if val is None:
+            self._run_command = val
+            return
+        p = "run_command"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._run_command = val
+
+    @property
+    def run_command_boolean(self):
+        return self._run_command_boolean
+
+    @run_command_boolean.setter
+    def run_command_boolean(self, val):
+        if val is None:
+            self._run_command_boolean = val
+            return
+        p = "run_command_boolean"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._run_command_boolean = val
+
+    @property
+    def conda_environment(self):
+        return self._conda_environment
+
+    @conda_environment.setter
+    def conda_environment(self, val):
+        if val is None:
+            self._conda_environment = val
+            return
+        p = "conda_environment"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._conda_environment = val
+
+    @property
+    def conda_environment_boolean(self):
+        return self._conda_environment_boolean
+
+    @conda_environment_boolean.setter
+    def conda_environment_boolean(self, val):
+        if val is None:
+            self._conda_environment_boolean = val
+            return
+        p = "conda_environment_boolean"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._conda_environment_boolean = val

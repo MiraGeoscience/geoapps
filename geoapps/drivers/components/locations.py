@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from geoapps.io.params import Params
 
 import numpy as np
-from geoh5py.objects import Grid2D, Points
+from geoh5py.objects import Grid2D
 from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.utils import rotate_xy
@@ -50,30 +50,21 @@ class InversionLocations:
 
     """
 
-    def __init__(
-        self,
-        workspace: Workspace,
-        params: Params,
-        window: Dict[str, Any],
-        out_group: ContainerGroup,
-    ):
+    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
         """
         :param workspace: Geoh5py workspace object containing location based data.
         :param params: Params object containing location based data parameters.
         :param window: Center and size defining window for data, topography, etc.
-        :param out_group: Parent group storing inversion results.
 
         """
         self.workspace = workspace
         self.params = params
         self.window = window
-        self.out_group = out_group
         self.mask: np.ndarray = None
-        self.origin: List[float] = None
+        self.origin: list[float] = None
         self.angle: float = None
         self.is_rotated: bool = False
         self.locations: np.ndarray = None
-        self.entity = None
 
         if params.mesh is not None:
             mesh = workspace.get_entity(params.mesh)[0]
@@ -97,16 +88,6 @@ class InversionLocations:
             msg = f"Badly formed mask array {v}"
             raise (ValueError(msg))
         self._mask = v
-
-    def create_entity(self, name, locs: np.ndarray):
-        """ Create Data group and Points object with observed data. """
-
-        self.entity = Points.create(
-            self.workspace,
-            name=name,
-            vertices=locs,
-            parent=self.out_group,
-        )
 
     def get_locations(self, uid: UUID) -> np.ndarray:
         """
@@ -133,7 +114,7 @@ class InversionLocations:
 
         return locs
 
-    def filter(self, a: Union[Dict[str, np.ndarray], np.ndarray]):
+    def filter(self, a: dict[str, np.ndarray] | np.ndarray):
         """
         Apply accumulated self.mask to array, or dict of arrays.
 
@@ -145,9 +126,17 @@ class InversionLocations:
 
         """
         if isinstance(a, dict):
-            return {k: v[self.mask] for k, v in a.items()}
+
+            if all([v is None for v in a.values()]):
+                return a
+            else:
+                return {k: v[self.mask] for k, v in a.items()}
         else:
-            return a[self.mask]
+
+            if a is None:
+                return None
+            else:
+                return a[self.mask]
 
     def rotate(self, locs: np.ndarray) -> np.ndarray:
         """
@@ -162,7 +151,7 @@ class InversionLocations:
         return np.c_[xy, locs[:, 2]]
 
     def set_z_from_topo(self, locs: np.ndarray):
-        """ interpolate locations z data from topography. """
+        """interpolate locations z data from topography."""
 
         topo = self.get_locations(self.params.topography_object)
 

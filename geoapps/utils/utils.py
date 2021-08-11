@@ -5,11 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import gc
 import json
 import os
 import re
-from typing import Dict, Tuple
 
 import dask
 import dask.array as da
@@ -34,19 +35,29 @@ def find_value(labels: list, keywords: list, default=None) -> list:
     """
     Find matching keywords within a list of labels.
 
-    :param labels: List of labels that may contain the keywords.
+    :param labels: List of labels or list of [key, value] that may contain the keywords.
     :param keywords: List of keywords to search for.
     :param default: Default value be returned if none of the keywords are found.
 
     :return matching_labels: List of labels containing any of the keywords.
     """
     value = None
-    for name in labels:
+    for entry in labels:
         for string in keywords:
+
+            if isinstance(entry, list):
+                name = entry[0]
+            else:
+                name = entry
+
             if isinstance(string, str) and (
                 (string.lower() in name.lower()) or (name.lower() in string.lower())
             ):
-                value = name
+                if isinstance(entry, list):
+                    value = entry[1]
+                else:
+                    value = name
+
     if value is None:
         value = default
     return value
@@ -358,7 +369,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
 
     if order == 0:
         data_trend = np.mean(pts[:, 2]) * np.ones(points[:, 0].shape)
-        print("Removed data mean: {:.6g}".format(data_trend[0]))
+        print(f"Removed data mean: {data_trend[0]:.6g}")
         C = np.r_[0, 0, data_trend]
 
     elif order == 1:
@@ -368,7 +379,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
 
         # evaluate at all data locations
         data_trend = C[0] * points[:, 0] + C[1] * points[:, 1] + C[2]
-        print("Removed linear trend with mean: {:.6g}".format(np.mean(data_trend)))
+        print(f"Removed linear trend with mean: {np.mean(data_trend):.6g}")
 
     elif order == 2:
         # best-fit quadratic curve
@@ -393,7 +404,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
             C,
         ).reshape(points[:, 0].shape)
 
-        print("Removed polynomial trend with mean: {:.6g}".format(np.mean(data_trend)))
+        print(f"Removed polynomial trend with mean: {np.mean(data_trend):.6g}")
     return data_trend, C
 
 
@@ -443,7 +454,8 @@ def weighted_average(
             w = 1.0 / (rad[:, ii] + threshold)
             weight = np.nansum([weight, w], axis=0)
 
-        avg_values += [values_interp / weight]
+        values_interp[weight > 0] = values_interp[weight > 0] / weight[weight > 0]
+        avg_values += [values_interp]
 
     if return_indices:
         return avg_values, ind
@@ -452,8 +464,8 @@ def weighted_average(
 
 
 def window_xy(
-    x: np.ndarray, y: np.ndarray, window: Dict[str, float], mask: np.array = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    x: np.ndarray, y: np.ndarray, window: dict[str, float], mask: np.array = None
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Window x, y coordinates with window limits built from center and size.
 
@@ -508,7 +520,7 @@ def window_xy(
 
 def downsample_xy(
     x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     """
     Downsample locations to approximate a grid with defined spacing.
@@ -546,7 +558,7 @@ def downsample_xy(
 
 def downsample_grid(
     xg: np.ndarray, yg: np.ndarray, distance: float, mask: np.ndarray = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Downsample grid locations to approximate spacing provided by 'distance'.
 
@@ -572,8 +584,8 @@ def downsample_grid(
 
     du = np.linalg.norm(np.c_[u_diff(xg), u_diff(yg)])
     dv = np.linalg.norm(np.c_[v_diff(xg), v_diff(yg)])
-    u_ds = int(np.rint(distance / du))
-    v_ds = int(np.rint(distance / dv))
+    u_ds = np.max([int(np.rint(distance / du)), 1])
+    v_ds = np.max([int(np.rint(distance / dv)), 1])
 
     downsample_mask = np.zeros_like(xg, dtype=bool)
     downsample_mask[::v_ds, ::u_ds] = True
@@ -1048,25 +1060,13 @@ def block_model_2_tensor(block_model, models=[]):
         ],
         x0="CC0",
     )
-
     tensor.x0 = [
         block_model.origin["x"] + block_model.u_cells[block_model.u_cells < 0].sum(),
         block_model.origin["y"] + block_model.v_cells[block_model.v_cells < 0].sum(),
         block_model.origin["z"] + block_model.z_cells[block_model.z_cells < 0].sum(),
     ]
-
-    print(
-        tensor.x0,
-        [
-            block_model.origin["x"]
-            + block_model.u_cells[block_model.u_cells < 0].sum(),
-            block_model.origin["y"]
-            + block_model.v_cells[block_model.v_cells < 0].sum(),
-            block_model.origin["z"]
-            + block_model.z_cells[block_model.z_cells < 0].sum(),
-        ],
-    )
     out = []
+
     for model in models:
         values = model.copy().reshape((tensor.nCz, tensor.nCx, tensor.nCy), order="F")
 
@@ -1121,8 +1121,8 @@ def octree_2_treemesh(mesh):
     nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
 
     cell_sizes = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
-    u_shift, v_shift, w_shift = [np.sum(h[h < 0]) for h in cell_sizes]
-    h1, h2, h3 = [np.abs(h) for h in cell_sizes]
+    u_shift, v_shift, w_shift = (np.sum(h[h < 0]) for h in cell_sizes)
+    h1, h2, h3 = (np.abs(h) for h in cell_sizes)
     x0 = tswCorn + np.array([u_shift, v_shift, w_shift])
 
     ls = np.log2(nCunderMesh).astype(int)
@@ -1169,12 +1169,11 @@ def object_2_dataframe(entity, fields=[], inplace=False, vertices=True, index=No
 
     d_f = pd.DataFrame(data_dict, columns=list(data_dict.keys()))
     for field in fields:
-        if entity.get_data(field):
-            obj = entity.get_data(field)[0]
-            if obj.values.shape[0] == locs.shape[0]:
-                d_f[field] = obj.values.copy()[index]
+        for data in entity.workspace.get_entity(field):
+            if (data in entity.children) and (data.values.shape[0] == locs.shape[0]):
+                d_f[data.name] = data.values.copy()[index]
                 if inplace:
-                    obj.values = None
+                    data.values = None
 
     return d_f
 

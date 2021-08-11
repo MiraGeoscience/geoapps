@@ -88,7 +88,7 @@ class InversionMesh:
             self.octree_permutation = self.mesh._ubc_order
 
     def original_cc(self) -> np.ndarray:
-        """ Returns the cell centers of the original Octree mesh type. """
+        """Returns the cell centers of the original Octree mesh type."""
         cc = self.mesh.cell_centers
         cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
         return cc[self.octree_permutation]

@@ -795,6 +795,7 @@ class SaveIterationsGeoH5(InversionDirective):
     data_type = {}
     replace_values = False
     no_data_value = None
+    group = False
     reg_fun = ["phi_ms", "phi_msx", "phi_msy", "phi_msz"]
 
     def initialize(self):
@@ -817,6 +818,9 @@ class SaveIterationsGeoH5(InversionDirective):
 
         prop = self.check_mvi_format(prop)
 
+        if self.group:
+            group_name = "Iteration_0"
+
         for ii, channel in enumerate(self.channels):
 
             attr = prop[ii :: len(self.channels)]
@@ -824,16 +828,29 @@ class SaveIterationsGeoH5(InversionDirective):
             if self.sorting is not None:
                 attr = attr[self.sorting]
 
-            data = self.h5_object.add_data(
-                {
-                    f"Iteration_0_"
-                    + channel: {"association": self.association, "values": attr}
-                }
-            )
+            if channel not in list(self.data_type.keys()):
+                data = self.h5_object.add_data(
+                    {
+                        f"Iteration_0_"
+                        + channel: {"association": self.association, "values": attr}
+                    }
+                )
+                data.entity_type.name = channel
+                self.data_type[channel] = data.entity_type
+            else:
+                data = self.h5_object.add_data(
+                    {
+                        f"Iteration_0_"
+                        + channel: {
+                            "association": self.association,
+                            "values": attr,
+                            "entity_type": self.data_type[channel],
+                        }
+                    }
+                )
 
-            data.entity_type.name = channel
-            self.data_type[channel] = data.entity_type
-
+            if self.group:
+                self.h5_object.add_data_to_group(data, group_name)
 
         if self.save_objective_function:
             # Save the data.
@@ -875,6 +892,9 @@ class SaveIterationsGeoH5(InversionDirective):
 
         prop = self.check_mvi_format(prop)
 
+        if self.group:
+            group_name = f"Iteration_{self.opt.iter}"
+
         for ii, channel in enumerate(self.channels):
             attr = prop[ii :: len(self.channels)]
 
@@ -890,7 +910,7 @@ class SaveIterationsGeoH5(InversionDirective):
                 data.name = f"Iteration_{self.opt.iter}_" + channel
                 data.values = attr
             else:
-                self.h5_object.add_data(
+                data = self.h5_object.add_data(
                     {
                         f"Iteration_{self.opt.iter}_"
                         + channel: {
@@ -900,6 +920,9 @@ class SaveIterationsGeoH5(InversionDirective):
                         }
                     }
                 )
+
+            if self.group:
+                self.h5_object.add_data_to_group(data, group_name)
 
         if self.save_objective_function:
             # Save objective function.

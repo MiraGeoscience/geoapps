@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict, List, Tuple, Union
+from __future__ import annotations
+
+from typing import Any
 from uuid import UUID
 
 import numpy as np
@@ -36,8 +38,8 @@ class InputValidator:
 
     def __init__(
         self,
-        requirements: List[str],
-        validations: Dict[str, Any],
+        requirements: list[str],
+        validations: dict[str, Any],
         workspace: Workspace = None,
         input=None,
     ):
@@ -69,8 +71,6 @@ class InputValidator:
     @input.setter
     def input(self, val):
         self._input = val
-        if val is not None:
-            self.validate_input(val)
 
     def validate_input(self, input) -> None:
         """
@@ -89,6 +89,7 @@ class InputValidator:
         it's value/type/shape/requirement validations.
         """
 
+        self.input = input
         self._validate_requirements(input.data)
 
         for k, v in input.data.items():
@@ -103,9 +104,9 @@ class InputValidator:
         self,
         param: str,
         value: Any,
-        pvalidations: Dict[str, List[Any]],
+        pvalidations: dict[str, list[Any]],
         workspace: Workspace = None,
-        associations: Dict[Union[str, UUID], Union[str, UUID]] = None,
+        associations: dict[str | UUID, str | UUID] = None,
     ) -> None:
         """
         Validates parameter values, types, shapes, and requirements.
@@ -137,7 +138,7 @@ class InputValidator:
                 if k not in pvalidations.keys():
                     exclusions = ["values", "types", "shapes", "reqs", "uuid"]
                     vkeys = [k for k in pvalidations.keys() if k not in exclusions]
-                    msg = self.iterable_validation_msg(param, "keys", k, vkeys)
+                    msg = self._iterable_validation_msg(param, "keys", k, vkeys)
                     raise KeyError(msg)
                 self.validate(k, v, pvalidations[k], workspace, associations)
 
@@ -147,6 +148,7 @@ class InputValidator:
             else:
                 return
 
+        ws = self.workspace if workspace is None else workspace
         if "values" in pvalidations.keys():
             self._validate_parameter_val(param, value, pvalidations["values"])
         if "types" in pvalidations.keys():
@@ -157,26 +159,31 @@ class InputValidator:
             for req in pvalidations["reqs"]:
                 self._validate_parameter_req(param, value, req)
         if "uuid" in pvalidations.keys():
-            ws = self.workspace if workspace is None else workspace
             try:
                 child_uuid = UUID(value) if isinstance(value, str) else value
                 parent = associations[child_uuid]
-            except:
+            except (KeyError, TypeError):
                 parent = None
             self._validate_parameter_uuid(param, value, ws, parent)
+        if "property_groups" in pvalidations.keys():
+            try:
+                parent = associations[value]
+            except (KeyError, TypeError):
+                parent = None
+            self._validate_parameter_property_groups(param, value, ws, parent)
 
     def _validate_parameter_val(
-        self, param: str, value: Any, vvals: List[Union[float, str]]
+        self, param: str, value: Any, vvals: list[float | str]
     ) -> None:
-        """ Raise ValueError if parameter value is invalid.  """
+        """Raise ValueError if parameter value is invalid."""
         if value not in vvals:
             msg = self._iterable_validation_msg(param, "value", value, vvals)
             raise ValueError(msg)
 
     def _validate_parameter_type(
-        self, param: str, value: Any, vtypes: List[type]
+        self, param: str, value: Any, vtypes: list[type]
     ) -> None:
-        """ Raise TypeError if parameter type is invalid. """
+        """Raise TypeError if parameter type is invalid."""
         isiter = self._isiterable(value)
         value = np.array(value).flatten().tolist()[0] if isiter else value
         if type(value) not in vtypes:
@@ -186,16 +193,16 @@ class InputValidator:
             raise TypeError(msg)
 
     def _validate_parameter_shape(
-        self, param: str, value: Any, vshape: List[Tuple[int]]
+        self, param: str, value: Any, vshape: list[tuple[int]]
     ) -> None:
-        """ Raise ValueError if parameter shape is invalid. """
+        """Raise ValueError if parameter shape is invalid."""
         pshape = np.array(value).shape
         if pshape != vshape:
             msg = self._iterable_validation_msg(param, "shape", pshape, vshape)
             raise ValueError(msg)
 
     def _validate_parameter_req(self, param: str, value: Any, req: tuple) -> None:
-        """ Raise a KeyError if parameter requirement is not satisfied. """
+        """Raise a KeyError if parameter requirement is not satisfied."""
 
         hasval = len(req) > 1  # req[0] contains value for which param req[1] must exist
         preq = req[1] if hasval else req[0]
@@ -215,7 +222,7 @@ class InputValidator:
             raise KeyError(msg)
 
     def _req_validation_msg(self, param, preq, val=None):
-        """ Generate unsatisfied parameter requirement message. """
+        """Generate unsatisfied parameter requirement message."""
 
         msg = f"Unsatisfied '{param}' requirement. Input file must contain "
         if val is not None:
@@ -227,7 +234,7 @@ class InputValidator:
     def _validate_parameter_uuid(
         self, param: str, value: str, workspace: Workspace = None, parent: UUID = None
     ) -> None:
-        """ Check whether a string is a valid uuid and addresses an object in the workspace. """
+        """Check whether a string is a valid uuid and addresses an object in the workspace."""
 
         msg = self._general_validation_msg(param, "uuid", value)
         try:
@@ -248,14 +255,25 @@ class InputValidator:
                 msg += f" Object must be a child of {parent}."
                 raise IndexError(msg)
 
-    def _general_validation_msg(self, param: str, type: str, value: Any) -> str:
-        """ Generate base error message: "Invalid '{param}' {type}: {value}.". """
+    def _validate_parameter_property_groups(
+        self, param: str, value: str, workspace: Workspace = None, parent: UUID = None
+    ) -> None:
+        msg = self._general_validation_msg(param, "property_groups", value)
+
+        if parent is not None:
+            parent_obj = workspace.get_entity(parent)[0]
+            if value not in [pg.uid for pg in parent_obj.property_groups]:
+                msg += f" Property Group must exist for {parent}."
+
+    @staticmethod
+    def _general_validation_msg(param: str, type: str, value: Any) -> str:
+        """Generate base error message: "Invalid '{param}' {type}: {value}."."""
         return f"Invalid '{param}' {type}: '{value}'."
 
     def _iterable_validation_msg(
-        self, param: str, type: str, value: Any, validations: List[Any]
+        self, param: str, type: str, value: Any, validations: list[Any]
     ) -> str:
-        """ Append possibly iterable validations: "Must be (one of): {validations}.". """
+        """Append possibly iterable validations: "Must be (one of): {validations}."."""
 
         msg = self._general_validation_msg(param, type, value)
         if self._isiterable(validations, checklen=True):
@@ -267,7 +285,7 @@ class InputValidator:
         return msg
 
     def _validate_requirements(
-        self, input: Dict[str, Any], requirements: List[str] = None
+        self, input: dict[str, Any], requirements: list[str] = None
     ) -> None:
         """
         Ensures that all required input file keys are present.
@@ -310,3 +328,56 @@ class InputValidator:
             return False if (checklen and (len(v) == 1)) else True
         else:
             return False
+
+
+class InputFreeformValidator(InputValidator):
+    """
+    Validations for Octree driver parameters.
+    """
+
+    _free_params_keys = []
+
+    def __init__(
+        self,
+        requirements: list[str],
+        validations: dict[str, Any],
+        workspace: Workspace = None,
+        input=None,
+        free_params_keys: list = [],
+    ):
+        super().__init__(requirements, validations, workspace=workspace, input=input)
+        self._free_params_keys = free_params_keys
+
+    def validate_input(self, input) -> None:
+        self._validate_requirements(input.data)
+        free_params_dict = {}
+        for k, v in input.data.items():
+            if " " in k:
+                for param in self.free_params_keys:
+                    if param in k.lower():
+                        group = k.lower().replace(param, "").lstrip()
+                        if group not in list(free_params_dict.keys()):
+                            free_params_dict[group] = {}
+
+                        free_params_dict[group][param] = v
+                        validator = self.validations[f"template_{param}"]
+
+                        break
+
+            elif k not in self.validations.keys():
+                raise KeyError(f"{k} is not a valid parameter name.")
+            else:
+                validator = self.validations[k]
+
+            self.validate(k, v, validator, self.workspace, input.associations)
+
+        for group in free_params_dict.values():
+            if not len(list(group.values())) == len(self.free_params_keys):
+                raise ValueError(
+                    "Property Groups must contain one of each"
+                    + f"{self.free_params_keys}"
+                )
+
+    @property
+    def free_params_keys(self):
+        return self._free_params_keys

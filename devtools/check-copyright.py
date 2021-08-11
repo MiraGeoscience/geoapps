@@ -18,7 +18,7 @@ if __name__ == "__main__":
     max_lines = 10
     report_files = []
     for f in files:
-        with open(f, mode="r", encoding="utf-8") as file:
+        with open(f, encoding="utf-8") as file:
             count = 0
             has_dated_copyright = False
             for line in file:
