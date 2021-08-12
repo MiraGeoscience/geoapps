@@ -249,22 +249,13 @@ class InversionDriver:
                 parent=self.params.out_group,
             )
 
-            comps, norms = self.survey.components, self.inversion_data.normalizations
-            data_type = {}
-            for ii, (comp, norm) in enumerate(zip(comps, norms)):
-                val = norm * self.survey.dobs[ii :: len(comps)]
-                observed_data_object = predicted_data_object.add_data(
-                    {f"Observed_{comp}": {"values": val}}
-                )
-                data_type[comp] = observed_data_object.entity_type
-
             directiveList.append(
                 directives.SaveIterationsGeoH5(
-                    h5_object=predicted_data_object,
+                    h5_object=self.inversion_data.predicted_data_object,
                     channels=self.survey.components,
                     mapping=np.hstack(self.inversion_data.normalizations),
                     attribute_type="predicted",
-                    data_type=data_type,
+                    data_type=self.inversion_data._observed_data_types,
                     sorting=tuple(self.sorting),
                     save_objective_function=True,
                 )

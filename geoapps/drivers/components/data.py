@@ -104,6 +104,10 @@ class InversionData(InversionLocations):
         self.predicted: dict[str, np.ndarray] = {}
         self.uncertainties: dict[str, np.ndarray] = {}
         self.normalizations: list[float] = []
+        self.data_entity = None
+        self.observed_data_object = None
+        self.predicted_data_object = None
+        self._observed_data_types = None
         self._initialize()
 
     def _initialize(self) -> None:
@@ -158,6 +162,7 @@ class InversionData(InversionLocations):
             self.observed = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
+        self.save_data()
 
     def get_data(self) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
         """
@@ -186,13 +191,14 @@ class InversionData(InversionLocations):
 
     def save_data(self):
 
-        self.create_entity("Data", self.locations)
+        self.data_entity = super().create_entity("Data", self.locations)
 
         for comp in self.components:
-            dnorm = self.normalizations[comp] * self.data[comp]
-            observed_data = self.entity.add_data(
+            dnorm = self.normalizations[comp] * self.observed[comp]
+            self.observed_data_object = self.data_entity.add_data(
                 {f"Observed_{comp}": {"values": dnorm}}
             )
+            self._observed_data_types[comp] = self.observed_data_object.entity_type
 
     def get_data_component(self, component: str) -> np.ndarray:
         """Get data component (channel) from params data."""
@@ -291,15 +297,15 @@ class InversionData(InversionLocations):
         :return: d: Normalized data.
         """
         d = deepcopy(data)
-        normalizations = []
+        normalizations = {}
         for comp in self.components:
             if comp == "gz":
-                normalizations.append(-1.0)
+                normalizations[comp] = -1.0
                 if d[comp] is not None:
                     d[comp] *= -1.0
                 print(f"Sign flip for {comp} component")
             else:
-                normalizations.append(1.0)
+                normalizations[comp] = -1.0
         self.normalizations = normalizations
         return d
 
@@ -393,14 +399,8 @@ class InversionData(InversionLocations):
                     -1 * self.angle,
                 )
 
-            predicted_data_object = Points.create(
-                self.workspace,
-                name=f"Predicted",
-                vertices=locs,
-                parent=self.params.out_group,
-            )
-
-            comps, norms = self.components, self.normalizations
-            for ii, (comp, norm) in enumerate(zip(comps, norms)):
-                val = norm * self.predicted[comp]
-                predicted_data_object.add_data({f"{comp}": {"values": val}})
+            for comp in self.components:
+                val = self.normalizations[comp] * self.predicted[comp]
+                self.predicted_data_object = self.data_entity.add_data(
+                    {f"{comp}": {"values": val}}
+                )
