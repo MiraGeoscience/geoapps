@@ -92,8 +92,10 @@ class Params:
 
             if "workspace" in kwargs:
                 ifile.data["workspace"] = kwargs["workspace"]
+                ifile.workspace = kwargs["workspace"]
             if "geoh5" in kwargs:
                 ifile.data["workspace"] = kwargs["geoh5"]
+                ifile.workspace = kwargs["geoh5"]
 
             self._input_file = ifile
             cls = self.from_input_file(ifile)

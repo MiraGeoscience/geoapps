@@ -39,10 +39,11 @@ def test_original_cc(tmp_path):
     np.testing.assert_allclose(msh.centroids, inversion_mesh.original_cc())
 
 
-def test_collect_mesh_params(tmp_path):
-    ws, params = setup_params(tmp_path)
-    inversion_mesh = InversionMesh(ws, params)
-    inversion_mesh.collect_mesh_params(params)
+#
+# def test_collect_mesh_params(tmp_path):
+#     ws, params = setup_params(tmp_path)
+#     inversion_mesh = InversionMesh(ws, params)
+#     inversion_mesh.collect_mesh_params(params)
 
 
 # def test_mesh_from_params(tmp_path):

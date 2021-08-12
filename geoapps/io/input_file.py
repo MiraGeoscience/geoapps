@@ -124,7 +124,10 @@ class InputFile:
             if getattr(self, "_filepath", None) is not None:
                 path = self.filepath
             elif getattr(self, "workspace", None) is not None:
-                path = self.workspace.h5file
+                if isinstance(self.workspace, str):
+                    path = self.workspace
+                else:
+                    path = self.workspace.h5file
 
             if path is not None:
                 self._workpath: str = op.dirname(op.abspath(path)) + op.sep
