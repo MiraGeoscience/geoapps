@@ -235,6 +235,7 @@ class ObjectDataSelection(BaseApplication):
             return None, None
 
     def update_data_list(self, _):
+        refresh = self.refresh.value
         self.refresh.value = False
         if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
             self.objects.value
@@ -278,7 +279,7 @@ class ObjectDataSelection(BaseApplication):
             self.data.options = []
             self.data.uid_name_map = {}
 
-        self.refresh.value = True
+        self.refresh.value = refresh
 
     def update_objects_list(self):
         if getattr(self, "_workspace", None) is not None:
