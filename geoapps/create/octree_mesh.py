@@ -43,6 +43,7 @@ class OctreeMesh(ObjectDataSelection):
         else:
             if "h5file" in app_initializer.keys():
                 app_initializer["geoh5"] = app_initializer.pop("h5file")
+                app_initializer["workspace"] = app_initializer["geoh5"]
 
             self.params = self._param_class(**app_initializer)
 
