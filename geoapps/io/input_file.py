@@ -46,7 +46,7 @@ class InputFile:
     """
 
     _workpath: str = None
-    _free_params_dict = None
+    _free_params_dict = {}
 
     def __init__(
         self,

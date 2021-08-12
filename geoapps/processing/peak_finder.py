@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import sys
+import uuid
 from os import path
 from typing import Optional
 
@@ -138,6 +139,7 @@ class PeakFinder(ObjectDataSelection):
         self.system.observe(self.set_data, names="value")
         super().__init__()
         self.pause_refresh = False
+        self.refresh.value = True
         self.previous_line = self.lines.lines.value
         self.smoothing.observe(self.line_update, names="value")
         self.max_migration.observe(self.line_update, names="value")
@@ -157,6 +159,7 @@ class PeakFinder(ObjectDataSelection):
                 "center": self.center,
                 "width": self.width,
                 "plot_trigger": self.plot_trigger,
+                "refresh": self.refresh,
                 "x_label": self.x_label,
             },
         )
@@ -211,25 +214,13 @@ class PeakFinder(ObjectDataSelection):
 
     def __populate__(self, **kwargs):
         super().__populate__(**kwargs)
-        prop_groups = {}
-        count = 0
-        obj_list = self.workspace.get_entity(self.objects.value)
-        for label, params in self.params.free_params_dict.items():
-            if params["data"] is not None and any(obj_list):
-                prop_group = [
-                    pg for pg in obj_list[0].property_groups if pg.uid == params["data"]
-                ]
-                if any(prop_group):
-                    count += 1
-                    prop_groups[prop_group[0].name] = {
-                        "data": prop_group[0].uid,
-                        "color": params["color"],
-                        "label": [count],
-                        "properties": prop_group[0].properties,
-                    }
 
-        if len(prop_groups) > 1:
-            self._channel_groups = prop_groups
+        obj_list = self.workspace.get_entity(self.objects.value)
+
+        if any(obj_list) and any(self.params.free_params_dict):
+            self._channel_groups = groups_from_params_dict(
+                obj_list[0], self.params.free_params_dict
+            )
 
         group_list = []
         for pg, params in self._channel_groups.items():
@@ -692,15 +683,15 @@ class PeakFinder(ObjectDataSelection):
         """
         Add a group from dictionary
         """
-        if getattr(self, f"Template {property_group} Data", None) is None:
+        if getattr(self, f"Group {property_group} Data", None) is None:
             setattr(
                 self,
-                f"Template {property_group} Data",
+                f"Group {property_group} Data",
                 Dropdown(
                     description="Group Name:",
                 ),
             )
-        widget = getattr(self, f"Template {property_group} Data")
+        widget = getattr(self, f"Group {property_group} Data")
         widget.name = property_group
         widget.value = None
         widget.options = self.data.options
@@ -709,30 +700,28 @@ class PeakFinder(ObjectDataSelection):
             widget.value = params["data"]
         except TraitError:
             pass
-        if getattr(self, f"Template {property_group} Color", None) is None:
+        if getattr(self, f"Group {property_group} Color", None) is None:
             setattr(
                 self,
-                f"Template {property_group} Color",
+                f"Group {property_group} Color",
                 ColorPicker(description="Color"),
             )
-        getattr(self, f"Template {property_group} Color").name = property_group
+        getattr(self, f"Group {property_group} Color").name = property_group
         try:
-            getattr(self, f"Template {property_group} Color").value = str(
-                params["color"]
-            )
+            getattr(self, f"Group {property_group} Color").value = str(params["color"])
         except TraitError:
             pass
 
-        getattr(self, f"Template {property_group} Data").observe(
+        getattr(self, f"Group {property_group} Data").observe(
             self.edit_group, names="value"
         )
-        getattr(self, f"Template {property_group} Color").observe(
+        getattr(self, f"Group {property_group} Color").observe(
             self.edit_group, names="value"
         )
         return VBox(
             [
-                getattr(self, f"Template {property_group} Data"),
-                getattr(self, f"Template {property_group} Color"),
+                getattr(self, f"Group {property_group} Data"),
+                getattr(self, f"Group {property_group} Color"),
             ],
             layout=Layout(border="solid"),
         )
@@ -804,7 +793,7 @@ class PeakFinder(ObjectDataSelection):
         if not self.pause_refresh:
             if isinstance(widget, Dropdown):
                 obj, _ = self.get_selected_entities()
-                group = {"color": getattr(self, f"Template {widget.name} Color").value}
+                group = {"color": getattr(self, f"Group {widget.name} Color").value}
                 if widget.value in [pg.uid for pg in obj.property_groups]:
                     prop_group = [
                         pg for pg in obj.property_groups if pg.uid == widget.value
@@ -975,6 +964,7 @@ class PeakFinder(ObjectDataSelection):
         center,
         width,
         plot_trigger,
+        refresh,
         x_label,
     ):
         """
@@ -983,6 +973,7 @@ class PeakFinder(ObjectDataSelection):
 
         if (
             self.pause_refresh
+            or not self.refresh.value
             or getattr(self, "survey", None) is None
             or self.plot_trigger.value is False
             or len(self.active_channels) == 0
@@ -991,6 +982,7 @@ class PeakFinder(ObjectDataSelection):
             or not self.plot_result
         ):
             return
+
         self.figure = plt.figure(figsize=(12, 6))
         axs = plt.subplot()
         lims = np.searchsorted(
@@ -1183,6 +1175,7 @@ class PeakFinder(ObjectDataSelection):
 
         if (
             self.plot_trigger.value
+            or self.refresh.value
             and hasattr(self.lines, "profile")
             and self.tem_checkbox.value
         ):
@@ -1340,12 +1333,10 @@ class PeakFinder(ObjectDataSelection):
                 "data": values["data"],
                 "color": values["color"],
             }
-            ui_json[f"Template {group} Data"] = default_ui_json[f"Template Data"].copy()
-            ui_json[f"Template {group} Data"]["group"] = group
-            ui_json[f"Template {group} Color"] = default_ui_json[
-                f"Template Color"
-            ].copy()
-            ui_json[f"Template {group} Color"]["group"] = group
+            ui_json[f"Group {group} Data"] = default_ui_json[f"Template Data"].copy()
+            ui_json[f"Group {group} Data"]["group"] = group
+            ui_json[f"Group {group} Color"] = default_ui_json[f"Template Color"].copy()
+            ui_json[f"Group {group} Color"]["group"] = group
 
         del ui_json[f"Template Data"]
         del ui_json[f"Template Color"]
@@ -1396,23 +1387,30 @@ class PeakFinder(ObjectDataSelection):
                 prop_group[0]
             )
         else:
-            count = 0
-            channel_groups = {}
-            for label, group_params in params.free_params_dict.items():
-                if group_params["data"] is not None:
-                    prop_group = [
-                        pg
-                        for pg in survey.property_groups
-                        if pg.uid == group_params["data"]
-                    ]
-                    if any(prop_group):
-                        count += 1
-                        channel_groups[prop_group[0].name] = {
-                            "data": prop_group[0].uid,
-                            "color": group_params["color"],
-                            "label": [count],
-                            "properties": prop_group[0].properties,
-                        }
+
+            channel_groups = groups_from_params_dict(params.free_params_dict)
+
+            # for label, group_params in params.free_params_dict.items():
+            #     if group_params["data"] is not None:
+            #
+            #         try:
+            #             group_id = uuid.UUID(group_params["data"])
+            #         except ValueError:
+            #             group_id = None
+            #
+            #         prop_group = [
+            #             pg
+            #             for pg in survey.property_groups
+            #             if pg.uid == group_id
+            #         ]
+            #         if any(prop_group):
+            #             count += 1
+            #             channel_groups[prop_group[0].name] = {
+            #                 "data": prop_group[0].uid,
+            #                 "color": group_params["color"],
+            #                 "label": [count],
+            #                 "properties": prop_group[0].properties,
+            #             }
 
         active_channels = {}
         for group in channel_groups.values():
@@ -1999,6 +1997,33 @@ def find_anomalies(
         return groups, profile
     else:
         return groups
+
+
+def groups_from_params_dict(entity: Entity, params_dict: dict):
+    """
+    Generate a dictionary of groups with associate properties from params.
+    """
+    count = 0
+    channel_groups = {}
+    for label, group_params in params_dict.items():
+        if group_params["data"] is not None:
+
+            try:
+                group_id = uuid.UUID(group_params["data"])
+            except ValueError:
+                group_id = None
+
+            prop_group = [pg for pg in entity.property_groups if pg.uid == group_id]
+            if any(prop_group):
+                count += 1
+                channel_groups[prop_group[0].name] = {
+                    "data": prop_group[0].uid,
+                    "color": group_params["color"],
+                    "label": [count],
+                    "properties": prop_group[0].properties,
+                }
+
+    return channel_groups
 
 
 if __name__ == "__main__":
