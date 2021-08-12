@@ -73,19 +73,20 @@ class InversionMesh:
 
         if self.params.mesh_from_params:
 
-            return
+            self.build_from_params()
 
         else:
 
-            self.mesh = self.workspace.get_entity(self.params.mesh)[0]
-            self.nC = self.mesh.n_cells
+            mesh = self.workspace.get_entity(self.params.mesh)[0]
+            self.uid = mesh.uid
+            self.nC = mesh.n_cells
 
-            if self.mesh.rotation:
-                origin = self.mesh.origin.tolist()
-                angle = self.mesh.rotation[0]
+            if mesh.rotation:
+                origin = mesh.origin.tolist()
+                angle = mesh.rotation[0]
                 self.rotation = {"origin": origin, "angle": angle}
 
-            self.mesh = octree_2_treemesh(self.mesh)
+            self.mesh = octree_2_treemesh(mesh)
             self.octree_permutation = self.mesh._ubc_order
 
     def original_cc(self) -> np.ndarray:
@@ -101,59 +102,69 @@ class InversionMesh:
             "u_cell_size",
             "v_cell_size",
             "w_cell_size",
-            "octree_levels_topo",
-            "octree_levels_obs",
             "depth_core",
-            "max_distance",
             "horizontal_padding",
             "vertical_padding",
+            "workspace",
         ]
         mesh_params_dict = params.to_dict(ui_json_format=False)
         mesh_params_dict = {
             k: v for k, v in mesh_params_dict.items() if k in mesh_param_names
         }
-        # mesh_params_dict["Refinement A"] = {
-        #     "object": self.workspace.get_entity("observed")[0].uid()
-        #     "levels": self.
-        # }
-        return OctreeParams(mesh_params_dict)
+        mesh_params_dict["Refinement A"] = {
+            "object": self.workspace.get_entity("Data")[0].uid,
+            "levels": params.octree_levels_obs,
+            "type": "radial",
+            "distance": params.max_distance,
+        }
+        mesh_params_dict["Refinement B"] = {
+            "object": params.topography_object,
+            "levels": params.octree_levels_topo,
+            "type": "surface",
+            "distance": params.max_distance,
+        }
+        mesh_params_dict["objects"] = self.workspace.get_entity("Data")[0].uid
 
-    def build_from_params(
-        self,
-        inversion_data: InversionData,
-        inversion_topography: InversionTopography,
-    ):
-        octree_dict = params.to_dict(mesh_params=True)
-        # octree_params = OctreeParams(**octree_dict)
-        # OctreeMesh.run(octree_params)
+        return OctreeParams(**mesh_params_dict)
 
-        # topography_locs = inversion_data.set_z_from_topo(inversion_data.locations)
-        print("Creating Global TreeMesh")
-        mesh = mesh_builder_xyz(
-            inversion_data.locations,
-            self.params.u_cell_size(),
-            padding_distance=self.params.padding_distance(),
-            mesh_type="TREE",
-            depth_core=self.params.depth_core,
-        )
+    def build_from_params(self):
+        octree_params = self.collect_mesh_params(self.params)
+        from geoapps.create.octree_mesh import OctreeMesh
 
-        mesh = refine_tree_xyz(
-            mesh,
-            inversion_topography.locations,
-            method="surface",
-            octree_levels=self.params.octree_levels_topo,
-            finalize=False,
-        )
-
-        mesh = refine_tree_xyz(
-            mesh,
-            inversion_data.locations,
-            method="surface",
-            octree_levels=self.params.octree_levels_obs,
-            max_distance=self.params.max_distance,
-            finalize=True,
-        )
-
-        self.mesh = mesh
+        octree_mesh = OctreeMesh.run(octree_params)
+        print(self.workspace.get_entity("Octree_Mesh"))
+        self.uid = octree_mesh.uid
+        self.mesh = octree_2_treemesh(octree_mesh)
         self.nC = self.mesh.nC
         self.octree_permutation = self.mesh._ubc_order
+
+        # topography_locs = inversion_data.set_z_from_topo(inversion_data.locations)
+        # print("Creating Global TreeMesh")
+        # mesh = mesh_builder_xyz(
+        #     inversion_data.locations,
+        #     self.params.u_cell_size(),
+        #     padding_distance=self.params.padding_distance(),
+        #     mesh_type="TREE",
+        #     depth_core=self.params.depth_core,
+        # )
+        #
+        # mesh = refine_tree_xyz(
+        #     mesh,
+        #     inversion_topography.locations,
+        #     method="surface",
+        #     octree_levels=self.params.octree_levels_topo,
+        #     finalize=False,
+        # )
+        #
+        # mesh = refine_tree_xyz(
+        #     mesh,
+        #     inversion_data.locations,
+        #     method="surface",
+        #     octree_levels=self.params.octree_levels_obs,
+        #     max_distance=self.params.max_distance,
+        #     finalize=True,
+        # )
+        #
+        # self.mesh = mesh
+        # self.nC = self.mesh.nC
+        # self.octree_permutation = self.mesh._ubc_order

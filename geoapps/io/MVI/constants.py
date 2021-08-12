@@ -176,10 +176,8 @@ default_ui_json = {
         "main": True,
         "dependency": "forward_only",
         "dependencyType": "hide",
-        "isValue": False,
         "label": "Elevation",
         "parent": "topography_object",
-        "property": None,
         "value": None,
     },
     "data_object": {
