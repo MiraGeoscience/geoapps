@@ -353,6 +353,10 @@ class InputFreeformValidator(InputValidator):
         free_params_dict = {}
         for k, v in input.data.items():
             if " " in k:
+
+                if "template" in k.lower():
+                    continue
+
                 for param in self.free_params_keys:
                     if param in k.lower():
                         group = k.lower().replace(param, "").lstrip()
@@ -371,12 +375,15 @@ class InputFreeformValidator(InputValidator):
 
             self.validate(k, v, validator, self.workspace, input.associations)
 
-        for group in free_params_dict.values():
-            if not len(list(group.values())) == len(self.free_params_keys):
-                raise ValueError(
-                    "Property Groups must contain one of each"
-                    + f"{self.free_params_keys}"
-                )
+        if any(free_params_dict):
+            for key, group in free_params_dict.items():
+                if not len(list(group.values())) == len(self.free_params_keys):
+                    raise ValueError(
+                        f"Freeformat parameter {key} must contain one of each: "
+                        + f"{self.free_params_keys}"
+                    )
+
+            input._free_params_dict = free_params_dict
 
     @property
     def free_params_keys(self):
