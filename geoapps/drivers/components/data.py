@@ -105,9 +105,7 @@ class InversionData(InversionLocations):
         self.uncertainties: dict[str, np.ndarray] = {}
         self.normalizations: list[float] = []
         self.data_entity = None
-        self.observed_data_object = None
-        self.predicted_data_object = None
-        self._observed_data_types = None
+        self._observed_data_types = {}
         self._initialize()
 
     def _initialize(self) -> None:
@@ -195,10 +193,10 @@ class InversionData(InversionLocations):
 
         for comp in self.components:
             dnorm = self.normalizations[comp] * self.observed[comp]
-            self.observed_data_object = self.data_entity.add_data(
+            observed_data_object = self.data_entity.add_data(
                 {f"Observed_{comp}": {"values": dnorm}}
             )
-            self._observed_data_types[comp] = self.observed_data_object.entity_type
+            self._observed_data_types[comp] = observed_data_object.entity_type
 
     def get_data_component(self, component: str) -> np.ndarray:
         """Get data component (channel) from params data."""
@@ -305,7 +303,7 @@ class InversionData(InversionLocations):
                     d[comp] *= -1.0
                 print(f"Sign flip for {comp} component")
             else:
-                normalizations[comp] = -1.0
+                normalizations[comp] = 1.0
         self.normalizations = normalizations
         return d
 

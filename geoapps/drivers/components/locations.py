@@ -92,6 +92,13 @@ class InversionLocations:
     def create_entity(self, name, locs: np.ndarray):
         """Create Data group and Points object with observed data."""
 
+        if self.is_rotated:
+            locs[:, :2] = rotate_xy(
+                locs[:, :2],
+                self.origin,
+                -self.angle,
+            )
+
         entity = Points.create(
             self.workspace,
             name=name,
