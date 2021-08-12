@@ -42,6 +42,19 @@ class OctreeParams(Params):
 
         super().__init__(validate, **kwargs)
 
+        free_params_dict = {}
+        for k, v in kwargs.items():
+            if "refinement" in k.lower():
+                for param in self._free_param_keys:
+                    if param not in v.keys():
+                        raise ValueError(
+                            f"Provided refinement {k} should have a key argument {param}"
+                        )
+                free_params_dict[k] = v
+
+        if any(free_params_dict):
+            self._free_params_dict = free_params_dict
+
     def _set_defaults(self) -> None:
         """Wraps Params._set_defaults"""
         return super()._set_defaults(self.default_ui_json)
