@@ -103,10 +103,6 @@ class InversionDriver:
         )
 
         self.inversion_mesh = InversionMesh(self.workspace, self.params)
-        if self.params.mesh_from_params:
-            self.inversion_mesh.build_from_params(
-                self.inversion_data, self.inversion_topography
-            )
 
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh
@@ -220,7 +216,7 @@ class InversionDriver:
             if self.inversion_type == "mvi":
                 channels = ["amplitude", "theta", "phi"]
 
-            outmesh = self.fetch("mesh").copy(
+            outmesh = self.fetch(self.inversion_mesh.uid).copy(
                 parent=self.params.out_group, copy_children=False
             )
 
