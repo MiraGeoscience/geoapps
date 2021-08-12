@@ -366,23 +366,6 @@ class Params:
             getattr(self, "_free_params_dict", None) is None
             and getattr(self, "_free_param_keys", None) is not None
         ):
-            free_params_dict = {}
-            for k, v in self.input_file.data.items():
-                if "template" in k.lower():
-                    for param in self._free_param_keys:
-                        if param in k.lower():
-                            group = k.lower().replace(param, "").lstrip().rstrip()
-                            if group not in list(free_params_dict.keys()):
-                                free_params_dict[group] = {}
-
-                            if isinstance(v, str):
-                                try:
-                                    v = UUID(v)
-                                except ValueError:
-                                    pass
-                            free_params_dict[group][param] = v
-                            break
-
-            self._free_params_dict = free_params_dict
+            self._free_params_dict = self.input_file._free_params_dict
 
         return self._free_params_dict
