@@ -28,6 +28,14 @@ def setup_params(tmp):
     return geotest.make()
 
 
+def test_save_data(tmp_path):
+    ws, params = setup_params(tmp_path)
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
+    data = InversionData(ws, params, window)
+    data.save_data()
+
+
 def test_get_uncertainty_component(tmp_path):
     ws, params = setup_params(tmp_path)
     window = params.window()

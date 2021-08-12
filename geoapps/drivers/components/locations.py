@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from geoapps.io.params import Params
 
 import numpy as np
-from geoh5py.objects import Grid2D
+from geoh5py.objects import Grid2D, Points
 from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.utils import rotate_xy
@@ -88,6 +88,18 @@ class InversionLocations:
             msg = f"Badly formed mask array {v}"
             raise (ValueError(msg))
         self._mask = v
+
+    def create_entity(self, name, locs: np.ndarray):
+        """Create Data group and Points object with observed data."""
+
+        entity = Points.create(
+            self.workspace,
+            name=name,
+            vertices=locs,
+            parent=self.params.out_group,
+        )
+
+        return entity
 
     def get_locations(self, uid: UUID) -> np.ndarray:
         """
