@@ -124,10 +124,20 @@ class InversionLocations:
         :return: Filtered data.
 
         """
+
         if isinstance(a, dict):
-            return {k: v[self.mask] for k, v in a.items()}
+
+            if all([v is None for v in a.values()]):
+                return a
+            else:
+                return {k: v[self.mask] for k, v in a.items()}
+
         else:
-            return a[self.mask]
+
+            if a is None:
+                return None
+            else:
+                return a[self.mask]
 
     def rotate(self, locs: np.ndarray) -> np.ndarray:
         """

@@ -10,46 +10,37 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
-from geoapps.io.Octree import (
-    OctreeValidator,
-    default_ui_json,
-    required_parameters,
-    validations,
-)
-
 from ..input_file import InputFile
 from ..params import Params
+from ..validators import InputFreeformValidator
+from . import default_ui_json, defaults, required_parameters, validations
 
 
 class OctreeParams(Params):
 
+    defaults = defaults
     _default_ui_json = default_ui_json
+    _required_parameters = required_parameters
+    _validations = validations
+    param_names = list(default_ui_json.keys())
+    _free_param_keys = ["object", "levels", "type", "distance"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, validate=True, **kwargs):
 
-        self.validations: dict[str, Any] = validations
-        self.validator: OctreeValidator = OctreeValidator(
-            required_parameters, validations
+        self.validator: InputFreeformValidator = InputFreeformValidator(
+            required_parameters, validations, free_params_keys=self._free_param_keys
         )
-        self.geoh5 = None
-        self.objects = None
-        self.u_cell_size = None
-        self.v_cell_size = None
-        self.w_cell_size = None
-        self.horizontal_padding = None
-        self.vertical_padding = None
-        self.depth_core = None
-        self.ga_group_name = None
-        self.monitoring_directory = None
-        self.workspace_geoh5 = None
-        self.run_command = None
-        self.run_command_boolean = None
-        self.conda_environment = None
-        self.conda_environment_boolean = None
-        self._refinements = None
-        self._input_file = InputFile()
+        self._title = None
+        self._objects = None
+        self._u_cell_size = None
+        self._v_cell_size = None
+        self._w_cell_size = None
+        self._horizontal_padding = None
+        self._vertical_padding = None
+        self._depth_core = None
+        self._ga_group_name = None
 
-        super().__init__(**kwargs)
+        super().__init__(validate, **kwargs)
 
     def _set_defaults(self) -> None:
         """Wraps Params._set_defaults"""
@@ -60,12 +51,28 @@ class OctreeParams(Params):
         return super().default(self.default_ui_json, param)
 
     @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, val):
+        self.setter_validator("title", val)
+
+    @property
+    def geoh5(self):
+        return self._geoh5
+
+    @geoh5.setter
+    def geoh5(self, val):
+        self.setter_validator("geoh5", val)
+
+    @property
     def objects(self):
         return self._objects
 
     @objects.setter
     def objects(self, val):
-        self.setter_validator("objects", val, fun=lambda x: UUID(x))
+        self.setter_validator("objects", val, promote_type=str, fun=lambda x: UUID(x))
 
     @property
     def u_cell_size(self):
@@ -116,12 +123,17 @@ class OctreeParams(Params):
         self.setter_validator("depth_core", val)
 
     @property
-    def refinements(self):
-        if getattr(self, "_refinements", None) is None:
-            self._refinements = self.validator.refinements
+    def ga_group_name(self):
+        return self._ga_group_name
 
-        return self._refinements
+    @ga_group_name.setter
+    def ga_group_name(self, val):
+        self.setter_validator("ga_group_name", val)
 
-    def _init_params(self, inputfile: InputFile) -> None:
-        """Wraps Params._init_params."""
-        super()._init_params(inputfile, required_parameters, validations)
+    @property
+    def workspace(self):
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, val):
+        self.setter_validator("workspace", val)

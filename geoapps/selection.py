@@ -328,7 +328,7 @@ class LineOptions(ObjectDataSelection):
 
     def __init__(self, **kwargs):
 
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
 
         super().__init__(**self.defaults)
 
@@ -391,7 +391,7 @@ class TopographyOptions(ObjectDataSelection):
     def __init__(
         self, option_list=["None", "Object", "Relative to Sensor", "Constant"], **kwargs
     ):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
         self._offset = FloatText(description="Vertical offset (+ve up)")
         self._constant = FloatText(

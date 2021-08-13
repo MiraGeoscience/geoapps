@@ -7,13 +7,10 @@
 
 
 import numpy as np
-import pytest
 import SimPEG
-from geoh5py.objects import Grid2D, Points
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers.components import InversionData, InversionMesh, InversionTopography
-from geoapps.io import InputFile
+from geoapps.drivers.components import InversionData
 from geoapps.io.MVI import MVIParams
 from geoapps.io.MVI.constants import default_ui_json
 from geoapps.utils.testing import Geoh5Tester
@@ -31,30 +28,10 @@ def setup_params(tmp):
     return geotest.make()
 
 
-# input_file = InputFile()
-# input_file.default(default_ui_json)
-# input_file.data["geoh5"] = "./FlinFlon.geoh5"
-# params = MVIParams.from_input_file(input_file)
-# params.topography = "{a603a762-f6cb-4b21-afda-3160e725bf7d}"
-# ws = params.workspace
-# mesh = InversionMesh(params, ws)
-# window = params.window()
-# topo = get_topography(ws, params, mesh, window)
-
-
 def test_get_uncertainty_component(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, window)
     params.tmi_uncertainty = 1
-    data = InversionData(ws, params, window)
-    unc = data.get_uncertainty_component("tmi")
-    assert len(np.unique(unc)) == 1
-    assert np.unique(unc)[0] == 1
-    assert len(unc) == len(data.mask)
-
-    params.tmi_uncertainty = None
     data = InversionData(ws, params, window)
     unc = data.get_uncertainty_component("tmi")
     assert len(np.unique(unc)) == 1
@@ -64,9 +41,7 @@ def test_get_uncertainty_component(tmp_path):
 
 def test_parse_ignore_values(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, window)
     params.ignore_values = "<99"
     data = InversionData(ws, params, window)
     val, type = data.parse_ignore_values()
@@ -88,9 +63,7 @@ def test_parse_ignore_values(tmp_path):
 
 def test_set_infinity_uncertainties(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, window)
     data = InversionData(ws, params, window)
     test_data = np.array([0, 1, 2, 3, 4, 5])
     test_unc = np.array([0.1] * 6)
@@ -123,9 +96,7 @@ def test_set_infinity_uncertainties(tmp_path):
 
 def test_displace(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, window)
     data = InversionData(ws, params, window)
     test_locs = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]])
     test_offset = np.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
@@ -158,9 +129,7 @@ def test_drape(tmp_path):
 
 def test_normalize(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, window)
     data = InversionData(ws, params, window)
     data.data = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
     data.components = list(data.data.keys())
@@ -171,9 +140,7 @@ def test_normalize(tmp_path):
 
 def test_get_survey(tmp_path):
     ws, params = setup_params(tmp_path)
-    mesh = InversionMesh(ws, params)
     window = params.window()
-    topo = InversionTopography(ws, params, window)
     data = InversionData(ws, params, window)
     survey = data.survey()
     assert isinstance(survey, SimPEG.potential_fields.magnetics.Survey)

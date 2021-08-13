@@ -71,8 +71,6 @@ class InputValidator:
     @input.setter
     def input(self, val):
         self._input = val
-        if val is not None:
-            self.validate_input(val)
 
     def validate_input(self, input) -> None:
         """
@@ -91,6 +89,7 @@ class InputValidator:
         it's value/type/shape/requirement validations.
         """
 
+        self.input = input
         self._validate_requirements(input.data)
 
         for k, v in input.data.items():
@@ -329,3 +328,56 @@ class InputValidator:
             return False if (checklen and (len(v) == 1)) else True
         else:
             return False
+
+
+class InputFreeformValidator(InputValidator):
+    """
+    Validations for Octree driver parameters.
+    """
+
+    _free_params_keys = []
+
+    def __init__(
+        self,
+        requirements: list[str],
+        validations: dict[str, Any],
+        workspace: Workspace = None,
+        input=None,
+        free_params_keys: list = [],
+    ):
+        super().__init__(requirements, validations, workspace=workspace, input=input)
+        self._free_params_keys = free_params_keys
+
+    def validate_input(self, input) -> None:
+        self._validate_requirements(input.data)
+        free_params_dict = {}
+        for k, v in input.data.items():
+            if " " in k:
+                for param in self.free_params_keys:
+                    if param in k.lower():
+                        group = k.lower().replace(param, "").lstrip()
+                        if group not in list(free_params_dict.keys()):
+                            free_params_dict[group] = {}
+
+                        free_params_dict[group][param] = v
+                        validator = self.validations[f"template_{param}"]
+
+                        break
+
+            elif k not in self.validations.keys():
+                raise KeyError(f"{k} is not a valid parameter name.")
+            else:
+                validator = self.validations[k]
+
+            self.validate(k, v, validator, self.workspace, input.associations)
+
+        for group in free_params_dict.values():
+            if not len(list(group.values())) == len(self.free_params_keys):
+                raise ValueError(
+                    "Property Groups must contain one of each"
+                    + f"{self.free_params_keys}"
+                )
+
+    @property
+    def free_params_keys(self):
+        return self._free_params_keys

@@ -30,7 +30,7 @@ class PlotSelection2D(ObjectDataSelection):
     plot_result = True
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.axis = None
         self.indices = None
         self.highlight_selection = None

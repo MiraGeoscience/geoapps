@@ -44,6 +44,7 @@ class SimPEGFactory:
         """
         self.params = params
         self.inversion_type = params.inversion_type
+        from SimPEG import dask
 
         if self.inversion_type == "mvi":
             from SimPEG.potential_fields import magnetics as data_module
@@ -105,12 +106,12 @@ class SurveyFactory(SimPEGFactory):
 
         """
 
-        n_channels = len(data.keys())
-
         if local_index is None:
             local_index = np.arange(len(locs))
 
-        local_index = np.tile(local_index, n_channels)
+        components = list(data.keys())
+        n_channels = len(components)
+        tiled_local_index = np.tile(local_index, n_channels)
 
         if self.inversion_type == "mvi":
             parameters = self.params.inducing_field_aid()
@@ -119,15 +120,16 @@ class SurveyFactory(SimPEGFactory):
             parameters = None
 
         receivers = self.data_module.receivers.Point(
-            locs[local_index], components=list(data.keys())
+            locs[local_index], components=components
         )
         source = self.data_module.sources.SourceField(
             receiver_list=[receivers], parameters=parameters
         )
         survey = self.data_module.survey.Survey(source)
 
-        survey.dobs = self._stack_channels(data)[local_index]
-        survey.std = self._stack_channels(uncertainties)[local_index]
+        if not self.params.forward_only:
+            survey.dobs = self._stack_channels(data)[tiled_local_index]
+            survey.std = self._stack_channels(uncertainties)[tiled_local_index]
 
         return survey
 
@@ -178,17 +180,15 @@ class SimulationFactory(SimPEGFactory):
         :param: tile_id: Identification number of a particular tile.
 
         """
-
         sens_path = self._get_sens_path(tile_id)
         data_dependent_args = self._get_args(active_cells)
-
         sim = self.data_module.simulation.Simulation3DIntegral(
             survey=survey,
             mesh=mesh,
             actInd=active_cells,
             sensitivity_path=sens_path,
             chunk_format="row",
-            store_sensitivities="disk",
+            store_sensitivities="forward_only" if self.params.forward_only else "disk",
             max_chunk_size=self.params.max_chunk_size,
             **data_dependent_args,
         )
