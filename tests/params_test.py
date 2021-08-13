@@ -14,9 +14,35 @@ import numpy as np
 import pytest
 from geoh5py.workspace import Workspace
 
-from geoapps.io import InputFile, Params
+from geoapps.io import InputFile
+from geoapps.io.Gravity import GravityParams
 from geoapps.io.MVI import MVIParams
-from geoapps.io.MVI.constants import default_ui_json, validations
+from geoapps.io.MVI.constants import default_ui_json as MVI_defaults
+from geoapps.io.MVI.constants import validations as MVI_validations
+from geoapps.io.Octree import OctreeParams
+from geoapps.io.PeakFinder import PeakFinderParams
+from geoapps.utils.testing import Geoh5Tester
+
+workspace = Workspace("./FlinFlon.geoh5")
+
+
+def setup_params(tmp, ui, params_class):
+    geotest = Geoh5Tester(workspace, tmp, "test.geoh5", ui, params_class)
+    geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
+    geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
+    geotest.set_param("gz_channel", "{6de9177a-8277-4e17-b76c-2b8b05dcf23c}")
+    geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
+    geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
+    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    return geotest
+
+
+# def test_inversion_type(tmp_path):
+#     geotest = setup_params(tmp_path, MVI_defaults, MVIParams)
+#     geotest.set_param("inversion_type", "nogood")
+#     ws, params = geotest.make()
+#     assert True
+
 
 ######################  Setup  ###########################
 
@@ -30,38 +56,6 @@ def tmp_input_file(filepath, idict):
         json.dump(idict, f)
 
 
-def default_test_generator(tmp_path, param, newval):
-
-    d_u_j = deepcopy(default_ui_json)
-    params = MVIParams()
-    assert getattr(params, param) == d_u_j[param]["default"]
-    filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
-    params = MVIParams.from_path(filepath, workspace=workspace)
-    assert getattr(params, param) == d_u_j[param]["default"]
-    with open(filepath) as f:
-        ui = json.load(f)
-    ui[param]["isValue"] = True
-    ui[param]["value"] = newval
-    ui[param]["visible"] = True
-    ui[param]["enabled"] = False
-    with open(filepath, "w") as f:
-        json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath, workspace=workspace)
-    assert getattr(params, param) == d_u_j[param]["default"]
-    with open(filepath) as f:
-        ui = json.load(f)
-    ui[param]["isValue"] = True
-    ui[param]["value"] = newval
-    ui[param]["visible"] = False
-    ui[param]["enabled"] = True
-    with open(filepath, "w") as f:
-        json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath, workspace=workspace)
-    assert getattr(params, param) == d_u_j[param]["default"]
-
-
 def catch_invalid_generator(
     tmp_path, param, invalid_value, validation_type, workspace=None, parent=None
 ):
@@ -73,16 +67,20 @@ def catch_invalid_generator(
         "reqs": "reqs",
         "uuid": "uuid",
     }
-    pvalidations = validations[param][key_map[validation_type]]
+    pvalidations = MVI_validations[param][key_map[validation_type]]
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
+    ifile = InputFile()
+    ifile.filepath = filepath
+    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
-    ui[param]["value"] = invalid_value
-    ui[param]["visible"] = True
-    ui[param]["enabled"] = True
-    ui[param]["isValue"] = True
+    if isinstance(ui[param], dict):
+        ui[param]["value"] = invalid_value
+        ui[param]["visible"] = True
+        ui[param]["enabled"] = True
+        ui[param]["isValue"] = True
+    else:
+        ui[param] = invalid_value
     ui["geoh5"] = None
     if validation_type == "value":
         err = ValueError
@@ -93,6 +91,7 @@ def catch_invalid_generator(
             str(invalid_value),
             *(str(v) for v in pvalidations),
         ]
+
     elif validation_type == "type":
         err = TypeError
         types = set(pvalidations + [type(invalid_value)])
@@ -108,6 +107,7 @@ def catch_invalid_generator(
         hasval = len(req) > 1
         preq = req[1] if hasval else req[0]
         ui[preq]["value"] = None
+        ui[preq]["enabled"] = False
         assertions += [str(k) for k in req]
     elif validation_type == "uuid":
         err = (ValueError, IndexError)
@@ -136,14 +136,19 @@ def catch_invalid_generator(
 
 def param_test_generator(tmp_path, param, value, workspace=workspace):
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
+    ifile = InputFile()
+    ifile.filepath = filepath
+    wrkstr = workspace.h5file
+    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
-    ui[param]["isValue"] = True
-    ui[param]["value"] = value
-    ui[param]["visible"] = True
-    ui[param]["enabled"] = True
+    if isinstance(ui[param], dict):
+        ui[param]["isValue"] = True
+        ui[param]["value"] = value
+        ui[param]["visible"] = True
+        ui[param]["enabled"] = True
+    else:
+        ui[param] = value
     ui["geoh5"] = None
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
@@ -154,30 +159,54 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
     except ValueError:
         pass
 
-    assert getattr(params, param) == value
+    pval = getattr(params, param)
+
+    if param == "out_group":
+        pval = pval.name
+
+    assert pval == value
 
 
 ######################  Tests  ###########################
 
 
+def test_params_initialize():
+    for params in [MVIParams(), GravityParams(), OctreeParams(), PeakFinderParams()]:
+        check = []
+        for k, v in params.defaults.items():
+            if " " in k:
+                continue
+                check.append(getattr(params, k) == v)
+        assert all(check)
+
+    params = MVIParams(core_cell_size_x=9999, validate=True, workspace=workspace)
+    assert params.core_cell_size_x == 9999
+    params = GravityParams(core_cell_size_x=9999, validate=True, workspace=workspace)
+    assert params.core_cell_size_x == 9999
+    params = OctreeParams(vertical_padding=500, validate=True, workspace=workspace)
+    assert params.vertical_padding == 500
+    params = PeakFinderParams(center=1000, validate=True, workspace=workspace)
+    assert params.center == 1000
+
+
 def test_params_constructors(tmp_path):
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ui = default_ui_json.copy()
+    ifile = InputFile()
+    ifile.filepath = filepath
+    ui = deepcopy(MVI_defaults)
     ui["geoh5"] = wrkstr
     ifile.write_ui_json(ui, default=True)
     params1 = MVIParams.from_path(filepath, workspace=workspace)
     params2 = MVIParams.from_input_file(ifile, workspace=workspace)
 
 
-def test_default_generator(tmp_path):
-    """
-    ### test default behaviour ###
-    """
-    param = "inversion_type"
-    newval = "mvic"
+def test_param_names():
+    assert np.all(MVIParams.param_names == list(MVI_defaults.keys()))
 
-    default_test_generator(tmp_path, param, newval)
+
+def test_active_set():
+    params = MVIParams(workspace=workspace, inversion_type="mvi", core_cell_size=2)
+    params.active_set()
 
 
 def test_validate_inversion_type(tmp_path):
@@ -185,7 +214,7 @@ def test_validate_inversion_type(tmp_path):
     newval = "mvic"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "em", "value", workspace=workspace)
-    catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
+    # catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
 
 
 def test_validate_forward_only(tmp_path):
@@ -193,7 +222,7 @@ def test_validate_forward_only(tmp_path):
     newval = False
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "test", "type", workspace=workspace)
-    catch_invalid_generator(tmp_path, param, True, "reqs", workspace=workspace)
+    # catch_invalid_generator(tmp_path, param, True, "reqs", workspace=workspace)
 
 
 def test_validate_inducing_field_strength(tmp_path):

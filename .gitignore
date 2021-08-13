@@ -109,6 +109,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.conda-env
 
 # Spyder project settings
 .spyderproject
@@ -151,4 +152,3 @@ dmypy.json
 /tests/SimPEG_PFInversion/Tile0.zarr/.zarray
 /tests/SimPEG_PFInversion/Tile0.zarr/0.0
 /tests/SimPEG_PFInversion/Tile0.zarr/0.1
-/.conda-env/

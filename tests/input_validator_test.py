@@ -13,7 +13,8 @@ from geoapps.io.validators import InputValidator
 
 ######################  Setup  ###########################
 
-ifile = InputFile("test.ui.json")
+ifile = InputFile()
+ifile.filpath = "test.ui.json"
 ifile.data = {"mesh_from_params": True, "core_cell_size_x": 2}
 validator = InputValidator(required_parameters, validations, input=ifile)
 

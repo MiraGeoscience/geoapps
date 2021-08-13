@@ -46,7 +46,7 @@ from geoapps.utils.formatters import string_name
 from geoapps.utils.utils import LineDataDerivatives, hex_to_rgb, running_mean
 
 from ..io.PeakFinder import PeakFinderParams
-from ..io.PeakFinder.constants import default_ui_json
+from ..io.PeakFinder.constants import app_initializer, default_ui_json
 
 _default_channel_groups = {
     "early": {"label": ["early"], "color": "#0000FF", "channels": []},
@@ -77,25 +77,51 @@ class PeakFinder(ObjectDataSelection):
 
     _param_class = PeakFinderParams
     _add_groups = "only"
-    _object_types = (Curve,)
+    _center = None
+    _flip_sign = None
     _group_auto = None
+    _group_list = None
+    _group_display = None
+    _groups_setter = None
+    _lines = None
+    _markers = None
+    _max_migration = None
+    _min_amplitude = None
+    _min_channels = None
+    _min_value = None
+    _min_width = None
+    _plot_trigger = None
+    _residual = None
+    _scale_button = None
+    _scale_value = None
+    _show_decay = None
+    _smoothing = None
+    _structural_markers = None
+    _system = None
+    _tem_checkbox = None
+    _width = None
+    _object_types = (Curve,)
+    all_anomalies = []
+    active_channels = {}
+    _survey = None
+    _channel_groups = {}
+    pause_refresh = False
     decay_figure = None
     marker = {"left": "<", "right": ">"}
     plot_result = True
 
     def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class.from_path(ui_json)
         else:
-            self.params = self._param_class.from_dict(
-                self._param_class._default_ui_json, **kwargs
-            )
-        self.defaults = self.update_defaults(**self.params.__dict__)
-        self.all_anomalies = []
-        self.active_channels = {}
-        self.pause_refresh = False
-        self._survey = None
-        self._channel_groups = {}
+            if "h5file" in app_initializer.keys():
+                app_initializer["geoh5"] = app_initializer.pop("h5file")
+
+            self.params = self._param_class(**app_initializer)
+
+        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.pop("workspace", None)
         self.groups_panel = VBox([])
         self.group_auto.observe(self.create_default_groups, names="value")
         self.objects.observe(self.objects_change, names="value")
@@ -110,7 +136,7 @@ class PeakFinder(ObjectDataSelection):
         )
         self.data.observe(self.set_data, names="value")
         self.system.observe(self.set_data, names="value")
-        super().__init__(**kwargs)
+        super().__init__()
         self.pause_refresh = False
         self.previous_line = self.lines.lines.value
         self.smoothing.observe(self.line_update, names="value")
@@ -188,7 +214,7 @@ class PeakFinder(ObjectDataSelection):
         prop_groups = {}
         count = 0
         obj_list = self.workspace.get_entity(self.objects.value)
-        for label, params in self.params.groups.items():
+        for label, params in self.params.free_params_dict.items():
             if params["data"] is not None and any(obj_list):
                 prop_group = [
                     pg for pg in obj_list[0].property_groups if pg.uid == params["data"]
@@ -666,45 +692,47 @@ class PeakFinder(ObjectDataSelection):
         """
         Add a group from dictionary
         """
-        setattr(
-            self,
-            f"Property Group {property_group} Data",
-            Dropdown(
-                description="Group Name:",
-                options=self.data.options,
-            ),
-        )
-        getattr(self, f"Property Group {property_group} Data").name = property_group
+        if getattr(self, f"Template {property_group} Data", None) is None:
+            setattr(
+                self,
+                f"Template {property_group} Data",
+                Dropdown(
+                    description="Group Name:",
+                ),
+            )
+        widget = getattr(self, f"Template {property_group} Data")
+        widget.name = property_group
+        widget.value = None
+        widget.options = self.data.options
+
         try:
-            getattr(self, f"Property Group {property_group} Data").value = params[
-                "data"
-            ]
+            widget.value = params["data"]
         except TraitError:
             pass
-
-        setattr(
-            self,
-            f"Property Group {property_group} Color",
-            ColorPicker(description="Color"),
-        )
-        getattr(self, f"Property Group {property_group} Color").name = property_group
+        if getattr(self, f"Template {property_group} Color", None) is None:
+            setattr(
+                self,
+                f"Template {property_group} Color",
+                ColorPicker(description="Color"),
+            )
+        getattr(self, f"Template {property_group} Color").name = property_group
         try:
-            getattr(self, f"Property Group {property_group} Color").value = str(
+            getattr(self, f"Template {property_group} Color").value = str(
                 params["color"]
             )
         except TraitError:
             pass
 
-        getattr(self, f"Property Group {property_group} Data").observe(
+        getattr(self, f"Template {property_group} Data").observe(
             self.edit_group, names="value"
         )
-        getattr(self, f"Property Group {property_group} Color").observe(
+        getattr(self, f"Template {property_group} Color").observe(
             self.edit_group, names="value"
         )
         return VBox(
             [
-                getattr(self, f"Property Group {property_group} Data"),
-                getattr(self, f"Property Group {property_group} Color"),
+                getattr(self, f"Template {property_group} Data"),
+                getattr(self, f"Template {property_group} Color"),
             ],
             layout=Layout(border="solid"),
         )
@@ -713,31 +741,35 @@ class PeakFinder(ObjectDataSelection):
         if self.group_auto.value:
             obj = self.workspace.get_entity(self.objects.value)[0]
             group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
-
             if any(group):
                 channel_groups = self.default_groups_from_property_group(group[0])
-
                 self._channel_groups = channel_groups
                 self.pause_refresh = True
-                for name, group in self._channel_groups.items():
-                    if hasattr(self, f"Property Group {name} Data"):
-                        getattr(self, f"Property Group {name} Data").value = group[
-                            "data"
-                        ]
+                # for name, group in self._channel_groups.items():
+                #     if hasattr(self, f"Template {name} Data"):
+                #         getattr(self, f"Template {name} Data").value = group[
+                #             "data"
+                #         ]
+
+                group_list = []
+                for pg, params in self._channel_groups.items():
+                    group_list += [self.add_group_widget(pg, params)]
+
+                self.groups_panel.children = group_list
 
                 self.update_data_list(None)
                 self.set_data(None)
         self.group_auto.value = False
 
     @staticmethod
-    def default_groups_from_property_group(property_group):
+    def default_groups_from_property_group(property_group, start_index=0):
         parent = property_group.parent
 
         data_list = [
             parent.workspace.get_entity(uid)[0] for uid in property_group.properties
         ]
 
-        start = 0
+        start = start_index
         end = len(data_list)
         block = int((end - start) / 3)
         ranges = {
@@ -761,7 +793,6 @@ class PeakFinder(ObjectDataSelection):
                 "label": [ii + 1],
                 "properties": prop_group.properties,
             }
-            parent.workspace.finalize()
 
         return channel_groups
 
@@ -773,9 +804,7 @@ class PeakFinder(ObjectDataSelection):
         if not self.pause_refresh:
             if isinstance(widget, Dropdown):
                 obj, _ = self.get_selected_entities()
-                group = {
-                    "color": getattr(self, f"Property Group {widget.name} Color").value
-                }
+                group = {"color": getattr(self, f"Template {widget.name} Color").value}
                 if widget.value in [pg.uid for pg in obj.property_groups]:
                     prop_group = [
                         pg for pg in obj.property_groups if pg.uid == widget.value
@@ -1245,14 +1274,16 @@ class PeakFinder(ObjectDataSelection):
             for group in self.channel_groups.values():
                 for channel in group["properties"]:
                     obj = self.workspace.get_entity(channel)[0]
-                    self.active_channels[channel] = {"name": obj.name}
+
+                    if getattr(obj, "values", None) is not None:
+                        self.active_channels[channel] = {"name": obj.name}
 
             d_min, d_max = np.inf, -np.inf
             thresh_value = np.inf
             if self.tem_checkbox.value:
                 system = self.em_system_specs[self.system.value]
 
-            for uid, params in self.active_channels.items():
+            for uid, params in self.active_channels.copy().items():
                 obj = self.workspace.get_entity(uid)[0]
                 try:
                     if self.tem_checkbox.value:
@@ -1262,15 +1293,27 @@ class PeakFinder(ObjectDataSelection):
                             if ch in params["name"]
                         ]
                         if any(channel):
-                            params["time"] = system["channels"][channel[0]]
+                            self.active_channels[uid]["time"] = system["channels"][
+                                channel[0]
+                            ]
+                        else:
+                            del self.active_channels[uid]
+
+                    self.active_channels[uid]["values"] = (
+                        -1.0
+                    ) ** self.flip_sign.value * obj.values.copy()
+                    thresh_value = np.min(
+                        [
+                            thresh_value,
+                            np.percentile(
+                                np.abs(self.active_channels[uid]["values"]), 95
+                            ),
+                        ]
+                    )
+                    d_min = np.min([d_min, self.active_channels[uid]["values"].min()])
+                    d_max = np.max([d_max, self.active_channels[uid]["values"].max()])
                 except KeyError:
                     continue
-                params["values"] = (-1.0) ** self.flip_sign.value * obj.values.copy()
-                thresh_value = np.min(
-                    [thresh_value, np.percentile(np.abs(params["values"]), 95)]
-                )
-                d_min = np.min([d_min, params["values"].min()])
-                d_max = np.max([d_max, params["values"].max()])
 
             self.pause_refresh = False
             self.plot_trigger.value = False
@@ -1290,37 +1333,26 @@ class PeakFinder(ObjectDataSelection):
             except AttributeError:
                 continue
 
-        self.params._groups = {}
-        self.params.input_file.input_dict = default_ui_json.copy()
+        self.params._free_params_dict = {}
+        ui_json = default_ui_json.copy()
         for group, values in self.channel_groups.items():
-            self.params.input_file.data[f"Property Group {group} Data"] = values["data"]
-            self.params.input_file.data[f"Property Group {group} Color"] = values[
-                "color"
-            ]
-            self.params.groups[group] = {
+            self.params.free_params_dict[group] = {
                 "data": values["data"],
                 "color": values["color"],
             }
-            self.params.input_file.input_dict[
-                f"Property Group {group} Data"
-            ] = default_ui_json[f"Property Group Data"].copy()
-            self.params.input_file.input_dict[f"Property Group {group} Data"][
-                "group"
-            ] = group
-            self.params.input_file.input_dict[
-                f"Property Group {group} Color"
-            ] = default_ui_json[f"Property Group Color"].copy()
-            self.params.input_file.input_dict[f"Property Group {group} Color"][
-                "group"
-            ] = group
+            ui_json[f"Template {group} Data"] = default_ui_json[f"Template Data"].copy()
+            ui_json[f"Template {group} Data"]["group"] = group
+            ui_json[f"Template {group} Color"] = default_ui_json[
+                f"Template Color"
+            ].copy()
+            ui_json[f"Template {group} Color"]["group"] = group
 
-        del self.params.input_file.input_dict[f"Property Group Data"]
-        del self.params.input_file.input_dict[f"Property Group Color"]
-        if "Property Group Data" in self.params.input_file.data.keys():
-            del self.params.input_file.data[f"Property Group Data"]
-            del self.params.input_file.data[f"Property Group Color"]
+        del ui_json[f"Template Data"]
+        del ui_json[f"Template Color"]
+
+        self.params.param_names = list(ui_json.keys())
         self.params.group_auto = False
-        self.params.write_input_file(name=self.params.ga_group_name)
+        self.params.write_input_file(ui_json=ui_json, name=self.params.ga_group_name)
         self.run(self.params, output_group=self.ga_group)
 
     def update_center(self, _):
@@ -1345,6 +1377,12 @@ class PeakFinder(ObjectDataSelection):
         survey = workspace.get_entity(params.objects)[0]
         prop_group = [pg for pg in survey.property_groups if pg.uid == params.data]
 
+        if params.tem_checkbox:
+            system = geophysical_systems.parameters()[params.system]
+            normalization = system["normalization"]
+        else:
+            normalization = [1]
+
         if output_group is None:
             output_group = ContainerGroup.create(
                 workspace, name=string_name(params.ga_group_name)
@@ -1360,7 +1398,7 @@ class PeakFinder(ObjectDataSelection):
         else:
             count = 0
             channel_groups = {}
-            for label, group_params in params.groups.items():
+            for label, group_params in params.free_params_dict.items():
                 if group_params["data"] is not None:
                     prop_group = [
                         pg
@@ -1381,12 +1419,6 @@ class PeakFinder(ObjectDataSelection):
             for channel in group["properties"]:
                 obj = workspace.get_entity(channel)[0]
                 active_channels[channel] = {"name": obj.name}
-
-        if params.tem_checkbox:
-            system = geophysical_systems.parameters()[params.system]
-            normalization = system["normalization"]
-        else:
-            normalization = [1]
 
         for uid, channel_params in active_channels.items():
             obj = workspace.get_entity(uid)[0]

@@ -59,7 +59,7 @@ class Clustering(ScatterPlots):
     }
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.scalings = {}
         self.lower_bounds = {}
         self.upper_bounds = {}
