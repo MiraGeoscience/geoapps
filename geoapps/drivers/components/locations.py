@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from geoapps.io.params import Params
 
 import numpy as np
-from geoh5py.objects import Grid2D
+from geoh5py.objects import Grid2D, Points
 from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.utils import rotate_xy
@@ -66,11 +66,12 @@ class InversionLocations:
         self.is_rotated: bool = False
         self.locations: np.ndarray = None
 
-        mesh = workspace.get_entity(params.mesh)[0]
-        if mesh.rotation is not None:
-            self.origin = np.asarray(mesh.origin.tolist())
-            self.angle = -1 * mesh.rotation[0]
-            self.is_rotated = True
+        if params.mesh is not None:
+            mesh = workspace.get_entity(params.mesh)[0]
+            if mesh.rotation is not None:
+                self.origin = np.asarray(mesh.origin.tolist())
+                self.angle = -1 * mesh.rotation[0]
+                self.is_rotated = True
 
     @property
     def mask(self):
@@ -87,6 +88,25 @@ class InversionLocations:
             msg = f"Badly formed mask array {v}"
             raise (ValueError(msg))
         self._mask = v
+
+    def create_entity(self, name, locs: np.ndarray):
+        """Create Data group and Points object with observed data."""
+
+        if self.is_rotated:
+            locs[:, :2] = rotate_xy(
+                locs[:, :2],
+                self.origin,
+                -self.angle,
+            )
+
+        entity = Points.create(
+            self.workspace,
+            name=name,
+            vertices=locs,
+            parent=self.params.out_group,
+        )
+
+        return entity
 
     def get_locations(self, uid: UUID) -> np.ndarray:
         """
@@ -124,14 +144,12 @@ class InversionLocations:
         :return: Filtered data.
 
         """
-
         if isinstance(a, dict):
 
             if all([v is None for v in a.values()]):
                 return a
             else:
                 return {k: v[self.mask] for k, v in a.items()}
-
         else:
 
             if a is None:
