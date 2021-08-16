@@ -1390,28 +1390,6 @@ class PeakFinder(ObjectDataSelection):
 
             channel_groups = groups_from_params_dict(params.free_params_dict)
 
-            # for label, group_params in params.free_params_dict.items():
-            #     if group_params["data"] is not None:
-            #
-            #         try:
-            #             group_id = uuid.UUID(group_params["data"])
-            #         except ValueError:
-            #             group_id = None
-            #
-            #         prop_group = [
-            #             pg
-            #             for pg in survey.property_groups
-            #             if pg.uid == group_id
-            #         ]
-            #         if any(prop_group):
-            #             count += 1
-            #             channel_groups[prop_group[0].name] = {
-            #                 "data": prop_group[0].uid,
-            #                 "color": group_params["color"],
-            #                 "label": [count],
-            #                 "properties": prop_group[0].properties,
-            #             }
-
         active_channels = {}
         for group in channel_groups.values():
             for channel in group["properties"]:
