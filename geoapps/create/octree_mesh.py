@@ -49,23 +49,6 @@ class OctreeMesh(ObjectDataSelection):
 
         self.defaults.update(self.params.to_dict(ui_json_format=False))
         self.defaults.pop("workspace", None)
-
-        # if not any(
-        #     [
-        #         key
-        #         for key in self.params.free_params_dict.keys()
-        #         if "refinement" in key.lower()
-        #     ]
-        # ):
-        #     for key, params in app_initializer.items():
-        #         if "refinement" in key.lower():
-        #             self.params.free_params_dict[key.lower()] = {}
-        #             for arg, value in params.items():
-        #                 self.params.free_params_dict[key.lower()][arg] = value
-        #
-        # if "template" in self.params.free_params_dict.keys():
-        #     del self.params.free_params_dict["template"]
-
         self.refinement_list = VBox([])
 
         super().__init__()
