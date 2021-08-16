@@ -179,10 +179,10 @@ def test_params_initialize():
                 check.append(getattr(params, k) == v)
         assert all(check)
 
-    params = MVIParams(core_cell_size_x=9999, validate=True, workspace=workspace)
-    assert params.core_cell_size_x == 9999
-    params = GravityParams(core_cell_size_x=9999, validate=True, workspace=workspace)
-    assert params.core_cell_size_x == 9999
+    params = MVIParams(u_cell_size=9999, validate=True, workspace=workspace)
+    assert params.u_cell_size == 9999
+    params = GravityParams(u_cell_size=9999, validate=True, workspace=workspace)
+    assert params.u_cell_size == 9999
     params = OctreeParams(vertical_padding=500, validate=True, workspace=workspace)
     assert params.vertical_padding == 500
     params = PeakFinderParams(center=1000, validate=True, workspace=workspace)
@@ -205,7 +205,7 @@ def test_param_names():
 
 
 def test_active_set():
-    params = MVIParams(workspace=workspace, inversion_type="mvi", core_cell_size=2)
+    params = MVIParams(workspace=workspace, inversion_type="mvi", u_cell_size=2)
     params.active_set()
 
 
@@ -444,22 +444,22 @@ def test_validate_mesh_from_params(tmp_path):
     catch_invalid_generator(tmp_path, param, "sdf", "type", workspace=workspace)
 
 
-def test_validate_core_cell_size_x(tmp_path):
-    param = "core_cell_size_x"
+def test_validate_u_cell_size(tmp_path):
+    param = "u_cell_size"
     newval = 9
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "sdf", "type", workspace=workspace)
 
 
-def test_validate_core_cell_size_y(tmp_path):
-    param = "core_cell_size_y"
+def test_validate_v_cell_size(tmp_path):
+    param = "v_cell_size"
     newval = 9
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "sdf", "type", workspace=workspace)
 
 
-def test_validate_core_cell_size_z(tmp_path):
-    param = "core_cell_size_z"
+def test_validate_w_cell_size(tmp_path):
+    param = "w_cell_size"
     newval = 9
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "sdf", "type", workspace=workspace)
@@ -479,13 +479,6 @@ def test_validate_octree_levels_obs(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_validate_octree_levels_padding(tmp_path):
-    param = "octree_levels_padding"
-    newval = [1, 2, 3]
-    param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
-
-
 def test_validate_depth_core(tmp_path):
     param = "depth_core"
     newval = 99
@@ -500,22 +493,15 @@ def test_validate_max_distance(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_validate_padding_distance_x(tmp_path):
-    param = "padding_distance_x"
+def test_horizontal_padding(tmp_path):
+    param = "horizontal_padding"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_validate_padding_distance_y(tmp_path):
-    param = "padding_distance_y"
-    newval = 99
-    param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
-
-
-def test_validate_padding_distance_z(tmp_path):
-    param = "padding_distance_z"
+def test_vertical_padding(tmp_path):
+    param = "vertical_padding"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)

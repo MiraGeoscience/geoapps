@@ -24,6 +24,7 @@ class OctreeParams(Params):
     _validations = validations
     param_names = list(default_ui_json.keys())
     _free_param_keys = ["object", "levels", "type", "distance"]
+    _free_param_identifier = "refinement"
 
     def __init__(self, validate=True, **kwargs):
 
@@ -41,6 +42,19 @@ class OctreeParams(Params):
         self._ga_group_name = None
 
         super().__init__(validate, **kwargs)
+
+        free_params_dict = {}
+        for k, v in kwargs.items():
+            if self._free_param_identifier in k.lower():
+                for param in self._free_param_keys:
+                    if param not in v.keys():
+                        raise ValueError(
+                            f"Provided free parameter {k} should have a key argument {param}"
+                        )
+                free_params_dict[k] = v
+
+        if any(free_params_dict):
+            self._free_params_dict = free_params_dict
 
     def _set_defaults(self) -> None:
         """Wraps Params._set_defaults"""

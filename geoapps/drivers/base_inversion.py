@@ -216,7 +216,7 @@ class InversionDriver:
             if self.inversion_type == "mvi":
                 channels = ["amplitude", "theta", "phi"]
 
-            outmesh = self.fetch("mesh").copy(
+            outmesh = self.fetch(self.inversion_mesh.uid).copy(
                 parent=self.params.out_group, copy_children=False
             )
 
@@ -238,29 +238,15 @@ class InversionDriver:
                     self.inversion_mesh.rotation["origin"],
                     self.inversion_mesh.rotation["angle"],
                 )
-            predicted_data_object = Points.create(
-                self.workspace,
-                name=f"Predicted",
-                vertices=rx_locs,
-                parent=self.params.out_group,
-            )
 
-            comps, norms = self.survey.components, self.inversion_data.normalizations
-            data_type = {}
-            for ii, (comp, norm) in enumerate(zip(comps, norms)):
-                val = norm * self.survey.dobs[ii :: len(comps)]
-                observed_data_object = predicted_data_object.add_data(
-                    {f"Observed_{comp}": {"values": val}}
-                )
-                data_type[comp] = observed_data_object.entity_type
-
+            norms = self.inversion_data.normalizations
             directiveList.append(
                 directives.SaveIterationsGeoH5(
-                    h5_object=predicted_data_object,
+                    h5_object=self.inversion_data.data_entity,
                     channels=self.survey.components,
-                    mapping=np.hstack(self.inversion_data.normalizations),
+                    mapping=np.hstack([norms[c] for c in self.survey.components]),
                     attribute_type="predicted",
-                    data_type=data_type,
+                    data_type=self.inversion_data._observed_data_types,
                     sorting=tuple(self.sorting),
                     save_objective_function=True,
                 )
@@ -273,7 +259,7 @@ class InversionDriver:
         self.start_inversion_message()
         mrec = inv.run(self.starting_model)
         dpred = self.collect_predicted_data(global_misfit, mrec)
-        self.save_residuals(predicted_data_object, dpred)
+        self.save_residuals(self.inversion_data.data_entity, dpred)
         self.finish_inversion_message(dpred)
 
     def get_weighting_matrix(self, global_misfit):

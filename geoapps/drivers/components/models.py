@@ -218,7 +218,8 @@ class InversionModel:
                     declination = (
                         np.ones(self.mesh.nC) * self.params.inducing_field_declination
                     )
-                    declination += self.mesh.rotation["angle"]
+                    if self.mesh.rotation is not None:
+                        declination += self.mesh.rotation["angle"]
 
                 field_vecs = dip_azimuth2cartesian(
                     dip=inclination,

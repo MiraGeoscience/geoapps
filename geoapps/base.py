@@ -136,7 +136,9 @@ class BaseApplication:
                 self.params = getattr(self, "_param_class").from_path(
                     self.file_browser.selected
                 )
-                self.__populate__(**self.params.__dict__)
+                self.refresh.value = False
+                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.refresh.value = True
 
             elif extension == ".geoh5":
                 self.h5file = self.file_browser.selected
