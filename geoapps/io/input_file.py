@@ -103,6 +103,11 @@ class InputFile:
 
     @property
     def filepath(self):
+        if getattr(self, "_filepath", None) is None:
+
+            if getattr(self, "workpath", None) is not None:
+                self._filepath = op.join(self.workpath, "default.ui.json")
+
         return self._filepath
 
     @filepath.setter
@@ -132,21 +137,6 @@ class InputFile:
             if path is not None:
                 self._workpath: str = op.dirname(op.abspath(path)) + op.sep
         return self._workpath
-
-    # def default(self, default_ui) -> None:
-    #     """defaults InputFile data using 'default' field of default_ui"""
-    #
-    #     for k, v in default_ui.items():
-    #         if isinstance(v, dict):
-    #             if "isValue" in v.keys():
-    #                 field = "value" if v["isValue"] else "property"
-    #             else:
-    #                 field = "value"
-    #             self.data[k] = v[field]
-    #         else:
-    #             self.data[k] = v
-    #
-    #         self.is_loaded = True
 
     def write_ui_json(
         self,
@@ -196,7 +186,6 @@ class InputFile:
             else:
                 raise OSError("No data to write.")
 
-        out_file = self.filepath
         if name is not None:
             out_file = op.join(self.workpath, name + ".ui.json")
         else:
