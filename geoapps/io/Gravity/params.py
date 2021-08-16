@@ -59,17 +59,15 @@ class GravityParams(Params):
         self.output_tile_files = None
         self.mesh = None
         self.mesh_from_params = None
-        self.core_cell_size_x = None
-        self.core_cell_size_y = None
-        self.core_cell_size_z = None
+        self.u_cell_size = None
+        self.v_cell_size = None
+        self.w_cell_size = None
         self.octree_levels_topo = None
         self.octree_levels_obs = None
-        self.octree_levels_padding = None
         self.depth_core = None
         self.max_distance = None
-        self.padding_distance_x = None
-        self.padding_distance_y = None
-        self.padding_distance_z = None
+        self.horizontal_padding = None
+        self.vertical_padding = None
         self.window_center_x = None
         self.window_center_y = None
         self.window_width = None
@@ -129,6 +127,18 @@ class GravityParams(Params):
     def channel(self, component: str) -> UUID:
         """Returns channel uuid for chosen data component."""
         return self.__getattribute__("_".join([component, "channel"]))
+
+    def cell_size(self):
+        """Returns core cell size in all 3 dimensions."""
+        return [self.u_cell_size, self.v_cell_size, self.w_cell_size]
+
+    def padding_distance(self):
+        """Returns padding distance in all 3 dimensions."""
+        return [
+            self.padding_distance_x,
+            self.padding_distance_y,
+            self.padding_distance_z,
+        ]
 
     def components(self) -> List[str]:
         """Retrieve component names used to index channel and uncertainty data."""
@@ -579,49 +589,49 @@ class GravityParams(Params):
         self._mesh_from_params = val
 
     @property
-    def core_cell_size_x(self):
-        return self._core_cell_size_x
+    def u_cell_size(self):
+        return self._u_cell_size
 
-    @core_cell_size_x.setter
-    def core_cell_size_x(self, val):
+    @u_cell_size.setter
+    def u_cell_size(self, val):
         if val is None:
-            self._core_cell_size_x = val
+            self._u_cell_size = val
             return
-        p = "core_cell_size_x"
+        p = "u_cell_size"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._core_cell_size_x = val
+        self._u_cell_size = val
 
     @property
-    def core_cell_size_y(self):
-        return self._core_cell_size_y
+    def v_cell_size(self):
+        return self._v_cell_size
 
-    @core_cell_size_y.setter
-    def core_cell_size_y(self, val):
+    @v_cell_size.setter
+    def v_cell_size(self, val):
         if val is None:
-            self._core_cell_size_y = val
+            self._v_cell_size = val
             return
-        p = "core_cell_size_y"
+        p = "v_cell_size"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._core_cell_size_y = val
+        self._v_cell_size = val
 
     @property
-    def core_cell_size_z(self):
-        return self._core_cell_size_z
+    def w_cell_size(self):
+        return self._w_cell_size
 
-    @core_cell_size_z.setter
-    def core_cell_size_z(self, val):
+    @w_cell_size.setter
+    def w_cell_size(self, val):
         if val is None:
-            self._core_cell_size_z = val
+            self._w_cell_size = val
             return
-        p = "core_cell_size_z"
+        p = "w_cell_size"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._core_cell_size_z = val
+        self._w_cell_size = val
 
     @property
     def octree_levels_topo(self):
@@ -654,21 +664,6 @@ class GravityParams(Params):
         self._octree_levels_obs = val
 
     @property
-    def octree_levels_padding(self):
-        return self._octree_levels_padding
-
-    @octree_levels_padding.setter
-    def octree_levels_padding(self, val):
-        if val is None:
-            self._octree_levels_padding = val
-            return
-        p = "octree_levels_padding"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._octree_levels_padding = val
-
-    @property
     def depth_core(self):
         return self._depth_core
 
@@ -699,49 +694,34 @@ class GravityParams(Params):
         self._max_distance = val
 
     @property
-    def padding_distance_x(self):
-        return self._padding_distance_x
+    def horizontal_padding(self):
+        return self._horizontal_padding
 
-    @padding_distance_x.setter
-    def padding_distance_x(self, val):
+    @horizontal_padding.setter
+    def horizontal_padding(self, val):
         if val is None:
-            self._padding_distance_x = val
+            self._horizontal_padding = val
             return
-        p = "padding_distance_x"
+        p = "horizontal_padding"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._padding_distance_x = val
+        self._horizontal_padding = val
 
     @property
-    def padding_distance_y(self):
-        return self._padding_distance_y
+    def vertical_padding(self):
+        return self._vertical_padding
 
-    @padding_distance_y.setter
-    def padding_distance_y(self, val):
+    @vertical_padding.setter
+    def vertical_padding(self, val):
         if val is None:
-            self._padding_distance_y = val
+            self._vertical_padding = val
             return
-        p = "padding_distance_y"
+        p = "vertical_padding"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._padding_distance_y = val
-
-    @property
-    def padding_distance_z(self):
-        return self._padding_distance_z
-
-    @padding_distance_z.setter
-    def padding_distance_z(self, val):
-        if val is None:
-            self._padding_distance_z = val
-            return
-        p = "padding_distance_z"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._padding_distance_z = val
+        self._vertical_padding = val
 
     @property
     def window_center_x(self):

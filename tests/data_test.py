@@ -23,9 +23,20 @@ def setup_params(tmp):
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
+    geotest.set_param("tmi_channel_bool", True)
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
+    geotest.set_param("out_group", "MVIInversion")
     return geotest.make()
+
+
+def test_save_data(tmp_path):
+    ws, params = setup_params(tmp_path)
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
+    data = InversionData(ws, params, window)
+    obs = ws.get_entity("Observed_tmi")[0].values
+    assert len(obs) > 0
 
 
 def test_get_uncertainty_component(tmp_path):
@@ -134,8 +145,8 @@ def test_normalize(tmp_path):
     data.data = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
     data.components = list(data.data.keys())
     test_data = data.normalize(data.data)
-    assert np.all(data.normalizations == [1, -1])
-    assert np.all(test_data["gz"] == (-1 * data.data["gz"]))
+    assert list(data.normalizations.values()) == [1, -1]
+    assert all(test_data["gz"] == (-1 * data.data["gz"]))
 
 
 def test_get_survey(tmp_path):

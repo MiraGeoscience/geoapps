@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
+    from geoh5py.objects import Octree
     from geoapps.io.params import Params
     from discretize import TreeMesh
 
@@ -18,6 +19,7 @@ import numpy as np
 from geoh5py.workspace import Workspace
 
 from geoapps.io import Params
+from geoapps.io.Octree import OctreeParams
 from geoapps.utils import octree_2_treemesh, rotate_xy
 
 
@@ -70,21 +72,20 @@ class InversionMesh:
 
         if self.params.mesh_from_params:
 
-            # TODO implement the mesh_from_params option
-            msg = "Cannot currently mesh from parameters. Must provide mesh object."
-            raise NotImplementedError(msg)
+            self.build_from_params()
 
         else:
 
-            self.mesh = self.workspace.get_entity(self.params.mesh)[0]
-            self.nC = self.mesh.n_cells
+            mesh = self.workspace.get_entity(self.params.mesh)[0]
+            self.uid = mesh.uid
+            self.nC = mesh.n_cells
 
-            if self.mesh.rotation:
-                origin = self.mesh.origin.tolist()
-                angle = self.mesh.rotation[0]
+            if mesh.rotation:
+                origin = mesh.origin.tolist()
+                angle = mesh.rotation[0]
                 self.rotation = {"origin": origin, "angle": angle}
 
-            self.mesh = octree_2_treemesh(self.mesh)
+            self.mesh = octree_2_treemesh(mesh)
             self.octree_permutation = self.mesh._ubc_order
 
     def original_cc(self) -> np.ndarray:
@@ -92,3 +93,55 @@ class InversionMesh:
         cc = self.mesh.cell_centers
         cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
         return cc[self.octree_permutation]
+
+    def collect_mesh_params(self, params: Params) -> OctreeParams:
+        """Collect mesh params from inversion params set and return Octree Params object."""
+
+        mesh_param_names = [
+            "u_cell_size",
+            "v_cell_size",
+            "w_cell_size",
+            "depth_core",
+            "horizontal_padding",
+            "vertical_padding",
+            "workspace",
+        ]
+
+        mesh_params_dict = params.to_dict(ui_json_format=False)
+        for k in mesh_param_names:
+            if (k not in mesh_params_dict.keys()) or (mesh_params_dict[k] is None):
+                msg = f"Cannot create OctreeParams from {type(params)} instance. "
+                msg += f"Missing param: {k}."
+                raise ValueError(msg)
+
+        mesh_params_dict = {
+            k: v for k, v in mesh_params_dict.items() if k in mesh_param_names
+        }
+        mesh_params_dict["Refinement A"] = {
+            "object": self.workspace.get_entity("Data")[0].uid,
+            "levels": params.octree_levels_obs,
+            "type": "radial",
+            "distance": params.max_distance,
+        }
+        mesh_params_dict["Refinement B"] = {
+            "object": params.topography_object,
+            "levels": params.octree_levels_topo,
+            "type": "surface",
+            "distance": params.max_distance,
+        }
+        mesh_params_dict["objects"] = self.workspace.get_entity("Data")[0].uid
+
+        return OctreeParams(**mesh_params_dict)
+
+    def build_from_params(self) -> Octree:
+        """Runs geoapps.create.OctreeMesh to create mesh from params."""
+
+        from geoapps.create.octree_mesh import OctreeMesh
+
+        octree_params = self.collect_mesh_params(self.params)
+        octree_mesh = OctreeMesh.run(octree_params)
+
+        self.uid = octree_mesh.uid
+        self.mesh = octree_2_treemesh(octree_mesh)
+        self.nC = self.mesh.nC
+        self.octree_permutation = self.mesh._ubc_order

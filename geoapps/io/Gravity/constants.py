@@ -42,17 +42,15 @@ defaults = {
     "output_tile_files": False,
     "mesh": None,
     "mesh_from_params": False,
-    "core_cell_size_x": 2.0,
-    "core_cell_size_y": 2.0,
-    "core_cell_size_z": 2.0,
+    "u_cell_size": 2.0,
+    "v_cell_size": 2.0,
+    "w_cell_size": 2.0,
     "octree_levels_topo": [0, 1],
     "octree_levels_obs": [5, 5],
-    "octree_levels_padding": [2, 2],
     "depth_core": 100.0,
     "max_distance": np.inf,
-    "padding_distance_x": [0, 0],
-    "padding_distance_y": [0, 0],
-    "padding_distance_z": [0, 0],
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
@@ -367,7 +365,16 @@ default_ui_json = {
         "label": "build from parameters",
         "value": False,
     },
-    "core_cell_size_x": {
+    "survey_orientation": {
+        "default": None,
+        "group": "Mesh",
+        "visible": False,
+        "dependency": "mesh_from_params",
+        "dependencyType": "show",
+        "label": "survey orientation",
+        "value": None,
+    },
+    "u_cell_size": {
         "default": 2.0,
         "min": 0.0,
         "group": "Mesh",
@@ -377,7 +384,7 @@ default_ui_json = {
         "label": "Core cell size in x",
         "value": 2.0,
     },
-    "core_cell_size_y": {
+    "v_cell_size": {
         "default": 2.0,
         "min": 0.0,
         "group": "Mesh",
@@ -387,7 +394,7 @@ default_ui_json = {
         "label": "Core cell size in y",
         "value": 2.0,
     },
-    "core_cell_size_z": {
+    "w_cell_size": {
         "default": 2.0,
         "min": 0.0,
         "group": "Mesh",
@@ -419,17 +426,6 @@ default_ui_json = {
         "label": "Octree levels observations",
         "value": [5, 5],
     },
-    "octree_levels_padding": {
-        "default": [2, 2],
-        "group": "Mesh",
-        "enabled": False,
-        "visible": False,
-        "dependency": "mesh_from_params",
-        "dependencyType": "show",
-        "optional": True,
-        "label": "Octree levels padding",
-        "value": [2, 2],
-    },
     "depth_core": {
         "default": 100.0,
         "min": 0,
@@ -454,38 +450,29 @@ default_ui_json = {
         "label": "Maximum padding distance",
         "value": np.inf,
     },
-    "padding_distance_x": {
-        "default": [0, 0],
+    "horizontal_padding": {
+        "default": 1000.0,
+        "min": 0.0,
         "group": "Mesh",
         "enabled": False,
         "visible": False,
         "dependency": "mesh_from_params",
-        "dependencyType": "show",
-        "label": "Padding distance in x",
+        "dependency_type": "show",
         "optional": True,
-        "value": [0, 0],
+        "label": "Horizontal padding",
+        "value": 1000.0,
     },
-    "padding_distance_y": {
-        "default": [0, 0],
+    "vertical_padding": {
+        "default": 1000.0,
+        "min": 0.0,
         "group": "Mesh",
         "enabled": False,
         "visible": False,
         "dependency": "mesh_from_params",
-        "dependencyType": "show",
-        "label": "Padding distance in y",
+        "dependency_type": "show",
         "optional": True,
-        "value": [0, 0],
-    },
-    "padding_distance_z": {
-        "default": [0, 0],
-        "group": "Mesh",
-        "enabled": False,
-        "visible": False,
-        "dependency": "mesh_from_params",
-        "dependencyType": "show",
-        "label": "Padding distance in z",
-        "optional": True,
-        "value": [0, 0],
+        "label": "Vertical padding",
+        "value": 1000.0,
     },
     "window_center_x": {
         "default": 0.0,
@@ -939,14 +926,18 @@ validations = {
         "uuid": [],
         "types": [str, UUID],
     },
-    "mesh_from_params": {"types": [bool], "reqs": [(True, "core_cell_size_x")]},
-    "core_cell_size_x": {
+    "mesh_from_params": {
+        "types": [bool],
+        "reqs": [(True, "u_cell_size"), (True, "survey_orientation")],
+    },
+    "survey_orientation": {"types": [int, float]},
+    "u_cell_size": {
         "types": [int, float],
     },
-    "core_cell_size_y": {
+    "v_cell_size": {
         "types": [int, float],
     },
-    "core_cell_size_z": {
+    "w_cell_size": {
         "types": [int, float],
     },
     "octree_levels_topo": {
@@ -955,22 +946,16 @@ validations = {
     "octree_levels_obs": {
         "types": [int, float],
     },
-    "octree_levels_padding": {
-        "types": [int, float],
-    },
     "depth_core": {
         "types": [int, float],
     },
     "max_distance": {
         "types": [int, float],
     },
-    "padding_distance_x": {
+    "horizontal_padding": {
         "types": [int, float],
     },
-    "padding_distance_y": {
-        "types": [int, float],
-    },
-    "padding_distance_z": {
+    "vertical_padding": {
         "types": [int, float],
     },
     "window_center_x": {
