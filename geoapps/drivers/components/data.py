@@ -191,6 +191,9 @@ class InversionData(InversionLocations):
 
         self.data_entity = super().create_entity("Data", self.locations)
 
+        if self.params.forward_only:
+            return
+
         for comp in self.components:
             dnorm = self.normalizations[comp] * self.observed[comp]
             observed_data_object = self.data_entity.add_data(
