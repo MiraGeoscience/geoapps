@@ -14,6 +14,7 @@ from typing import Any, Callable
 from uuid import UUID
 
 import numpy as np
+from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
 from .validators import InputValidator
@@ -192,7 +193,7 @@ class InputFile:
             out_file = self.filepath
 
         with open(out_file, "w") as f:
-            json.dump(self._stringify(out), f, indent=4)
+            json.dump(self._stringify(self._demote(out)), f, indent=4)
 
     def _ui_2_py(self, ui_dict: dict[str, Any]) -> dict[str, Any]:
         """
@@ -304,7 +305,10 @@ class InputFile:
         """Converts promoted parameter values to their string representations."""
         uuid2str = lambda k, v: f"{{{str(v)}}}" if isinstance(v, UUID) else v
         workspace2path = lambda k, v: v.h5file if isinstance(v, Workspace) else v
-        mappers = [uuid2str, workspace2path]
+        containergroup2name = (
+            lambda k, v: v.name if isinstance(v, ContainerGroup) else v
+        )
+        mappers = [uuid2str, workspace2path, containergroup2name]
         for k, v in d.items():
             v = self._dict_mapper(k, v, mappers)
             d[k] = v
