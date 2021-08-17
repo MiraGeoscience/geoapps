@@ -14,6 +14,7 @@ from typing import Any, Callable
 from uuid import UUID
 
 import numpy as np
+from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
 from .validators import InputValidator
@@ -103,6 +104,11 @@ class InputFile:
 
     @property
     def filepath(self):
+        if getattr(self, "_filepath", None) is None:
+
+            if getattr(self, "workpath", None) is not None:
+                self._filepath = op.join(self.workpath, "default.ui.json")
+
         return self._filepath
 
     @filepath.setter
@@ -132,21 +138,6 @@ class InputFile:
             if path is not None:
                 self._workpath: str = op.dirname(op.abspath(path)) + op.sep
         return self._workpath
-
-    # def default(self, default_ui) -> None:
-    #     """defaults InputFile data using 'default' field of default_ui"""
-    #
-    #     for k, v in default_ui.items():
-    #         if isinstance(v, dict):
-    #             if "isValue" in v.keys():
-    #                 field = "value" if v["isValue"] else "property"
-    #             else:
-    #                 field = "value"
-    #             self.data[k] = v[field]
-    #         else:
-    #             self.data[k] = v
-    #
-    #         self.is_loaded = True
 
     def write_ui_json(
         self,
@@ -196,14 +187,13 @@ class InputFile:
             else:
                 raise OSError("No data to write.")
 
-        out_file = self.filepath
         if name is not None:
             out_file = op.join(self.workpath, name + ".ui.json")
         else:
             out_file = self.filepath
 
         with open(out_file, "w") as f:
-            json.dump(self._stringify(out), f, indent=4)
+            json.dump(self._stringify(self._demote(out)), f, indent=4)
 
     def _ui_2_py(self, ui_dict: dict[str, Any]) -> dict[str, Any]:
         """
@@ -315,7 +305,10 @@ class InputFile:
         """Converts promoted parameter values to their string representations."""
         uuid2str = lambda k, v: f"{{{str(v)}}}" if isinstance(v, UUID) else v
         workspace2path = lambda k, v: v.h5file if isinstance(v, Workspace) else v
-        mappers = [uuid2str, workspace2path]
+        containergroup2name = (
+            lambda k, v: v.name if isinstance(v, ContainerGroup) else v
+        )
+        mappers = [uuid2str, workspace2path, containergroup2name]
         for k, v in d.items():
             v = self._dict_mapper(k, v, mappers)
             d[k] = v
