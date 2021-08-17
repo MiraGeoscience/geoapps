@@ -189,6 +189,54 @@ def test_params_initialize():
     assert params.center == 1000
 
 
+def test_update(tmp_path):
+    new_params = {
+        "mesh_from_params": True,
+    }
+    params = MVIParams()
+    params.update(new_params)
+    assert params.mesh_from_params == True
+
+    new_params = {
+        "topography_object": {
+            "default": None,
+            "main": True,
+            "group": "Topography",
+            "label": "Object",
+            "meshType": [
+                "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+                "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+                "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+                "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+                "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            ],
+            "value": "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+        }
+    }
+    params.update(new_params)
+    assert params.topography_object == UUID("{202C5DB1-A56D-4004-9CAD-BAAFD8899406}")
+
+    new_params = {
+        "topography": {
+            "association": "Vertex",
+            "dataType": "Float",
+            "default": None,
+            "group": "Topography",
+            "main": True,
+            "dependency": "forward_only",
+            "dependencyType": "hide",
+            "isValue": False,
+            "label": "Elevation",
+            "parent": "topography_object",
+            "property": "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "value": 0.0,
+        }
+    }
+
+    params.update(new_params)
+    assert params.topography == UUID("{202C5DB1-A56D-4004-9CAD-BAAFD8899406}")
+
+
 def test_params_constructors(tmp_path):
     filepath = tmpfile(tmp_path)
     ifile = InputFile()
