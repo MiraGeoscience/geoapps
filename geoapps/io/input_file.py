@@ -168,7 +168,7 @@ class InputFile:
         name: optional
             Name of the file
         workspace : optional
-            Provide a workspace_geoh5 path to simulate auto-generated field in Geoscience ANALYST.
+            Provide a geoh5 path to simulate auto-generated field in Geoscience ANALYST.
         """
 
         out = deepcopy(ui_dict)
@@ -176,13 +176,12 @@ class InputFile:
             out["forward_only"] = True
             inversion_type = out["inversion_type"]
             if inversion_type == "mvi":
-                from geoapps.io.MVI.constants import forward_parameters as fparams
+                from geoapps.io.MVI.constants import forward_defaults as fparams
             if inversion_type == "gravity":
-                from geoapps.io.Gravity.constants import forward_parameters as fparams
-            out = {k: out[k] for k in fparams}
+                from geoapps.io.Gravity.constants import forward_defaults as fparams
+            out = {k: out[k] for k in fparams.keys()}
 
         if workspace is not None:
-            out["workspace_geoh5"] = workspace
             out["geoh5"] = workspace
 
         if not default:

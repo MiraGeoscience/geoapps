@@ -70,7 +70,6 @@ class Params:
     associations: dict[str | UUID, str | UUID] = None
     _workspace: Workspace = None
     _geoh5: Workspace = None
-    _output_geoh5: str = None
     _validator: InputValidator = None
     _ifile: InputFile = None
     _run_command = None
@@ -78,11 +77,14 @@ class Params:
     _conda_environment = None
     _conda_environment_boolean = None
     _monitoring_directory = None
-    _workspace_geoh5 = None
     _free_param_keys: list = None
 
     def __init__(self, validate=True, **kwargs):
+        self.associations = None
+        self.workspace = None
+
         self.update(self.defaults, validate=False)
+
         if kwargs:
             self.update(kwargs, validate=False)
             if validate:
@@ -309,14 +311,6 @@ class Params:
     @monitoring_directory.setter
     def monitoring_directory(self, val):
         self.setter_validator("monitoring_directory", val)
-
-    @property
-    def workspace_geoh5(self):
-        return self._workspace_geoh5
-
-    @workspace_geoh5.setter
-    def workspace_geoh5(self, val):
-        self.setter_validator("workspace_geoh5", val)
 
     @property
     def conda_environment(self):

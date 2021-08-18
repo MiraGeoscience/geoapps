@@ -105,11 +105,9 @@ class GravityParams(Params):
         self.n_cpu = None
         self.max_ram = None
         self.workspace = None
-        self.output_geoh5 = None
         self.out_group = None
         self.no_data_value = None
         self.monitoring_directory = None
-        self.workspace_geoh5 = None
         self.geoh5 = None
         self.run_command = None
         self.run_command_boolean = None
@@ -117,10 +115,6 @@ class GravityParams(Params):
         self.conda_environment_boolean = None
 
         super().__init__(validate, **kwargs)
-
-    def _set_defaults(self) -> None:
-        """Wraps Params._set_defaults"""
-        return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
         """Wraps Params.default."""
@@ -1283,21 +1277,6 @@ class GravityParams(Params):
         self._workspace = Workspace(val) if isinstance(val, str) else val
 
     @property
-    def output_geoh5(self):
-        return self._output_geoh5
-
-    @output_geoh5.setter
-    def output_geoh5(self, val):
-        if val is None:
-            self._output_geoh5 = val
-            return
-        p = "output_geoh5"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._output_geoh5 = val
-
-    @property
     def out_group(self):
         return self._out_group
 
@@ -1341,21 +1320,6 @@ class GravityParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._monitoring_directory = val
-
-    @property
-    def workspace_geoh5(self):
-        return self._workspace_geoh5
-
-    @workspace_geoh5.setter
-    def workspace_geoh5(self, val):
-        if val is None:
-            self._workspace_geoh5 = val
-            return
-        p = "workspace_geoh5"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._workspace_geoh5 = Workspace(val) if isinstance(val, str) else val
 
     @property
     def geoh5(self):

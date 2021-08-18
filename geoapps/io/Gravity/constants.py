@@ -92,11 +92,9 @@ defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "output_geoh5": None,
     "out_group": "MVIInversion",
     "no_data_value": None,
     "monitoring_directory": None,
-    "workspace_geoh5": None,
     "geoh5": None,
     "run_command": "geoapps.drivers.mvi_inversion",
     "run_command_boolean": False,
@@ -142,10 +140,8 @@ forward_parameters = [
     "n_cpu",
     "max_ram",
     "workspace",
-    "output_geoh5",
     "out_group",
     "monitoring_directory",
-    "workspace_geoh5",
     "geoh5",
     "run_command",
     "run_command_boolean",
@@ -830,13 +826,6 @@ default_ui_json = {
         "label": "Path to workspace",
         "value": None,
     },
-    "output_geoh5": {
-        "default": None,
-        "visible": False,
-        "enabled": False,
-        "label": "Path to results geoh5py file",
-        "value": None,
-    },
     "out_group": {
         "default": "GravInversion",
         "visible": True,
@@ -854,11 +843,6 @@ default_ui_json = {
         "value": 0,
     },
     "monitoring_directory": {
-        "default": None,
-        "enabled": False,
-        "value": None,
-    },
-    "workspace_geoh5": {
         "default": None,
         "enabled": False,
         "value": None,
@@ -1101,18 +1085,12 @@ validations = {
     "workspace": {
         "types": [str, Workspace],
     },
-    "output_geoh5": {
-        "types": [str, Workspace],
-    },
     "out_group": {"types": [str, ContainerGroup]},
     "no_data_value": {
         "types": [int, float],
     },
     "monitoring_directory": {
         "types": [str],
-    },
-    "workspace_geoh5": {
-        "types": [str, Workspace],
     },
     "geoh5": {
         "types": [str, Workspace],

@@ -778,13 +778,6 @@ def test_validate_workspace(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_validate_output_geoh5(tmp_path):
-    param = "output_geoh5"
-    newval = "../assets/something.geoh5py"
-    # param_test_generator(tmp_path, param, newval)
-    # catch_invalid_generator(tmp_path, param, 34, "type")
-
-
 def test_validate_out_group(tmp_path):
     param = "out_group"
     newval = "test_"
