@@ -25,7 +25,7 @@ from geoapps.io.validators import InputValidator
 ######################  Setup  ###########################
 
 d_u_j = deepcopy(default_ui_json)
-input_dict = {k: v["default"] for k, v in d_u_j.items() if isinstance(v, dict)}
+input_dict = defaults
 tmpfile = lambda path: os.path.join(path, "test.json")
 
 
@@ -160,6 +160,7 @@ def test_ui_json_io(tmp_path):
     validator = InputValidator(required_parameters, validations)
     ifile = InputFile(ifile.filepath, validator)
     for k, v in d_u_j.items():
+        print(k)
         if isinstance(v, dict):
             check_default = True
             for field in ["enabled", "visible"]:

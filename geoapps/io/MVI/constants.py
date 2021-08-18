@@ -37,10 +37,10 @@ defaults = {
     "bx_uncertainty": 0.0,
     "by_channel_bool": False,
     "by_channel": None,
-    "by_uncertainty": None,
+    "by_uncertainty": 0.0,
     "bz_channel_bool": False,
     "bz_channel": None,
-    "bz_uncertainty": None,
+    "bz_uncertainty": 0.0,
     "starting_model_object": None,
     "starting_inclination_object": None,
     "starting_declination_object": None,
@@ -101,14 +101,14 @@ defaults = {
     "reference_declination": None,
     "gradient_type": "total",
     "lower_bound_object": None,
-    "lower_bound": -np.inf,
+    "lower_bound": None,
     "upper_bound_object": None,
-    "upper_bound": np.inf,
+    "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "MVIInversion",
+    "out_group": "MVI",
     "no_data_value": None,
     "monitoring_directory": None,
     "geoh5": None,
@@ -165,7 +165,7 @@ forward_defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "MVI_Forward",
+    "out_group": "MVI",
     "monitoring_directory": None,
     "geoh5": None,
     "run_command": "geoapps.drivers.inversion",
@@ -177,7 +177,6 @@ default_ui_json = {
     "inducing_field_strength": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 50000.0,
         "min": 0.0,
         "main": True,
         "group": "Inducing Field",
@@ -190,7 +189,6 @@ default_ui_json = {
     "inducing_field_inclination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 90.0,
         "min": 0.0,
         "main": True,
         "group": "Inducing Field",
@@ -203,7 +201,6 @@ default_ui_json = {
     "inducing_field_declination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
         "min": 0.0,
         "main": True,
         "group": "Inducing Field",
@@ -214,7 +211,6 @@ default_ui_json = {
         "value": 0.0,
     },
     "tmi_channel_bool": {
-        "default": False,
         "group": "Data",
         "main": True,
         "label": "Use TMI",
@@ -223,7 +219,6 @@ default_ui_json = {
     "tmi_channel": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
         "group": "Data",
         "main": True,
         "label": "TMI channel",
@@ -233,7 +228,6 @@ default_ui_json = {
     "tmi_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
         "group": "Data",
         "main": True,
         "isValue": True,
@@ -243,7 +237,6 @@ default_ui_json = {
         "value": 0.0,
     },
     "bx_channel_bool": {
-        "default": False,
         "group": "Data",
         "main": True,
         "label": "Use Bx",
@@ -252,7 +245,6 @@ default_ui_json = {
     "bx_channel": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
         "group": "Data",
         "main": True,
         "label": "Bx channel",
@@ -262,7 +254,6 @@ default_ui_json = {
     "bx_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
         "group": "Data",
         "main": True,
         "isValue": True,
@@ -272,7 +263,6 @@ default_ui_json = {
         "value": 0.0,
     },
     "by_channel_bool": {
-        "default": False,
         "group": "Data",
         "main": True,
         "label": "Use By",
@@ -281,7 +271,6 @@ default_ui_json = {
     "by_channel": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
         "group": "Data",
         "main": True,
         "label": "By channel",
@@ -291,7 +280,6 @@ default_ui_json = {
     "by_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
         "group": "Data",
         "main": True,
         "isValue": True,
@@ -301,7 +289,6 @@ default_ui_json = {
         "value": 0.0,
     },
     "bz_channel_bool": {
-        "default": False,
         "group": "Data",
         "main": True,
         "label": "Use Bz",
@@ -310,7 +297,6 @@ default_ui_json = {
     "bz_channel": {
         "association": "Cell",
         "dataType": "Float",
-        "default": None,
         "group": "Data",
         "main": True,
         "label": "Bz channel",
@@ -320,7 +306,6 @@ default_ui_json = {
     "bz_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
         "group": "Data",
         "main": True,
         "isValue": True,
@@ -330,7 +315,6 @@ default_ui_json = {
         "value": 0.0,
     },
     "starting_inclination_object": {
-        "default": None,
         "group": "Starting Model",
         "main": True,
         "meshType": [
@@ -344,7 +328,6 @@ default_ui_json = {
         "value": None,
     },
     "starting_declination_object": {
-        "default": None,
         "group": "Starting Model",
         "main": True,
         "meshType": [
@@ -360,7 +343,6 @@ default_ui_json = {
     "starting_inclination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
         "group": "Starting Model",
         "main": True,
         "isValue": True,
@@ -374,7 +356,6 @@ default_ui_json = {
     "starting_declination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
         "group": "Starting Model",
         "main": True,
         "isValue": True,
@@ -386,7 +367,6 @@ default_ui_json = {
         "value": 0.0,
     },
     "reference_inclination_object": {
-        "default": None,
         "group": "Regularization",
         "label": "Reference inclination object",
         "meshType": [
@@ -399,7 +379,6 @@ default_ui_json = {
         "value": None,
     },
     "reference_declination_object": {
-        "default": None,
         "group": "Regularization",
         "label": "Reference declination object",
         "meshType": [
@@ -414,7 +393,6 @@ default_ui_json = {
     "reference_inclination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
         "group": "Regularization",
         "isValue": True,
         "optional": True,
@@ -427,7 +405,6 @@ default_ui_json = {
     "reference_declination": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
         "group": "Regularization",
         "isValue": True,
         "optional": True,
@@ -437,6 +414,7 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
+    "out_group": {"label": "Results group name", "value": "MVI"},
 }
 default_ui_json.update(base_default_ui_json)
 default_ui_json = {k: default_ui_json[k] for k in defaults}
@@ -508,5 +486,6 @@ validations = {
         "types": [str, int, float],
         "reqs": [("reference_declination_object")],
     },
+    "out_group": {"types": [str, ContainerGroup]},
 }
 validations.update(base_validations)
