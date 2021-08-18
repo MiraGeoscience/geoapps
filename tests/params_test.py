@@ -218,14 +218,6 @@ def test_validate_inversion_type(tmp_path):
     # catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
 
 
-def test_validate_forward_only(tmp_path):
-    param = "forward_only"
-    newval = False
-    param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, "test", "type", workspace=workspace)
-    # catch_invalid_generator(tmp_path, param, True, "reqs", workspace=workspace)
-
-
 def test_validate_inducing_field_strength(tmp_path):
     param = "inducing_field_strength"
     newval = 60000

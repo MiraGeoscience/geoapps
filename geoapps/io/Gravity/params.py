@@ -37,6 +37,12 @@ class GravityParams(Params):
         self.topography_object: UUID = None
         self.topography = None
         self.data_object = None
+        self.gx_channel_bool = None
+        self.gx_channel = None
+        self.gx_uncertainty = None
+        self.gy_channel_bool = None
+        self.gy_channel = None
+        self.gy_uncertainty = None
         self.gz_channel_bool = None
         self.gz_channel = None
         self.gz_uncertainty = None
@@ -257,6 +263,96 @@ class GravityParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._data_object = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def gx_channel_bool(self):
+        return self._gx_channel_bool
+
+    @gx_channel_bool.setter
+    def gx_channel_bool(self, val):
+        if val is None:
+            self._gx_channel_bool = val
+            return
+        p = "gx_channel_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._gx_channel_bool = val
+
+    @property
+    def gx_channel(self):
+        return self._gx_channel
+
+    @gx_channel.setter
+    def gx_channel(self, val):
+        if val is None:
+            self._gx_channel = val
+            return
+        p = "gx_channel"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._gx_channel = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def gx_uncertainty(self):
+        return self._gx_uncertainty
+
+    @gx_uncertainty.setter
+    def gx_uncertainty(self, val):
+        if val is None:
+            self._gx_uncertainty = val
+            return
+        p = "gx_uncertainty"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._gx_uncertainty = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def gy_channel_bool(self):
+        return self._gy_channel_bool
+
+    @gy_channel_bool.setter
+    def gy_channel_bool(self, val):
+        if val is None:
+            self._gy_channel_bool = val
+            return
+        p = "gy_channel_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._gy_channel_bool = val
+
+    @property
+    def gy_channel(self):
+        return self._gy_channel
+
+    @gy_channel.setter
+    def gy_channel(self, val):
+        if val is None:
+            self._gy_channel = val
+            return
+        p = "gy_channel"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._gy_channel = UUID(val) if isinstance(val, str) else val
+
+    @property
+    def gy_uncertainty(self):
+        return self._gy_uncertainty
+
+    @gy_uncertainty.setter
+    def gy_uncertainty(self, val):
+        if val is None:
+            self._gy_uncertainty = val
+            return
+        p = "gy_uncertainty"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._gy_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
     def gz_channel_bool(self):

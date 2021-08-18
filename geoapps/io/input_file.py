@@ -143,6 +143,7 @@ class InputFile:
         self,
         ui_dict: dict[str, Any],
         default: bool = False,
+        forward: bool = False,
         name: str = None,
         workspace: Workspace = None,
     ) -> None:
@@ -157,14 +158,19 @@ class InputFile:
             Writes default values stored in ui_dict to file.
         name: optional
             Name of the file
-        param_dict : optional
-            Parameters to insert in ui_dict values.
-            Defaults to the :obj:`InputFile.data` is not provided.
         workspace : optional
             Provide a workspace_geoh5 path to simulate auto-generated field in Geoscience ANALYST.
         """
 
         out = deepcopy(ui_dict)
+        if forward:
+            out["forward_only"] = True
+            inversion_type = out["inversion_type"]
+            if inversion_type == "mvi":
+                from geoapps.io.MVI.constants import forward_parameters as fparams
+            if inversion_type == "gravity":
+                from geoapps.io.Gravity.constants import forward_parameters as fparams
+            out = {k: out[k] for k in fparams}
 
         if workspace is not None:
             out["workspace_geoh5"] = workspace
