@@ -56,10 +56,6 @@ class OctreeParams(Params):
         if any(free_params_dict):
             self._free_params_dict = free_params_dict
 
-    def _set_defaults(self) -> None:
-        """Wraps Params._set_defaults"""
-        return super()._set_defaults(self.default_ui_json)
-
     def default(self, param) -> Any:
         """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
