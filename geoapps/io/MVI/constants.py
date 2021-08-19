@@ -17,10 +17,9 @@ from geoapps.io.Inversion.constants import (
 )
 from geoapps.io.Inversion.constants import validations as base_validations
 
-required_parameters = ["inversion_type"]
-required_parameters += base_required_parameters
+################# defaults ##################
 
-defaults = {
+inversion_defaults = {
     "inversion_type": "mvi",
     "forward_only": False,
     "inducing_field_strength": 50000.0,
@@ -73,10 +72,10 @@ defaults = {
     "max_distance": np.inf,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
+    "window_center_x": 0.0,
+    "window_center_y": 0.0,
+    "window_width": 0.0,
+    "window_height": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "max_iterations": 25,
@@ -108,16 +107,17 @@ defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "MVI",
+    "out_group": "MVIInversion",
     "no_data_value": None,
     "monitoring_directory": None,
     "geoh5": None,
-    "run_command": "geoapps.drivers.inversion",
+    "run_command": "geoapps.drivers.mvi_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
 
 forward_defaults = {
+    "inversion_type": "mvi",
     "forward_only": True,
     "inversion_type": "mvi",
     "inducing_field_strength": 50000,
@@ -157,18 +157,18 @@ forward_defaults = {
     "max_distance": np.inf,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
+    "window_center_x": 0.0,
+    "window_center_y": 0.0,
+    "window_width": 0.0,
+    "window_height": 0.0,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "MVI",
+    "out_group": "MVIForward",
     "monitoring_directory": None,
     "geoh5": None,
-    "run_command": "geoapps.drivers.inversion",
+    "run_command": "geoapps.drivers.mvi_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
@@ -414,10 +414,16 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
-    "out_group": {"label": "Results group name", "value": "MVI"},
+    "out_group": {"label": "Results group name", "value": "MVIInversion"},
 }
 default_ui_json.update(base_default_ui_json)
-default_ui_json = {k: default_ui_json[k] for k in defaults}
+default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
+
+
+################ Validations #################
+
+required_parameters = ["inversion_type"]
+required_parameters += base_required_parameters
 
 validations = {
     "inversion_type": {

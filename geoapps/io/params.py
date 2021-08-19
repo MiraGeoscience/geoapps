@@ -65,8 +65,6 @@ class Params:
 
     """
 
-    defaults = {}
-    _default_ui_json = {}
     associations: dict[str | UUID, str | UUID] = None
     _workspace: Workspace = None
     _geoh5: Workspace = None
@@ -80,28 +78,14 @@ class Params:
     _free_param_keys: list = None
 
     def __init__(self, validate=True, **kwargs):
+
         self.associations = None
         self.workspace = None
 
         self.update(self.defaults, validate=False)
 
         if kwargs:
-            self.update(kwargs, validate=False)
-            if validate:
-                ifile = InputFile.from_dict(self.to_dict(), self.validator)
-            else:
-                ifile = InputFile.from_dict(self.to_dict())
-
-            if "workspace" in kwargs:
-                ifile.data["workspace"] = kwargs["workspace"]
-                ifile.workspace = kwargs["workspace"]
-            if "geoh5" in kwargs:
-                ifile.data["workspace"] = kwargs["geoh5"]
-                ifile.workspace = kwargs["geoh5"]
-
-            self._input_file = ifile
-            cls = self.from_input_file(ifile)
-            self.__dict__.update(cls.__dict__)
+            self._handle_kwargs(kwargs, validate)
 
     @classmethod
     def from_input_file(
@@ -159,11 +143,6 @@ class Params:
         p = cls.from_input_file(input_file, workspace)
 
         return p
-
-    @property
-    def default_ui_json(self):
-        """Dictionary of default values structured in ANALYST ui.json format"""
-        return self._default_ui_json
 
     @property
     def required_parameters(self):
@@ -245,10 +224,6 @@ class Params:
     def parent(self, child_id: str | UUID) -> str | UUID:
         """Returns parent id of provided child id."""
         return self.associations[child_id]
-
-    def default(self, default_ui: dict[str, Any], param: str) -> Any:
-        """Return default value of parameter stored in default_ui_json."""
-        return default_ui[param]["default"]
 
     @property
     def validator(self) -> InputValidator:
@@ -347,14 +322,21 @@ class Params:
 
         setattr(self, f"_{key}", value)
 
-    def write_input_file(self, ui_json: dict = None, name: str = None):
+    def write_input_file(
+        self, ui_json: dict = None, default: bool = False, name: str = None
+    ):
         """Write out a ui.json with the current state of parameters"""
 
         if ui_json is None:
             ui_json = self.default_ui_json
 
-        ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
-        ifile.write_ui_json(ui_json, default=False, name=name)
+        if default:
+            ifile = InputFile()
+            ifile.filepath = name
+        else:
+            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
+
+        ifile.write_ui_json(ui_json, default=default, name=name)
 
     @property
     def free_params_dict(self):
@@ -365,3 +347,24 @@ class Params:
             self._free_params_dict = self.input_file._free_params_dict
 
         return self._free_params_dict
+
+    def _handle_kwargs(self, kwargs, validate):
+        """Updates attributes with kwargs, validates and attaches input file attributes."""
+
+        self.update(kwargs, validate=False)
+
+        if validate:
+            ifile = InputFile.from_dict(self.to_dict(), self.validator)
+        else:
+            ifile = InputFile.from_dict(self.to_dict())
+
+        if "workspace" in kwargs:
+            ifile.data["workspace"] = kwargs["workspace"]
+            ifile.workspace = kwargs["workspace"]
+        if "geoh5" in kwargs:
+            ifile.data["workspace"] = kwargs["geoh5"]
+            ifile.workspace = kwargs["geoh5"]
+
+        self._input_file = ifile
+        cls = self.from_input_file(ifile)
+        self.__dict__.update(cls.__dict__)
