@@ -71,7 +71,7 @@ def catch_invalid_generator(
     filepath = tmpfile(tmp_path)
     ifile = InputFile()
     ifile.filepath = filepath
-    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
+    ifile.write_ui_json(MVI_defaults, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
     if isinstance(ui[param], dict):
@@ -139,7 +139,7 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
     ifile = InputFile()
     ifile.filepath = filepath
     wrkstr = workspace.h5file
-    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
+    ifile.write_ui_json(MVI_defaults, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
     if isinstance(ui[param], dict):
@@ -243,13 +243,13 @@ def test_params_constructors(tmp_path):
     ifile.filepath = filepath
     ui = deepcopy(MVI_defaults)
     ui["geoh5"] = wrkstr
-    ifile.write_ui_json(ui, default=True)
+    ifile.write_ui_json(ui)
     params1 = MVIParams.from_path(filepath, workspace=workspace)
     params2 = MVIParams.from_input_file(ifile, workspace=workspace)
 
 
 def test_param_names():
-    assert np.all(MVIParams.param_names == list(MVI_defaults.keys()))
+    assert np.all(MVIParams().param_names == list(MVI_defaults.keys()))
 
 
 def test_active_set():

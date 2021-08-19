@@ -15,12 +15,11 @@ from geoh5py.workspace import Workspace
 from geoapps.io.Inversion import InversionParams
 
 from ..input_file import InputFile
-from ..params import Params
 from ..validators import InputValidator
 from .constants import (
     default_ui_json,
-    defaults,
     forward_defaults,
+    inversion_defaults,
     required_parameters,
     validations,
 )
@@ -28,17 +27,15 @@ from .constants import (
 
 class MVIParams(InversionParams):
 
-    defaults = defaults
-    _default_ui_json = default_ui_json
     _required_parameters = required_parameters
     _validations = validations
-    param_names = list(default_ui_json.keys())
 
-    def __init__(self, validate=True, **kwargs):
+    def __init__(self, forward=False, **kwargs):
 
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
+
         self.inversion_type: str = "mvi"
         self.inducing_field_strength: float = None
         self.inducing_field_inclination: float = None
@@ -64,7 +61,21 @@ class MVIParams(InversionParams):
         self.reference_inclination = None
         self.reference_declination = None
 
-        super().__init__(validate, **kwargs)
+        self.defaults = forward_defaults if forward else inversion_defaults
+        self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
+        self.param_names = list(self.default_ui_json.keys())
+
+        for k, v in self.default_ui_json.items():
+            if isinstance(v, dict):
+                field = "value"
+                if "isValue" in v.keys():
+                    if not v["isValue"]:
+                        field = "property"
+                self.default_ui_json[k][field] = self.defaults[k]
+            else:
+                self.default_ui_json[k] = self.defaults[k]
+
+        super().__init__(**kwargs)
 
     def components(self) -> list[str]:
         comps = super().components()

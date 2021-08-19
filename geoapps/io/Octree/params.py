@@ -18,8 +18,6 @@ from . import default_ui_json, defaults, required_parameters, validations
 
 class OctreeParams(Params):
 
-    defaults = defaults
-    _default_ui_json = default_ui_json
     _required_parameters = required_parameters
     _validations = validations
     param_names = list(default_ui_json.keys())
@@ -40,6 +38,9 @@ class OctreeParams(Params):
         self._vertical_padding = None
         self._depth_core = None
         self._ga_group_name = None
+
+        self.defaults = defaults
+        self.default_ui_json = default_ui_json
 
         super().__init__(validate, **kwargs)
 

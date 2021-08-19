@@ -20,11 +20,8 @@ from .constants import default_ui_json, defaults, required_parameters, validatio
 
 class PeakFinderParams(Params):
 
-    defaults = defaults
-    _default_ui_json = default_ui_json
     _required_parameters = required_parameters
     _validations = validations
-    param_names = list(default_ui_json.keys())
     _free_param_keys: list = ["data", "color"]
     _free_param_identifier: str = "group"
 
@@ -57,6 +54,10 @@ class PeakFinderParams(Params):
         self._template_color = None
         self._free_params_dict = None
         self._plot_result = True
+
+        self.defaults = defaults
+        self.default_ui_json = default_ui_json
+        self.param_names = list(self.default_ui_json.keys())
 
         super().__init__(validate, **kwargs)
 
