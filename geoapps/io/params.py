@@ -214,8 +214,11 @@ class Params:
                 if isinstance(ui_json[k], dict):
                     field = "value"
                     if "isValue" in ui_json[k].keys():
-                        if ui_json[k]["isValue"] is False:
+                        if isinstance(new_val, UUID):
+                            ui_json[k]["isValue"] = False
                             field = "property"
+                        else:
+                            ui_json[k]["isValue"] = True
                     if ui_json[k][field] != new_val:
                         ui_json[k]["enabled"] = True
                         ui_json[k]["visible"] = True
@@ -360,6 +363,10 @@ class Params:
             ui_json = self.default_ui_json
 
         ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
+
+        if getattr(self, "input_file", None) is not None:
+            ifile.filepath = self.input_file.filepath
+
         ifile.write_ui_json(ui_json, default=False, name=name)
 
     @property
