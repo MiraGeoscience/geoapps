@@ -787,4 +787,5 @@ validations = {
     "conda_environment_boolean": {
         "types": [bool],
     },
+    "out_group": {"types": [str, ContainerGroup]},
 }

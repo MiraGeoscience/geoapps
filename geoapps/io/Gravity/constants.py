@@ -17,8 +17,6 @@ from geoapps.io.Inversion.constants import (
 )
 from geoapps.io.Inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
     "inversion_type": "gravity",
     "forward_only": False,
@@ -272,5 +270,6 @@ validations = {
         "reqs": [("data_object"), (True, "gz_channel_bool")],
     },
     "gz_uncertainty": {"types": [str, int, float], "reqs": [(True, "gz_channel_bool")]},
-    "out_group": {"types": [str, ContainerGroup]},
 }
+
+validations.update(base_validations)
