@@ -32,8 +32,8 @@ class DirectCurrentParams(InversionParams):
             required_parameters, validations
         )
         self.inversion_type = "direct_current"
-        self.data_channel = None
-        self.data_uncertainty = None
+        self.potential_channel = None
+        self.potential_uncertainty = None
         self.out_group = None
         self.defaults = forward_defaults if forward else inversion_defaults
         self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
@@ -57,41 +57,24 @@ class DirectCurrentParams(InversionParams):
 
     @inversion_type.setter
     def inversion_type(self, val):
-        if val is None:
-            self._inversion_type = val
-            return
-        p = "inversion_type"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inversion_type = val
+        self.setter_validator("inversion_type", val)
 
     @property
-    def data_channel(self):
-        return self._data_channel
+    def potential_channel(self):
+        return self._potential_channel
 
-    @data_channel.setter
-    def data_channel(self, val):
-        if val is None:
-            self._data_channel = val
-            return
-        p = "data_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
+    @potential_channel.setter
+    def potential_channel(self, val):
+        self.setter_validator(
+            "potential_channel", val, promote_type=str, fun=lambda x: UUID(x)
         )
-        self._data_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def data_uncertainty(self):
-        return self._data_uncertainty
+    def potential_uncertainty(self):
+        return self._potential_uncertainty
 
-    @data_uncertainty.setter
-    def data_uncertainty(self, val):
-        if val is None:
-            self._data_uncertainty = val
-            return
-        p = "data_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
+    @potential_uncertainty.setter
+    def potential_uncertainty(self, val):
+        self.setter_validator(
+            "potential_uncertainty", val, promote_type=str, fun=lambda x: UUID(x)
         )
-        self._data_uncertainty = UUID(val) if isinstance(val, str) else val
