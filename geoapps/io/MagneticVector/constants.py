@@ -111,7 +111,7 @@ inversion_defaults = {
     "no_data_value": None,
     "monitoring_directory": None,
     "geoh5": None,
-    "run_command": "geoapps.drivers.mvi_inversion",
+    "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
@@ -168,7 +168,7 @@ forward_defaults = {
     "out_group": "MVIForward",
     "monitoring_directory": None,
     "geoh5": None,
-    "run_command": "geoapps.drivers.mvi_inversion",
+    "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
@@ -265,7 +265,54 @@ default_ui_json = {
     "by_channel_bool": {
         "group": "Data",
         "main": True,
+        "label": "Use By",
         "value": None,
+    },
+    "by_channel": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Data",
+        "main": True,
+        "label": "By channel",
+        "parent": "data_object",
+        "value": None,
+    },
+    "by_uncertainty": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Data",
+        "main": True,
+        "isValue": True,
+        "label": "By uncertainty",
+        "parent": "data_object",
+        "property": None,
+        "value": 0.0,
+    },
+    "bz_channel_bool": {
+        "group": "Data",
+        "main": True,
+        "label": "Use Bz",
+        "value": None,
+    },
+    "bz_channel": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Data",
+        "main": True,
+        "label": "Bz channel",
+        "parent": "data_object",
+        "value": None,
+    },
+    "bz_uncertainty": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Data",
+        "main": True,
+        "isValue": True,
+        "label": "Bz uncertainty",
+        "parent": "data_object",
+        "property": None,
+        "value": 0.0,
     },
     "starting_inclination_object": {
         "group": "Starting Model",
@@ -451,3 +498,4 @@ validations = {
     },
     "out_group": {"types": [str, ContainerGroup]},
 }
+validations.update(base_validations)
