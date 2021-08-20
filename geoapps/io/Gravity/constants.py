@@ -274,4 +274,3 @@ validations = {
     "gz_uncertainty": {"types": [str, int, float], "reqs": [(True, "gz_channel_bool")]},
     "out_group": {"types": [str, ContainerGroup]},
 }
-validations.update(base_validations)

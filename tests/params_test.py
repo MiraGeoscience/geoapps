@@ -143,7 +143,11 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
     with open(filepath) as f:
         ui = json.load(f)
     if isinstance(ui[param], dict):
-        ui[param]["isValue"] = True
+        if "isValue" in ui[param].keys():
+            if isinstance(value, UUID):
+                ui[param]["isValue"] = False
+            else:
+                ui[param]["isValue"] = True
         ui[param]["value"] = value
         ui[param]["visible"] = True
         ui[param]["enabled"] = True
@@ -165,9 +169,6 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
         pval = pval.name
 
     assert pval == value
-
-
-######################  Tests  ###########################
 
 
 def test_params_initialize():
@@ -790,3 +791,31 @@ def test_validate_no_data_value(tmp_path):
     newval = 5
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
+
+
+def test_isValue(tmp_path):
+    # "starting_model"
+    filepath = tmpfile(tmp_path)
+    ifile = InputFile()
+    ifile.filepath = filepath
+
+    mesh = workspace.get_entity("O2O_Interp_25m")[0]
+
+    params = MVIParams.from_input_file(ifile, workspace)
+    params.starting_model_object = mesh.uid
+    params.starting_model = 0.0
+
+    params.write_input_file()
+
+    with open(filepath) as f:
+        ui = json.load(f)
+
+    assert ui["starting_model"]["isValue"] is True, "isValue should be True"
+
+    params.starting_model = mesh.get_data("VTEM_model")[0].uid
+
+    params.write_input_file()
+    with open(filepath) as f:
+        ui = json.load(f)
+
+    assert ui["starting_model"]["isValue"] is False, "isValue should be False"
