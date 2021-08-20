@@ -21,8 +21,8 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "data_channel": None,
-    "data_uncertainty": 0.0,
+    "potential_channel": None,
+    "potential_uncertainty": 0.0,
     "starting_model_object": None,
     "starting_model": 0.0,
     "tile_spatial": 1,
@@ -136,16 +136,7 @@ forward_defaults = {
 }
 default_ui_json = {
     "inversion_type": "direct_current",
-    "data_object": {
-        "main": True,
-        "group": "Data",
-        "label": "Object",
-        "meshType": [
-            "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
-        ],
-        "value": None,
-    },
-    "data_channel": {
+    "potential_channel": {
         "association": "Cell",
         "dataType": "Float",
         "default": None,
@@ -155,7 +146,7 @@ default_ui_json = {
         "parent": "data_object",
         "value": None,
     },
-    "data_uncertainty": {
+    "potential_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
         "default": 0.0,
@@ -171,6 +162,8 @@ default_ui_json = {
 }
 default_ui_json.update(base_default_ui_json)
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
+default_ui_json["data_object"]["meshType"] = "{275ecee9-9c24-4378-bf94-65f3c5fbe163}"
+
 required_parameters = ["inversion_type"]
 required_parameters += base_required_parameters
 validations = {
@@ -178,11 +171,11 @@ validations = {
         "types": [str],
         "values": ["direct_current"],
     },
-    "data_channel": {
+    "potential_channel": {
         "types": [str, UUID],
         "reqs": [("data_object")],
     },
-    "data_uncertainty": {"types": [str, int, float]},
+    "potential_uncertainty": {"types": [str, int, float]},
 }
 
 validations.update(base_validations)
