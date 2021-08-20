@@ -46,7 +46,7 @@ class SimPEGFactory:
         self.inversion_type = params.inversion_type
         from SimPEG import dask
 
-        if self.inversion_type == "mvi":
+        if self.inversion_type in ["mvi", "magnetic"]:
             from SimPEG.potential_fields import magnetics as data_module
 
             self.data_module = data_module
@@ -113,10 +113,10 @@ class SurveyFactory(SimPEGFactory):
         n_channels = len(components)
         tiled_local_index = np.tile(local_index, n_channels)
 
-        if self.inversion_type == "mvi":
+        if self.inversion_type in ["mvi", "magnetic"]:
             parameters = self.params.inducing_field_aid()
 
-        elif self.inversion_type == "gravity":
+        elif self.inversion_type in ["gravity"]:
             parameters = None
 
         receivers = self.data_module.receivers.Point(
@@ -206,6 +206,9 @@ class SimulationFactory(SimPEGFactory):
 
         elif self.inversion_type == "gravity":
             args = {"rhoMap": maps.IdentityMap(nP=int(active_cells.sum()))}
+
+        elif self.inversion_type == "magnetic":
+            args = {"chiMap": maps.IdentityMap(nP=int(active_cells.sum()))}
 
         return args
 
