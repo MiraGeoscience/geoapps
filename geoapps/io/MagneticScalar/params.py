@@ -25,7 +25,7 @@ from .constants import (
 )
 
 
-class GravityParams(InversionParams):
+class MagneticScalarParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
@@ -35,16 +35,13 @@ class GravityParams(InversionParams):
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
-        self.inversion_type = "gravity"
-        self.gx_channel_bool = None
-        self.gx_channel = None
-        self.gx_uncertainty = None
-        self.gy_channel_bool = None
-        self.gy_channel = None
-        self.gy_uncertainty = None
-        self.gz_channel_bool = None
-        self.gz_channel = None
-        self.gz_uncertainty = None
+        self.inversion_type = "magnetic"
+        self.inducing_field_strength: float = None
+        self.inducing_field_inclination: float = None
+        self.inducing_field_declination: float = None
+        self.tmi_channel_bool = None
+        self.tmi_channel = None
+        self.tmi_uncertainty = None
         self.out_group = None
 
         self.defaults = forward_defaults if forward else inversion_defaults
@@ -68,8 +65,16 @@ class GravityParams(InversionParams):
         comps = super().components()
         if self.forward_only:
             if len(comps) == 0:
-                comps = ["gz"]
+                comps = ["tmi"]
         return comps
+
+    def inducing_field_aid(self) -> list[float]:
+        """Returns inducing field components as a list."""
+        return [
+            self.inducing_field_strength,
+            self.inducing_field_inclination,
+            self.inducing_field_declination,
+        ]
 
     @property
     def inversion_type(self):
@@ -87,136 +92,93 @@ class GravityParams(InversionParams):
         self._inversion_type = val
 
     @property
-    def gx_channel_bool(self):
-        return self._gx_channel_bool
+    def inducing_field_strength(self):
+        return self._inducing_field_strength
 
-    @gx_channel_bool.setter
-    def gx_channel_bool(self, val):
+    @inducing_field_strength.setter
+    def inducing_field_strength(self, val):
         if val is None:
-            self._gx_channel_bool = val
+            self._inducing_field_strength = val
             return
-        p = "gx_channel_bool"
+        p = "inducing_field_strength"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._gx_channel_bool = val
+        if val <= 0:
+            raise ValueError("inducing_field_strength must be greater than 0.")
+        self._inducing_field_strength = UUID(val) if isinstance(val, str) else val
 
     @property
-    def gx_channel(self):
-        return self._gx_channel
+    def inducing_field_inclination(self):
+        return self._inducing_field_inclination
 
-    @gx_channel.setter
-    def gx_channel(self, val):
+    @inducing_field_inclination.setter
+    def inducing_field_inclination(self, val):
         if val is None:
-            self._gx_channel = val
+            self._inducing_field_inclination = val
             return
-        p = "gx_channel"
+        p = "inducing_field_inclination"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._gx_channel = UUID(val) if isinstance(val, str) else val
+        self._inducing_field_inclination = UUID(val) if isinstance(val, str) else val
 
     @property
-    def gx_uncertainty(self):
-        return self._gx_uncertainty
+    def inducing_field_declination(self):
+        return self._inducing_field_declination
 
-    @gx_uncertainty.setter
-    def gx_uncertainty(self, val):
+    @inducing_field_declination.setter
+    def inducing_field_declination(self, val):
         if val is None:
-            self._gx_uncertainty = val
+            self._inducing_field_declination = val
             return
-        p = "gx_uncertainty"
+        p = "inducing_field_declination"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._gx_uncertainty = UUID(val) if isinstance(val, str) else val
+        self._inducing_field_declination = UUID(val) if isinstance(val, str) else val
 
     @property
-    def gy_channel_bool(self):
-        return self._gy_channel_bool
+    def tmi_channel_bool(self):
+        return self._tmi_channel_bool
 
-    @gy_channel_bool.setter
-    def gy_channel_bool(self, val):
+    @tmi_channel_bool.setter
+    def tmi_channel_bool(self, val):
         if val is None:
-            self._gy_channel_bool = val
+            self._tmi_channel_bool = val
             return
-        p = "gy_channel_bool"
+        p = "tmi_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._gy_channel_bool = val
+        self._tmi_channel_bool = val
 
     @property
-    def gy_channel(self):
-        return self._gy_channel
+    def tmi_channel(self):
+        return self._tmi_channel
 
-    @gy_channel.setter
-    def gy_channel(self, val):
+    @tmi_channel.setter
+    def tmi_channel(self, val):
         if val is None:
-            self._gy_channel = val
+            self._tmi_channel = val
             return
-        p = "gy_channel"
+        p = "tmi_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._gy_channel = UUID(val) if isinstance(val, str) else val
+        self._tmi_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def gy_uncertainty(self):
-        return self._gy_uncertainty
+    def tmi_uncertainty(self):
+        return self._tmi_uncertainty
 
-    @gy_uncertainty.setter
-    def gy_uncertainty(self, val):
+    @tmi_uncertainty.setter
+    def tmi_uncertainty(self, val):
         if val is None:
-            self._gy_uncertainty = val
+            self._tmi_uncertainty = val
             return
-        p = "gy_uncertainty"
+        p = "tmi_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._gy_uncertainty = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def gz_channel_bool(self):
-        return self._gz_channel_bool
-
-    @gz_channel_bool.setter
-    def gz_channel_bool(self, val):
-        if val is None:
-            self._gz_channel_bool = val
-            return
-        p = "gz_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._gz_channel_bool = val
-
-    @property
-    def gz_channel(self):
-        return self._gz_channel
-
-    @gz_channel.setter
-    def gz_channel(self, val):
-        if val is None:
-            self._gz_channel = val
-            return
-        p = "gz_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._gz_channel = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def gz_uncertainty(self):
-        return self._gz_uncertainty
-
-    @gz_uncertainty.setter
-    def gz_uncertainty(self, val):
-        if val is None:
-            self._gz_uncertainty = val
-            return
-        p = "gz_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._gz_uncertainty = UUID(val) if isinstance(val, str) else val
+        self._tmi_uncertainty = UUID(val) if isinstance(val, str) else val

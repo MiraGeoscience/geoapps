@@ -119,10 +119,9 @@ inversion_defaults = {
 forward_defaults = {
     "inversion_type": "mvi",
     "forward_only": True,
-    "inversion_type": "mvi",
-    "inducing_field_strength": 50000,
-    "inducing_field_inclination": 90,
-    "inducing_field_declination": 0,
+    "inducing_field_strength": 50000.0,
+    "inducing_field_inclination": 90.0,
+    "inducing_field_declination": 0.0,
     "topography_object": None,
     "topography": None,
     "data_object": None,
