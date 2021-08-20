@@ -25,7 +25,7 @@ from .constants import (
 )
 
 
-class MVIParams(InversionParams):
+class MagneticVectorParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
