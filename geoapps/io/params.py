@@ -81,9 +81,7 @@ class Params:
 
         self.associations = None
         self.workspace = None
-
         self.update(self.defaults, validate=False)
-
         if kwargs:
             self._handle_kwargs(kwargs, validate)
 
@@ -347,24 +345,3 @@ class Params:
             self._free_params_dict = self.input_file._free_params_dict
 
         return self._free_params_dict
-
-    def _handle_kwargs(self, kwargs, validate):
-        """Updates attributes with kwargs, validates and attaches input file attributes."""
-
-        self.update(kwargs, validate=False)
-
-        if validate:
-            ifile = InputFile.from_dict(self.to_dict(), self.validator)
-        else:
-            ifile = InputFile.from_dict(self.to_dict())
-
-        if "workspace" in kwargs:
-            ifile.data["workspace"] = kwargs["workspace"]
-            ifile.workspace = kwargs["workspace"]
-        if "geoh5" in kwargs:
-            ifile.data["workspace"] = kwargs["geoh5"]
-            ifile.workspace = kwargs["geoh5"]
-
-        self._input_file = ifile
-        cls = self.from_input_file(ifile)
-        self.__dict__.update(cls.__dict__)
