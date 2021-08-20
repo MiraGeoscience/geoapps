@@ -328,6 +328,9 @@ class Params:
         if ui_json is None:
             ui_json = self.default_ui_json
 
+        if name is None:
+            name = f"{self.__class__.__name__}.ui.json"
+
         if default:
             ifile = InputFile()
             ifile.filepath = name

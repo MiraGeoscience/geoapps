@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import json
+import os
 import os.path as op
 import warnings
 from copy import deepcopy
@@ -193,7 +194,12 @@ class InputFile:
                     out[k] = v
 
         if name is not None:
-            out_file = op.join(self.workpath, name)
+
+            path = self.workpath
+            if path is None:
+                path = os.getcwd()
+
+            out_file = op.join(path, name)
         else:
             out_file = self.filepath
 
