@@ -194,7 +194,7 @@ class Params:
                     field = "value"
                     if default:
                         field = "default"
-                    elif "isValue" in value.values():
+                    elif "isValue" in value.keys():
                         if not value["isValue"]:
                             field = "property"
                     setattr(self, key, value[field])
