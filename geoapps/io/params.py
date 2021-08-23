@@ -193,8 +193,11 @@ class Params:
                 if isinstance(ui_json[k], dict):
                     field = "value"
                     if "isValue" in ui_json[k].keys():
-                        if ui_json[k]["isValue"] is False:
+                        if isinstance(new_val, UUID):
+                            ui_json[k]["isValue"] = False
                             field = "property"
+                        else:
+                            ui_json[k]["isValue"] = True
                     if ui_json[k][field] != new_val:
                         ui_json[k]["enabled"] = True
                         ui_json[k]["visible"] = True
@@ -337,6 +340,9 @@ class Params:
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
+        if getattr(self, "input_file", None) is not None:
+            ifile.filepath = self.input_file.filepath
+
         ifile.write_ui_json(ui_json, default=default, name=name)
 
     @property
@@ -348,3 +354,24 @@ class Params:
             self._free_params_dict = self.input_file._free_params_dict
 
         return self._free_params_dict
+
+    def _handle_kwargs(self, kwargs, validate):
+        """Updates attributes with kwargs, validates and attaches input file attributes."""
+
+        self.update(kwargs, validate=False)
+
+        if validate:
+            ifile = InputFile.from_dict(self.to_dict(), self.validator)
+        else:
+            ifile = InputFile.from_dict(self.to_dict())
+
+        if "workspace" in kwargs:
+            ifile.data["workspace"] = kwargs["workspace"]
+            ifile.workspace = kwargs["workspace"]
+        if "geoh5" in kwargs:
+            ifile.data["workspace"] = kwargs["geoh5"]
+            ifile.workspace = kwargs["geoh5"]
+
+        self._input_file = ifile
+        cls = self.from_input_file(ifile)
+        self.__dict__.update(cls.__dict__)

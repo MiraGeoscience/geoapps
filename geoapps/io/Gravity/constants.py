@@ -17,6 +17,8 @@ from geoapps.io.Inversion.constants import (
 )
 from geoapps.io.Inversion.constants import validations as base_validations
 
+################# defaults ##################
+
 inversion_defaults = {
     "inversion_type": "gravity",
     "forward_only": False,
@@ -81,12 +83,12 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": None,
+    "reference_model": 0.0,
     "gradient_type": "total",
     "lower_bound_object": None,
-    "lower_bound": -1,
+    "lower_bound": -1.0,
     "upper_bound_object": None,
-    "upper_bound": 1,
+    "upper_bound": 1.0,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -270,6 +272,6 @@ validations = {
         "reqs": [("data_object"), (True, "gz_channel_bool")],
     },
     "gz_uncertainty": {"types": [str, int, float], "reqs": [(True, "gz_channel_bool")]},
+    "out_group": {"types": [str, ContainerGroup]},
 }
-
 validations.update(base_validations)
