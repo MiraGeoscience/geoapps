@@ -8,7 +8,7 @@
 import pytest
 
 from geoapps.io import InputFile
-from geoapps.io.MVI.constants import required_parameters, validations
+from geoapps.io.MagneticVector.constants import required_parameters, validations
 from geoapps.io.validators import InputValidator
 
 ######################  Setup  ###########################

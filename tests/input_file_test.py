@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 from geoapps.io import InputFile
-from geoapps.io.MVI.constants import (
+from geoapps.io.MagneticVector.constants import (
     default_ui_json,
     inversion_defaults,
     required_parameters,
