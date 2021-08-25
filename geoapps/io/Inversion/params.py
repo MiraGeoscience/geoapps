@@ -65,7 +65,7 @@ class InversionParams(Params):
         self.alpha_x: float = None
         self.alpha_y: float = None
         self.alpha_z: float = None
-        self.smallness_norm: float = None
+        self.m_norm: float = None
         self.x_norm: float = None
         self.y_norm: float = None
         self.z_norm: float = None
@@ -147,7 +147,7 @@ class InversionParams(Params):
     def model_norms(self) -> list[float]:
         """Returns model norm components as a list."""
         return [
-            self.smallness_norm,
+            self.m_norm,
             self.x_norm,
             self.y_norm,
             self.z_norm,
@@ -874,19 +874,19 @@ class InversionParams(Params):
         self._alpha_z = val
 
     @property
-    def smallness_norm(self):
-        return self._smallness_norm
+    def m_norm(self):
+        return self._m_norm
 
-    @smallness_norm.setter
-    def smallness_norm(self, val):
+    @m_norm.setter
+    def m_norm(self, val):
         if val is None:
-            self._smallness_norm = val
+            self._m_norm = val
             return
-        p = "smallness_norm"
+        p = "m_norm"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._smallness_norm = val
+        self._m_norm = val
 
     @property
     def x_norm(self):
