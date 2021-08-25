@@ -11,9 +11,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from uuid import UUID
     from geoh5py.workspace import Workspace
     from geoapps.io.params import Params
+
+from uuid import UUID
 
 import numpy as np
 from geoh5py.objects import Grid2D, Points
@@ -110,7 +111,7 @@ class InversionLocations:
 
         return entity
 
-    def get_locations(self, uid: UUID, pseudo=False) -> np.ndarray:
+    def get_locations(self, obj) -> np.ndarray:
         """
         Returns locations of data object centroids or vertices.
 
@@ -121,17 +122,10 @@ class InversionLocations:
 
         """
 
-        data_object = self.workspace.get_entity(uid)[0]
-
-        if pseudo:
-            pseudo_x = data_object.get_data("Pseudo X")[0]
-            pseudo_y = data_object.get_data("Pseudo Y")[0]
-            pseudo_z = data_object.get_data("Pseudo Z")[0]
-
-            if all([x is not None for x in (pseudo_x, pseudo_y, pseudo_z)]):
-                return np.c_[pseudo_x.values, pseudo_y.values, pseudo_z.values]
-            else:
-                return None
+        if isinstance(obj, UUID):
+            data_object = self.workspace.get_entity(obj)[0]
+        else:
+            data_object = obj
 
         if isinstance(data_object, Grid2D):
             locs = data_object.centroids
@@ -178,11 +172,18 @@ class InversionLocations:
 
         :param locs: Array of xyz locations.
         """
+
+        if locs is None:
+            return None
+
         xy = rotate_xy(locs[:, :2], self.origin, self.angle)
         return np.c_[xy, locs[:, 2]]
 
     def set_z_from_topo(self, locs: np.ndarray):
         """interpolate locations z data from topography."""
+
+        if locs is None:
+            return None
 
         topo = self.get_locations(self.params.topography_object)
 

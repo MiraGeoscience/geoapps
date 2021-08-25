@@ -12,13 +12,14 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.io import Params
+    from uuid import UUID
 
 from copy import deepcopy
 
 import numpy as np
 from dask.distributed import get_client, progress
 from discretize import TreeMesh
-from geoh5py.objects import Points
+from geoh5py.objects import Grid2D, Points, PotentialElectrode
 from SimPEG import maps
 from SimPEG.utils.drivers import create_nested_mesh
 
@@ -97,7 +98,6 @@ class InversionData(InversionLocations):
         self.detrend_type: str = None
         self.locations: np.ndarray = None
         self.has_pseudo: bool = False
-        self.pseudo_locations: np.ndarray = None
         self.mask: np.ndarray = None
         self.vector: bool = None
         self.n_blocks: int = None
@@ -118,18 +118,21 @@ class InversionData(InversionLocations):
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
 
-        self.locations = super().get_locations(self.params.data_object)
-        self.pseudo_locations = super().get_locations(
-            self.params.data_object, pseudo=True
-        )
-        self.has_pseudo = True if self.pseudo_locations is not None else False
+        self.locations = self.get_txrx_locations(self.params.data_object)
+        self.has_source = True if self.locations["sources"] is not None else False
+        self.has_pseudo = True if self.locations["pseudo"] is not None else False
 
         if self.params.z_from_topo:
-            self.locations = super().set_z_from_topo(self.locations)
-        self.mask = np.ones(len(self.locations), dtype=bool)
+            for k in self.locations.keys():
+                self.locations[k] = super().set_z_from_topo(self.locations[k])
+
+        filt_locs = (
+            self.locations["pseudo"] if self.has_pseudo else self.locations["receivers"]
+        )
+        self.mask = np.ones(len(filt_locs), dtype=bool)
 
         if self.window is not None:
-            filt_locs = self.pseudo_locations if self.has_pseudo else self.locations
+
             self.mask = filter_xy(
                 filt_locs[:, 0],
                 filt_locs[:, 1],
@@ -138,7 +141,7 @@ class InversionData(InversionLocations):
                 mask=self.mask,
             )
 
-        if self.params.resolution is not None:
+        if self.params.resolution not in [0.0, None]:
             self.resolution = self.params.resolution
             self.mask = filter_xy(
                 filt_locs[:, 0],
@@ -147,20 +150,24 @@ class InversionData(InversionLocations):
                 mask=self.mask,
             )
 
-        self.locations = super().filter(self.locations)
+        key = "pseudo" if self.has_pseudo else "receivers"
+        self.locations[key] = super().filter(self.locations[key])
         self.observed = super().filter(self.observed)
         self.uncertainties = super().filter(self.uncertainties)
 
         self.offset, self.radar = self.params.offset()
         if self.offset is not None:
-            self.locations = self.displace(self.locations, self.offset)
+            for k in self.locations.keys():
+                self.locations[k] = self.displace(self.locations[k], self.offset)
         if self.radar is not None:
             radar_offset = self.workspace.get_entity(self.radar)[0].values
             radar_offset = super().filter(radar_offset)
-            self.locations = self.drape(self.locations, radar_offset)
+            for k in self.locations.keys():
+                self.locations[k] = self.drape(self.locations[k], radar_offset)
 
         if self.is_rotated:
-            self.locations = self.rotate(self.locations)
+            for k in self.locations.keys():
+                self.locations[k] = self.rotate(self.locations[k])
 
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
@@ -169,6 +176,33 @@ class InversionData(InversionLocations):
 
         self.observed = self.normalize(self.observed)
         self.save_data()
+
+    def get_txrx_locations(self, uid: UUID) -> dict[str, np.ndarray]:
+        """
+        Returns locations of sources and receivers centroids or vertices.
+
+        :param uid: UUID of geoh5py object containing centroid or
+            vertex location data
+
+        :return: dictionary containing at least a receivers array, but
+            possibly also a sources and pseudo array of x, y, z locations.
+
+        """
+
+        data_object = self.workspace.get_entity(uid)[0]
+        receivers = super().get_locations(data_object)
+
+        locs = {"sources": None, "receivers": receivers, "pseudo": None}
+
+        if isinstance(data_object, PotentialElectrode):
+            locs["sources"] = super().get_locations(data_object.current_electrodes)
+            locs["pseudo"] = np.c_[
+                data_object.get_data("Pseudo X")[0].values,
+                data_object.get_data("Pseudo Y")[0].values,
+                data_object.get_data("Pseudo Z")[0].values,
+            ]
+
+        return locs
 
     def get_data(self) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
         """
@@ -197,7 +231,7 @@ class InversionData(InversionLocations):
 
     def save_data(self):
 
-        self.data_entity = super().create_entity("Data", self.locations)
+        self.data_entity = super().create_entity("Data", self.locations["receivers"])
 
         if self.params.forward_only:
             return
@@ -271,10 +305,16 @@ class InversionData(InversionLocations):
 
     def displace(self, locs: np.ndarray, offset: np.ndarray) -> np.ndarray:
         """Offset data locations in all three dimensions."""
+        if locs is None:
+            return None
+
         return locs + offset if offset is not None else 0
 
     def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
         """Drape data locations using radar channel offsets."""
+
+        if locs is None:
+            return None
 
         radar_offset_pad = np.zeros((len(radar_offset), 3))
         radar_offset_pad[:, 2] = radar_offset
