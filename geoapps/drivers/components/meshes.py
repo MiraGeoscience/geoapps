@@ -59,6 +59,7 @@ class InversionMesh:
         self.nC: int = None
         self.rotation: dict[str, float] = None
         self.octree_permutation: np.ndarray = None
+        self.mesh_entity: Octree = None
         self._initialize()
 
     def _initialize(self) -> None:
@@ -73,19 +74,24 @@ class InversionMesh:
         if self.params.mesh_from_params:
 
             self.build_from_params()
+            self.mesh_entity = self.workspace.get_entity("Octree_Mesh")[0].copy(
+                parent=self.params.out_group, copy_children=False
+            )
 
         else:
 
-            mesh = self.workspace.get_entity(self.params.mesh)[0]
-            self.uid = mesh.uid
-            self.nC = mesh.n_cells
+            self.mesh_entity = self.workspace.get_entity(self.params.mesh)[0].copy(
+                parent=self.params.out_group, copy_children=False
+            )
+            self.uid = self.mesh_entity.uid
+            self.nC = self.mesh_entity.n_cells
 
-            if mesh.rotation:
-                origin = mesh.origin.tolist()
-                angle = mesh.rotation[0]
+            if self.mesh_entity.rotation:
+                origin = self.mesh_entity.origin.tolist()
+                angle = self.mesh_entity.rotation[0]
                 self.rotation = {"origin": origin, "angle": angle}
 
-            self.mesh = octree_2_treemesh(mesh)
+            self.mesh = octree_2_treemesh(self.mesh_entity)
             self.octree_permutation = self.mesh._ubc_order
 
     def original_cc(self) -> np.ndarray:

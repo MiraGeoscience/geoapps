@@ -115,7 +115,7 @@ class InversionDriver:
         self.survey = self.inversion_data.survey()
 
         # Build active cells array and reduce models active set
-        self.active_cells = self.inversion_topography.active_cells(self.mesh)
+        self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
         self.models.remove_air(self.active_cells)
         self.active_cells_map = maps.InjectActiveCells(self.mesh, self.active_cells, 0)
 
@@ -216,13 +216,9 @@ class InversionDriver:
             if self.inversion_type == "mvi":
                 channels = ["amplitude", "theta", "phi"]
 
-            outmesh = self.fetch(self.inversion_mesh.uid).copy(
-                parent=self.params.out_group, copy_children=False
-            )
-
             directiveList.append(
                 directives.SaveIterationsGeoH5(
-                    h5_object=outmesh,
+                    h5_object=self.inversion_mesh.mesh_entity,
                     channels=channels,
                     mapping=self.active_cells_map,
                     attribute_type="mvi_angles" if self.is_vector else "model",

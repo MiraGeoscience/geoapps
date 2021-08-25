@@ -186,6 +186,7 @@ class InversionModel:
         self.model = None
         self.is_vector = None
         self.n_blocks = None
+        self.mesh_entity = mesh.mesh_entity
         self._initialize()
 
     def _initialize(self):
@@ -243,6 +244,8 @@ class InversionModel:
         if model is not None:
             self.model = mkvc(model)
 
+        self.save_model()
+
     def remove_air(self, active_cells):
         """Use active cells vector to remove air cells from model"""
 
@@ -266,6 +269,14 @@ class InversionModel:
         :return: Vector of model values reordered for TreeMesh.
         """
         return model[np.argsort(self.mesh.octree_permutation)]
+
+    def save_model(self):
+        """Resort model to the Octree object's ordering and save to workspace."""
+
+        remapped_model = self.permute_2_octree()
+        self.mesh_entity.add_data(
+            {f"{self.model_type}_model": {"values": remapped_model}}
+        )
 
     def _get(self, name: str):
         """
