@@ -8,6 +8,7 @@
 import json
 import multiprocessing
 import os
+import os.path as path
 
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
@@ -30,6 +31,10 @@ from ipywidgets.widgets import (
 )
 
 from geoapps.base import BaseApplication
+from geoapps.io.Gravity.params import GravityParams
+from geoapps.io.MagneticScalar.params import MagneticScalarParams
+from geoapps.io.MagneticVector.constants import app_initializer, default_ui_json
+from geoapps.io.MagneticVector.params import MagneticVectorParams
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import LineOptions, ObjectDataSelection, TopographyOptions
 from geoapps.utils import geophysical_systems
@@ -723,6 +728,7 @@ class InversionApp(PlotSelection2D):
         "padding_distance": "1000, 1000, 1000, 1000, 0, 0",
     }
 
+    _param_class = MagneticVectorParams
     _select_multiple = True
     _add_groups = True
     _sensor = None
@@ -731,8 +737,20 @@ class InversionApp(PlotSelection2D):
     _inversion_parameters = None
     _spatial_options = None
 
-    def __init__(self, **kwargs):
-        self.defaults.update(**kwargs)
+    def __init__(self, ui_json=None, **kwargs):
+
+        app_initializer.update(kwargs)
+        if ui_json is not None and path.exists(ui_json):
+            self.params = self._param_class.from_path(ui_json)
+        else:
+            if "h5file" in app_initializer.keys():
+                app_initializer["geoh5"] = app_initializer.pop("h5file")
+                app_initializer["workspace"] = app_initializer["geoh5"]
+
+            self.params = self._param_class(**app_initializer)
+
+        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.pop("workspace", None)
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
