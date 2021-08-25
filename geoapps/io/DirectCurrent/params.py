@@ -32,9 +32,11 @@ class DirectCurrentParams(InversionParams):
             required_parameters, validations
         )
         self.inversion_type = "direct_current"
+        self.potential_channel_bool = None
         self.potential_channel = None
         self.potential_uncertainty = None
         self.out_group = None
+
         self.defaults = forward_defaults if forward else inversion_defaults
         self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
         self.param_names = list(self.default_ui_json.keys())
@@ -58,6 +60,21 @@ class DirectCurrentParams(InversionParams):
     @inversion_type.setter
     def inversion_type(self, val):
         self.setter_validator("inversion_type", val)
+
+    @property
+    def potential_channel_bool(self):
+        return self._potential_channel_bool
+
+    @potential_channel_bool.setter
+    def potential_channel_bool(self, val):
+        if val is None:
+            self._potential_channel_bool = val
+            return
+        p = "potential_channel_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._potential_channel_bool = val
 
     @property
     def potential_channel(self):

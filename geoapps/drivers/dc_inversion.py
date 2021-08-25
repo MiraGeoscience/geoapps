@@ -8,7 +8,7 @@
 
 import sys
 
-from geoapps.io.Gravity import GravityParams
+from geoapps.io.DirectCurrent import DirectCurrentParams
 
 from .base_inversion import InversionDriver
 
@@ -16,13 +16,13 @@ from .base_inversion import InversionDriver
 def start_inversion(filepath=None):
     """Starts inversion with parameters defined in input file."""
 
-    params = GravityParams.from_path(filepath)
-    driver = GravityDriver(params)
+    params = DirectCurrentParams.from_path(filepath)
+    driver = DirectCurrentDriver(params)
     driver.run()
 
 
-class GravityDriver(InversionDriver):
-    def __init__(self, params: GravityParams):
+class DirectCurrentDriver(InversionDriver):
+    def __init__(self, params: DirectCurrentParams):
         super().__init__(params)
 
     def run(self):

@@ -47,13 +47,26 @@ class SimPEGFactory:
         from SimPEG import dask
 
         if self.inversion_type in ["mvi", "magnetic"]:
+
             from SimPEG.potential_fields import magnetics as data_module
 
             self.data_module = data_module
+            self.simulation_module = data_module.simulation.Simulation3DIntegral
+
         elif self.inversion_type == "gravity":
+
             from SimPEG.potential_fields import gravity as data_module
 
             self.data_module = data_module
+            self.simulation_module = data_module.simulation.Simulation3DIntegral
+
+        elif self.inversion_type == "direct_current":
+
+            from pymatsolver.direct import Pardiso as Solver
+            from SimPEG.electromagnetics.static import resistivity as data_module
+
+            self.data_module = data_module
+            self.simulation_module = data_module.simulation.Simulation3DNodal
         else:
             msg = f"Inversion type: {self.inversion_type} not implemented yet."
             raise NotImplementedError(msg)
@@ -116,7 +129,7 @@ class SurveyFactory(SimPEGFactory):
         if self.inversion_type in ["mvi", "magnetic"]:
             parameters = self.params.inducing_field_aid()
 
-        elif self.inversion_type in ["gravity"]:
+        elif self.inversion_type in ["gravity", "direct_current"]:
             parameters = None
 
         receivers = self.data_module.receivers.Point(
@@ -168,7 +181,7 @@ class SimulationFactory(SimPEGFactory):
         self,
         survey: BaseSurvey,
         mesh: TreeMesh,
-        active_cells: np.ndarray,
+        map,
         tile_id: int = None,
     ):
         """
@@ -176,39 +189,67 @@ class SimulationFactory(SimPEGFactory):
 
         :param: survey: SimPEG survey object containing data locations.
         :param: mesh: Inversion mesh.
-        :param: active_cells: Active cells mask.
+        :param: map: SimPEG Map object.
         :param: tile_id: Identification number of a particular tile.
 
         """
+
+        active_cells = map.local_active
         sens_path = self._get_sens_path(tile_id)
-        data_dependent_args = self._get_args(active_cells)
-        sim = self.data_module.simulation.Simulation3DIntegral(
+        data_dependent_args = self._assemble_args(map, mesh)
+        sim = self.simulation_module(
             survey=survey,
             mesh=mesh,
-            actInd=active_cells,
             sensitivity_path=sens_path,
             chunk_format="row",
-            store_sensitivities="forward_only" if self.params.forward_only else "disk",
             max_chunk_size=self.params.max_chunk_size,
             **data_dependent_args,
         )
 
-        return sim
+        return sim, map
 
-    def _get_args(self, active_cells: np.ndarray) -> dict[str, Any]:
+    def _assemble_args(self, map, mesh=None) -> dict[str, Any]:
         """Return inversion type specific kwargs dict for simulation object."""
+
+        active_cells = map.local_active
 
         if self.inversion_type == "mvi":
             args = {
+                "actInd": active_cells,
                 "chiMap": maps.IdentityMap(nP=int(active_cells.sum()) * 3),
                 "modelType": "vector",
+                "store_sensitivities": "forward_only"
+                if self.params.forward_only
+                else "disk",
             }
 
         elif self.inversion_type == "gravity":
-            args = {"rhoMap": maps.IdentityMap(nP=int(active_cells.sum()))}
+            args = {
+                "actInd": active_cells,
+                "rhoMap": maps.IdentityMap(nP=int(active_cells.sum())),
+                "store_sensitivities": "forward_only"
+                if self.params.forward_only
+                else "disk",
+            }
 
         elif self.inversion_type == "magnetic":
-            args = {"chiMap": maps.IdentityMap(nP=int(active_cells.sum()))}
+            args = {
+                "actInd": active_cells,
+                "chiMap": maps.IdentityMap(nP=int(active_cells.sum())),
+                "store_sensitivities": "forward_only"
+                if self.params.forward_only
+                else "disk",
+            }
+
+        elif self.inversion_type == "direct_current":
+            actmap = maps.InjectActiveCells(
+                mesh, active_cells, valInactive=np.log(1e-8)
+            )
+            args = {
+                "Solver": Solver,
+                "sigmaMap": maps.ExpMap(mesh) * actmap,
+                "store_sensitivities": False if self.params.forward_only else True,
+            }
 
         return args
 

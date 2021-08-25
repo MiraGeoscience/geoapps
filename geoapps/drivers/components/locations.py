@@ -65,6 +65,8 @@ class InversionLocations:
         self.angle: float = None
         self.is_rotated: bool = False
         self.locations: np.ndarray = None
+        self.has_pseudo: bool = False
+        self.pseudo_locations: np.ndarray = None
 
         if params.mesh is not None:
             mesh = workspace.get_entity(params.mesh)[0]
@@ -108,7 +110,7 @@ class InversionLocations:
 
         return entity
 
-    def get_locations(self, uid: UUID) -> np.ndarray:
+    def get_locations(self, uid: UUID, pseudo=False) -> np.ndarray:
         """
         Returns locations of data object centroids or vertices.
 
@@ -120,6 +122,16 @@ class InversionLocations:
         """
 
         data_object = self.workspace.get_entity(uid)[0]
+
+        if pseudo:
+            pseudo_x = data_object.get_data("Pseudo X")[0]
+            pseudo_y = data_object.get_data("Pseudo Y")[0]
+            pseudo_z = data_object.get_data("Pseudo Z")[0]
+
+            if all([x is not None for x in (pseudo_x, pseudo_y, pseudo_z)]):
+                return np.c_[pseudo_x.values, pseudo_y.values, pseudo_z.values]
+            else:
+                return None
 
         if isinstance(data_object, Grid2D):
             locs = data_object.centroids

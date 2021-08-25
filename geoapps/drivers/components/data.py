@@ -96,6 +96,8 @@ class InversionData(InversionLocations):
         self.detrend_order: float = None
         self.detrend_type: str = None
         self.locations: np.ndarray = None
+        self.has_pseudo: bool = False
+        self.pseudo_locations: np.ndarray = None
         self.mask: np.ndarray = None
         self.vector: bool = None
         self.n_blocks: int = None
@@ -117,14 +119,20 @@ class InversionData(InversionLocations):
         self.components, self.observed, self.uncertainties = self.get_data()
 
         self.locations = super().get_locations(self.params.data_object)
+        self.pseudo_locations = super().get_locations(
+            self.params.data_object, pseudo=True
+        )
+        self.has_pseudo = True if self.pseudo_locations is not None else False
+
         if self.params.z_from_topo:
             self.locations = super().set_z_from_topo(self.locations)
         self.mask = np.ones(len(self.locations), dtype=bool)
 
         if self.window is not None:
+            filt_locs = self.pseudo_locations if self.has_pseudo else self.locations
             self.mask = filter_xy(
-                self.locations[:, 0],
-                self.locations[:, 1],
+                filt_locs[:, 0],
+                filt_locs[:, 1],
                 window=self.window,
                 angle=self.angle,
                 mask=self.mask,
@@ -133,8 +141,8 @@ class InversionData(InversionLocations):
         if self.params.resolution is not None:
             self.resolution = self.params.resolution
             self.mask = filter_xy(
-                self.locations[:, 0],
-                self.locations[:, 1],
+                filt_locs[:, 0],
+                filt_locs[:, 1],
                 distance=self.resolution,
                 mask=self.mask,
             )
@@ -358,19 +366,15 @@ class InversionData(InversionLocations):
 
         if local_index is None:
 
-            sim = simulation_factory.build(survey, mesh, active_cells)
             map = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
+            sim, map = simulation_factory.build(survey, mesh, map)
 
         else:
 
             nested_mesh = create_nested_mesh(survey.receiver_locations, mesh)
             args = {"components": 3} if self.vector else {}
             map = maps.TileMap(mesh, active_cells, nested_mesh, **args)
-            local_active_cells = map.local_active
-
-            sim = simulation_factory.build(
-                survey, nested_mesh, local_active_cells, tile_id
-            )
+            sim, map = simulation_factory.build(survey, nested_mesh, map, tile_id)
 
         return sim, map
 
@@ -382,6 +386,7 @@ class InversionData(InversionLocations):
         save: bool = True,
     ) -> np.ndarray:
         """Simulate fields for a particular model."""
+
         client = get_client()
         sim, _ = self.simulation(mesh, active_cells)
         prediction = client.compute(sim.dpred(model))
