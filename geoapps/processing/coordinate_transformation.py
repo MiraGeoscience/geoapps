@@ -38,7 +38,7 @@ class CoordinateTransformation(ObjectDataSelection):
 
     def __init__(self, **kwargs):
 
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
 
         self.code_out.observe(self.set_wkt_out, names="value")
         self.code_in.observe(self.set_wkt_in, names="value")

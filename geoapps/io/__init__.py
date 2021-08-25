@@ -7,4 +7,4 @@
 
 from .input_file import InputFile
 from .params import Params
-from .validators import InputValidator
+from .validators import InputFreeformValidator, InputValidator
