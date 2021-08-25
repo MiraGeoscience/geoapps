@@ -235,6 +235,7 @@ class ObjectDataSelection(BaseApplication):
             return None, None
 
     def update_data_list(self, _):
+        refresh = self.refresh.value
         self.refresh.value = False
         if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
             self.objects.value
@@ -278,7 +279,7 @@ class ObjectDataSelection(BaseApplication):
             self.data.options = []
             self.data.uid_name_map = {}
 
-        self.refresh.value = True
+        self.refresh.value = refresh
 
     def update_objects_list(self):
         if getattr(self, "_workspace", None) is not None:
@@ -328,7 +329,7 @@ class LineOptions(ObjectDataSelection):
 
     def __init__(self, **kwargs):
 
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
 
         super().__init__(**self.defaults)
 
@@ -391,7 +392,7 @@ class TopographyOptions(ObjectDataSelection):
     def __init__(
         self, option_list=["None", "Object", "Relative to Sensor", "Constant"], **kwargs
     ):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
         self._offset = FloatText(description="Vertical offset (+ve up)")
         self._constant = FloatText(

@@ -47,7 +47,7 @@ class BaseApplication:
     plot_result = False
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._file_browser = FileChooser()
         self._file_browser._select.on_click(self.file_browser_change)
         self._file_browser._select.style = {"description_width": "initial"}
@@ -125,16 +125,6 @@ class BaseApplication:
                 except:
                     pass
 
-    def update_defaults(self, **kwargs):
-        """
-        Add defaults to the kwargs
-        """
-        for key, value in self.defaults.copy().items():
-            if key not in kwargs.keys():
-                kwargs[key] = value
-
-        return kwargs
-
     def file_browser_change(self, _):
         """
         Change the target h5file
@@ -146,7 +136,9 @@ class BaseApplication:
                 self.params = getattr(self, "_param_class").from_path(
                     self.file_browser.selected
                 )
-                self.__populate__(**self.params.__dict__)
+                self.refresh.value = False
+                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.refresh.value = True
 
             elif extension == ".geoh5":
                 self.h5file = self.file_browser.selected

@@ -14,9 +14,35 @@ import numpy as np
 import pytest
 from geoh5py.workspace import Workspace
 
-from geoapps.io import InputFile, Params
+from geoapps.io import InputFile
+from geoapps.io.Gravity import GravityParams
 from geoapps.io.MVI import MVIParams
-from geoapps.io.MVI.constants import default_ui_json, validations
+from geoapps.io.MVI.constants import default_ui_json as MVI_defaults
+from geoapps.io.MVI.constants import validations as MVI_validations
+from geoapps.io.Octree import OctreeParams
+from geoapps.io.PeakFinder import PeakFinderParams
+from geoapps.utils.testing import Geoh5Tester
+
+workspace = Workspace("./FlinFlon.geoh5")
+
+
+def setup_params(tmp, ui, params_class):
+    geotest = Geoh5Tester(workspace, tmp, "test.geoh5", ui, params_class)
+    geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
+    geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
+    geotest.set_param("gz_channel", "{6de9177a-8277-4e17-b76c-2b8b05dcf23c}")
+    geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
+    geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
+    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    return geotest
+
+
+# def test_inversion_type(tmp_path):
+#     geotest = setup_params(tmp_path, MVI_defaults, MVIParams)
+#     geotest.set_param("inversion_type", "nogood")
+#     ws, params = geotest.make()
+#     assert True
+
 
 ######################  Setup  ###########################
 
@@ -30,38 +56,6 @@ def tmp_input_file(filepath, idict):
         json.dump(idict, f)
 
 
-def default_test_generator(tmp_path, param, newval):
-
-    d_u_j = deepcopy(default_ui_json)
-    params = MVIParams()
-    assert getattr(params, param) == d_u_j[param]["default"]
-    filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
-    params = MVIParams.from_path(filepath, workspace=workspace)
-    assert getattr(params, param) == d_u_j[param]["default"]
-    with open(filepath) as f:
-        ui = json.load(f)
-    ui[param]["isValue"] = True
-    ui[param]["value"] = newval
-    ui[param]["visible"] = True
-    ui[param]["enabled"] = False
-    with open(filepath, "w") as f:
-        json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath, workspace=workspace)
-    assert getattr(params, param) == d_u_j[param]["default"]
-    with open(filepath) as f:
-        ui = json.load(f)
-    ui[param]["isValue"] = True
-    ui[param]["value"] = newval
-    ui[param]["visible"] = False
-    ui[param]["enabled"] = True
-    with open(filepath, "w") as f:
-        json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath, workspace=workspace)
-    assert getattr(params, param) == d_u_j[param]["default"]
-
-
 def catch_invalid_generator(
     tmp_path, param, invalid_value, validation_type, workspace=None, parent=None
 ):
@@ -73,16 +67,20 @@ def catch_invalid_generator(
         "reqs": "reqs",
         "uuid": "uuid",
     }
-    pvalidations = validations[param][key_map[validation_type]]
+    pvalidations = MVI_validations[param][key_map[validation_type]]
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
+    ifile = InputFile()
+    ifile.filepath = filepath
+    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
-    ui[param]["value"] = invalid_value
-    ui[param]["visible"] = True
-    ui[param]["enabled"] = True
-    ui[param]["isValue"] = True
+    if isinstance(ui[param], dict):
+        ui[param]["value"] = invalid_value
+        ui[param]["visible"] = True
+        ui[param]["enabled"] = True
+        ui[param]["isValue"] = True
+    else:
+        ui[param] = invalid_value
     ui["geoh5"] = None
     if validation_type == "value":
         err = ValueError
@@ -93,6 +91,7 @@ def catch_invalid_generator(
             str(invalid_value),
             *(str(v) for v in pvalidations),
         ]
+
     elif validation_type == "type":
         err = TypeError
         types = set(pvalidations + [type(invalid_value)])
@@ -108,6 +107,7 @@ def catch_invalid_generator(
         hasval = len(req) > 1
         preq = req[1] if hasval else req[0]
         ui[preq]["value"] = None
+        ui[preq]["enabled"] = False
         assertions += [str(k) for k in req]
     elif validation_type == "uuid":
         err = (ValueError, IndexError)
@@ -136,14 +136,23 @@ def catch_invalid_generator(
 
 def param_test_generator(tmp_path, param, value, workspace=workspace):
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ifile.write_ui_json(default_ui_json, default=True, workspace=wrkstr)
+    ifile = InputFile()
+    ifile.filepath = filepath
+    wrkstr = workspace.h5file
+    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
-    ui[param]["isValue"] = True
-    ui[param]["value"] = value
-    ui[param]["visible"] = True
-    ui[param]["enabled"] = True
+    if isinstance(ui[param], dict):
+        if "isValue" in ui[param].keys():
+            if isinstance(value, UUID):
+                ui[param]["isValue"] = False
+            else:
+                ui[param]["isValue"] = True
+        ui[param]["value"] = value
+        ui[param]["visible"] = True
+        ui[param]["enabled"] = True
+    else:
+        ui[param] = value
     ui["geoh5"] = None
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
@@ -154,30 +163,99 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
     except ValueError:
         pass
 
-    assert getattr(params, param) == value
+    pval = getattr(params, param)
+
+    if param == "out_group":
+        pval = pval.name
+
+    assert pval == value
 
 
-######################  Tests  ###########################
+def test_params_initialize():
+    for params in [MVIParams(), GravityParams(), OctreeParams(), PeakFinderParams()]:
+        check = []
+        for k, v in params.defaults.items():
+            if " " in k:
+                continue
+                check.append(getattr(params, k) == v)
+        assert all(check)
+
+    params = MVIParams(u_cell_size=9999, validate=True, workspace=workspace)
+    assert params.u_cell_size == 9999
+    params = GravityParams(u_cell_size=9999, validate=True, workspace=workspace)
+    assert params.u_cell_size == 9999
+    params = OctreeParams(vertical_padding=500, validate=True, workspace=workspace)
+    assert params.vertical_padding == 500
+    params = PeakFinderParams(center=1000, validate=True, workspace=workspace)
+    assert params.center == 1000
+
+
+def test_update(tmp_path):
+    new_params = {
+        "mesh_from_params": True,
+    }
+    params = MVIParams()
+    params.update(new_params)
+    assert params.mesh_from_params == True
+
+    new_params = {
+        "topography_object": {
+            "default": None,
+            "main": True,
+            "group": "Topography",
+            "label": "Object",
+            "meshType": [
+                "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+                "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+                "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+                "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+                "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            ],
+            "value": "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+        }
+    }
+    params.update(new_params)
+    assert params.topography_object == UUID("{202C5DB1-A56D-4004-9CAD-BAAFD8899406}")
+
+    new_params = {
+        "topography": {
+            "association": "Vertex",
+            "dataType": "Float",
+            "default": None,
+            "group": "Topography",
+            "main": True,
+            "dependency": "forward_only",
+            "dependencyType": "hide",
+            "isValue": False,
+            "label": "Elevation",
+            "parent": "topography_object",
+            "property": "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "value": 0.0,
+        }
+    }
+
+    params.update(new_params)
+    assert params.topography == UUID("{202C5DB1-A56D-4004-9CAD-BAAFD8899406}")
 
 
 def test_params_constructors(tmp_path):
     filepath = tmpfile(tmp_path)
-    ifile = InputFile(filepath)
-    ui = default_ui_json.copy()
+    ifile = InputFile()
+    ifile.filepath = filepath
+    ui = deepcopy(MVI_defaults)
     ui["geoh5"] = wrkstr
     ifile.write_ui_json(ui, default=True)
     params1 = MVIParams.from_path(filepath, workspace=workspace)
     params2 = MVIParams.from_input_file(ifile, workspace=workspace)
 
 
-def test_default_generator(tmp_path):
-    """
-    ### test default behaviour ###
-    """
-    param = "inversion_type"
-    newval = "mvic"
+def test_param_names():
+    assert np.all(MVIParams.param_names == list(MVI_defaults.keys()))
 
-    default_test_generator(tmp_path, param, newval)
+
+def test_active_set():
+    params = MVIParams(workspace=workspace, inversion_type="mvi", u_cell_size=2)
+    params.active_set()
 
 
 def test_validate_inversion_type(tmp_path):
@@ -185,15 +263,7 @@ def test_validate_inversion_type(tmp_path):
     newval = "mvic"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "em", "value", workspace=workspace)
-    catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
-
-
-def test_validate_forward_only(tmp_path):
-    param = "forward_only"
-    newval = False
-    param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, "test", "type", workspace=workspace)
-    catch_invalid_generator(tmp_path, param, True, "reqs", workspace=workspace)
+    # catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
 
 
 def test_validate_inducing_field_strength(tmp_path):
@@ -415,22 +485,22 @@ def test_validate_mesh_from_params(tmp_path):
     catch_invalid_generator(tmp_path, param, "sdf", "type", workspace=workspace)
 
 
-def test_validate_core_cell_size_x(tmp_path):
-    param = "core_cell_size_x"
+def test_validate_u_cell_size(tmp_path):
+    param = "u_cell_size"
     newval = 9
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "sdf", "type", workspace=workspace)
 
 
-def test_validate_core_cell_size_y(tmp_path):
-    param = "core_cell_size_y"
+def test_validate_v_cell_size(tmp_path):
+    param = "v_cell_size"
     newval = 9
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "sdf", "type", workspace=workspace)
 
 
-def test_validate_core_cell_size_z(tmp_path):
-    param = "core_cell_size_z"
+def test_validate_w_cell_size(tmp_path):
+    param = "w_cell_size"
     newval = 9
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "sdf", "type", workspace=workspace)
@@ -450,13 +520,6 @@ def test_validate_octree_levels_obs(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_validate_octree_levels_padding(tmp_path):
-    param = "octree_levels_padding"
-    newval = [1, 2, 3]
-    param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
-
-
 def test_validate_depth_core(tmp_path):
     param = "depth_core"
     newval = 99
@@ -471,22 +534,15 @@ def test_validate_max_distance(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_validate_padding_distance_x(tmp_path):
-    param = "padding_distance_x"
+def test_horizontal_padding(tmp_path):
+    param = "horizontal_padding"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_validate_padding_distance_y(tmp_path):
-    param = "padding_distance_y"
-    newval = 99
-    param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
-
-
-def test_validate_padding_distance_z(tmp_path):
-    param = "padding_distance_z"
+def test_vertical_padding(tmp_path):
+    param = "vertical_padding"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
@@ -742,3 +798,31 @@ def test_validate_no_data_value(tmp_path):
     newval = 5
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
+
+
+def test_isValue(tmp_path):
+    # "starting_model"
+    filepath = tmpfile(tmp_path)
+    ifile = InputFile()
+    ifile.filepath = filepath
+
+    mesh = workspace.get_entity("O2O_Interp_25m")[0]
+
+    params = MVIParams.from_input_file(ifile, workspace)
+    params.starting_model_object = mesh.uid
+    params.starting_model = 0.0
+
+    params.write_input_file()
+
+    with open(filepath) as f:
+        ui = json.load(f)
+
+    assert ui["starting_model"]["isValue"] is True, "isValue should be True"
+
+    params.starting_model = mesh.get_data("VTEM_model")[0].uid
+
+    params.write_input_file()
+    with open(filepath) as f:
+        ui = json.load(f)
+
+    assert ui["starting_model"]["isValue"] is False, "isValue should be False"

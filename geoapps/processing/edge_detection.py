@@ -60,7 +60,7 @@ class EdgeDetectionApp(PlotSelection2D):
     _object_types = (Grid2D,)
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._compute = Button(
             description="Compute",
             button_style="warning",

@@ -27,7 +27,7 @@ class Calculator(ObjectDataSelection):
     _select_multiple = True
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.var = {}
         self._channel = Text(description="Name: ")
         self._equation = Textarea(layout=Layout(width="75%"))
