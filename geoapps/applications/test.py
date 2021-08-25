@@ -7,7 +7,7 @@
 
 from dask.distributed import Client
 
-from geoapps.inversion import InversionApp
+from geoapps.pf_inversion_app import InversionApp
 from geoapps.plotting import ScatterPlots
 from geoapps.processing import ContourValues, PeakFinder
 

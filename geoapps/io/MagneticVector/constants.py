@@ -498,3 +498,28 @@ validations = {
     "out_group": {"types": [str, ContainerGroup]},
 }
 validations.update(base_validations)
+
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f",
+    "tmi_channel": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "resolution": 50,
+    "window_center_x": 314600.0,
+    "window_center_y": 6072200.0,
+    "window_center_z": -20,
+    "window_width": 1000.0,
+    "window_height": 1500.0,
+    "smallness_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+    "max_iterations": 25,
+    "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+    "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    "z_from_topo": True,
+    "receivers_offset_x": 0,
+    "receivers_offset_y": 0,
+    "receivers_offset_z": 60,
+    "horizontal_padding": 1000,
+    "vertical_padding": 1000,
+}
