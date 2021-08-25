@@ -176,9 +176,17 @@ class MeshOctreeOptions:
     """
 
     def __init__(self, **kwargs):
-        self._core_cell_size = widgets.Text(
-            value="25, 25, 25",
-            description="Smallest cells",
+        self._u_cell_size = widgets.FloatText(
+            value=25.0,
+            description="",
+        )
+        self._v_cell_size = widgets.FloatText(
+            value=25.0,
+            description="",
+        )
+        self._z_cell_size = widgets.FloatText(
+            value=25.0,
+            description="",
         )
         self._octree_levels_topo = widgets.Text(
             value="0, 0, 0, 2",
@@ -192,9 +200,13 @@ class MeshOctreeOptions:
             value=500,
             description="Minimum depth (m)",
         )
-        self._padding_distance = widgets.Text(
-            value="0, 0, 0, 0, 0, 0",
-            description="Padding [W,E,N,S,D,U] (m)",
+        self._horizontal_padding = widgets.FloatText(
+            value=1000.0,
+            description="Horizontal padding (m)",
+        )
+        self._vertical_padding = widgets.FloatText(
+            value=1000.0,
+            description="Vertical padding (m)",
         )
         self._max_distance = FloatText(
             value=1000,
@@ -202,13 +214,16 @@ class MeshOctreeOptions:
         )
         self._main = widgets.VBox(
             [
-                Label("Octree Mesh"),
-                self._core_cell_size,
+                Label("Core cell size (u, v, z)"),
+                HBox([self._u_cell_size, self._v_cell_size, self._z_cell_size]),
+                Label("Refinements"),
                 self._octree_levels_topo,
                 self._octree_levels_obs,
-                self._depth_core,
-                self._padding_distance,
                 self._max_distance,
+                Label("Dimensions"),
+                self._horizontal_padding,
+                self._vertical_padding,
+                self._depth_core,
             ]
         )
 
@@ -219,13 +234,23 @@ class MeshOctreeOptions:
         for key, value in kwargs.items():
             if hasattr(self, "_" + key):
                 try:
+                    if isinstance(value, list):
+                        value = ", ".join(list(map(str, value)))
                     getattr(self, key).value = value
                 except:
                     pass
 
     @property
-    def core_cell_size(self):
-        return self._core_cell_size
+    def u_cell_size(self):
+        return self._u_cell_size
+
+    @property
+    def v_cell_size(self):
+        return self._v_cell_size
+
+    @property
+    def z_cell_size(self):
+        return self._z_cell_size
 
     @property
     def depth_core(self):
@@ -244,8 +269,12 @@ class MeshOctreeOptions:
         return self._octree_levels_topo
 
     @property
-    def padding_distance(self):
-        return self._padding_distance
+    def horizontal_padding(self):
+        return self._horizontal_padding
+
+    @property
+    def vertical_padding(self):
+        return self._vertical_padding
 
     @property
     def main(self):
@@ -460,10 +489,43 @@ class InversionOptions(BaseApplication):
             value="1, 1, 1, 1",
             description="Scaling alpha_(s, x, y, z)",
         )
-        self._norms = widgets.Text(
-            value="2, 2, 2, 2",
-            description="Norms p_(s, x, y, z)",
+        self._m_norms = widgets.FloatText(
+            value=2,
+            description="Model",
             continuous_update=False,
+        )
+        self._x_norms = widgets.FloatText(
+            value=2,
+            description="Gradient x",
+            continuous_update=False,
+        )
+        self._y_norms = widgets.FloatText(
+            value=2,
+            description="Gradient y",
+            continuous_update=False,
+        )
+        self._z_norms = widgets.FloatText(
+            value=2,
+            description="Gradient z",
+            continuous_update=False,
+        )
+        self._norms = VBox(
+            [
+                Label(description="Norms"),
+                self._m_norms,
+                self._x_norms,
+                self._y_norms,
+                self._z_norms,
+            ]
+        )
+        self._alphas = VBox(
+            [
+                Label(description="Scaling"),
+                self._alpha_s,
+                self._alpha_x,
+                self._alpha_y,
+                self._alpha_z,
+            ]
         )
         self.bound_panel = VBox([self._upper_bound, self._lower_bound])
         self._mesh = MeshOctreeOptions()
@@ -473,7 +535,7 @@ class InversionOptions(BaseApplication):
             "starting model": self._starting_model.main,
             "background susceptibility": self._susceptibility_model.main,
             "regularization": VBox(
-                [self._reference_model.main, self._alphas, self._norms]
+                [self._reference_model.main, HBox([self._alphas, self._norms])]
             ),
             "upper-lower bounds": self.bound_panel,
             "mesh": self.mesh.main,
@@ -707,26 +769,6 @@ def inversion_defaults():
 
 
 class InversionApp(PlotSelection2D):
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "inducing_field": "60000, 79, 11",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": ["{44822654-b6ae-45b0-8886-2d845f80f422}"],
-        "resolution": 50,
-        "center_x": 314600.0,
-        "center_y": 6072200.0,
-        "width": 1000.0,
-        "height": 1500.0,
-        "azimuth": -20,
-        "inversion_parameters": {"norms": "0, 2, 2, 2", "max_iterations": 25},
-        "topography": {
-            "options": "Object",
-            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-            "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
-        },
-        "sensor": {"offset": "0, 0, 60", "options": "topo + radar + (dx, dy, dz)"},
-        "padding_distance": "1000, 1000, 1000, 1000, 0, 0",
-    }
 
     _param_class = MagneticVectorParams
     _select_multiple = True
@@ -736,6 +778,7 @@ class InversionApp(PlotSelection2D):
     _topography = None
     _inversion_parameters = None
     _spatial_options = None
+    defaults = {}
 
     def __init__(self, ui_json=None, **kwargs):
 
@@ -749,6 +792,7 @@ class InversionApp(PlotSelection2D):
 
             self.params = self._param_class(**app_initializer)
 
+        self.data_object = self.objects
         self.defaults.update(self.params.to_dict(ui_json_format=False))
         self.defaults.pop("workspace", None)
         self.em_system_specs = geophysical_systems.parameters()
@@ -757,12 +801,18 @@ class InversionApp(PlotSelection2D):
             value=False,
             description="Forward only",
         )
-        self._inducing_field = widgets.Text(
-            description="Inducing Field [Amp, Inc, Dec]",
+        self._inducing_field_strength = widgets.FloatText(
+            description="Amplitude (nT)",
         )
-        self._starting_channel = (IntText(value=None, description="Starting Channel"),)
+        self._inducing_field_inclination = widgets.FloatText(
+            description="Inclination (d.dd)",
+        )
+        self._inducing_field_declination = widgets.FloatText(
+            description="Declination (d.dd)",
+        )
+
         self._system = Dropdown(
-            options=["MVI", "Magnetics", "Gravity"] + list(self.em_system_specs.keys()),
+            options=["MVI", "Magnetics", "Gravity"],
             description="Survey Type: ",
         )
         self._write = ToggleButton(
@@ -778,9 +828,9 @@ class InversionApp(PlotSelection2D):
         self.write.observe(self.write_trigger, names="value")
         self.system.observe(self.system_observer, names="value")
         self.mesh_octree = MeshOctreeOptions(**self.defaults)
-        self.mesh_1D = Mesh1DOptions(**self.defaults)
+        # self.mesh_1D = Mesh1DOptions(**self.defaults)
         self.objects.observe(self.object_observer, names="value")
-        self.data.observe(self.update_component_panel, names="value")
+        # self.data.observe(self.update_component_panel, names="value")
         self.data_channel_choices.observe(
             self.data_channel_choices_observer, names="value"
         )
@@ -807,15 +857,25 @@ class InversionApp(PlotSelection2D):
         return self._forward_only
 
     @property
-    def inducing_field(self):
+    def inducing_field_strength(self):
         """"""
-        return self._inducing_field
+        return self._inducing_field_strength
+
+    @property
+    def inducing_field_inclination(self):
+        """"""
+        return self._inducing_field_inclination
+
+    @property
+    def inducing_field_declination(self):
+        """"""
+        return self._inducing_field_declination
 
     @property
     def inversion_parameters(self):
         if getattr(self, "_inversion_parameters", None) is None:
             self._inversion_parameters = InversionOptions(
-                workspace=self._workspace, **self.defaults["inversion_parameters"]
+                workspace=self._workspace, **self.defaults
             )
 
         return self._inversion_parameters
@@ -835,7 +895,7 @@ class InversionApp(PlotSelection2D):
                     self.project_panel,
                     HBox(
                         [
-                            self.data_panel,
+                            self.objects,
                             VBox(
                                 [
                                     VBox(
@@ -869,7 +929,7 @@ class InversionApp(PlotSelection2D):
             self._sensor = SensorOptions(
                 workspace=self._workspace,
                 objects=self._objects,
-                **self.defaults["sensor"],
+                **self.defaults,
             )
         return self._sensor
 
@@ -1157,7 +1217,17 @@ class InversionApp(PlotSelection2D):
         self.trigger.button_style = "danger"
 
         if self.system.value in ["MVI", "Magnetics"]:
-            self.survey_type_panel.children = [self.system, self.inducing_field]
+            self.survey_type_panel.children = [
+                self.system,
+                VBox(
+                    [
+                        Label(description="Inducing Field"),
+                        self.inducing_field_strength,
+                        self.inducing_field_inclination,
+                        self.inducing_field_declination,
+                    ]
+                ),
+            ]
         else:
             self.survey_type_panel.children = [self.system]
 
@@ -1287,7 +1357,7 @@ class InversionApp(PlotSelection2D):
 
             if input_dict["inversion_type"] in ["mvi", "magnetics"]:
                 input_dict["inducing_field_aid"] = string_2_list(
-                    self.inducing_field.value
+                    self.inducing_field_strength.value
                 )
 
             # Octree mesh parameters

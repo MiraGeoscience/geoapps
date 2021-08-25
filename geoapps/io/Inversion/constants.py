@@ -320,6 +320,15 @@ default_ui_json = {
         "label": "Window height",
         "value": 0.0,
     },
+    "window_azimuth": {
+        "min": -180,
+        "max": 180,
+        "group": "window",
+        "optional": True,
+        "enabled": False,
+        "label": "Window azimuth",
+        "value": 0.0,
+    },
     "inversion_style": {
         "choiceList": ["voxel"],
         "group": "Optimization",
@@ -401,7 +410,7 @@ default_ui_json = {
         "label": "Z-smoothness weight",
         "value": 1.0,
     },
-    "smallness_norm": {
+    "m_norm": {
         "min": 0.0,
         "max": 2.0,
         "group": "Regularization",
@@ -678,6 +687,9 @@ validations = {
     "window_height": {
         "types": [int, float],
     },
+    "window_azimuth": {
+        "types": [int, float],
+    },
     "inversion_style": {
         "types": [str],
         "values": ["voxel"],
@@ -716,7 +728,7 @@ validations = {
     "alpha_z": {
         "types": [int, float],
     },
-    "smallness_norm": {
+    "m_norm": {
         "types": [int, float],
     },
     "x_norm": {
