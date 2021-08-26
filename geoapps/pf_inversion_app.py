@@ -411,269 +411,35 @@ class ModelOptions(ObjectDataSelection):
         return self._value
 
 
-class InversionOptions(BaseApplication):
-    """
-    Collection of widgets controlling the inversion parameters
-    """
-
-    defaults = {}
-
-    def __init__(self, **kwargs):
-        self.defaults.update(**kwargs)
-        self._output_name = widgets.Text(
-            value="Inversion_", description="Save to:", disabled=False
-        )
-        self._chi_factor = FloatText(
-            value=1, description="Target misfit", disabled=False
-        )
-        self._uncert_mode = widgets.RadioButtons(
-            options=[
-                "Estimated (%|data| + background)",
-                "User input (%|data| + floor)",
-            ],
-            value="User input (%|data| + floor)",
-            disabled=False,
-        )
-        self._lower_bound = widgets.Text(
-            value=None,
-            description="Lower bound value",
-        )
-        self._upper_bound = widgets.Text(
-            value=None,
-            description="Upper bound value",
-        )
-        self._ignore_values = widgets.Text(
-            value="<0",
-            description="Data (i.e. <0 = no negatives)",
-        )
-        self._max_iterations = IntText(value=10, description="Max beta Iterations")
-        self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
-        self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
-        self._n_cpu = IntText(
-            value=int(multiprocessing.cpu_count() / 2), description="Max CPUs"
-        )
-        self._max_ram = FloatText(value=2.0, description="Max RAM (Gb)")
-        self._beta_start_options = widgets.RadioButtons(
-            options=["value", "ratio"],
-            value="ratio",
-            description="Starting tradeoff (beta):",
-        )
-        self._beta_start = FloatText(value=1e2, description="phi_d/phi_m")
-        self._beta_start_options.observe(self.initial_beta_change)
-        self._beta_start_panel = HBox([self._beta_start_options, self._beta_start])
-        self._optimization = VBox(
-            [
-                self._max_iterations,
-                self._chi_factor,
-                self._beta_start_panel,
-                self._max_cg_iterations,
-                self._tol_cg,
-                self._n_cpu,
-                self._max_ram,
-            ]
-        )
-        self._starting_model = ModelOptions(**kwargs)
-        self._susceptibility_model = ModelOptions(
-            units="SI", description="Background susceptibility", **kwargs
-        )
-        self._susceptibility_model.options.options = ["None", "Model", "Value"]
-        self._reference_model = ModelOptions(**kwargs)
-        self._reference_model.options.options = [
-            "None",
-            "Best-fitting halfspace",
-            "Model",
-            "Value",
-        ]
-        self.reference_model.options.observe(self.update_ref)
-        self._alphas = widgets.Text(
-            value="1, 1, 1, 1",
-            description="Scaling alpha_(s, x, y, z)",
-        )
-        self._m_norms = widgets.FloatText(
-            value=2,
-            description="Model",
-            continuous_update=False,
-        )
-        self._x_norms = widgets.FloatText(
-            value=2,
-            description="Gradient x",
-            continuous_update=False,
-        )
-        self._y_norms = widgets.FloatText(
-            value=2,
-            description="Gradient y",
-            continuous_update=False,
-        )
-        self._z_norms = widgets.FloatText(
-            value=2,
-            description="Gradient z",
-            continuous_update=False,
-        )
-        self._norms = VBox(
-            [
-                Label(description="Norms"),
-                self._m_norms,
-                self._x_norms,
-                self._y_norms,
-                self._z_norms,
-            ]
-        )
-        self._alphas = VBox(
-            [
-                Label(description="Scaling"),
-                self._alpha_s,
-                self._alpha_x,
-                self._alpha_y,
-                self._alpha_z,
-            ]
-        )
-        self.bound_panel = VBox([self._upper_bound, self._lower_bound])
-        self._mesh = MeshOctreeOptions()
-        self.inversion_options = {
-            "output name": self._output_name,
-            "uncertainties": self._uncert_mode,
-            "starting model": self._starting_model.main,
-            "background susceptibility": self._susceptibility_model.main,
-            "regularization": VBox(
-                [self._reference_model.main, HBox([self._alphas, self._norms])]
-            ),
-            "upper-lower bounds": self.bound_panel,
-            "mesh": self.mesh.main,
-            "ignore values": VBox([self._ignore_values]),
-            "optimization": self._optimization,
-        }
-        self.option_choices = widgets.Dropdown(
-            options=list(self.inversion_options.keys()),
-            value=list(self.inversion_options.keys())[0],
-            disabled=False,
-        )
-        self.option_choices.observe(self.inversion_option_change, names="value")
-
-        super().__init__(**self.defaults)
-
-        self._main = widgets.VBox(
-            [
-                HBox([widgets.Label("Inversion Options")]),
-                HBox(
-                    [
-                        self.option_choices,
-                        self.inversion_options[self.option_choices.value],
-                    ],
-                ),
-            ],
-            layout=Layout(width="100%"),
-        )
-
-    def inversion_option_change(self, _):
-        self._main.children[1].children = [
-            self.option_choices,
-            self.inversion_options[self.option_choices.value],
-        ]
-
-    def initial_beta_change(self, _):
-        if self._beta_start_options.value == "ratio":
-            self._beta_start.description = "phi_d/phi_m"
-        else:
-            self._beta_start.description = ""
-
-    @property
-    def alphas(self):
-        return self._alphas
-
-    @property
-    def beta_start(self):
-        return self._beta_start
-
-    @property
-    def beta_start_options(self):
-        return self._beta_start_options
-
-    @property
-    def chi_factor(self):
-        return self._chi_factor
-
-    @property
-    def ignore_values(self):
-        return self._ignore_values
-
-    @property
-    def lower_bound(self):
-        return self._lower_bound
-
-    @property
-    def upper_bound(self):
-        return self._upper_bound
-
-    @property
-    def max_iterations(self):
-        return self._max_iterations
-
-    @property
-    def max_cg_iterations(self):
-        return self._max_cg_iterations
-
-    @property
-    def n_cpu(self):
-        """
-        ipywidgets.IntText()
-        """
-        return self._n_cpu
-
-    @property
-    def max_ram(self):
-        """
-        ipywidgets.IntText()
-        """
-        return self._max_ram
-
-    @property
-    def mesh(self):
-        return self._mesh
-
-    @property
-    def norms(self):
-        return self._norms
-
-    @property
-    def optimization(self):
-        return self._optimization
-
-    @property
-    def output_name(self):
-        return self._output_name
-
-    @property
-    def reference_model(self):
-        return self._reference_model
-
-    @property
-    def starting_model(self):
-        return self._starting_model
-
-    @property
-    def susceptibility_model(self):
-        return self._susceptibility_model
-
-    @property
-    def tol_cg(self):
-        return self._tol_cg
-
-    @property
-    def uncert_mode(self):
-        return self._uncert_mode
-
-    def update_ref(self, _):
-        alphas = string_2_list(self.alphas.value)
-        if self.reference_model.options.value == "None":
-            alphas[0] = 0.0
-        else:
-            alphas[0] = 1.0
-        self.alphas.value = ", ".join(list(map(str, alphas)))
-
-    def update_workspace(self, workspace):
-        self.starting_model.workspace = workspace
-        self.reference_model.workspace = workspace
-        self.susceptibility_model.workspace = workspace
+# class InversionOptions(BaseApplication):
+#     """
+#     Collection of widgets controlling the inversion parameters
+#     """
+#
+#     defaults = {}
+#
+#     def __init__(self, **kwargs):
+#
+#
+#         super().__init__(**self.defaults)
+#
+#         self._main = widgets.VBox(
+#             [
+#                 HBox([widgets.Label("Inversion Options")]),
+#                 HBox(
+#                     [
+#                         self.option_choices,
+#                         self.inversion_options[self.option_choices.value],
+#                     ],
+#                 ),
+#             ],
+#             layout=Layout(width="100%"),
+#         )
+#
+#     def update_workspace(self, workspace):
+#         self.starting_model.workspace = workspace
+#         self.reference_model.workspace = workspace
+#         self.susceptibility_model.workspace = workspace
 
 
 def get_inversion_output(h5file, group_name):
@@ -749,18 +515,28 @@ def inversion_defaults():
     Get defaults for gravity, magnetics and EM1D inversions
     """
     defaults = {
-        "units": {"Gravity": "g/cc", "MVI": "SI", "Magnetics": "SI", "EM1D": "S/m"},
+        "units": {
+            "gravity": "g/cc",
+            "magnetic vector": "SI",
+            "magnetic scalar": "SI",
+            "EM1D": "S/m",
+        },
         "property": {
-            "Gravity": "density",
-            "MVI": "effective susceptibility",
-            "Magnetics": "susceptibility",
+            "gravity": "density",
+            "magnetic vector": "effective susceptibility",
+            "magnetic scalar": "susceptibility",
             "EM1D": "conductivity",
         },
-        "reference_value": {"Gravity": 0.0, "MVI": 0.0, "Magnetics": 0.0, "EM1D": 1e-3},
+        "reference_value": {
+            "gravity": 0.0,
+            "magnetic vector": 0.0,
+            "magnetic scalar": 0.0,
+            "EM1D": 1e-3,
+        },
         "starting_value": {
-            "Gravity": 1e-4,
-            "MVI": 1e-4,
-            "Magnetics": 1e-4,
+            "gravity": 1e-4,
+            "magnetic vector": 1e-4,
+            "magnetic scalar": 1e-4,
             "EM1D": 1e-3,
         },
     }
@@ -810,9 +586,8 @@ class InversionApp(PlotSelection2D):
         self._inducing_field_declination = widgets.FloatText(
             description="Declination (d.dd)",
         )
-
-        self._system = Dropdown(
-            options=["MVI", "Magnetics", "Gravity"],
+        self._inversion_type = Dropdown(
+            options=["magnetic vector", "magnetic scalar", "gravity"],
             description="Survey Type: ",
         )
         self._write = ToggleButton(
@@ -821,13 +596,158 @@ class InversionApp(PlotSelection2D):
             button_style="warning",
             icon="check",
         )
+        self.defaults.update(**kwargs)
+        self._output_name = widgets.Text(
+            value="Inversion_", description="Save to:", disabled=False
+        )
+        self._chi_factor = FloatText(
+            value=1, description="Target misfit", disabled=False
+        )
+        self._uncert_mode = widgets.RadioButtons(
+            options=[
+                "Estimated (%|data| + background)",
+                "User input (%|data| + floor)",
+            ],
+            value="User input (%|data| + floor)",
+            disabled=False,
+        )
+        self._lower_bound = widgets.Text(
+            value=None,
+            description="Lower bound value",
+        )
+        self._upper_bound = widgets.Text(
+            value=None,
+            description="Upper bound value",
+        )
+        self._ignore_values = widgets.Text(
+            value="<0",
+            description="Data (i.e. <0 = no negatives)",
+        )
+        self._max_iterations = IntText(value=10, description="Max beta Iterations")
+        self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
+        self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
+        self._n_cpu = IntText(
+            value=int(multiprocessing.cpu_count() / 2), description="Max CPUs"
+        )
+        self._max_ram = FloatText(value=2.0, description="Max RAM (Gb)")
+        self._beta_start_options = widgets.RadioButtons(
+            options=["value", "ratio"],
+            value="ratio",
+            description="Starting tradeoff (beta):",
+        )
+        self._beta_start = FloatText(value=1e2, description="phi_d/phi_m")
+        self._beta_start_options.observe(self.initial_beta_change)
+        self._beta_start_panel = HBox([self._beta_start_options, self._beta_start])
+        self._optimization = VBox(
+            [
+                self._max_iterations,
+                self._chi_factor,
+                self._beta_start_panel,
+                self._max_cg_iterations,
+                self._tol_cg,
+                self._n_cpu,
+                self._max_ram,
+            ]
+        )
+        self._starting_model_group = ModelOptions(**self.defaults)
+        self._starting_model_object = self._starting_model_group.objects
+        self._starting_model = self._starting_model_group.data
+        # self._susceptibility_model = ModelOptions(
+        #     units="SI", description="Background susceptibility", **kwargs
+        # )
+        # self._susceptibility_model.options.options = ["None", "Model", "Value"]
+        self._reference_model_group = ModelOptions(**self.defaults)
+        self._reference_model_group.options.observe(self.update_ref)
+        self._reference_model_object = self._reference_model_group.objects
+        self._reference_model = self._reference_model_group.data
+        self._topography_group = TopographyOptions(**self.defaults)
+        self._topography_object = self._topography_group.objects
+        self._topography = self._topography_group.data
+        self._alpha_s = widgets.FloatText(
+            min=0,
+            value=1,
+            description="Reference Model",
+        )
+        self._alpha_x = widgets.FloatText(
+            min=0,
+            value=1,
+            description="Gradient EW",
+        )
+        self._alpha_y = widgets.FloatText(
+            min=0,
+            value=1,
+            description="Gradient NS",
+        )
+        self._alpha_z = widgets.FloatText(
+            min=0,
+            value=1,
+            description="Gradient Vertical",
+        )
+        self._s_norm = widgets.FloatText(
+            value=2,
+            description="",
+            continuous_update=False,
+        )
+        self._x_norm = widgets.FloatText(
+            value=2,
+            description="",
+            continuous_update=False,
+        )
+        self._y_norm = widgets.FloatText(
+            value=2,
+            description="",
+            continuous_update=False,
+        )
+        self._z_norm = widgets.FloatText(
+            value=2,
+            description="",
+            continuous_update=False,
+        )
+        self._norms = VBox(
+            [
+                Label("Norms"),
+                self._s_norm,
+                self._x_norm,
+                self._y_norm,
+                self._z_norm,
+            ]
+        )
+        self._alphas = VBox(
+            [
+                Label("Scaling"),
+                self._alpha_s,
+                self._alpha_x,
+                self._alpha_y,
+                self._alpha_z,
+            ]
+        )
+        self.bound_panel = VBox([self._upper_bound, self._lower_bound])
+        self.mesh_octree = MeshOctreeOptions(**self.defaults)
+        self.inversion_options = {
+            "output name": self._output_name,
+            "uncertainties": self._uncert_mode,
+            "starting model": self._starting_model_group.main,
+            # "background susceptibility": self._susceptibility_model.main,
+            "regularization": VBox(
+                [self._reference_model_group.main, HBox([self._alphas, self._norms])]
+            ),
+            "upper-lower bounds": self.bound_panel,
+            "mesh": self.mesh_octree.main,
+            "ignore values": VBox([self._ignore_values]),
+            "optimization": self._optimization,
+        }
+        self.option_choices = widgets.Dropdown(
+            options=list(self.inversion_options.keys()),
+            value=list(self.inversion_options.keys())[0],
+            disabled=False,
+        )
+        self.option_choices.observe(self.inversion_option_change, names="value")
         self.data_channel_choices = widgets.Dropdown()
         self.data_channel_panel = widgets.VBox([self.data_channel_choices])
-        self.survey_type_panel = VBox([self.system])
+        self.survey_type_panel = VBox([self.inversion_type])
         self.trigger.observe(self.trigger_click, names="value")
         self.write.observe(self.write_trigger, names="value")
-        self.system.observe(self.system_observer, names="value")
-        self.mesh_octree = MeshOctreeOptions(**self.defaults)
+        self.inversion_type.observe(self.inversion_type_observer, names="value")
         # self.mesh_1D = Mesh1DOptions(**self.defaults)
         self.objects.observe(self.object_observer, names="value")
         # self.data.observe(self.update_component_panel, names="value")
@@ -839,12 +759,128 @@ class InversionApp(PlotSelection2D):
         self.spatial_panel = VBox([self.spatial_choices])
         super().__init__(**self.defaults)
 
-        for item in ["width", "height", "resolution"]:
+        for item in ["window_width", "window_height", "resolution"]:
             getattr(self, item).observe(self.update_octree_param, names="value")
 
         self.output_panel = VBox([self.export_directory, self.write, self.trigger])
 
-        self.inversion_parameters.update_ref(None)
+    @property
+    def alphas(self):
+        return self._alphas
+
+    @property
+    def alpha_s(self):
+        return self._alpha_s
+
+    @property
+    def alpha_x(self):
+        return self._alpha_x
+
+    @property
+    def alpha_y(self):
+        return self._alpha_y
+
+    @property
+    def alpha_z(self):
+        return self._alpha_z
+
+    @property
+    def beta_start(self):
+        return self._beta_start
+
+    @property
+    def beta_start_options(self):
+        return self._beta_start_options
+
+    @property
+    def chi_factor(self):
+        return self._chi_factor
+
+    @property
+    def ignore_values(self):
+        return self._ignore_values
+
+    @property
+    def lower_bound(self):
+        return self._lower_bound
+
+    @property
+    def upper_bound(self):
+        return self._upper_bound
+
+    @property
+    def max_iterations(self):
+        return self._max_iterations
+
+    @property
+    def max_cg_iterations(self):
+        return self._max_cg_iterations
+
+    @property
+    def n_cpu(self):
+        """
+        ipywidgets.IntText()
+        """
+        return self._n_cpu
+
+    @property
+    def max_ram(self):
+        """
+        ipywidgets.IntText()
+        """
+        return self._max_ram
+
+    @property
+    def mesh(self):
+        return self._mesh
+
+    @property
+    def norms(self):
+        return self._norms
+
+    @property
+    def s_norm(self):
+        return self._s_norm
+
+    @property
+    def x_norm(self):
+        return self._x_norm
+
+    @property
+    def y_norm(self):
+        return self._y_norm
+
+    @property
+    def z_norm(self):
+        return self._z_norm
+
+    @property
+    def optimization(self):
+        return self._optimization
+
+    @property
+    def output_name(self):
+        return self._output_name
+
+    @property
+    def reference_model(self):
+        return self._reference_model
+
+    @property
+    def starting_model(self):
+        return self._starting_model
+
+    # @property
+    # def susceptibility_model(self):
+    #     return self._susceptibility_model
+
+    @property
+    def tol_cg(self):
+        return self._tol_cg
+
+    @property
+    def uncert_mode(self):
+        return self._uncert_mode
 
     @property
     def data_count(self):
@@ -870,15 +906,6 @@ class InversionApp(PlotSelection2D):
     def inducing_field_declination(self):
         """"""
         return self._inducing_field_declination
-
-    @property
-    def inversion_parameters(self):
-        if getattr(self, "_inversion_parameters", None) is None:
-            self._inversion_parameters = InversionOptions(
-                workspace=self._workspace, **self.defaults
-            )
-
-        return self._inversion_parameters
 
     @property
     def lines(self):
@@ -916,7 +943,12 @@ class InversionApp(PlotSelection2D):
                             self.spatial_panel,
                         ]
                     ),
-                    self.inversion_parameters.main,
+                    HBox(
+                        [
+                            self.option_choices,
+                            self.inversion_options[self.option_choices.value],
+                        ],
+                    ),
                     self.forward_only,
                     self.output_panel,
                 ]
@@ -937,7 +969,7 @@ class InversionApp(PlotSelection2D):
     def spatial_options(self):
         if getattr(self, "_spatial_options", None) is None:
             self._spatial_options = {
-                "Topography": self.topography.main,
+                "Topography": self.topography_group.main,
                 "Sensor": self.sensor.main,
                 "Line ID": self.lines.main,
             }
@@ -949,19 +981,17 @@ class InversionApp(PlotSelection2D):
         return self._starting_channel
 
     @property
-    def system(self):
+    def inversion_type(self):
         """"""
-        return self._system
+        return self._inversion_type
 
     @property
     def topography(self):
-        if getattr(self, "_topography", None) is None:
-
-            self._topography = TopographyOptions(
-                workspace=self._workspace, **self.defaults["topography"]
-            )
-
         return self._topography
+
+    @property
+    def topography_object(self):
+        return self._topography_object
 
     @property
     def workspace(self):
@@ -985,11 +1015,13 @@ class InversionApp(PlotSelection2D):
         self.update_objects_list()
 
         # Check for startup
-        if getattr(self, "_inversion_parameters", None) is not None:
-            self.inversion_parameters.update_workspace(workspace)
-            self.lines.workspace = workspace
-            self.sensor.workspace = workspace
-            self.topography.workspace = workspace
+        # if getattr(self, "_inversion_parameters", None) is not None:
+        #     # self.inversion_parameters.update_workspace(workspace)
+        self.lines.workspace = workspace
+        self.sensor.workspace = workspace
+        self._topography_group.workspace = workspace
+        self._reference_model_group.workspace = workspace
+        self._starting_model_group.workspace = workspace
 
         export_path = os.path.abspath(os.path.dirname(self.h5file))
         if not os.path.exists(export_path):
@@ -1003,9 +1035,34 @@ class InversionApp(PlotSelection2D):
         """"""
         return self._write
 
+    # Observers
+    def update_ref(self, _):
+        alphas = [alpha.value for alpha in self.alphas.children]
+        if self.reference_model.options.value == "None":
+            alphas[0] = 0.0
+        else:
+            alphas[0] = 1.0
+        self.alphas.value = ", ".join(list(map(str, alphas)))
+
+    def inversion_option_change(self, _):
+        self._main.children[1].children = [
+            self.option_choices,
+            self.inversion_options[self.option_choices.value],
+        ]
+
+    def initial_beta_change(self, _):
+        if self._beta_start_options.value == "ratio":
+            self._beta_start.description = "phi_d/phi_m"
+        else:
+            self._beta_start.description = ""
+
     def trigger_click(self, _):
         """"""
-        if self.system.value in ["Gravity", "MVI", "Magnetics"]:
+        if self.inversion_type.value in [
+            "gravity",
+            "magnetic vector",
+            "magnetic scalar",
+        ]:
             os.system(
                 "start cmd.exe @cmd /k "
                 + 'python -m geoapps.drivers.pf_inversion "'
@@ -1019,13 +1076,17 @@ class InversionApp(PlotSelection2D):
             )
         self.trigger.button_style = ""
 
-    def system_observer(self, _):
+    def inversion_type_observer(self, _):
         """
         Change the application on change of system
         """
-        if self.system.value in ["MVI", "Magnetics", "Gravity"]:
+        if self.inversion_type.value in [
+            "magnetic vector",
+            "magnetic scalar",
+            "gravity",
+        ]:
             start_channel = 0
-            if self.system.value in ["MVI", "Magnetics"]:
+            if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
                 data_type_list = ["tmi", "bxx", "bxy", "bxz", "byy", "byz", "bzz"]
                 labels = ["tmi", "bxx", "bxy", "bxz", "byy", "byz", "bzz"]
 
@@ -1053,37 +1114,41 @@ class InversionApp(PlotSelection2D):
                 "Value",
             ]
             self.inversion_parameters.reference_model.options.value = "Value"
-            flag = self.system.value
+            flag = self.inversion_type.value
 
             self.inversion_parameters.lower_bound.value = ""
             self.inversion_parameters.upper_bound.value = ""
             self.inversion_parameters.ignore_values.value = "-99999"
 
         else:
-            tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
+            tx_offsets = self.em_system_specs[self.inversion_type.value]["tx_offsets"]
             self.sensor.offset.value = ", ".join(
                 [
                     str(offset)
-                    for offset in self.em_system_specs[self.system.value]["bird_offset"]
+                    for offset in self.em_system_specs[self.inversion_type.value][
+                        "bird_offset"
+                    ]
                 ]
             )
-            uncertainties = self.em_system_specs[self.system.value]["uncertainty"]
+            uncertainties = self.em_system_specs[self.inversion_type.value][
+                "uncertainty"
+            ]
 
             # if start_channel is None:
-            start_channel = self.em_system_specs[self.system.value][
+            start_channel = self.em_system_specs[self.inversion_type.value][
                 "channel_start_index"
             ]
-            if self.em_system_specs[self.system.value]["type"] == "time":
+            if self.em_system_specs[self.inversion_type.value]["type"] == "time":
                 labels = ["Time (s)"] * len(
-                    self.em_system_specs[self.system.value]["channels"]
+                    self.em_system_specs[self.inversion_type.value]["channels"]
                 )
             else:
                 labels = ["Frequency (Hz)"] * len(
-                    self.em_system_specs[self.system.value]["channels"]
+                    self.em_system_specs[self.inversion_type.value]["channels"]
                 )
 
             system_specs = {}
-            for key, time in self.em_system_specs[self.system.value][
+            for key, time in self.em_system_specs[self.inversion_type.value][
                 "channels"
             ].items():
                 system_specs[key] = f"{time:.5e}"
@@ -1138,11 +1203,19 @@ class InversionApp(PlotSelection2D):
                 child.uid for child in entity.children
             ]:
                 data_widget.children[0].value = False
-                if self.system.value in ["MVI", "Magnetics", "Gravity"]:
+                if self.inversion_type.value in [
+                    "magnetic vector",
+                    "magnetic scalar",
+                    "gravity",
+                ]:
                     data_widget.children[3].value = "0, 1"
             else:
                 data_widget.children[0].value = True
-                if self.system.value in ["MVI", "Magnetics", "Gravity"]:
+                if self.inversion_type.value in [
+                    "magnetic vector",
+                    "magnetic scalar",
+                    "gravity",
+                ]:
                     values = self.workspace.get_entity(channel.value)[0].values
                     if values is not None and values.dtype in [
                         np.float32,
@@ -1182,7 +1255,11 @@ class InversionApp(PlotSelection2D):
 
             data_channel_options[key] = channel_options.main
 
-            if self.system.value not in ["MVI", "Magnetics", "Gravity"]:
+            if self.inversion_type.value not in [
+                "magnetic vector",
+                "magnetic scalar",
+                "gravity",
+            ]:
                 data_channel_options[key].children[1].value = channel
             else:
                 data_channel_options[key].children[1].layout.visibility = "hidden"
@@ -1200,8 +1277,9 @@ class InversionApp(PlotSelection2D):
         self.update_component_panel(None)
 
         if (
-            self.system.value not in ["MVI", "Magnetics", "Gravity"]
-            and self.em_system_specs[self.system.value]["type"] == "frequency"
+            self.inversion_type.value
+            not in ["magnetic vector", "magnetic scalar", "gravity"]
+            and self.em_system_specs[self.inversion_type.value]["type"] == "frequency"
         ):
             self.inversion_parameters.option_choices.options = list(
                 self.inversion_parameters.inversion_options.keys()
@@ -1216,9 +1294,9 @@ class InversionApp(PlotSelection2D):
         self.write.button_style = "warning"
         self.trigger.button_style = "danger"
 
-        if self.system.value in ["MVI", "Magnetics"]:
+        if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
             self.survey_type_panel.children = [
-                self.system,
+                self.inversion_type,
                 VBox(
                     [
                         Label(description="Inducing Field"),
@@ -1229,7 +1307,7 @@ class InversionApp(PlotSelection2D):
                 ),
             ]
         else:
-            self.survey_type_panel.children = [self.system]
+            self.survey_type_panel.children = [self.inversion_type]
 
     def object_observer(self, _):
 
@@ -1248,9 +1326,9 @@ class InversionApp(PlotSelection2D):
                         for channel in self.data.uid_name_map.values()
                     ]
                 ):
-                    self.system.value = aem_system
+                    self.inversion_type.value = aem_system
 
-            self.system_observer(None)
+            self.inversion_type_observer(None)
 
             if hasattr(self.data_channel_choices, "data_channel_options"):
                 for (
@@ -1352,8 +1430,12 @@ class InversionApp(PlotSelection2D):
             "save_to_geoh5": os.path.abspath(self.h5file),
             "mesh": "Mesh",
         }
-        if self.system.value in ["Gravity", "MVI", "Magnetics"]:
-            input_dict["inversion_type"] = self.system.value.lower()
+        if self.inversion_type.value in [
+            "gravity",
+            "magnetic vector",
+            "magnetic scalar",
+        ]:
+            input_dict["inversion_type"] = self.inversion_type.value.lower()
 
             if input_dict["inversion_type"] in ["mvi", "magnetics"]:
                 input_dict["inducing_field_aid"] = string_2_list(
@@ -1380,7 +1462,7 @@ class InversionApp(PlotSelection2D):
             ]
 
         else:
-            input_dict["system"] = self.system.value
+            input_dict["system"] = self.inversion_type.value
             input_dict["lines"] = {
                 str(self.lines.data.value): [
                     str(line) for line in self.lines.lines.value
@@ -1399,7 +1481,7 @@ class InversionApp(PlotSelection2D):
         input_dict[
             "max_cg_iterations"
         ] = self.inversion_parameters.max_cg_iterations.value
-        input_dict
+
         input_dict["n_cpu"] = self.inversion_parameters.n_cpu.value
         input_dict["max_ram"] = self.inversion_parameters.max_ram.value
 
@@ -1471,11 +1553,11 @@ class InversionApp(PlotSelection2D):
                     susc_type: self.inversion_parameters.susceptibility_model.value.value
                 }
 
-        input_dict["model_norms"] = string_2_list(self.inversion_parameters.norms.value)
+        input_dict["model_norm"] = string_2_list(self.inversion_parameters.norms.value)
 
-        if len(input_dict["model_norms"]) not in [4, 12]:
+        if len(input_dict["model_norm"]) not in [4, 12]:
             print(
-                f"Norm values should be 4 or 12 values. List of {len(input_dict['model_norms'])} values provided"
+                f"Norm values should be 4 or 12 values. List of {len(input_dict['model_norm'])} values provided"
             )
 
         if len(self.inversion_parameters.lower_bound.value) > 0:
@@ -1511,12 +1593,17 @@ class InversionApp(PlotSelection2D):
                     data_widget.children[4].value
                 )
 
-                if self.system.value not in ["Gravity", "MVI", "Magnetics"]:
+                if self.inversion_type.value not in [
+                    "gravity",
+                    "magnetic vector",
+                    "magnetic scalar",
+                ]:
                     channel_param[key]["value"] = string_2_list(
                         data_widget.children[1].value
                     )
                 if (
-                    self.system.value in ["Gravity", "MVI", "Magnetics"]
+                    self.inversion_type.value
+                    in ["gravity", "magnetic vector", "magnetic scalar"]
                     and self.azimuth.value != 0
                     and key not in ["tmi", "gz"]
                 ):

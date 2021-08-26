@@ -410,7 +410,7 @@ default_ui_json = {
         "label": "Z-smoothness weight",
         "value": 1.0,
     },
-    "m_norm": {
+    "s_norm": {
         "min": 0.0,
         "max": 2.0,
         "group": "Regularization",
@@ -728,7 +728,7 @@ validations = {
     "alpha_z": {
         "types": [int, float],
     },
-    "m_norm": {
+    "s_norm": {
         "types": [int, float],
     },
     "x_norm": {
