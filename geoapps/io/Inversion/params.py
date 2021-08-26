@@ -49,10 +49,11 @@ class InversionParams(Params):
         self.max_distance: float = None
         self.horizontal_padding: float = None
         self.vertical_padding: float = None
+        self.window_azimuth: float = None
         self.window_center_x: float = None
         self.window_center_y: float = None
-        self.window_width: float = None
         self.window_height: float = None
+        self.window_width: float = None
         self.inversion_style: str = None
         self.chi_factor: float = None
         self.max_iterations: int = None
@@ -65,7 +66,7 @@ class InversionParams(Params):
         self.alpha_x: float = None
         self.alpha_y: float = None
         self.alpha_z: float = None
-        self.m_norm: float = None
+        self.s_norm: float = None
         self.x_norm: float = None
         self.y_norm: float = None
         self.z_norm: float = None
@@ -122,6 +123,7 @@ class InversionParams(Params):
     def window(self) -> dict[str, float]:
         """Returns window dictionary"""
         win = {
+            "azimuth": self.window_azimuth,
             "center_x": self.window_center_x,
             "center_y": self.window_center_y,
             "width": self.window_width,
@@ -147,7 +149,7 @@ class InversionParams(Params):
     def model_norms(self) -> list[float]:
         """Returns model norm components as a list."""
         return [
-            self.m_norm,
+            self.s_norm,
             self.x_norm,
             self.y_norm,
             self.z_norm,
@@ -694,6 +696,21 @@ class InversionParams(Params):
         self._window_height = val
 
     @property
+    def window_azimuth(self):
+        return self._window_azimuth
+
+    @window_azimuth.setter
+    def window_azimuth(self, val):
+        if val is None:
+            self._window_azimuth = val
+            return
+        p = "window_azimuth"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._window_azimuth = val
+
+    @property
     def inversion_style(self):
         return self._inversion_style
 
@@ -874,19 +891,19 @@ class InversionParams(Params):
         self._alpha_z = val
 
     @property
-    def m_norm(self):
-        return self._m_norm
+    def s_norm(self):
+        return self._s_norm
 
-    @m_norm.setter
-    def m_norm(self, val):
+    @s_norm.setter
+    def s_norm(self, val):
         if val is None:
-            self._m_norm = val
+            self._s_norm = val
             return
-        p = "m_norm"
+        p = "s_norm"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._m_norm = val
+        self._s_norm = val
 
     @property
     def x_norm(self):

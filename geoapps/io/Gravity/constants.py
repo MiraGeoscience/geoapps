@@ -78,7 +78,7 @@ inversion_defaults = {
     "alpha_x": 1.0,
     "alpha_y": 1.0,
     "alpha_z": 1.0,
-    "m_norm": 2.0,
+    "s_norm": 2.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,

@@ -146,7 +146,7 @@ class PlotSelection2D(ObjectDataSelection):
         """
         :obj:`ipywidgets.FloatSlider`: Rotation angle of the selection box.
         """
-        return self._azimuth
+        return self._window_azimuth
 
     @property
     def window_center_x(self):
@@ -201,7 +201,7 @@ class PlotSelection2D(ObjectDataSelection):
         return self._resolution
 
     @property
-    def width(self):
+    def window_width(self):
         """
         :obj:`ipywidgets.FloatSlider`: Width (m) of the selection box
         """

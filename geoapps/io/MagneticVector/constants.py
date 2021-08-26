@@ -20,14 +20,15 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "inversion_type": "mvi",
+    "inversion_type": "magnetic vector",
+    "geoh5": None,
+    "data_object": None,
     "forward_only": False,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
     "inducing_field_declination": 0.0,
     "topography_object": None,
     "topography": None,
-    "data_object": None,
     "tmi_channel_bool": False,
     "tmi_channel": None,
     "tmi_uncertainty": 0.0,
@@ -89,7 +90,7 @@ inversion_defaults = {
     "alpha_x": 1.0,
     "alpha_y": 1.0,
     "alpha_z": 1.0,
-    "m_norm": 2.0,
+    "s_norm": 2.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
@@ -111,14 +112,13 @@ inversion_defaults = {
     "out_group": "MVIInversion",
     "no_data_value": None,
     "monitoring_directory": None,
-    "geoh5": None,
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
 
 forward_defaults = {
-    "inversion_type": "mvi",
+    "inversion_type": "magnetic vector",
     "forward_only": True,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -174,7 +174,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
 }
 default_ui_json = {
-    "inversion_type": "mvi",
+    "inversion_type": "magnetic vector",
     "inducing_field_strength": {
         "association": "Cell",
         "dataType": "Float",
@@ -433,7 +433,7 @@ required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["gravity", "magnetic", "mvi", "mvic"],
+        "values": ["gravity", "magnetic scalar", "magnetic vector"],
     },
     "inducing_field_strength": {
         "types": [int, float],
@@ -521,7 +521,7 @@ app_initializer = {
     "window_azimuth": -20,
     "window_width": 1000.0,
     "window_height": 1500.0,
-    "m_norm": 0.0,
+    "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
