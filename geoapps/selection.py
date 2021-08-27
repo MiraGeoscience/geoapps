@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from os import path
 from uuid import UUID
 
 import ipywidgets as widgets
@@ -201,6 +202,11 @@ class ObjectDataSelection(BaseApplication):
 
         # Refresh the list of objects
         self.update_objects_list()
+        self._file_browser.reset(
+            path=self.working_directory,
+            filename=path.basename(self._h5file),
+        )
+        self._file_browser._apply_selection()
 
     def get_selected_entities(self):
         """

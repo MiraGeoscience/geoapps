@@ -90,6 +90,11 @@ class BaseApplication:
         self.ga_group_name.observe(self.ga_group_name_update)
         self.__populate__(**self.defaults)
 
+        for value in self.__dict__.copy():
+            attr = getattr(self, value, None)
+            if isinstance(attr, Widget):
+                attr.style = {"description_width": "initial"}
+
     def __call__(self):
         return self.main
 
@@ -97,7 +102,6 @@ class BaseApplication:
         for key, value in kwargs.items():
             if key[0] == "_":
                 key = key[1:]
-
             if hasattr(self, "_" + key) or hasattr(self, key):
                 try:
                     if isinstance(getattr(self, key, None), Widget) and not isinstance(
@@ -108,7 +112,7 @@ class BaseApplication:
                                 value = [uuid.UUID(val) for val in value]
                             else:
                                 value = uuid.UUID(value)
-                        except (ValueError, AttributeError):
+                        except (ValueError, AttributeError, TypeError):
                             pass
 
                         widget = getattr(self, key)
@@ -317,11 +321,6 @@ class BaseApplication:
         self._h5file = value
         self._workspace_geoh5 = value
         self._working_directory = None
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
         self.workspace = Workspace(self._h5file)
 
     @property
@@ -414,6 +413,11 @@ class BaseApplication:
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
         self._h5file = workspace.h5file
+        self._file_browser.reset(
+            path=self.working_directory,
+            filename=path.basename(self._h5file),
+        )
+        self._file_browser._apply_selection()
 
     @property
     def working_directory(self):

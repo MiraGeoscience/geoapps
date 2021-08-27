@@ -144,9 +144,9 @@ default_ui_json = {
         "min": 0.0,
         "group": "Data Options",
         "optional": True,
-        "enabled": False,
+        "enabled": True,
         "label": "Resolution",
-        "value": 50.0,
+        "value": 0.0,
     },
     "detrend_data": {
         "group": "Data Options",
