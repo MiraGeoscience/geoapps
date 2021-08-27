@@ -532,4 +532,5 @@ app_initializer = {
     "receivers_offset_x": 0,
     "receivers_offset_y": 0,
     "receivers_offset_z": 60,
+    "out_group": "MVIInversion",
 }

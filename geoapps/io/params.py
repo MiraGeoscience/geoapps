@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import warnings
 from copy import deepcopy
+from os import path
 from typing import Any
 from uuid import UUID
 
@@ -328,6 +329,10 @@ class Params:
     ):
         """Write out a ui.json with the current state of parameters"""
 
+        if name is not None:
+            if ".ui.json" not in name:
+                name += ".ui.json"
+
         if ui_json is None:
             ui_json = self.default_ui_json
 
@@ -337,10 +342,15 @@ class Params:
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
-        if getattr(self, "input_file", None) is not None:
-            ifile.filepath = self.input_file.filepath
+        if name is None:
+            name = "default.ui.json"
 
-        ifile.write_ui_json(ui_json, default=default, name=name)
+        if getattr(self, "input_file", None) is not None:
+            out_file = path.join(self.input_file.workpath, name)
+            self.input_file.filepath = out_file
+            ifile.filepath = out_file
+
+        ifile.write_ui_json(ui_json, default=default)
 
     @property
     def free_params_dict(self):
