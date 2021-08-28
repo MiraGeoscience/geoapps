@@ -369,12 +369,12 @@ class InversionData(InversionLocations):
             the portion of the data indexed by the local_index argument.
         """
 
-        survey_factory = SurveyFactory(self.params)
-        survey = survey_factory.build(
-            self.locations, self.observed, self.uncertainties, local_index
+        return SurveyFactory(self.params).build(
+            locations=self.locations,
+            data=self.observed,
+            uncertainties=self.uncertainties,
+            local_index=local_index,
         )
-
-        return survey
 
     def simulation(
         self,
@@ -407,14 +407,16 @@ class InversionData(InversionLocations):
         if local_index is None:
 
             map = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
-            sim, map = simulation_factory.build(survey, mesh, map)
+            sim = simulation_factory.build(survey=survey, mesh=mesh, map=map)
 
         else:
 
-            nested_mesh = create_nested_mesh(survey.receiver_locations, mesh)
-            args = {"components": 3} if self.vector else {}
-            map = maps.TileMap(mesh, active_cells, nested_mesh, **args)
-            sim, map = simulation_factory.build(survey, nested_mesh, map, tile_id)
+            nested_mesh = create_nested_mesh(survey.unique_locations, mesh)
+            kwargs = {"components": 3} if self.vector else {}
+            map = maps.TileMap(mesh, active_cells, nested_mesh, **kwargs)
+            sim = simulation_factory.build(
+                survey=survey, mesh=nested_mesh, map=map, tile_id=tile_id
+            )
 
         return sim, map
 
