@@ -416,13 +416,36 @@ class InversionDriver:
 
     def get_tiles(self):
 
-        if isinstance(self.params.tile_spatial, UUID):
+        if self.params.inversion_type == "direct_current":
+
             tiles = []
-            for ii in np.unique(self.params.tile_spatial).to_list():
-                tiles += [np.where(self.params.tile_spatial == ii)[0]]
+
+            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
+            current_electrodes = potential_electrodes.current_electrodes
+            ab_pairs = current_electrodes.cells
+            line_indices = current_electrodes.parts
+
+            for line in current_electrodes.unique_parts:
+                ind = line_indices == line
+                electrode_ind = np.arange(current_electrodes.n_vertices)[ind]
+                a_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
+                b_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
+                for ei in electrode_ind:
+                    a_ind |= ei == ab_pairs[:, 0]
+                    b_ind |= ei == ab_pairs[:, 1]
+                ab_ind = a_ind | b_ind
+                tiles.append(np.arange(current_electrodes.n_cells)[ab_ind])
+
+            # TODO Figure out how to handle a tile_spatial object to replace above
+
+            # tiles = []
+            # for ii in np.unique(self.params.tile_spatial).tolist():
+            #     tiles += [np.where(self.params.tile_spatial == ii)[0]]
+
         else:
+
             tiles = tile_locations(
-                self.survey.receiver_locations,
+                self.locs,
                 self.params.tile_spatial,
                 method="kmeans",
             )
@@ -435,6 +458,7 @@ class InversionDriver:
             [],
             [],
         )
+
         for tile_id, local_index in enumerate(tiles):
             lsurvey = self.inversion_data.survey(local_index)
             lsim, lmap = self.inversion_data.simulation(
