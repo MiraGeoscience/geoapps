@@ -32,6 +32,7 @@ from ipywidgets.widgets import (
 )
 
 from geoapps.base import BaseApplication
+from geoapps.drivers.magnetic_vector_inversion import MagneticVectorDriver
 from geoapps.io.Gravity.params import GravityParams
 from geoapps.io.MagneticScalar.params import MagneticScalarParams
 from geoapps.io.MagneticVector.constants import app_initializer, default_ui_json
@@ -401,9 +402,11 @@ class InversionApp(PlotSelection2D):
     @property
     def reference_model(self):
         if self._reference_model_group.options.value == "Model":
-            return self._reference_model_group.data
+            return self._reference_model_group.data.value
+        elif self._reference_model_group.options.value == "Constant":
+            return self._reference_model_group.constant.value
         else:
-            return self._reference_model_group.constant
+            return None
 
     @reference_model.setter
     def reference_model(self, value):
@@ -417,14 +420,16 @@ class InversionApp(PlotSelection2D):
 
     @property
     def reference_model_object(self):
-        return self._reference_model_group.objects
+        return self._reference_model_group.objects.value
 
     @property
     def starting_model(self):
         if self._starting_model_group.options.value == "Model":
-            return self._starting_model_group.data
+            return self._starting_model_group.data.value
+        elif self._starting_model_group.options.value == "Constant":
+            return self._starting_model_group.constant.value
         else:
-            return self._starting_model_group.constant
+            return None
 
     @starting_model.setter
     def starting_model(self, value):
@@ -436,14 +441,16 @@ class InversionApp(PlotSelection2D):
 
     @property
     def starting_model_object(self):
-        return self._starting_model_group.objects
+        return self._starting_model_group.objects.value
 
     @property
     def lower_bound(self):
         if self._lower_bound_group.options.value == "Model":
-            return self._lower_bound_group.data
+            return self._lower_bound_group.data.value
+        elif self._lower_bound_group.options.value == "Constant":
+            return self._lower_bound_group.constant.value
         else:
-            return self._lower_bound_group.constant
+            return None
 
     @lower_bound.setter
     def lower_bound(self, value):
@@ -457,14 +464,16 @@ class InversionApp(PlotSelection2D):
 
     @property
     def lower_bound_object(self):
-        return self._lower_bound_group.objects
+        return self._lower_bound_group.objects.value
 
     @property
     def upper_bound(self):
         if self._upper_bound_group.options.value == "Model":
-            return self._upper_bound_group.data
+            return self._upper_bound_group.data.value
+        elif self._upper_bound_group.options.value == "Constant":
+            return self._upper_bound_group.constant.value
         else:
-            return self._upper_bound_group.constant
+            return None
 
     @upper_bound.setter
     def upper_bound(self, value):
@@ -478,7 +487,7 @@ class InversionApp(PlotSelection2D):
 
     @property
     def upper_bound_object(self):
-        return self._upper_bound_group.objects
+        return self._upper_bound_group.objects.value
 
     # @property
     # def susceptibility_model(self):
@@ -1392,7 +1401,7 @@ class InversionApp(PlotSelection2D):
                         setattr(
                             self.params,
                             model_group + label,
-                            getattr(self, model_group + label).value,
+                            getattr(self, model_group + label),
                         )
                 elif isinstance(attr, MeshOctreeOptions):
                     for O_key in self._mesh_octree.__dict__:
@@ -1403,6 +1412,14 @@ class InversionApp(PlotSelection2D):
                             setattr(self.params, O_key, value)
             except AttributeError:
                 continue
+
+        for key in self.data_channel_choices.options:
+            widget = getattr(self, f"{key}_uncertainty_channel")
+            if widget.value is not None:
+                setattr(self.params, f"{key}_uncertainty", widget.value)
+            else:
+                widget = getattr(self, f"{key}_uncertainty_floor")
+                setattr(self.params, f"{key}_uncertainty", widget.value)
 
         self.params.out_group.name = self._ga_group_name.value
         self.params.write_input_file(name=self._ga_group_name.value)
@@ -1415,11 +1432,14 @@ class InversionApp(PlotSelection2D):
 
         if isinstance(params, MagneticVectorParams):
 
-            os.system(
-                "start cmd.exe @cmd /k "
-                + 'python -m geoapps.drivers.magnetic_vector_inversion "'
-                + f"{params.input_file.filepath}"
-            )
+            # os.system(
+            #     "start cmd.exe @cmd /k "
+            #     + 'python -m geoapps.drivers.magnetic_vector_inversion "'
+            #     + f"{params.input_file.filepath}"
+            # )
+            driver = MagneticVectorDriver(params)
+            driver.run()
+
         # elif params.inversion_type == "magnetic scalar":
         #     from geoapps.drivers.magnetic_scalar_inversion import MagneticScalarDriver
         #     driver = MagneticScalarDriver(params)
@@ -1801,6 +1821,19 @@ class ModelOptions(ObjectDataSelection):
         self._main = widgets.VBox(
             [self._description, widgets.VBox([self._options, self._constant])]
         )
+
+        # for key, value in kwargs.items():
+        #     if self.identifier in key:
+        #         if "object" in key:
+        #             self.objects.value = value
+        #         elif isinstance(value, float):
+        #             self.constant.value = value
+        #             self.options.value = "Constant"
+        #         elif isinstance(value, UUID):
+        #             self.data.value = value
+        #             self.options.value = "Model"
+        #         else:
+        #             self.options.value = "None"
 
     def update_panel(self, _):
 
