@@ -342,13 +342,14 @@ class Params:
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
-        if name is None:
-            name = "default.ui.json"
-
         if getattr(self, "input_file", None) is not None:
-            out_file = path.join(self.input_file.workpath, name)
-            self.input_file.filepath = out_file
-            ifile.filepath = out_file
+
+            if name is None:
+                ifile.filepath = self.input_file.filepath
+            else:
+                out_file = path.join(self.input_file.workpath, "default.ui.json")
+                self.input_file.filepath = out_file
+                ifile.filepath = out_file
 
         ifile.write_ui_json(ui_json, default=default)
 
@@ -364,6 +365,13 @@ class Params:
 
     def _handle_kwargs(self, kwargs, validate):
         """Updates attributes with kwargs, validates and attaches input file attributes."""
+
+        for key in kwargs:
+            if key in self.default_ui_json and isinstance(
+                self.default_ui_json[key], dict
+            ):
+                self.default_ui_json[key]["enabled"] = True
+                self.default_ui_json[key]["visible"] = True
 
         self.update(kwargs, validate=False)
 

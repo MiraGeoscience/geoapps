@@ -213,7 +213,7 @@ class InversionDriver:
         if self.params.geoh5 is not None:
 
             channels = ["model"]
-            if self.inversion_type == "mvi":
+            if self.inversion_type == "magnetic vector":
                 channels = ["amplitude", "theta", "phi"]
 
             outmesh = self.fetch(self.inversion_mesh.uid).copy(
@@ -346,7 +346,7 @@ class InversionDriver:
 
     def get_regularization(self, wr):
 
-        if self.inversion_type == "mvi":
+        if self.inversion_type == "magnetic vector":
 
             wires = maps.Wires(
                 ("p", self.n_cells), ("s", self.n_cells), ("t", self.n_cells)

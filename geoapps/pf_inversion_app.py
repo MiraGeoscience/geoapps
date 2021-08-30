@@ -267,7 +267,7 @@ class InversionApp(PlotSelection2D):
                 ),
             ]
         )
-        self.mesh_octree = MeshOctreeOptions(**self.defaults)
+        self._mesh_octree = MeshOctreeOptions(**self.defaults)
         self.inversion_options = {
             "output name": self._ga_group_name,
             # "uncertainties": self._uncert_mode,
@@ -277,7 +277,7 @@ class InversionApp(PlotSelection2D):
                 [self._reference_model_group.main, HBox([self._alphas, self._norms])]
             ),
             "upper-lower bounds": self.bound_panel,
-            "mesh": self.mesh_octree.main,
+            "mesh": self._mesh_octree.main,
             "ignore values": VBox([self._ignore_values]),
             "optimization": self._optimization,
         }
@@ -666,6 +666,7 @@ class InversionApp(PlotSelection2D):
         self._topography_group.workspace = workspace
         self._reference_model_group.workspace = workspace
         self._starting_model_group.workspace = workspace
+        self._mesh_octree.workspace = workspace
 
         export_path = os.path.abspath(os.path.dirname(self.h5file))
         if not os.path.exists(export_path):
@@ -759,8 +760,8 @@ class InversionApp(PlotSelection2D):
         self.spatial_choices.options = list(self.spatial_options.keys())[:2]
 
         # Switch mesh options
-        # self.inversion_parameters._mesh = self.mesh_octree
-        # self.inversion_parameters.inversion_options["mesh"] = self.mesh_octree.main
+        # self.inversion_parameters._mesh = self._mesh_octree
+        # self.inversion_parameters.inversion_options["mesh"] = self._mesh_octree.main
         #
         # self.inversion_parameters.reference_model.options.options = [
         #     "None",
@@ -1126,13 +1127,13 @@ class InversionApp(PlotSelection2D):
 
     def update_octree_param(self, _):
         dl = self.resolution.value
-        self.mesh_octree.u_cell_size.value = f"{dl/2:.0f}"
-        self.mesh_octree.v_cell_size.value = f"{dl / 2:.0f}"
-        self.mesh_octree.z_cell_size.value = f"{dl / 2:.0f}"
-        self.mesh_octree.depth_core.value = np.ceil(
+        self._mesh_octree.u_cell_size.value = f"{dl/2:.0f}"
+        self._mesh_octree.v_cell_size.value = f"{dl / 2:.0f}"
+        self._mesh_octree.z_cell_size.value = f"{dl / 2:.0f}"
+        self._mesh_octree.depth_core.value = np.ceil(
             np.min([self.window_width.value, self.window_height.value]) / 2.0
         )
-        self.mesh_octree.horizontal_padding.value = (
+        self._mesh_octree.horizontal_padding.value = (
             np.max([self.window_width.value, self.window_width.value]) / 2
         )
         self.resolution.indices = None
@@ -1166,17 +1167,17 @@ class InversionApp(PlotSelection2D):
         #
         #     # Octree mesh parameters
         #     input_dict["core_cell_size"] = string_2_list(
-        #         self.mesh_octree.core_cell_size.value
+        #         self._mesh_octree.core_cell_size.value
         #     )
         #     input_dict["octree_levels_topo"] = string_2_list(
-        #         self.mesh_octree.octree_levels_topo.value
+        #         self._mesh_octree.octree_levels_topo.value
         #     )
         #     input_dict["octree_levels_obs"] = string_2_list(
-        #         self.mesh_octree.octree_levels_obs.value
+        #         self._mesh_octree.octree_levels_obs.value
         #     )
-        #     input_dict["depth_core"] = {"value": self.mesh_octree.depth_core.value}
-        #     input_dict["max_distance"] = self.mesh_octree.max_distance.value
-        #     p_d = string_2_list(self.mesh_octree.padding_distance.value)
+        #     input_dict["depth_core"] = {"value": self._mesh_octree.depth_core.value}
+        #     input_dict["max_distance"] = self._mesh_octree.max_distance.value
+        #     p_d = string_2_list(self._mesh_octree.padding_distance.value)
         #     input_dict["padding_distance"] = [
         #         [p_d[0], p_d[1]],
         #         [p_d[2], p_d[3]],
@@ -1394,8 +1395,8 @@ class InversionApp(PlotSelection2D):
                             getattr(self, model_group + label).value,
                         )
                 elif isinstance(attr, MeshOctreeOptions):
-                    for O_key in self.mesh_octree.__dict__:
-                        value = getattr(self.mesh_octree, O_key[1:])
+                    for O_key in self._mesh_octree.__dict__:
+                        value = getattr(self._mesh_octree, O_key[1:])
                         if isinstance(value, Widget):
                             setattr(self.params, O_key, value.value)
                         else:
@@ -1568,12 +1569,14 @@ class SensorOptions(ObjectDataSelection):
         ]
 
 
-class MeshOctreeOptions:
+class MeshOctreeOptions(ObjectDataSelection):
     """
     Widget used for the creation of an octree meshes
     """
 
     def __init__(self, **kwargs):
+        self._mesh_from_params = Checkbox(value=False, description="Create")
+        self._mesh_from_params.observe(self.from_params_choice, names="value")
         self._u_cell_size = widgets.FloatText(
             value=25.0,
             description="",
@@ -1610,7 +1613,7 @@ class MeshOctreeOptions:
             value=1000,
             description="Maximum distance (m)",
         )
-        self._main = widgets.VBox(
+        self._parameters = widgets.VBox(
             [
                 Label("Core cell size (u, v, z)"),
                 self._u_cell_size,
@@ -1626,19 +1629,21 @@ class MeshOctreeOptions:
                 self._depth_core,
             ]
         )
+        self._main = VBox([self.objects, self.mesh_from_params])
 
-        for obj in self.__dict__:
-            if hasattr(getattr(self, obj), "style"):
-                getattr(self, obj).style = {"description_width": "initial"}
+        super().__init__(**kwargs)
 
-        for key, value in kwargs.items():
-            if hasattr(self, "_" + key):
-                try:
-                    if isinstance(value, list):
-                        value = ", ".join(list(map(str, value)))
-                    getattr(self, "_" + key).value = value
-                except:
-                    pass
+    @property
+    def main(self):
+        return self._main
+
+    @property
+    def mesh(self):
+        return self._objects
+
+    @property
+    def mesh_from_params(self):
+        return self._mesh_from_params
 
     @property
     def u_cell_size(self):
@@ -1687,6 +1692,16 @@ class MeshOctreeOptions:
     @property
     def main(self):
         return self._main
+
+    def from_params_choice(self, _):
+        if self._mesh_from_params.value:
+            self._main.children = [
+                self.objects,
+                self.mesh_from_params,
+                self._parameters,
+            ]
+        else:
+            self._main.children = [self.objects, self.mesh_from_params]
 
 
 class Mesh1DOptions:

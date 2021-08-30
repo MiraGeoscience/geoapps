@@ -92,8 +92,10 @@ class InversionModelCollection:
 
     def _initialize(self):
 
-        self.is_vector = True if self.params.inversion_type == "mvi" else False
-        self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
+        self.is_vector = (
+            True if self.params.inversion_type == "magnetic vector" else False
+        )
+        self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
         self._starting = InversionModel(
             self.workspace, self.params, self.mesh, "starting"
         )
@@ -192,13 +194,15 @@ class InversionModel:
         """
         Build the model vector from params data.
 
-        If params.inversion_type is "mvi" and no inclination/declination
+        If params.inversion_type is "magnetic vector" and no inclination/declination
         are provided, then values are projected onto the direction of the
         inducing field.
         """
 
-        self.is_vector = True if self.params.inversion_type == "mvi" else False
-        self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
+        self.is_vector = (
+            True if self.params.inversion_type == "magnetic vector" else False
+        )
+        self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
 
         if self.model_type in ["starting", "reference"]:
 

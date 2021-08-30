@@ -245,13 +245,12 @@ def inversion(input_file):
     # Read json file and overwrite defaults
     assert "inversion_type" in list(
         input_dict.keys()
-    ), "Require 'inversion_type' to be set: 'gravity', 'magnetics', 'mvi', or 'mvic'"
+    ), "Require 'inversion_type' to be set: 'gravity', 'magnetic scalar' or 'magnetic vector'"
     assert input_dict["inversion_type"] in [
         "gravity",
-        "magnetics",
-        "mvi",
-        "mvic",
-    ], "'inversion_type' must be one of: 'gravity', 'magnetics', 'mvi', or 'mvic'"
+        "magnetic scalar",
+        "magnetic vector",
+    ], "'inversion_type' must be one of: 'gravity', 'magnetic scalar', 'magnetic vector'"
 
     if "inversion_style" in list(input_dict.keys()):
         inversion_style = input_dict["inversion_style"]
@@ -838,7 +837,7 @@ def inversion(input_file):
             local_survey.std = survey.std[data_ind]
             local_survey.ind = np.where(ind_t)[0]
 
-        elif input_dict["inversion_type"] in ["magnetics", "mvi", "mvic"]:
+        elif input_dict["inversion_type"] in ["magnetic scalar", "magnetic vector"]:
             rxLoc_t = PF.BaseMag.RxObs(rxLoc[ind_t, :])
             srcField = PF.BaseMag.SrcField([rxLoc_t], param=survey.srcField.param)
             local_survey = PF.BaseMag.LinearSurvey(
@@ -1249,7 +1248,7 @@ def inversion(input_file):
                 chunk_by_rows=chunk_by_rows,
             )
 
-        elif "mvi" in input_dict["inversion_type"]:
+        elif "magnetic vector" in input_dict["inversion_type"]:
             prob = PF.Magnetics.MagneticIntegral(
                 local_mesh,
                 chiMap=tile_map * model_map,
@@ -1312,7 +1311,7 @@ def inversion(input_file):
 
             point_object.add_data({"Forward_" + comp: {"values": val[sorting]}})
 
-        if "mvi" in input_dict["inversion_type"]:
+        if "magnetic vector" in input_dict["inversion_type"]:
             Utils.io_utils.writeUBCmagneticsObservations(
                 outDir + "/Obs.mag", survey, dpred
             )
@@ -1456,7 +1455,7 @@ def inversion(input_file):
     # Add a list of directives to the inversion
     directiveList = []
 
-    if vector_property and input_dict["inversion_type"] == "mvi":
+    if vector_property and input_dict["inversion_type"] == "magnetic vector":
         directiveList.append(
             Directives.VectorInversion(
                 chifact_target=target_chi * 2,
