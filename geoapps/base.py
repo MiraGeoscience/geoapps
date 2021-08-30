@@ -92,7 +92,7 @@ class BaseApplication:
 
         for value in self.__dict__.copy():
             attr = getattr(self, value, None)
-            if isinstance(attr, Widget):
+            if isinstance(attr, Widget) and hasattr(attr, "style"):
                 attr.style = {"description_width": "initial"}
 
     def __call__(self):

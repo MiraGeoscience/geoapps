@@ -1285,7 +1285,7 @@ class InversionApp(PlotSelection2D):
         if self.system.value in ["Gravity", "MVI", "Magnetics"]:
             input_dict["inversion_type"] = self.system.value.lower()
 
-            if input_dict["inversion_type"] in ["mvi", "magnetics"]:
+            if input_dict["inversion_type"] in ["magnetic vector", "magnetic scalar"]:
                 input_dict["inducing_field_aid"] = string_2_list(
                     self.inducing_field.value
                 )
