@@ -141,8 +141,8 @@ class InversionDriver:
         global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
 
         # Trigger sensitivity calcs
-        for local in local_misfits:
-            local.simulation.Jmatrix
+        # for local in local_misfits:
+        #     local.simulation.Jmatrix
 
         # Create regularization
         wr = self.get_weighting_matrix(global_misfit)
@@ -227,20 +227,12 @@ class InversionDriver:
                 )
             )
 
-            rx_locs = self.survey.receiver_locations
-            if self.is_rotated:
-                rx_locs[:, :2] = rotate_xy(
-                    rx_locs[:, :2],
-                    self.inversion_mesh.rotation["origin"],
-                    self.inversion_mesh.rotation["angle"],
-                )
-
             norms = self.inversion_data.normalizations
             directiveList.append(
                 directives.SaveIterationsGeoH5(
                     h5_object=self.inversion_data.data_entity,
-                    channels=self.survey.components,
-                    mapping=np.hstack([norms[c] for c in self.survey.components]),
+                    channels=self.data.keys(),
+                    mapping=np.hstack([norms[c] for c in self.data.keys()]),
                     attribute_type="predicted",
                     data_type=self.inversion_data._observed_data_types,
                     sorting=tuple(self.sorting),
@@ -305,23 +297,23 @@ class InversionDriver:
         return dpred
 
     def save_residuals(self, obj, dpred):
-        for ii, component in enumerate(self.survey.components):
+        for ii, component in enumerate(self.data.keys()):
             obj.add_data(
                 {
                     "Residuals_"
                     + component: {
                         "values": (
-                            self.survey.dobs[ii :: len(self.survey.components)]
-                            - dpred[ii :: len(self.survey.components)]
+                            self.survey.dobs[ii :: len(self.data.keys())]
+                            - dpred[ii :: len(self.data.keys())]
                         )
                     },
                     "Normalized Residuals_"
                     + component: {
                         "values": (
-                            self.survey.dobs[ii :: len(self.survey.components)]
-                            - dpred[ii :: len(self.survey.components)]
+                            self.survey.dobs[ii :: len(self.data.keys())]
+                            - dpred[ii :: len(self.data.keys())]
                         )
-                        / self.survey.std[ii :: len(self.survey.components)]
+                        / self.survey.std[ii :: len(self.data.keys())]
                     },
                 }
             )

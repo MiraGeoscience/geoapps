@@ -170,7 +170,7 @@ class ReceiversFactory(SimPEGFactory):
 
         return args
 
-    def assemble_keyword_arguments(self, locations=None, data=None, local_index=None):
+    def assemble_keyword_arguments(self, data=None, local_index=None):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic", "mvi"]:
@@ -292,7 +292,9 @@ class SurveyFactory(SimPEGFactory):
             # TODO hook up tile_spatial to handle local_index handling
             sources = []
             for source_id in self.local_index:
-                receivers = ReceiversFactory(self.params).build(local_index=[source_id])
+                receivers = ReceiversFactory(self.params).build(
+                    data=data, local_index=[source_id]
+                )
                 source = SourcesFactory(self.params).build(
                     receivers=receivers, local_index=[source_id]
                 )
