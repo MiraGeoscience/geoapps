@@ -65,12 +65,9 @@ class Params:
 
     """
 
-    defaults = {}
-    _default_ui_json = {}
     associations: dict[str | UUID, str | UUID] = None
     _workspace: Workspace = None
     _geoh5: Workspace = None
-    _output_geoh5: str = None
     _validator: InputValidator = None
     _ifile: InputFile = None
     _run_command = None
@@ -78,28 +75,15 @@ class Params:
     _conda_environment = None
     _conda_environment_boolean = None
     _monitoring_directory = None
-    _workspace_geoh5 = None
     _free_param_keys: list = None
 
     def __init__(self, validate=True, **kwargs):
+
+        self.associations = None
+        self.workspace = None
         self.update(self.defaults, validate=False)
         if kwargs:
-            self.update(kwargs, validate=False)
-            if validate:
-                ifile = InputFile.from_dict(self.to_dict(), self.validator)
-            else:
-                ifile = InputFile.from_dict(self.to_dict())
-
-            if "workspace" in kwargs:
-                ifile.data["workspace"] = kwargs["workspace"]
-                ifile.workspace = kwargs["workspace"]
-            if "geoh5" in kwargs:
-                ifile.data["workspace"] = kwargs["geoh5"]
-                ifile.workspace = kwargs["geoh5"]
-
-            self._input_file = ifile
-            cls = self.from_input_file(ifile)
-            self.__dict__.update(cls.__dict__)
+            self._handle_kwargs(kwargs, validate)
 
     @classmethod
     def from_input_file(
@@ -157,11 +141,6 @@ class Params:
         p = cls.from_input_file(input_file, workspace)
 
         return p
-
-    @property
-    def default_ui_json(self):
-        """Dictionary of default values structured in ANALYST ui.json format"""
-        return self._default_ui_json
 
     @property
     def required_parameters(self):
@@ -247,10 +226,6 @@ class Params:
         """Returns parent id of provided child id."""
         return self.associations[child_id]
 
-    def default(self, default_ui: dict[str, Any], param: str) -> Any:
-        """Return default value of parameter stored in default_ui_json."""
-        return default_ui[param]["default"]
-
     @property
     def validator(self) -> InputValidator:
 
@@ -314,14 +289,6 @@ class Params:
         self.setter_validator("monitoring_directory", val)
 
     @property
-    def workspace_geoh5(self):
-        return self._workspace_geoh5
-
-    @workspace_geoh5.setter
-    def workspace_geoh5(self, val):
-        self.setter_validator("workspace_geoh5", val)
-
-    @property
     def conda_environment(self):
         return self._conda_environment
 
@@ -356,18 +323,24 @@ class Params:
 
         setattr(self, f"_{key}", value)
 
-    def write_input_file(self, ui_json: dict = None, name: str = None):
+    def write_input_file(
+        self, ui_json: dict = None, default: bool = False, name: str = None
+    ):
         """Write out a ui.json with the current state of parameters"""
 
         if ui_json is None:
             ui_json = self.default_ui_json
 
-        ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
+        if default:
+            ifile = InputFile()
+            ifile.filepath = name
+        else:
+            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
         if getattr(self, "input_file", None) is not None:
             ifile.filepath = self.input_file.filepath
 
-        ifile.write_ui_json(ui_json, default=False, name=name)
+        ifile.write_ui_json(ui_json, default=default, name=name)
 
     @property
     def free_params_dict(self):
@@ -378,3 +351,24 @@ class Params:
             self._free_params_dict = self.input_file._free_params_dict
 
         return self._free_params_dict
+
+    def _handle_kwargs(self, kwargs, validate):
+        """Updates attributes with kwargs, validates and attaches input file attributes."""
+
+        self.update(kwargs, validate=False)
+
+        if validate:
+            ifile = InputFile.from_dict(self.to_dict(), self.validator)
+        else:
+            ifile = InputFile.from_dict(self.to_dict())
+
+        if "workspace" in kwargs:
+            ifile.data["workspace"] = kwargs["workspace"]
+            ifile.workspace = kwargs["workspace"]
+        if "geoh5" in kwargs:
+            ifile.data["workspace"] = kwargs["geoh5"]
+            ifile.workspace = kwargs["geoh5"]
+
+        self._input_file = ifile
+        cls = self.from_input_file(ifile)
+        self.__dict__.update(cls.__dict__)

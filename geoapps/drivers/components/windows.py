@@ -84,8 +84,11 @@ class InversionWindow:
 
     def is_empty(self) -> bool:
         """Check if window data is empty."""
-        center_x_null = True if self.window["center"][0] is None else False
-        center_y_null = True if self.window["center"][1] is None else False
-        size_x_null = True if self.window["size"][0] is None else False
-        size_y_null = True if self.window["size"][1] is None else False
-        return center_x_null & center_y_null & size_x_null & size_y_null
+        if self.window is None:
+            return True
+        else:
+            center_x_null = True if self.window["center"][0] is None else False
+            center_y_null = True if self.window["center"][1] is None else False
+            size_x_null = True if self.window["size"][0] is None else False
+            size_y_null = True if self.window["size"][1] is None else False
+            return center_x_null & center_y_null & size_x_null & size_y_null

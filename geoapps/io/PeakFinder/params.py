@@ -20,11 +20,8 @@ from .constants import default_ui_json, defaults, required_parameters, validatio
 
 class PeakFinderParams(Params):
 
-    defaults = defaults
-    _default_ui_json = default_ui_json
     _required_parameters = required_parameters
     _validations = validations
-    param_names = list(default_ui_json.keys())
     _free_param_keys: list = ["data", "color"]
     _free_param_identifier: str = "group"
 
@@ -58,6 +55,10 @@ class PeakFinderParams(Params):
         self._free_params_dict = None
         self._plot_result = True
 
+        self.defaults = defaults
+        self.default_ui_json = default_ui_json
+        self.param_names = list(self.default_ui_json.keys())
+
         super().__init__(validate, **kwargs)
 
         free_params_dict = {}
@@ -72,10 +73,6 @@ class PeakFinderParams(Params):
 
         if any(free_params_dict):
             self._free_params_dict = free_params_dict
-
-    def _set_defaults(self) -> None:
-        """Wraps Params._set_defaults"""
-        return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
         """Wraps Params.default."""
@@ -308,16 +305,6 @@ class PeakFinderParams(Params):
     @width.setter
     def width(self, val):
         self.setter_validator("width", val)
-
-    @property
-    def workspace_geoh5(self):
-        return self._workspace_geoh5
-
-    @workspace_geoh5.setter
-    def workspace_geoh5(self, val):
-        self.setter_validator(
-            "workspace_geoh5", val, promote_type=str, fun=lambda x: Workspace(x)
-        )
 
     @property
     def workspace(self):

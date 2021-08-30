@@ -7,138 +7,89 @@
 
 from __future__ import annotations
 
-from typing import Any
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
-from geoh5py.workspace import Workspace
 
-from ..input_file import InputFile
 from ..params import Params
-from ..validators import InputValidator
-from .constants import default_ui_json, defaults, required_parameters, validations
 
 
-class MVIParams(Params):
+class InversionParams(Params):
+    def __init__(self, **kwargs):
 
-    defaults = defaults
-    _default_ui_json = default_ui_json
-    _required_parameters = required_parameters
-    _validations = validations
-    param_names = list(default_ui_json.keys())
-
-    def __init__(self, validate=True, **kwargs):
-
-        self.validator: InputValidator = InputValidator(
-            required_parameters, validations
-        )
-        self.associations: dict[str | UUID, str | UUID] = None
-        self.forward_only: bool = None
-        self.inducing_field_strength: float = None
-        self.inducing_field_inclination: float = None
-        self.inducing_field_declination: float = None
+        self.forward_only = None
         self.topography_object: UUID = None
         self.topography = None
-        self.data_object = None
-        self.tmi_channel_bool = None
-        self.tmi_channel = None
-        self.tmi_uncertainty = None
-        self.bx_channel_bool = None
-        self.bx_channel = None
-        self.bx_uncertainty = None
-        self.by_channel_bool = None
-        self.by_channel = None
-        self.by_uncertainty = None
-        self.bz_channel_bool = None
-        self.bz_channel = None
-        self.bz_uncertainty = None
-        self.starting_model_object = None
-        self.starting_inclination_object = None
-        self.starting_declination_object = None
+        self.data_object: UUID = None
+        self.starting_model_object: UUID = None
         self.starting_model = None
-        self.starting_inclination = None
-        self.starting_declination = None
         self.tile_spatial = None
-        self.z_from_topo = None
+        self.z_from_topo: bool = None
         self.receivers_radar_drape = None
-        self.receivers_offset_x = None
-        self.receivers_offset_y = None
-        self.receivers_offset_z = None
+        self.receivers_offset_x: float = None
+        self.receivers_offset_y: float = None
+        self.receivers_offset_z: float = None
         self.gps_receivers_offset = None
-        self.ignore_values = None
-        self.resolution = None
-        self.detrend_data = None
-        self.detrend_order = None
-        self.detrend_type = None
-        self.max_chunk_size = None
-        self.chunk_by_rows = None
-        self.output_tile_files = None
+        self.ignore_values: str = None
+        self.resolution: float = None
+        self.detrend_data: bool = None
+        self.detrend_order: int = None
+        self.detrend_type: str = None
+        self.max_chunk_size: int = None
+        self.chunk_by_rows: bool = None
+        self.output_tile_files: bool = None
         self.mesh = None
-        self.mesh_from_params = None
-        self.u_cell_size = None
-        self.v_cell_size = None
-        self.w_cell_size = None
-        self.octree_levels_topo = None
-        self.octree_levels_obs = None
-        self.depth_core = None
-        self.max_distance = None
-        self.horizontal_padding = None
-        self.vertical_padding = None
-        self.window_center_x = None
-        self.window_center_y = None
-        self.window_width = None
-        self.window_height = None
-        self.inversion_style = None
-        self.chi_factor = None
-        self.max_iterations = None
-        self.max_cg_iterations = None
-        self.max_global_iterations = None
-        self.initial_beta = None
-        self.initial_beta_ratio = None
-        self.tol_cg = None
-        self.alpha_s = None
-        self.alpha_x = None
-        self.alpha_y = None
-        self.alpha_z = None
-        self.smallness_norm = None
-        self.x_norm = None
-        self.y_norm = None
-        self.z_norm = None
-        self.reference_model_object = None
-        self.reference_inclination_object = None
-        self.reference_declination_object = None
+        self.mesh_from_params: bool = None
+        self.u_cell_size: float = None
+        self.v_cell_size: float = None
+        self.w_cell_size: float = None
+        self.octree_levels_topo: list[int] = None
+        self.octree_levels_obs: list[int] = None
+        self.depth_core: float = None
+        self.max_distance: float = None
+        self.horizontal_padding: float = None
+        self.vertical_padding: float = None
+        self.window_center_x: float = None
+        self.window_center_y: float = None
+        self.window_width: float = None
+        self.window_height: float = None
+        self.inversion_style: str = None
+        self.chi_factor: float = None
+        self.max_iterations: int = None
+        self.max_cg_iterations: int = None
+        self.max_global_iterations: int = None
+        self.initial_beta: float = None
+        self.initial_beta_ratio: float = None
+        self.tol_cg: float = None
+        self.alpha_s: float = None
+        self.alpha_x: float = None
+        self.alpha_y: float = None
+        self.alpha_z: float = None
+        self.smallness_norm: float = None
+        self.x_norm: float = None
+        self.y_norm: float = None
+        self.z_norm: float = None
+        self.reference_model_object: UUID = None
         self.reference_model = None
-        self.reference_inclination = None
-        self.reference_declination = None
-        self.gradient_type = None
-        self.lower_bound_object = None
+        self.gradient_type: str = None
+        self.lower_bound_object: UUID = None
         self.lower_bound = None
-        self.upper_bound_object = None
+        self.upper_bound_object: UUID = None
         self.upper_bound = None
-        self.parallelized = None
-        self.n_cpu = None
-        self.max_ram = None
-        self.inversion_type = None
+        self.parallelized: bool = None
+        self.n_cpu: int = None
+        self.max_ram: float = None
         self.out_group = None
-        self.output_geoh5 = None
-        self.no_data_value = None
-        self.monitoring_directory = None
-        self.workspace_geoh5 = None
+        self.no_data_value: float = None
+        self.monitoring_directory: str = None
+        self.workspace_geoh5: str = None
         self.geoh5 = None
-        self.run_command = None
-        self.run_command_boolean = None
-        self.conda_environment = None
-        self.conda_environment_boolean = None
+        self.run_command: str = None
+        self.run_command_boolean: bool = None
+        self.conda_environment: str = None
+        self.conda_environment_boolean: bool = None
 
-        super().__init__(validate, **kwargs)
-
-    def _set_defaults(self) -> None:
-        """Wraps Params._set_defaults"""
-        return super()._set_defaults(self.default_ui_json)
-
-    def default(self, param) -> Any:
-        """Wraps Params.default."""
-        return super().default(self.default_ui_json, param)
+        super().__init__(**kwargs)
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""
@@ -148,15 +99,24 @@ class MVIParams(Params):
         """Returns channel uuid for chosen data component."""
         return self.__getattribute__("_".join([component, "channel"]))
 
-    def components(self) -> List[str]:
+    def cell_size(self):
+        """Returns core cell size in all 3 dimensions."""
+        return [self.u_cell_size, self.v_cell_size, self.w_cell_size]
+
+    def padding_distance(self):
+        """Returns padding distance in all 3 dimensions."""
+        return [
+            self.padding_distance_x,
+            self.padding_distance_y,
+            self.padding_distance_z,
+        ]
+
+    def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
         for k, v in self.__dict__.items():
             if ("channel_bool" in k) & (v is True):
                 comps.append(k.split("_")[1])
-        if self.forward_only:
-            if len(comps) == 0:
-                comps = ["tmi"]
         return comps
 
     def window(self) -> dict[str, float]:
@@ -169,7 +129,9 @@ class MVIParams(Params):
             "center": [self.window_center_x, self.window_center_y],
             "size": [self.window_width, self.window_height],
         }
-        return win if any([v is not None for v in win.values()]) else None
+        check_keys = ["center_x", "center_y", "width", "height"]
+        no_data = all([v is None for k, v in win.items() if k in check_keys])
+        return None if no_data else win
 
     def offset(self) -> tuple[list[float], UUID]:
         """Returns offset components as list and drape data."""
@@ -182,14 +144,6 @@ class MVIParams(Params):
         offsets = offsets if is_offset else None
         return offsets, self.receivers_radar_drape
 
-    def inducing_field_aid(self) -> list[float]:
-        """Returns inducing field components as a list."""
-        return [
-            self.inducing_field_strength,
-            self.inducing_field_inclination,
-            self.inducing_field_declination,
-        ]
-
     def model_norms(self) -> list[float]:
         """Returns model norm components as a list."""
         return [
@@ -198,21 +152,6 @@ class MVIParams(Params):
             self.y_norm,
             self.z_norm,
         ]
-
-    @property
-    def inversion_type(self):
-        return self._inversion_type
-
-    @inversion_type.setter
-    def inversion_type(self, val):
-        if val is None:
-            self._inversion_type = val
-            return
-        p = "inversion_type"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inversion_type = val
 
     @property
     def forward_only(self):
@@ -228,53 +167,6 @@ class MVIParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._forward_only = val
-
-    @property
-    def inducing_field_strength(self):
-        return self._inducing_field_strength
-
-    @inducing_field_strength.setter
-    def inducing_field_strength(self, val):
-        if val is None:
-            self._inducing_field_strength = val
-            return
-        p = "inducing_field_strength"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        if val <= 0:
-            raise ValueError("inducing_field_strength must be greater than 0.")
-        self._inducing_field_strength = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def inducing_field_inclination(self):
-        return self._inducing_field_inclination
-
-    @inducing_field_inclination.setter
-    def inducing_field_inclination(self, val):
-        if val is None:
-            self._inducing_field_inclination = val
-            return
-        p = "inducing_field_inclination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inducing_field_inclination = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def inducing_field_declination(self):
-        return self._inducing_field_declination
-
-    @inducing_field_declination.setter
-    def inducing_field_declination(self, val):
-        if val is None:
-            self._inducing_field_declination = val
-            return
-        p = "inducing_field_declination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inducing_field_declination = UUID(val) if isinstance(val, str) else val
 
     @property
     def topography_object(self):
@@ -322,186 +214,6 @@ class MVIParams(Params):
         self._data_object = UUID(val) if isinstance(val, str) else val
 
     @property
-    def tmi_channel_bool(self):
-        return self._tmi_channel_bool
-
-    @tmi_channel_bool.setter
-    def tmi_channel_bool(self, val):
-        if val is None:
-            self._tmi_channel_bool = val
-            return
-        p = "tmi_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._tmi_channel_bool = val
-
-    @property
-    def tmi_channel(self):
-        return self._tmi_channel
-
-    @tmi_channel.setter
-    def tmi_channel(self, val):
-        if val is None:
-            self._tmi_channel = val
-            return
-        p = "tmi_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._tmi_channel = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def tmi_uncertainty(self):
-        return self._tmi_uncertainty
-
-    @tmi_uncertainty.setter
-    def tmi_uncertainty(self, val):
-        if val is None:
-            self._tmi_uncertainty = val
-            return
-        p = "tmi_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._tmi_uncertainty = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def bx_channel_bool(self):
-        return self._bx_channel_bool
-
-    @bx_channel_bool.setter
-    def bx_channel_bool(self, val):
-        if val is None:
-            self._bx_channel_bool = val
-            return
-        p = "bx_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bx_channel_bool = val
-
-    @property
-    def bx_channel(self):
-        return self._bx_channel
-
-    @bx_channel.setter
-    def bx_channel(self, val):
-        if val is None:
-            self._bx_channel = val
-            return
-        p = "bx_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bx_channel = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def bx_uncertainty(self):
-        return self._bx_uncertainty
-
-    @bx_uncertainty.setter
-    def bx_uncertainty(self, val):
-        if val is None:
-            self._bx_uncertainty = val
-            return
-        p = "bx_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bx_uncertainty = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def by_channel_bool(self):
-        return self._by_channel_bool
-
-    @by_channel_bool.setter
-    def by_channel_bool(self, val):
-        if val is None:
-            self._by_channel_bool = val
-            return
-        p = "by_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._by_channel_bool = val
-
-    @property
-    def by_channel(self):
-        return self._by_channel
-
-    @by_channel.setter
-    def by_channel(self, val):
-        if val is None:
-            self._by_channel = val
-            return
-        p = "by_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._by_channel = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def by_uncertainty(self):
-        return self._by_uncertainty
-
-    @by_uncertainty.setter
-    def by_uncertainty(self, val):
-        if val is None:
-            self._by_uncertainty = val
-            return
-        p = "by_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._by_uncertainty = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def bz_channel_bool(self):
-        return self._bz_channel_bool
-
-    @bz_channel_bool.setter
-    def bz_channel_bool(self, val):
-        if val is None:
-            self._bz_channel_bool = val
-            return
-        p = "bz_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bz_channel_bool = val
-
-    @property
-    def bz_channel(self):
-        return self._bz_channel
-
-    @bz_channel.setter
-    def bz_channel(self, val):
-        if val is None:
-            self._bz_channel = val
-            return
-        p = "bz_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bz_channel = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def bz_uncertainty(self):
-        return self._bz_uncertainty
-
-    @bz_uncertainty.setter
-    def bz_uncertainty(self, val):
-        if val is None:
-            self._bz_uncertainty = val
-            return
-        p = "bz_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bz_uncertainty = UUID(val) if isinstance(val, str) else val
-
-    @property
     def starting_model_object(self):
         return self._starting_model_object
 
@@ -517,36 +229,6 @@ class MVIParams(Params):
         self._starting_model_object = UUID(val) if isinstance(val, str) else val
 
     @property
-    def starting_inclination_object(self):
-        return self._starting_inclination_object
-
-    @starting_inclination_object.setter
-    def starting_inclination_object(self, val):
-        if val is None:
-            self._starting_inclination_object = val
-            return
-        p = "starting_inclination_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._starting_inclination_object = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def starting_declination_object(self):
-        return self._starting_declination_object
-
-    @starting_declination_object.setter
-    def starting_declination_object(self, val):
-        if val is None:
-            self._starting_declination_object = val
-            return
-        p = "starting_declination_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._starting_declination_object = UUID(val) if isinstance(val, str) else val
-
-    @property
     def starting_model(self):
         return self._starting_model
 
@@ -560,36 +242,6 @@ class MVIParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._starting_model = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def starting_inclination(self):
-        return self._starting_inclination
-
-    @starting_inclination.setter
-    def starting_inclination(self, val):
-        if val is None:
-            self._starting_inclination = val
-            return
-        p = "starting_inclination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._starting_inclination = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def starting_declination(self):
-        return self._starting_declination
-
-    @starting_declination.setter
-    def starting_declination(self, val):
-        if val is None:
-            self._starting_declination = val
-            return
-        p = "starting_declination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._starting_declination = UUID(val) if isinstance(val, str) else val
 
     @property
     def tile_spatial(self):
@@ -1297,36 +949,6 @@ class MVIParams(Params):
         self._reference_model_object = UUID(val) if isinstance(val, str) else val
 
     @property
-    def reference_inclination_object(self):
-        return self._reference_inclination_object
-
-    @reference_inclination_object.setter
-    def reference_inclination_object(self, val):
-        if val is None:
-            self._reference_inclination_object = val
-            return
-        p = "reference_inclination_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_inclination_object = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def reference_declination_object(self):
-        return self._reference_declination_object
-
-    @reference_declination_object.setter
-    def reference_declination_object(self, val):
-        if val is None:
-            self._reference_declination_object = val
-            return
-        p = "reference_declination_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_declination_object = UUID(val) if isinstance(val, str) else val
-
-    @property
     def reference_model(self):
         return self._reference_model
 
@@ -1340,36 +962,6 @@ class MVIParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._reference_model = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def reference_inclination(self):
-        return self._reference_inclination
-
-    @reference_inclination.setter
-    def reference_inclination(self, val):
-        if val is None:
-            self._reference_inclination = val
-            return
-        p = "reference_inclination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_inclination = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def reference_declination(self):
-        return self._reference_declination
-
-    @reference_declination.setter
-    def reference_declination(self, val):
-        if val is None:
-            self._reference_declination = val
-            return
-        p = "reference_declination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_declination = UUID(val) if isinstance(val, str) else val
 
     @property
     def gradient_type(self):
@@ -1505,21 +1097,6 @@ class MVIParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._out_group = ContainerGroup.create(self.workspace, name=val)
-
-    @property
-    def output_geoh5(self):
-        return self._output_geoh5
-
-    @output_geoh5.setter
-    def output_geoh5(self, val):
-        if val is None:
-            self._output_geoh5 = val
-            return
-        p = "output_geoh5"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._output_geoh5 = val
 
     @property
     def no_data_value(self):

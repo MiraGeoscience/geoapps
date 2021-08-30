@@ -11,15 +11,17 @@ import SimPEG
 from geoh5py.workspace import Workspace
 
 from geoapps.drivers.components import InversionData
-from geoapps.io.MVI import MVIParams
-from geoapps.io.MVI.constants import default_ui_json
+from geoapps.io.MagneticVector import MagneticVectorParams
+from geoapps.io.MagneticVector.constants import default_ui_json
 from geoapps.utils.testing import Geoh5Tester
 
 workspace = Workspace("./FlinFlon.geoh5")
 
 
 def setup_params(tmp):
-    geotest = Geoh5Tester(workspace, tmp, "test.geoh5", default_ui_json, MVIParams)
+    geotest = Geoh5Tester(
+        workspace, tmp, "test.geoh5", default_ui_json, MagneticVectorParams
+    )
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
