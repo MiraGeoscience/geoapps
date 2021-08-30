@@ -7,7 +7,7 @@
 
 import sys
 
-from geoapps.io.MVI import MVIParams
+from geoapps.io.MagneticVector import MagneticVectorParams
 
 from .base_inversion import InversionDriver
 
@@ -15,13 +15,13 @@ from .base_inversion import InversionDriver
 def start_inversion(filepath=None):
     """Starts inversion with parameters defined in input file."""
 
-    params = MVIParams.from_path(filepath)
-    driver = MVIDriver(params)
+    params = MagneticVectorParams.from_path(filepath)
+    driver = MagneticVectorDriver(params)
     driver.run()
 
 
-class MVIDriver(InversionDriver):
-    def __init__(self, params: MVIParams):
+class MagneticVectorDriver(InversionDriver):
+    def __init__(self, params: MagneticVectorParams):
         super().__init__(params)
 
     def run(self):

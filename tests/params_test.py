@@ -16,9 +16,9 @@ from geoh5py.workspace import Workspace
 
 from geoapps.io import InputFile
 from geoapps.io.Gravity import GravityParams
-from geoapps.io.MVI import MVIParams
-from geoapps.io.MVI.constants import default_ui_json as MVI_defaults
-from geoapps.io.MVI.constants import validations as MVI_validations
+from geoapps.io.MagneticVector import MagneticVectorParams
+from geoapps.io.MagneticVector.constants import default_ui_json as MVI_defaults
+from geoapps.io.MagneticVector.constants import validations as MVI_validations
 from geoapps.io.Octree import OctreeParams
 from geoapps.io.PeakFinder import PeakFinderParams
 from geoapps.utils.testing import Geoh5Tester
@@ -38,7 +38,7 @@ def setup_params(tmp, ui, params_class):
 
 
 # def test_inversion_type(tmp_path):
-#     geotest = setup_params(tmp_path, MVI_defaults, MVIParams)
+#     geotest = setup_params(tmp_path, MVI_defaults, MagneticVectorParams)
 #     geotest.set_param("inversion_type", "nogood")
 #     ws, params = geotest.make()
 #     assert True
@@ -71,7 +71,7 @@ def catch_invalid_generator(
     filepath = tmpfile(tmp_path)
     ifile = InputFile()
     ifile.filepath = filepath
-    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
+    ifile.write_ui_json(MVI_defaults, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
     if isinstance(ui[param], dict):
@@ -128,7 +128,7 @@ def catch_invalid_generator(
         json.dump(ui, f, indent=4)
 
     with pytest.raises(err) as excinfo:
-        MVIParams.from_path(filepath, workspace=workspace)
+        MagneticVectorParams.from_path(filepath, workspace=workspace)
 
     for a in assertions:
         assert a in str(excinfo.value)
@@ -139,7 +139,7 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
     ifile = InputFile()
     ifile.filepath = filepath
     wrkstr = workspace.h5file
-    ifile.write_ui_json(MVI_defaults, default=True, workspace=wrkstr)
+    ifile.write_ui_json(MVI_defaults, workspace=wrkstr)
     with open(filepath) as f:
         ui = json.load(f)
     if isinstance(ui[param], dict):
@@ -156,7 +156,7 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
     ui["geoh5"] = None
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
-    params = MVIParams.from_path(filepath, workspace=workspace)
+    params = MagneticVectorParams.from_path(filepath, workspace=workspace)
 
     try:
         value = UUID(str(value))
@@ -172,7 +172,12 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
 
 
 def test_params_initialize():
-    for params in [MVIParams(), GravityParams(), OctreeParams(), PeakFinderParams()]:
+    for params in [
+        MagneticVectorParams(),
+        GravityParams(),
+        OctreeParams(),
+        PeakFinderParams(),
+    ]:
         check = []
         for k, v in params.defaults.items():
             if " " in k:
@@ -180,7 +185,7 @@ def test_params_initialize():
                 check.append(getattr(params, k) == v)
         assert all(check)
 
-    params = MVIParams(u_cell_size=9999, validate=True, workspace=workspace)
+    params = MagneticVectorParams(u_cell_size=9999, validate=True, workspace=workspace)
     assert params.u_cell_size == 9999
     params = GravityParams(u_cell_size=9999, validate=True, workspace=workspace)
     assert params.u_cell_size == 9999
@@ -194,7 +199,7 @@ def test_update(tmp_path):
     new_params = {
         "mesh_from_params": True,
     }
-    params = MVIParams()
+    params = MagneticVectorParams()
     params.update(new_params)
     assert params.mesh_from_params == True
 
@@ -244,17 +249,19 @@ def test_params_constructors(tmp_path):
     ifile.filepath = filepath
     ui = deepcopy(MVI_defaults)
     ui["geoh5"] = wrkstr
-    ifile.write_ui_json(ui, default=True)
-    params1 = MVIParams.from_path(filepath, workspace=workspace)
-    params2 = MVIParams.from_input_file(ifile, workspace=workspace)
+    ifile.write_ui_json(ui)
+    params1 = MagneticVectorParams.from_path(filepath, workspace=workspace)
+    params2 = MagneticVectorParams.from_input_file(ifile, workspace=workspace)
 
 
 def test_param_names():
-    assert np.all(MVIParams.param_names == list(MVI_defaults.keys()))
+    assert np.all(MagneticVectorParams().param_names == list(MVI_defaults.keys()))
 
 
 def test_active_set():
-    params = MVIParams(workspace=workspace, inversion_type="mvi", u_cell_size=2)
+    params = MagneticVectorParams(
+        workspace=workspace, inversion_type="mvi", u_cell_size=2
+    )
     params.active_set()
 
 
@@ -779,13 +786,6 @@ def test_validate_workspace(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_validate_output_geoh5(tmp_path):
-    param = "output_geoh5"
-    newval = "../assets/something.geoh5py"
-    # param_test_generator(tmp_path, param, newval)
-    # catch_invalid_generator(tmp_path, param, 34, "type")
-
-
 def test_validate_out_group(tmp_path):
     param = "out_group"
     newval = "test_"
@@ -808,7 +808,7 @@ def test_isValue(tmp_path):
 
     mesh = workspace.get_entity("O2O_Interp_25m")[0]
 
-    params = MVIParams.from_input_file(ifile, workspace)
+    params = MagneticVectorParams.from_input_file(ifile, workspace)
     params.starting_model_object = mesh.uid
     params.starting_model = 0.0
 

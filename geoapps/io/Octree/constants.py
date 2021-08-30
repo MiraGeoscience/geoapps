@@ -29,7 +29,6 @@ defaults = {
     "run_command": ("geoapps.create.octree_mesh"),
     "run_command_boolean": False,
     "monitoring_directory": None,
-    "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
     "workspace": None,
@@ -149,7 +148,6 @@ default_ui_json = {
         "main": True,
     },
     "monitoring_directory": None,
-    "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
     "workspace": None,
@@ -211,9 +209,6 @@ validations = {
     },
     "monitoring_directory": {
         "types": [str],
-    },
-    "workspace_geoh5": {
-        "types": [str, Workspace],
     },
     "conda_environment": {
         "types": [str],

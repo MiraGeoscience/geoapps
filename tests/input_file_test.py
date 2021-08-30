@@ -14,9 +14,9 @@ import numpy as np
 import pytest
 
 from geoapps.io import InputFile
-from geoapps.io.MVI.constants import (
+from geoapps.io.MagneticVector.constants import (
     default_ui_json,
-    defaults,
+    inversion_defaults,
     required_parameters,
     validations,
 )
@@ -25,7 +25,7 @@ from geoapps.io.validators import InputValidator
 ######################  Setup  ###########################
 
 d_u_j = deepcopy(default_ui_json)
-input_dict = {k: v["default"] for k, v in d_u_j.items() if isinstance(v, dict)}
+input_dict = inversion_defaults
 tmpfile = lambda path: os.path.join(path, "test.json")
 
 
@@ -54,7 +54,7 @@ def test_blank_construction():
 def test_default_construction(tmp_path):
     ifile = InputFile()
     ifile.filepath = os.path.join(tmp_path, "test.ui.json")
-    ifile.write_ui_json(default_ui_json, default=True)
+    ifile.write_ui_json(default_ui_json)
     validator = InputValidator(required_parameters, validations)
     ifile = InputFile(ifile.filepath, validator)
     assert ifile.is_loaded
@@ -156,10 +156,11 @@ def test_ui_json_io(tmp_path):
 
     ifile = InputFile()
     ifile.filepath = os.path.join(tmp_path, "test.ui.json")
-    ifile.write_ui_json(default_ui_json, default=True)
+    ifile.write_ui_json(default_ui_json)
     validator = InputValidator(required_parameters, validations)
     ifile = InputFile(ifile.filepath, validator)
     for k, v in d_u_j.items():
+        print(k)
         if isinstance(v, dict):
             check_default = True
             for field in ["enabled", "visible"]:
@@ -168,11 +169,11 @@ def test_ui_json_io(tmp_path):
                         assert ifile.data[k] is None
                         check_default = False
             if check_default:
-                assert ifile.data[k] == defaults[k]
+                assert ifile.data[k] == inversion_defaults[k]
         else:
             assert ifile.data[k] == v
     ifile.data["inducing_field_strength"] = 99
-    ifile.write_ui_json(default_ui_json, default=False)
+    ifile.write_ui_json(default_ui_json)
     ifile = InputFile(ifile.filepath, validator)
     assert ifile.data["inducing_field_strength"] == 99
     assert ifile.data["inversion_type"] == "mvi"

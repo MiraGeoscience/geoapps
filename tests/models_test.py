@@ -17,8 +17,8 @@ from geoapps.drivers.components import (
     InversionTopography,
     InversionWindow,
 )
-from geoapps.io.MVI import MVIParams
-from geoapps.io.MVI.constants import default_ui_json
+from geoapps.io.MagneticVector import MagneticVectorParams
+from geoapps.io.MagneticVector.constants import default_ui_json
 from geoapps.utils import rotate_xy
 from geoapps.utils.testing import Geoh5Tester
 
@@ -27,7 +27,9 @@ workspace = Workspace("./FlinFlon.geoh5")
 
 def setup_params(path):
 
-    geotest = Geoh5Tester(workspace, path, "test.geoh5", default_ui_json, MVIParams)
+    geotest = Geoh5Tester(
+        workspace, path, "test.geoh5", default_ui_json, MagneticVectorParams
+    )
     geotest.set_param("window_center_x", 314183.0)
     geotest.set_param("window_center_y", 6071014.0)
     geotest.set_param("window_width", 1000.0)

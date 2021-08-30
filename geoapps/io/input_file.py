@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os.path as op
+import warnings
 from copy import deepcopy
 from typing import Any, Callable
 from uuid import UUID
@@ -143,7 +144,6 @@ class InputFile:
         self,
         ui_dict: dict[str, Any],
         default: bool = False,
-        forward: bool = False,
         name: str = None,
         workspace: Workspace = None,
     ) -> None:
@@ -154,47 +154,46 @@ class InputFile:
         ----------
         ui_dict :
             Dictionary in ui.json format, including defaults.
-        default : optional
-            Writes default values stored in ui_dict to file.
+        default :
+            Write default values. Ignoring contents of self.data.
         name: optional
             Name of the file
         workspace : optional
-            Provide a workspace_geoh5 path to simulate auto-generated field in Geoscience ANALYST.
+            Provide a geoh5 path to simulate auto-generated field in Geoscience ANALYST.
         """
 
+        if name is not None:
+            if "ui.json" not in name:
+                name += "ui.json"
+
         out = deepcopy(ui_dict)
-        if forward:
-            out["forward_only"] = True
-            inversion_type = out["inversion_type"]
-            if inversion_type == "mvi":
-                from geoapps.io.MVI.constants import forward_parameters as fparams
-            if inversion_type == "gravity":
-                from geoapps.io.Gravity.constants import forward_parameters as fparams
-            out = {k: out[k] for k in fparams}
 
         if workspace is not None:
-            out["workspace_geoh5"] = workspace
             out["geoh5"] = workspace
 
         if not default:
-            if self.is_loaded:
-                for k, v in self.data.items():
-                    if isinstance(out[k], dict):
-                        field = "value"
-                        if "isValue" in out[k].keys():
-                            if not out[k]["isValue"]:
-                                field = "property"
-                        out[k][field] = v
-                        if v is not None:
-                            out[k]["visible"] = True
-                            out[k]["enabled"] = True
-                    else:
-                        out[k] = v
-            else:
-                raise OSError("No data to write.")
+            for k, v in self.data.items():
+                msg = f"Overriding param: {k} 'None' value to zero since 'dataType' is 'Float'."
+                if isinstance(out[k], dict):
+                    field = "value"
+                    if "isValue" in out[k].keys():
+                        if not out[k]["isValue"]:
+                            field = "property"
+                        else:
+                            if "dataType" in out[k].keys():
+                                if ("dataType" == "Float") & (v is None):
+                                    v = 0
+                                    warnings.warn(msg)
+
+                    out[k][field] = v
+                    if v is not None:
+                        out[k]["visible"] = True
+                        out[k]["enabled"] = True
+                else:
+                    out[k] = v
 
         if name is not None:
-            out_file = op.join(self.workpath, name + ".ui.json")
+            out_file = op.join(self.workpath, name)
         else:
             out_file = self.filepath
 

@@ -18,8 +18,6 @@ from . import default_ui_json, defaults, required_parameters, validations
 
 class OctreeParams(Params):
 
-    defaults = defaults
-    _default_ui_json = default_ui_json
     _required_parameters = required_parameters
     _validations = validations
     param_names = list(default_ui_json.keys())
@@ -41,6 +39,9 @@ class OctreeParams(Params):
         self._depth_core = None
         self._ga_group_name = None
 
+        self.defaults = defaults
+        self.default_ui_json = default_ui_json
+
         super().__init__(validate, **kwargs)
 
         free_params_dict = {}
@@ -55,10 +56,6 @@ class OctreeParams(Params):
 
         if any(free_params_dict):
             self._free_params_dict = free_params_dict
-
-    def _set_defaults(self) -> None:
-        """Wraps Params._set_defaults"""
-        return super()._set_defaults(self.default_ui_json)
 
     def default(self, param) -> Any:
         """Wraps Params.default."""

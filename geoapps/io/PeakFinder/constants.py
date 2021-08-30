@@ -48,7 +48,6 @@ defaults = {
     "conda_environment_boolean": None,
     "template_data": None,
     "template_color": None,
-    "workspace_geoh5": None,
     "workspace": None,
     "monitoring_directory": None,
 }
@@ -212,7 +211,6 @@ default_ui_json = {
     "conda_environment_boolean": None,
     "template_data": None,
     "template_color": None,
-    "workspace_geoh5": None,
     "workspace": None,
     "monitoring_directory": None,
     "plot_result": True,
@@ -304,9 +302,6 @@ validations = {
     },
     "template_color": {
         "types": [str],
-    },
-    "workspace_geoh5": {
-        "types": [str, Workspace],
     },
     "workspace": {
         "types": [str, Workspace],
