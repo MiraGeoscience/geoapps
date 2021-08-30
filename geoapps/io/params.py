@@ -77,11 +77,13 @@ class Params:
     _conda_environment_boolean = None
     _monitoring_directory = None
     _free_param_keys: list = None
+    _verbose = True
 
-    def __init__(self, validate=True, **kwargs):
+    def __init__(self, validate=True, verbose=True, **kwargs):
 
         self.associations = None
         self.workspace = None
+        self._verbose = verbose
         self.update(self.defaults, validate=False)
         if kwargs:
             self._handle_kwargs(kwargs, validate)
@@ -164,7 +166,7 @@ class Params:
             if not validate:
                 key = f"_{key}"
 
-            if getattr(self, key, "invalid_param") == "invalid_param":
+            if getattr(self, key, "invalid_param") == "invalid_param" and self._verbose:
                 warnings.warn(
                     f"Skipping dictionary entry: {key}.  Not a valid attribute."
                 )
@@ -338,7 +340,6 @@ class Params:
 
         if default:
             ifile = InputFile()
-            ifile.filepath = name
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
@@ -347,7 +348,7 @@ class Params:
             if name is None:
                 ifile.filepath = self.input_file.filepath
             else:
-                out_file = path.join(self.input_file.workpath, "default.ui.json")
+                out_file = path.join(self.input_file.workpath, name)
                 self.input_file.filepath = out_file
                 ifile.filepath = out_file
 
