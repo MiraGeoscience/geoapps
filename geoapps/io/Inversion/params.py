@@ -10,6 +10,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
+from geoh5py.workspace import Workspace
 
 from ..params import Params
 
@@ -1113,7 +1114,15 @@ class InversionParams(Params):
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._out_group = ContainerGroup.create(self.workspace, name=val)
+
+    def get_out_group(self):
+        if isinstance(self.workspace, Workspace) and self.out_group is not None:
+            group = self.workspace.get_entity(self.out_group)
+
+            if not group:
+                return ContainerGroup.create(self.workspace, name=self.out_group)
+
+            return group[0]
 
     @property
     def no_data_value(self):
