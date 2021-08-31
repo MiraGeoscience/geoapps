@@ -8,20 +8,23 @@
 from dask.distributed import Client
 
 from geoapps.pf_inversion_app import InversionApp
-from geoapps.plotting import ScatterPlots
-from geoapps.processing import ContourValues, PeakFinder
+
+# from geoapps.plotting import ScatterPlots
+# from geoapps.processing.peak_finder import PeakFinder
 
 
 def run():
     #
-    # app = InversionApp()
-    # app.widget
+    app = InversionApp()
+    app.inversion_type.value = "gravity"
+    app.write.click()
+    app.trigger.click()
 
-    client = Client()
-    app = PeakFinder()
-    app.tem_checkbox.values = False
-    app.data.value = ["Sf[12]"]
-    app.widget
+    # client = Client()
+    # app = PeakFinder()
+    # app.tem_checkbox.values = False
+    # app.data.value = ["Sf[12]"]
+    # app.widget
 
 
 # from geoapps.processing import ContourValues
