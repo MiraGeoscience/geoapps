@@ -386,6 +386,10 @@ class InversionApp(PlotSelection2D):
         return self._optimization
 
     @property
+    def out_group(self):
+        return self._ga_group_name
+
+    @property
     def ga_group_name(self):
         return self._ga_group_name
 
@@ -996,7 +1000,6 @@ class InversionApp(PlotSelection2D):
                             setattr(self.params, O_key, value)
             except AttributeError:
                 continue
-
         # Copy object to work geoh5
         new_workspace = Workspace(
             path.join(
@@ -1004,10 +1007,6 @@ class InversionApp(PlotSelection2D):
                 self._ga_group_name.value + ".geoh5",
             )
         )
-        new_group = self.params.out_group.copy(parent=new_workspace)
-        self.workspace.remove_entity(self.params.out_group)
-        self.params._out_group = new_group
-
         for elem in [
             self,
             self._mesh_octree,

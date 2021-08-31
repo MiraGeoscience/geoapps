@@ -216,9 +216,11 @@ class InversionDriver:
             if self.inversion_type == "magnetic vector":
                 channels = ["amplitude", "theta", "phi"]
 
-            outmesh = self.fetch(self.inversion_mesh.uid).copy(
-                parent=self.params.out_group, copy_children=False
+            orig_octree = self.fetch(self.inversion_mesh.uid)
+            outmesh = orig_octree.copy(
+                parent=self.params.get_out_group(), copy_children=False
             )
+            self.workspace.remove_entity(orig_octree)
 
             directiveList.append(
                 directives.SaveIterationsGeoH5(
