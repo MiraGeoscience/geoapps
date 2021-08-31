@@ -522,7 +522,7 @@ app_initializer = {
     "vertical_padding": 1000.0,
     "window_center_x": 314600.0,
     "window_center_y": 6072200.0,
-    "window_azimuth": -20,
+    "window_azimuth": 0,
     "window_width": 1000.0,
     "window_height": 1500.0,
     "s_norm": 0.0,

@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import json
 import time
 import uuid
 from os import mkdir, path
@@ -360,27 +359,6 @@ class BaseApplication:
         if getattr(self, "_refresh", None) is None:
             self._refresh = ToggleButton(value=False)
         return self._refresh
-
-    def save_json_params(self, file_name: str, out_dict: dict):
-        """"""
-        for key, params in out_dict.items():
-            if getattr(self, key, None) is not None:
-                value = getattr(self, key)
-                if hasattr(value, "value"):
-                    value = value.value
-                    if isinstance(value, uuid.UUID):
-                        value = str(value)
-
-                if isinstance(out_dict[key], dict):
-                    out_dict[key]["value"] = value
-                else:
-                    out_dict[key] = value
-
-        file = f"{path.join(self.working_directory, file_name)}.ui.json"
-        with open(file, "w") as f:
-            json.dump(out_dict, f, indent=4)
-
-        return out_dict
 
     @property
     def trigger(self) -> Button:
