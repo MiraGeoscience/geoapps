@@ -20,7 +20,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "inversion_type": "magnetic",
+    "inversion_type": "magnetic scalar",
     "forward_only": False,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -63,6 +63,7 @@ inversion_defaults = {
     "window_center_y": 0.0,
     "window_width": 0.0,
     "window_height": 0.0,
+    "window_azimuth": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "max_iterations": 25,
@@ -99,7 +100,7 @@ inversion_defaults = {
     "conda_environment": "geoapps",
 }
 forward_defaults = {
-    "inversion_type": "magnetic",
+    "inversion_type": "magnetic scalar",
     "forward_only": True,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -135,6 +136,7 @@ forward_defaults = {
     "window_center_y": 0.0,
     "window_width": 0.0,
     "window_height": 0.0,
+    "window_azimuth": 0.0,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -148,7 +150,7 @@ forward_defaults = {
 }
 
 default_ui_json = {
-    "inversion_type": "magnetic",
+    "inversion_type": "magnetic scalar",
     "inducing_field_strength": {
         "association": "Cell",
         "dataType": "Float",
@@ -220,7 +222,7 @@ required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["magnetic"],
+        "values": ["magnetic scalar"],
     },
     "inducing_field_strength": {
         "types": [int, float],

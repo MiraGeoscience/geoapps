@@ -207,7 +207,7 @@ class SimulationFactory(SimPEGFactory):
         elif self.inversion_type == "gravity":
             args = {"rhoMap": maps.IdentityMap(nP=int(active_cells.sum()))}
 
-        elif self.inversion_type == "magnetic":
+        elif self.inversion_type == "magnetic scalar":
             args = {"chiMap": maps.IdentityMap(nP=int(active_cells.sum()))}
 
         return args

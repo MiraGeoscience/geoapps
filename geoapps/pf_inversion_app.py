@@ -722,12 +722,14 @@ class InversionApp(PlotSelection2D):
         if self.inversion_type.value == "magnetic vector" and not isinstance(
             self.params, MagneticVectorParams
         ):
+            self.params.inversion_type = "magnetic vector"
             self.params = MagneticVectorParams(
                 verbose=False, **self.params.to_dict(ui_json_format=False)
             )
         elif self.inversion_type.value == "magnetic scalar" and not isinstance(
             self.params, MagneticScalarParams
         ):
+            self.params.inversion_type = "magnetic scalar"
             self.params = MagneticScalarParams(
                 verbose=False, **self.params.to_dict(ui_json_format=False)
             )
