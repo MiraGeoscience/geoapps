@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=R0904
 
 import tempfile
 from pathlib import Path
@@ -54,8 +55,8 @@ def test_create_octree_app():
         ]
 
         max_distance = 200
-        refine_A = [4, 4, 4]
-        refine_B = [0, 0, 4]
+        refine_a = [4, 4, 4]
+        refine_b = [0, 0, 4]
 
         # Create a tree mesh from discretize
         treemesh = mesh_builder_xyz(
@@ -70,7 +71,7 @@ def test_create_octree_app():
             treemesh,
             points.vertices,
             method="radial",
-            octree_levels=refine_A,
+            octree_levels=refine_a,
             max_distance=max_distance,
             finalize=False,
         )
@@ -79,7 +80,7 @@ def test_create_octree_app():
             treemesh,
             topo.vertices,
             method="surface",
-            octree_levels=refine_B,
+            octree_levels=refine_b,
             max_distance=max_distance,
             finalize=True,
         )
@@ -97,7 +98,7 @@ def test_create_octree_app():
                 "enabled": True,
                 "group": "Refinement A",
                 "label": "Levels",
-                "value": ",".join([str(val) for val in refine_A]),
+                "value": ",".join([str(val) for val in refine_a]),
             },
             "Refinement A Type": {
                 "group": "Refinement A",
@@ -118,7 +119,7 @@ def test_create_octree_app():
                 "enabled": True,
                 "group": "Refinement B",
                 "label": "Levels",
-                "value": ",".join([str(val) for val in refine_B]),
+                "value": ",".join([str(val) for val in refine_b]),
             },
             "Refinement B Type": {
                 "group": "Refinement B",
@@ -147,7 +148,7 @@ def test_create_octree_app():
         app.trigger.click()
 
         # Re-load the new mesh and compare
-        ws = Workspace(app.h5file)
-        rec_octree = ws.get_entity("Octree_Mesh")[0]
+        new_ws = Workspace(app.h5file)
+        rec_octree = new_ws.get_entity("Octree_Mesh")[0]
 
         compare_entities(octree, rec_octree, ignore=["_name", "_uid"])
