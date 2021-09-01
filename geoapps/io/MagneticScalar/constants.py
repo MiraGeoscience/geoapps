@@ -91,7 +91,7 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "MagneticScalarInversion",
+    "out_group": "SusceptibilityInversion",
     "no_data_value": None,
     "monitoring_directory": None,
     "geoh5": None,
@@ -208,7 +208,7 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
-    "out_group": {"label": "Results group name", "value": "Gravity"},
+    "out_group": {"label": "Results group name", "value": "SusceptibilityInversion"},
 }
 default_ui_json.update(base_default_ui_json)
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
