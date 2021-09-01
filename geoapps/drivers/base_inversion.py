@@ -76,19 +76,23 @@ class InversionDriver:
 
     @property
     def starting_model(self):
-        return self.models.starting
+        mstart = self.models.starting
+        return mstart
 
     @property
     def reference_model(self):
-        return self.models.reference
+        mref = self.models.reference
+        return mref
 
     @property
     def lower_bound(self):
-        return self.models.lower_bound
+        lbound = self.models.lower_bound
+        return lbound
 
     @property
     def upper_bound(self):
-        return self.models.upper_bound
+        ubound = self.models.upper_bound
+        return ubound
 
     def _initialize(self):
 
@@ -112,7 +116,7 @@ class InversionDriver:
         """Run inversion from params"""
 
         # Create SimPEG Survey object
-        self.survey = self.inversion_data.survey()
+        self.survey, _ = self.inversion_data.survey()
 
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
@@ -127,7 +131,11 @@ class InversionDriver:
         # If forward only is true simulate fields, save to workspace and exit.
         if self.params.forward_only:
             self.inversion_data.simulate(
-                self.mesh, self.starting_model, self.active_cells, save=True
+                self.mesh,
+                self.starting_model,
+                self.survey,
+                self.active_cells,
+                save=True,
             )
             return
 
@@ -152,8 +160,8 @@ class InversionDriver:
         print("active", sum(self.active_cells))
         opt = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
-            lower=self.models.lower_bound,
-            upper=self.models.upper_bound,
+            lower=self.lower_bound,
+            upper=self.upper_bound,
             maxIterLS=20,
             maxIterCG=self.params.max_cg_iterations,
             tolCG=self.params.tol_cg,
@@ -165,6 +173,9 @@ class InversionDriver:
         prob = inverse_problem.BaseInvProblem(
             global_misfit, reg, opt, beta=self.params.initial_beta
         )
+
+        # prob.dpred = prob.get_dpred(self.starting_model, compute_J=True)
+        prob.dpred = prob.get_dpred(np.ones(self.n_cells) * np.log(0.2), compute_J=True)
 
         # Add a list of directives to the inversion
         directiveList = []
@@ -203,7 +214,7 @@ class InversionDriver:
             directiveList.append(
                 directives.BetaEstimate_ByEig(
                     beta0_ratio=self.params.initial_beta_ratio,
-                    method="old",
+                    method="ratio",
                 )
             )
 
@@ -235,7 +246,7 @@ class InversionDriver:
                     mapping=np.hstack([norms[c] for c in self.data.keys()]),
                     attribute_type="predicted",
                     data_type=self.inversion_data._observed_data_types,
-                    sorting=tuple(self.sorting),
+                    sorting=np.hstack(self.sorting),
                     save_objective_function=True,
                 )
             )
@@ -452,9 +463,11 @@ class InversionDriver:
         )
 
         for tile_id, local_index in enumerate(tiles):
-            lsurvey = self.inversion_data.survey(local_index)
+            lsurvey, local_index = self.inversion_data.survey(local_index)
+            if self.params.inversion_type == "direct_current":
+                lsurvey.drape_electrodes_on_topography(self.mesh, self.active_cells)
             lsim, lmap = self.inversion_data.simulation(
-                self.mesh, self.active_cells, local_index, tile_id
+                self.mesh, self.active_cells, lsurvey, tile_id
             )
             ldat = (
                 data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
@@ -464,19 +477,12 @@ class InversionDriver:
                 simulation=lsim,
                 model_map=lmap,
             )
+            lmisfit.W = 1 / lsurvey.std
+
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
 
         return local_misfits
-
-    def models(self):
-        """Return all models with data"""
-        return [
-            self.inversion_starting_model,
-            self.inversion_reference_model,
-            self.inversion_lower_bound,
-            self.inversion_upper_bound,
-        ]
 
     def fetch(self, p: str | UUID):
         """Fetch the object addressed by uuid from the workspace."""

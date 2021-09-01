@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -101,11 +102,11 @@ class SimPEGFactory:
     def concrete_object(self):
         """To be over-ridden in factory implementations."""
 
-    def assemble_arguments(self):
+    def assemble_arguments(self, **kwargs):
         """To be over-ridden in factory implementations."""
         return []
 
-    def assemble_keyword_arguments(self):
+    def assemble_keyword_arguments(self, **kwargs):
         """To be over-ridden in factory implementations."""
         return {}
 
@@ -274,7 +275,9 @@ class SurveyFactory(SimPEGFactory):
 
             return survey.Survey
 
-    def assemble_arguments(self, locations, data, uncertainties, local_index):
+    def assemble_arguments(
+        self, locations=None, data=None, uncertainties=None, local_index=None
+    ):
         """Provides implementations to assemble arguments for receivers object."""
 
         if self.factory_type == "direct_current":
@@ -295,6 +298,8 @@ class SurveyFactory(SimPEGFactory):
                 receivers = ReceiversFactory(self.params).build(
                     data=data, local_index=[source_id]
                 )
+                if receivers.nD == 0:
+                    continue
                 source = SourcesFactory(self.params).build(
                     receivers=receivers, local_index=[source_id]
                 )
@@ -315,10 +320,7 @@ class SurveyFactory(SimPEGFactory):
 
             return [sources]
 
-    def assemble_keyword_arguments(self, locations, data, uncertainties, local_index):
-        return {}
-
-    def build(self, locations, data, uncertainties, local_index):
+    def build(self, locations=None, data=None, uncertainties=None, local_index=None):
         """Overloads base method to add dobs, std attributes to survey class instance."""
 
         survey = super().build(
@@ -380,11 +382,8 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DNodal
 
-    def assemble_arguments(self, survey, mesh, map, tile_id):
-        return []
-
     def assemble_keyword_arguments(
-        self, survey=None, mesh=None, map=None, tile_id=None
+        self, survey=None, mesh=None, active_cells=None, map=None, tile_id=None
     ):
 
         sens_path = self._get_sens_path(tile_id)
@@ -396,7 +395,7 @@ class SimulationFactory(SimPEGFactory):
         kwargs["max_chunk_size"] = self.params.max_chunk_size
 
         if self.factory_type == "mvi":
-            kwargs["actInd"] = map.local_active
+            kwargs["actInd"] = active_cells
             kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
             kwargs["modelType"] = "vector"
             kwargs["store_sensitivities"] = (
@@ -405,7 +404,7 @@ class SimulationFactory(SimPEGFactory):
             kwargs["chunk_format"] = "row"
 
         elif self.factory_type == "magnetic":
-            kwargs["actInd"] = map.local_active
+            kwargs["actInd"] = active_cells
             kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
             kwargs["store_sensitivities"] = (
                 "forward_only" if self.params.forward_only else "disk"
@@ -415,10 +414,10 @@ class SimulationFactory(SimPEGFactory):
         elif self.factory_type == "direct_current":
 
             actmap = maps.InjectActiveCells(
-                mesh, map.local_active, valInactive=np.log(1e-8)
+                mesh, active_cells, valInactive=np.log(1e-8)
             )
-            kwargs["Solver"] = self.solver
             kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
+            kwargs["Solver"] = self.solver
             kwargs["store_sensitivities"] = False if self.params.forward_only else True
 
         return kwargs

@@ -367,20 +367,25 @@ class InversionData(InversionLocations):
 
         :return: survey: SimPEG Survey class that covers all data or optionally
             the portion of the data indexed by the local_index argument.
+        :return: local_index: receiver indices belonging to a particular tile.
         """
 
-        return SurveyFactory(self.params).build(
+        survey_factory = SurveyFactory(self.params)
+        survey = survey_factory.build(
             locations=self.locations,
             data=self.observed,
             uncertainties=self.uncertainties,
             local_index=local_index,
         )
+        has_rxids = True if len(survey_factory.receiver_ids) > 0 else False
+        local_index = survey_factory.receiver_ids if has_rxids else local_index
+        return survey, local_index
 
     def simulation(
         self,
         mesh: TreeMesh,
         active_cells: np.ndarray,
-        local_index: np.ndarray = None,
+        survey,
         tile_id: int = None,
     ):
         """
@@ -388,10 +393,9 @@ class InversionData(InversionLocations):
 
         :param: mesh: Inversion mesh.
         :param: active_cells: Mask that reduces model to active (earth) cells.
-        :param: local_index (Optional): Indices of the data belonging to a
-            particular tile in case of a tiled inversion.
-        :param: tile_id (Optional): Id associated with the tile being indexed
-            by the local_index argument in case of a tiled inversion.
+        :param: survey: SimPEG survey object.
+        :param: tile_id (Optional): Id associated with the tile covered by
+            the survey in case of a tiled inversion.
 
         :return: sim: SimPEG simulation object for full data or optionally
             the portion of the data indexed by the local_index argument.
@@ -402,12 +406,13 @@ class InversionData(InversionLocations):
         """
 
         simulation_factory = SimulationFactory(self.params)
-        survey = self.survey(local_index)
 
-        if local_index is None:
+        if tile_id is None:
 
             map = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
-            sim = simulation_factory.build(survey=survey, mesh=mesh, map=map)
+            sim = simulation_factory.build(
+                survey=survey, mesh=mesh, active_cells=active_cells, map=map
+            )
 
         else:
 
@@ -415,7 +420,11 @@ class InversionData(InversionLocations):
             kwargs = {"components": 3} if self.vector else {}
             map = maps.TileMap(mesh, active_cells, nested_mesh, **kwargs)
             sim = simulation_factory.build(
-                survey=survey, mesh=nested_mesh, map=map, tile_id=tile_id
+                survey=survey,
+                mesh=nested_mesh,
+                active_cells=map.local_active,
+                map=map,
+                tile_id=tile_id,
             )
 
         return sim, map
@@ -424,13 +433,14 @@ class InversionData(InversionLocations):
         self,
         mesh: TreeMesh,
         model: np.ndarray,
+        survey,
         active_cells: np.ndarray,
         save: bool = True,
     ) -> np.ndarray:
         """Simulate fields for a particular model."""
 
         client = get_client()
-        sim, _ = self.simulation(mesh, active_cells)
+        sim, _ = self.simulation(mesh, active_cells, survey)
         prediction = client.compute(sim.dpred(model))
         progress(prediction)
         d = np.asarray(prediction.result()).reshape((-1, len(self.components)))
