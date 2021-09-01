@@ -599,6 +599,35 @@ class InversionApp(PlotSelection2D):
         return self._sensor
 
     @property
+    def z_from_topo(self):
+        if self.sensor.options.value == "topo + radar + (dx, dy, dz)":
+            return True
+        return False
+
+    @z_from_topo.setter
+    def z_from_topo(self, value: bool):
+        if value:
+            self.sensor.options.value = "topo + radar + (dx, dy, dz)"
+        else:
+            self.sensor.options.value = "sensor location + (dx, dy, dz)"
+
+    @property
+    def receivers_radar_drape(self):
+        return self.sensor.data.value
+
+    @property
+    def receivers_offset_x(self):
+        return self.sensor.receivers_offset_x
+
+    @property
+    def receivers_offset_y(self):
+        return self.sensor.receivers_offset_y
+
+    @property
+    def receivers_offset_z(self):
+        return self.sensor.receivers_offset_z
+
+    @property
     def starting_channel(self):
         """"""
         return self._starting_channel
@@ -722,24 +751,24 @@ class InversionApp(PlotSelection2D):
         if self.inversion_type.value == "magnetic vector" and not isinstance(
             self.params, MagneticVectorParams
         ):
-            self.params.inversion_type = "magnetic vector"
-            self.params = MagneticVectorParams(
-                verbose=False, **self.params.to_dict(ui_json_format=False)
-            )
+            params = self.params.to_dict(ui_json_format=False)
+            params["inversion_type"] = "magnetic vector"
+            self.params = MagneticVectorParams(verbose=False, **params)
         elif self.inversion_type.value == "magnetic scalar" and not isinstance(
             self.params, MagneticScalarParams
         ):
-            self.params.inversion_type = "magnetic scalar"
-            self.params = MagneticScalarParams(
-                verbose=False, **self.params.to_dict(ui_json_format=False)
-            )
+            params = self.params.to_dict(ui_json_format=False)
+            params["inversion_type"] = "magnetic scalar"
+            self.params = MagneticScalarParams(verbose=False, **params)
         elif self.inversion_type.value == "gravity" and not isinstance(
             self.params, GravityParams
         ):
-            self.params.inversion_type = "gravity"
-            self.params = GravityParams(
-                verbose=False, **self.params.to_dict(ui_json_format=False)
-            )
+            params = self.params.to_dict(ui_json_format=False)
+            params["inversion_type"] = "gravity"
+            self.params = GravityParams(verbose=False, **params)
+
+        self.ga_group_name.value = self.params.defaults["out_group"]
+
         if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
             data_type_list = [
                 "tmi",
@@ -1173,7 +1202,17 @@ class SensorOptions(ObjectDataSelection):
 
     def __init__(self, **kwargs):
         self.defaults.update(**kwargs)
-        self._offset = Text(description="(dx, dy, dz) (+ve up)", value="0, 0, 0")
+        self._receivers_offset_x = FloatText(description="dx (+East)", value=0.0)
+        self._receivers_offset_y = FloatText(description="dy (+North)", value=0.0)
+        self._receivers_offset_z = FloatText(description="dz (+ve up)", value=0.0)
+        self._offset = VBox(
+            [
+                Label("Constant offsets"),
+                self._receivers_offset_x,
+                self._receivers_offset_y,
+                self._receivers_offset_z,
+            ]
+        )
         self._constant = FloatText(
             description="Constant elevation (m)",
         )
@@ -1185,19 +1224,14 @@ class SensorOptions(ObjectDataSelection):
             "topo + radar + (dx, dy, dz)": VBox(
                 [
                     self.offset,
+                    self.data,
                 ]
             ),
         }
         self.options.observe(self.update_options, names="value")
+        self.data.description = "Radar (Optional):"
 
         super().__init__(**self.defaults)
-
-        self.option_list["topo + radar + (dx, dy, dz)"].children = [
-            self.offset,
-            self.data,
-        ]
-        self.data.description = "Radar (Optional):"
-        self.data.style = {"description_width": "initial"}
 
     @property
     def main(self):
@@ -1209,6 +1243,18 @@ class SensorOptions(ObjectDataSelection):
     @property
     def offset(self):
         return self._offset
+
+    @property
+    def receivers_offset_x(self):
+        return self._receivers_offset_x
+
+    @property
+    def receivers_offset_y(self):
+        return self._receivers_offset_y
+
+    @property
+    def receivers_offset_z(self):
+        return self._receivers_offset_z
 
     @property
     def options(self):
@@ -1462,19 +1508,6 @@ class ModelOptions(ObjectDataSelection):
         self._main = widgets.VBox(
             [self._description, widgets.VBox([self._options, self._constant])]
         )
-
-        # for key, value in kwargs.items():
-        #     if self.identifier in key:
-        #         if "object" in key:
-        #             self.objects.value = value
-        #         elif isinstance(value, float):
-        #             self.constant.value = value
-        #             self.options.value = "Constant"
-        #         elif isinstance(value, UUID):
-        #             self.data.value = value
-        #             self.options.value = "Model"
-        #         else:
-        #             self.options.value = "None"
 
     def update_panel(self, _):
 
