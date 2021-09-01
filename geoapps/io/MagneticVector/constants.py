@@ -109,7 +109,7 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "MVIInversion",
+    "out_group": "VectorInversion",
     "no_data_value": None,
     "monitoring_directory": None,
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
@@ -419,7 +419,7 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
-    "out_group": {"label": "Results group name", "value": "MVIInversion"},
+    "out_group": {"label": "Results group name", "value": "VectorInversion"},
 }
 default_ui_json.update(base_default_ui_json)
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
@@ -510,6 +510,7 @@ app_initializer = {
     "inducing_field_inclination": 79.0,
     "inducing_field_declination": 11.0,
     "mesh_from_params": True,
+    "reference_model": 0.0,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
@@ -536,5 +537,5 @@ app_initializer = {
     "receivers_offset_x": 0,
     "receivers_offset_y": 0,
     "receivers_offset_z": 60,
-    "out_group": "MVIInversion",
+    "out_group": "VectorInversion",
 }

@@ -534,7 +534,7 @@ class InversionApp(PlotSelection2D):
                     ),
                     VBox(
                         [
-                            Label("Select Data Components"),
+                            Label("Input Data"),
                             HBox(
                                 [
                                     self.data_channel_panel,
