@@ -463,9 +463,9 @@ class InversionDriver:
         )
 
         for tile_id, local_index in enumerate(tiles):
-            lsurvey, local_index = self.inversion_data.survey(local_index)
-            if self.params.inversion_type == "direct_current":
-                lsurvey.drape_electrodes_on_topography(self.mesh, self.active_cells)
+            lsurvey, local_index = self.inversion_data.survey(
+                self.mesh, self.active_cells, local_index
+            )
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, lsurvey, tile_id
             )

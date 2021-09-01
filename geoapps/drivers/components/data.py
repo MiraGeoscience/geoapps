@@ -19,13 +19,13 @@ from copy import deepcopy
 import numpy as np
 from dask.distributed import get_client, progress
 from discretize import TreeMesh
-from geoh5py.objects import Grid2D, Points, PotentialElectrode
+from geoh5py.objects import PotentialElectrode
 from SimPEG import maps
 from SimPEG.utils.drivers import create_nested_mesh
 
+from geoapps.drivers.components.factories import SimulationFactory, SurveyFactory
 from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
-from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
 
 
@@ -358,7 +358,12 @@ class InversionData(InversionLocations):
         self.normalizations = normalizations
         return d
 
-    def survey(self, local_index: np.ndarray = None):
+    def survey(
+        self,
+        mesh: TreeMesh = None,
+        active_cells: np.ndarray = None,
+        local_index: np.ndarray = None,
+    ):
         """
         Generates SimPEG survey object.
 
@@ -375,6 +380,8 @@ class InversionData(InversionLocations):
             locations=self.locations,
             data=self.observed,
             uncertainties=self.uncertainties,
+            mesh=mesh,
+            active_cells=active_cells,
             local_index=local_index,
         )
         has_rxids = True if len(survey_factory.receiver_ids) > 0 else False

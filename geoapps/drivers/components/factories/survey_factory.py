@@ -5,24 +5,30 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoapps.io.params import Params
-    from discretize import TreeMesh
-    from SimPEG.survey import BaseSurvey
-
-import os
 
 import numpy as np
-from SimPEG import maps
+
+from .simpeg_factory import SimPEGFactory
+
+########## Shared utilities #############
 
 
 def receiver_group(txi, potential_electrodes):
-    """Group receivers by common transmitter id."""
+    """
+    Group receivers by common transmitter id.
+
+    :param: txi : transmitter index number.
+    :param: potential_electrodes : geoh5py object that holds potential electrodes
+        ab_map and ab_cell_id for a dc survey.
+
+    :return: ids : list of ids of potential electrodes used with transmitter txi.
+    """
 
     index_map = potential_electrodes.ab_map.map
     index_map = {int(v): k for k, v in index_map.items() if v != "Unknown"}
@@ -46,78 +52,6 @@ def group_locations(obj, ids):
     return (obj.vertices[obj.cells[ids, i]] for i in range(obj.cells.shape[1]))
 
 
-def stack_channels(channel_data: dict[str, np.ndarray]):
-    """Convert dictionary of data/uncertainties to stacked array."""
-    return np.vstack([list(channel_data.values())]).ravel()
-
-
-class SimPEGFactory:
-    """
-    Build SimPEG objects based on inversion type.
-
-    Parameters
-    ----------
-    params :
-        Driver parameters object.
-    factory_type :
-        Concrete factory type.
-    simpeg_object :
-        Abstract SimPEG object.
-
-    Methods
-    -------
-    assemble_arguments():
-        Assemble arguments for SimPEG object instantiation.
-    assemble_keyword_arguments():
-        Assemble keyword arguments for SimPEG object instantiation.
-    build():
-        Generate SimPEG object with assembled arguments and keyword arguments.
-    """
-
-    valid_factory_types = ["gravity", "magnetic", "mvi", "direct_current"]
-
-    def __init__(self, params: Params):
-        """
-        :param params: Driver parameters object.
-        :param factory_type: Concrete factory type.
-        :param simpeg_object: Abstract SimPEG object.
-
-        """
-        self.params = params
-        self.factory_type: str = params.inversion_type
-        self.simpeg_object = None
-
-    @property
-    def factory_type(self):
-        return self._factory_type
-
-    @factory_type.setter
-    def factory_type(self, p):
-        if p not in self.valid_factory_types:
-            msg = f"Factory type: {self.factory_type} not implemented yet."
-            raise NotImplementedError(msg)
-        else:
-            self._factory_type = p
-
-    def concrete_object(self):
-        """To be over-ridden in factory implementations."""
-
-    def assemble_arguments(self, **kwargs):
-        """To be over-ridden in factory implementations."""
-        return []
-
-    def assemble_keyword_arguments(self, **kwargs):
-        """To be over-ridden in factory implementations."""
-        return {}
-
-    def build(self, **kwargs):
-        """To be over-ridden in factory implementations."""
-
-        class_args = self.assemble_arguments(**kwargs)
-        class_kwargs = self.assemble_keyword_arguments(**kwargs)
-        return self.simpeg_object(*class_args, **class_kwargs)
-
-
 class ReceiversFactory(SimPEGFactory):
     """Build SimPEG receivers objects based on factory type."""
 
@@ -132,19 +66,16 @@ class ReceiversFactory(SimPEGFactory):
     def concrete_object(self):
 
         if self.factory_type in ["mvi", "magnetic"]:
-
             from SimPEG.potential_fields.magnetics import receivers
 
             return receivers.Point
 
         elif self.factory_type == "gravity":
-
             from SimPEG.potential_fields.gravity import receivers
 
-            return data_module.receivers.Point
+            return receivers.Point
 
         elif self.factory_type == "direct_current":
-
             from SimPEG.electromagnetics.static.resistivity import receivers
 
             return receivers.Dipole
@@ -194,19 +125,16 @@ class SourcesFactory(SimPEGFactory):
     def concrete_object(self):
 
         if self.factory_type in ["mvi", "magnetic"]:
-
             from SimPEG.potential_fields.magnetics import sources
 
             return sources.SourceField
 
         elif self.factory_type == "gravity":
-
             from SimPEG.potential_fields.gravity import sources
 
             return sources.SourceField
 
         elif self.factory_type == "direct_current":
-
             from SimPEG.electromagnetics.static.resistivity import sources
 
             return sources.Dipole
@@ -258,25 +186,28 @@ class SurveyFactory(SimPEGFactory):
     def concrete_object(self):
 
         if self.factory_type in ["mvi", "magnetic"]:
-
             from SimPEG.potential_fields.magnetics import survey
 
             return survey.Survey
 
         elif self.factory_type == "gravity":
-
             from SimPEG.potential_fields.gravity import survey
 
             return survey.Survey
 
         elif self.factory_type == "direct_current":
-
             from SimPEG.electromagnetics.static.resistivity import survey
 
             return survey.Survey
 
     def assemble_arguments(
-        self, locations=None, data=None, uncertainties=None, local_index=None
+        self,
+        locations=None,
+        data=None,
+        uncertainties=None,
+        mesh=None,
+        active_cells=None,
+        local_index=None,
     ):
         """Provides implementations to assemble arguments for receivers object."""
 
@@ -320,7 +251,15 @@ class SurveyFactory(SimPEGFactory):
 
             return [sources]
 
-    def build(self, locations=None, data=None, uncertainties=None, local_index=None):
+    def build(
+        self,
+        locations=None,
+        data=None,
+        uncertainties=None,
+        mesh=None,
+        active_cells=None,
+        local_index=None,
+    ):
         """Overloads base method to add dobs, std attributes to survey class instance."""
 
         survey = super().build(
@@ -340,95 +279,15 @@ class SurveyFactory(SimPEGFactory):
                 else self.local_index
             )
             tiled_local_index = np.tile(ind, n_channels)
-            survey.dobs = stack_channels(data)[tiled_local_index]
-            survey.std = stack_channels(uncertainties)[tiled_local_index]
+            survey.dobs = self._stack_channels(data)[tiled_local_index]
+            survey.std = self._stack_channels(uncertainties)[tiled_local_index]
+
+        if self.factory_type == "direct_current":
+            if (mesh is not None) and (active_cells is not None):
+                survey.drape_electrodes_on_topography(mesh, active_cells)
 
         return survey
 
-
-class SimulationFactory(SimPEGFactory):
-    def __init__(self, params: Params):
-        """
-        :param params: Params object containing SimPEG object parameters.
-        :param local_index: Indices defining local part of full survey.
-
-        """
-        super().__init__(params)
-        self.simpeg_object = self.concrete_object()
-        from SimPEG import dask
-
-        if self.factory_type == "direct_current":
-            import pymatsolver.direct as solver_module
-
-            self.solver = solver_module.Pardiso
-
-    def concrete_object(self):
-
-        if self.factory_type in ["magnetic", "mvi"]:
-
-            from SimPEG.potential_fields.magnetics import simulation
-
-            return simulation.Simulation3DIntegral
-
-        if self.factory_type == "gravity":
-
-            from SimPEG.potential_fields.gravity import simulation
-
-            return simulation.Simulation3DIntegral
-
-        if self.factory_type == "direct_current":
-
-            from SimPEG.electromagnetics.static.resistivity import simulation
-
-            return simulation.Simulation3DNodal
-
-    def assemble_keyword_arguments(
-        self, survey=None, mesh=None, active_cells=None, map=None, tile_id=None
-    ):
-
-        sens_path = self._get_sens_path(tile_id)
-
-        kwargs = {}
-        kwargs["survey"] = survey
-        kwargs["mesh"] = mesh
-        kwargs["sensitivity_path"] = sens_path
-        kwargs["max_chunk_size"] = self.params.max_chunk_size
-
-        if self.factory_type == "mvi":
-            kwargs["actInd"] = active_cells
-            kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
-            kwargs["modelType"] = "vector"
-            kwargs["store_sensitivities"] = (
-                "forward_only" if self.params.forward_only else "disk"
-            )
-            kwargs["chunk_format"] = "row"
-
-        elif self.factory_type == "magnetic":
-            kwargs["actInd"] = active_cells
-            kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
-            kwargs["store_sensitivities"] = (
-                "forward_only" if self.params.forward_only else "disk"
-            )
-            kwargs["chunk_format"] = "row"
-
-        elif self.factory_type == "direct_current":
-
-            actmap = maps.InjectActiveCells(
-                mesh, active_cells, valInactive=np.log(1e-8)
-            )
-            kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
-            kwargs["Solver"] = self.solver
-            kwargs["store_sensitivities"] = False if self.params.forward_only else True
-
-        return kwargs
-
-    def _get_sens_path(self, tile_id: int) -> str:
-        """Build path to destination of on-disk sensitivities."""
-        out_dir = os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
-
-        if tile_id is None:
-            sens_path = out_dir + "Tile.zarr"
-        else:
-            sens_path = out_dir + "Tile" + str(tile_id) + ".zarr"
-
-        return sens_path
+    def _stack_channels(self, channel_data: dict[str, np.ndarray]):
+        """Convert dictionary of data/uncertainties to stacked array."""
+        return np.vstack([list(channel_data.values())]).ravel()
