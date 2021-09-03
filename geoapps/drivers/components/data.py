@@ -232,10 +232,16 @@ class InversionData(InversionLocations):
     def save_data(self):
 
         if self.params.inversion_type == "direct_current":
-            self.entity = self.workspace.get_entity(self.params.data_object)[0].copy(
-                parent=self.params.out_group, copy_children=False
-            )
+
+            rx_obj = self.workspace.get_entity(self.params.data_object)[0]
+            tx_obj = self.params.workspace.get_entity(f"{rx_obj.name} (currents)")[0]
+
+            self.entity = rx_obj.copy(parent=self.params.out_group, copy_children=False)
             self.entity.name = "Data"
+            rx_obj.get_data("A-B Cell ID")[0].copy(parent=self.entity)
+            src = tx_obj.copy(parent=self.params.out_group, copy_children=False)
+            src.name = "Predicted (currents)"
+            self.entity.current_electrodes = src
 
             for comp in self.components:
                 self.data_entity = self.entity.add_data(
