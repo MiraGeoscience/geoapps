@@ -16,10 +16,13 @@ from geoapps.pf_inversion_app import InversionApp
 def run():
     #
     app = InversionApp()
-    app.inversion_type.value = "gravity"
     app.write.click()
-    app.trigger.click()
+    # app.trigger.click()
 
+    from geoapps.drivers.magnetic_vector_inversion import MagneticVectorDriver
+
+    driver = MagneticVectorDriver(app.params)
+    driver.run()
     # client = Client()
     # app = PeakFinder()
     # app.tem_checkbox.values = False
