@@ -333,11 +333,83 @@ default_ui_json = {
         "label": "Chi factor",
         "value": 1.0,
     },
+    "sens_wts_threshold": {
+        "group": "Update sensitivity weights directive",
+        "groupOptional": True,
+        "visible": False,
+        "enabled": True,
+        "label": "Update sensitivity weight threshold",
+        "value": 1e-3,
+    },
+    "f_min_change": {
+        "group": "Update IRLS directive",
+        "groupOptional": True,
+        "visible": False,
+        "enabled": True,
+        "label": "f min change",
+        "value": 1e-4,
+    },
+    "minGNiter": {
+        "group": "Update IRLS directive",
+        "visible": False,
+        "enabled": True,
+        "label": "Minimum Gauss-Newton iterations",
+        "value": 1,
+    },
+    "beta_tol": {
+        "group": "Update IRLS directive",
+        "visible": False,
+        "enabled": False,
+        "label": "Beta tolerance",
+        "value": 0.5,
+    },
+    "prctile": {
+        "group": "Update IRLS directive",
+        "visible": False,
+        "enabled": False,
+        "label": "percentile",
+        "value": 50,
+    },
+    "coolingRate": {
+        "group": "Update IRLS directive",
+        "visible": False,
+        "enabled": False,
+        "label": "Beta cooling rate",
+        "value": 1,
+    },
+    "coolEps_q": {
+        "group": "Update IRLS directive",
+        "visible": False,
+        "enabled": False,
+        "label": "Cool epsilon q",
+        "value": True,
+    },
+    "coolEpsFact": {
+        "group": "Update IRLS directive",
+        "visible": False,
+        "enabled": False,
+        "label": "Cool epsilon fact",
+        "value": 1.2,
+    },
+    "beta_search": {
+        "group": "Update IRLS directive",
+        "visible": False,
+        "enabled": False,
+        "label": "Perform beta search",
+        "value": False,
+    },
     "max_iterations": {
         "min": 0,
         "group": "Optimization",
         "label": "Max iteration count",
         "value": 25,
+    },
+    "max_least_squares_iterations": {
+        "group": "Optimization",
+        "visible": False,
+        "enabled": False,
+        "label": "Max least squares iteration count",
+        "value": 20,
     },
     "max_cg_iterations": {
         "min": 0,
@@ -685,7 +757,37 @@ validations = {
     "chi_factor": {
         "types": [int, float],
     },
+    "sens_wts_threshold": {
+        "types": [int, float],
+    },
+    "f_min_change": {
+        "types": [int, float],
+    },
+    "minGNiter": {
+        "types": [int, float],
+    },
+    "beta_tol": {
+        "types": [int, float],
+    },
+    "prctile": {
+        "types": [int, float],
+    },
+    "coolingRate": {
+        "types": [int, float],
+    },
+    "coolEps_q": {
+        "types": [bool],
+    },
+    "coolEpsFact": {
+        "types": [int, float],
+    },
+    "beta_search": {
+        "types": [bool],
+    },
     "max_iterations": {
+        "types": [int, float],
+    },
+    "max_least_squares_iterations": {
         "types": [int, float],
     },
     "max_cg_iterations": {

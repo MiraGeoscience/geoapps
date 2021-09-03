@@ -39,6 +39,7 @@ from .components import (
     InversionTopography,
     InversionWindow,
 )
+from .components.factories import DirectivesFactory
 
 cluster = LocalCluster(processes=False)
 client = Client(cluster)
@@ -162,7 +163,7 @@ class InversionDriver:
             maxIter=self.params.max_iterations,
             lower=self.lower_bound,
             upper=self.upper_bound,
-            maxIterLS=20,
+            maxIterLS=self.params.max_least_squares_iterations,
             maxIterCG=self.params.max_cg_iterations,
             tolCG=self.params.tol_cg,
             stepOffBoundsFact=1e-8,
@@ -178,78 +179,9 @@ class InversionDriver:
         prob.dpred = prob.get_dpred(np.ones(self.n_cells) * np.log(0.2), compute_J=True)
 
         # Add a list of directives to the inversion
-        directiveList = []
-
-        # MVI or not
-        if self.is_vector:
-            directiveList.append(
-                directives.VectorInversion(
-                    chifact_target=self.params.chi_factor * 2,
-                )
-            )
-            cool_eps_fact = 1.5
-            prctile = 75
-        else:
-            cool_eps_fact = 1.2
-            prctile = 50
-
-        # Pre-conditioner
-        directiveList.append(
-            directives.Update_IRLS(
-                f_min_change=1e-4,
-                max_irls_iterations=self.params.max_iterations,
-                minGNiter=1,
-                beta_tol=0.5,
-                prctile=prctile,
-                coolingRate=1,
-                coolEps_q=True,
-                coolEpsFact=cool_eps_fact,
-                beta_search=False,
-                chifact_target=self.params.chi_factor,
-            )
+        directiveList = DirectivesFactory(self.params).build(
+            self.inversion_data, self.inversion_mesh, self.active_cells, self.sorting
         )
-
-        # Beta estimate
-        if self.params.initial_beta is None:
-            directiveList.append(
-                directives.BetaEstimate_ByEig(
-                    beta0_ratio=self.params.initial_beta_ratio,
-                    method="ratio",
-                )
-            )
-
-        directiveList.append(directives.UpdatePreconditioner())
-
-        # Save model
-        if self.params.geoh5 is not None:
-
-            channels = ["model"]
-            if self.inversion_type == "mvi":
-                channels = ["amplitude", "theta", "phi"]
-
-            directiveList.append(
-                directives.SaveIterationsGeoH5(
-                    h5_object=self.inversion_mesh.mesh_entity,
-                    channels=channels,
-                    mapping=self.active_cells_map,
-                    attribute_type="mvi_angles" if self.is_vector else "model",
-                    association="CELL",
-                    sorting=self.mesh._ubc_order,
-                )
-            )
-
-            norms = self.inversion_data.normalizations
-            directiveList.append(
-                directives.SaveIterationsGeoH5(
-                    h5_object=self.inversion_data.data_entity,
-                    channels=self.data.keys(),
-                    mapping=np.hstack([norms[c] for c in self.data.keys()]),
-                    attribute_type="predicted",
-                    data_type=self.inversion_data._observed_data_types,
-                    sorting=np.hstack(self.sorting),
-                    save_objective_function=True,
-                )
-            )
 
         # Put all the parts together
         inv = inversion.BaseInversion(prob, directiveList=directiveList)
@@ -258,7 +190,7 @@ class InversionDriver:
         self.start_inversion_message()
         mrec = inv.run(self.starting_model)
         dpred = self.collect_predicted_data(global_misfit, mrec)
-        self.save_residuals(self.inversion_data.data_entity, dpred)
+        self.save_residuals(self.inversion_data.entity, dpred)
         self.finish_inversion_message(dpred)
 
     def get_weighting_matrix(self, global_misfit):
@@ -463,7 +395,7 @@ class InversionDriver:
         )
 
         for tile_id, local_index in enumerate(tiles):
-            lsurvey, local_index = self.inversion_data.survey(
+            lsurvey, _ = self.inversion_data.survey(
                 self.mesh, self.active_cells, local_index
             )
             lsim, lmap = self.inversion_data.simulation(

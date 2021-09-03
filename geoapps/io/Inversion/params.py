@@ -55,7 +55,17 @@ class InversionParams(Params):
         self.window_height: float = None
         self.inversion_style: str = None
         self.chi_factor: float = None
+        self.sens_wts_threshold: float = None
+        self.f_min_change: float = None
+        self.minGNiter: float = None
+        self.beta_tol: float = None
+        self.prctile: float = None
+        self.coolingRate: float = None
+        self.coolEps_q: bool = None
+        self.coolEpsFact: float = None
+        self.beta_search: bool = None
         self.max_iterations: int = None
+        self.max_least_squares_iterations: int = None
         self.max_cg_iterations: int = None
         self.max_global_iterations: int = None
         self.initial_beta: float = None
@@ -152,6 +162,17 @@ class InversionParams(Params):
             self.y_norm,
             self.z_norm,
         ]
+
+    def directive_params(self, directive_name):
+
+        if directive_name == "VectorInversion":
+            return {"chifact_target": self.chi_factor * 2}
+
+        elif directive_name == "Update_IRLS":
+            kwargs = {}
+            kwargs["f_min_change"] = self.f_min_change
+            kwargs["max_irls_iterations"] = self.max_iterations
+            kwargs[""]
 
     @property
     def forward_only(self):
@@ -724,6 +745,141 @@ class InversionParams(Params):
         self._chi_factor = val
 
     @property
+    def sens_wts_threshold(self):
+        return self._sens_wts_threshold
+
+    @sens_wts_threshold.setter
+    def sens_wts_threshold(self, val):
+        if val is None:
+            self._sens_wts_threshold = val
+            return
+        p = "sens_wts_threshold"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._sens_wts_threshold = val
+
+    @property
+    def f_min_change(self):
+        return self._f_min_change
+
+    @f_min_change.setter
+    def f_min_change(self, val):
+        if val is None:
+            self._f_min_change = val
+            return
+        p = "f_min_change"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._f_min_change = val
+
+    @property
+    def minGNiter(self):
+        return self._minGNiter
+
+    @minGNiter.setter
+    def minGNiter(self, val):
+        if val is None:
+            self._minGNiter = val
+            return
+        p = "minGNiter"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._minGNiter = val
+
+    @property
+    def beta_tol(self):
+        return self._beta_tol
+
+    @beta_tol.setter
+    def beta_tol(self, val):
+        if val is None:
+            self._beta_tol = val
+            return
+        p = "beta_tol"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._beta_tol = val
+
+    @property
+    def prctile(self):
+        return self._prctile
+
+    @prctile.setter
+    def prctile(self, val):
+        if val is None:
+            self._prctile = val
+            return
+        p = "prctile"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._prctile = val
+
+    @property
+    def coolingRate(self):
+        return self._coolingRate
+
+    @coolingRate.setter
+    def coolingRate(self, val):
+        if val is None:
+            self._coolingRate = val
+            return
+        p = "coolingRate"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._coolingRate = val
+
+    @property
+    def coolEps_q(self):
+        return self._coolEps_q
+
+    @coolEps_q.setter
+    def coolEps_q(self, val):
+        if val is None:
+            self._coolEps_q = val
+            return
+        p = "coolEps_q"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._coolEps_q = val
+
+    @property
+    def coolEpsFact(self):
+        return self._coolEpsFact
+
+    @coolEpsFact.setter
+    def coolEpsFact(self, val):
+        if val is None:
+            self._coolEpsFact = val
+            return
+        p = "coolEpsFact"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._coolEpsFact = val
+
+    @property
+    def beta_search(self):
+        return self._beta_search
+
+    @beta_search.setter
+    def beta_search(self, val):
+        if val is None:
+            self._beta_search = val
+            return
+        p = "beta_search"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._beta_search = val
+
+    @property
     def max_iterations(self):
         return self._max_iterations
 
@@ -737,6 +893,21 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._max_iterations = val
+
+    @property
+    def max_least_squares_iterations(self):
+        return self._max_least_squares_iterations
+
+    @max_least_squares_iterations.setter
+    def max_least_squares_iterations(self, val):
+        if val is None:
+            self._max_least_squares_iterations = val
+            return
+        p = "max_least_squares_iterations"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._max_least_squares_iterations = val
 
     @property
     def max_cg_iterations(self):
