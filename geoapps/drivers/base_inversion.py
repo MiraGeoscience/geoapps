@@ -175,6 +175,8 @@ class InversionDriver:
         if self.is_vector:
             directiveList.append(
                 directives.VectorInversion(
+                    [local.simulation for local in local_misfits],
+                    reg,
                     chifact_target=self.params.chi_factor * 2,
                 )
             )
@@ -272,7 +274,6 @@ class InversionDriver:
         :return: wr: Diagonal weighting matrix.
 
         """
-
         wr = np.zeros(self.n_cells * self.n_blocks)
         norm = np.tile(self.mesh.cell_volumes[self.active_cells] ** 2.0, self.n_blocks)
 

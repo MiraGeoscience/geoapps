@@ -201,7 +201,7 @@ class SimulationFactory(SimPEGFactory):
         if self.inversion_type == "magnetic vector":
             args = {
                 "chiMap": maps.IdentityMap(nP=int(active_cells.sum()) * 3),
-                "modelType": "vector",
+                "model_type": "vector",
             }
 
         elif self.inversion_type == "gravity":
