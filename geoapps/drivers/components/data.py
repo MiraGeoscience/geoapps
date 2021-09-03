@@ -106,7 +106,7 @@ class InversionData(InversionLocations):
         self.predicted: dict[str, np.ndarray] = {}
         self.uncertainties: dict[str, np.ndarray] = {}
         self.normalizations: list[float] = []
-        self.data_entity = None
+        self.entity = None
         self._observed_data_types = {}
         self._initialize()
 
@@ -231,17 +231,35 @@ class InversionData(InversionLocations):
 
     def save_data(self):
 
-        self.data_entity = super().create_entity("Data", self.locations["receivers"])
-
-        if self.params.forward_only:
-            return
-
-        for comp in self.components:
-            dnorm = self.normalizations[comp] * self.observed[comp]
-            observed_data_object = self.data_entity.add_data(
-                {f"Observed_{comp}": {"values": dnorm}}
+        if self.params.inversion_type == "direct_current":
+            self.entity = self.workspace.get_entity(self.params.data_object)[0].copy(
+                parent=self.params.out_group, copy_children=False
             )
-            self._observed_data_types[comp] = observed_data_object.entity_type
+            self.entity.name = "Data"
+
+            for comp in self.components:
+                self.data_entity = self.entity.add_data(
+                    {
+                        f"Observed_{comp}": {
+                            "values": self.observed[comp],
+                            "association": "CELL",
+                        }
+                    }
+                )
+
+        else:
+
+            self.entity = super().create_entity("Data", self.locations["receivers"])
+
+            if self.params.forward_only:
+                return
+
+            for comp in self.components:
+                dnorm = self.normalizations[comp] * self.observed[comp]
+                observed_data_object = self.entity.add_data(
+                    {f"Observed_{comp}": {"values": dnorm}}
+                )
+                self._observed_data_types[comp] = observed_data_object.entity_type
 
     def get_data_component(self, component: str) -> np.ndarray:
         """Get data component (channel) from params data."""
@@ -466,6 +484,6 @@ class InversionData(InversionLocations):
 
             for comp in self.components:
                 val = self.normalizations[comp] * self.predicted[comp]
-                self.predicted_data_object = self.data_entity.add_data(
+                self.predicted_data_object = self.entity.add_data(
                     {f"{comp}": {"values": val}}
                 )

@@ -58,7 +58,17 @@ inversion_defaults = {
     "window_height": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
+    "sens_wts_threshold": 1e-3,
+    "f_min_change": 1e-4,
+    "minGNiter": 1,
+    "beta_tol": 0.5,
+    "prctile": 50,
+    "coolingRate": 1,
+    "coolEps_q": True,
+    "coolEpsFact": 1.2,
+    "beta_search": False,
     "max_iterations": 25,
+    "max_least_squares_iterations": 20,
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e1,
@@ -138,6 +148,12 @@ forward_defaults = {
 }
 default_ui_json = {
     "inversion_type": "direct_current",
+    "directive_list": [
+        "UpdateSensitivityWeights",
+        "Update_IRLS",
+        "UpdatePreconditioner",
+        "SaveIterationsGeoH5",
+    ],
     "potential_channel_bool": True,
     "potential_channel": {
         "association": "Cell",
@@ -162,6 +178,13 @@ default_ui_json = {
         "value": 0.0,
     },
     "out_group": {"label": "Results group name", "value": "DirectCurrent"},
+    "directives": {
+        "UpdateSensitivityWeights": {},
+        "Update_IRLS": {},
+        "BetaEstimate_ByEig": {},
+        "UpdatePreconditioner": {},
+        "SaveIterationsGeoH5": {},
+    },
 }
 default_ui_json.update(base_default_ui_json)
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
@@ -180,6 +203,7 @@ validations = {
         "reqs": [("data_object")],
     },
     "potential_uncertainty": {"types": [str, int, float]},
+    "directives": {},
 }
 
 validations.update(base_validations)

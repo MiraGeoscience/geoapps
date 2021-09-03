@@ -84,7 +84,7 @@ class InversionTopography(InversionLocations):
             earth cells that are active in the inversion (beneath topography).
         """
         active_cells = active_from_xyz(mesh.mesh, self.locations, grid_reference="N")
-        mesh.mesh_entity.add_data(
+        mesh.entity.add_data(
             {
                 "active_cells": {
                     "values": active_cells[mesh.octree_permutation].astype("float64")

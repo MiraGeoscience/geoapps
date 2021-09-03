@@ -193,7 +193,7 @@ class InversionModel:
         self.model = None
         self.is_vector = None
         self.n_blocks = None
-        self.mesh_entity = mesh.mesh_entity
+        self.entity = mesh.entity
         self._initialize()
 
     def _initialize(self):
@@ -281,9 +281,7 @@ class InversionModel:
         """Resort model to the Octree object's ordering and save to workspace."""
 
         remapped_model = self.permute_2_octree()
-        self.mesh_entity.add_data(
-            {f"{self.model_type}_model": {"values": remapped_model}}
-        )
+        self.entity.add_data({f"{self.model_type}_model": {"values": remapped_model}})
 
     def _get(self, name: str):
         """
