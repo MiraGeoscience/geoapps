@@ -27,7 +27,7 @@ from SimPEG import (
     optimization,
     regularization,
 )
-from SimPEG.utils import tile_locations
+from SimPEG.utils import cartesian2amplitude_dip_azimuth, tile_locations
 
 from geoapps.io import Params
 from geoapps.utils import rotate_xy
@@ -218,7 +218,7 @@ class InversionDriver:
 
             channels = ["model"]
             if self.inversion_type == "magnetic vector":
-                channels = ["amplitude", "theta", "phi"]
+                channels = ["amplitude", "dip", "azimuth"]
 
             orig_octree = self.fetch(self.inversion_mesh.uid)
             outmesh = orig_octree.copy(
@@ -230,8 +230,7 @@ class InversionDriver:
                 directives.SaveIterationsGeoH5(
                     h5_object=outmesh,
                     channels=channels,
-                    mapping=self.active_cells_map,
-                    attribute_type="mvi_angles" if self.is_vector else "model",
+                    transforms=[cartesian2amplitude_dip_azimuth, self.active_cells_map],
                     association="CELL",
                     sorting=self.mesh._ubc_order,
                 )
@@ -250,7 +249,10 @@ class InversionDriver:
                 directives.SaveIterationsGeoH5(
                     h5_object=self.inversion_data.data_entity,
                     channels=self.survey.components,
-                    mapping=np.hstack([norms[c] for c in self.survey.components]),
+                    transforms=np.kron(
+                        [norms[c] for c in self.survey.components],
+                        np.ones(self.survey.receiver_locations.shape[0]),
+                    ),
                     attribute_type="predicted",
                     data_type=self.inversion_data._observed_data_types,
                     sorting=tuple(self.sorting),
