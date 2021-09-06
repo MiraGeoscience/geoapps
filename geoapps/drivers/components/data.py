@@ -232,7 +232,11 @@ class InversionData(InversionLocations):
             if ignore_type in ["<", ">"]:
                 ignore_value = float(ignore_values.split(ignore_type)[1])
             else:
-                ignore_value = float(ignore_values)
+
+                try:
+                    ignore_value = float(ignore_values)
+                except ValueError:
+                    return None, None
 
             return ignore_value, ignore_type
         else:
