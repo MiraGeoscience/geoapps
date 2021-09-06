@@ -140,8 +140,7 @@ class InversionApp(PlotSelection2D):
         self._lower_bound_group = ModelOptions("lower_bound", **self.defaults)
         self._upper_bound_group = ModelOptions("upper_bound", **self.defaults)
         self._ignore_values = widgets.Text(
-            value="<0",
-            description="Data (i.e. <0 = no negatives)",
+            description="Value (i.e. '<0' for no negatives)",
         )
         self._max_iterations = IntText(value=10, description="Max beta Iterations")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
