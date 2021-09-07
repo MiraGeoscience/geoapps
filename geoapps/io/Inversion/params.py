@@ -1119,7 +1119,7 @@ class InversionParams(Params):
         if isinstance(self.workspace, Workspace) and self.out_group is not None:
             group = self.workspace.get_entity(self.out_group)
 
-            if not group:
+            if len(group) == 0 or group[0] is None:
                 return ContainerGroup.create(self.workspace, name=self.out_group)
 
             return group[0]
@@ -1138,108 +1138,3 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._no_data_value = val
-
-    @property
-    def monitoring_directory(self):
-        return self._monitoring_directory
-
-    @monitoring_directory.setter
-    def monitoring_directory(self, val):
-        if val is None:
-            self._monitoring_directory = val
-            return
-        p = "monitoring_directory"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._monitoring_directory = val
-
-    @property
-    def workspace_geoh5(self):
-        return self._workspace_geoh5
-
-    @workspace_geoh5.setter
-    def workspace_geoh5(self, val):
-        if val is None:
-            self._workspace_geoh5 = val
-            return
-        p = "workspace_geoh5"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._workspace_geoh5 = val
-
-    @property
-    def geoh5(self):
-        return self._geoh5
-
-    @geoh5.setter
-    def geoh5(self, val):
-        if val is None:
-            self._geoh5 = val
-            return
-        p = "geoh5"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._geoh5 = val
-
-    @property
-    def run_command(self):
-        return self._run_command
-
-    @run_command.setter
-    def run_command(self, val):
-        if val is None:
-            self._run_command = val
-            return
-        p = "run_command"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._run_command = val
-
-    @property
-    def run_command_boolean(self):
-        return self._run_command_boolean
-
-    @run_command_boolean.setter
-    def run_command_boolean(self, val):
-        if val is None:
-            self._run_command_boolean = val
-            return
-        p = "run_command_boolean"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._run_command_boolean = val
-
-    @property
-    def conda_environment(self):
-        return self._conda_environment
-
-    @conda_environment.setter
-    def conda_environment(self, val):
-        if val is None:
-            self._conda_environment = val
-            return
-        p = "conda_environment"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._conda_environment = val
-
-    @property
-    def conda_environment_boolean(self):
-        return self._conda_environment_boolean
-
-    @conda_environment_boolean.setter
-    def conda_environment_boolean(self, val):
-        if val is None:
-            self._conda_environment_boolean = val
-            return
-        p = "conda_environment_boolean"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._conda_environment_boolean = val
