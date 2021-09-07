@@ -172,7 +172,6 @@ class InversionApp(PlotSelection2D):
         self._starting_model_group.options.options = ["Constant", "Model"]
         self._reference_model_group = ModelOptions("reference_model", **self.defaults)
         self._reference_model_group.options.observe(self.update_ref)
-        self._reference_model = self._reference_model_group.data
         self._topography_group = TopographyOptions(**self.defaults)
         self._detrend_data = Checkbox(description="Detrend data")
         self._detrend_order = IntText(description="Order", min=0, max=2, value=0)
@@ -1067,6 +1066,7 @@ class InversionApp(PlotSelection2D):
                     0
                 ].copy(parent=new_obj)
 
+        self.params.workspace = new_workspace
         self.params.write_input_file(name=self._ga_group_name.value)
 
         self.write.button_style = ""

@@ -265,7 +265,9 @@ class Params:
         if val is None:
             self._geoh5 = val
             return
-        self.setter_validator("geoh5", val)
+        self.setter_validator(
+            "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
+        )
 
     @property
     def run_command(self):
