@@ -182,7 +182,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
             values = values[indices]
 
         if "marker_size" not in kwargs.keys():
-            marker_size = 5
+            marker_size = 50
         else:
             marker_size = kwargs["marker_size"]
 
