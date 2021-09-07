@@ -223,7 +223,7 @@ class InversionDriver:
 
             orig_octree = self.fetch(self.inversion_mesh.uid)
             outmesh = orig_octree.copy(
-                parent=self.params.get_out_group(), copy_children=False
+                parent=self.params.out_group, copy_children=False
             )
             self.workspace.remove_entity(orig_octree)
 

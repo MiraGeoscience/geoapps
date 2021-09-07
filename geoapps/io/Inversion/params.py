@@ -1110,17 +1110,19 @@ class InversionParams(Params):
         if val is None:
             self._out_group = val
             return
-        p = "out_group"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
+
+        self.setter_validator(
+            "out_group",
+            val,
+            fun=lambda x: self.get_out_group(x) if isinstance(val, str) else x,
         )
 
-    def get_out_group(self):
-        if isinstance(self.workspace, Workspace) and self.out_group is not None:
-            group = self.workspace.get_entity(self.out_group)
+    def get_out_group(self, name: str):
+        if isinstance(self.workspace, Workspace) and isinstance(name, str):
+            group = self.workspace.get_entity(name)
 
             if len(group) == 0 or group[0] is None:
-                return ContainerGroup.create(self.workspace, name=self.out_group)
+                return ContainerGroup.create(self.workspace, name=name)
 
             return group[0]
 
