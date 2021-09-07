@@ -313,7 +313,7 @@ class Params:
     def input_file(self):
         return self._input_file
 
-    def setter_validator(self, key: str, value, promote_type=None, fun=lambda x: x):
+    def setter_validator(self, key: str, value, fun=lambda x: x):
 
         if value is None:
             setattr(self, f"_{key}", value)
@@ -322,10 +322,7 @@ class Params:
         self.validator.validate(
             key, value, self.validations[key], self.workspace, self.associations
         )
-        if promote_type is not None:
-            if isinstance(value, promote_type):
-                value = fun(value)
-
+        value = fun(value)
         setattr(self, f"_{key}", value)
 
     def write_input_file(
