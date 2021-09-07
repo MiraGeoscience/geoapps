@@ -22,11 +22,13 @@ class DirectivesFactory:
         "SaveIterationsGeoH5": [
             "save_iteration_model_directive",
             "save_iteration_data_directive",
+            "save_iteration_apparent_resistivity_directive",
         ],
     }
 
     def __init__(self, params):
         self.params = params
+        self.factory_type = params.inversion_type
         self.directive_list = []
         self.vector_inversion_directive = None
         self.update_sensitivity_weights_directive = None
@@ -35,6 +37,7 @@ class DirectivesFactory:
         self.update_preconditioner_directive = None
         self.save_iteration_model_directive = None
         self.save_iteration_data_directive = None
+        self.save_iteration_apparent_resistivity_directive = None
 
     def build(self, inversion_data, inversion_mesh, active_cells, sorting):
 
@@ -83,6 +86,17 @@ class DirectivesFactory:
                 sorting=sorting,
             )
 
+            if self.factory_type == "direct_current":
+                mapping = inversion_data.transformations["potential"]
+                self.save_iteration_apparent_resistivity_directive = (
+                    SaveIterationGeoh5Factory(self.params).build(
+                        inversion_object=inversion_data,
+                        active_cells=active_cells,
+                        sorting=sorting,
+                        mapping=mapping,
+                    )
+                )
+
         for directive_name in self.params._directive_list:
             for attr in self._directive_2_attr[directive_name]:
                 directive = getattr(self, attr)
@@ -102,10 +116,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         return directives.SaveIterationsGeoH5
 
     def assemble_keyword_arguments(
-        self,
-        inversion_object=None,
-        active_cells=None,
-        sorting=None,
+        self, inversion_object=None, active_cells=None, sorting=None, mapping=None
     ):
 
         if "mesh" in inversion_object.__dict__.keys():
@@ -122,21 +133,28 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         if object_type == "data":
 
-            kwargs["channels"] = inversion_object.observed.keys()
+            channels = inversion_object.observed.keys()
+            kwargs["channels"] = channels
             kwargs["attribute_type"] = "predicted"
             kwargs["save_objective_function"] = True
-            kwargs["mapping"] = np.hstack(
-                [
-                    inversion_object.normalizations[c]
-                    for c in inversion_object.observed.keys()
-                ]
-            )
 
             if self.factory_type == "direct_current":
                 kwargs["association"] = "CELL"
                 kwargs["data_type"] = {
-                    "potential": {"dc", inversion_object.data_entity.entity_type}
+                    "": {
+                        c: inversion_object.data_entity[c].entity_type for c in channels
+                    }
                 }
+                if mapping is not None:
+                    kwargs["mapping"] = mapping
+                    kwargs["channels"] = ["apparent_resistivity"]
+                    apparent_resistivity_entity_type = self.params.workspace.get_entity(
+                        "Observed_apparent_resistivity"
+                    )[0].entity_type
+                    kwargs["data_type"] = {
+                        "": {"apparent_resistivity": apparent_resistivity_entity_type}
+                    }
+
             else:
                 kwargs["data_type"] = inversion_object._observed_data_types
                 kwargs["sorting"] = np.hstack(sorting)
