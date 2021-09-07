@@ -20,7 +20,8 @@ import numpy as np
 from dask.distributed import get_client, progress
 from discretize import TreeMesh
 from geoh5py.objects import PotentialElectrode
-from SimPEG import maps
+from SimPEG import data, maps
+from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 from SimPEG.utils.drivers import create_nested_mesh
 
 from geoapps.drivers.components.factories import SimulationFactory, SurveyFactory
@@ -105,8 +106,10 @@ class InversionData(InversionLocations):
         self.observed: dict[str, np.ndarray] = {}
         self.predicted: dict[str, np.ndarray] = {}
         self.uncertainties: dict[str, np.ndarray] = {}
-        self.normalizations: list[float] = []
+        self.normalizations: dict[str, Any] = {}
+        self.transformations: dict[str, Any] = {}
         self.entity = None
+        self.data_entity = {}
         self._observed_data_types = {}
         self._initialize()
 
@@ -240,11 +243,15 @@ class InversionData(InversionLocations):
             self.entity.name = "Data"
             rx_obj.get_data("A-B Cell ID")[0].copy(parent=self.entity)
             src = tx_obj.copy(parent=self.params.out_group, copy_children=False)
-            src.name = "Predicted (currents)"
+            src.name = "Data (currents)"
             self.entity.current_electrodes = src
 
+            survey, _ = self.survey()
+            self.transformations["potential"] = 1 / (geometric_factor(survey) + 1e-10)
+            appres = self.observed["potential"] * self.transformations["potential"]
+
             for comp in self.components:
-                self.data_entity = self.entity.add_data(
+                self.data_entity[comp] = self.entity.add_data(
                     {
                         f"Observed_{comp}": {
                             "values": self.observed[comp],
@@ -252,6 +259,15 @@ class InversionData(InversionLocations):
                         }
                     }
                 )
+
+            self.data_entity["apparent_resistivity"] = self.entity.add_data(
+                {
+                    "Observed_apparent_resistivity": {
+                        "values": appres,
+                        "association": "CELL",
+                    }
+                }
+            )
 
         else:
 
