@@ -465,7 +465,6 @@ class InversionOptions(BaseApplication):
         super().__init__(**self.defaults)
 
         self.inversion_options = {
-            "output name": self.ga_group_name,
             "uncertainties": self._uncert_mode,
             "starting model": self._starting_model.main,
             "background susceptibility": self._susceptibility_model.main,
@@ -483,9 +482,6 @@ class InversionOptions(BaseApplication):
             disabled=False,
         )
         self.option_choices.observe(self.inversion_option_change, names="value")
-
-        self.ga_group_name.value = "Inversion_"
-
         self._main = widgets.VBox(
             [
                 HBox([widgets.Label("Inversion Options")]),
@@ -701,6 +697,7 @@ class InversionApp(PlotSelection2D):
         "resolution": 50,
         "window_width": 1500,
         "window_height": 1500,
+        "ga_group_name": "EM1DInversion_",
         "inversion_parameters": {"max_iterations": 25},
         "topography": {
             "options": "Object",
@@ -720,7 +717,6 @@ class InversionApp(PlotSelection2D):
     _lines = None
     _topography = None
     _inversion_parameters = None
-    _spatial_options = None
 
     def __init__(self, **kwargs):
         self.defaults.update(**kwargs)
@@ -741,7 +737,9 @@ class InversionApp(PlotSelection2D):
             icon="check",
         )
         self.data_channel_choices = widgets.Dropdown()
-        self.data_channel_panel = widgets.VBox([self.data_channel_choices])
+        self.data_channel_panel = widgets.VBox(
+            [self.data_channel_choices], layout=Layout(width="50%")
+        )
         self.trigger.observe(self.trigger_click, names="value")
         self.write.on_click(self.write_trigger)
         self.system.observe(self.system_observer, names="value")
@@ -751,9 +749,7 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices.observe(
             self.data_channel_choices_observer, names="value"
         )
-        self.spatial_choices = widgets.Dropdown()
-        self.spatial_choices.observe(self.spatial_option_change, names="value")
-        self.spatial_panel = VBox([self.spatial_choices])
+
         super().__init__(**self.defaults)
 
         if "lines" in self.defaults:
@@ -785,7 +781,10 @@ class InversionApp(PlotSelection2D):
     def lines(self):
         if getattr(self, "_lines", None) is None:
             self._lines = LineOptions(workspace=self._workspace, objects=self._objects)
-            self.lines.lines.observe(self.update_selection, names="value")
+            self._lines.lines.observe(self.update_selection, names="value")
+            self._lines.data.description = "Field"
+            self._lines.lines.description = "ID:"
+
         return self._lines
 
     @property
@@ -805,21 +804,58 @@ class InversionApp(PlotSelection2D):
                                             self.system,
                                         ]
                                     ),
-                                    VBox([Label("Channels"), self.data_channel_panel]),
                                 ],
                             ),
-                        ]
+                        ],
+                        layout=Layout(border="solid"),
                     ),
-                    self.window_selection,
                     VBox(
                         [
-                            Label("Topo, Sensor and Line Location Options"),
-                            self.spatial_panel,
-                        ]
+                            Label("Input Data"),
+                            HBox(
+                                [
+                                    self.data_channel_panel,
+                                    self.window_selection,
+                                ],
+                            ),
+                            Label("Line Selection"),
+                            self.lines.main,
+                        ],
+                        layout=Layout(border="solid"),
                     ),
-                    self.inversion_parameters.main,
-                    self.forward_only,
-                    self.output_panel,
+                    HBox(
+                        [
+                            VBox(
+                                [
+                                    Label("Topography"),
+                                    self.topography.main,
+                                ]
+                            ),
+                            VBox(
+                                [
+                                    Label("Sensor Location"),
+                                    self.sensor.main,
+                                ]
+                            ),
+                        ],
+                        layout=Layout(border="solid"),
+                    ),
+                    VBox(
+                        [
+                            Label("Inversion Parameters"),
+                            self.forward_only,
+                            self.inversion_parameters.main,
+                        ],
+                        layout=Layout(border="solid"),
+                    ),
+                    VBox(
+                        [
+                            Label("Output"),
+                            self.ga_group_name,
+                            self.output_panel,
+                        ],
+                        layout=Layout(border="solid"),
+                    ),
                 ]
             )
         return self._main
@@ -833,16 +869,6 @@ class InversionApp(PlotSelection2D):
                 **self.defaults["sensor"],
             )
         return self._sensor
-
-    @property
-    def spatial_options(self):
-        if getattr(self, "_spatial_options", None) is None:
-            self._spatial_options = {
-                "Topography": self.topography.main,
-                "Sensor": self.sensor.main,
-                "Line ID": self.lines.main,
-            }
-        return self._spatial_options
 
     @property
     def starting_channel(self):
@@ -909,7 +935,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + 'python -m geoapps.drivers.em1d_inversion "'
-            + f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.ga_group_name.value)}.json"
+            + f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
         )
         self.trigger.button_style = ""
 
@@ -940,8 +966,6 @@ class InversionApp(PlotSelection2D):
         system_specs = {}
         for key, time in self.em_system_specs[self.system.value]["channels"].items():
             system_specs[key] = f"{time:.5e}"
-
-        self.spatial_choices.options = list(self.spatial_options.keys())
 
         self.inversion_parameters.reference_model.options.options = [
             "Best-fitting halfspace",
@@ -978,8 +1002,6 @@ class InversionApp(PlotSelection2D):
         self.inversion_parameters.starting_model.description.value = (
             "Starting " + inversion_defaults()["property"][flag]
         )
-
-        self.spatial_choices.value = self.spatial_choices.options[0]
 
         def channel_setter(caller):
 
@@ -1119,14 +1141,6 @@ class InversionApp(PlotSelection2D):
         self.write.button_style = "warning"
         self.trigger.button_style = "danger"
 
-    def spatial_option_change(self, _):
-        self.spatial_panel.children = [
-            self.spatial_choices,
-            self.spatial_options[self.spatial_choices.value],
-        ]
-        self.write.button_style = "warning"
-        self.trigger.button_style = "danger"
-
     def update_selection(self, _):
         self.highlight_selection = {self.lines.data.value: self.lines.lines.value}
         self.refresh.value = False
@@ -1134,7 +1148,7 @@ class InversionApp(PlotSelection2D):
 
     def write_trigger(self, _):
         input_dict = {
-            "out_group": self.inversion_parameters.ga_group_name.value,
+            "out_group": self.ga_group_name.value,
             "mesh": "Mesh",
         }
         input_dict["system"] = self.system.value
@@ -1310,7 +1324,7 @@ class InversionApp(PlotSelection2D):
         new_workspace = Workspace(
             os.path.join(
                 self.export_directory.selected_path,
-                self.inversion_parameters.ga_group_name.value + ".geoh5",
+                self.ga_group_name.value + ".geoh5",
             )
         )
 
@@ -1342,7 +1356,7 @@ class InversionApp(PlotSelection2D):
         input_dict["workspace"] = os.path.abspath(new_workspace.h5file)
         input_dict["save_to_geoh5"] = os.path.abspath(new_workspace.h5file)
 
-        file = f"{os.path.join(self.export_directory.selected_path, self.inversion_parameters.ga_group_name.value)}.json"
+        file = f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
         with open(file, "w") as f:
             json.dump(input_dict, f, indent=4)
 
