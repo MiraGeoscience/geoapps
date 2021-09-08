@@ -218,6 +218,9 @@ class InversionDriver:
             channels = ["model"]
             if self.inversion_type == "magnetic vector":
                 channels = ["amplitude", "dip", "azimuth"]
+                transforms = [cartesian2amplitude_dip_azimuth, self.active_cells_map]
+            else:
+                transforms = [self.active_cells_map]
 
             orig_octree = self.fetch(self.inversion_mesh.uid)
             outmesh = orig_octree.copy(
@@ -229,7 +232,7 @@ class InversionDriver:
                 directives.SaveIterationsGeoH5(
                     outmesh,
                     channels=channels,
-                    transforms=[cartesian2amplitude_dip_azimuth, self.active_cells_map],
+                    transforms=transforms,
                     association="CELL",
                     sorting=self.mesh._ubc_order,
                 )
