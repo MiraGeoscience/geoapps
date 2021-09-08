@@ -12,9 +12,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
 from geoh5py.data import Data, ReferencedData
+from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
+from geoh5py.workspace import Workspace
+from ipywidgets import widgets
 
 from geoapps.utils.utils import filter_xy, format_labels, inv_symlog, symlog
+
+from ..utils import get_inversion_output
 
 
 def normalize(values):
@@ -633,3 +638,42 @@ def check_data_type(data):
 #         ]
 #     )
 #     return layout
+
+
+def plot_convergence_curve(h5file):
+    """"""
+    workspace = Workspace(h5file)
+    names = [
+        group.name for group in workspace.groups if isinstance(group, ContainerGroup)
+    ]
+    objects = widgets.Dropdown(
+        options=names,
+        value=names[0],
+        description="Inversion Group:",
+        style={"description_width": "initial"},
+    )
+
+    def plot_curve(objects):
+
+        inversion = workspace.get_entity(objects)[0]
+        result = None
+        if getattr(inversion, "comments", None) is not None:
+            if inversion.comments.values is not None:
+                result = get_inversion_output(workspace.h5file, objects)
+                iterations = result["iteration"]
+                phi_d = result["phi_d"]
+                phi_m = result["phi_m"]
+
+                ax1 = plt.subplot()
+                ax2 = ax1.twinx()
+                ax1.plot(iterations, phi_d, linewidth=3, c="k")
+                ax1.set_xlabel("Iterations")
+                ax1.set_ylabel(r"$\phi_d$", size=16)
+                ax2.plot(iterations, phi_m, linewidth=3, c="r")
+                ax2.set_ylabel(r"$\phi_m$", size=16)
+
+        return result
+
+    interactive_plot = widgets.interactive(plot_curve, objects=objects)
+
+    return interactive_plot
