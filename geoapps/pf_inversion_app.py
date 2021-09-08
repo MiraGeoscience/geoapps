@@ -746,18 +746,21 @@ class InversionApp(PlotSelection2D):
         ):
             params = self.params.to_dict(ui_json_format=False)
             params["inversion_type"] = "magnetic vector"
+            params["out_group"] = "VectorInversion"
             self.params = MagneticVectorParams(verbose=False, **params)
         elif self.inversion_type.value == "magnetic scalar" and not isinstance(
             self.params, MagneticScalarParams
         ):
             params = self.params.to_dict(ui_json_format=False)
             params["inversion_type"] = "magnetic scalar"
+            params["out_group"] = "SusceptibilityInversion"
             self.params = MagneticScalarParams(verbose=False, **params)
         elif self.inversion_type.value == "gravity" and not isinstance(
             self.params, GravityParams
         ):
             params = self.params.to_dict(ui_json_format=False)
             params["inversion_type"] = "gravity"
+            params["out_group"] = "GravityInversion"
             self.params = GravityParams(verbose=False, **params)
 
         self.ga_group_name.value = self.params.defaults["out_group"]
@@ -939,6 +942,12 @@ class InversionApp(PlotSelection2D):
             ]
         else:
             self.survey_type_panel.children = [self.inversion_type]
+
+        if self.inversion_type.value == "magnetic scalar":
+            self._lower_bound_group.options.value = "Constant"
+            self._lower_bound_group.constant.value = 0.0
+        else:
+            self._lower_bound_group.options.value = "None"
 
     def object_observer(self, _):
         """ """
