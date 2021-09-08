@@ -3,9 +3,8 @@ Applications
 
 Gallery of applications currently available
 
-
-Workspace
----------
+Core Utilities
+--------------
 
 .. nbgallery::
     :name: base_applications
@@ -16,9 +15,10 @@ Workspace
     applications/view_selection
     applications/object_data_selection
     applications/base_application
+    applications/scatter
 
 
-Object/Data Utilities
+Create Objects & Data
 ---------------------
 
 .. nbgallery::
@@ -47,8 +47,8 @@ Machine Learning
     applications/clustering
     applications/peak_finder
 
-Geophysical Inversion
----------------------
+Geophysical Data Inversion
+--------------------------
 
 .. nbgallery::
     :name: inversion
@@ -57,23 +57,6 @@ Geophysical Inversion
 
     applications/grav_mag_inversion
     applications/em1d_inversion
-
-
-Visualization
--------------
-
-.. nbgallery::
-    :name: data_viz
-    :glob:
-    :reversed:
-
-    applications/scatter
-
-
-
-
-
-
 
 
 Need help? Contact us at support@mirageoscience.com
