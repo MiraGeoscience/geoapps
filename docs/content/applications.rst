@@ -35,19 +35,28 @@ Object/Data Utilities
     applications/data_interpolation
 
 
-Processing
-----------
+Machine Learning
+----------------
 
 .. nbgallery::
-    :name: data_manipulation
+    :name: machine_learning
     :glob:
     :reversed:
 
     applications/edge_detection
-    applications/geophysical_inversion
     applications/clustering
     applications/peak_finder
 
+Geophysical Inversion
+---------------------
+
+.. nbgallery::
+    :name: inversion
+    :glob:
+    :reversed:
+
+    applications/grav_mag_inversion
+    applications/em1d_inversion
 
 
 Visualization
@@ -103,7 +112,11 @@ Need help? Contact us at support@mirageoscience.com
     :align: center
     :width: 0
 
-.. figure:: applications/images/inversion_thumbnail.png
+.. figure:: applications/images/inversion_em1d_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/inversion_grav_mag_thumbnail.png
     :align: center
     :width: 0
 

@@ -9,12 +9,11 @@ import json
 import multiprocessing
 import os
 import os.path as path
+import uuid
 
 import ipywidgets as widgets
-import matplotlib.pyplot as plt
 import numpy as np
-from geoh5py.groups import ContainerGroup
-from geoh5py.objects import BlockModel, Curve, Grid2D, Octree, Points, Surface
+from geoh5py.objects import BlockModel, Octree, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
     Button,
@@ -25,14 +24,10 @@ from ipywidgets.widgets import (
     IntText,
     Label,
     Layout,
-    Text,
-    ToggleButton,
     VBox,
     Widget,
 )
 
-from geoapps.base import BaseApplication
-from geoapps.drivers.magnetic_vector_inversion import MagneticVectorDriver
 from geoapps.io.Gravity.params import GravityParams
 from geoapps.io.MagneticScalar.params import MagneticScalarParams
 from geoapps.io.MagneticVector.constants import app_initializer
@@ -1015,10 +1010,14 @@ class InversionApp(PlotSelection2D):
                 elif isinstance(attr, ModelOptions):
                     model_group = attr.identifier
                     for label in ["", "_object"]:
+                        value = getattr(self, model_group + label)
+                        if isinstance(value, uuid.UUID):
+                            value = str(value)
+
                         setattr(
                             self.params,
                             model_group + label,
-                            getattr(self, model_group + label),
+                            value,
                         )
                 elif isinstance(attr, MeshOctreeOptions):
                     for O_key in self._mesh_octree.__dict__:
@@ -1067,6 +1066,9 @@ class InversionApp(PlotSelection2D):
                 ].copy(parent=new_obj)
 
         self.params.workspace = new_workspace
+        self.params.input_file.filepath = os.path.join(
+            self.export_directory.selected_path, self._ga_group_name.value + ".ui.json"
+        )
         self.params.write_input_file(name=self._ga_group_name.value)
 
         self.write.button_style = ""
@@ -1122,74 +1124,6 @@ class InversionApp(PlotSelection2D):
 
             elif extension == ".geoh5":
                 self.h5file = self.file_browser.selected
-
-
-def get_inversion_output(h5file, group_name):
-    """
-    Recover an inversion iterations from a ContainerGroup comments.
-    """
-    workspace = Workspace(h5file)
-    out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
-
-    if workspace.get_entity(group_name):
-        group = workspace.get_entity(group_name)[0]
-
-        for comment in group.comments.values:
-            if "Iteration" in comment["Author"]:
-                out["iteration"] += [np.int(comment["Author"].split("_")[1])]
-                out["time"] += [comment["Date"]]
-                values = json.loads(comment["Text"])
-                out["phi_d"] += [float(values["phi_d"])]
-                out["phi_m"] += [float(values["phi_m"])]
-                out["beta"] += [float(values["beta"])]
-
-        if len(out["iteration"]) > 0:
-            out["iteration"] = np.hstack(out["iteration"])
-            ind = np.argsort(out["iteration"])
-            out["iteration"] = out["iteration"][ind]
-            out["phi_d"] = np.hstack(out["phi_d"])[ind]
-            out["phi_m"] = np.hstack(out["phi_m"])[ind]
-            out["time"] = np.hstack(out["time"])[ind]
-
-    return out
-
-
-def plot_convergence_curve(h5file):
-    """"""
-    workspace = Workspace(h5file)
-    names = [
-        group.name for group in workspace.groups if isinstance(group, ContainerGroup)
-    ]
-    objects = widgets.Dropdown(
-        options=names,
-        value=names[0],
-        description="Inversion Group:",
-    )
-
-    def plot_curve(objects):
-
-        inversion = workspace.get_entity(objects)[0]
-        result = None
-        if getattr(inversion, "comments", None) is not None:
-            if inversion.comments.values is not None:
-                result = get_inversion_output(workspace.h5file, objects)
-                iterations = result["iteration"]
-                phi_d = result["phi_d"]
-                phi_m = result["phi_m"]
-
-                ax1 = plt.subplot()
-                ax2 = ax1.twinx()
-                ax1.plot(iterations, phi_d, linewidth=3, c="k")
-                ax1.set_xlabel("Iterations")
-                ax1.set_ylabel(r"$\phi_d$", size=16)
-                ax2.plot(iterations, phi_m, linewidth=3, c="r")
-                ax2.set_ylabel(r"$\phi_m$", size=16)
-
-        return result
-
-    interactive_plot = widgets.interactive(plot_curve, objects=objects)
-
-    return interactive_plot
 
 
 class SensorOptions(ObjectDataSelection):

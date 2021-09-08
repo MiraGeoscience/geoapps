@@ -41,9 +41,6 @@ from .components import (
     InversionWindow,
 )
 
-cluster = LocalCluster(processes=False)
-client = Client(cluster)
-
 warnings.filterwarnings("ignore")
 
 
@@ -113,7 +110,8 @@ class InversionDriver:
 
     def run(self):
         """Run inversion from params"""
-
+        cluster = LocalCluster(processes=False)
+        client = Client(cluster)
         # Create SimPEG Survey object
         self.survey = self.inversion_data.survey()
 
