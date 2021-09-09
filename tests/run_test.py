@@ -5,7 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
+import os
 from uuid import UUID
 
 from geoh5py.workspace import Workspace
@@ -13,6 +13,7 @@ from geoh5py.workspace import Workspace
 from geoapps.create.contours import ContourValues
 from geoapps.create.isosurface import IsoSurface
 from geoapps.create.surface_2d import Surface2D
+from geoapps.drivers.pf_inversion import InputFile, start_inversion
 from geoapps.export import Export
 from geoapps.inversion import InversionApp
 from geoapps.processing import (
@@ -22,7 +23,6 @@ from geoapps.processing import (
     DataInterpolation,
     EdgeDetectionApp,
 )
-from geoapps.processing.peak_finder import PeakFinder
 from geoapps.utils.testing import Geoh5Tester
 
 project = "FlinFlon.geoh5"
@@ -83,7 +83,22 @@ def test_inversion(tmp_path):
         plot_result=False,
     )
     app.write.value = True
-    app.run.value = True
+    input_file = InputFile(
+        os.path.join(
+            app.export_directory.selected_path,
+            app.inversion_parameters.output_name.value + ".json",
+        )
+    )
+    start_inversion(input_file)
+
+    # Re-open result and check
+    ws = Workspace(geotest.ws.h5file)
+    pred = ws.get_entity("Predicted")[0]
+    d_pred = pred.get_data("Iteration_0_tmi")[0]
+    obs = pred.get_data("Observed_tmi")[0]
+    assert (
+        d_pred.entity_type == obs.entity_type
+    ), "Predicted and observed data should have the same entity_type."
 
 
 def test_iso_surface():
