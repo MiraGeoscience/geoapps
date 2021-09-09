@@ -7,6 +7,7 @@
 
 import numpy as np
 from SimPEG import directives, maps
+from SimPEG.utils import cartesian2amplitude_dip_azimuth
 
 from .simpeg_factory import SimPEGFactory
 
@@ -98,13 +99,13 @@ class DirectivesFactory:
             )
 
             if self.factory_type == "direct_current":
-                mapping = inversion_data.transformations["potential"]
+                transform = inversion_data.transformations["potential"]
                 self.save_iteration_apparent_resistivity_directive = (
                     SaveIterationGeoh5Factory(self.params).build(
                         inversion_object=inversion_data,
                         active_cells=active_cells,
                         sorting=sorting,
-                        mapping=mapping,
+                        transform=transform,
                     )
                 )
 
@@ -122,75 +123,82 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
     def __init__(self, params):
         super().__init__(params)
         self.simpeg_object = self.concrete_object()
+        self.object_type = "mesh" if hasattr(inverion_object, "mesh") else "data"
 
     def concrete_object(self):
         return directives.SaveIterationsGeoH5
 
+    def assemble_arguments(self, inversion_object):
+        return [inversion_object.entity]
+
     def assemble_keyword_arguments(
-        self, inversion_object=None, active_cells=None, sorting=None, mapping=None
+        self, inversion_object=None, active_cells=None, sorting=None, transform=None
     ):
 
-        if "mesh" in inversion_object.__dict__.keys():
-            object_type = "mesh"
-        elif "observed" in inversion_object.__dict__.keys():
-            object_type = "data"
-        else:
-            msg = "Not a valid inversion_object type must be one of 'InversionData'"
-            msg += " or 'InversionMesh'."
-            raise ValueError(msg)
-
         kwargs = {}
-        kwargs["h5_object"] = inversion_object.entity
 
-        if object_type == "data":
+        if self.object_type == "data":
 
             channels = inversion_object.observed.keys()
             kwargs["channels"] = channels
             kwargs["attribute_type"] = "predicted"
             kwargs["save_objective_function"] = True
+            kwargs["transforms"] = np.tile(
+                [inversion_object.normalizations[c] for c in channels],
+                (len(inversion_object.locations), 1),
+            )
 
             if self.factory_type == "direct_current":
+
                 kwargs["association"] = "CELL"
+                kwargs["components"] = ["dc"]
                 kwargs["data_type"] = {
-                    "": {
+                    "dc": {
                         c: inversion_object.data_entity[c].entity_type for c in channels
                     }
                 }
-                if mapping is not None:
-                    kwargs["mapping"] = mapping
+
+                # Include an apparent resistivity mapper
+                if transform is not None:
+
+                    kwargs["transforms"].append(transform)
                     kwargs["channels"] = ["apparent_resistivity"]
                     apparent_resistivity_entity_type = self.params.workspace.get_entity(
                         "Observed_apparent_resistivity"
                     )[0].entity_type
                     kwargs["data_type"] = {
-                        "": {"apparent_resistivity": apparent_resistivity_entity_type}
+                        "dc": {"apparent_resistivity": apparent_resistivity_entity_type}
                     }
 
-            else:
-                kwargs["data_type"] = inversion_object._observed_data_types
+            if self.factory_type in ["magnetic scalar", "magnetic vector"]:
+                kwargs["components"] = ["mag"]
+                kwargs["data_type"] = {"mag": inversion_object._observed_data_types}
                 kwargs["sorting"] = np.hstack(sorting)
 
-        elif object_type == "mesh":
+            if self.factory_type == "gravity":
+                kwargs["components"] = ["grav"]
+                kwargs["data_type"] = {"grav": inversion_object._observed_data_types}
+                kwargs["sorting"] = np.hstack(sorting)
 
+        elif self.object_type == "mesh":
+
+            active_cells_map = maps.InjectActiveCells(
+                inversion_object.mesh, active_cells, np.nan
+            )
             kwargs["association"] = "CELL"
             kwargs["sorting"] = inversion_object.mesh._ubc_order
+            kwargs["channels"] = ["model"]
+            kwargs["transforms"] = [active_cells_map]
 
             if self.factory_type == "magnetic vector":
                 kwargs["channels"] = ["amplitude", "theta", "phi"]
-                kwargs["attribute_type"] = "mvi_angles"
-            else:
-                kwargs["channels"] = ["model"]
-                kwargs["attribute_type"] = "model"
+                kwargs["transforms"] = [
+                    cartesian2amplitude_dip_azimuth,
+                    active_cells_map,
+                ]
 
             if self.factory_type == "direct_current":
-                actmap = maps.InjectActiveCells(
-                    inversion_object.mesh, indActive=active_cells, valInactive=np.nan
-                )
                 expmap = maps.ExpMap(inversion_object.mesh)
-                kwargs["mapping"] = expmap * actmap
-            else:
-                kwargs["mapping"] = maps.InjectActiveCells(
-                    inversion_object.mesh, active_cells, 0
-                )
+                kwargs["transforms"] = [expmap * active_cells_map]
 
         return kwargs
