@@ -356,7 +356,7 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Starting Model",
         "main": True,
-        "isValue": True,
+        "isValue": False,
         "optional": True,
         "enabled": False,
         "parent": "starting_inclination_object",
@@ -369,7 +369,7 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Starting Model",
         "main": True,
-        "isValue": True,
+        "isValue": False,
         "optional": True,
         "enabled": False,
         "parent": "starting_declination_object",
@@ -407,7 +407,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "group": "Regularization",
-        "isValue": True,
+        "isValue": False,
         "optional": True,
         "enabled": False,
         "label": "Reference inclination value",
@@ -419,7 +419,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "group": "Regularization",
-        "isValue": True,
+        "isValue": False,
         "optional": True,
         "enabled": False,
         "label": "Reference declination value",
@@ -429,7 +429,18 @@ default_ui_json = {
     },
     "out_group": {"label": "Results group name", "value": "MVIInversion"},
 }
+
 default_ui_json.update(base_default_ui_json)
+# for k, v in inversion_defaults.items():
+#     if isinstance(default_ui_json[k], dict):
+#         key = "value"
+#         if "isValue" in default_ui_json[k].keys():
+#             if default_ui_json[k]["isValue"] == False:
+#                 key = "property"
+#         default_ui_json[k][key] = v
+#     else:
+#         default_ui_json[k] = v
+
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 
 

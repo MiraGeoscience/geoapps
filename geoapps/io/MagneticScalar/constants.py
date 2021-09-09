@@ -32,7 +32,7 @@ inversion_defaults = {
     "tmi_channel": None,
     "tmi_uncertainty": 10.0,
     "starting_model_object": None,
-    "starting_model": 0.01,
+    "starting_model": None,
     "tile_spatial": 1,
     "z_from_topo": True,
     "receivers_radar_drape": None,
@@ -93,9 +93,9 @@ inversion_defaults = {
     "reference_model": None,
     "gradient_type": "total",
     "lower_bound_object": None,
-    "lower_bound": 0.0,
+    "lower_bound": None,
     "upper_bound_object": None,
-    "upper_bound": 1.0,
+    "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -119,7 +119,7 @@ forward_defaults = {
     "data_object": None,
     "tmi_channel_bool": True,
     "starting_model_object": None,
-    "starting_model": 0.0,
+    "starting_model": None,
     "tile_spatial": 1,
     "z_from_topo": True,
     "receivers_radar_drape": None,
@@ -218,7 +218,18 @@ default_ui_json = {
     },
     "out_group": {"label": "Results group name", "value": "Gravity"},
 }
+
 default_ui_json.update(base_default_ui_json)
+for k, v in inversion_defaults.items():
+    if isinstance(default_ui_json[k], dict):
+        key = "value"
+        if "isValue" in default_ui_json[k].keys():
+            if default_ui_json[k]["isValue"] == False:
+                key = "property"
+        default_ui_json[k][key] = v
+    else:
+        default_ui_json[k] = v
+
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 
 

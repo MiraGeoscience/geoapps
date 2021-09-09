@@ -68,6 +68,10 @@ class InversionDriver:
         return self.inversion_data.observed
 
     @property
+    def locations(self):
+        return self.inversion_data.locations
+
+    @property
     def topography(self):
         return self.inversion_topography.topography
 
@@ -175,8 +179,7 @@ class InversionDriver:
             global_misfit, reg, opt, beta=self.params.initial_beta
         )
 
-        # prob.dpred = prob.get_dpred(self.starting_model, compute_J=True)
-        prob.dpred = prob.get_dpred(np.ones(self.n_cells) * np.log(0.2), compute_J=True)
+        prob.dpred = prob.get_dpred(self.starting_model, compute_J=True)
 
         # Add a list of directives to the inversion
         directiveList = DirectivesFactory(self.params).build(
@@ -380,7 +383,7 @@ class InversionDriver:
         else:
 
             tiles = tile_locations(
-                self.locs,
+                self.locations["receivers"],
                 self.params.tile_spatial,
                 method="kmeans",
             )

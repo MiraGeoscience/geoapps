@@ -102,13 +102,16 @@ class ReceiversFactory(SimPEGFactory):
 
         return args
 
-    def assemble_keyword_arguments(self, data=None, local_index=None):
+    def assemble_keyword_arguments(self, locations=None, data=None, local_index=None):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic", "mvi"]:
             kwargs["components"] = list(data.keys())
 
         return kwargs
+
+    def build(self, locations=None, data=None, local_index=None):
+        return super().build(locations=locations, data=data, local_index=local_index)
 
 
 class SourcesFactory(SimPEGFactory):
@@ -168,6 +171,9 @@ class SourcesFactory(SimPEGFactory):
 
         return kwargs
 
+    def build(self, receivers=None, local_index=None):
+        return super().build(receivers=receivers, local_index=local_index)
+
 
 class SurveyFactory(SimPEGFactory):
     """Build SimPEG sources objects based on factory type."""
@@ -205,8 +211,6 @@ class SurveyFactory(SimPEGFactory):
         locations=None,
         data=None,
         uncertainties=None,
-        mesh=None,
-        active_cells=None,
         local_index=None,
     ):
         """Provides implementations to assemble arguments for receivers object."""
@@ -227,7 +231,7 @@ class SurveyFactory(SimPEGFactory):
             sources = []
             for source_id in self.local_index:
                 receivers = ReceiversFactory(self.params).build(
-                    data=data, local_index=[source_id]
+                    locations=locations, data=data, local_index=[source_id]
                 )
                 if receivers.nD == 0:
                     continue
@@ -244,8 +248,14 @@ class SurveyFactory(SimPEGFactory):
             return [sources]
 
         else:
+
+            if local_index is None:
+                self.local_index = np.arange(len(locations["receivers"]), dtype=int)
+            else:
+                self.local_index = local_index
+
             receivers = ReceiversFactory(self.params).build(
-                self.locations, data, local_index
+                locations=locations, data=data, local_index=self.local_index
             )
             sources = SourcesFactory(self.params).build(receivers)
 

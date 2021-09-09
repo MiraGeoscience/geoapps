@@ -246,6 +246,9 @@ class InversionData(InversionLocations):
             src.name = "Data (currents)"
             self.entity.current_electrodes = src
 
+            if self.params.forward_only:
+                return
+
             survey, _ = self.survey()
             self.transformations["potential"] = 1 / (geometric_factor(survey) + 1e-10)
             appres = self.observed["potential"] * self.transformations["potential"]

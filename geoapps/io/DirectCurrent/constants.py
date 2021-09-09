@@ -25,7 +25,7 @@ inversion_defaults = {
     "potential_channel": None,
     "potential_uncertainty": 0.0,
     "starting_model_object": None,
-    "starting_model": 0.0,
+    "starting_model": None,
     "tile_spatial": 1,
     "z_from_topo": True,
     "receivers_radar_drape": None,
@@ -73,7 +73,7 @@ inversion_defaults = {
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e1,
     "initial_beta": 0.0,
-    "tol_cg": 1e-16,
+    "tol_cg": 1e-4,
     "alpha_s": 1.0,
     "alpha_x": 1.0,
     "alpha_y": 1.0,
@@ -86,9 +86,9 @@ inversion_defaults = {
     "reference_model": None,
     "gradient_type": "total",
     "lower_bound_object": None,
-    "lower_bound": 0.0,
+    "lower_bound": None,
     "upper_bound_object": None,
-    "upper_bound": 1e6,
+    "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -148,12 +148,6 @@ forward_defaults = {
 }
 default_ui_json = {
     "inversion_type": "direct_current",
-    "directive_list": [
-        "UpdateSensitivityWeights",
-        "Update_IRLS",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ],
     "potential_channel_bool": True,
     "potential_channel": {
         "association": "Cell",
@@ -178,15 +172,20 @@ default_ui_json = {
         "value": 0.0,
     },
     "out_group": {"label": "Results group name", "value": "DirectCurrent"},
-    "directives": {
-        "UpdateSensitivityWeights": {},
-        "Update_IRLS": {},
-        "BetaEstimate_ByEig": {},
-        "UpdatePreconditioner": {},
-        "SaveIterationsGeoH5": {},
-    },
 }
+
+
 default_ui_json.update(base_default_ui_json)
+for k, v in inversion_defaults.items():
+    if isinstance(default_ui_json[k], dict):
+        key = "value"
+        if "isValue" in default_ui_json[k].keys():
+            if default_ui_json[k]["isValue"] == False:
+                key = "property"
+        default_ui_json[k][key] = v
+    else:
+        default_ui_json[k] = v
+
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 default_ui_json["data_object"]["meshType"] = "{275ecee9-9c24-4378-bf94-65f3c5fbe163}"
 
@@ -203,7 +202,6 @@ validations = {
         "reqs": [("data_object")],
     },
     "potential_uncertainty": {"types": [str, int, float]},
-    "directives": {},
 }
 
 validations.update(base_validations)

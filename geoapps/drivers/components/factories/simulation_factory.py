@@ -82,6 +82,14 @@ class SimulationFactory(SimPEGFactory):
             )
             kwargs["chunk_format"] = "row"
 
+        elif self.factory_type == "gravity":
+            kwargs["actInd"] = active_cells
+            kwargs["rhoMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
+            kwargs["store_sensitivities"] = (
+                "forward_only" if self.params.forward_only else "disk"
+            )
+            kwargs["chunk_format"] = "row"
+
         elif self.factory_type == "direct_current":
 
             actmap = maps.InjectActiveCells(

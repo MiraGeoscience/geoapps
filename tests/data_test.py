@@ -155,5 +155,5 @@ def test_get_survey(tmp_path):
     ws, params = setup_params(tmp_path)
     window = params.window()
     data = InversionData(ws, params, window)
-    survey = data.survey()
+    survey, _ = data.survey()
     assert isinstance(survey, SimPEG.potential_fields.magnetics.Survey)

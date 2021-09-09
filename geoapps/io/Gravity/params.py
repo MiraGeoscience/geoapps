@@ -25,6 +25,12 @@ class GravityParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
+    _directive_list = [
+        "Update_IRLS",
+        "BetaEstimate_ByEig",
+        "UpdatePreconditioner",
+        "SaveIterationsGeoH5",
+    ]
 
     def __init__(self, forward=False, **kwargs):
 
