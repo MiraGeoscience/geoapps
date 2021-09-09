@@ -20,7 +20,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "inversion_type": "magnetic",
+    "inversion_type": "magnetic scalar",
     "forward_only": False,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -63,6 +63,7 @@ inversion_defaults = {
     "window_center_y": 0.0,
     "window_width": 0.0,
     "window_height": 0.0,
+    "window_azimuth": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "sens_wts_threshold": 1e-3,
@@ -85,7 +86,7 @@ inversion_defaults = {
     "alpha_x": 1.0,
     "alpha_y": 1.0,
     "alpha_z": 1.0,
-    "smallness_norm": 2.0,
+    "s_norm": 2.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
@@ -100,7 +101,7 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "MagneticScalarInversion",
+    "out_group": "SusceptibilityInversion",
     "no_data_value": None,
     "monitoring_directory": None,
     "geoh5": None,
@@ -109,7 +110,7 @@ inversion_defaults = {
     "conda_environment": "geoapps",
 }
 forward_defaults = {
-    "inversion_type": "magnetic",
+    "inversion_type": "magnetic scalar",
     "forward_only": True,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -145,6 +146,7 @@ forward_defaults = {
     "window_center_y": 0.0,
     "window_width": 0.0,
     "window_height": 0.0,
+    "window_azimuth": 0.0,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -158,7 +160,7 @@ forward_defaults = {
 }
 
 default_ui_json = {
-    "inversion_type": "magnetic",
+    "inversion_type": "magnetic scalar",
     "inducing_field_strength": {
         "association": "Cell",
         "dataType": "Float",
@@ -216,7 +218,7 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
-    "out_group": {"label": "Results group name", "value": "Gravity"},
+    "out_group": {"label": "Results group name", "value": "SusceptibilityInversion"},
 }
 
 default_ui_json.update(base_default_ui_json)
@@ -241,7 +243,7 @@ required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["magnetic"],
+        "values": ["magnetic scalar"],
     },
     "inducing_field_strength": {
         "types": [int, float],

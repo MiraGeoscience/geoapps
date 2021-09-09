@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import json
-import os
 import os.path as op
 import warnings
 from copy import deepcopy
@@ -145,7 +144,6 @@ class InputFile:
         self,
         ui_dict: dict[str, Any],
         default: bool = False,
-        name: str = None,
         workspace: Workspace = None,
     ) -> None:
         """
@@ -162,11 +160,6 @@ class InputFile:
         workspace : optional
             Provide a geoh5 path to simulate auto-generated field in Geoscience ANALYST.
         """
-
-        if name is not None:
-            if "ui.json" not in name:
-                name += "ui.json"
-
         out = deepcopy(ui_dict)
 
         if workspace is not None:
@@ -193,17 +186,7 @@ class InputFile:
                 else:
                     out[k] = v
 
-        if name is not None:
-
-            path = self.workpath
-            if path is None:
-                path = os.getcwd()
-
-            out_file = op.join(path, name)
-        else:
-            out_file = self.filepath
-
-        with open(out_file, "w") as f:
+        with open(self.filepath, "w") as f:
             json.dump(self._stringify(self._demote(out)), f, indent=4)
 
     def _ui_2_py(self, ui_dict: dict[str, Any]) -> dict[str, Any]:

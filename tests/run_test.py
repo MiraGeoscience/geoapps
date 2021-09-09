@@ -14,7 +14,7 @@ from geoapps.create.contours import ContourValues
 from geoapps.create.isosurface import IsoSurface
 from geoapps.create.surface_2d import Surface2D
 from geoapps.export import Export
-from geoapps.inversion import InversionApp
+from geoapps.pf_inversion_app import InversionApp
 from geoapps.processing import (
     Calculator,
     Clustering,

@@ -39,7 +39,7 @@ class MagneticVectorParams(InversionParams):
             required_parameters, validations
         )
 
-        self.inversion_type: str = "mvi"
+        self.inversion_type: str = "magnetic vector"
         self.inducing_field_strength: float = None
         self.inducing_field_inclination: float = None
         self.inducing_field_declination: float = None

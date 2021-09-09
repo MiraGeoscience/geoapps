@@ -39,14 +39,20 @@ class DirectivesFactory:
         self.save_iteration_data_directive = None
         self.save_iteration_apparent_resistivity_directive = None
 
-    def build(self, inversion_data, inversion_mesh, active_cells, sorting):
+    def build(
+        self,
+        inversion_data,
+        inversion_mesh,
+        active_cells,
+        sorting,
+        local_misfits,
+        regularizer,
+    ):
 
         self.vector_inversion_directive = directives.VectorInversion(
-            chifact_target=self.params.chi_factor * 2
-        )
-
-        self.update_sensitivity_weights_directive = directives.UpdateSensitivityWeights(
-            threshold=self.params.sens_wts_threshold
+            [local.simulation for local in local_misfits],
+            regularizer,
+            chifact_target=self.params.chi_factor * 2,
         )
 
         self.update_irls_directive = directives.Update_IRLS(
@@ -60,6 +66,11 @@ class DirectivesFactory:
             coolEpsFact=self.params.coolEpsFact,
             beta_search=self.params.beta_search,
             chifact_target=self.params.chi_factor,
+        )
+
+        self.update_sensitivity_weights_directive = directives.UpdateSensitivityWeights(
+            everyIter=self.params.every_iteration,
+            threshold=self.params.sens_wts_threshold,
         )
 
         if self.params.initial_beta is None:
@@ -164,7 +175,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             kwargs["association"] = "CELL"
             kwargs["sorting"] = inversion_object.mesh._ubc_order
 
-            if self.factory_type == "mvi":
+            if self.factory_type == "magnetic vector":
                 kwargs["channels"] = ["amplitude", "theta", "phi"]
                 kwargs["attribute_type"] = "mvi_angles"
             else:

@@ -41,7 +41,7 @@ class MagneticScalarParams(InversionParams):
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
-        self.inversion_type = "magnetic"
+        self.inversion_type = "magnetic scalar"
         self.inducing_field_strength: float = None
         self.inducing_field_inclination: float = None
         self.inducing_field_declination: float = None
