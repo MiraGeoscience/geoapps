@@ -72,27 +72,25 @@ class InversionMesh:
         """
 
         if self.params.mesh_from_params:
-
             self.build_from_params()
-            self.entity = self.workspace.get_entity("Octree_Mesh")[0].copy(
-                parent=self.params.out_group, copy_children=False
-            )
-
+            orig_octree = self.workspace.get_entity("Octree_Mesh")[0]
         else:
+            orig_octree = self.workspace.get_entity(self.params.mesh)[0]
 
-            self.entity = self.workspace.get_entity(self.params.mesh)[0].copy(
-                parent=self.params.out_group, copy_children=False
-            )
-            self.uid = self.entity.uid
-            self.nC = self.entity.n_cells
+        self.entity = orig_octree.copy(
+            parent=self.params.out_group, copy_children=False
+        )
+        self.workspace.remove_entity(orig_octree)
+        self.uid = self.entity.uid
+        self.nC = self.entity.n_cells
 
-            if self.entity.rotation:
-                origin = self.entity.origin.tolist()
-                angle = self.entity.rotation[0]
-                self.rotation = {"origin": origin, "angle": angle}
+        if self.entity.rotation:
+            origin = self.entity.origin.tolist()
+            angle = self.entity.rotation[0]
+            self.rotation = {"origin": origin, "angle": angle}
 
-            self.mesh = octree_2_treemesh(self.entity)
-            self.octree_permutation = self.mesh._ubc_order
+        self.mesh = octree_2_treemesh(self.entity)
+        self.octree_permutation = self.mesh._ubc_order
 
     def original_cc(self) -> np.ndarray:
         """Returns the cell centers of the original Octree mesh type."""
