@@ -35,7 +35,7 @@ class PlotSelection2D(ObjectDataSelection):
         self.indices = None
         self.highlight_selection = None
         self.collections = []
-        self._azimuth = FloatSlider(
+        self._window_azimuth = FloatSlider(
             min=-90,
             max=90,
             value=0,
@@ -43,14 +43,14 @@ class PlotSelection2D(ObjectDataSelection):
             description="Azimuth",
             continuous_update=False,
         )
-        self._center_x = FloatSlider(
+        self._window_center_x = FloatSlider(
             min=-100,
             max=100,
             step=10,
             description="Easting",
             continuous_update=False,
         )
-        self._center_y = FloatSlider(
+        self._window_center_y = FloatSlider(
             min=-100,
             max=100,
             step=10,
@@ -69,7 +69,7 @@ class PlotSelection2D(ObjectDataSelection):
         self._resolution = FloatText(
             description="Grid Resolution (m)", style={"description_width": "initial"}
         )
-        self._width = FloatSlider(
+        self._window_width = FloatSlider(
             min=0,
             max=100,
             step=10,
@@ -77,7 +77,7 @@ class PlotSelection2D(ObjectDataSelection):
             description="Width",
             continuous_update=False,
         )
-        self._height = FloatSlider(
+        self._window_height = FloatSlider(
             min=0,
             max=100,
             step=10,
@@ -99,11 +99,11 @@ class PlotSelection2D(ObjectDataSelection):
             {
                 "data_name": self.data,
                 "resolution": self.resolution,
-                "center_x": self.center_x,
-                "center_y": self.center_y,
-                "width": self.width,
-                "height": self.height,
-                "azimuth": self.azimuth,
+                "center_x": self.window_center_x,
+                "center_y": self.window_center_y,
+                "width": self.window_width,
+                "height": self.window_height,
+                "azimuth": self.window_azimuth,
                 "zoom_extent": self.zoom_extent,
                 "contours": self.contours,
                 "refresh": self.refresh,
@@ -115,14 +115,14 @@ class PlotSelection2D(ObjectDataSelection):
                 VBox([self.resolution, self.data_count]),
                 HBox(
                     [
-                        self.center_y,
-                        self.height,
+                        self.window_center_y,
+                        self.window_height,
                         VBox(
                             [
-                                self.width,
-                                self.center_x,
+                                self.window_width,
+                                self.window_center_x,
                                 self.window_plot,
-                                self.azimuth,
+                                self.window_azimuth,
                                 HBox([self.zoom_extent, self.colorbar]),
                             ]
                         ),
@@ -142,25 +142,25 @@ class PlotSelection2D(ObjectDataSelection):
         return self._main
 
     @property
-    def azimuth(self):
+    def window_azimuth(self):
         """
         :obj:`ipywidgets.FloatSlider`: Rotation angle of the selection box.
         """
-        return self._azimuth
+        return self._window_azimuth
 
     @property
-    def center_x(self):
+    def window_center_x(self):
         """
         :obj:`ipywidgets.FloatSlider`: Easting position of the selection box.
         """
-        return self._center_x
+        return self._window_center_x
 
     @property
-    def center_y(self):
+    def window_center_y(self):
         """
         :obj:`ipywidgets.FloatSlider`: Northing position of the selection box.
         """
-        return self._center_y
+        return self._window_center_y
 
     @property
     def colorbar(self):
@@ -187,11 +187,11 @@ class PlotSelection2D(ObjectDataSelection):
         return self._data_count
 
     @property
-    def height(self):
+    def window_height(self):
         """
         :obj:`ipywidgets.FloatSlider`: Height (m) of the selection box
         """
-        return self._height
+        return self._window_height
 
     @property
     def resolution(self):
@@ -201,11 +201,11 @@ class PlotSelection2D(ObjectDataSelection):
         return self._resolution
 
     @property
-    def width(self):
+    def window_width(self):
         """
         :obj:`ipywidgets.FloatSlider`: Width (m) of the selection box
         """
-        return self._width
+        return self._window_width
 
     @property
     def zoom_extent(self):
@@ -309,21 +309,21 @@ class PlotSelection2D(ObjectDataSelection):
         height = lim_y[1] - lim_y[0]
 
         self.refresh.value = False
-        self.center_x.min = -np.inf
-        self.center_x.max = lim_x[1] + width * 0.1
-        self.center_x.value = np.mean(lim_x)
-        self.center_x.min = lim_x[0] - width * 0.1
+        self.window_center_x.min = -np.inf
+        self.window_center_x.max = lim_x[1] + width * 0.1
+        self.window_center_x.value = np.mean(lim_x)
+        self.window_center_x.min = lim_x[0] - width * 0.1
 
-        self.center_y.min = -np.inf
-        self.center_y.max = lim_y[1] + height * 0.1
-        self.center_y.value = np.mean(lim_y)
-        self.center_y.min = lim_y[0] - height * 0.1
+        self.window_center_y.min = -np.inf
+        self.window_center_y.max = lim_y[1] + height * 0.1
+        self.window_center_y.value = np.mean(lim_y)
+        self.window_center_y.min = lim_y[0] - height * 0.1
 
-        self.width.max = width * 1.2
-        self.width.value = self.width.max / 2.0
-        self.width.min = 0
+        self.window_width.max = width * 1.2
+        self.window_width.value = self.window_width.max / 2.0
+        self.window_width.min = 0
 
-        self.height.max = height * 1.2
-        self.height.min = 0
-        self.height.value = self.height.max / 2.0
+        self.window_height.max = height * 1.2
+        self.window_height.min = 0
+        self.window_height.value = self.window_height.max / 2.0
         self.refresh.value = True

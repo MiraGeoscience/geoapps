@@ -149,5 +149,6 @@ class InversionMesh:
 
         self.uid = octree_mesh.uid
         self.mesh = octree_2_treemesh(octree_mesh)
+
         self.nC = self.mesh.nC
         self.octree_permutation = self.mesh._ubc_order

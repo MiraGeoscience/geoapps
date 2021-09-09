@@ -10,6 +10,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
+from geoh5py.workspace import Workspace
 
 from ..params import Params
 
@@ -49,10 +50,11 @@ class InversionParams(Params):
         self.max_distance: float = None
         self.horizontal_padding: float = None
         self.vertical_padding: float = None
+        self.window_azimuth: float = None
         self.window_center_x: float = None
         self.window_center_y: float = None
-        self.window_width: float = None
         self.window_height: float = None
+        self.window_width: float = None
         self.inversion_style: str = None
         self.chi_factor: float = None
         self.sens_wts_threshold: float = None
@@ -75,7 +77,7 @@ class InversionParams(Params):
         self.alpha_x: float = None
         self.alpha_y: float = None
         self.alpha_z: float = None
-        self.smallness_norm: float = None
+        self.s_norm: float = None
         self.x_norm: float = None
         self.y_norm: float = None
         self.z_norm: float = None
@@ -132,6 +134,7 @@ class InversionParams(Params):
     def window(self) -> dict[str, float]:
         """Returns window dictionary"""
         win = {
+            "azimuth": self.window_azimuth,
             "center_x": self.window_center_x,
             "center_y": self.window_center_y,
             "width": self.window_width,
@@ -157,7 +160,7 @@ class InversionParams(Params):
     def model_norms(self) -> list[float]:
         """Returns model norm components as a list."""
         return [
-            self.smallness_norm,
+            self.s_norm,
             self.x_norm,
             self.y_norm,
             self.z_norm,
@@ -715,6 +718,21 @@ class InversionParams(Params):
         self._window_height = val
 
     @property
+    def window_azimuth(self):
+        return self._window_azimuth
+
+    @window_azimuth.setter
+    def window_azimuth(self, val):
+        if val is None:
+            self._window_azimuth = val
+            return
+        p = "window_azimuth"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._window_azimuth = val
+
+    @property
     def inversion_style(self):
         return self._inversion_style
 
@@ -1045,19 +1063,19 @@ class InversionParams(Params):
         self._alpha_z = val
 
     @property
-    def smallness_norm(self):
-        return self._smallness_norm
+    def s_norm(self):
+        return self._s_norm
 
-    @smallness_norm.setter
-    def smallness_norm(self, val):
+    @s_norm.setter
+    def s_norm(self, val):
         if val is None:
-            self._smallness_norm = val
+            self._s_norm = val
             return
-        p = "smallness_norm"
+        p = "s_norm"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._smallness_norm = val
+        self._s_norm = val
 
     @property
     def x_norm(self):
@@ -1263,11 +1281,21 @@ class InversionParams(Params):
         if val is None:
             self._out_group = val
             return
-        p = "out_group"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
+
+        self.setter_validator(
+            "out_group",
+            val,
+            fun=lambda x: self.get_out_group(x) if isinstance(val, str) else x,
         )
-        self._out_group = ContainerGroup.create(self.workspace, name=val)
+
+    def get_out_group(self, name: str):
+        if isinstance(self.workspace, Workspace) and isinstance(name, str):
+            group = self.workspace.get_entity(name)
+
+            if len(group) == 0 or group[0] is None:
+                return ContainerGroup.create(self.workspace, name=name)
+
+            return group[0]
 
     @property
     def no_data_value(self):
@@ -1283,108 +1311,3 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._no_data_value = val
-
-    @property
-    def monitoring_directory(self):
-        return self._monitoring_directory
-
-    @monitoring_directory.setter
-    def monitoring_directory(self, val):
-        if val is None:
-            self._monitoring_directory = val
-            return
-        p = "monitoring_directory"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._monitoring_directory = val
-
-    @property
-    def workspace_geoh5(self):
-        return self._workspace_geoh5
-
-    @workspace_geoh5.setter
-    def workspace_geoh5(self, val):
-        if val is None:
-            self._workspace_geoh5 = val
-            return
-        p = "workspace_geoh5"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._workspace_geoh5 = val
-
-    @property
-    def geoh5(self):
-        return self._geoh5
-
-    @geoh5.setter
-    def geoh5(self, val):
-        if val is None:
-            self._geoh5 = val
-            return
-        p = "geoh5"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._geoh5 = val
-
-    @property
-    def run_command(self):
-        return self._run_command
-
-    @run_command.setter
-    def run_command(self, val):
-        if val is None:
-            self._run_command = val
-            return
-        p = "run_command"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._run_command = val
-
-    @property
-    def run_command_boolean(self):
-        return self._run_command_boolean
-
-    @run_command_boolean.setter
-    def run_command_boolean(self, val):
-        if val is None:
-            self._run_command_boolean = val
-            return
-        p = "run_command_boolean"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._run_command_boolean = val
-
-    @property
-    def conda_environment(self):
-        return self._conda_environment
-
-    @conda_environment.setter
-    def conda_environment(self, val):
-        if val is None:
-            self._conda_environment = val
-            return
-        p = "conda_environment"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._conda_environment = val
-
-    @property
-    def conda_environment_boolean(self):
-        return self._conda_environment_boolean
-
-    @conda_environment_boolean.setter
-    def conda_environment_boolean(self, val):
-        if val is None:
-            self._conda_environment_boolean = val
-            return
-        p = "conda_environment_boolean"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._conda_environment_boolean = val

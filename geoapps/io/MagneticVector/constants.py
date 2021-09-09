@@ -20,14 +20,15 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "inversion_type": "mvi",
+    "inversion_type": "magnetic vector",
+    "geoh5": None,
+    "data_object": None,
     "forward_only": False,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
     "inducing_field_declination": 0.0,
     "topography_object": None,
     "topography": None,
-    "data_object": None,
     "tmi_channel_bool": False,
     "tmi_channel": None,
     "tmi_uncertainty": 0.0,
@@ -76,16 +77,17 @@ inversion_defaults = {
     "window_center_y": 0.0,
     "window_width": 0.0,
     "window_height": 0.0,
+    "window_azimuth": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "sens_wts_threshold": 1e-3,
     "f_min_change": 1e-4,
     "minGNiter": 1,
     "beta_tol": 0.5,
-    "prctile": 75,
+    "prctile": 50,
     "coolingRate": 1,
     "coolEps_q": True,
-    "coolEpsFact": 1.5,
+    "coolEpsFact": 1.2,
     "beta_search": False,
     "max_iterations": 25,
     "max_least_squares_iterations": 20,
@@ -98,7 +100,7 @@ inversion_defaults = {
     "alpha_x": 1.0,
     "alpha_y": 1.0,
     "alpha_z": 1.0,
-    "smallness_norm": 2.0,
+    "s_norm": 2.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
@@ -117,17 +119,16 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "MVIInversion",
+    "out_group": "VectorInversion",
     "no_data_value": None,
     "monitoring_directory": None,
-    "geoh5": None,
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
 
 forward_defaults = {
-    "inversion_type": "mvi",
+    "inversion_type": "magnetic vector",
     "forward_only": True,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -170,6 +171,7 @@ forward_defaults = {
     "window_center_y": 0.0,
     "window_width": 0.0,
     "window_height": 0.0,
+    "window_azimuth": 0.0,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -182,7 +184,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
 }
 default_ui_json = {
-    "inversion_type": "mvi",
+    "inversion_type": "magnetic vector",
     "inducing_field_strength": {
         "association": "Cell",
         "dataType": "Float",
@@ -427,7 +429,7 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
-    "out_group": {"label": "Results group name", "value": "MVIInversion"},
+    "out_group": {"label": "Results group name", "value": "VectorInversion"},
 }
 
 default_ui_json.update(base_default_ui_json)
@@ -452,7 +454,7 @@ required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["gravity", "magnetic", "mvi", "mvic"],
+        "values": ["gravity", "magnetic scalar", "magnetic vector"],
     },
     "inducing_field_strength": {
         "types": [int, float],
@@ -519,3 +521,42 @@ validations = {
     "out_group": {"types": [str, ContainerGroup]},
 }
 validations.update(base_validations)
+
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "data_object": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f",
+    "tmi_channel_bool": True,
+    "tmi_channel": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "inducing_field_strength": 60000.0,
+    "inducing_field_inclination": 79.0,
+    "inducing_field_declination": 11.0,
+    "mesh_from_params": True,
+    "reference_model": 0.0,
+    "u_cell_size": 25.0,
+    "v_cell_size": 25.0,
+    "w_cell_size": 25.0,
+    "resolution": 50,
+    "octree_levels_topo": [0, 0, 0, 2],
+    "octree_levels_obs": [5, 5, 5, 5],
+    "depth_core": 500.0,
+    "max_distance": np.inf,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "window_center_x": 314600.0,
+    "window_center_y": 6072200.0,
+    "window_azimuth": 0,
+    "window_width": 1000.0,
+    "window_height": 1500.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+    "max_iterations": 25,
+    "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+    "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    "z_from_topo": True,
+    "receivers_offset_x": 0,
+    "receivers_offset_y": 0,
+    "receivers_offset_z": 60,
+    "out_group": "VectorInversion",
+}

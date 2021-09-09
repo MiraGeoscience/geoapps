@@ -116,8 +116,8 @@ class InversionData(InversionLocations):
     def _initialize(self) -> None:
         """Extract data from the workspace using params data."""
 
-        self.vector = True if self.params.inversion_type == "mvi" else False
-        self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
+        self.vector = True if self.params.inversion_type == "magnetic vector" else False
+        self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
 
@@ -317,7 +317,11 @@ class InversionData(InversionLocations):
             if ignore_type in ["<", ">"]:
                 ignore_value = float(ignore_values.split(ignore_type)[1])
             else:
-                ignore_value = float(ignore_values)
+
+                try:
+                    ignore_value = float(ignore_values)
+                except ValueError:
+                    return None, None
 
             return ignore_value, ignore_type
         else:

@@ -38,7 +38,7 @@ class SimulationFactory(SimPEGFactory):
 
     def concrete_object(self):
 
-        if self.factory_type in ["magnetic", "mvi"]:
+        if self.factory_type in ["magnetic scalar", "magnetic vector"]:
             from SimPEG.potential_fields.magnetics import simulation
 
             return simulation.Simulation3DIntegral
@@ -65,7 +65,7 @@ class SimulationFactory(SimPEGFactory):
         kwargs["sensitivity_path"] = sens_path
         kwargs["max_chunk_size"] = self.params.max_chunk_size
 
-        if self.factory_type == "mvi":
+        if self.factory_type == "magnetic vector":
             kwargs["actInd"] = active_cells
             kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
             kwargs["modelType"] = "vector"
@@ -74,7 +74,7 @@ class SimulationFactory(SimPEGFactory):
             )
             kwargs["chunk_format"] = "row"
 
-        elif self.factory_type == "magnetic":
+        elif self.factory_type == "magnetic scalar":
             kwargs["actInd"] = active_cells
             kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
             kwargs["store_sensitivities"] = (
