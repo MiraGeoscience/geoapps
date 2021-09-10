@@ -44,7 +44,7 @@ inversion_defaults = {
     "receivers_offset_z": 0,
     "gps_receivers_offset": None,
     "ignore_values": None,
-    "resolution": 50.0,
+    "resolution": 0.0,
     "detrend_data": False,
     "detrend_order": 0,
     "detrend_type": "all",
@@ -261,19 +261,28 @@ validations = {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "gx_channel_bool")],
     },
-    "gx_uncertainty": {"types": [str, int, float], "reqs": [(True, "gx_channel_bool")]},
+    "gx_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "gx_channel_bool")],
+    },
     "gy_channel_bool": {"types": [bool]},
     "gy_channel": {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "gy_channel_bool")],
     },
-    "gy_uncertainty": {"types": [str, int, float], "reqs": [(True, "gy_channel_bool")]},
+    "gy_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "gy_channel_bool")],
+    },
     "gz_channel_bool": {"types": [bool]},
     "gz_channel": {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "gz_channel_bool")],
     },
-    "gz_uncertainty": {"types": [str, int, float], "reqs": [(True, "gz_channel_bool")]},
+    "gz_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "gz_channel_bool")],
+    },
     "out_group": {"types": [str, ContainerGroup]},
 }
 validations.update(base_validations)
