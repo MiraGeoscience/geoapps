@@ -70,7 +70,7 @@ class DirectivesFactory:
         )
 
         self.update_sensitivity_weights_directive = directives.UpdateSensitivityWeights(
-            everyIter=self.params.every_iteration,
+            everyIter=self.params.every_iteration_bool,
             threshold=self.params.sens_wts_threshold,
         )
 
@@ -123,21 +123,24 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
     def __init__(self, params):
         super().__init__(params)
         self.simpeg_object = self.concrete_object()
-        self.object_type = "mesh" if hasattr(inverion_object, "mesh") else "data"
 
     def concrete_object(self):
         return directives.SaveIterationsGeoH5
 
-    def assemble_arguments(self, inversion_object):
+    def assemble_arguments(
+        self, inversion_object=None, active_cells=None, sorting=None, transform=None
+    ):
         return [inversion_object.entity]
 
     def assemble_keyword_arguments(
         self, inversion_object=None, active_cells=None, sorting=None, transform=None
     ):
 
+        object_type = "mesh" if hasattr(inversion_object, "mesh") else "data"
+
         kwargs = {}
 
-        if self.object_type == "data":
+        if object_type == "data":
 
             channels = inversion_object.observed.keys()
             kwargs["channels"] = channels
@@ -180,7 +183,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 kwargs["data_type"] = {"grav": inversion_object._observed_data_types}
                 kwargs["sorting"] = np.hstack(sorting)
 
-        elif self.object_type == "mesh":
+        elif object_type == "mesh":
 
             active_cells_map = maps.InjectActiveCells(
                 inversion_object.mesh, active_cells, np.nan
@@ -202,3 +205,13 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 kwargs["transforms"] = [expmap * active_cells_map]
 
         return kwargs
+
+    def build(
+        self, inversion_object=None, active_cells=None, sorting=None, transform=None
+    ):
+        return super().build(
+            inversion_object=inversion_object,
+            active_cells=active_cells,
+            sorting=sorting,
+            transform=transform,
+        )

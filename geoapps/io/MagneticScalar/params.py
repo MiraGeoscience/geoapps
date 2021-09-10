@@ -30,6 +30,7 @@ class MagneticScalarParams(InversionParams):
     _required_parameters = required_parameters
     _validations = validations
     _directive_list = [
+        "UpdateSensitivityWeights",
         "Update_IRLS",
         "BetaEstimate_ByEig",
         "UpdatePreconditioner",

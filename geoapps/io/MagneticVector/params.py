@@ -27,6 +27,7 @@ class MagneticVectorParams(InversionParams):
     _validations = validations
     _directive_list = [
         "VectorInversion",
+        "UpdateSensitivityWeights",
         "Update_IRLS",
         "BetaEstimate_ByEig",
         "UpdatePreconditioner",

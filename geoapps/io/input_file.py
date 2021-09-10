@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import json
-import os.path as op
+import os
 import warnings
 from copy import deepcopy
 from typing import Any, Callable
@@ -108,7 +108,7 @@ class InputFile:
         if getattr(self, "_filepath", None) is None:
 
             if getattr(self, "workpath", None) is not None:
-                self._filepath = op.join(self.workpath, "default.ui.json")
+                self._filepath = os.path.join(self.workpath, "default.ui.json")
 
         return self._filepath
 
@@ -137,13 +137,16 @@ class InputFile:
                     path = self.workspace.h5file
 
             if path is not None:
-                self._workpath: str = op.dirname(op.abspath(path)) + op.sep
+                self._workpath: str = (
+                    os.path.dirname(os.path.abspath(path)) + os.path.sep
+                )
         return self._workpath
 
     def write_ui_json(
         self,
         ui_dict: dict[str, Any],
         default: bool = False,
+        name: str = None,
         workspace: Workspace = None,
     ) -> None:
         """
@@ -160,6 +163,11 @@ class InputFile:
         workspace : optional
             Provide a geoh5 path to simulate auto-generated field in Geoscience ANALYST.
         """
+
+        if name is not None:
+            if "ui.json" not in name:
+                name += "ui.json"
+
         out = deepcopy(ui_dict)
 
         if workspace is not None:
@@ -186,7 +194,17 @@ class InputFile:
                 else:
                     out[k] = v
 
-        with open(self.filepath, "w") as f:
+        if name is not None:
+
+            path = self.workpath
+            if path is None:
+                path = os.getcwd()
+
+            out_file = os.path.join(path, name)
+        else:
+            out_file = self.filepath
+
+        with open(out_file, "w") as f:
             json.dump(self._stringify(self._demote(out)), f, indent=4)
 
     def _ui_2_py(self, ui_dict: dict[str, Any]) -> dict[str, Any]:

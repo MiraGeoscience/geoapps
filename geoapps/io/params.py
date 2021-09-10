@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import warnings
 from copy import deepcopy
-from os import path
 from typing import Any
 from uuid import UUID
 
@@ -345,16 +344,7 @@ class Params:
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
-        if getattr(self, "input_file", None) is not None:
-
-            if name is None:
-                ifile.filepath = self.input_file.filepath
-            else:
-                out_file = path.join(self.input_file.workpath, name)
-                self.input_file.filepath = out_file
-                ifile.filepath = out_file
-
-        ifile.write_ui_json(ui_json, default=default)
+        ifile.write_ui_json(ui_json, name=name, default=default)
 
     @property
     def free_params_dict(self):

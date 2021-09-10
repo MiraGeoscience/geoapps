@@ -58,6 +58,7 @@ class InversionParams(Params):
         self.inversion_style: str = None
         self.chi_factor: float = None
         self.sens_wts_threshold: float = None
+        self.every_iteration_bool: bool = None
         self.f_min_change: float = None
         self.minGNiter: float = None
         self.beta_tol: float = None
@@ -776,6 +777,21 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._sens_wts_threshold = val
+
+    @property
+    def every_iteration_bool(self):
+        return self._every_iteration_bool
+
+    @every_iteration_bool.setter
+    def every_iteration_bool(self, val):
+        if val is None:
+            self._every_iteration_bool = val
+            return
+        p = "every_iteration_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._every_iteration_bool = val
 
     @property
     def f_min_change(self):
