@@ -450,7 +450,7 @@ validations = {
         "reqs": [("data_object"), (True, "tmi_channel_bool")],
     },
     "tmi_uncertainty": {
-        "types": [str, int, float],
+        "types": [str, int, float, UUID],
         "reqs": [(True, "tmi_channel_bool")],
     },
     "bx_channel_bool": {"types": [bool]},
@@ -458,19 +458,28 @@ validations = {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "bx_channel_bool")],
     },
-    "bx_uncertainty": {"types": [str, int, float], "reqs": [(True, "bx_channel_bool")]},
+    "bx_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "bx_channel_bool")],
+    },
     "by_channel_bool": {"types": [bool]},
     "by_channel": {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "by_channel_bool")],
     },
-    "by_uncertainty": {"types": [str, int, float], "reqs": [(True, "by_channel_bool")]},
+    "by_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "by_channel_bool")],
+    },
     "bz_channel_bool": {"types": [bool]},
     "bz_channel": {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "bz_channel_bool")],
     },
-    "bz_uncertainty": {"types": [str, int, float], "reqs": [(True, "bz_channel_bool")]},
+    "bz_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "bz_channel_bool")],
+    },
     "starting_inclination_object": {
         "types": [str, UUID],
     },
@@ -514,7 +523,7 @@ app_initializer = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "resolution": 50,
+    "resolution": 0.0,
     "octree_levels_topo": [0, 0, 0, 2],
     "octree_levels_obs": [5, 5, 5, 5],
     "depth_core": 500.0,

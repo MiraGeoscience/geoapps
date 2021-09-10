@@ -41,7 +41,7 @@ inversion_defaults = {
     "receivers_offset_z": 0,
     "gps_receivers_offset": None,
     "ignore_values": None,
-    "resolution": 50.0,
+    "resolution": 0.0,
     "detrend_data": False,
     "detrend_order": 0,
     "detrend_type": "all",
@@ -239,7 +239,7 @@ validations = {
         "reqs": [("data_object"), (True, "tmi_channel_bool")],
     },
     "tmi_uncertainty": {
-        "types": [str, int, float],
+        "types": [str, int, float, UUID],
         "reqs": [(True, "tmi_channel_bool")],
     },
     "out_group": {"types": [str, ContainerGroup]},

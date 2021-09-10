@@ -14,7 +14,7 @@ from uuid import UUID
 
 import numpy as np
 from dask import config as dconf
-from dask.distributed import Client, LocalCluster
+from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.objects import Points
 from SimPEG import (
     dask,
@@ -54,6 +54,7 @@ class InversionDriver:
         self.inversion_topography = None
         self.inversion_mesh = None
         self.inversion_models = None
+        self.inverse_problem = None
         self.survey = None
         self.active_cells = None
         self._initialize()
@@ -110,8 +111,12 @@ class InversionDriver:
 
     def run(self):
         """Run inversion from params"""
-        cluster = LocalCluster(processes=False)
-        client = Client(cluster)
+        try:
+            get_client()
+        except ValueError:
+            cluster = LocalCluster(processes=False)
+            Client(cluster)
+
         # Create SimPEG Survey object
         self.survey = self.inversion_data.survey()
 
@@ -164,7 +169,7 @@ class InversionDriver:
         )
 
         # Create the default L2 inverse problem from the above objects
-        prob = inverse_problem.BaseInvProblem(
+        self.inverse_problem = inverse_problem.BaseInvProblem(
             global_misfit, reg, opt, beta=self.params.initial_beta
         )
 
@@ -272,7 +277,7 @@ class InversionDriver:
             )
 
         # Put all the parts together
-        inv = inversion.BaseInversion(prob, directiveList=directiveList)
+        inv = inversion.BaseInversion(self.inverse_problem, directiveList=directiveList)
 
         # Run the inversion
         self.start_inversion_message()
