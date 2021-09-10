@@ -181,7 +181,12 @@ class InversionDriver:
 
         # Add a list of directives to the inversion
         directiveList = DirectivesFactory(self.params).build(
-            self.inversion_data, self.inversion_mesh, self.active_cells, self.sorting
+            self.inversion_data,
+            self.inversion_mesh,
+            self.active_cells,
+            self.sorting,
+            local_misfits,
+            reg,
         )
 
         # Put all the parts together

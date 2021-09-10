@@ -68,7 +68,7 @@ class SimulationFactory(SimPEGFactory):
         if self.factory_type == "magnetic vector":
             kwargs["actInd"] = active_cells
             kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
-            kwargs["modelType"] = "vector"
+            kwargs["model_type"] = "vector"
             kwargs["store_sensitivities"] = (
                 "forward_only" if self.params.forward_only else "disk"
             )

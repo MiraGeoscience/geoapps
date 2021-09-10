@@ -345,10 +345,17 @@ default_ui_json = {
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
         "groupOptional": True,
-        "visible": False,
+        "visible": True,
         "enabled": True,
         "label": "Update sensitivity weight threshold",
         "value": 1e-3,
+    },
+    "every_iteration_bool": {
+        "group": "Update sensitivity weights directive",
+        "visible": True,
+        "enabled": True,
+        "label": "Update every iteration",
+        "value": False,
     },
     "f_min_change": {
         "group": "Update IRLS directive",
@@ -769,6 +776,9 @@ validations = {
     },
     "sens_wts_threshold": {
         "types": [int, float],
+    },
+    "every_iteration_bool": {
+        "types": [bool],
     },
     "f_min_change": {
         "types": [int, float],
