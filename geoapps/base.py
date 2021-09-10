@@ -89,7 +89,7 @@ class BaseApplication:
         self.ga_group_name.observe(self.ga_group_name_update)
         self.__populate__(**self.defaults)
 
-        for key in self.__dict__:
+        for key in self.__dict__.keys():
             attr = getattr(self, key, None)
             if isinstance(attr, Widget) and hasattr(attr, "style"):
                 attr.style = {"description_width": "initial"}
