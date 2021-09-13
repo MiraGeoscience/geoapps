@@ -8,19 +8,17 @@
 from os import path
 
 import numpy as np
-from dask.distributed import Client, LocalCluster, get_client
 from discretize.utils import active_from_xyz, mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Points, Surface
 from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
-from SimPEG import maps, utils
-from SimPEG.potential_fields import magnetics as mag
+from SimPEG import utils
 
 from geoapps.utils import get_inversion_output, treemesh_2_octree
 
 
-def setup_workspace(tmp_path, phys_prop):
-    project = path.join(tmp_path, "mag_test.geoh5")
+def setup_workspace(work_dir, phys_prop):
+    project = path.join(work_dir, "mag_test.geoh5")
     workspace = Workspace(project)
 
     # Topography
