@@ -1058,7 +1058,10 @@ class InversionApp(PlotSelection2D):
                 for d in data:
                     d.copy(parent=new_obj)
 
-        self.params.geoh5 = new_workspace.h5file
+        if self.sensor.options.value == "topo + radar + (dx, dy, dz)":
+            self.params.z_from_topo = True
+        else:
+            self.params.z_from_topo = False
 
         new_obj = new_workspace.get_entity(self.objects.value)[0]
         for key in self.data_channel_choices.options:
@@ -1074,6 +1077,7 @@ class InversionApp(PlotSelection2D):
                     0
                 ].copy(parent=new_obj)
 
+        self.params.geoh5 = new_workspace.h5file
         self.params.workspace = new_workspace
         self.params.input_file.filepath = os.path.join(
             self.export_directory.selected_path, self._ga_group_name.value + ".ui.json"
