@@ -152,10 +152,6 @@ class InversionDriver:
         local_misfits = self.get_tile_misfits(self.tiles)
         global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
 
-        # Trigger sensitivity calcs
-        # for local in local_misfits:
-        #     local.simulation.Jmatrix
-
         # Create regularization
         reg = self.get_regularization()
 
