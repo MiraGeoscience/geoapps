@@ -117,7 +117,7 @@ def test_create_octree_app():
         app.trigger.click()
 
         # Re-load the new mesh and compare
-        ws = Workspace(app.h5file)
-        rec_octree = ws.get_entity("Octree_Mesh")[0]
+        new_workspace = Workspace(app.h5file)
+        rec_octree = new_workspace.get_entity("Octree_Mesh")[0]
 
         compare_entities(octree, rec_octree, ignore=["_name", "_uid"])
