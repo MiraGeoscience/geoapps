@@ -146,10 +146,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             kwargs["channels"] = channels
             kwargs["attribute_type"] = "predicted"
             kwargs["save_objective_function"] = True
-            kwargs["transforms"] = np.tile(
-                [inversion_object.normalizations[c] for c in channels],
-                (len(inversion_object.locations), 1),
-            )
+            kwargs["transforms"] = [
+                np.tile(
+                    [inversion_object.normalizations[c] for c in channels],
+                    (len(inversion_object.observed), 1),
+                )
+            ]
 
             if self.factory_type == "direct_current":
 
