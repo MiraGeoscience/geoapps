@@ -371,7 +371,7 @@ class InversionDriver:
             [],
         )
         for tile_id, local_index in enumerate(tiles):
-            lsurvey, _ = self.inversion_data.survey(
+            lsurvey, local_index = self.inversion_data.survey(
                 self.mesh, self.active_cells, local_index
             )
             lsim, lmap = self.inversion_data.simulation(
