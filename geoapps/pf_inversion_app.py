@@ -993,7 +993,7 @@ class InversionApp(PlotSelection2D):
         dl = self.resolution.value
         self._mesh_octree.u_cell_size.value = f"{dl/2:.0f}"
         self._mesh_octree.v_cell_size.value = f"{dl / 2:.0f}"
-        self._mesh_octree.z_cell_size.value = f"{dl / 2:.0f}"
+        self._mesh_octree.w_cell_size.value = f"{dl / 2:.0f}"
         self._mesh_octree.depth_core.value = np.ceil(
             np.min([self.window_width.value, self.window_height.value]) / 2.0
         )
@@ -1234,7 +1234,7 @@ class MeshOctreeOptions(ObjectDataSelection):
             value=25.0,
             description="",
         )
-        self._z_cell_size = widgets.FloatText(
+        self._w_cell_size = widgets.FloatText(
             value=25.0,
             description="",
         )
@@ -1267,7 +1267,7 @@ class MeshOctreeOptions(ObjectDataSelection):
                 Label("Core cell size (u, v, z)"),
                 self._u_cell_size,
                 self._v_cell_size,
-                self._z_cell_size,
+                self._w_cell_size,
                 Label("Refinement Layers"),
                 self._octree_levels_topo,
                 self._octree_levels_obs,
@@ -1303,8 +1303,8 @@ class MeshOctreeOptions(ObjectDataSelection):
         return self._v_cell_size
 
     @property
-    def z_cell_size(self):
-        return self._z_cell_size
+    def w_cell_size(self):
+        return self._w_cell_size
 
     @property
     def depth_core(self):
