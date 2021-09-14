@@ -575,6 +575,9 @@ default_ui_json = {
 }
 
 validations = {
+    "title": {
+        "types": [str],
+    },
     "forward_only": {
         "types": [bool],
         "reqs": [
