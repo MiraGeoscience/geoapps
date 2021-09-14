@@ -75,6 +75,7 @@ class Params:
     _run_command_boolean = None
     _conda_environment = None
     _conda_environment_boolean = None
+    _title = None
     _monitoring_directory = None
     _free_param_keys: list = None
     _verbose = True
@@ -308,6 +309,14 @@ class Params:
     @conda_environment_boolean.setter
     def conda_environment_boolean(self, val):
         self.setter_validator("conda_environment_boolean", val)
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, val):
+        self.setter_validator("title", val)
 
     @property
     def input_file(self):
