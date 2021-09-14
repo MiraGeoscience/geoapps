@@ -591,20 +591,11 @@ class InversionApp(PlotSelection2D):
 
     @property
     def z_from_topo(self):
-        if self.sensor.options.value == "topo + radar + (dx, dy, dz)":
-            return True
-        return False
-
-    @z_from_topo.setter
-    def z_from_topo(self, value: bool):
-        if value:
-            self.sensor.options.value = "topo + radar + (dx, dy, dz)"
-        else:
-            self.sensor.options.value = "sensor location + (dx, dy, dz)"
+        return self.sensor.z_from_topo
 
     @property
     def receivers_radar_drape(self):
-        return self.sensor.data.value
+        return self.sensor.data
 
     @property
     def receivers_offset_x(self):
@@ -1028,9 +1019,9 @@ class InversionApp(PlotSelection2D):
                             model_group + label,
                             value,
                         )
-                elif isinstance(attr, MeshOctreeOptions):
-                    for O_key in self._mesh_octree.__dict__:
-                        value = getattr(self._mesh_octree, O_key[1:])
+                elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                    for O_key in attr.__dict__:
+                        value = getattr(attr, O_key[1:])
                         if isinstance(value, Widget):
                             setattr(self.params, O_key, value.value)
                         else:
@@ -1057,11 +1048,6 @@ class InversionApp(PlotSelection2D):
                 new_obj = obj.copy(parent=new_workspace, copy_children=False)
                 for d in data:
                     d.copy(parent=new_obj)
-
-        if self.sensor.options.value == "topo + radar + (dx, dy, dz)":
-            self.params.z_from_topo = True
-        else:
-            self.params.z_from_topo = False
 
         new_obj = new_workspace.get_entity(self.objects.value)[0]
         for key in self.data_channel_choices.options:
@@ -1150,44 +1136,34 @@ class SensorOptions(ObjectDataSelection):
         self._receivers_offset_x = FloatText(description="dx (+East)", value=0.0)
         self._receivers_offset_y = FloatText(description="dy (+North)", value=0.0)
         self._receivers_offset_z = FloatText(description="dz (+ve up)", value=0.0)
-        self._offset = VBox(
-            [
-                Label("Constant offsets"),
-                self._receivers_offset_x,
-                self._receivers_offset_y,
-                self._receivers_offset_z,
-            ]
-        )
-        self._constant = FloatText(
-            description="Constant elevation (m)",
-        )
-        if "offset" in self.defaults.keys():
-            self._offset.value = self.defaults["offset"]
-
-        self.option_list = {
-            "sensor location + (dx, dy, dz)": self.offset,
-            "topo + radar + (dx, dy, dz)": VBox(
-                [
-                    self.offset,
-                    self.data,
-                ]
-            ),
-        }
-        self.options.observe(self.update_options, names="value")
+        self._z_from_topo = Checkbox(description="Set Z from topo + offsets")
         self.data.description = "Radar (Optional):"
-
+        self._receivers_radar_drape = self.data
         super().__init__(**self.defaults)
 
     @property
     def main(self):
         if self._main is None:
-            self._main = VBox([self.options, self.option_list[self.options.value]])
+            self._main = VBox(
+                [
+                    self.z_from_topo,
+                    Label("Offsets"),
+                    self._receivers_offset_x,
+                    self._receivers_offset_y,
+                    self._receivers_offset_z,
+                    self._receivers_radar_drape,
+                ]
+            )
 
         return self._main
 
     @property
     def offset(self):
         return self._offset
+
+    @property
+    def receivers_radar_drape(self):
+        return self._receivers_radar_drape
 
     @property
     def receivers_offset_x(self):
@@ -1202,23 +1178,8 @@ class SensorOptions(ObjectDataSelection):
         return self._receivers_offset_z
 
     @property
-    def options(self):
-
-        if getattr(self, "_options", None) is None:
-            self._options = widgets.RadioButtons(
-                options=[
-                    "sensor location + (dx, dy, dz)",
-                    "topo + radar + (dx, dy, dz)",
-                ],
-                description="Define by:",
-            )
-        return self._options
-
-    def update_options(self, _):
-        self.main.children = [
-            self.options,
-            self.option_list[self.options.value],
-        ]
+    def z_from_topo(self):
+        return self._z_from_topo
 
 
 class MeshOctreeOptions(ObjectDataSelection):
@@ -1354,77 +1315,6 @@ class MeshOctreeOptions(ObjectDataSelection):
             ]
         else:
             self._main.children = [self.objects, self.mesh_from_params]
-
-
-class Mesh1DOptions:
-    """
-    Widget used for the creation of a 1D mesh
-    """
-
-    def __init__(self, **kwargs):
-        self._hz_expansion = FloatText(
-            value=1.05,
-            description="Expansion factor:",
-        )
-        self._hz_min = FloatText(
-            value=10.0,
-            description="Smallest cell (m):",
-        )
-        self._n_cells = FloatText(
-            value=25.0,
-            description="Number of cells:",
-        )
-        self.cell_count = Label(f"Max depth: {self.count_cells():.2f} m")
-        self.n_cells.observe(self.update_hz_count)
-        self.hz_expansion.observe(self.update_hz_count)
-        self.hz_min.observe(self.update_hz_count)
-        self._main = VBox(
-            [
-                Label("1D Mesh"),
-                self.hz_min,
-                self.hz_expansion,
-                self.n_cells,
-                self.cell_count,
-            ]
-        )
-
-        for obj in self.__dict__:
-            if hasattr(getattr(self, obj), "style"):
-                getattr(self, obj).style = {"description_width": "initial"}
-
-        for key, value in kwargs.items():
-            if hasattr(self, "_" + key):
-                try:
-                    getattr(self, key).value = value
-                except:
-                    pass
-
-    def count_cells(self):
-        return (
-            self.hz_min.value * self.hz_expansion.value ** np.arange(self.n_cells.value)
-        ).sum()
-
-    def update_hz_count(self, _):
-        self.cell_count.value = f"Max depth: {self.count_cells():.2f} m"
-
-    @property
-    def hz_expansion(self):
-        """"""
-        return self._hz_expansion
-
-    @property
-    def hz_min(self):
-        """"""
-        return self._hz_min
-
-    @property
-    def n_cells(self):
-        """"""
-        return self._n_cells
-
-    @property
-    def main(self):
-        return self._main
 
 
 class ModelOptions(ObjectDataSelection):
