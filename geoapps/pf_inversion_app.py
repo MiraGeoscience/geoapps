@@ -42,34 +42,33 @@ def inversion_defaults():
     """
     Get defaults for gravity, magnetics and EM1D inversions
     """
-    defaults = {
+    return {
         "units": {
             "gravity": "g/cc",
             "magnetic vector": "SI",
             "magnetic scalar": "SI",
-            "EM1D": "S/m",
         },
         "property": {
             "gravity": "density",
             "magnetic vector": "effective susceptibility",
             "magnetic scalar": "susceptibility",
-            "EM1D": "conductivity",
         },
         "reference_value": {
             "gravity": 0.0,
             "magnetic vector": 0.0,
             "magnetic scalar": 0.0,
-            "EM1D": 1e-3,
         },
         "starting_value": {
             "gravity": 1e-4,
             "magnetic vector": 1e-4,
             "magnetic scalar": 1e-4,
-            "EM1D": 1e-3,
+        },
+        "component": {
+            "gravity": "gz",
+            "magnetic vector": "tmi",
+            "magnetic scalar": "tmi",
         },
     }
-
-    return defaults
 
 
 class InversionApp(PlotSelection2D):
@@ -917,9 +916,11 @@ class InversionApp(PlotSelection2D):
                 )
                 data_channel_options[key].children[3].children[0].header = key
                 data_channel_options[key].children[3].children[1].header = key
-            data_channel_options[key].children[1].value = find_value(options, [key])
+            # data_channel_options[key].children[1].value = find_value(options, [key])
 
-        self.data_channel_choices.value = list(data_channel_options.keys())[0]
+        self.data_channel_choices.value = inversion_defaults()["component"][
+            self.inversion_type.value
+        ]
         self.data_channel_choices.data_channel_options = data_channel_options
         self.data_channel_panel.children = [
             self.data_channel_choices,
