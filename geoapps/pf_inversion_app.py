@@ -125,7 +125,7 @@ class InversionApp(PlotSelection2D):
             button_style="warning",
             icon="check",
         )
-        self.defaults.update(**kwargs)
+        self.defaults.update(self.params.to_dict(ui_json_format=False))
         self._ga_group_name = widgets.Text(
             value="Inversion_", description="Save as:", disabled=False
         )
@@ -585,7 +585,6 @@ class InversionApp(PlotSelection2D):
     def sensor(self):
         if getattr(self, "_sensor", None) is None:
             self._sensor = SensorOptions(
-                workspace=self._workspace,
                 objects=self._objects,
                 **self.defaults,
             )
@@ -741,10 +740,10 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
+        params = self.params.to_dict(ui_json_format=False)
         if self.inversion_type.value == "magnetic vector" and not isinstance(
             self.params, MagneticVectorParams
         ):
-            params = self.params.to_dict(ui_json_format=False)
             self._param_class = MagneticVectorParams
             params["inversion_type"] = "magnetic vector"
             params["out_group"] = "VectorInversion"
@@ -752,14 +751,12 @@ class InversionApp(PlotSelection2D):
         elif self.inversion_type.value == "magnetic scalar" and not isinstance(
             self.params, MagneticScalarParams
         ):
-            params = self.params.to_dict(ui_json_format=False)
             params["inversion_type"] = "magnetic scalar"
             params["out_group"] = "SusceptibilityInversion"
             self._param_class = MagneticScalarParams
         elif self.inversion_type.value == "gravity" and not isinstance(
             self.params, GravityParams
         ):
-            params = self.params.to_dict(ui_json_format=False)
             params["inversion_type"] = "gravity"
             params["out_group"] = "GravityInversion"
             self._param_class = GravityParams
