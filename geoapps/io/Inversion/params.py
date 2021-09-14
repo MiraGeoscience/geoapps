@@ -7,11 +7,13 @@
 
 from __future__ import annotations
 
+import os.path as path
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
+from ..input_file import InputFile
 from ..params import Params
 
 
@@ -1140,3 +1142,38 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._no_data_value = val
+
+    def write_input_file(
+        self, ui_json: dict = None, default: bool = False, name: str = None
+    ):
+        """Write out a ui.json with the current state of parameters"""
+
+        if name is not None:
+            if ".ui.json" not in name:
+                name += ".ui.json"
+
+        if ui_json is None:
+            if self.forward_only:
+                defaults = self.forward_defaults
+            else:
+                defaults = self.inversion_defaults
+
+            ui_json = {k: self.default_ui_json[k] for k in defaults}
+            self.title = defaults["title"]
+            self.run_command = defaults["run_command"]
+
+        if default:
+            ifile = InputFile()
+        else:
+            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
+
+        if getattr(self, "input_file", None) is not None:
+
+            if name is None:
+                ifile.filepath = self.input_file.filepath
+            else:
+                out_file = path.join(self.input_file.workpath, name)
+                self.input_file.filepath = out_file
+                ifile.filepath = out_file
+
+        ifile.write_ui_json(ui_json, default=default)

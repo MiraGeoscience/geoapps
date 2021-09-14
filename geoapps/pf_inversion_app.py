@@ -745,24 +745,26 @@ class InversionApp(PlotSelection2D):
             self.params, MagneticVectorParams
         ):
             params = self.params.to_dict(ui_json_format=False)
+            self._param_class = MagneticVectorParams
             params["inversion_type"] = "magnetic vector"
             params["out_group"] = "VectorInversion"
-            self.params = MagneticVectorParams(verbose=False, **params)
+
         elif self.inversion_type.value == "magnetic scalar" and not isinstance(
             self.params, MagneticScalarParams
         ):
             params = self.params.to_dict(ui_json_format=False)
             params["inversion_type"] = "magnetic scalar"
             params["out_group"] = "SusceptibilityInversion"
-            self.params = MagneticScalarParams(verbose=False, **params)
+            self._param_class = MagneticScalarParams
         elif self.inversion_type.value == "gravity" and not isinstance(
             self.params, GravityParams
         ):
             params = self.params.to_dict(ui_json_format=False)
             params["inversion_type"] = "gravity"
             params["out_group"] = "GravityInversion"
-            self.params = GravityParams(verbose=False, **params)
+            self._param_class = GravityParams
 
+        self.params = self._param_class(verbose=False, **params)
         self.ga_group_name.value = self.params.defaults["out_group"]
 
         if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
@@ -1083,7 +1085,6 @@ class InversionApp(PlotSelection2D):
             self.export_directory.selected_path, self._ga_group_name.value + ".ui.json"
         )
         self.params.write_input_file(name=self._ga_group_name.value)
-
         self.write.button_style = ""
         self.trigger.button_style = "success"
 
