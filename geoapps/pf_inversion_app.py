@@ -167,6 +167,10 @@ class InversionApp(PlotSelection2D):
         self._reference_model_group = ModelOptions("reference_model", **self.defaults)
         self._reference_model_group.options.observe(self.update_ref)
         self._topography_group = TopographyOptions(**self.defaults)
+        self._sensor = SensorOptions(
+            objects=self._objects,
+            **self.defaults,
+        )
         self._detrend_data = Checkbox(description="Detrend data")
         self._detrend_order = IntText(description="Order", min=0, max=2, value=0)
         self._detrend_type = Dropdown(
@@ -406,7 +410,7 @@ class InversionApp(PlotSelection2D):
 
     @property
     def reference_model_object(self):
-        return self._reference_model_group.objects.value
+        return self._reference_model_group.objects
 
     @property
     def starting_model(self):
@@ -427,7 +431,7 @@ class InversionApp(PlotSelection2D):
 
     @property
     def starting_model_object(self):
-        return self._starting_model_group.objects.value
+        return self._starting_model_group.objects
 
     @property
     def lower_bound(self):
@@ -450,7 +454,7 @@ class InversionApp(PlotSelection2D):
 
     @property
     def lower_bound_object(self):
-        return self._lower_bound_group.objects.value
+        return self._lower_bound_group.objects
 
     @property
     def upper_bound(self):
@@ -473,7 +477,7 @@ class InversionApp(PlotSelection2D):
 
     @property
     def upper_bound_object(self):
-        return self._upper_bound_group.objects.value
+        return self._upper_bound_group.objects
 
     @property
     def tol_cg(self):
@@ -582,11 +586,6 @@ class InversionApp(PlotSelection2D):
 
     @property
     def sensor(self):
-        if getattr(self, "_sensor", None) is None:
-            self._sensor = SensorOptions(
-                objects=self._objects,
-                **self.defaults,
-            )
         return self._sensor
 
     @property
@@ -1130,6 +1129,7 @@ class SensorOptions(ObjectDataSelection):
     """
 
     _options = None
+    defaults = {}
 
     def __init__(self, **kwargs):
         self.defaults.update(**kwargs)
@@ -1333,12 +1333,14 @@ class ModelOptions(ObjectDataSelection):
         )
         self._options.observe(self.update_panel, names="value")
         self.objects.description = "Object"
+
         self.data.description = "Values"
         self._constant = FloatText(description=self.units)
         self._description = Label()
 
         super().__init__(**kwargs)
 
+        self.objects.observe(self.objects_setter, names="value")
         self.selection_widget = self.main
         self._main = widgets.VBox(
             [self._description, widgets.VBox([self._options, self._constant])]
@@ -1354,6 +1356,10 @@ class ModelOptions(ObjectDataSelection):
             self._main.children[1].children[1].layout.visibility = "visible"
         else:
             self._main.children[1].children[1].layout.visibility = "hidden"
+
+    def objects_setter(self, _):
+        if self.objects.value is not None:
+            self.options.value = "Model"
 
     @property
     def constant(self):

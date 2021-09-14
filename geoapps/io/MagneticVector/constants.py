@@ -533,6 +533,7 @@ app_initializer = {
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
+    "upper_bound": None,
     "max_iterations": 25,
     "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
     "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
