@@ -197,7 +197,7 @@ class Params:
                 if isinstance(ui_json[k], dict):
                     field = "value"
                     if "isValue" in ui_json[k].keys():
-                        if isinstance(new_val, UUID):
+                        if isinstance(new_val, UUID) or new_val is None:
                             ui_json[k]["isValue"] = False
                             field = "property"
                         else:
