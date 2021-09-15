@@ -269,9 +269,8 @@ class InversionData(InversionLocations):
         """Offset data locations in all three dimensions."""
         return locs + offset if offset is not None else 0
 
-    def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
+    def drape(self, locs: np.ndarray, radar_offset: np.ndarray) -> np.ndarray:
         """Drape data locations using radar channel offsets."""
-
         radar_offset_pad = np.zeros((len(radar_offset), 3))
         radar_offset_pad[:, 2] = radar_offset
 
@@ -324,7 +323,6 @@ class InversionData(InversionLocations):
         :return: survey: SimPEG Survey class that covers all data or optionally
             the portion of the data indexed by the local_index argument.
         """
-
         survey_factory = SurveyFactory(self.params)
         survey = survey_factory.build(
             self.locations, self.observed, self.uncertainties, local_index
@@ -356,7 +354,6 @@ class InversionData(InversionLocations):
             tile_id is provided map will simply be an identity map with no
             effect of the data.
         """
-
         simulation_factory = SimulationFactory(self.params)
         survey = self.survey(local_index)
 
