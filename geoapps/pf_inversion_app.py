@@ -143,19 +143,16 @@ class InversionApp(PlotSelection2D):
             value=int(multiprocessing.cpu_count() / 2), description="Max CPUs"
         )
         self._max_ram = FloatText(value=2.0, description="Max RAM (Gb)")
-        self._beta_start_options = widgets.RadioButtons(
-            options=["value", "ratio"],
-            value="ratio",
-            description="Starting tradeoff (beta):",
+        # self._initial_beta = FloatText(value=1e2, description="Value:")
+        self._initial_beta_ratio = FloatText(
+            value=1e2, description="Beta ratio (phi_d/phi_m):"
         )
-        self._beta_start = FloatText(value=1e2, description="phi_d/phi_m")
-        self._beta_start_options.observe(self.initial_beta_change)
-        self._beta_start_panel = HBox([self._beta_start_options, self._beta_start])
+        self._initial_beta_panel = HBox([self._initial_beta_ratio])
         self._optimization = VBox(
             [
                 self._max_iterations,
                 self._chi_factor,
-                self._beta_start_panel,
+                self._initial_beta_panel,
                 self._max_cg_iterations,
                 self._tol_cg,
                 self._n_cpu,
@@ -339,13 +336,17 @@ class InversionApp(PlotSelection2D):
     def alpha_z(self):
         return self._alpha_z
 
-    @property
-    def beta_start(self):
-        return self._beta_start
+    # @property
+    # def initial_beta(self):
+    #     return self._initial_beta
 
     @property
-    def beta_start_options(self):
-        return self._beta_start_options
+    def initial_beta(self):
+        return self._initial_beta_ratio
+
+    @property
+    def initial_beta_options(self):
+        return self._initial_beta_options
 
     @property
     def chi_factor(self):
@@ -841,12 +842,6 @@ class InversionApp(PlotSelection2D):
             self.option_choices,
             self.inversion_options[self.option_choices.value],
         ]
-
-    def initial_beta_change(self, _):
-        if self._beta_start_options.value == "ratio":
-            self._beta_start.description = "phi_d/phi_m"
-        else:
-            self._beta_start.description = ""
 
     def trigger_click(self, _):
         """"""

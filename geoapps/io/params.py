@@ -375,12 +375,13 @@ class Params:
     def _handle_kwargs(self, kwargs, validate):
         """Updates attributes with kwargs, validates and attaches input file attributes."""
 
-        for key in kwargs:
+        for key, value in kwargs.items():
             if key in self.default_ui_json and isinstance(
                 self.default_ui_json[key], dict
             ):
-                self.default_ui_json[key]["enabled"] = True
                 self.default_ui_json[key]["visible"] = True
+                if value is not None:
+                    self.default_ui_json[key]["enabled"] = True
 
         self.update(kwargs, validate=False)
 
