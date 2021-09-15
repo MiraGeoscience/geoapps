@@ -98,8 +98,13 @@ class DirectivesFactory:
                 sorting=sorting,
             )
 
-            if self.factory_type == "direct_current":
-                transform = inversion_data.transformations["potential"]
+            if self.factory_type in ["direct_current", "induced_polarization"]:
+                key = (
+                    "potential"
+                    if self.factory_type == "direct_current"
+                    else "chargeability"
+                )
+                transform = inversion_data.transformations[key]
                 self.save_iteration_apparent_resistivity_directive = (
                     SaveIterationGeoh5Factory(self.params).build(
                         inversion_object=inversion_data,
@@ -153,12 +158,15 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 )
             ]
 
-            if self.factory_type == "direct_current":
+            if self.factory_type in ["direct_current", "induced_polarization"]:
 
+                is_dc = True if self.factory_type == "direct_current" else False
+
+                component = "dc" if is_dc else "ip"
                 kwargs["association"] = "CELL"
-                kwargs["components"] = ["dc"]
+                kwargs["components"] = [component]
                 kwargs["data_type"] = {
-                    "dc": {
+                    component: {
                         c: inversion_object.data_entity[c].entity_type for c in channels
                     }
                 }
@@ -166,13 +174,16 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 # Include an apparent resistivity mapper
                 if transform is not None:
 
+                    property = "resistivity" if is_dc else "chargeability"
                     kwargs["transforms"].append(transform)
-                    kwargs["channels"] = ["apparent_resistivity"]
-                    apparent_resistivity_entity_type = self.params.workspace.get_entity(
-                        "Observed_apparent_resistivity"
+                    kwargs["channels"] = [f"apparent_{property}"]
+                    apparent_measurement_entity_type = self.params.workspace.get_entity(
+                        f"Observed_apparent_{property}"
                     )[0].entity_type
                     kwargs["data_type"] = {
-                        "dc": {"apparent_resistivity": apparent_resistivity_entity_type}
+                        component: {
+                            f"apparent_{property}": apparent_measurement_entity_type
+                        }
                     }
 
             if self.factory_type in ["magnetic scalar", "magnetic vector"]:
