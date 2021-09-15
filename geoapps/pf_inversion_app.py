@@ -890,22 +890,23 @@ class InversionApp(PlotSelection2D):
                     ),
                 )
                 data_channel_options[key] = getattr(self, f"{key}_group")
-                data_channel_options[key].children[1].options = [["", None]] + options
+                data_channel_options[key].children[3].children[0].header = key
+                data_channel_options[key].children[3].children[1].header = key
                 data_channel_options[key].children[1].header = key
                 data_channel_options[key].children[1].observe(
                     channel_setter, names="value"
                 )
-                data_channel_options[key].children[3].children[1].options = [
-                    ["", None]
-                ] + options
                 data_channel_options[key].children[3].children[0].observe(
                     uncert_setter, names="value"
                 )
                 data_channel_options[key].children[3].children[1].observe(
                     uncert_setter, names="value"
                 )
-                data_channel_options[key].children[3].children[0].header = key
-                data_channel_options[key].children[3].children[1].header = key
+            data_channel_options[key].children[1].options = [["", None]] + options
+            data_channel_options[key].children[3].children[1].options = [
+                ["", None]
+            ] + options
+
             # data_channel_options[key].children[1].value = find_value(options, [key])
 
         self.data_channel_choices.value = inversion_defaults()["component"][
@@ -1010,6 +1011,10 @@ class InversionApp(PlotSelection2D):
                     model_group = attr.identifier
                     for label in ["", "_object"]:
                         value = getattr(self, model_group + label)
+
+                        if isinstance(value, Widget):
+                            value = value.value
+
                         if isinstance(value, uuid.UUID):
                             value = str(value)
 
