@@ -56,7 +56,8 @@ class GravityParams(InversionParams):
             if isinstance(v, dict):
                 field = "value"
                 if "isValue" in v.keys():
-                    if not v["isValue"]:
+                    if not v["isValue"] or self.defaults[k] is None:
+                        v["isValue"] = False
                         field = "property"
                 self.default_ui_json[k][field] = self.defaults[k]
             else:
