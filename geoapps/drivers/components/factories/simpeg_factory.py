@@ -41,6 +41,7 @@ class SimPEGFactory:
         "magnetic scalar",
         "magnetic vector",
         "direct_current",
+        "induced_polarization",
     ]
 
     def __init__(self, params: Params):

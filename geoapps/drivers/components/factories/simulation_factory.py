@@ -31,7 +31,7 @@ class SimulationFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
         from SimPEG import dask
 
-        if self.factory_type == "direct_current":
+        if self.factory_type in ["direct_current", "induced_polarization"]:
             import pymatsolver.direct as solver_module
 
             self.solver = solver_module.Pardiso
@@ -52,9 +52,19 @@ class SimulationFactory(SimPEGFactory):
             from SimPEG.electromagnetics.static.resistivity import simulation
 
             return simulation.Simulation3DNodal
+        if self.factory_type == "induced_polarization":
+            from SimPEG.electromagnetics.static.induced_polarization import simulation
+
+            return simulation.Simulation3DNodal
 
     def assemble_keyword_arguments(
-        self, survey=None, mesh=None, active_cells=None, map=None, tile_id=None
+        self,
+        survey=None,
+        mesh=None,
+        active_cells=None,
+        map=None,
+        tile_id=None,
+        sigma=None,
     ):
 
         sens_path = self._get_sens_path(tile_id)
@@ -92,10 +102,22 @@ class SimulationFactory(SimPEGFactory):
 
         elif self.factory_type == "direct_current":
 
+            kwargs["etaMap"] = maps.IdentityMap(mesh)
             actmap = maps.InjectActiveCells(
                 mesh, active_cells, valInactive=np.log(1e-8)
             )
             kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
+            kwargs["Solver"] = self.solver
+            kwargs["store_sensitivities"] = False if self.params.forward_only else True
+
+        elif self.factory_type == "induced_polarization":
+
+            sigma = self.workspace.get_entity(self.params.conductivity_model)[0].values
+
+            actmap = maps.InjectActiveCells(
+                mesh, active_cells, valInactive=np.log(1e-8)
+            )
+            kwargs["sigma"] = maps.ExpMap(mesh) * actmap
             kwargs["Solver"] = self.solver
             kwargs["store_sensitivities"] = False if self.params.forward_only else True
 

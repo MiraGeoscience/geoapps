@@ -234,7 +234,7 @@ class InversionData(InversionLocations):
 
     def save_data(self):
 
-        if self.params.inversion_type == "direct_current":
+        if self.params.inversion_type in ["direct_current", "induced_polarization"]:
 
             rx_obj = self.workspace.get_entity(self.params.data_object)[0]
             tx_obj = self.params.workspace.get_entity(f"{rx_obj.name} (currents)")[0]
@@ -250,8 +250,13 @@ class InversionData(InversionLocations):
                 return
 
             survey, _ = self.survey()
-            self.transformations["potential"] = 1 / (geometric_factor(survey) + 1e-10)
-            appres = self.observed["potential"] * self.transformations["potential"]
+            key = (
+                "potential"
+                if self.params.inversion_type == "direct_current"
+                else "chargeability"
+            )
+            self.transformations[key] = 1 / (geometric_factor(survey) + 1e-10)
+            apparent_measurement = self.observed[key] * self.transformations[key]
 
             for comp in self.components:
                 self.data_entity[comp] = self.entity.add_data(
@@ -263,10 +268,15 @@ class InversionData(InversionLocations):
                     }
                 )
 
-            self.data_entity["apparent_resistivity"] = self.entity.add_data(
+            if self.params.inversion_type == "direct_current":
+                key = "apparent_resistivity"
+            else:
+                key = "apparent_chargeability"
+
+            self.data_entity[key] = self.entity.add_data(
                 {
-                    "Observed_apparent_resistivity": {
-                        "values": appres,
+                    f"Observed_{key}": {
+                        "values": apparent_measurement,
                         "association": "CELL",
                     }
                 }
