@@ -164,8 +164,34 @@ class InversionApp(PlotSelection2D):
         )
         self._starting_model_group = ModelOptions("starting_model", **self.defaults)
         self._starting_model_group.options.options = ["Constant", "Model"]
+        self._starting_inclination_group = ModelOptions(
+            "starting_inclination",
+            description="Starting Inclination",
+            units="Degree",
+            **self.defaults,
+        )
+        self._starting_inclination_group.options.options = ["Constant", "Model"]
+        self._starting_declination_group = ModelOptions(
+            "starting_declination",
+            description="Starting Declination",
+            units="Degree",
+            **self.defaults,
+        )
+        self._starting_declination_group.options.options = ["Constant", "Model"]
         self._reference_model_group = ModelOptions("reference_model", **self.defaults)
         self._reference_model_group.options.observe(self.update_ref)
+        self._reference_inclination_group = ModelOptions(
+            "reference_inclination",
+            description="Reference Inclination",
+            units="Degree",
+            **self.defaults,
+        )
+        self._reference_declination_group = ModelOptions(
+            "reference_declination",
+            description="Reference Declination",
+            units="Degree",
+            **self.defaults,
+        )
         self._topography_group = TopographyOptions(**self.defaults)
         self._sensor = SensorOptions(
             objects=self._objects,
@@ -183,22 +209,22 @@ class InversionApp(PlotSelection2D):
         self._alpha_s = widgets.FloatText(
             min=0,
             value=1,
-            description="Reference Model",
+            description="Reference Model (s)",
         )
         self._alpha_x = widgets.FloatText(
             min=0,
             value=1,
-            description="Gradient EW",
+            description="EW-gradient (x)",
         )
         self._alpha_y = widgets.FloatText(
             min=0,
             value=1,
-            description="Gradient NS",
+            description="NS-gradient (y)",
         )
         self._alpha_z = widgets.FloatText(
             min=0,
             value=1,
-            description="Gradient Vertical",
+            description="Vertical-gradient (z)",
         )
         self._s_norm = widgets.FloatText(
             value=2,
@@ -222,7 +248,7 @@ class InversionApp(PlotSelection2D):
         )
         self._norms = VBox(
             [
-                Label("Norms"),
+                Label("Lp-norms"),
                 self._s_norm,
                 self._x_norm,
                 self._y_norm,
@@ -231,7 +257,7 @@ class InversionApp(PlotSelection2D):
         )
         self._alphas = VBox(
             [
-                Label("Scaling"),
+                Label("Scaling (alphas)"),
                 self._alpha_s,
                 self._alpha_x,
                 self._alpha_y,
@@ -251,11 +277,22 @@ class InversionApp(PlotSelection2D):
         )
         self._mesh_octree = MeshOctreeOptions(**self.defaults)
         self.inversion_options = {
-            "starting model": self._starting_model_group.main,
-            "mesh": self._mesh_octree.main,
-            "regularization": VBox(
-                [self._reference_model_group.main, HBox([self._alphas, self._norms])]
+            "starting model": VBox(
+                [
+                    self._starting_model_group.main,
+                    self._starting_inclination_group.main,
+                    self._starting_declination_group.main,
+                ]
             ),
+            "mesh": self._mesh_octree.main,
+            "reference model": VBox(
+                [
+                    self._reference_model_group.main,
+                    self._reference_inclination_group.main,
+                    self._reference_declination_group.main,
+                ]
+            ),
+            "regularization": HBox([self._alphas, self._norms]),
             "upper-lower bounds": self.bound_panel,
             "detrend": self._detrend_panel,
             "ignore values": VBox([self._ignore_values]),
@@ -270,7 +307,6 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices = widgets.Dropdown(description="Component:")
         self.data_channel_panel = widgets.VBox([self.data_channel_choices])
         self.survey_type_panel = HBox([self.inversion_type])
-
         self.inversion_type.observe(self.inversion_type_observer, names="value")
         self.objects.observe(self.object_observer, names="value")
         self.data_channel_choices.observe(
@@ -413,6 +449,52 @@ class InversionApp(PlotSelection2D):
         return self._reference_model_group.objects
 
     @property
+    def reference_inclination(self):
+        if self._reference_inclination_group.options.value == "Model":
+            return self._reference_inclination_group.data.value
+        elif self._reference_inclination_group.options.value == "Constant":
+            return self._reference_inclination_group.constant.value
+        else:
+            return None
+
+    @reference_inclination.setter
+    def reference_inclination(self, value):
+        if isinstance(value, float):
+            self._reference_inclination_group.options.value = "Constant"
+            self._reference_inclination_group.constant.value = value
+        elif value is None:
+            self._reference_inclination_group.options.value = "None"
+        else:
+            self._reference_inclination_group.data.value = value
+
+    @property
+    def reference_inclination_object(self):
+        return self._reference_inclination_group.objects
+
+    @property
+    def reference_declination(self):
+        if self._reference_declination_group.options.value == "Model":
+            return self._reference_declination_group.data.value
+        elif self._reference_declination_group.options.value == "Constant":
+            return self._reference_declination_group.constant.value
+        else:
+            return None
+
+    @reference_declination.setter
+    def reference_declination(self, value):
+        if isinstance(value, float):
+            self._reference_declination_group.options.value = "Constant"
+            self._reference_declination_group.constant.value = value
+        elif value is None:
+            self._reference_declination_group.options.value = "None"
+        else:
+            self._reference_declination_group.data.value = value
+
+    @property
+    def reference_declination_object(self):
+        return self._reference_declination_group.objects
+
+    @property
     def starting_model(self):
         if self._starting_model_group.options.value == "Model":
             return self._starting_model_group.data.value
@@ -432,6 +514,52 @@ class InversionApp(PlotSelection2D):
     @property
     def starting_model_object(self):
         return self._starting_model_group.objects
+
+    @property
+    def starting_inclination(self):
+        if self._starting_inclination_group.options.value == "Model":
+            return self._starting_inclination_group.data.value
+        elif self._starting_inclination_group.options.value == "Constant":
+            return self._starting_inclination_group.constant.value
+        else:
+            return None
+
+    @starting_inclination.setter
+    def starting_inclination(self, value):
+        if isinstance(value, float):
+            self._starting_inclination_group.options.value = "Constant"
+            self._starting_inclination_group.constant.value = value
+        elif value is None:
+            self._starting_inclination_group.options.value = "None"
+        else:
+            self._starting_inclination_group.data.value = value
+
+    @property
+    def starting_inclination_object(self):
+        return self._starting_inclination_group.objects
+
+    @property
+    def starting_declination(self):
+        if self._starting_declination_group.options.value == "Model":
+            return self._starting_declination_group.data.value
+        elif self._starting_declination_group.options.value == "Constant":
+            return self._starting_declination_group.constant.value
+        else:
+            return None
+
+    @starting_declination.setter
+    def starting_declination(self, value):
+        if isinstance(value, float):
+            self._starting_declination_group.options.value = "Constant"
+            self._starting_declination_group.constant.value = value
+        elif value is None:
+            self._starting_declination_group.options.value = "None"
+        else:
+            self._starting_declination_group.data.value = value
+
+    @property
+    def starting_declination_object(self):
+        return self._starting_declination_group.objects
 
     @property
     def lower_bound(self):
@@ -780,18 +908,14 @@ class InversionApp(PlotSelection2D):
                 "uv",
             ]
         flag = self.inversion_type.value
-        self._reference_model_group.constant.description = inversion_defaults()[
-            "units"
-        ][flag]
+        self._reference_model_group.units = inversion_defaults()["units"][flag]
         self._reference_model_group.constant.value = inversion_defaults()[
             "reference_value"
         ][flag]
         self._reference_model_group.description.value = (
             "Reference " + inversion_defaults()["property"][flag]
         )
-        self._starting_model_group.constant.description = inversion_defaults()["units"][
-            flag
-        ]
+        self._starting_model_group.units = inversion_defaults()["units"][flag]
         self._starting_model_group.constant.value = inversion_defaults()[
             "starting_value"
         ][flag]
@@ -940,6 +1064,25 @@ class InversionApp(PlotSelection2D):
         else:
             self._lower_bound_group.options.value = "None"
 
+        if self.inversion_type.value == "magnetic vector":
+            self.inversion_options["starting model"].children = [
+                self._starting_model_group.main,
+                self._starting_inclination_group.main,
+                self._starting_declination_group.main,
+            ]
+            self.inversion_options["reference model"].children = [
+                self._reference_model_group.main,
+                self._reference_inclination_group.main,
+                self._reference_declination_group.main,
+            ]
+        else:
+            self.inversion_options["starting model"].children = [
+                self._starting_model_group.main,
+            ]
+            self.inversion_options["reference model"].children = [
+                self._reference_model_group.main,
+            ]
+
     def object_observer(self, _):
         """ """
         self.resolution.indices = None
@@ -1007,29 +1150,21 @@ class InversionApp(PlotSelection2D):
                 attr = getattr(self, key)
                 if isinstance(attr, Widget):
                     setattr(self.params, key, attr.value)
-                elif isinstance(attr, ModelOptions):
-                    model_group = attr.identifier
-                    for label in ["", "_object"]:
-                        value = getattr(self, model_group + label)
-
+                else:
+                    sub_keys = []
+                    if isinstance(attr, ModelOptions):
+                        sub_keys = [attr.identifier, attr.identifier + "_object"]
+                        attr = self
+                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                        sub_keys = attr.params_keys
+                    for sub_key in sub_keys:
+                        value = getattr(attr, sub_key)
                         if isinstance(value, Widget):
                             value = value.value
-
                         if isinstance(value, uuid.UUID):
                             value = str(value)
+                        setattr(self.params, sub_key, value)
 
-                        setattr(
-                            self.params,
-                            model_group + label,
-                            value,
-                        )
-                elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                    for O_key in attr.__dict__:
-                        value = getattr(attr, O_key[1:])
-                        if isinstance(value, Widget):
-                            setattr(self.params, O_key, value.value)
-                        else:
-                            setattr(self.params, O_key, value)
             except AttributeError:
                 continue
         # Copy object to work geoh5
@@ -1045,6 +1180,8 @@ class InversionApp(PlotSelection2D):
             self._topography_group,
             self._starting_model_group,
             self._reference_model_group,
+            self._lower_bound_group,
+            self._upper_bound_group,
         ]:
             obj, data = elem.get_selected_entities()
 
@@ -1052,6 +1189,19 @@ class InversionApp(PlotSelection2D):
                 new_obj = obj.copy(parent=new_workspace, copy_children=False)
                 for d in data:
                     d.copy(parent=new_obj)
+
+        if self.inversion_type.value == "magnetic vector":
+            for elem in [
+                self._starting_inclination_group,
+                self._starting_declination_group,
+                self._reference_inclination_group,
+                self._reference_declination_group,
+            ]:
+                obj, data = elem.get_selected_entities()
+                if obj is not None:
+                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
+                    for d in data:
+                        d.copy(parent=new_obj)
 
         new_obj = new_workspace.get_entity(self.objects.value)[0]
         for key in self.data_channel_choices.options:
@@ -1066,6 +1216,11 @@ class InversionApp(PlotSelection2D):
                 self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
                     0
                 ].copy(parent=new_obj)
+
+        if self.receivers_radar_drape.value is not None:
+            self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
+                parent=new_obj
+            )
 
         self.params.geoh5 = new_workspace.h5file
         self.params.workspace = new_workspace
@@ -1135,6 +1290,13 @@ class SensorOptions(ObjectDataSelection):
 
     _options = None
     defaults = {}
+    params_keys = [
+        "receivers_offset_x",
+        "receivers_offset_y",
+        "receivers_offset_z",
+        "z_from_topo",
+        "receivers_radar_drape",
+    ]
 
     def __init__(self, **kwargs):
         self.defaults.update(**kwargs)
@@ -1192,7 +1354,22 @@ class MeshOctreeOptions(ObjectDataSelection):
     Widget used for the creation of an octree meshes
     """
 
+    params_keys = [
+        "mesh",
+        "mesh_from_params",
+        "u_cell_size",
+        "v_cell_size",
+        "w_cell_size",
+        "octree_levels_topo",
+        "octree_levels_obs",
+        "depth_core",
+        "horizontal_padding",
+        "vertical_padding",
+        "max_distance",
+    ]
+
     def __init__(self, **kwargs):
+        self._mesh = self.objects
         self._mesh_from_params = Checkbox(value=False, description="Create")
         self._mesh_from_params.observe(self.from_params_choice, names="value")
         self._u_cell_size = widgets.FloatText(
@@ -1248,6 +1425,7 @@ class MeshOctreeOptions(ObjectDataSelection):
             ]
         )
         self._main = VBox([self.objects, self.mesh_from_params])
+        self._objects.observe(self.mesh_selection, names="value")
 
         super().__init__(**kwargs)
 
@@ -1257,7 +1435,7 @@ class MeshOctreeOptions(ObjectDataSelection):
 
     @property
     def mesh(self):
-        return self._objects
+        return self._mesh
 
     @property
     def mesh_from_params(self):
@@ -1318,8 +1496,14 @@ class MeshOctreeOptions(ObjectDataSelection):
                 self.mesh_from_params,
                 self._parameters,
             ]
+            if self._objects.value is not None:
+                self._objects.value = None
         else:
             self._main.children = [self.objects, self.mesh_from_params]
+
+    def mesh_selection(self, _):
+        if self._objects.value is not None:
+            self._mesh_from_params.value = False
 
 
 class ModelOptions(ObjectDataSelection):

@@ -89,7 +89,7 @@ class ObjectDataSelection(BaseApplication):
         """
         :obj:`ipywidgets.VBox`: A box containing all widgets forming the application.
         """
-        self.__populate__(**self.defaults)
+        # self.__populate__(**self.defaults)
         if self._main is None:
             self._main = self.data_panel
             self.update_data_list(None)
