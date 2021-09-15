@@ -378,7 +378,7 @@ default_ui_json = {
         "dependency": "provide_beta",
         "dependencyType": "enabled",
         "label": "Initial beta",
-        "value": 0.0,
+        "value": "",
     },
     "tol_cg": {
         "min": 0,
