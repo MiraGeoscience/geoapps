@@ -20,6 +20,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
+    "title": "SimPEG Inversion - Magnetic Vector",
     "inversion_type": "magnetic vector",
     "geoh5": None,
     "data_object": None,
@@ -129,6 +130,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
+    "title": "SimPEG Forward - Magnetic Vector",
     "inversion_type": "magnetic vector",
     "forward_only": True,
     "inducing_field_strength": 50000.0,
@@ -185,6 +187,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
 }
 default_ui_json = {
+    "title": "SimPEG Inversion - Magnetic Vector",
     "inversion_type": "magnetic vector",
     "inducing_field_strength": {
         "association": "Cell",
@@ -552,10 +555,16 @@ app_initializer = {
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
+    "upper_bound": None,
+    "starting_inclination": 79.0,
+    "starting_declination": 11.0,
+    "reference_inclination": None,
+    "reference_declination": None,
     "max_iterations": 25,
     "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
     "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
     "z_from_topo": True,
+    "detrend_type": "all",
     "receivers_offset_x": 0,
     "receivers_offset_y": 0,
     "receivers_offset_z": 60,

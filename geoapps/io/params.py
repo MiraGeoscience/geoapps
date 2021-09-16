@@ -74,6 +74,7 @@ class Params:
     _run_command_boolean = None
     _conda_environment = None
     _conda_environment_boolean = None
+    _title = None
     _monitoring_directory = None
     _free_param_keys: list = None
     _verbose = True
@@ -195,7 +196,7 @@ class Params:
                 if isinstance(ui_json[k], dict):
                     field = "value"
                     if "isValue" in ui_json[k].keys():
-                        if isinstance(new_val, UUID):
+                        if isinstance(new_val, UUID) or new_val is None:
                             ui_json[k]["isValue"] = False
                             field = "property"
                         else:
@@ -309,6 +310,14 @@ class Params:
         self.setter_validator("conda_environment_boolean", val)
 
     @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, val):
+        self.setter_validator("title", val)
+
+    @property
     def input_file(self):
         return self._input_file
 
@@ -359,12 +368,13 @@ class Params:
     def _handle_kwargs(self, kwargs, validate):
         """Updates attributes with kwargs, validates and attaches input file attributes."""
 
-        for key in kwargs:
+        for key, value in kwargs.items():
             if key in self.default_ui_json and isinstance(
                 self.default_ui_json[key], dict
             ):
-                self.default_ui_json[key]["enabled"] = True
                 self.default_ui_json[key]["visible"] = True
+                if value is not None:
+                    self.default_ui_json[key]["enabled"] = True
 
         self.update(kwargs, validate=False)
 
