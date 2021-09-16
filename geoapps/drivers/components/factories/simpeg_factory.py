@@ -36,7 +36,12 @@ class SimPEGFactory:
         Generate SimPEG object with assembled arguments and keyword arguments.
     """
 
-    valid_factory_types = ["gravity", "magnetic", "mvi", "direct_current"]
+    valid_factory_types = [
+        "gravity",
+        "magnetic scalar",
+        "magnetic vector",
+        "direct_current",
+    ]
 
     def __init__(self, params: Params):
         """

@@ -260,14 +260,14 @@ def test_param_names():
 
 def test_active_set():
     params = MagneticVectorParams(
-        workspace=workspace, inversion_type="mvi", u_cell_size=2
+        workspace=workspace, inversion_type="magnetic vector", u_cell_size=2
     )
     params.active_set()
 
 
 def test_validate_inversion_type(tmp_path):
     param = "inversion_type"
-    newval = "mvic"
+    newval = "magnetic scalar"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "em", "value", workspace=workspace)
     # catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
@@ -667,8 +667,8 @@ def test_validate_alpha_z(tmp_path):
     catch_invalid_generator(tmp_path, param, "test", "type", workspace=workspace)
 
 
-def test_validate_smallness_norm(tmp_path):
-    param = "smallness_norm"
+def test_validate_s_norm(tmp_path):
+    param = "s_norm"
     newval = 0.5
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "test", "type", workspace=workspace)

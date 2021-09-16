@@ -6,4 +6,3 @@
 #  (see LICENSE file at the root of this source code package).
 
 __version__ = "0.5.0"
-# from .drivers import grav_inversion, mvi_inversion, pf_inversion

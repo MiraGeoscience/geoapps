@@ -70,20 +70,14 @@ class OctreeParams(Params):
         self.setter_validator("title", val)
 
     @property
-    def geoh5(self):
-        return self._geoh5
-
-    @geoh5.setter
-    def geoh5(self, val):
-        self.setter_validator("geoh5", val)
-
-    @property
     def objects(self):
         return self._objects
 
     @objects.setter
     def objects(self, val):
-        self.setter_validator("objects", val, promote_type=str, fun=lambda x: UUID(x))
+        self.setter_validator(
+            "objects", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
+        )
 
     @property
     def u_cell_size(self):
@@ -140,11 +134,3 @@ class OctreeParams(Params):
     @ga_group_name.setter
     def ga_group_name(self, val):
         self.setter_validator("ga_group_name", val)
-
-    @property
-    def workspace(self):
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, val):
-        self.setter_validator("workspace", val)

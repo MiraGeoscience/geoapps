@@ -579,11 +579,11 @@ class SaveOutputEveryIteration(SaveEveryIteration):
         if self.save_txt:
             f = open(self.fileName + ".txt", "a")
             f.write(
-                " {:3d} {:1.4e} {:1.4e} {:1.4e} {:1.4e} {:1.4e} "
+                " {:3.0f} {:1.4e} {:1.4e} {:1.4e} {:1.4e} {:1.4e} "
                 "{:1.4e}  {:1.4e}  {:1.4e}\n".format(
                     self.opt.iter,
                     self.beta[self.opt.iter - 1],
-                    self.phi_d[self.opt.iter - 1],
+                    self.phi_d[self.opt.iter - 1][0],
                     self.phi_m[self.opt.iter - 1][0],
                     self.phi_m_small[self.opt.iter - 1],
                     self.phi_m_smooth_x[self.opt.iter - 1],

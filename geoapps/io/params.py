@@ -74,13 +74,16 @@ class Params:
     _run_command_boolean = None
     _conda_environment = None
     _conda_environment_boolean = None
+    _title = None
     _monitoring_directory = None
     _free_param_keys: list = None
+    _verbose = True
 
-    def __init__(self, validate=True, **kwargs):
+    def __init__(self, validate=True, verbose=True, **kwargs):
 
         self.associations = None
         self.workspace = None
+        self._verbose = verbose
         self.update(self.defaults, validate=False)
         if kwargs:
             self._handle_kwargs(kwargs, validate)
@@ -163,7 +166,7 @@ class Params:
             if not validate:
                 key = f"_{key}"
 
-            if getattr(self, key, "invalid_param") == "invalid_param":
+            if getattr(self, key, "invalid_param") == "invalid_param" and self._verbose:
                 warnings.warn(
                     f"Skipping dictionary entry: {key}.  Not a valid attribute."
                 )
@@ -193,7 +196,7 @@ class Params:
                 if isinstance(ui_json[k], dict):
                     field = "value"
                     if "isValue" in ui_json[k].keys():
-                        if isinstance(new_val, UUID):
+                        if isinstance(new_val, UUID) or new_val is None:
                             ui_json[k]["isValue"] = False
                             field = "property"
                         else:
@@ -262,7 +265,9 @@ class Params:
         if val is None:
             self._geoh5 = val
             return
-        self.setter_validator("geoh5", val)
+        self.setter_validator(
+            "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
+        )
 
     @property
     def run_command(self):
@@ -305,10 +310,18 @@ class Params:
         self.setter_validator("conda_environment_boolean", val)
 
     @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, val):
+        self.setter_validator("title", val)
+
+    @property
     def input_file(self):
         return self._input_file
 
-    def setter_validator(self, key: str, value, promote_type=None, fun=lambda x: x):
+    def setter_validator(self, key: str, value, fun=lambda x: x):
 
         if value is None:
             setattr(self, f"_{key}", value)
@@ -317,16 +330,17 @@ class Params:
         self.validator.validate(
             key, value, self.validations[key], self.workspace, self.associations
         )
-        if promote_type is not None:
-            if isinstance(value, promote_type):
-                value = fun(value)
-
+        value = fun(value)
         setattr(self, f"_{key}", value)
 
     def write_input_file(
         self, ui_json: dict = None, default: bool = False, name: str = None
     ):
         """Write out a ui.json with the current state of parameters"""
+
+        if name is not None:
+            if ".ui.json" not in name:
+                name += ".ui.json"
 
         if ui_json is None:
             ui_json = self.default_ui_json
@@ -336,14 +350,10 @@ class Params:
 
         if default:
             ifile = InputFile()
-            ifile.filepath = name
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
-        if getattr(self, "input_file", None) is not None:
-            ifile.filepath = self.input_file.filepath
-
-        ifile.write_ui_json(ui_json, default=default, name=name)
+        ifile.write_ui_json(ui_json, name=name, default=default)
 
     @property
     def free_params_dict(self):
@@ -357,6 +367,14 @@ class Params:
 
     def _handle_kwargs(self, kwargs, validate):
         """Updates attributes with kwargs, validates and attaches input file attributes."""
+
+        for key, value in kwargs.items():
+            if key in self.default_ui_json and isinstance(
+                self.default_ui_json[key], dict
+            ):
+                self.default_ui_json[key]["visible"] = True
+                if value is not None:
+                    self.default_ui_json[key]["enabled"] = True
 
         self.update(kwargs, validate=False)
 

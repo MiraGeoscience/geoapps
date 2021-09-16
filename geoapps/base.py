@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import json
 import time
 import uuid
 from os import mkdir, path
@@ -90,6 +89,11 @@ class BaseApplication:
         self.ga_group_name.observe(self.ga_group_name_update)
         self.__populate__(**self.defaults)
 
+        for key in list(self.__dict__.keys()):
+            attr = getattr(self, key, None)
+            if isinstance(attr, Widget) and hasattr(attr, "style"):
+                attr.style = {"description_width": "initial"}
+
     def __call__(self):
         return self.main
 
@@ -97,7 +101,6 @@ class BaseApplication:
         for key, value in kwargs.items():
             if key[0] == "_":
                 key = key[1:]
-
             if hasattr(self, "_" + key) or hasattr(self, key):
                 try:
                     if isinstance(getattr(self, key, None), Widget) and not isinstance(
@@ -108,7 +111,7 @@ class BaseApplication:
                                 value = [uuid.UUID(val) for val in value]
                             else:
                                 value = uuid.UUID(value)
-                        except (ValueError, AttributeError):
+                        except (ValueError, AttributeError, TypeError):
                             pass
 
                         widget = getattr(self, key)
@@ -317,11 +320,6 @@ class BaseApplication:
         self._h5file = value
         self._workspace_geoh5 = value
         self._working_directory = None
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
         self.workspace = Workspace(self._h5file)
 
     @property
@@ -362,27 +360,6 @@ class BaseApplication:
             self._refresh = ToggleButton(value=False)
         return self._refresh
 
-    def save_json_params(self, file_name: str, out_dict: dict):
-        """"""
-        for key, params in out_dict.items():
-            if getattr(self, key, None) is not None:
-                value = getattr(self, key)
-                if hasattr(value, "value"):
-                    value = value.value
-                    if isinstance(value, uuid.UUID):
-                        value = str(value)
-
-                if isinstance(out_dict[key], dict):
-                    out_dict[key]["value"] = value
-                else:
-                    out_dict[key] = value
-
-        file = f"{path.join(self.working_directory, file_name)}.ui.json"
-        with open(file, "w") as f:
-            json.dump(out_dict, f, indent=4)
-
-        return out_dict
-
     @property
     def trigger(self) -> Button:
         """
@@ -414,6 +391,11 @@ class BaseApplication:
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self._workspace = workspace
         self._h5file = workspace.h5file
+        self._file_browser.reset(
+            path=self.working_directory,
+            filename=path.basename(self._h5file),
+        )
+        self._file_browser._apply_selection()
 
     @property
     def working_directory(self):
