@@ -185,6 +185,7 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
         ],
         "label": "Starting conductivity model object",
         "value": None,

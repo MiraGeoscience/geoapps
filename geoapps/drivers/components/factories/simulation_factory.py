@@ -116,6 +116,7 @@ class SimulationFactory(SimPEGFactory):
             inv_mesh = InversionMesh(ws, self.params)
             sigma = InversionModel(ws, self.params, inv_mesh, "conductivity").model
             del inv_mesh
+            # TODO - above is inefficient.. fixit
             sigma = map * sigma[map.global_active]
             actmap = maps.InjectActiveCells(
                 mesh, active_cells, valInactive=np.log(1e-8)
