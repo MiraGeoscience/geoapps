@@ -40,6 +40,7 @@ from .components import (
     InversionTopography,
     InversionWindow,
 )
+from .components.factories import DirectivesFactory
 
 warnings.filterwarnings("ignore")
 
@@ -66,6 +67,10 @@ class InversionDriver:
     @property
     def data(self):
         return self.inversion_data.observed
+
+    @property
+    def locations(self):
+        return self.inversion_data.locations
 
     @property
     def topography(self):
@@ -118,15 +123,14 @@ class InversionDriver:
             Client(cluster)
 
         # Create SimPEG Survey object
-        self.survey = self.inversion_data.survey()
+        self.survey, _ = self.inversion_data.survey()
 
         # Build active cells array and reduce models active set
-        self.active_cells = self.inversion_topography.active_cells(self.mesh)
+        self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
         self.models.remove_air(self.active_cells)
         self.active_cells_map = maps.InjectActiveCells(
             self.mesh, self.active_cells, np.nan
         )
-
         self.n_cells = int(np.sum(self.active_cells))
         self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1
@@ -135,7 +139,11 @@ class InversionDriver:
         # If forward only is true simulate fields, save to workspace and exit.
         if self.params.forward_only:
             self.inversion_data.simulate(
-                self.mesh, self.starting_model, self.active_cells, save=True
+                self.mesh,
+                self.starting_model,
+                self.survey,
+                self.active_cells,
+                save=True,
             )
             return
 
@@ -148,10 +156,6 @@ class InversionDriver:
         local_misfits = self.get_tile_misfits(self.tiles)
         global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
 
-        # Trigger sensitivity calcs
-        for local in local_misfits:
-            local.simulation.Jmatrix
-
         # Create regularization
         reg = self.get_regularization()
 
@@ -159,9 +163,9 @@ class InversionDriver:
         print("active", sum(self.active_cells))
         opt = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
-            lower=self.models.lower_bound,
-            upper=self.models.upper_bound,
-            maxIterLS=20,
+            lower=self.lower_bound,
+            upper=self.upper_bound,
+            maxIterLS=self.params.max_least_squares_iterations,
             maxIterCG=self.params.max_cg_iterations,
             tolCG=self.params.tol_cg,
             stepOffBoundsFact=1e-8,
@@ -173,108 +177,17 @@ class InversionDriver:
             global_misfit, reg, opt, beta=self.params.initial_beta
         )
 
+        prob.dpred = prob.get_dpred(self.starting_model, compute_J=True)
+
         # Add a list of directives to the inversion
-        directiveList = []
-
-        # MVI or not
-        if self.is_vector:
-            directiveList.append(
-                directives.VectorInversion(
-                    [local.simulation for local in local_misfits],
-                    reg,
-                    chifact_target=self.params.chi_factor * 2,
-                )
-            )
-
-        cool_eps_fact = 1.2
-        prctile = 50
-        # Pre-conditioner
-        directiveList.append(
-            directives.Update_IRLS(
-                f_min_change=1e-4,
-                max_irls_iterations=self.params.max_iterations,
-                minGNiter=1,
-                beta_tol=0.5,
-                prctile=prctile,
-                coolingRate=1,
-                coolEps_q=True,
-                coolEpsFact=cool_eps_fact,
-                beta_search=False,
-                chifact_target=self.params.chi_factor,
-            )
+        directiveList = DirectivesFactory(self.params).build(
+            self.inversion_data,
+            self.inversion_mesh,
+            self.active_cells,
+            self.sorting,
+            local_misfits,
+            reg,
         )
-
-        directiveList.append(directives.UpdateSensitivityWeights(everyIter=False))
-
-        # Beta estimate
-        if self.params.initial_beta is None:
-            directiveList.append(
-                directives.BetaEstimate_ByEig(
-                    beta0_ratio=self.params.initial_beta_ratio,
-                    method="old",
-                )
-            )
-
-        directiveList.append(directives.UpdatePreconditioner())
-
-        # Save model
-        if self.params.geoh5 is not None:
-
-            channels = ["model"]
-            if self.inversion_type == "magnetic vector":
-                channels = ["amplitude", "dip", "azimuth"]
-                transforms = [cartesian2amplitude_dip_azimuth, self.active_cells_map]
-            else:
-                transforms = [self.active_cells_map]
-
-            orig_octree = self.fetch(self.inversion_mesh.uid)
-            outmesh = orig_octree.copy(
-                parent=self.params.out_group, copy_children=False
-            )
-            self.workspace.remove_entity(orig_octree)
-
-            directiveList.append(
-                directives.SaveIterationsGeoH5(
-                    outmesh,
-                    channels=channels,
-                    transforms=transforms,
-                    association="CELL",
-                    sorting=self.mesh._ubc_order,
-                )
-            )
-
-            rx_locs = self.survey.receiver_locations
-            if self.is_rotated:
-                rx_locs[:, :2] = rotate_xy(
-                    rx_locs[:, :2],
-                    self.inversion_mesh.rotation["origin"],
-                    self.inversion_mesh.rotation["angle"],
-                )
-
-            norms = self.inversion_data.normalizations
-            if "magnetic" in self.inversion_type:
-                components = ["mag"]
-            else:
-                components = ["grav"]
-
-            directiveList.append(
-                directives.SaveIterationsGeoH5(
-                    self.inversion_data.data_entity,
-                    components=components,
-                    channels=self.survey.components,
-                    transforms=np.kron(
-                        [norms[c] for c in self.survey.components],
-                        np.ones(self.survey.receiver_locations.shape[0]),
-                    ),
-                    attribute_type="predicted",
-                    data_type={
-                        comp: self.inversion_data._observed_data_types
-                        for comp in components
-                    },
-                    sorting=tuple(self.sorting),
-                    save_objective_function=True,
-                )
-            )
 
         # Put all the parts together
         inv = inversion.BaseInversion(self.inverse_problem, directiveList=directiveList)
@@ -283,7 +196,7 @@ class InversionDriver:
         self.start_inversion_message()
         mrec = inv.run(self.starting_model)
         dpred = self.collect_predicted_data(global_misfit, mrec)
-        self.save_residuals(self.inversion_data.data_entity, dpred)
+        self.save_residuals(self.inversion_data.entity, dpred)
         self.finish_inversion_message(dpred)
 
     def start_inversion_message(self):
@@ -315,23 +228,23 @@ class InversionDriver:
         return dpred
 
     def save_residuals(self, obj, dpred):
-        for ii, component in enumerate(self.survey.components):
+        for ii, component in enumerate(self.data.keys()):
             obj.add_data(
                 {
                     "Residuals_"
                     + component: {
                         "values": (
-                            self.survey.dobs[ii :: len(self.survey.components)]
-                            - dpred[ii :: len(self.survey.components)]
+                            self.survey.dobs[ii :: len(self.data.keys())]
+                            - dpred[ii :: len(self.data.keys())]
                         )
                     },
                     "Normalized Residuals_"
                     + component: {
                         "values": (
-                            self.survey.dobs[ii :: len(self.survey.components)]
-                            - dpred[ii :: len(self.survey.components)]
+                            self.survey.dobs[ii :: len(self.data.keys())]
+                            - dpred[ii :: len(self.data.keys())]
                         )
-                        / self.survey.std[ii :: len(self.survey.components)]
+                        / self.survey.std[ii :: len(self.data.keys())]
                     },
                 }
             )
@@ -356,6 +269,7 @@ class InversionDriver:
             wires = maps.Wires(
                 ("p", self.n_cells), ("s", self.n_cells), ("t", self.n_cells)
             )
+
             reg_p = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
@@ -380,6 +294,7 @@ class InversionDriver:
                 norms=self.params.model_norms(),
                 mref=self.reference_model,
             )
+
             reg_t = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
@@ -392,11 +307,13 @@ class InversionDriver:
                 norms=self.params.model_norms(),
                 mref=self.reference_model,
             )
+
             # Assemble the 3-component regularizations
             reg = reg_p + reg_s + reg_t
             reg.mref = self.reference_model
 
         else:
+
             reg = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
@@ -409,17 +326,38 @@ class InversionDriver:
                 norms=self.params.model_norms(),
                 mref=self.reference_model,
             )
+
         return reg
 
     def get_tiles(self):
 
-        if isinstance(self.params.tile_spatial, UUID):
+        if self.params.inversion_type == "direct_current":
+
             tiles = []
-            for ii in np.unique(self.params.tile_spatial).to_list():
-                tiles += [np.where(self.params.tile_spatial == ii)[0]]
+            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
+            current_electrodes = potential_electrodes.current_electrodes
+            ab_pairs = current_electrodes.cells
+            line_indices = current_electrodes.parts
+
+            for line in current_electrodes.unique_parts:
+                ind = line_indices == line
+                electrode_ind = np.arange(current_electrodes.n_vertices)[ind]
+                a_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
+                b_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
+                for ei in electrode_ind:
+                    a_ind |= ei == ab_pairs[:, 0]
+                    b_ind |= ei == ab_pairs[:, 1]
+                ab_ind = a_ind | b_ind
+                tiles.append(np.arange(current_electrodes.n_cells)[ab_ind])
+
+            # TODO Figure out how to handle a tile_spatial object to replace above
+
+            # tiles = []
+            # for ii in np.unique(self.params.tile_spatial).tolist():
+            #     tiles += [np.where(self.params.tile_spatial == ii)[0]]
         else:
             tiles = tile_locations(
-                self.survey.receiver_locations,
+                self.locations["receivers"],
                 self.params.tile_spatial,
                 method="kmeans",
             )
@@ -433,9 +371,11 @@ class InversionDriver:
             [],
         )
         for tile_id, local_index in enumerate(tiles):
-            lsurvey = self.inversion_data.survey(local_index)
+            lsurvey, local_index = self.inversion_data.survey(
+                self.mesh, self.active_cells, local_index
+            )
             lsim, lmap = self.inversion_data.simulation(
-                self.mesh, self.active_cells, local_index, tile_id
+                self.mesh, self.active_cells, lsurvey, tile_id
             )
             ldat = (
                 data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
@@ -445,19 +385,12 @@ class InversionDriver:
                 simulation=lsim,
                 model_map=lmap,
             )
+            lmisfit.W = 1 / lsurvey.std
+
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
 
         return local_misfits
-
-    def models(self):
-        """Return all models with data"""
-        return [
-            self.inversion_starting_model,
-            self.inversion_reference_model,
-            self.inversion_lower_bound,
-            self.inversion_upper_bound,
-        ]
 
     def fetch(self, p: str | UUID):
         """Fetch the object addressed by uuid from the workspace."""

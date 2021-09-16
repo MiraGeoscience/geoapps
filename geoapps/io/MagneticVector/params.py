@@ -9,12 +9,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from geoh5py.groups import ContainerGroup
-from geoh5py.workspace import Workspace
-
 from geoapps.io.Inversion import InversionParams
 
-from ..input_file import InputFile
 from ..validators import InputValidator
 from .constants import (
     default_ui_json,
@@ -29,6 +25,16 @@ class MagneticVectorParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
+    forward_defaults = forward_defaults
+    inversion_defaults = inversion_defaults
+    _directive_list = [
+        "VectorInversion",
+        "UpdateSensitivityWeights",
+        "Update_IRLS",
+        "BetaEstimate_ByEig",
+        "UpdatePreconditioner",
+        "SaveIterationsGeoH5",
+    ]
 
     def __init__(self, forward=False, **kwargs):
         self.validator: InputValidator = InputValidator(
@@ -58,7 +64,7 @@ class MagneticVectorParams(InversionParams):
         self.reference_declination_object: UUID = None
         self.reference_inclination = None
         self.reference_declination = None
-        self.defaults = forward_defaults if forward else inversion_defaults
+        self.defaults = inversion_defaults
         self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
         self.param_names = list(self.default_ui_json.keys())
 
@@ -66,7 +72,8 @@ class MagneticVectorParams(InversionParams):
             if isinstance(v, dict):
                 field = "value"
                 if "isValue" in v.keys():
-                    if not v["isValue"]:
+                    if not v["isValue"] or self.defaults[k] is None:
+                        v["isValue"] = False
                         field = "property"
                 self.default_ui_json[k][field] = self.defaults[k]
             else:

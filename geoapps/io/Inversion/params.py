@@ -7,11 +7,13 @@
 
 from __future__ import annotations
 
+import os.path as path
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
+from ..input_file import InputFile
 from ..params import Params
 
 
@@ -57,7 +59,18 @@ class InversionParams(Params):
         self.window_width: float = None
         self.inversion_style: str = None
         self.chi_factor: float = None
+        self.sens_wts_threshold: float = None
+        self.every_iteration_bool: bool = None
+        self.f_min_change: float = None
+        self.minGNiter: float = None
+        self.beta_tol: float = None
+        self.prctile: float = None
+        self.coolingRate: float = None
+        self.coolEps_q: bool = None
+        self.coolEpsFact: float = None
+        self.beta_search: bool = None
         self.max_iterations: int = None
+        self.max_least_squares_iterations: int = None
         self.max_cg_iterations: int = None
         self.max_global_iterations: int = None
         self.initial_beta: float = None
@@ -155,6 +168,17 @@ class InversionParams(Params):
             self.y_norm,
             self.z_norm,
         ]
+
+    def directive_params(self, directive_name):
+
+        if directive_name == "VectorInversion":
+            return {"chifact_target": self.chi_factor * 2}
+
+        elif directive_name == "Update_IRLS":
+            kwargs = {}
+            kwargs["f_min_change"] = self.f_min_change
+            kwargs["max_irls_iterations"] = self.max_iterations
+            kwargs[""]
 
     @property
     def forward_only(self):
@@ -742,6 +766,156 @@ class InversionParams(Params):
         self._chi_factor = val
 
     @property
+    def sens_wts_threshold(self):
+        return self._sens_wts_threshold
+
+    @sens_wts_threshold.setter
+    def sens_wts_threshold(self, val):
+        if val is None:
+            self._sens_wts_threshold = val
+            return
+        p = "sens_wts_threshold"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._sens_wts_threshold = val
+
+    @property
+    def every_iteration_bool(self):
+        return self._every_iteration_bool
+
+    @every_iteration_bool.setter
+    def every_iteration_bool(self, val):
+        if val is None:
+            self._every_iteration_bool = val
+            return
+        p = "every_iteration_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._every_iteration_bool = val
+
+    @property
+    def f_min_change(self):
+        return self._f_min_change
+
+    @f_min_change.setter
+    def f_min_change(self, val):
+        if val is None:
+            self._f_min_change = val
+            return
+        p = "f_min_change"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._f_min_change = val
+
+    @property
+    def minGNiter(self):
+        return self._minGNiter
+
+    @minGNiter.setter
+    def minGNiter(self, val):
+        if val is None:
+            self._minGNiter = val
+            return
+        p = "minGNiter"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._minGNiter = val
+
+    @property
+    def beta_tol(self):
+        return self._beta_tol
+
+    @beta_tol.setter
+    def beta_tol(self, val):
+        if val is None:
+            self._beta_tol = val
+            return
+        p = "beta_tol"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._beta_tol = val
+
+    @property
+    def prctile(self):
+        return self._prctile
+
+    @prctile.setter
+    def prctile(self, val):
+        if val is None:
+            self._prctile = val
+            return
+        p = "prctile"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._prctile = val
+
+    @property
+    def coolingRate(self):
+        return self._coolingRate
+
+    @coolingRate.setter
+    def coolingRate(self, val):
+        if val is None:
+            self._coolingRate = val
+            return
+        p = "coolingRate"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._coolingRate = val
+
+    @property
+    def coolEps_q(self):
+        return self._coolEps_q
+
+    @coolEps_q.setter
+    def coolEps_q(self, val):
+        if val is None:
+            self._coolEps_q = val
+            return
+        p = "coolEps_q"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._coolEps_q = val
+
+    @property
+    def coolEpsFact(self):
+        return self._coolEpsFact
+
+    @coolEpsFact.setter
+    def coolEpsFact(self, val):
+        if val is None:
+            self._coolEpsFact = val
+            return
+        p = "coolEpsFact"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._coolEpsFact = val
+
+    @property
+    def beta_search(self):
+        return self._beta_search
+
+    @beta_search.setter
+    def beta_search(self, val):
+        if val is None:
+            self._beta_search = val
+            return
+        p = "beta_search"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._beta_search = val
+
+    @property
     def max_iterations(self):
         return self._max_iterations
 
@@ -755,6 +929,21 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._max_iterations = val
+
+    @property
+    def max_least_squares_iterations(self):
+        return self._max_least_squares_iterations
+
+    @max_least_squares_iterations.setter
+    def max_least_squares_iterations(self, val):
+        if val is None:
+            self._max_least_squares_iterations = val
+            return
+        p = "max_least_squares_iterations"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._max_least_squares_iterations = val
 
     @property
     def max_cg_iterations(self):
@@ -1135,3 +1324,38 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._no_data_value = val
+
+    def write_input_file(
+        self, ui_json: dict = None, default: bool = False, name: str = None
+    ):
+        """Write out a ui.json with the current state of parameters"""
+
+        if name is not None:
+            if ".ui.json" not in name:
+                name += ".ui.json"
+
+        if ui_json is None:
+            if self.forward_only:
+                defaults = self.forward_defaults
+            else:
+                defaults = self.inversion_defaults
+
+            ui_json = {k: self.default_ui_json[k] for k in defaults}
+            self.title = defaults["title"]
+            self.run_command = defaults["run_command"]
+
+        if default:
+            ifile = InputFile()
+        else:
+            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
+
+        if getattr(self, "input_file", None) is not None:
+
+            if name is None:
+                ifile.filepath = self.input_file.filepath
+            else:
+                out_file = path.join(self.input_file.workpath, name)
+                self.input_file.filepath = out_file
+                ifile.filepath = out_file
+
+        ifile.write_ui_json(ui_json, default=default)

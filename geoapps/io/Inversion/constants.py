@@ -72,7 +72,7 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Starting Model",
         "main": True,
-        "isValue": True,
+        "isValue": False,
         "parent": "starting_model_object",
         "label": "Starting model value",
         "property": None,
@@ -342,11 +342,88 @@ default_ui_json = {
         "label": "Chi factor",
         "value": 1.0,
     },
+    "sens_wts_threshold": {
+        "group": "Update sensitivity weights directive",
+        "groupOptional": True,
+        "visible": True,
+        "enabled": True,
+        "label": "Update sensitivity weight threshold",
+        "value": 1e-3,
+    },
+    "every_iteration_bool": {
+        "group": "Update sensitivity weights directive",
+        "visible": True,
+        "enabled": True,
+        "label": "Update every iteration",
+        "value": False,
+    },
+    "f_min_change": {
+        "group": "Update IRLS directive",
+        "groupOptional": True,
+        "visible": True,
+        "enabled": True,
+        "label": "f min change",
+        "value": 1e-4,
+    },
+    "minGNiter": {
+        "group": "Update IRLS directive",
+        "visible": True,
+        "enabled": True,
+        "label": "Minimum Gauss-Newton iterations",
+        "value": 1,
+    },
+    "beta_tol": {
+        "group": "Update IRLS directive",
+        "visible": True,
+        "enabled": False,
+        "label": "Beta tolerance",
+        "value": 0.5,
+    },
+    "prctile": {
+        "group": "Update IRLS directive",
+        "visible": True,
+        "enabled": False,
+        "label": "percentile",
+        "value": 50,
+    },
+    "coolingRate": {
+        "group": "Update IRLS directive",
+        "visible": True,
+        "enabled": False,
+        "label": "Beta cooling rate",
+        "value": 1,
+    },
+    "coolEps_q": {
+        "group": "Update IRLS directive",
+        "visible": True,
+        "enabled": False,
+        "label": "Cool epsilon q",
+        "value": True,
+    },
+    "coolEpsFact": {
+        "group": "Update IRLS directive",
+        "visible": True,
+        "enabled": False,
+        "label": "Cool epsilon fact",
+        "value": 1.2,
+    },
+    "beta_search": {
+        "group": "Update IRLS directive",
+        "visible": True,
+        "enabled": False,
+        "label": "Perform beta search",
+        "value": False,
+    },
     "max_iterations": {
         "min": 0,
         "group": "Optimization",
         "label": "Max iteration count",
         "value": 25,
+    },
+    "max_least_squares_iterations": {
+        "group": "Optimization",
+        "label": "Max least squares iteration count",
+        "value": 20,
     },
     "max_cg_iterations": {
         "min": 0,
@@ -378,7 +455,7 @@ default_ui_json = {
         "dependency": "provide_beta",
         "dependencyType": "enabled",
         "label": "Initial beta",
-        "value": 0.0,
+        "value": "",
     },
     "tol_cg": {
         "min": 0,
@@ -484,7 +561,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "group": "Regularization",
-        "isValue": True,
+        "isValue": False,
         "parent": "lower_bound_object",
         "label": "Lower bound on model",
         "property": None,
@@ -507,7 +584,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "group": "Regularization",
-        "isValue": True,
+        "isValue": False,
         "parent": "upper_bound_object",
         "label": "Upper bound on model",
         "property": None,
@@ -563,7 +640,7 @@ default_ui_json = {
         "enabled": False,
         "value": None,
     },
-    "run_command": "geoapps.drivers.mvi_inversion",
+    "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": {
         "default": False,
         "value": False,
@@ -575,6 +652,9 @@ default_ui_json = {
 }
 
 validations = {
+    "title": {
+        "types": [str],
+    },
     "forward_only": {
         "types": [bool],
         "reqs": [
@@ -697,7 +777,40 @@ validations = {
     "chi_factor": {
         "types": [int, float],
     },
+    "sens_wts_threshold": {
+        "types": [int, float],
+    },
+    "every_iteration_bool": {
+        "types": [bool],
+    },
+    "f_min_change": {
+        "types": [int, float],
+    },
+    "minGNiter": {
+        "types": [int, float],
+    },
+    "beta_tol": {
+        "types": [int, float],
+    },
+    "prctile": {
+        "types": [int, float],
+    },
+    "coolingRate": {
+        "types": [int, float],
+    },
+    "coolEps_q": {
+        "types": [bool],
+    },
+    "coolEpsFact": {
+        "types": [int, float],
+    },
+    "beta_search": {
+        "types": [bool],
+    },
     "max_iterations": {
+        "types": [int, float],
+    },
+    "max_least_squares_iterations": {
         "types": [int, float],
     },
     "max_cg_iterations": {
@@ -799,4 +912,5 @@ validations = {
     "conda_environment_boolean": {
         "types": [bool],
     },
+    "out_group": {"types": [str, ContainerGroup]},
 }
