@@ -68,7 +68,7 @@ inversion_defaults = {
     "coolEpsFact": 1.2,
     "beta_search": False,
     "max_iterations": 25,
-    "max_least_squares_iterations": 20,
+    "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e1,

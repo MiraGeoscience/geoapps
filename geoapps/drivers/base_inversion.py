@@ -167,7 +167,7 @@ class InversionDriver:
             maxIter=self.params.max_iterations,
             lower=self.lower_bound,
             upper=self.upper_bound,
-            maxIterLS=self.params.max_least_squares_iterations,
+            maxIterLS=self.params.max_line_search_iterations,
             maxIterCG=self.params.max_cg_iterations,
             tolCG=self.params.tol_cg,
             stepOffBoundsFact=1e-8,
