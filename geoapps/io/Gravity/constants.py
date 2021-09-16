@@ -20,6 +20,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
+    "title": "SimPEG Inversion - Gravity",
     "inversion_type": "gravity",
     "forward_only": False,
     "topography_object": None,
@@ -114,6 +115,7 @@ inversion_defaults = {
     "conda_environment": "geoapps",
 }
 forward_defaults = {
+    "title": "SimPEG Forward - Gravity",
     "inversion_type": "gravity",
     "forward_only": True,
     "topography_object": None,
@@ -163,6 +165,7 @@ forward_defaults = {
 }
 
 default_ui_json = {
+    "title": "SimPEG Inversion - Gravity",
     "inversion_type": "gravity",
     "gx_channel_bool": {
         "default": False,
