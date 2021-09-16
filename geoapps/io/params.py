@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import warnings
 from copy import deepcopy
-from os import path
 from typing import Any
 from uuid import UUID
 
@@ -76,6 +75,7 @@ class Params:
     _run_command_boolean = None
     _conda_environment = None
     _conda_environment_boolean = None
+    _title = None
     _monitoring_directory = None
     _free_param_keys: list = None
     _verbose = True
@@ -200,7 +200,7 @@ class Params:
                 if isinstance(ui_json[k], dict):
                     field = "value"
                     if "isValue" in ui_json[k].keys():
-                        if isinstance(new_val, UUID):
+                        if isinstance(new_val, UUID) or new_val is None:
                             ui_json[k]["isValue"] = False
                             field = "property"
                         else:
@@ -314,6 +314,14 @@ class Params:
         self.setter_validator("conda_environment_boolean", val)
 
     @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, val):
+        self.setter_validator("title", val)
+
+    @property
     def input_file(self):
         return self._input_file
 
@@ -341,21 +349,15 @@ class Params:
         if ui_json is None:
             ui_json = self.default_ui_json
 
+        if name is None:
+            name = f"{self.__class__.__name__}.ui.json"
+
         if default:
             ifile = InputFile()
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
-        if getattr(self, "input_file", None) is not None:
-
-            if name is None:
-                ifile.filepath = self.input_file.filepath
-            else:
-                out_file = path.join(self.input_file.workpath, name)
-                self.input_file.filepath = out_file
-                ifile.filepath = out_file
-
-        ifile.write_ui_json(ui_json, default=default)
+        ifile.write_ui_json(ui_json, name=name, default=default)
 
     @property
     def free_params_dict(self):
@@ -370,12 +372,13 @@ class Params:
     def _handle_kwargs(self, kwargs, validate):
         """Updates attributes with kwargs, validates and attaches input file attributes."""
 
-        for key in kwargs:
+        for key, value in kwargs.items():
             if key in self.default_ui_json and isinstance(
                 self.default_ui_json[key], dict
             ):
-                self.default_ui_json[key]["enabled"] = True
                 self.default_ui_json[key]["visible"] = True
+                if value is not None:
+                    self.default_ui_json[key]["enabled"] = True
 
         self.update(kwargs, validate=False)
 

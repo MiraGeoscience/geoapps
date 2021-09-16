@@ -40,7 +40,9 @@ class InversionModelCollection:
         :param: params: Params object containing window parameters.
         :param: mesh: Inversion mesh on which the models are defined as cell
             centered properties.
-        :param: vector: True if models are vector valued.
+        :param: is_sigma: True if models are in units of conductivity. When true,
+            models will be converted to log(conductivity) for inversion purposes.
+        :param: is_vector: True if models are vector valued.
         :param: n_blocks: Number of blocks (components) if vector.
         :param: starting: Inversion starting model.
         :param: reference: Inversion reference model.
@@ -50,6 +52,7 @@ class InversionModelCollection:
         self.workspace = workspace
         self.params = params
         self.mesh = mesh
+        self.is_sigma = None
         self.is_vector = None
         self.n_blocks = None
         self._starting = None
@@ -60,38 +63,42 @@ class InversionModelCollection:
 
     @property
     def starting(self):
-        return self._starting.model
-
-    @starting.setter
-    def starting(self, v):
-        self._starting.model = v
+        mstart = self._starting.model
+        mstart = np.log(mstart) if self.is_sigma else mstart
+        return mstart
 
     @property
     def reference(self):
-        return self._reference.model
-
-    @reference.setter
-    def reference(self, v):
-        self._reference.model = v
+        mref = self._reference.model
+        use_log = True if self.is_sigma else False
+        if all(mref == 0) | (mref is None):
+            self.params.alpha_s = 0.0
+            mref = self.starting
+            use_log = False
+        mref = np.log(mref) if use_log else mref
+        return mref
 
     @property
     def lower_bound(self):
-        return self._lower_bound.model
-
-    @lower_bound.setter
-    def lower_bound(self, v):
-        self._lower_bound.model = v
+        lbound = self._lower_bound.model
+        if self.is_sigma:
+            for i in range(len(lbound)):
+                lbound[i] = np.log(lbound[i]) if np.isfinite(lbound[i]) else lbound[i]
+        return lbound
 
     @property
     def upper_bound(self):
-        return self._upper_bound.model
-
-    @upper_bound.setter
-    def upper_bound(self, v):
-        self._upper_bound.model = v
+        ubound = self._upper_bound.model
+        if self.is_sigma:
+            for i in range(len(ubound)):
+                ubound[i] = np.log(ubound[i]) if np.isfinite(ubound[i]) else ubound[i]
+        return ubound
 
     def _initialize(self):
 
+        self.is_sigma = (
+            True if self.params.inversion_type in ["direct_current"] else False
+        )
         self.is_vector = (
             True if self.params.inversion_type == "magnetic vector" else False
         )
@@ -188,6 +195,7 @@ class InversionModel:
         self.model = None
         self.is_vector = None
         self.n_blocks = None
+        self.entity = mesh.entity
         self._initialize()
 
     def _initialize(self):
@@ -247,6 +255,8 @@ class InversionModel:
         if model is not None:
             self.model = mkvc(model)
 
+        self.save_model()
+
     def remove_air(self, active_cells):
         """Use active cells vector to remove air cells from model"""
 
@@ -270,6 +280,12 @@ class InversionModel:
         :return: Vector of model values reordered for TreeMesh.
         """
         return model[np.argsort(self.mesh.octree_permutation)]
+
+    def save_model(self):
+        """Resort model to the Octree object's ordering and save to workspace."""
+
+        remapped_model = self.permute_2_octree()
+        self.entity.add_data({f"{self.model_type}_model": {"values": remapped_model}})
 
     def _get(self, name: str):
         """

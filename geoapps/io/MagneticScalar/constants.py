@@ -20,6 +20,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
+    "title": "SimPEG Inversion - Magnetic Susceptibility",
     "inversion_type": "magnetic scalar",
     "forward_only": False,
     "inducing_field_strength": 50000.0,
@@ -32,7 +33,7 @@ inversion_defaults = {
     "tmi_channel": None,
     "tmi_uncertainty": 10.0,
     "starting_model_object": None,
-    "starting_model": 0.01,
+    "starting_model": None,
     "tile_spatial": 1,
     "z_from_topo": True,
     "receivers_radar_drape": None,
@@ -66,11 +67,22 @@ inversion_defaults = {
     "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
+    "sens_wts_threshold": 1e-3,
+    "every_iteration_bool": False,
+    "f_min_change": 1e-4,
+    "minGNiter": 1,
+    "beta_tol": 0.5,
+    "prctile": 50,
+    "coolingRate": 1,
+    "coolEps_q": True,
+    "coolEpsFact": 1.2,
+    "beta_search": False,
     "max_iterations": 25,
+    "max_least_squares_iterations": 20,
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
-    "initial_beta_ratio": 1e1,
-    "initial_beta": 0.0,
+    "initial_beta_ratio": 1e2,
+    "initial_beta": None,
     "tol_cg": 1e-16,
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -84,9 +96,9 @@ inversion_defaults = {
     "reference_model": None,
     "gradient_type": "total",
     "lower_bound_object": None,
-    "lower_bound": 0.0,
+    "lower_bound": None,
     "upper_bound_object": None,
-    "upper_bound": 1.0,
+    "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -100,6 +112,7 @@ inversion_defaults = {
     "conda_environment": "geoapps",
 }
 forward_defaults = {
+    "title": "SimPEG Forward - Magnetic Susceptibility",
     "inversion_type": "magnetic scalar",
     "forward_only": True,
     "inducing_field_strength": 50000.0,
@@ -110,7 +123,7 @@ forward_defaults = {
     "data_object": None,
     "tmi_channel_bool": True,
     "starting_model_object": None,
-    "starting_model": 0.0,
+    "starting_model": None,
     "tile_spatial": 1,
     "z_from_topo": True,
     "receivers_radar_drape": None,
@@ -150,6 +163,7 @@ forward_defaults = {
 }
 
 default_ui_json = {
+    "title": "SimPEG Inversion - Magnetic Susceptibility",
     "inversion_type": "magnetic scalar",
     "inducing_field_strength": {
         "association": "Cell",
@@ -210,7 +224,18 @@ default_ui_json = {
     },
     "out_group": {"label": "Results group name", "value": "SusceptibilityInversion"},
 }
+
 default_ui_json.update(base_default_ui_json)
+for k, v in inversion_defaults.items():
+    if isinstance(default_ui_json[k], dict):
+        key = "value"
+        if "isValue" in default_ui_json[k].keys():
+            if default_ui_json[k]["isValue"] == False:
+                key = "property"
+        default_ui_json[k][key] = v
+    else:
+        default_ui_json[k] = v
+
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 
 
