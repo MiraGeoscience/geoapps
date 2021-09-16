@@ -24,9 +24,9 @@ from SimPEG import data, maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.drivers.components.factories import SimulationFactory, SurveyFactory
 from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
+from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
 
 
@@ -135,7 +135,6 @@ class InversionData(InversionLocations):
         self.mask = np.ones(len(filt_locs), dtype=bool)
 
         if self.window is not None:
-
             self.mask = filter_xy(
                 filt_locs[:, 0],
                 filt_locs[:, 1],
@@ -357,7 +356,7 @@ class InversionData(InversionLocations):
 
         return locs + offset if offset is not None else 0
 
-    def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
+    def drape(self, locs: np.ndarray, radar_offset: np.ndarray) -> np.ndarray:
         """Drape data locations using radar channel offsets."""
 
         if locs is None:
@@ -492,7 +491,6 @@ class InversionData(InversionLocations):
         save: bool = True,
     ) -> np.ndarray:
         """Simulate fields for a particular model."""
-
         client = get_client()
         sim, _ = self.simulation(mesh, active_cells, survey)
         prediction = client.compute(sim.dpred(model))
