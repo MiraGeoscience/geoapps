@@ -177,7 +177,9 @@ class InversionDriver:
             global_misfit, reg, opt, beta=self.params.initial_beta
         )
 
-        prob.dpred = prob.get_dpred(self.starting_model, compute_J=True)
+        self.inverse_problem.dpred = self.inverse_problem.get_dpred(
+            self.starting_model, compute_J=True
+        )
 
         # Add a list of directives to the inversion
         directiveList = DirectivesFactory(self.params).build(
