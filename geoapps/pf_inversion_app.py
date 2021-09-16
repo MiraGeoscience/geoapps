@@ -86,6 +86,9 @@ class InversionApp(PlotSelection2D):
     defaults = {}
 
     def __init__(self, ui_json=None, **kwargs):
+        if "plot_result" in kwargs:
+            self.plot_result = kwargs["plot_result"]
+
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class.from_path(ui_json)
@@ -111,8 +114,14 @@ class InversionApp(PlotSelection2D):
         self._inducing_field_inclination = widgets.FloatText(
             description="Inclination (d.dd)",
         )
+        self._inducing_field_inclination.observe(
+            self.inducing_field_inclination_change, names="value"
+        )
         self._inducing_field_declination = widgets.FloatText(
             description="Declination (d.dd)",
+        )
+        self._inducing_field_declination.observe(
+            self.inducing_field_declination_change, names="value"
         )
         self._inversion_type = Dropdown(
             options=["magnetic vector", "magnetic scalar", "gravity"],
@@ -836,6 +845,24 @@ class InversionApp(PlotSelection2D):
         else:
             alphas[0] = 1.0
         self.alphas.value = ", ".join(list(map(str, alphas)))
+
+    def inducing_field_inclination_change(self, _):
+        if self.inversion_type.value == "magnetic vector":
+            self._reference_inclination_group.constant.value = (
+                self._inducing_field_inclination.value
+            )
+            self._starting_inclination_group.constant.value = (
+                self._inducing_field_inclination.value
+            )
+
+    def inducing_field_declination_change(self, _):
+        if self.inversion_type.value == "magnetic vector":
+            self._reference_declination_group.constant.value = (
+                self._inducing_field_declination.value
+            )
+            self._starting_declination_group.constant.value = (
+                self._inducing_field_declination.value
+            )
 
     def inversion_option_change(self, _):
         self._main.children[4].children[2].children = [
