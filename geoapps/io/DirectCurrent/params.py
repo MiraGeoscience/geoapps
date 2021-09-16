@@ -90,7 +90,7 @@ class DirectCurrentParams(InversionParams):
     @potential_channel.setter
     def potential_channel(self, val):
         self.setter_validator(
-            "potential_channel", val, promote_type=str, fun=lambda x: UUID(x)
+            "potential_channel", val, fun=lambda x: UUID(x) if isinstance(x, str) else x
         )
 
     @property
@@ -100,5 +100,7 @@ class DirectCurrentParams(InversionParams):
     @potential_uncertainty.setter
     def potential_uncertainty(self, val):
         self.setter_validator(
-            "potential_uncertainty", val, promote_type=str, fun=lambda x: UUID(x)
+            "potential_uncertainty",
+            val,
+            fun=lambda x: UUID(x) if isinstance(x, str) else x,
         )

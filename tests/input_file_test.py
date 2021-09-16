@@ -59,7 +59,7 @@ def test_default_construction(tmp_path):
     ifile = InputFile(ifile.filepath, validator)
     assert ifile.is_loaded
     assert ifile.is_formatted
-    assert ifile.data["inversion_type"] == "mvi"
+    assert ifile.data["inversion_type"] == "magnetic vector"
 
 
 def test_dict_mapper():
@@ -176,7 +176,7 @@ def test_ui_json_io(tmp_path):
     ifile.write_ui_json(default_ui_json)
     ifile = InputFile(ifile.filepath, validator)
     assert ifile.data["inducing_field_strength"] == 99
-    assert ifile.data["inversion_type"] == "mvi"
+    assert ifile.data["inversion_type"] == "magnetic vector"
 
 
 def test_validations(tmp_path):
