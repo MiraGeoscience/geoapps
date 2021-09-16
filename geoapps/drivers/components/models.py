@@ -172,7 +172,13 @@ class InversionModel:
         TreeMesh sorting.
     """
 
-    model_types = ["starting", "reference", "lower_bound", "upper_bound"]
+    model_types = [
+        "starting",
+        "reference",
+        "lower_bound",
+        "upper_bound",
+        "conductivity",
+    ]
 
     def __init__(
         self,
@@ -212,7 +218,7 @@ class InversionModel:
         )
         self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
 
-        if self.model_type in ["starting", "reference"]:
+        if self.model_type in ["starting", "reference", "conductivity"]:
 
             model = self._get(self.model_type + "_model")
 

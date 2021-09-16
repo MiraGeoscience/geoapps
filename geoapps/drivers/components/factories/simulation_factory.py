@@ -101,8 +101,6 @@ class SimulationFactory(SimPEGFactory):
             kwargs["chunk_format"] = "row"
 
         elif self.factory_type == "direct_current":
-
-            kwargs["etaMap"] = maps.IdentityMap(mesh)
             actmap = maps.InjectActiveCells(
                 mesh, active_cells, valInactive=np.log(1e-8)
             )
@@ -111,15 +109,25 @@ class SimulationFactory(SimPEGFactory):
             kwargs["store_sensitivities"] = False if self.params.forward_only else True
 
         elif self.factory_type == "induced_polarization":
+            from ..meshes import InversionMesh
+            from ..models import InversionModel
 
-            sigma = self.workspace.get_entity(self.params.conductivity_model)[0].values
-
+            ws = self.params.workspace
+            inv_mesh = InversionMesh(ws, self.params)
+            sigma = InversionModel(ws, self.params, inv_mesh, "conductivity").model
+            del inv_mesh
+            sigma = map * sigma[map.global_active]
             actmap = maps.InjectActiveCells(
                 mesh, active_cells, valInactive=np.log(1e-8)
             )
-            kwargs["sigma"] = maps.ExpMap(mesh) * actmap
+            etamap = maps.InjectActiveCells(
+                mesh, indActive=map.local_active, valInactive=0
+            )
+            kwargs["etaMap"] = etamap
+            kwargs["sigma"] = actmap * sigma
             kwargs["Solver"] = self.solver
             kwargs["store_sensitivities"] = False if self.params.forward_only else True
+            kwargs["max_ram"] = 1
 
         return kwargs
 
