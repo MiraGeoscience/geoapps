@@ -75,6 +75,8 @@ class InversionMesh:
             self.build_from_params()
             self.entity = self.workspace.get_entity("Octree_Mesh")[0]
             self.entity.parent = self.params.out_group
+            self.params.mesh = str(self.entity.uid)
+            self.params.mesh_from_params = False
         else:
             orig_octree = self.workspace.get_entity(self.params.mesh)[0]
 
