@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import os
-import os.path as op
 import warnings
 from copy import deepcopy
 from typing import Any, Callable
@@ -109,7 +108,7 @@ class InputFile:
         if getattr(self, "_filepath", None) is None:
 
             if getattr(self, "workpath", None) is not None:
-                self._filepath = op.join(self.workpath, "default.ui.json")
+                self._filepath = os.path.join(self.workpath, "default.ui.json")
 
         return self._filepath
 
@@ -138,7 +137,9 @@ class InputFile:
                     path = self.workspace.h5file
 
             if path is not None:
-                self._workpath: str = op.dirname(op.abspath(path)) + op.sep
+                self._workpath: str = (
+                    os.path.dirname(os.path.abspath(path)) + os.path.sep
+                )
         return self._workpath
 
     def write_ui_json(
@@ -199,7 +200,7 @@ class InputFile:
             if path is None:
                 path = os.getcwd()
 
-            out_file = op.join(path, name)
+            out_file = os.path.join(path, name)
         else:
             out_file = self.filepath
 

@@ -1813,6 +1813,36 @@ def iso_surface(
     return surfaces
 
 
+def get_inversion_output(h5file, group_name):
+    """
+    Recover an inversion iterations from a ContainerGroup comments.
+    """
+    workspace = Workspace(h5file)
+    out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
+
+    if workspace.get_entity(group_name):
+        group = workspace.get_entity(group_name)[0]
+
+        for comment in group.comments.values:
+            if "Iteration" in comment["Author"]:
+                out["iteration"] += [np.int(comment["Author"].split("_")[1])]
+                out["time"] += [comment["Date"]]
+                values = json.loads(comment["Text"])
+                out["phi_d"] += [float(values["phi_d"])]
+                out["phi_m"] += [float(values["phi_m"])]
+                out["beta"] += [float(values["beta"])]
+
+        if len(out["iteration"]) > 0:
+            out["iteration"] = np.hstack(out["iteration"])
+            ind = np.argsort(out["iteration"])
+            out["iteration"] = out["iteration"][ind]
+            out["phi_d"] = np.hstack(out["phi_d"])[ind]
+            out["phi_m"] = np.hstack(out["phi_m"])[ind]
+            out["time"] = np.hstack(out["time"])[ind]
+
+    return out
+
+
 def load_json_params(file: str):
     """
     Read input parameters from json

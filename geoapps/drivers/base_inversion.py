@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import multiprocessing
+import warnings
 from multiprocessing.pool import ThreadPool
 from uuid import UUID
 
@@ -27,7 +28,7 @@ from SimPEG import (
     optimization,
     regularization,
 )
-from SimPEG.utils import tile_locations
+from SimPEG.utils import cartesian2amplitude_dip_azimuth, tile_locations
 
 from geoapps.io import Params
 from geoapps.utils import rotate_xy
@@ -41,8 +42,7 @@ from .components import (
 )
 from .components.factories import DirectivesFactory
 
-cluster = LocalCluster(processes=False)
-client = Client(cluster)
+warnings.filterwarnings("ignore")
 
 
 class InversionDriver:
@@ -81,23 +81,19 @@ class InversionDriver:
 
     @property
     def starting_model(self):
-        mstart = self.models.starting
-        return mstart
+        return self.models.starting
 
     @property
     def reference_model(self):
-        mref = self.models.reference
-        return mref
+        return self.models.reference
 
     @property
     def lower_bound(self):
-        lbound = self.models.lower_bound
-        return lbound
+        return self.models.lower_bound
 
     @property
     def upper_bound(self):
-        ubound = self.models.upper_bound
-        return ubound
+        return self.models.upper_bound
 
     def _initialize(self):
 
@@ -119,15 +115,17 @@ class InversionDriver:
 
     def run(self):
         """Run inversion from params"""
-
+        cluster = LocalCluster(processes=False)
+        client = Client(cluster)
         # Create SimPEG Survey object
         self.survey, _ = self.inversion_data.survey()
 
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
         self.models.remove_air(self.active_cells)
-        self.active_cells_map = maps.InjectActiveCells(self.mesh, self.active_cells, 0)
-
+        self.active_cells_map = maps.InjectActiveCells(
+            self.mesh, self.active_cells, np.nan
+        )
         self.n_cells = int(np.sum(self.active_cells))
         self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1
@@ -153,13 +151,8 @@ class InversionDriver:
         local_misfits = self.get_tile_misfits(self.tiles)
         global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
 
-        # Trigger sensitivity calcs
-        # for local in local_misfits:
-        #     local.simulation.Jmatrix
-
         # Create regularization
-        wr = self.get_weighting_matrix(global_misfit)
-        reg = self.get_regularization(wr)
+        reg = self.get_regularization()
 
         # Specify optimization algorithm and set parameters
         print("active", sum(self.active_cells))
@@ -183,7 +176,12 @@ class InversionDriver:
 
         # Add a list of directives to the inversion
         directiveList = DirectivesFactory(self.params).build(
-            self.inversion_data, self.inversion_mesh, self.active_cells, self.sorting
+            self.inversion_data,
+            self.inversion_mesh,
+            self.active_cells,
+            self.sorting,
+            local_misfits,
+            reg,
         )
 
         # Put all the parts together
@@ -195,24 +193,6 @@ class InversionDriver:
         dpred = self.collect_predicted_data(global_misfit, mrec)
         self.save_residuals(self.inversion_data.entity, dpred)
         self.finish_inversion_message(dpred)
-
-    def get_weighting_matrix(self, global_misfit):
-        """Calculate diagonal weighting matrix for regularization.
-        :param global_misfit: global misfit function.
-        :return: wr: Diagonal weighting matrix.
-
-        """
-
-        wr = np.zeros(self.n_cells * self.n_blocks)
-        norm = np.tile(self.mesh.cell_volumes[self.active_cells] ** 2.0, self.n_blocks)
-
-        for ii, dmisfit in enumerate(global_misfit.objfcts):
-            wr += dmisfit.getJtJdiag(self.starting_model) / norm
-
-        wr **= 0.5
-        wr = wr / wr.max()
-
-        return wr
 
     def start_inversion_message(self):
 
@@ -278,10 +258,9 @@ class InversionDriver:
             % (0.5 * np.sum(((self.survey.dobs - dpred) / self.survey.std) ** 2.0))
         )
 
-    def get_regularization(self, wr):
+    def get_regularization(self):
 
-        if self.inversion_type == "mvi":
-
+        if self.inversion_type == "magnetic vector":
             wires = maps.Wires(
                 ("p", self.n_cells), ("s", self.n_cells), ("t", self.n_cells)
             )
@@ -296,10 +275,8 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
+                mref=self.reference_model,
             )
-            reg_p.cell_weights = wires.p * wr
-            reg_p.mref = self.reference_model
-
             reg_s = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
@@ -310,10 +287,8 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
+                mref=self.reference_model,
             )
-
-            reg_s.cell_weights = wires.s * wr
-            reg_s.mref = self.reference_model
 
             reg_t = regularization.Sparse(
                 self.mesh,
@@ -325,10 +300,8 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
+                mref=self.reference_model,
             )
-
-            reg_t.cell_weights = wires.t * wr
-            reg_t.mref = self.reference_model
 
             # Assemble the 3-component regularizations
             reg = reg_p + reg_s + reg_t
@@ -346,9 +319,8 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
+                mref=self.reference_model,
             )
-            reg.cell_weights = wr
-            reg.mref = self.reference_model
 
         return reg
 
@@ -357,7 +329,6 @@ class InversionDriver:
         if self.params.inversion_type == "direct_current":
 
             tiles = []
-
             potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
             current_electrodes = potential_electrodes.current_electrodes
             ab_pairs = current_electrodes.cells
@@ -379,9 +350,7 @@ class InversionDriver:
             # tiles = []
             # for ii in np.unique(self.params.tile_spatial).tolist():
             #     tiles += [np.where(self.params.tile_spatial == ii)[0]]
-
         else:
-
             tiles = tile_locations(
                 self.locations["receivers"],
                 self.params.tile_spatial,
@@ -396,9 +365,8 @@ class InversionDriver:
             [],
             [],
         )
-
         for tile_id, local_index in enumerate(tiles):
-            lsurvey, _ = self.inversion_data.survey(
+            lsurvey, local_index = self.inversion_data.survey(
                 self.mesh, self.active_cells, local_index
             )
             lsim, lmap = self.inversion_data.simulation(

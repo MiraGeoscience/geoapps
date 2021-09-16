@@ -1547,9 +1547,9 @@ def inversion(input_file):
     #         vector=input_dict["inversion_type"][0:3] == 'mvi'
     #     )
     # )
-    # save_output = Directives.SaveOutputEveryIteration()
-    # save_output.fileName = workDir + "Output"
-    # directiveList.append(save_output)
+    save_output = Directives.SaveOutputEveryIteration()
+    save_output.fileName = workDir + "Output"
+    directiveList.append(save_output)
 
     # Put all the parts together
     inv = Inversion.BaseInversion(invProb, directiveList=directiveList)

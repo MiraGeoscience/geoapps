@@ -44,7 +44,7 @@ def test_original_cc(tmp_path):
 
     ws, params = setup_params(tmp_path)
     inversion_mesh = InversionMesh(ws, params)
-    msh = ws.get_entity(params.mesh)[0]
+    msh = ws.get_entity(inversion_mesh.uid)[0]
     np.testing.assert_allclose(msh.centroids, inversion_mesh.original_cc())
 
 
