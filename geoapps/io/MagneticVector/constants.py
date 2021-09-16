@@ -107,7 +107,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": None,
+    "reference_model": 0.0,
     "reference_inclination_object": None,
     "reference_declination_object": None,
     "reference_inclination": None,
@@ -437,15 +437,17 @@ default_ui_json = {
 }
 
 default_ui_json.update(base_default_ui_json)
-# for k, v in inversion_defaults.items():
-#     if isinstance(default_ui_json[k], dict):
-#         key = "value"
-#         if "isValue" in default_ui_json[k].keys():
-#             if default_ui_json[k]["isValue"] == False:
-#                 key = "property"
-#         default_ui_json[k][key] = v
-#     else:
-#         default_ui_json[k] = v
+for k, v in inversion_defaults.items():
+    if isinstance(default_ui_json[k], dict):
+        key = "value"
+        if "isValue" in default_ui_json[k].keys():
+            if default_ui_json[k]["isValue"] == False:
+                key = "property"
+        default_ui_json[k][key] = v
+        if "enabled" in default_ui_json[k].keys() and v is not None:
+            default_ui_json[k]["enabled"] = True
+    else:
+        default_ui_json[k] = v
 
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 

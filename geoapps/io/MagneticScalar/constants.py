@@ -93,7 +93,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": None,
+    "reference_model": 0.0,
     "gradient_type": "total",
     "lower_bound_object": None,
     "lower_bound": None,
@@ -233,6 +233,8 @@ for k, v in inversion_defaults.items():
             if default_ui_json[k]["isValue"] == False:
                 key = "property"
         default_ui_json[k][key] = v
+        if "enabled" in default_ui_json[k].keys() and v is not None:
+            default_ui_json[k]["enabled"] = True
     else:
         default_ui_json[k] = v
 
