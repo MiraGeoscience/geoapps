@@ -326,7 +326,7 @@ class InversionDriver:
 
     def get_tiles(self):
 
-        if self.params.inversion_type == "direct_current":
+        if self.params.inversion_type == "direct current":
 
             tiles = []
             potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]

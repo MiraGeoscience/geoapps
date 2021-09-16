@@ -74,7 +74,7 @@ class InputFile:
                 self.load(data, self.validator)
 
     @classmethod
-    def from_dict(cls, dict: dict[str, Any], validator: InputValidator):
+    def from_dict(cls, dict: dict[str, Any], validator: InputValidator = None):
         ifile = cls()
         ifile.load(dict, validator)
         return ifile
@@ -141,6 +141,10 @@ class InputFile:
                     os.path.dirname(os.path.abspath(path)) + os.path.sep
                 )
         return self._workpath
+
+    @workpath.setter
+    def workpath(self, v):
+        self._workpath = v
 
     def write_ui_json(
         self,

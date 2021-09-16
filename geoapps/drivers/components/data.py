@@ -233,7 +233,7 @@ class InversionData(InversionLocations):
 
     def save_data(self):
 
-        if self.params.inversion_type == "direct_current":
+        if self.params.inversion_type == "direct current":
 
             rx_obj = self.workspace.get_entity(self.params.data_object)[0]
             tx_obj = self.params.workspace.get_entity(f"{rx_obj.name} (currents)")[0]

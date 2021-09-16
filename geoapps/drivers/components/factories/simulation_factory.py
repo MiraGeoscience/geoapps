@@ -31,7 +31,7 @@ class SimulationFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
         from SimPEG import dask
 
-        if self.factory_type == "direct_current":
+        if self.factory_type == "direct current":
             import pymatsolver.direct as solver_module
 
             self.solver = solver_module.Pardiso
@@ -48,7 +48,7 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DIntegral
 
-        if self.factory_type == "direct_current":
+        if self.factory_type == "direct current":
             from SimPEG.electromagnetics.static.resistivity import simulation
 
             return simulation.Simulation3DNodal
@@ -90,7 +90,7 @@ class SimulationFactory(SimPEGFactory):
             )
             kwargs["chunk_format"] = "row"
 
-        elif self.factory_type == "direct_current":
+        elif self.factory_type == "direct current":
 
             actmap = maps.InjectActiveCells(
                 mesh, active_cells, valInactive=np.log(1e-8)
