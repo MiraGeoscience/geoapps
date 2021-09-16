@@ -65,7 +65,7 @@ class ReceiversFactory(SimPEGFactory):
 
     def concrete_object(self):
 
-        if self.factory_type in ["mvi", "magnetic"]:
+        if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import receivers
 
             return receivers.Point
@@ -105,7 +105,7 @@ class ReceiversFactory(SimPEGFactory):
     def assemble_keyword_arguments(self, locations=None, data=None, local_index=None):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
-        if self.factory_type in ["gravity", "magnetic", "mvi"]:
+        if self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
             kwargs["components"] = list(data.keys())
 
         return kwargs
@@ -127,7 +127,7 @@ class SourcesFactory(SimPEGFactory):
 
     def concrete_object(self):
 
-        if self.factory_type in ["mvi", "magnetic"]:
+        if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import sources
 
             return sources.SourceField
@@ -166,7 +166,7 @@ class SourcesFactory(SimPEGFactory):
     def assemble_keyword_arguments(self, receivers=None, local_index=None):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
-        if self.factory_type in ["magnetic", "mvi"]:
+        if self.factory_type in ["magnetic scalar", "magnetic vector"]:
             kwargs["parameters"] = self.params.inducing_field_aid()
 
         return kwargs
@@ -191,7 +191,7 @@ class SurveyFactory(SimPEGFactory):
 
     def concrete_object(self):
 
-        if self.factory_type in ["mvi", "magnetic"]:
+        if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import survey
 
             return survey.Survey

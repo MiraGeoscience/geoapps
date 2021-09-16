@@ -24,9 +24,9 @@ from SimPEG import data, maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.drivers.components.factories import SimulationFactory, SurveyFactory
 from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
+from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
 
 
@@ -116,8 +116,8 @@ class InversionData(InversionLocations):
     def _initialize(self) -> None:
         """Extract data from the workspace using params data."""
 
-        self.vector = True if self.params.inversion_type == "mvi" else False
-        self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
+        self.vector = True if self.params.inversion_type == "magnetic vector" else False
+        self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
 
@@ -135,7 +135,6 @@ class InversionData(InversionLocations):
         self.mask = np.ones(len(filt_locs), dtype=bool)
 
         if self.window is not None:
-
             self.mask = filter_xy(
                 filt_locs[:, 0],
                 filt_locs[:, 1],
@@ -317,7 +316,11 @@ class InversionData(InversionLocations):
             if ignore_type in ["<", ">"]:
                 ignore_value = float(ignore_values.split(ignore_type)[1])
             else:
-                ignore_value = float(ignore_values)
+
+                try:
+                    ignore_value = float(ignore_values)
+                except ValueError:
+                    return None, None
 
             return ignore_value, ignore_type
         else:
@@ -353,7 +356,7 @@ class InversionData(InversionLocations):
 
         return locs + offset if offset is not None else 0
 
-    def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
+    def drape(self, locs: np.ndarray, radar_offset: np.ndarray) -> np.ndarray:
         """Drape data locations using radar channel offsets."""
 
         if locs is None:
@@ -488,7 +491,6 @@ class InversionData(InversionLocations):
         save: bool = True,
     ) -> np.ndarray:
         """Simulate fields for a particular model."""
-
         client = get_client()
         sim, _ = self.simulation(mesh, active_cells, survey)
         prediction = client.compute(sim.dpred(model))
