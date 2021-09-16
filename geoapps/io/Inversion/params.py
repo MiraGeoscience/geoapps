@@ -65,7 +65,7 @@ class InversionParams(Params):
         self.coolEpsFact: float = None
         self.beta_search: bool = None
         self.max_iterations: int = None
-        self.max_least_squares_iterations: int = None
+        self.max_line_search_iterations: int = None
         self.max_cg_iterations: int = None
         self.max_global_iterations: int = None
         self.initial_beta: float = None
