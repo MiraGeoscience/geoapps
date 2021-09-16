@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import os.path as path
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
@@ -103,6 +102,17 @@ class InversionParams(Params):
         self.run_command_boolean: bool = None
         self.conda_environment: str = None
         self.conda_environment_boolean: bool = None
+
+        for k, v in self.default_ui_json.items():
+            if isinstance(v, dict):
+                field = "value"
+                if "isValue" in v.keys():
+                    if not v["isValue"] or self.defaults[k] is None:
+                        v["isValue"] = False
+                        field = "property"
+                self.default_ui_json[k][field] = self.defaults[k]
+            else:
+                self.default_ui_json[k] = self.defaults[k]
 
         super().__init__(**kwargs)
 
@@ -931,19 +941,19 @@ class InversionParams(Params):
         self._max_iterations = val
 
     @property
-    def max_least_squares_iterations(self):
-        return self._max_least_squares_iterations
+    def max_line_search_iterations(self):
+        return self._max_line_search_iterations
 
-    @max_least_squares_iterations.setter
-    def max_least_squares_iterations(self, val):
+    @max_line_search_iterations.setter
+    def max_line_search_iterations(self, val):
         if val is None:
-            self._max_least_squares_iterations = val
+            self._max_line_search_iterations = val
             return
-        p = "max_least_squares_iterations"
+        p = "max_line_search_iterations"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._max_least_squares_iterations = val
+        self._max_line_search_iterations = val
 
     @property
     def max_cg_iterations(self):
@@ -1339,6 +1349,13 @@ class InversionParams(Params):
             if ".ui.json" not in name:
                 name += ".ui.json"
 
+        elif hasattr(self, "input_file"):
+            if self.input_file.filepath is not None:
+                name = self.input_file.filepath
+            else:
+                msg = "No name provided and none set in self.input_file."
+                raise OSError(msg)
+
         if ui_json is None:
             if self.forward_only:
                 defaults = self.forward_defaults
@@ -1346,21 +1363,24 @@ class InversionParams(Params):
                 defaults = self.inversion_defaults
 
             ui_json = {k: self.default_ui_json[k] for k in defaults}
+
+            for k, v in defaults.items():
+                if isinstance(ui_json[k], dict):
+                    key = "value"
+                    if "isValue" in ui_json[k].keys():
+                        if ui_json[k]["isValue"] == False:
+                            key = "property"
+                    ui_json[k][key] = v
+                else:
+                    ui_json[k] = v
+
             self.title = defaults["title"]
             self.run_command = defaults["run_command"]
 
         if default:
-            ifile = InputFile()
+            ifile = InputFile.from_dict(ui_json)
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
-        if getattr(self, "input_file", None) is not None:
-
-            if name is None:
-                ifile.filepath = self.input_file.filepath
-            else:
-                out_file = path.join(self.input_file.workpath, name)
-                self.input_file.filepath = out_file
-                ifile.filepath = out_file
-
-        ifile.write_ui_json(ui_json, default=default)
+        ifile.filepath = name
+        ifile.write_ui_json(ui_json, name=name, default=default)

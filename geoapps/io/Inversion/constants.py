@@ -810,7 +810,7 @@ validations = {
     "max_iterations": {
         "types": [int, float],
     },
-    "max_least_squares_iterations": {
+    "max_line_search_iterations": {
         "types": [int, float],
     },
     "max_cg_iterations": {

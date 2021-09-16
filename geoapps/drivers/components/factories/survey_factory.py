@@ -75,7 +75,7 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Point
 
-        elif self.factory_type == "direct_current":
+        elif self.factory_type == "direct current":
             from SimPEG.electromagnetics.static.resistivity import receivers
 
             return receivers.Dipole
@@ -84,7 +84,7 @@ class ReceiversFactory(SimPEGFactory):
         """Provides implementations to assemble arguments for receivers object."""
 
         args = []
-        if self.factory_type == "direct_current":
+        if self.factory_type == "direct current":
 
             potential_electrodes = self.params.workspace.get_entity(
                 self.params.data_object
@@ -137,7 +137,7 @@ class SourcesFactory(SimPEGFactory):
 
             return sources.SourceField
 
-        elif self.factory_type == "direct_current":
+        elif self.factory_type == "direct current":
             from SimPEG.electromagnetics.static.resistivity import sources
 
             return sources.Dipole
@@ -146,7 +146,7 @@ class SourcesFactory(SimPEGFactory):
         """Provides implementations to assemble arguments for sources object."""
 
         args = []
-        if self.factory_type == "direct_current":
+        if self.factory_type == "direct current":
 
             potential_electrodes = self.params.workspace.get_entity(
                 self.params.data_object
@@ -201,7 +201,7 @@ class SurveyFactory(SimPEGFactory):
 
             return survey.Survey
 
-        elif self.factory_type == "direct_current":
+        elif self.factory_type == "direct current":
             from SimPEG.electromagnetics.static.resistivity import survey
 
             return survey.Survey
@@ -215,7 +215,7 @@ class SurveyFactory(SimPEGFactory):
     ):
         """Provides implementations to assemble arguments for receivers object."""
 
-        if self.factory_type == "direct_current":
+        if self.factory_type == "direct current":
 
             potential_electrodes = self.params.workspace.get_entity(
                 self.params.data_object
@@ -285,14 +285,14 @@ class SurveyFactory(SimPEGFactory):
         if not self.params.forward_only:
             ind = (
                 self.receiver_ids
-                if self.factory_type == "direct_current"
+                if self.factory_type == "direct current"
                 else self.local_index
             )
             tiled_local_index = np.tile(ind, n_channels)
             survey.dobs = self._stack_channels(data)[tiled_local_index]
             survey.std = self._stack_channels(uncertainties)[tiled_local_index]
 
-        if self.factory_type == "direct_current":
+        if self.factory_type == "direct current":
             if (mesh is not None) and (active_cells is not None):
                 survey.drape_electrodes_on_topography(mesh, active_cells)
 
