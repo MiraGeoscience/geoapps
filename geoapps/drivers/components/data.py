@@ -234,7 +234,7 @@ class InversionData(InversionLocations):
 
     def save_data(self):
 
-        if self.params.inversion_type in ["direct_current", "induced_polarization"]:
+        if self.params.inversion_type in ["direct current", "induced polarization"]:
 
             rx_obj = self.workspace.get_entity(self.params.data_object)[0]
             tx_obj = self.params.workspace.get_entity(f"{rx_obj.name} (currents)")[0]
@@ -252,7 +252,7 @@ class InversionData(InversionLocations):
             survey, _ = self.survey()
             key = (
                 "potential"
-                if self.params.inversion_type == "direct_current"
+                if self.params.inversion_type == "direct current"
                 else "chargeability"
             )
             self.transformations[key] = 1 / (geometric_factor(survey) + 1e-10)
@@ -268,7 +268,7 @@ class InversionData(InversionLocations):
                     }
                 )
 
-            if self.params.inversion_type == "direct_current":
+            if self.params.inversion_type == "direct current":
                 key = "apparent_resistivity"
             else:
                 key = "apparent_chargeability"
@@ -367,7 +367,7 @@ class InversionData(InversionLocations):
 
         return locs + offset if offset is not None else 0
 
-    def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
+    def drape(self, locs: np.ndarray, radar_offset: np.ndarray) -> np.ndarray:
         """Drape data locations using radar channel offsets."""
 
         if locs is None:

@@ -31,7 +31,7 @@ class SimulationFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
         from SimPEG import dask
 
-        if self.factory_type in ["direct_current", "induced_polarization"]:
+        if self.factory_type in ["direct current", "induced polarization"]:
             import pymatsolver.direct as solver_module
 
             self.solver = solver_module.Pardiso
@@ -48,7 +48,7 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DIntegral
 
-        if self.factory_type == "direct_current":
+        if self.factory_type == "direct current":
             from SimPEG.electromagnetics.static.resistivity import simulation
 
             return simulation.Simulation3DNodal
@@ -100,14 +100,14 @@ class SimulationFactory(SimPEGFactory):
             )
             kwargs["chunk_format"] = "row"
 
-        elif self.factory_type == "direct_current":
+        elif self.factory_type == "direct current":
+
             actmap = maps.InjectActiveCells(
                 mesh, active_cells, valInactive=np.log(1e-8)
             )
             kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
             kwargs["Solver"] = self.solver
             kwargs["store_sensitivities"] = False if self.params.forward_only else True
-
         elif self.factory_type == "induced_polarization":
             from ..meshes import InversionMesh
             from ..models import InversionModel

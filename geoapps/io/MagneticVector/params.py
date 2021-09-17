@@ -25,6 +25,8 @@ class MagneticVectorParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
+    forward_defaults = forward_defaults
+    inversion_defaults = inversion_defaults
     _directive_list = [
         "VectorInversion",
         "UpdateSensitivityWeights",
@@ -65,19 +67,9 @@ class MagneticVectorParams(InversionParams):
         self.reference_inclination = None
         self.reference_declination = None
 
-        self.defaults = forward_defaults if forward else inversion_defaults
+        self.defaults = inversion_defaults
         self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
         self.param_names = list(self.default_ui_json.keys())
-
-        for k, v in self.default_ui_json.items():
-            if isinstance(v, dict):
-                field = "value"
-                if "isValue" in v.keys():
-                    if not v["isValue"]:
-                        field = "property"
-                self.default_ui_json[k][field] = self.defaults[k]
-            else:
-                self.default_ui_json[k] = self.defaults[k]
 
         super().__init__(**kwargs)
 

@@ -420,7 +420,7 @@ default_ui_json = {
         "label": "Max iteration count",
         "value": 25,
     },
-    "max_least_squares_iterations": {
+    "max_line_search_iterations": {
         "group": "Optimization",
         "label": "Max least squares iteration count",
         "value": 20,
@@ -455,7 +455,7 @@ default_ui_json = {
         "dependency": "provide_beta",
         "dependencyType": "enabled",
         "label": "Initial beta",
-        "value": 0.0,
+        "value": "",
     },
     "tol_cg": {
         "min": 0,
@@ -652,6 +652,9 @@ default_ui_json = {
 }
 
 validations = {
+    "title": {
+        "types": [str],
+    },
     "forward_only": {
         "types": [bool],
         "reqs": [
@@ -807,7 +810,7 @@ validations = {
     "max_iterations": {
         "types": [int, float],
     },
-    "max_least_squares_iterations": {
+    "max_line_search_iterations": {
         "types": [int, float],
     },
     "max_cg_iterations": {

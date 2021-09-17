@@ -20,6 +20,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
+    "title": "SimPEG Inversion - Magnetic Vector",
     "inversion_type": "magnetic vector",
     "geoh5": None,
     "data_object": None,
@@ -91,7 +92,7 @@ inversion_defaults = {
     "coolEpsFact": 1.2,
     "beta_search": False,
     "max_iterations": 25,
-    "max_least_squares_iterations": 20,
+    "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e2,
@@ -129,6 +130,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
+    "title": "SimPEG Forward - Magnetic Vector",
     "inversion_type": "magnetic vector",
     "forward_only": True,
     "inducing_field_strength": 50000.0,
@@ -185,6 +187,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
 }
 default_ui_json = {
+    "title": "SimPEG Inversion - Magnetic Vector",
     "inversion_type": "magnetic vector",
     "inducing_field_strength": {
         "association": "Cell",
@@ -434,15 +437,15 @@ default_ui_json = {
 }
 
 default_ui_json.update(base_default_ui_json)
-# for k, v in inversion_defaults.items():
-#     if isinstance(default_ui_json[k], dict):
-#         key = "value"
-#         if "isValue" in default_ui_json[k].keys():
-#             if default_ui_json[k]["isValue"] == False:
-#                 key = "property"
-#         default_ui_json[k][key] = v
-#     else:
-#         default_ui_json[k] = v
+for k, v in inversion_defaults.items():
+    if isinstance(default_ui_json[k], dict):
+        key = "value"
+        if "isValue" in default_ui_json[k].keys():
+            if default_ui_json[k]["isValue"] == False:
+                key = "property"
+        default_ui_json[k][key] = v
+    else:
+        default_ui_json[k] = v
 
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 
@@ -552,10 +555,16 @@ app_initializer = {
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
+    "upper_bound": None,
+    "starting_inclination": 79.0,
+    "starting_declination": 11.0,
+    "reference_inclination": None,
+    "reference_declination": None,
     "max_iterations": 25,
     "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
     "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
     "z_from_topo": True,
+    "detrend_type": "all",
     "receivers_offset_x": 0,
     "receivers_offset_y": 0,
     "receivers_offset_z": 60,

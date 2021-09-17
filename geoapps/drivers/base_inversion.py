@@ -97,6 +97,8 @@ class InversionDriver:
 
     def _initialize(self):
 
+        ### Collect inversion components ###
+
         self.configure_dask()
 
         self.inversion_window = InversionWindow(self.workspace, self.params)
@@ -161,7 +163,7 @@ class InversionDriver:
             maxIter=self.params.max_iterations,
             lower=self.lower_bound,
             upper=self.upper_bound,
-            maxIterLS=self.params.max_least_squares_iterations,
+            maxIterLS=self.params.max_line_search_iterations,
             maxIterCG=self.params.max_cg_iterations,
             tolCG=self.params.tol_cg,
             stepOffBoundsFact=1e-8,
@@ -327,7 +329,7 @@ class InversionDriver:
 
     def get_tiles(self):
 
-        if self.params.inversion_type in ["direct_current", "induced_polarization"]:
+        if self.params.inversion_type in ["direct current", "induced polarization"]:
 
             tiles = []
             potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]

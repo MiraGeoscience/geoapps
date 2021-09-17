@@ -7,11 +7,13 @@
 
 from __future__ import annotations
 
+import os
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
+from ..input_file import InputFile
 from ..params import Params
 
 
@@ -68,7 +70,7 @@ class InversionParams(Params):
         self.coolEpsFact: float = None
         self.beta_search: bool = None
         self.max_iterations: int = None
-        self.max_least_squares_iterations: int = None
+        self.max_line_search_iterations: int = None
         self.max_cg_iterations: int = None
         self.max_global_iterations: int = None
         self.initial_beta: float = None
@@ -101,6 +103,17 @@ class InversionParams(Params):
         self.run_command_boolean: bool = None
         self.conda_environment: str = None
         self.conda_environment_boolean: bool = None
+
+        for k, v in self.default_ui_json.items():
+            if isinstance(v, dict):
+                field = "value"
+                if "isValue" in v.keys():
+                    if not v["isValue"] or self.defaults[k] is None:
+                        v["isValue"] = False
+                        field = "property"
+                self.default_ui_json[k][field] = self.defaults[k]
+            else:
+                self.default_ui_json[k] = self.defaults[k]
 
         super().__init__(**kwargs)
 
@@ -929,19 +942,19 @@ class InversionParams(Params):
         self._max_iterations = val
 
     @property
-    def max_least_squares_iterations(self):
-        return self._max_least_squares_iterations
+    def max_line_search_iterations(self):
+        return self._max_line_search_iterations
 
-    @max_least_squares_iterations.setter
-    def max_least_squares_iterations(self, val):
+    @max_line_search_iterations.setter
+    def max_line_search_iterations(self, val):
         if val is None:
-            self._max_least_squares_iterations = val
+            self._max_line_search_iterations = val
             return
-        p = "max_least_squares_iterations"
+        p = "max_line_search_iterations"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._max_least_squares_iterations = val
+        self._max_line_search_iterations = val
 
     @property
     def max_cg_iterations(self):
@@ -1327,3 +1340,51 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._no_data_value = val
+
+    def write_input_file(
+        self, ui_json: dict = None, default: bool = False, name: str = None
+    ):
+        """Write out a ui.json with the current state of parameters"""
+
+        if name is not None:
+            if ".ui.json" not in name:
+                name += ".ui.json"
+
+        if ui_json is None:
+            if self.forward_only:
+                defaults = self.forward_defaults
+            else:
+                defaults = self.inversion_defaults
+
+            ui_json = {k: self.default_ui_json[k] for k in defaults}
+            self.title = defaults["title"]
+            self.run_command = defaults["run_command"]
+
+        if default:
+            for k, v in defaults.items():
+                if isinstance(ui_json[k], dict):
+                    key = "value"
+                    if "isValue" in ui_json[k].keys():
+                        if ui_json[k]["isValue"] == False:
+                            key = "property"
+                    ui_json[k][key] = v
+                else:
+                    ui_json[k] = v
+
+            ifile = InputFile.from_dict(ui_json)
+        else:
+            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
+
+        if getattr(self, "input_file", None) is not None:
+
+            if name is None:
+                ifile.filepath = self.input_file.filepath
+            else:
+                if self.input_file.workpath is None:
+                    out_file = os.path.abspath(name)
+                else:
+                    out_file = os.path.join(self.input_file.workpath, name)
+                self.input_file.filepath = out_file
+                ifile.filepath = out_file
+
+        ifile.write_ui_json(ui_json, default=default)
