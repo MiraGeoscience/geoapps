@@ -20,6 +20,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
+    "title": "SimPEG Inversion - Magnetic Susceptibility",
     "inversion_type": "magnetic scalar",
     "forward_only": False,
     "inducing_field_strength": 50000.0,
@@ -77,11 +78,11 @@ inversion_defaults = {
     "coolEpsFact": 1.2,
     "beta_search": False,
     "max_iterations": 25,
-    "max_least_squares_iterations": 20,
+    "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
-    "initial_beta_ratio": 1e1,
-    "initial_beta": 0.0,
+    "initial_beta_ratio": 1e2,
+    "initial_beta": None,
     "tol_cg": 1e-16,
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -111,6 +112,7 @@ inversion_defaults = {
     "conda_environment": "geoapps",
 }
 forward_defaults = {
+    "title": "SimPEG Forward - Magnetic Susceptibility",
     "inversion_type": "magnetic scalar",
     "forward_only": True,
     "inducing_field_strength": 50000.0,
@@ -161,6 +163,7 @@ forward_defaults = {
 }
 
 default_ui_json = {
+    "title": "SimPEG Inversion - Magnetic Susceptibility",
     "inversion_type": "magnetic scalar",
     "inducing_field_strength": {
         "association": "Cell",
