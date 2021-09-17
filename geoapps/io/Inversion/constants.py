@@ -420,7 +420,7 @@ default_ui_json = {
         "label": "Max iteration count",
         "value": 25,
     },
-    "max_least_squares_iterations": {
+    "max_line_search_iterations": {
         "group": "Optimization",
         "label": "Max least squares iteration count",
         "value": 20,
@@ -810,7 +810,7 @@ validations = {
     "max_iterations": {
         "types": [int, float],
     },
-    "max_least_squares_iterations": {
+    "max_line_search_iterations": {
         "types": [int, float],
     },
     "max_cg_iterations": {

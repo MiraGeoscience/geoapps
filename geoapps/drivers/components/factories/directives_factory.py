@@ -99,7 +99,7 @@ class DirectivesFactory:
                 sorting=sorting,
             )
 
-            if self.factory_type == "direct_current":
+            if self.factory_type == "direct current":
                 transform = inversion_data.transformations["potential"]
                 self.save_iteration_apparent_resistivity_directive = (
                     SaveIterationGeoh5Factory(self.params).build(
@@ -154,7 +154,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 )
             ]
 
-            if self.factory_type == "direct_current":
+            if self.factory_type == "direct current":
 
                 kwargs["association"] = "CELL"
                 kwargs["components"] = ["dc"]
@@ -197,13 +197,13 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             kwargs["transforms"] = [active_cells_map]
 
             if self.factory_type == "magnetic vector":
-                kwargs["channels"] = ["amplitude", "theta", "phi"]
+                kwargs["channels"] = ["amplitude", "dip", "azimuth"]
                 kwargs["transforms"] = [
                     cartesian2amplitude_dip_azimuth,
                     active_cells_map,
                 ]
 
-            if self.factory_type == "direct_current":
+            if self.factory_type == "direct current":
                 expmap = maps.ExpMap(inversion_object.mesh)
                 kwargs["transforms"] = [expmap * active_cells_map]
 

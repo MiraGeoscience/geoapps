@@ -16,7 +16,8 @@ from geoapps.io.Inversion.constants import (
 from geoapps.io.Inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "inversion_type": "direct_current",
+    "title": "SimPEG Inversion - Direct Current",
+    "inversion_type": "direct current",
     "forward_only": False,
     "topography_object": None,
     "topography": None,
@@ -69,7 +70,7 @@ inversion_defaults = {
     "coolEpsFact": 1.2,
     "beta_search": False,
     "max_iterations": 25,
-    "max_least_squares_iterations": 20,
+    "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e1,
@@ -98,12 +99,14 @@ inversion_defaults = {
     "no_data_value": None,
     "monitoring_directory": None,
     "geoh5": None,
+    "title": "Direct Current Inversion",
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
 forward_defaults = {
-    "inversion_type": "direct_current",
+    "title": "SimPEG Forward - Direct Current",
+    "inversion_type": "direct current",
     "forward_only": True,
     "topography_object": None,
     "topography": None,
@@ -148,7 +151,8 @@ forward_defaults = {
     "conda_environment": "geoapps",
 }
 default_ui_json = {
-    "inversion_type": "direct_current",
+    "title": "SimPEG Inversion - Direct Current",
+    "inversion_type": "direct current",
     "potential_channel_bool": True,
     "potential_channel": {
         "association": "Cell",
@@ -197,7 +201,7 @@ required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["direct_current"],
+        "values": ["direct current"],
     },
     "potential_channel_bool": {"types": [bool]},
     "potential_channel": {
