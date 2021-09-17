@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
@@ -1349,13 +1350,6 @@ class InversionParams(Params):
             if ".ui.json" not in name:
                 name += ".ui.json"
 
-        elif hasattr(self, "input_file"):
-            if self.input_file.filepath is not None:
-                name = self.input_file.filepath
-            else:
-                msg = "No name provided and none set in self.input_file."
-                raise OSError(msg)
-
         if ui_json is None:
             if self.forward_only:
                 defaults = self.forward_defaults
@@ -1363,7 +1357,10 @@ class InversionParams(Params):
                 defaults = self.inversion_defaults
 
             ui_json = {k: self.default_ui_json[k] for k in defaults}
+            self.title = defaults["title"]
+            self.run_command = defaults["run_command"]
 
+        if default:
             for k, v in defaults.items():
                 if isinstance(ui_json[k], dict):
                     key = "value"
@@ -1374,13 +1371,20 @@ class InversionParams(Params):
                 else:
                     ui_json[k] = v
 
-            self.title = defaults["title"]
-            self.run_command = defaults["run_command"]
-
-        if default:
             ifile = InputFile.from_dict(ui_json)
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
-        ifile.filepath = name
-        ifile.write_ui_json(ui_json, name=name, default=default)
+        if getattr(self, "input_file", None) is not None:
+
+            if name is None:
+                ifile.filepath = self.input_file.filepath
+            else:
+                if self.input_file.workpath is None:
+                    out_file = os.path.abspath(name)
+                else:
+                    out_file = os.path.join(self.input_file.workpath, name)
+                self.input_file.filepath = out_file
+                ifile.filepath = out_file
+
+        ifile.write_ui_json(ui_json, default=default)
