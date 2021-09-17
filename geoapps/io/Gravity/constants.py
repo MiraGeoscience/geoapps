@@ -36,7 +36,7 @@ inversion_defaults = {
     "gz_channel": None,
     "gz_uncertainty": 0.0,
     "starting_model_object": None,
-    "starting_model": 0.0,
+    "starting_model": None,
     "tile_spatial": 1,
     "z_from_topo": True,
     "receivers_radar_drape": None,
@@ -70,7 +70,18 @@ inversion_defaults = {
     "window_azimuth": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
+    "sens_wts_threshold": 1e-3,
+    "every_iteration_bool": False,
+    "f_min_change": 1e-4,
+    "minGNiter": 1,
+    "beta_tol": 0.5,
+    "prctile": 50,
+    "coolingRate": 1,
+    "coolEps_q": True,
+    "coolEpsFact": 1.2,
+    "beta_search": False,
     "max_iterations": 25,
+    "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e1,
@@ -85,12 +96,12 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": 0.0,
+    "reference_model": None,
     "gradient_type": "total",
     "lower_bound_object": None,
-    "lower_bound": -1.0,
+    "lower_bound": None,
     "upper_bound_object": None,
-    "upper_bound": 1.0,
+    "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -245,7 +256,18 @@ default_ui_json = {
     },
     "out_group": {"label": "Results group name", "value": "Gravity"},
 }
+
 default_ui_json.update(base_default_ui_json)
+for k, v in inversion_defaults.items():
+    if isinstance(default_ui_json[k], dict):
+        key = "value"
+        if "isValue" in default_ui_json[k].keys():
+            if default_ui_json[k]["isValue"] == False:
+                key = "property"
+        default_ui_json[k][key] = v
+    else:
+        default_ui_json[k] = v
+
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 
 

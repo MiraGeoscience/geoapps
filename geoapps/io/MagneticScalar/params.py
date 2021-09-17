@@ -31,6 +31,13 @@ class MagneticScalarParams(InversionParams):
     _validations = validations
     forward_defaults = forward_defaults
     inversion_defaults = inversion_defaults
+    _directive_list = [
+        "UpdateSensitivityWeights",
+        "Update_IRLS",
+        "BetaEstimate_ByEig",
+        "UpdatePreconditioner",
+        "SaveIterationsGeoH5",
+    ]
 
     def __init__(self, **kwargs):
 
@@ -48,17 +55,6 @@ class MagneticScalarParams(InversionParams):
         self.defaults = inversion_defaults
         self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
         self.param_names = list(self.default_ui_json.keys())
-
-        for k, v in self.default_ui_json.items():
-            if isinstance(v, dict):
-                field = "value"
-                if "isValue" in v.keys():
-                    if not v["isValue"] or self.defaults[k] is None:
-                        v["isValue"] = False
-                        field = "property"
-                self.default_ui_json[k][field] = self.defaults[k]
-            else:
-                self.default_ui_json[k] = self.defaults[k]
 
         super().__init__(**kwargs)
 

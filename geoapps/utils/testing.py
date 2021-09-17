@@ -26,14 +26,12 @@ class Geoh5Tester:
         self.workspace = workspace
         self.tmp_path = os.path.join(path, name)
 
-        if None not in [ui, params_class]:
-
+        if params_class is not None:
+            ws = Workspace(self.tmp_path)
             self.input_file = InputFile()
             self.input_file.data["geoh5"] = None
             self.input_file.data["workspace"] = None
-            self.params = params_class.from_input_file(
-                self.input_file, workspace=workspace
-            )
+            self.params = params_class.from_input_file(self.input_file, workspace=ws)
             self.ws = self.params.workspace
             self.has_params = True
 

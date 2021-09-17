@@ -81,7 +81,18 @@ inversion_defaults = {
     "window_azimuth": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
+    "sens_wts_threshold": 1e-3,
+    "every_iteration_bool": False,
+    "f_min_change": 1e-4,
+    "minGNiter": 1,
+    "beta_tol": 0.5,
+    "prctile": 50,
+    "coolingRate": 1,
+    "coolEps_q": True,
+    "coolEpsFact": 1.2,
+    "beta_search": False,
     "max_iterations": 25,
+    "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e2,
@@ -351,7 +362,7 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Starting Model",
         "main": True,
-        "isValue": True,
+        "isValue": False,
         "optional": True,
         "enabled": False,
         "parent": "starting_inclination_object",
@@ -364,7 +375,7 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Starting Model",
         "main": True,
-        "isValue": True,
+        "isValue": False,
         "optional": True,
         "enabled": False,
         "parent": "starting_declination_object",
@@ -402,7 +413,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "group": "Regularization",
-        "isValue": True,
+        "isValue": False,
         "optional": True,
         "enabled": False,
         "label": "Reference inclination value",
@@ -414,7 +425,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "group": "Regularization",
-        "isValue": True,
+        "isValue": False,
         "optional": True,
         "enabled": False,
         "label": "Reference declination value",
@@ -424,7 +435,18 @@ default_ui_json = {
     },
     "out_group": {"label": "Results group name", "value": "VectorInversion"},
 }
+
 default_ui_json.update(base_default_ui_json)
+for k, v in inversion_defaults.items():
+    if isinstance(default_ui_json[k], dict):
+        key = "value"
+        if "isValue" in default_ui_json[k].keys():
+            if default_ui_json[k]["isValue"] == False:
+                key = "property"
+        default_ui_json[k][key] = v
+    else:
+        default_ui_json[k] = v
+
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 
 

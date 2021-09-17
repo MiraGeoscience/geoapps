@@ -812,7 +812,7 @@ def test_isValue(tmp_path):
     params.starting_model_object = mesh.uid
     params.starting_model = 0.0
 
-    params.write_input_file()
+    params.write_input_file(name=filepath)
 
     with open(filepath) as f:
         ui = json.load(f)
@@ -821,7 +821,7 @@ def test_isValue(tmp_path):
 
     params.starting_model = mesh.get_data("VTEM_model")[0].uid
 
-    params.write_input_file()
+    params.write_input_file(name=filepath)
     with open(filepath) as f:
         ui = json.load(f)
 
