@@ -29,8 +29,8 @@ class MagneticVectorParams(InversionParams):
     inversion_defaults = inversion_defaults
     _directive_list = [
         "VectorInversion",
-        "UpdateSensitivityWeights",
         "Update_IRLS",
+        "UpdateSensitivityWeights",
         "BetaEstimate_ByEig",
         "UpdatePreconditioner",
         "SaveIterationsGeoH5",
