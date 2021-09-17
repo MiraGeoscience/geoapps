@@ -40,7 +40,7 @@ class SimPEGFactory:
         "gravity",
         "magnetic scalar",
         "magnetic vector",
-        "direct_current",
+        "direct current",
     ]
 
     def __init__(self, params: Params):
