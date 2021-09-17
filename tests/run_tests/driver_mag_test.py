@@ -16,9 +16,9 @@ from SimPEG import utils
 
 from geoapps.utils import get_inversion_output, treemesh_2_octree
 
-n_grid_points = 20  # Full run: 20
+n_grid_points = 2  # Full run: 20
 h = 5.0  # Full run: 5.0
-max_iterations = 30  # Full run: 30
+max_iterations = 1  # Full run: 30
 
 
 def setup_workspace(work_dir, phys_prop):
@@ -91,9 +91,9 @@ def test_susceptibility_run(tmp_path):
     H0 = (50000.0, 90.0, 0.0)
     # Values stored from pre-runs
     target = {
-        "data_norm": 716.999,
-        "phi_m": 0.006225,
-        "phi_d": 92500.0,
+        "data_norm": 8.22434,
+        "phi_m": 9.915e-6,
+        "phi_d": 26.64,
     }
     # Run the forward
     workspace = setup_workspace(tmp_path, 0.05)
@@ -152,8 +152,8 @@ def test_susceptibility_run(tmp_path):
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
     )
-    # np.testing.assert_almost_equal(output["phi_m"][1], target["phi_m"])
-    # np.testing.assert_almost_equal(output["phi_d"][1], target["phi_d"])
+    np.testing.assert_almost_equal(output["phi_m"][1], target["phi_m"])
+    np.testing.assert_almost_equal(output["phi_d"][1], target["phi_d"])
 
     ##########################################################################
     # Solution should satisfy this condition if run to completion.
@@ -180,9 +180,9 @@ def test_magnetic_vector_run(tmp_path):
     H0 = (50000.0, 90.0, 0.0)
     # Values stored from pre-runs
     target = {
-        "data_norm": 716.999,
-        "phi_m": 0.0007209,
-        "phi_d": 147600.0,
+        "data_norm": 8.22434,
+        "phi_m": 4.295e-5,
+        "phi_d": 0.8521,
     }
     # Run the forward
     workspace = setup_workspace(tmp_path, 0.05)
@@ -206,9 +206,9 @@ def test_magnetic_vector_run(tmp_path):
 
     workspace = Workspace(workspace.h5file)
     tmi = workspace.get_entity("tmi")[0]
-    # np.testing.assert_almost_equal(
-    #     np.linalg.norm(tmi.values), target["data_norm"], decimal=3
-    # )
+    np.testing.assert_almost_equal(
+        np.linalg.norm(tmi.values), target["data_norm"], decimal=3
+    )
 
     # Run the inverse
     params = MagneticVectorParams(
@@ -222,9 +222,9 @@ def test_magnetic_vector_run(tmp_path):
         data_object=tmi.parent,
         starting_model=1e-4,
         s_norm=0.0,
-        x_norm=0.0,
-        y_norm=0.0,
-        z_norm=0.0,
+        x_norm=1.0,
+        y_norm=1.0,
+        z_norm=1.0,
         gradient_type="components",
         tmi_channel_bool=True,
         z_from_topo=False,
@@ -239,18 +239,19 @@ def test_magnetic_vector_run(tmp_path):
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
     )
-    # np.testing.assert_almost_equal(output["phi_m"][1], target["phi_m"])
-    # np.testing.assert_almost_equal(output["phi_d"][1], target["phi_d"])
+    np.testing.assert_almost_equal(output["phi_m"][1], target["phi_m"])
+    np.testing.assert_almost_equal(output["phi_d"][1], target["phi_d"])
 
     ##########################################################################
     # Solution should satisfy this condition if run to completion.
-    # To get validated with full run if values in 'target' need to be updated.
-    #
-    residual = (
-        np.linalg.norm(driver.inverse_problem.model - model)
-        / np.linalg.norm(model)
-        * 100.0
-    )
-    assert (
-        residual < 0.1
-    ), f"Deviation from the true solution is {residual}%. Please revise."
+    # To get validation with full run set:
+    # n_grid_points = 20
+    # h =  5
+    # max_iterations = 30
+    # residual = (
+    #         np.linalg.norm(driver.inverse_problem.model - fwr_driver.starting_model) /
+    #         np.linalg.norm(fwr_driver.starting_model) * 100.
+    # )
+    # assert residual < 2.0, (
+    #     f"Deviation from the true solution is {residual}%. Please revise."
+    # )
