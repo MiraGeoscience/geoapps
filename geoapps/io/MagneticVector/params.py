@@ -29,6 +29,8 @@ class MagneticVectorParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
+    forward_defaults = forward_defaults
+    inversion_defaults = inversion_defaults
 
     def __init__(self, forward=False, **kwargs):
 
@@ -36,7 +38,7 @@ class MagneticVectorParams(InversionParams):
             required_parameters, validations
         )
 
-        self.inversion_type: str = "mvi"
+        self.inversion_type: str = "magnetic vector"
         self.inducing_field_strength: float = None
         self.inducing_field_inclination: float = None
         self.inducing_field_declination: float = None
@@ -61,7 +63,7 @@ class MagneticVectorParams(InversionParams):
         self.reference_inclination = None
         self.reference_declination = None
 
-        self.defaults = forward_defaults if forward else inversion_defaults
+        self.defaults = inversion_defaults
         self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
         self.param_names = list(self.default_ui_json.keys())
 
@@ -69,7 +71,8 @@ class MagneticVectorParams(InversionParams):
             if isinstance(v, dict):
                 field = "value"
                 if "isValue" in v.keys():
-                    if not v["isValue"]:
+                    if not v["isValue"] or self.defaults[k] is None:
+                        v["isValue"] = False
                         field = "property"
                 self.default_ui_json[k][field] = self.defaults[k]
             else:

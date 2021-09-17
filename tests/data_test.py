@@ -135,7 +135,7 @@ def test_drape(tmp_path):
     test_locs = np.array([[1.0, 2.0, 1.0], [2.0, 1.0, 1.0], [8.0, 9.0, 1.0]])
     radar_ch = np.array([1.0, 2.0, 3.0])
     expected_locs = np.array([[1.0, 2.0, 2.0], [2.0, 1.0, 3.0], [8.0, 9.0, 4.0]])
-    draped_locs = data.drape(radar_ch, test_locs)
+    draped_locs = data.drape(test_locs, radar_ch)
 
     assert np.all(draped_locs == expected_locs)
 

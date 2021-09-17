@@ -10,6 +10,7 @@ from .utils import (
     downsample_grid,
     downsample_xy,
     filter_xy,
+    get_inversion_output,
     octree_2_treemesh,
     rotate_xy,
     treemesh_2_octree,

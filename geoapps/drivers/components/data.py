@@ -111,8 +111,8 @@ class InversionData(InversionLocations):
     def _initialize(self) -> None:
         """Extract data from the workspace using params data."""
 
-        self.vector = True if self.params.inversion_type == "mvi" else False
-        self.n_blocks = 3 if self.params.inversion_type == "mvi" else 1
+        self.vector = True if self.params.inversion_type == "magnetic vector" else False
+        self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
 
@@ -232,7 +232,11 @@ class InversionData(InversionLocations):
             if ignore_type in ["<", ">"]:
                 ignore_value = float(ignore_values.split(ignore_type)[1])
             else:
-                ignore_value = float(ignore_values)
+
+                try:
+                    ignore_value = float(ignore_values)
+                except ValueError:
+                    return None, None
 
             return ignore_value, ignore_type
         else:
@@ -265,9 +269,8 @@ class InversionData(InversionLocations):
         """Offset data locations in all three dimensions."""
         return locs + offset if offset is not None else 0
 
-    def drape(self, radar_offset: np.ndarray, locs: np.ndarray) -> np.ndarray:
+    def drape(self, locs: np.ndarray, radar_offset: np.ndarray) -> np.ndarray:
         """Drape data locations using radar channel offsets."""
-
         radar_offset_pad = np.zeros((len(radar_offset), 3))
         radar_offset_pad[:, 2] = radar_offset
 
@@ -320,7 +323,6 @@ class InversionData(InversionLocations):
         :return: survey: SimPEG Survey class that covers all data or optionally
             the portion of the data indexed by the local_index argument.
         """
-
         survey_factory = SurveyFactory(self.params)
         survey = survey_factory.build(
             self.locations, self.observed, self.uncertainties, local_index
@@ -352,7 +354,6 @@ class InversionData(InversionLocations):
             tile_id is provided map will simply be an identity map with no
             effect of the data.
         """
-
         simulation_factory = SimulationFactory(self.params)
         survey = self.survey(local_index)
 

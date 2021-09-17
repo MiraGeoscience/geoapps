@@ -9,12 +9,17 @@
 from uuid import UUID
 
 from geoh5py.workspace import Workspace
+from ipywidgets import Widget
 
 from geoapps.create.contours import ContourValues
 from geoapps.create.isosurface import IsoSurface
 from geoapps.create.surface_2d import Surface2D
+from geoapps.drivers.magnetic_vector_inversion import (
+    MagneticVectorDriver,
+    MagneticVectorParams,
+)
 from geoapps.export import Export
-from geoapps.inversion import InversionApp
+from geoapps.pf_inversion_app import InversionApp
 from geoapps.processing import (
     Calculator,
     Clustering,
@@ -22,7 +27,6 @@ from geoapps.processing import (
     DataInterpolation,
     EdgeDetectionApp,
 )
-from geoapps.processing.peak_finder import PeakFinder
 from geoapps.utils.testing import Geoh5Tester
 
 project = "FlinFlon.geoh5"
@@ -75,15 +79,46 @@ def test_inversion(tmp_path):
     geotest.copy_entity(UUID("{e334f687-df71-4538-ad28-264e420210b8}"))
     geotest.copy_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))
     geotest.copy_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))
-    geotest.copy_entity(UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"))
-    geotest.copy_entity(UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"))
-    app = InversionApp(
-        h5file=geotest.ws.h5file,
-        inversion_parameters={"max_iterations": 1},
-        plot_result=False,
-    )
-    app.write.value = True
-    app.run.value = True
+
+    params = {
+        "w_cell_size": 60,
+        "z_from_topo": False,
+        "forward_only": True,
+        "starting_model": 0.01,
+        "receivers_radar_drape": UUID("{6de9177a-8277-4e17-b76c-2b8b05dcf23c}"),
+    }
+
+    changes = {
+        "inducing_field_inclination": 35,
+        "detrend_data": True,
+    }
+
+    side_effects = {"starting_inclination": 35, "detrend_type": "all"}
+
+    app = InversionApp(h5file=geotest.ws.h5file, plot_result=False, **params)
+
+    for param, value in changes.items():
+        if isinstance(getattr(app, param), Widget):
+            getattr(app, param).value = value
+        else:
+            setattr(app, param, value)
+
+    app.write.click()
+
+    params_reload = MagneticVectorParams.from_path(app.params.input_file.filepath)
+
+    for param, value in params.items():
+        assert (
+            getattr(params_reload, param) == value
+        ), f"Parameter {param} not saved and loaded correctly."
+
+    for param, value in side_effects.items():
+        assert (
+            getattr(params_reload, param) == value
+        ), f"Side effect parameter {param} not saved and loaded correctly."
+
+    driver = MagneticVectorDriver(params_reload)
+    driver.run()
 
 
 def test_iso_surface():
