@@ -97,6 +97,8 @@ class InversionDriver:
 
     def _initialize(self):
 
+        ### Collect inversion components ###
+
         self.configure_dask()
 
         self.inversion_window = InversionWindow(self.workspace, self.params)
