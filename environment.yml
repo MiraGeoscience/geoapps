@@ -14,6 +14,7 @@ dependencies:
   - ipykernel
   - scikit-image
   - scikit-learn
+  - jupyter_client=6.1.12
   - zarr
   - fsspec
   - xarray
