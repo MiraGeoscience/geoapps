@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import os.path as path
+import os
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
@@ -59,7 +59,18 @@ class InversionParams(Params):
         self.window_width: float = None
         self.inversion_style: str = None
         self.chi_factor: float = None
+        self.sens_wts_threshold: float = None
+        self.every_iteration_bool: bool = None
+        self.f_min_change: float = None
+        self.minGNiter: float = None
+        self.beta_tol: float = None
+        self.prctile: float = None
+        self.coolingRate: float = None
+        self.coolEps_q: bool = None
+        self.coolEpsFact: float = None
+        self.beta_search: bool = None
         self.max_iterations: int = None
+        self.max_line_search_iterations: int = None
         self.max_cg_iterations: int = None
         self.max_global_iterations: int = None
         self.initial_beta: float = None
@@ -92,6 +103,17 @@ class InversionParams(Params):
         self.run_command_boolean: bool = None
         self.conda_environment: str = None
         self.conda_environment_boolean: bool = None
+
+        for k, v in self.default_ui_json.items():
+            if isinstance(v, dict):
+                field = "value"
+                if "isValue" in v.keys():
+                    if not v["isValue"] or self.defaults[k] is None:
+                        v["isValue"] = False
+                        field = "property"
+                self.default_ui_json[k][field] = self.defaults[k]
+            else:
+                self.default_ui_json[k] = self.defaults[k]
 
         super().__init__(**kwargs)
 
@@ -157,6 +179,17 @@ class InversionParams(Params):
             self.y_norm,
             self.z_norm,
         ]
+
+    def directive_params(self, directive_name):
+
+        if directive_name == "VectorInversion":
+            return {"chifact_target": self.chi_factor * 2}
+
+        elif directive_name == "Update_IRLS":
+            kwargs = {}
+            kwargs["f_min_change"] = self.f_min_change
+            kwargs["max_irls_iterations"] = self.max_iterations
+            kwargs[""]
 
     @property
     def forward_only(self):
@@ -744,6 +777,156 @@ class InversionParams(Params):
         self._chi_factor = val
 
     @property
+    def sens_wts_threshold(self):
+        return self._sens_wts_threshold
+
+    @sens_wts_threshold.setter
+    def sens_wts_threshold(self, val):
+        if val is None:
+            self._sens_wts_threshold = val
+            return
+        p = "sens_wts_threshold"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._sens_wts_threshold = val
+
+    @property
+    def every_iteration_bool(self):
+        return self._every_iteration_bool
+
+    @every_iteration_bool.setter
+    def every_iteration_bool(self, val):
+        if val is None:
+            self._every_iteration_bool = val
+            return
+        p = "every_iteration_bool"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._every_iteration_bool = val
+
+    @property
+    def f_min_change(self):
+        return self._f_min_change
+
+    @f_min_change.setter
+    def f_min_change(self, val):
+        if val is None:
+            self._f_min_change = val
+            return
+        p = "f_min_change"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._f_min_change = val
+
+    @property
+    def minGNiter(self):
+        return self._minGNiter
+
+    @minGNiter.setter
+    def minGNiter(self, val):
+        if val is None:
+            self._minGNiter = val
+            return
+        p = "minGNiter"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._minGNiter = val
+
+    @property
+    def beta_tol(self):
+        return self._beta_tol
+
+    @beta_tol.setter
+    def beta_tol(self, val):
+        if val is None:
+            self._beta_tol = val
+            return
+        p = "beta_tol"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._beta_tol = val
+
+    @property
+    def prctile(self):
+        return self._prctile
+
+    @prctile.setter
+    def prctile(self, val):
+        if val is None:
+            self._prctile = val
+            return
+        p = "prctile"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._prctile = val
+
+    @property
+    def coolingRate(self):
+        return self._coolingRate
+
+    @coolingRate.setter
+    def coolingRate(self, val):
+        if val is None:
+            self._coolingRate = val
+            return
+        p = "coolingRate"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._coolingRate = val
+
+    @property
+    def coolEps_q(self):
+        return self._coolEps_q
+
+    @coolEps_q.setter
+    def coolEps_q(self, val):
+        if val is None:
+            self._coolEps_q = val
+            return
+        p = "coolEps_q"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._coolEps_q = val
+
+    @property
+    def coolEpsFact(self):
+        return self._coolEpsFact
+
+    @coolEpsFact.setter
+    def coolEpsFact(self, val):
+        if val is None:
+            self._coolEpsFact = val
+            return
+        p = "coolEpsFact"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._coolEpsFact = val
+
+    @property
+    def beta_search(self):
+        return self._beta_search
+
+    @beta_search.setter
+    def beta_search(self, val):
+        if val is None:
+            self._beta_search = val
+            return
+        p = "beta_search"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._beta_search = val
+
+    @property
     def max_iterations(self):
         return self._max_iterations
 
@@ -757,6 +940,21 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._max_iterations = val
+
+    @property
+    def max_line_search_iterations(self):
+        return self._max_line_search_iterations
+
+    @max_line_search_iterations.setter
+    def max_line_search_iterations(self, val):
+        if val is None:
+            self._max_line_search_iterations = val
+            return
+        p = "max_line_search_iterations"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._max_line_search_iterations = val
 
     @property
     def max_cg_iterations(self):
@@ -1163,7 +1361,17 @@ class InversionParams(Params):
             self.run_command = defaults["run_command"]
 
         if default:
-            ifile = InputFile()
+            for k, v in defaults.items():
+                if isinstance(ui_json[k], dict):
+                    key = "value"
+                    if "isValue" in ui_json[k].keys():
+                        if ui_json[k]["isValue"] == False:
+                            key = "property"
+                    ui_json[k][key] = v
+                else:
+                    ui_json[k] = v
+
+            ifile = InputFile.from_dict(ui_json)
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
@@ -1172,7 +1380,10 @@ class InversionParams(Params):
             if name is None:
                 ifile.filepath = self.input_file.filepath
             else:
-                out_file = path.join(self.input_file.workpath, name)
+                if self.input_file.workpath is None:
+                    out_file = os.path.abspath(name)
+                else:
+                    out_file = os.path.join(self.input_file.workpath, name)
                 self.input_file.filepath = out_file
                 ifile.filepath = out_file
 

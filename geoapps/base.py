@@ -101,7 +101,6 @@ class BaseApplication:
         for key, value in kwargs.items():
             if key[0] == "_":
                 key = key[1:]
-
             if hasattr(self, "_" + key) or hasattr(self, key):
                 try:
                     if isinstance(getattr(self, key, None), Widget) and not isinstance(

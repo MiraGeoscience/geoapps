@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import json
-import os.path as op
+import os
 import warnings
 from copy import deepcopy
 from typing import Any, Callable
@@ -74,7 +74,7 @@ class InputFile:
                 self.load(data, self.validator)
 
     @classmethod
-    def from_dict(cls, dict: dict[str, Any], validator: InputValidator):
+    def from_dict(cls, dict: dict[str, Any], validator: InputValidator = None):
         ifile = cls()
         ifile.load(dict, validator)
         return ifile
@@ -108,7 +108,7 @@ class InputFile:
         if getattr(self, "_filepath", None) is None:
 
             if getattr(self, "workpath", None) is not None:
-                self._filepath = op.join(self.workpath, "default.ui.json")
+                self._filepath = os.path.join(self.workpath, "default.ui.json")
 
         return self._filepath
 
@@ -137,8 +137,14 @@ class InputFile:
                     path = self.workspace.h5file
 
             if path is not None:
-                self._workpath: str = op.dirname(op.abspath(path)) + op.sep
+                self._workpath: str = (
+                    os.path.dirname(os.path.abspath(path)) + os.path.sep
+                )
         return self._workpath
+
+    @workpath.setter
+    def workpath(self, v):
+        self._workpath = v
 
     def write_ui_json(
         self,
@@ -148,7 +154,6 @@ class InputFile:
     ) -> None:
         """
         Writes a ui.json formatted file from InputFile data
-
         Parameters
         ----------
         ui_dict :

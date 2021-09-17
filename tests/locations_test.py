@@ -94,6 +94,5 @@ def test_z_from_topo(tmp_path):
     ws, params = setup_params(tmp_path)
     window = params.window()
     locations = InversionLocations(ws, params, window)
-    locations.locs = np.array([[315674, 6070832, 0]])
-    locs = locations.set_z_from_topo(locations.locs)
+    locs = locations.set_z_from_topo(np.array([[315674, 6070832, 0]]))
     assert locs[0, 2] == 326
