@@ -1388,7 +1388,7 @@ class PeakFinder(ObjectDataSelection):
             )
         else:
 
-            channel_groups = groups_from_params_dict(params.free_params_dict)
+            channel_groups = groups_from_params_dict(survey, params.free_params_dict)
 
         active_channels = {}
         for group in channel_groups.values():
@@ -1987,7 +1987,10 @@ def groups_from_params_dict(entity: Entity, params_dict: dict):
         if group_params["data"] is not None:
 
             try:
-                group_id = uuid.UUID(group_params["data"])
+                group_id = group_params["data"]
+                if not isinstance(group_id, uuid.UUID):
+                    group_id = uuid.UUID(group_id)
+
             except ValueError:
                 group_id = None
 

@@ -46,7 +46,7 @@ class SimPEGFactory:
         self.inversion_type = params.inversion_type
         from SimPEG import dask
 
-        if self.inversion_type in ["mvi", "magnetic"]:
+        if self.inversion_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields import magnetics as data_module
 
             self.data_module = data_module
@@ -113,7 +113,7 @@ class SurveyFactory(SimPEGFactory):
         n_channels = len(components)
         tiled_local_index = np.tile(local_index, n_channels)
 
-        if self.inversion_type in ["mvi", "magnetic"]:
+        if self.inversion_type in ["magnetic vector", "magnetic scalar"]:
             parameters = self.params.inducing_field_aid()
 
         elif self.inversion_type in ["gravity"]:
@@ -198,16 +198,16 @@ class SimulationFactory(SimPEGFactory):
     def _get_args(self, active_cells: np.ndarray) -> dict[str, Any]:
         """Return inversion type specific kwargs dict for simulation object."""
 
-        if self.inversion_type == "mvi":
+        if self.inversion_type == "magnetic vector":
             args = {
                 "chiMap": maps.IdentityMap(nP=int(active_cells.sum()) * 3),
-                "modelType": "vector",
+                "model_type": "vector",
             }
 
         elif self.inversion_type == "gravity":
             args = {"rhoMap": maps.IdentityMap(nP=int(active_cells.sum()))}
 
-        elif self.inversion_type == "magnetic":
+        elif self.inversion_type == "magnetic scalar":
             args = {"chiMap": maps.IdentityMap(nP=int(active_cells.sum()))}
 
         return args

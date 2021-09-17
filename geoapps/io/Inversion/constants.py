@@ -144,9 +144,9 @@ default_ui_json = {
         "min": 0.0,
         "group": "Data Options",
         "optional": True,
-        "enabled": False,
+        "enabled": True,
         "label": "Resolution",
-        "value": 50.0,
+        "value": 0.0,
     },
     "detrend_data": {
         "group": "Data Options",
@@ -320,6 +320,15 @@ default_ui_json = {
         "label": "Window height",
         "value": 0.0,
     },
+    "window_azimuth": {
+        "min": -180,
+        "max": 180,
+        "group": "window",
+        "optional": True,
+        "enabled": False,
+        "label": "Window azimuth",
+        "value": 0.0,
+    },
     "inversion_style": {
         "choiceList": ["voxel"],
         "group": "Optimization",
@@ -369,7 +378,7 @@ default_ui_json = {
         "dependency": "provide_beta",
         "dependencyType": "enabled",
         "label": "Initial beta",
-        "value": 0.0,
+        "value": "",
     },
     "tol_cg": {
         "min": 0,
@@ -401,7 +410,7 @@ default_ui_json = {
         "label": "Z-smoothness weight",
         "value": 1.0,
     },
-    "smallness_norm": {
+    "s_norm": {
         "min": 0.0,
         "max": 2.0,
         "group": "Regularization",
@@ -566,6 +575,9 @@ default_ui_json = {
 }
 
 validations = {
+    "title": {
+        "types": [str],
+    },
     "forward_only": {
         "types": [bool],
         "reqs": [
@@ -678,6 +690,9 @@ validations = {
     "window_height": {
         "types": [int, float],
     },
+    "window_azimuth": {
+        "types": [int, float],
+    },
     "inversion_style": {
         "types": [str],
         "values": ["voxel"],
@@ -716,7 +731,7 @@ validations = {
     "alpha_z": {
         "types": [int, float],
     },
-    "smallness_norm": {
+    "s_norm": {
         "types": [int, float],
     },
     "x_norm": {
