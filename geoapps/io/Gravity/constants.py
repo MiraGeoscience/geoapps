@@ -70,7 +70,7 @@ inversion_defaults = {
     "window_azimuth": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
-    "sens_wts_threshold": 1e-3,
+    "sens_wts_threshold": 0.0,
     "every_iteration_bool": False,
     "f_min_change": 1e-4,
     "minGNiter": 1,
