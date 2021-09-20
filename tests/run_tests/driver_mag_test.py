@@ -5,108 +5,48 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from os import path
-
 import numpy as np
-from discretize.utils import active_from_xyz, mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import Points, Surface
 from geoh5py.workspace import Workspace
-from scipy.spatial import Delaunay
 from SimPEG import utils
 
-from geoapps.utils import get_inversion_output, treemesh_2_octree
+from geoapps.utils import get_inversion_output
+from geoapps.utils.testing import setup_inversion_workspace
 
-n_grid_points = 20  # Full run: 20
-h = 5.0  # Full run: 5.0
-max_iterations = 30  # Full run: 30
+# To test the full run and validate the inversion.
+# Move this file out of the test directory and run.
 
-
-def setup_workspace(work_dir, phys_prop):
-    project = path.join(work_dir, "mag_test.geoh5")
-    workspace = Workspace(project)
-
-    # Topography
-    xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
-    b = 100
-    A = 50
-    zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
-    topo = np.c_[utils.mkvc(xx), utils.mkvc(yy), utils.mkvc(zz)]
-    triang = Delaunay(topo[:, :2])
-
-    surf = Surface.create(
-        workspace, vertices=topo, cells=triang.simplices, name="topography"
-    )
-
-    # Observation points
-    xr = np.linspace(-100.0, 100.0, n_grid_points)
-    yr = np.linspace(-100.0, 100.0, n_grid_points)
-    X, Y = np.meshgrid(xr, yr)
-    Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + 5.0
-    points = Points.create(
-        workspace,
-        vertices=np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)],
-        name="survey",
-    )
-
-    # Create a mesh
-    padDist = np.ones((3, 2)) * 100
-    nCpad = [2, 4, 2]
-    mesh = mesh_builder_xyz(
-        points.vertices,
-        [h] * 3,
-        depth_core=100.0,
-        padding_distance=padDist,
-        mesh_type="TREE",
-    )
-    mesh = refine_tree_xyz(
-        mesh,
-        topo,
-        method="surface",
-        octree_levels=nCpad,
-        octree_levels_padding=nCpad,
-        finalize=True,
-    )
-    octree = treemesh_2_octree(workspace, mesh, name="mesh")
-    active = active_from_xyz(mesh, surf.vertices, grid_reference="N")
-
-    # Model
-    model = utils.model_builder.addBlock(
-        mesh.gridCC,
-        np.zeros(mesh.nC),
-        np.r_[-20, -20, -15],
-        np.r_[20, 20, 20],
-        phys_prop,
-    )
-    model[~active] = np.nan
-    octree.add_data({"model": {"values": model[mesh._ubc_order]}})
-    octree.copy()  # Keep a copy around for ref
-
-    return workspace
+target_susceptibility_run = {
+    "data_norm": 7.33970,
+    "phi_d": 0.6644,
+    "phi_m": 2.112e-5,
+}
 
 
-def test_susceptibility_run(tmp_path):
+def test_susceptibility_run(
+    tmp_path,
+    n_grid_points=2,
+    max_iterations=1,
+    pytest=True,
+    refinement=(2,),
+):
     from geoapps.drivers.magnetic_scalar_inversion import MagneticScalarDriver
     from geoapps.io.MagneticScalar.params import MagneticScalarParams
 
-    # Inducing field
-    H0 = (50000.0, 90.0, 0.0)
-    # Values stored from pre-runs
-    target = {
-        "data_norm": 8.22434,
-        "phi_m": 9.915e-6,
-        "phi_d": 26.64,
-    }
+    np.random.seed(0)
+    inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    workspace = setup_workspace(tmp_path, 0.05)
+    workspace = setup_inversion_workspace(
+        tmp_path, 0.05, n_grid_points=n_grid_points, refinement=refinement
+    )
     model = workspace.get_entity("model")[0]
     params = MagneticScalarParams(
         forward_only=True,
         workspace=workspace,
         mesh=model.parent,
         topography_object=workspace.get_entity("topography")[0],
-        inducing_field_strength=H0[0],
-        inducing_field_inclination=H0[1],
-        inducing_field_declination=H0[2],
+        inducing_field_strength=inducing_field[0],
+        inducing_field_inclination=inducing_field[1],
+        inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
         data_object=workspace.get_entity("survey")[0],
@@ -115,22 +55,17 @@ def test_susceptibility_run(tmp_path):
     )
     fwr_driver = MagneticScalarDriver(params)
     fwr_driver.run()
-
     workspace = Workspace(workspace.h5file)
     tmi = workspace.get_entity("tmi")[0]
-    np.testing.assert_almost_equal(
-        np.linalg.norm(tmi.values), target["data_norm"], decimal=3
-    )
-
     # Run the inverse
     np.random.seed(0)
     params = MagneticScalarParams(
         workspace=workspace,
         mesh=workspace.get_entity("mesh")[0],
         topography_object=workspace.get_entity("topography")[0],
-        inducing_field_strength=H0[0],
-        inducing_field_inclination=H0[1],
-        inducing_field_declination=H0[2],
+        inducing_field_strength=inducing_field[0],
+        inducing_field_inclination=inducing_field[1],
+        inducing_field_declination=inducing_field[2],
         resolution=0.0,
         data_object=tmi.parent,
         starting_model=1e-4,
@@ -143,59 +78,63 @@ def test_susceptibility_run(tmp_path):
         tmi_channel_bool=True,
         z_from_topo=False,
         tmi_channel=tmi,
-        tmi_uncertainty=1.0,
+        tmi_uncertainty=4.0,
         max_iterations=max_iterations,
+        initial_beta_ratio=1e0,
     )
     driver = MagneticScalarDriver(params)
     driver.run()
-
-    # Re-open the workspace and get iterations
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
     )
-    np.testing.assert_almost_equal(output["phi_m"][1], target["phi_m"])
-    np.testing.assert_almost_equal(output["phi_d"][1], target["phi_d"])
-
-    ##########################################################################
-    # Solution should satisfy this condition if run to completion.
-    # To get validation with full run set:
-    # n_grid_points = 20
-    # h =  5
-    # max_iterations = 30
-    # residual = (
-    #         np.linalg.norm(driver.inverse_problem.model - fwr_driver.starting_model) /
-    #         np.linalg.norm(fwr_driver.starting_model) * 100.
-    # )
-    # assert residual < 2.0, (
-    #     f"Deviation from the true solution is {residual}%. Please revise."
-    # )
+    if pytest:
+        np.testing.assert_almost_equal(
+            np.linalg.norm(tmi.values),
+            target_susceptibility_run["data_norm"],
+            decimal=3,
+        )
+        np.testing.assert_almost_equal(
+            output["phi_m"][1], target_susceptibility_run["phi_m"]
+        )
+        np.testing.assert_almost_equal(
+            output["phi_d"][1], target_susceptibility_run["phi_d"]
+        )
+    else:
+        return fwr_driver.starting_model, driver.inverse_problem.model
 
 
-def test_magnetic_vector_run(tmp_path):
+target_magnetic_vector_run = {
+    "data_norm": 5.78921,
+    "phi_d": 0.01857,
+    "phi_m": 1.083e-5,
+}
+
+
+def test_magnetic_vector_run(
+    tmp_path,
+    n_grid_points=2,
+    max_iterations=1,
+    pytest=True,
+    refinement=(2,),
+):
     from geoapps.drivers.magnetic_vector_inversion import MagneticVectorDriver
     from geoapps.io.MagneticVector.params import MagneticVectorParams
 
     np.random.seed(0)
-
-    # Inducing field
-    H0 = (50000.0, 90.0, 0.0)
-    # Values stored from pre-runs
-    target = {
-        "data_norm": 8.22434,
-        "phi_m": 4.295e-5,
-        "phi_d": 0.8521,
-    }
+    inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    workspace = setup_workspace(tmp_path, 0.05)
+    workspace = setup_inversion_workspace(
+        tmp_path, 0.05, n_grid_points=n_grid_points, refinement=refinement
+    )
     model = workspace.get_entity("model")[0]
     params = MagneticVectorParams(
         forward_only=True,
         workspace=workspace,
         mesh=model.parent,
         topography_object=workspace.get_entity("topography")[0],
-        inducing_field_strength=H0[0],
-        inducing_field_inclination=H0[1],
-        inducing_field_declination=H0[2],
+        inducing_field_strength=inducing_field[0],
+        inducing_field_inclination=inducing_field[1],
+        inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
         data_object=workspace.get_entity("survey")[0],
@@ -204,23 +143,18 @@ def test_magnetic_vector_run(tmp_path):
         starting_inclination=45,
         starting_declination=270,
     )
-    driver = MagneticVectorDriver(params)
-    driver.run()
-
+    fwr_driver = MagneticVectorDriver(params)
+    fwr_driver.run()
     workspace = Workspace(workspace.h5file)
     tmi = workspace.get_entity("tmi")[0]
-    # np.testing.assert_almost_equal(
-    #     np.linalg.norm(tmi.values), target["data_norm"], decimal=3
-    # )
-
     # Run the inverse
     params = MagneticVectorParams(
         workspace=workspace,
         mesh=workspace.get_entity("mesh")[0],
         topography_object=workspace.get_entity("topography")[0],
-        inducing_field_strength=H0[0],
-        inducing_field_inclination=H0[1],
-        inducing_field_declination=H0[2],
+        inducing_field_strength=inducing_field[0],
+        inducing_field_inclination=inducing_field[1],
+        inducing_field_declination=inducing_field[2],
         resolution=0.0,
         data_object=tmi.parent,
         starting_model=1e-4,
@@ -232,29 +166,50 @@ def test_magnetic_vector_run(tmp_path):
         tmi_channel_bool=True,
         z_from_topo=False,
         tmi_channel=tmi,
-        tmi_uncertainty=1.0,
+        tmi_uncertainty=4.0,
         max_iterations=max_iterations,
+        initial_beta_ratio=1e1,
+        prctile=100,
     )
     driver = MagneticVectorDriver(params)
     driver.run()
-
     # Re-open the workspace and get iterations
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
     )
-    # np.testing.assert_almost_equal(output["phi_m"][1], target["phi_m"])
-    # np.testing.assert_almost_equal(output["phi_d"][1], target["phi_d"])
+    if pytest:
+        np.testing.assert_almost_equal(
+            output["phi_m"][1], target_magnetic_vector_run["phi_m"]
+        )
+        np.testing.assert_almost_equal(
+            output["phi_d"][1], target_magnetic_vector_run["phi_d"]
+        )
+        np.testing.assert_almost_equal(
+            np.linalg.norm(tmi.values),
+            target_magnetic_vector_run["data_norm"],
+            decimal=3,
+        )
+    else:
+        return fwr_driver.starting_model, utils.spherical2cartesian(
+            driver.inverse_problem.model
+        )
 
-    ##########################################################################
-    # Solution should satisfy this condition if run to completion.
-    # To get validation with full run set:
-    # n_grid_points = 20
-    # h =  5
-    # max_iterations = 30
-    # residual = (
-    #         np.linalg.norm(driver.inverse_problem.model - fwr_driver.starting_model) /
-    #         np.linalg.norm(fwr_driver.starting_model) * 100.
-    # )
-    # assert residual < 2.0, (
-    #     f"Deviation from the true solution is {residual}%. Please revise."
-    # )
+
+if __name__ == "__main__":
+    # Full run
+    m_start, m_rec = test_susceptibility_run(
+        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 6)
+    )
+    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
+    assert (
+        residual < 15.0
+    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
+    print("Susceptibility model is within 15% of the answer. Well done you!")
+    m_start, m_rec = test_magnetic_vector_run(
+        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 6)
+    )
+    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
+    assert (
+        residual < 50.0
+    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
+    print("MVI model is within 50% of the answer. Done!")
