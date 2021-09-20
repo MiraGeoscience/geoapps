@@ -69,7 +69,7 @@ class Geoh5Tester:
 
 
 def setup_inversion_workspace(work_dir, phys_prop, n_grid_points=20, refinement=(4, 6)):
-    project = os.path.join(work_dir, "mag_test.geoh5")
+    project = os.path.join(work_dir, "inversion_test.geoh5")
     workspace = Workspace(project)
     # Topography
     xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
