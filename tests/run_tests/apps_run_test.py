@@ -83,7 +83,6 @@ def test_inversion(tmp_path):
     geotest.copy_entity(UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"))
 
     params = {
-        "max_iterations": 1,
         "w_cell_size": 60,
         "z_from_topo": False,
         "forward_only": True,
