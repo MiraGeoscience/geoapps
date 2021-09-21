@@ -106,6 +106,9 @@ def inversion(input_file):
             # Spherical or sparse
             max_iterations = 40
 
+    if "forward_only" in input_param:
+        max_iterations = 0
+
     if "max_cg_iterations" in list(input_param.keys()):
         max_cg_iterations = input_param["max_cg_iterations"]
     else:
@@ -708,6 +711,10 @@ def inversion(input_file):
 
     survey.dobs = dobs
     survey.std = uncert
+
+    if "forward_only" in input_param:
+        reference = starting
+        print("**** Running Forward Only ****")
 
     if isinstance(reference, str):
         print("**** Best-fitting halfspace inversion ****")
