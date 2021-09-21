@@ -25,7 +25,7 @@ from geoapps.processing import (
     EdgeDetectionApp,
 )
 
-project = "../FlinFlon.geoh5"
+project = "./FlinFlon.geoh5"
 workspace = Workspace(project)
 
 
