@@ -468,11 +468,9 @@ class InversionData(InversionLocations):
             tile_id is provided map will simply be an identity map with no
             effect of the data.
         """
-
         simulation_factory = SimulationFactory(self.params)
 
         if tile_id is None:
-
             map = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
             sim = simulation_factory.build(
                 survey=survey, global_mesh=mesh, active_cells=active_cells, map=map
@@ -514,14 +512,7 @@ class InversionData(InversionLocations):
             self.predicted[c] = d[:, i]
 
         if save:
-            if self.is_rotated:
-                locs = self.locations.copy()
-                locs[:, :2] = rotate_xy(
-                    locs[:, :2],
-                    self.origin,
-                    -1 * self.angle,
-                )
-
+            # TODO Should rotate the x,y (and/or tensor) components of the fields if used.
             for comp in self.components:
                 val = self.normalizations[comp] * self.predicted[comp]
                 self.predicted_data_object = self.entity.add_data(

@@ -59,12 +59,12 @@ inversion_defaults = {
     "window_height": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
-    "sens_wts_threshold": 1e-3,
+    "sens_wts_threshold": 0.0,
     "every_iteration_bool": False,
     "f_min_change": 1e-4,
     "minGNiter": 1,
     "beta_tol": 0.5,
-    "prctile": 50,
+    "prctile": 95,
     "coolingRate": 1,
     "coolEps_q": True,
     "coolEpsFact": 1.2,
@@ -188,6 +188,8 @@ for k, v in inversion_defaults.items():
             if default_ui_json[k]["isValue"] == False:
                 key = "property"
         default_ui_json[k][key] = v
+        if "enabled" in default_ui_json[k].keys() and v is not None:
+            default_ui_json[k]["enabled"] = True
     else:
         default_ui_json[k] = v
 

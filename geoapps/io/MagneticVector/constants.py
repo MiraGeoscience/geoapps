@@ -74,19 +74,19 @@ inversion_defaults = {
     "max_distance": np.inf,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
-    "window_center_x": 0.0,
-    "window_center_y": 0.0,
-    "window_width": 0.0,
-    "window_height": 0.0,
-    "window_azimuth": 0.0,
+    "window_center_x": None,
+    "window_center_y": None,
+    "window_width": None,
+    "window_height": None,
+    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
-    "sens_wts_threshold": 1e-3,
+    "sens_wts_threshold": 0.0,
     "every_iteration_bool": False,
     "f_min_change": 1e-4,
     "minGNiter": 1,
     "beta_tol": 0.5,
-    "prctile": 50,
+    "prctile": 95,
     "coolingRate": 1,
     "coolEps_q": True,
     "coolEpsFact": 1.2,
@@ -107,7 +107,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": None,
+    "reference_model": 0.0,
     "reference_inclination_object": None,
     "reference_declination_object": None,
     "reference_inclination": None,
@@ -170,11 +170,11 @@ forward_defaults = {
     "max_distance": np.inf,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
-    "window_center_x": 0.0,
-    "window_center_y": 0.0,
-    "window_width": 0.0,
-    "window_height": 0.0,
-    "window_azimuth": 0.0,
+    "window_center_x": None,
+    "window_center_y": None,
+    "window_width": None,
+    "window_height": None,
+    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -444,6 +444,8 @@ for k, v in inversion_defaults.items():
             if default_ui_json[k]["isValue"] == False:
                 key = "property"
         default_ui_json[k][key] = v
+        if "enabled" in default_ui_json[k].keys() and v is not None:
+            default_ui_json[k]["enabled"] = True
     else:
         default_ui_json[k] = v
 
@@ -475,7 +477,7 @@ validations = {
         "reqs": [("data_object"), (True, "tmi_channel_bool")],
     },
     "tmi_uncertainty": {
-        "types": [str, int, float],
+        "types": [str, int, float, UUID],
         "reqs": [(True, "tmi_channel_bool")],
     },
     "bx_channel_bool": {"types": [bool]},
@@ -483,19 +485,28 @@ validations = {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "bx_channel_bool")],
     },
-    "bx_uncertainty": {"types": [str, int, float], "reqs": [(True, "bx_channel_bool")]},
+    "bx_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "bx_channel_bool")],
+    },
     "by_channel_bool": {"types": [bool]},
     "by_channel": {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "by_channel_bool")],
     },
-    "by_uncertainty": {"types": [str, int, float], "reqs": [(True, "by_channel_bool")]},
+    "by_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "by_channel_bool")],
+    },
     "bz_channel_bool": {"types": [bool]},
     "bz_channel": {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "bz_channel_bool")],
     },
-    "bz_uncertainty": {"types": [str, int, float], "reqs": [(True, "bz_channel_bool")]},
+    "bz_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "bz_channel_bool")],
+    },
     "starting_inclination_object": {
         "types": [str, UUID],
     },
@@ -539,7 +550,7 @@ app_initializer = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "resolution": 50,
+    "resolution": 0.0,
     "octree_levels_topo": [0, 0, 0, 2],
     "octree_levels_obs": [5, 5, 5, 5],
     "depth_core": 500.0,
