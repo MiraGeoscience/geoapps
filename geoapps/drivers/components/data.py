@@ -198,11 +198,12 @@ class InversionData(InversionLocations):
 
         if isinstance(data_object, PotentialElectrode):
             locs["sources"] = super().get_locations(data_object.current_electrodes)
-            locs["pseudo"] = np.c_[
-                data_object.get_data("Pseudo X")[0].values,
-                data_object.get_data("Pseudo Y")[0].values,
-                data_object.get_data("Pseudo Z")[0].values,
-            ]
+            if data_object.get_data("Pseudo X"):
+                locs["pseudo"] = np.c_[
+                    data_object.get_data("Pseudo X")[0].values,
+                    data_object.get_data("Pseudo Y")[0].values,
+                    data_object.get_data("Pseudo Z")[0].values,
+                ]
 
         return locs
 
