@@ -550,7 +550,7 @@ app_initializer = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "resolution": 0.0,
+    "resolution": 50.0,
     "octree_levels_topo": [0, 0, 0, 2],
     "octree_levels_obs": [5, 5, 5, 5],
     "depth_core": 500.0,
