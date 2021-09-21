@@ -14,10 +14,7 @@ from ipywidgets import Widget
 from geoapps.create.contours import ContourValues
 from geoapps.create.isosurface import IsoSurface
 from geoapps.create.surface_2d import Surface2D
-from geoapps.drivers.magnetic_vector_inversion import (
-    MagneticVectorDriver,
-    MagneticVectorParams,
-)
+from geoapps.drivers.magnetic_vector_inversion import MagneticVectorParams
 from geoapps.export import Export
 from geoapps.pf_inversion_app import InversionApp
 from geoapps.processing import (
@@ -27,9 +24,8 @@ from geoapps.processing import (
     DataInterpolation,
     EdgeDetectionApp,
 )
-from geoapps.utils.testing import Geoh5Tester
 
-project = "FlinFlon.geoh5"
+project = "../FlinFlon.geoh5"
 workspace = Workspace(project)
 
 
@@ -73,12 +69,13 @@ def test_export():
     app.trigger.click()
 
 
-def test_inversion():
+def test_inversion(tmp_path):
     params = {
         "w_cell_size": 60,
         "z_from_topo": False,
         "forward_only": True,
         "starting_model": 0.01,
+        "topography": None,
         "receivers_radar_drape": UUID("{6de9177a-8277-4e17-b76c-2b8b05dcf23c}"),
     }
 
@@ -90,6 +87,7 @@ def test_inversion():
     side_effects = {"starting_inclination": 35, "detrend_type": "all"}
 
     app = InversionApp(h5file=project, plot_result=False, **params)
+    app.monitoring_directory = str(tmp_path)
 
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):
@@ -110,9 +108,6 @@ def test_inversion():
         assert (
             getattr(params_reload, param) == value
         ), f"Side effect parameter {param} not saved and loaded correctly."
-
-    driver = MagneticVectorDriver(params_reload)
-    driver.run()
 
 
 def test_iso_surface():
