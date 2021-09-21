@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=R0904
 
 import tempfile
 from pathlib import Path
@@ -54,8 +55,8 @@ def test_create_octree_app():
         ]
 
         max_distance = 200
-        refine_A = [4, 4, 4]
-        refine_B = [0, 0, 4]
+        refine_a = [4, 4, 4]
+        refine_b = [0, 0, 4]
 
         # Create a tree mesh from discretize
         treemesh = mesh_builder_xyz(
@@ -70,7 +71,7 @@ def test_create_octree_app():
             treemesh,
             points.vertices,
             method="radial",
-            octree_levels=refine_A,
+            octree_levels=refine_a,
             max_distance=max_distance,
             finalize=False,
         )
@@ -79,7 +80,7 @@ def test_create_octree_app():
             treemesh,
             topo.vertices,
             method="surface",
-            octree_levels=refine_B,
+            octree_levels=refine_b,
             max_distance=max_distance,
             finalize=True,
         )
@@ -90,13 +91,13 @@ def test_create_octree_app():
         refinements = {
             "Refinement A": {
                 "object": str(points.uid),
-                "levels": "".join([str(val) for val in refine_A]),
+                "levels": "".join([str(val) for val in refine_a]),
                 "type": "radial",
                 "distance": max_distance,
             },
             "Refinement B": {
                 "object": str(topo.uid),
-                "levels": "".join([str(val) for val in refine_B]),
+                "levels": "".join([str(val) for val in refine_b]),
                 "type": "surface",
                 "distance": max_distance,
             },
