@@ -7,6 +7,7 @@
 
 
 import numpy as np
+import requests
 import SimPEG
 from geoh5py.workspace import Workspace
 
@@ -14,6 +15,11 @@ from geoapps.drivers.components import InversionData
 from geoapps.io.MagneticVector import MagneticVectorParams
 from geoapps.io.MagneticVector.constants import default_ui_json
 from geoapps.utils.testing import Geoh5Tester
+
+project = "FlinFlon.geoh5"
+url = "https://github.com/MiraGeoscience/geoapps/raw/main/assets/FlinFlon.geoh5"
+r = requests.get(url)
+open(project, "wb").write(r.content)
 
 workspace = Workspace("./FlinFlon.geoh5")
 
