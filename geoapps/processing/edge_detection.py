@@ -328,14 +328,14 @@ class EdgeDetectionApp(PlotSelection2D):
             self.resolution.value,
             window={
                 "center": [
-                    self.center_x.value,
-                    self.center_y.value,
+                    self.window_center_x.value,
+                    self.window_center_y.value,
                 ],
                 "size": [
-                    self.width.value,
-                    self.height.value,
+                    self.window_width.value,
+                    self.window_height.value,
                 ],
-                "azimuth": self.azimuth.value,
+                "azimuth": self.window_azimuth.value,
             },
         )
         indices_2 = filter_xy(
@@ -344,14 +344,14 @@ class EdgeDetectionApp(PlotSelection2D):
             self.resolution.value,
             window={
                 "center": [
-                    self.center_x.value,
-                    self.center_y.value,
+                    self.window_center_x.value,
+                    self.window_center_y.value,
                 ],
                 "size": [
-                    self.width.value,
-                    self.height.value,
+                    self.window_width.value,
+                    self.window_height.value,
                 ],
-                "azimuth": self.azimuth.value,
+                "azimuth": self.window_azimuth.value,
             },
         )
 

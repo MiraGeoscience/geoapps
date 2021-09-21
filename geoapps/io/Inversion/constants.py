@@ -384,7 +384,7 @@ default_ui_json = {
         "visible": True,
         "enabled": False,
         "label": "percentile",
-        "value": 50,
+        "value": 95,
     },
     "coolingRate": {
         "group": "Update IRLS directive",
@@ -445,7 +445,7 @@ default_ui_json = {
         "dependency": "initial_beta",
         "dependencyType": "disabled",
         "label": "Initial beta ratio",
-        "value": 1e2,
+        "value": 1e1,
     },
     "initial_beta": {
         "min": 0.0,

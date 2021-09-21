@@ -71,7 +71,7 @@ class InversionModelCollection:
     def reference(self):
         mref = self._reference.model
         use_log = True if self.is_sigma else False
-        if all(mref == 0) | (mref is None):
+        if mref is None:
             self.params.alpha_s = 0.0
             mref = self.starting
             use_log = False

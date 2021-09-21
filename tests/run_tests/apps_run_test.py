@@ -73,13 +73,7 @@ def test_export():
     app.trigger.click()
 
 
-def test_inversion(tmp_path):
-    test_ws_path = "test.geoh5"
-    geotest = Geoh5Tester(workspace, tmp_path, test_ws_path)
-    geotest.copy_entity(UUID("{e334f687-df71-4538-ad28-264e420210b8}"))
-    geotest.copy_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))
-    geotest.copy_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))
-
+def test_inversion():
     params = {
         "w_cell_size": 60,
         "z_from_topo": False,
@@ -95,7 +89,7 @@ def test_inversion(tmp_path):
 
     side_effects = {"starting_inclination": 35, "detrend_type": "all"}
 
-    app = InversionApp(h5file=geotest.ws.h5file, plot_result=False, **params)
+    app = InversionApp(h5file=project, plot_result=False, **params)
 
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):

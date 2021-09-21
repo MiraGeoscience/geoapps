@@ -76,6 +76,7 @@ class PeakFinder(ObjectDataSelection):
     Application for the picking of targets along Time-domain EM profiles
     """
 
+    defaults = {}
     _param_class = PeakFinderParams
     _add_groups = "only"
     _center = None
