@@ -1,4 +1,4 @@
 [run]
 omit =
-    geoh5py/handlers/*
-    geoh5py/interfaces/*
+    geoapps/simpegEM1D/*
+    geoapps/simpegPF/*
