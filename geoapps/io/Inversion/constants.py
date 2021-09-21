@@ -422,7 +422,7 @@ default_ui_json = {
     },
     "max_line_search_iterations": {
         "group": "Optimization",
-        "label": "Max least squares iteration count",
+        "label": "Max line search iteration count",
         "value": 20,
     },
     "max_cg_iterations": {

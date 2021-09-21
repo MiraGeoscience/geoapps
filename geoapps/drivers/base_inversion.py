@@ -125,10 +125,6 @@ class InversionDriver:
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
         self.models.remove_air(self.active_cells)
-        self.active_cells_map = maps.InjectActiveCells(
-            self.mesh, self.active_cells, np.nan
-        )
-
         self.n_cells = int(np.sum(self.active_cells))
         self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1

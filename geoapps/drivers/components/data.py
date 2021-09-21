@@ -475,7 +475,7 @@ class InversionData(InversionLocations):
 
             map = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
             sim = simulation_factory.build(
-                survey=survey, mesh=mesh, active_cells=active_cells, map=map
+                survey=survey, global_mesh=mesh, active_cells=active_cells, map=map
             )
 
         else:
@@ -485,7 +485,8 @@ class InversionData(InversionLocations):
             map = maps.TileMap(mesh, active_cells, nested_mesh, **kwargs)
             sim = simulation_factory.build(
                 survey=survey,
-                mesh=nested_mesh,
+                global_mesh=mesh,
+                local_mesh=nested_mesh,
                 active_cells=map.local_active,
                 map=map,
                 tile_id=tile_id,

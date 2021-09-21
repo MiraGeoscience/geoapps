@@ -25,6 +25,8 @@ class InducedPolarizationParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
+    forward_defaults = forward_defaults
+    inversion_defaults = inversion_defaults
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -38,7 +40,7 @@ class InducedPolarizationParams(InversionParams):
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
-        self.inversion_type = "induced_polarization"
+        self.inversion_type = "induced polarization"
         self.chargeability_channel_bool = None
         self.chargeability_channel = None
         self.chargeability_uncertainty = None
