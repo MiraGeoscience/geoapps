@@ -36,7 +36,11 @@ def test_susceptibility_run(
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
     workspace = setup_inversion_workspace(
-        tmp_path, 0.05, n_grid_points=n_grid_points, refinement=refinement
+        tmp_path,
+        background=0.0,
+        anomaly=0.05,
+        n_grid_points=n_grid_points,
+        refinement=refinement,
     )
     model = workspace.get_entity("model")[0]
     params = MagneticScalarParams(
