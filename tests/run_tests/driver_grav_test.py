@@ -7,6 +7,7 @@
 
 import numpy as np
 from geoh5py.workspace import Workspace
+from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
@@ -15,9 +16,9 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_gravity_run = {
-    "data_norm": 7.33970,
-    "phi_d": 0.6644,
-    "phi_m": 2.112e-5,
+    "data_norm": 0.00636,
+    "phi_d": 0.0002888,
+    "phi_m": 0.02895,
 }
 
 
@@ -34,7 +35,7 @@ def test_gravity_run(
     np.random.seed(0)
     # Run the forward
     workspace = setup_inversion_workspace(
-        tmp_path, 0.25, n_grid_points=n_grid_points, refinement=refinement
+        tmp_path, 0.75, n_grid_points=n_grid_points, refinement=refinement
     )
     model = workspace.get_entity("model")[0]
     params = GravityParams(
@@ -62,16 +63,17 @@ def test_gravity_run(
         data_object=gz.parent,
         starting_model=1e-4,
         s_norm=0.0,
-        x_norm=0.0,
-        y_norm=0.0,
-        z_norm=0.0,
+        x_norm=1.0,
+        y_norm=1.0,
+        z_norm=1.0,
         gradient_type="components",
         gz_channel_bool=True,
         z_from_topo=False,
         gz_channel=gz,
-        gz_uncertainty=5e-4,
+        gz_uncertainty=2e-3,
         max_iterations=max_iterations,
-        initial_beta_ratio=1e0,
+        initial_beta_ratio=1e-2,
+        prctile=100,
     )
     driver = GravityDriver(params)
     driver.run()
@@ -97,6 +99,6 @@ if __name__ == "__main__":
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
-        residual < 15.0
+        residual < 20.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
     print("Susceptibility model is within 15% of the answer. Well done you!")
