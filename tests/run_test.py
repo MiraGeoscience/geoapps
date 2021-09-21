@@ -5,7 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
 from uuid import UUID
 
 from geoh5py.workspace import Workspace
