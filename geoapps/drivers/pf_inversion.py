@@ -529,11 +529,13 @@ def inversion(input_file):
                     else:
                         topo = topo_entity.vertices
 
-                    if input_dict["topography"]["GA_object"]["data"] != "Z":
+                    try:
                         data = workspace.get_entity(
                             uuid.UUID(input_dict["topography"]["GA_object"]["data"])
                         )[0]
                         topo[:, 2] = data.values
+                    except (ValueError, IndexError):
+                        pass
 
                 if window is not None:
 
