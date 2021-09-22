@@ -18,6 +18,7 @@ from geoh5py.workspace import Workspace
 
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.utils import (
+    calculate_2D_trend,
     downsample_grid,
     downsample_xy,
     filter_xy,
@@ -299,3 +300,19 @@ def test_filter_xy():
     window["azimuth"] = -30
     combo_mask_test = filter_xy(xg_rot, yg_rot, distance=2, window=window)
     assert np.all(combo_mask_test == combo_mask)
+
+
+def test_detrend_xy():
+    xg, yg = np.meshgrid(np.arange(64), np.arange(64))
+    xy = np.c_[xg.flatten(), yg.flatten()]
+
+    coefficients = np.random.randn(3)
+    values = coefficients[0] + coefficients[1] * xy[:, 0] + coefficients[2] * xy[:, 1]
+
+    ind_nan = np.random.randint(0, high=values.shape[0] - 1, size=32)
+    nan_values = values.copy()
+    nan_values[ind_nan] = np.nan
+
+    comp_trend, comp_params = calculate_2D_trend(xy, nan_values, order=1, method="all")
+
+    np.testing.assert_almost_equal(values, comp_trend)
