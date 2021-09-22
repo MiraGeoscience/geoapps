@@ -289,7 +289,9 @@ class SurveyFactory(SimPEGFactory):
                 else self.local_index
             )
             tiled_local_index = np.tile(ind, n_channels)
-            survey.dobs = self._stack_channels(data)[tiled_local_index]
+            data_vec = self._stack_channels(data)[tiled_local_index]
+            data_vec[np.isnan(data_vec)] = 0.0  # Nan's handled by inf uncertainties
+            survey.dobs = data_vec
             survey.std = self._stack_channels(uncertainties)[tiled_local_index]
 
         if self.factory_type == "direct current":

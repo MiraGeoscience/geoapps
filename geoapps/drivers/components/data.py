@@ -335,6 +335,8 @@ class InversionData(InversionLocations):
             return None
 
         unc = uncertainties.copy()
+        unc[np.isnan(data)] = np.inf
+
         if self.ignore_value is None:
             return unc
         elif self.ignore_type == "<":
