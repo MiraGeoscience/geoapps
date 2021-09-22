@@ -364,43 +364,36 @@ def calculate_2D_trend(
             f"Only {ind_nan.sum():.0f} values found."
         )
 
-    output = np.ones_like(values) * np.nan
-    points = points[ind_nan, :]
+    loc_xy = points[ind_nan, :]
     values = values[ind_nan]
 
     if method == "corners":
-        hull = ConvexHull(points[:, :2])
+        hull = ConvexHull(loc_xy[:, :2])
         # Extract only those points that make the ConvexHull
-        pts = np.c_[points[hull.vertices, :2], values[hull.vertices]]
-    elif method == "all":
-        # Extract all points
-        pts = np.c_[points[:, :2], values]
-    else:
+        loc_xy = loc_xy[hull.vertices, :2]
+        values = values[hull.vertices]
+    elif not method == "all":
         raise ValueError(
             "'method' must be either 'all', or 'corners'. " f"Value {method} provided"
         )
 
     if order == 0:
-        data_trend = np.mean(pts[:, 2]) * np.ones(points[:, 0].shape)
-        print(f"Removed data mean: {data_trend[0]:.6g}")
-        params = np.r_[0, 0, data_trend]
+        data_trend = np.mean(values) * np.ones(points[:, 0].shape)
+        params = np.r_[data_trend]
     elif order == 1:
         # best-fit linear plane
-        A = np.c_[pts[:, 0], pts[:, 1], np.ones(pts.shape[0])]
-        params, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)  # coefficients
-
-        # evaluate at all data locations
-        data_trend = params[0] * points[:, 0] + params[1] * points[:, 1] + params[2]
-        print(f"Removed linear trend with mean: {np.mean(data_trend):.6g}")
+        A = np.c_[np.ones(loc_xy.shape[0]), loc_xy[:, 0], loc_xy[:, 1]]
+        params, _, _, _ = np.linalg.lstsq(A, values, rcond=None)  # coefficients
+        data_trend = params[0] + params[1] * points[:, 0] + params[2] * points[:, 1]
     elif order == 2:
         # best-fit quadratic curve
         A = np.c_[
-            np.ones(pts.shape[0]),
-            pts[:, :2],
-            np.prod(pts[:, :2], axis=1),
-            pts[:, :2] ** 2,
+            np.ones(loc_xy.shape[0]),
+            loc_xy[:, :2],
+            np.prod(loc_xy[:, :2], axis=1),
+            loc_xy[:, :2] ** 2,
         ]
-        params, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)
+        params, _, _, _ = np.linalg.lstsq(A, values, rcond=None)
         data_trend = np.dot(
             np.c_[
                 np.ones(points[:, 0].shape),
@@ -412,15 +405,16 @@ def calculate_2D_trend(
             ],
             params,
         ).reshape(points[:, 0].shape)
-        print(f"Removed polynomial trend with mean: {np.mean(data_trend):.6g}")
 
     else:
         raise ValueError(
             "Polynomial 'order' should be 0, 1 or 2. " f"Value of {order} provided."
         )
 
-    output[ind_nan] = data_trend
-    return output, params
+    print(
+        f"Removed {order}th order polynomial trend with mean: {np.mean(data_trend):.6g}"
+    )
+    return data_trend, params
 
 
 def weighted_average(
