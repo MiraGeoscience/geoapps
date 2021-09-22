@@ -320,7 +320,9 @@ def export_curve_2_shapefile(
                 c.write(res)
 
 
-def calculate_2D_trend(points, values, order=0, method="all"):
+def calculate_2D_trend(
+    points: np.ndarray, values: np.ndarray, order: int = 0, method: str = "all"
+):
     """
     detrend2D(points, values, order=0, method='all')
 
@@ -329,14 +331,13 @@ def calculate_2D_trend(points, values, order=0, method="all"):
     Parameters:
     ----------
 
-    points: ndarray or floats, shape(npoints, 2)
+    points: array or floats, shape(*, 2)
         Coordinates of input points
 
-    values: ndarray of floats, shape(npoints,)
-        Values to be detrended
+    values: array of floats, shape(*,)
+        Values to be de-trended
 
-    order: int
-        Order of the polynomial to be used
+    order: Order of the polynomial to be used
 
     method: str
         Method to be used for the detrending
@@ -347,41 +348,50 @@ def calculate_2D_trend(points, values, order=0, method="all"):
     Returns
     -------
 
-    trend: ndarray of floats, shape(npoints,)
+    trend: array of floats, shape(*,)
         Calculated trend
 
-    coefficients: ndarray of floats, shape(order+1)
+    coefficients: array of floats, shape(order+1)
         Coefficients for the polynomial describing the trend
+
         trend = c[0] + points[:, 0] * c[1] +  points[:, 1] * c[2]
-
     """
+    ind_nan = ~np.isnan(values)
 
-    assert method in ["all", "corners"], "method must be 'all', or 'corners'"
+    if ind_nan.sum() < 3:
+        raise ValueError(
+            "The number of none nan values must be greater than 3."
+            f"Only {ind_nan.sum():.0f} values found."
+        )
 
-    assert order in [0, 1, 2], "order must be 0, 1, or 2"
+    output = np.ones_like(values) * np.nan
+    points = points[ind_nan, :]
+    values = values[ind_nan]
 
     if method == "corners":
         hull = ConvexHull(points[:, :2])
         # Extract only those points that make the ConvexHull
         pts = np.c_[points[hull.vertices, :2], values[hull.vertices]]
-    else:
+    elif method == "all":
         # Extract all points
         pts = np.c_[points[:, :2], values]
+    else:
+        raise ValueError(
+            "'method' must be either 'all', or 'corners'. " f"Value {method} provided"
+        )
 
     if order == 0:
         data_trend = np.mean(pts[:, 2]) * np.ones(points[:, 0].shape)
         print(f"Removed data mean: {data_trend[0]:.6g}")
-        C = np.r_[0, 0, data_trend]
-
+        params = np.r_[0, 0, data_trend]
     elif order == 1:
         # best-fit linear plane
         A = np.c_[pts[:, 0], pts[:, 1], np.ones(pts.shape[0])]
-        C, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)  # coefficients
+        params, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)  # coefficients
 
         # evaluate at all data locations
-        data_trend = C[0] * points[:, 0] + C[1] * points[:, 1] + C[2]
+        data_trend = params[0] * points[:, 0] + params[1] * points[:, 1] + params[2]
         print(f"Removed linear trend with mean: {np.mean(data_trend):.6g}")
-
     elif order == 2:
         # best-fit quadratic curve
         A = np.c_[
@@ -390,9 +400,7 @@ def calculate_2D_trend(points, values, order=0, method="all"):
             np.prod(pts[:, :2], axis=1),
             pts[:, :2] ** 2,
         ]
-        C, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)
-
-        # evaluate at all data locations
+        params, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)
         data_trend = np.dot(
             np.c_[
                 np.ones(points[:, 0].shape),
@@ -402,11 +410,17 @@ def calculate_2D_trend(points, values, order=0, method="all"):
                 points[:, 0] ** 2,
                 points[:, 1] ** 2,
             ],
-            C,
+            params,
         ).reshape(points[:, 0].shape)
-
         print(f"Removed polynomial trend with mean: {np.mean(data_trend):.6g}")
-    return data_trend, C
+
+    else:
+        raise ValueError(
+            "Polynomial 'order' should be 0, 1 or 2. " f"Value of {order} provided."
+        )
+
+    output[ind_nan] = data_trend
+    return output, params
 
 
 def weighted_average(
