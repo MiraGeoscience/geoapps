@@ -98,13 +98,14 @@ def setup_inversion_workspace(
 
     if dcip:
 
-        parts = np.repeat(np.arange(n_grid_points), n_grid_points).astype("int32")
+        parts = np.kron(np.arange(n_grid_points), np.ones(n_grid_points)).astype("int")
+        # parts = np.repeat(np.arange(n_grid_points), n_grid_points).astype("int32")
         currents = CurrentElectrode.create(
-            workspace, name="survey", vertices=vertices, parts=parts
+            workspace, name="survey (currents)", vertices=vertices, parts=parts
         )
         currents.add_default_ab_cell_id()
         potentials = PotentialElectrode.create(
-            workspace, name="survey (currents)", vertices=vertices
+            workspace, name="survey", vertices=vertices
         )
         potentials.current_electrodes = currents
         currents.potential_electrodes = potentials
@@ -112,7 +113,7 @@ def setup_inversion_workspace(
         N = 6
         dipoles = []
         current_id = []
-
+        potentials_parts = []
         for val in currents.ab_cell_id.values:  # For each source dipole
             cell_id = int(currents.ab_map[val]) - 1  # Python 0 indexing
             line = currents.parts[currents.cells[cell_id, 0]]
@@ -126,7 +127,7 @@ def setup_inversion_workspace(
                     currents.parts[dipole_ids] != line
                 ):
                     continue
-
+                potentials_parts += [line] * len(dipole_ids)
                 dipoles += [dipole_ids]  # Save the receiver id
                 current_id += [val]  # Save the source id
 
