@@ -356,14 +356,13 @@ def calculate_2D_trend(
 
         trend = c[0] + points[:, 0] * c[1] +  points[:, 1] * c[2]
     """
-    ind_nan = ~np.isnan(values)
-
-    if ind_nan.sum() < 3:
+    if not isinstance(order, int) or order < 0:
         raise ValueError(
-            "The number of none nan values must be greater than 3."
-            f"Only {ind_nan.sum():.0f} values found."
+            "Polynomial 'order' should be an integer > 0. "
+            f"Value of {order} provided."
         )
 
+    ind_nan = ~np.isnan(values)
     loc_xy = points[ind_nan, :]
     values = values[ind_nan]
 
@@ -377,40 +376,33 @@ def calculate_2D_trend(
             "'method' must be either 'all', or 'corners'. " f"Value {method} provided"
         )
 
-    if order == 0:
-        data_trend = np.mean(values) * np.ones(points[:, 0].shape)
-        params = np.r_[data_trend]
-    elif order == 1:
-        # best-fit linear plane
-        A = np.c_[np.ones(loc_xy.shape[0]), loc_xy[:, 0], loc_xy[:, 1]]
-        params, _, _, _ = np.linalg.lstsq(A, values, rcond=None)  # coefficients
-        data_trend = params[0] + params[1] * points[:, 0] + params[2] * points[:, 1]
-    elif order == 2:
-        # best-fit quadratic curve
-        A = np.c_[
-            np.ones(loc_xy.shape[0]),
-            loc_xy[:, :2],
-            np.prod(loc_xy[:, :2], axis=1),
-            loc_xy[:, :2] ** 2,
-        ]
-        params, _, _, _ = np.linalg.lstsq(A, values, rcond=None)
-        data_trend = np.dot(
-            np.c_[
-                np.ones(points[:, 0].shape),
-                points[:, 0],
-                points[:, 1],
-                points[:, 0] * points[:, 1],
-                points[:, 0] ** 2,
-                points[:, 1] ** 2,
-            ],
-            params,
-        ).reshape(points[:, 0].shape)
+    # Compute center of mass
+    center_x = np.sum(loc_xy[:, 0] * np.abs(values)) / np.sum(np.abs(values))
+    center_y = np.sum(loc_xy[:, 1] * np.abs(values)) / np.sum(np.abs(values))
 
-    else:
+    polynomial = []
+    xx, yy = np.triu_indices(order + 1)
+    for x, y in zip(xx, yy):
+        polynomial.append(
+            (loc_xy[:, 0] - center_x) ** float(x)
+            * (loc_xy[:, 1] - center_y) ** float(y - x)
+        )
+    polynomial = np.vstack(polynomial).T
+
+    if polynomial.shape[0] <= polynomial.shape[1]:
         raise ValueError(
-            "Polynomial 'order' should be 0, 1 or 2. " f"Value of {order} provided."
+            "The number of input values must be greater than the number of coefficients in the polynomial. "
+            f"Provided {polynomial.shape[0]} values for a {order}th order polynomial with {polynomial.shape[1]} coefficients."
         )
 
+    params, _, _, _ = np.linalg.lstsq(polynomial, values, rcond=None)
+    data_trend = np.zeros(points.shape[0])
+    for count, (x, y) in enumerate(zip(xx, yy)):
+        data_trend += (
+            params[count]
+            * (points[:, 0] - center_x) ** float(x)
+            * (points[:, 1] - center_y) ** float(y - x)
+        )
     print(
         f"Removed {order}th order polynomial trend with mean: {np.mean(data_trend):.6g}"
     )

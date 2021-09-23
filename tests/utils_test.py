@@ -13,6 +13,7 @@
 import itertools
 
 import numpy as np
+import pytest
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
 
@@ -305,14 +306,25 @@ def test_filter_xy():
 def test_detrend_xy():
     xg, yg = np.meshgrid(np.arange(64), np.arange(64))
     xy = np.c_[xg.flatten(), yg.flatten()]
-
     coefficients = np.random.randn(3)
-    values = coefficients[0] + coefficients[1] * xy[:, 0] + coefficients[2] * xy[:, 1]
-
+    values = coefficients[0] + coefficients[1] * xy[:, 1] + coefficients[2] * xy[:, 0]
     ind_nan = np.random.randint(0, high=values.shape[0] - 1, size=32)
     nan_values = values.copy()
     nan_values[ind_nan] = np.nan
-
-    comp_trend, comp_params = calculate_2D_trend(xy, nan_values, order=1, method="all")
+    comp_trend, comp_params = calculate_2D_trend(xy, nan_values, order=5, method="all")
+    corner_trend, corner_params = calculate_2D_trend(
+        xy, nan_values, order=1, method="corners"
+    )
 
     np.testing.assert_almost_equal(values, comp_trend)
+    np.testing.assert_almost_equal(values, corner_trend)
+    np.testing.assert_almost_equal(comp_params, corner_params)
+
+    with pytest.raises(ValueError):
+        calculate_2D_trend(xy[:3, :], nan_values[:3], order=2)
+
+    with pytest.raises(ValueError):
+        calculate_2D_trend(xy, nan_values, order=1.1)
+
+    with pytest.raises(ValueError):
+        calculate_2D_trend(xy, nan_values, order=-2)
