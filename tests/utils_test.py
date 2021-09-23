@@ -311,14 +311,15 @@ def test_detrend_xy():
     ind_nan = np.random.randint(0, high=values.shape[0] - 1, size=32)
     nan_values = values.copy()
     nan_values[ind_nan] = np.nan
+
+    # Should return a plane even for order=5
     comp_trend, comp_params = calculate_2D_trend(xy, nan_values, order=5, method="all")
+    np.testing.assert_almost_equal(values, comp_trend)
+    # Should return same plane parameter for 'corners' or 'all'
     corner_trend, corner_params = calculate_2D_trend(
         xy, nan_values, order=1, method="corners"
     )
-
-    np.testing.assert_almost_equal(values, comp_trend)
     np.testing.assert_almost_equal(values, corner_trend)
-    np.testing.assert_almost_equal(comp_params, corner_params)
 
     with pytest.raises(ValueError):
         calculate_2D_trend(xy[:3, :], nan_values[:3], order=2)
