@@ -26,7 +26,7 @@ from SimPEG.utils.drivers import create_nested_mesh
 
 from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
-from .factories import SimulationFactory, SurveyFactory
+from .factories import SimulationFactory, SurveyFactory, receiver_group
 from .locations import InversionLocations
 
 
@@ -91,15 +91,17 @@ class InversionData(InversionLocations):
         super().__init__(workspace, params, window)
 
         self.resolution: int = None
+        self.resolution: int = None
         self.offset: list[float] = None
         self.radar: np.ndarray = None
         self.ignore_value: float = None
         self.ignore_type: str = None
         self.detrend_order: float = None
         self.detrend_type: str = None
-        self.locations: np.ndarray = None
+        self.locations: dict[str, Any] = None
         self.has_pseudo: bool = False
         self.mask: np.ndarray = None
+        self.indices: np.ndarray = None
         self.vector: bool = None
         self.n_blocks: int = None
         self.components: list[str] = None
@@ -121,16 +123,17 @@ class InversionData(InversionLocations):
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
 
-        self.locations = self.get_txrx_locations(self.params.data_object)
-        self.has_source = True if self.locations["sources"] is not None else False
-        self.has_pseudo = True if self.locations["pseudo"] is not None else False
+        self.locations = self.get_locations(self.params.data_object)
+        self.has_source = True if "sources" in self.locations.keys() else False
+        self.create_entity()
 
         if self.params.z_from_topo:
-            for k in self.locations.keys():
-                self.locations[k] = super().set_z_from_topo(self.locations[k])
+            self.locations = self.set_z_from_topo(self.locations)
 
         filt_locs = (
-            self.locations["pseudo"] if self.has_pseudo else self.locations["receivers"]
+            self.locations["sources"]
+            if self.has_source
+            else self.locations["receivers"]
         )
         self.mask = np.ones(len(filt_locs), dtype=bool)
 
@@ -152,24 +155,21 @@ class InversionData(InversionLocations):
                 mask=self.mask,
             )
 
-        key = "pseudo" if self.has_pseudo else "receivers"
-        self.locations[key] = super().filter(self.locations[key])
-        self.observed = super().filter(self.observed)
-        self.uncertainties = super().filter(self.uncertainties)
+        if not self.has_source:
+            self.locations["receivers"] = self.filter(self.locations["receivers"])
+        self.observed = self.filter(self.observed)
+        self.uncertainties = self.filter(self.uncertainties)
 
         self.offset, self.radar = self.params.offset()
         if self.offset is not None:
-            for k in self.locations.keys():
-                self.locations[k] = self.displace(self.locations[k], self.offset)
+            self.locations = self.displace(self.locations, self.offset)
         if self.radar is not None:
             radar_offset = self.workspace.get_entity(self.radar)[0].values
-            radar_offset = super().filter(radar_offset)
-            for k in self.locations.keys():
-                self.locations[k] = self.drape(self.locations[k], radar_offset)
+            radar_offset = self.filter(radar_offset)
+            self.locations = self.drape(self.locations, radar_offset)
 
         if self.is_rotated:
-            for k in self.locations.keys():
-                self.locations[k] = self.rotate(self.locations[k])
+            self.locations = self.rotate(self.locations)
 
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
@@ -177,9 +177,54 @@ class InversionData(InversionLocations):
             self.observed = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
-        self.save_data()
 
-    def get_txrx_locations(self, uid: UUID) -> dict[str, np.ndarray]:
+        if not self.params.forward_only:
+            self.save_data()
+
+    def set_z_from_topo(self, locations):
+        """Override parent class definition to handle dictionary."""
+        for k in locations.keys():
+            locations[k] = super().set_z_from_topo(locations[k])
+        return locations
+
+    def rotate(self, locations):
+        """Override parent class definition to handle dictionary."""
+        return {k: super().rotate(locations[k]) for k in locations.keys()}
+
+    def filter(self, a):
+
+        if self.params.inversion_type in ["direct current", "induced_polarization"]:
+            # convert tx mask into a data mask
+
+            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
+            current_electrodes = potential_electrodes.current_electrodes
+            ab_pairs = current_electrodes.cells
+
+            electrode_ind = np.arange(current_electrodes.n_vertices)[self.mask]
+            a_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
+            b_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
+            for ei in electrode_ind:
+                a_ind |= ei == ab_pairs[:, 0]
+                b_ind |= ei == ab_pairs[:, 1]
+            ab_ind = a_ind | b_ind
+
+            if self.indices is None:
+                self.indices = np.where(ab_ind)[0]
+
+            rx_mask = np.zeros(self.entity.n_cells, dtype=bool)
+            for txi in self.indices:
+                rx_ids = receiver_group(txi, self.entity)
+                rx_mask[rx_ids] = True
+
+            a = super().filter(a, mask=rx_mask)
+
+        else:
+
+            a = super().filter(a)
+
+        return a
+
+    def get_locations(self, uid: UUID) -> dict[str, np.ndarray]:
         """
         Returns locations of sources and receivers centroids or vertices.
 
@@ -192,18 +237,7 @@ class InversionData(InversionLocations):
         """
 
         data_object = self.workspace.get_entity(uid)[0]
-        receivers = super().get_locations(data_object)
-
-        locs = {"sources": None, "receivers": receivers, "pseudo": None}
-
-        if isinstance(data_object, PotentialElectrode):
-            locs["sources"] = super().get_locations(data_object.current_electrodes)
-            if data_object.get_data("Pseudo X"):
-                locs["pseudo"] = np.c_[
-                    data_object.get_data("Pseudo X")[0].values,
-                    data_object.get_data("Pseudo Y")[0].values,
-                    data_object.get_data("Pseudo Z")[0].values,
-                ]
+        locs = super().get_locations(data_object)
 
         return locs
 
@@ -232,7 +266,7 @@ class InversionData(InversionLocations):
 
         return list(data.keys()), data, uncertainties
 
-    def save_data(self):
+    def create_entity(self):
 
         if self.params.inversion_type == "direct current":
 
@@ -241,23 +275,31 @@ class InversionData(InversionLocations):
 
             self.entity = rx_obj.copy(parent=self.params.out_group, copy_children=False)
             self.entity.name = "Data"
+
             rx_obj.get_data("A-B Cell ID")[0].copy(parent=self.entity)
             src = tx_obj.copy(parent=self.params.out_group, copy_children=False)
             src.name = "Data (currents)"
             self.entity.current_electrodes = src
 
-            if self.params.forward_only:
-                return
+        else:
+            self.entity = super().create_entity("Data", self.locations["receivers"])
+
+    def save_data(self):
+
+        data = self.predicted if self.params.forward_only else self.observed
+        basename = "Predicted" if self.params.forward_only else "Observed"
+
+        if self.params.inversion_type == "direct current":
 
             survey, _ = self.survey()
             self.transformations["potential"] = 1 / (geometric_factor(survey) + 1e-10)
-            appres = self.observed["potential"] * self.transformations["potential"]
+            appres = data["potential"] * self.transformations["potential"]
 
             for comp in self.components:
                 self.data_entity[comp] = self.entity.add_data(
                     {
-                        f"Observed_{comp}": {
-                            "values": self.observed[comp],
+                        f"{basename}_{comp}": {
+                            "values": data[comp],
                             "association": "CELL",
                         }
                     }
@@ -265,7 +307,7 @@ class InversionData(InversionLocations):
 
             self.data_entity["apparent_resistivity"] = self.entity.add_data(
                 {
-                    "Observed_apparent_resistivity": {
+                    f"{basename}_apparent_resistivity": {
                         "values": appres,
                         "association": "CELL",
                     }
@@ -276,15 +318,13 @@ class InversionData(InversionLocations):
 
             self.entity = super().create_entity("Data", self.locations["receivers"])
 
-            if self.params.forward_only:
-                return
-
             for comp in self.components:
-                dnorm = self.normalizations[comp] * self.observed[comp]
-                observed_data_object = self.entity.add_data(
-                    {f"Observed_{comp}": {"values": dnorm}}
+                dnorm = self.normalizations[comp] * data[comp]
+                self.data_entity[comp] = self.entity.add_data(
+                    {f"{basename}_{comp}": {"values": dnorm}}
                 )
-                self._observed_data_types[comp] = observed_data_object.entity_type
+                if not self.params.forward_only:
+                    self._observed_data_types[comp] = self.data_entity[comp].entity_type
 
     def get_data_component(self, component: str) -> np.ndarray:
         """Get data component (channel) from params data."""
@@ -354,8 +394,11 @@ class InversionData(InversionLocations):
         """Offset data locations in all three dimensions."""
         if locs is None:
             return None
+        else:
+            for k in locs.keys():
+                locs[k] = locs[k] + offset if offset is not None else 0
 
-        return locs + offset if offset is not None else 0
+        return locs
 
     def drape(self, locs: np.ndarray, radar_offset: np.ndarray) -> np.ndarray:
         """Drape data locations using radar channel offsets."""
@@ -430,6 +473,7 @@ class InversionData(InversionLocations):
             mesh=mesh,
             active_cells=active_cells,
             local_index=local_index,
+            indices=self.indices,
         )
         has_rxids = True if len(survey_factory.receiver_ids) > 0 else False
         local_index = survey_factory.receiver_ids if has_rxids else local_index
@@ -463,7 +507,7 @@ class InversionData(InversionLocations):
         if tile_id is None:
             map = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
             sim = simulation_factory.build(
-                survey=survey, mesh=mesh, active_cells=active_cells, map=map
+                survey=survey, global_mesh=mesh, active_cells=active_cells, map=map
             )
 
         else:
@@ -473,7 +517,8 @@ class InversionData(InversionLocations):
             map = maps.TileMap(mesh, active_cells, nested_mesh, **kwargs)
             sim = simulation_factory.build(
                 survey=survey,
-                mesh=nested_mesh,
+                global_mesh=mesh,
+                local_mesh=nested_mesh,
                 active_cells=map.local_active,
                 map=map,
                 tile_id=tile_id,
@@ -481,28 +526,16 @@ class InversionData(InversionLocations):
 
         return sim, map
 
-    def simulate(
-        self,
-        mesh: TreeMesh,
-        model: np.ndarray,
-        survey,
-        active_cells: np.ndarray,
-        save: bool = True,
-    ) -> np.ndarray:
+    def simulate(self, model, inverse_problem, sorting):
         """Simulate fields for a particular model."""
-        client = get_client()
-        sim, _ = self.simulation(mesh, active_cells, survey)
-        prediction = client.compute(sim.dpred(model))
-        progress(prediction)
-        d = np.asarray(prediction.result()).reshape((-1, len(self.components)))
 
-        for i, c in enumerate(self.components):
-            self.predicted[c] = d[:, i]
+        dpred = inverse_problem.get_dpred(
+            model, compute_J=False if self.params.forward_only else True
+        )
+        dpred = np.hstack(dpred)[np.hstack(sorting)]
+        for i, comp in enumerate(self.components):
+            self.predicted[comp] = np.atleast_2d(dpred).T[:, i]
 
-        if save:
             # TODO Should rotate the x,y (and/or tensor) components of the fields if used.
-            for comp in self.components:
-                val = self.normalizations[comp] * self.predicted[comp]
-                self.predicted_data_object = self.entity.add_data(
-                    {f"{comp}": {"values": val}}
-                )
+
+        self.save_data()

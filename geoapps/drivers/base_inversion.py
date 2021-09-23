@@ -138,17 +138,6 @@ class InversionDriver:
         self.n_blocks = 3 if self.is_vector else 1
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
-        # If forward only is true simulate fields, save to workspace and exit.
-        if self.params.forward_only:
-            self.inversion_data.simulate(
-                self.mesh,
-                self.starting_model,
-                self.survey,
-                self.active_cells,
-                save=True,
-            )
-            return
-
         # Tile locations
         self.tiles = self.get_tiles()
         self.nTiles = len(self.tiles)
@@ -179,9 +168,14 @@ class InversionDriver:
             global_misfit, reg, opt, beta=self.params.initial_beta
         )
 
-        self.inverse_problem.dpred = self.inverse_problem.get_dpred(
-            self.starting_model, compute_J=True
+        # Solve forward problem, and attach dpred to inverse problem or
+        self.inverse_problem = self.inversion_data.simulate(
+            self.starting_model, self.inverse_problem, self.sorting
         )
+
+        # If forward only option enabled, stop here
+        if self.params.forward_only:
+            return
 
         # Add a list of directives to the inversion
         directiveList = DirectivesFactory(self.params).build(
@@ -381,15 +375,21 @@ class InversionDriver:
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, lsurvey, tile_id
             )
-            ldat = (
-                data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
-            )
-            lmisfit = data_misfit.L2DataMisfit(
-                data=ldat[0],
-                simulation=lsim,
-                model_map=lmap,
-            )
-            lmisfit.W = 1 / lsurvey.std
+
+            if self.params.forward_only:
+                lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
+            else:
+                ldat = (
+                    data.Data(
+                        lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std
+                    ),
+                )
+                lmisfit = data_misfit.L2DataMisfit(
+                    data=ldat[0],
+                    simulation=lsim,
+                    model_map=lmap,
+                )
+                lmisfit.W = 1 / lsurvey.std
 
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)

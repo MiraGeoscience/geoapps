@@ -92,9 +92,12 @@ class ReceiversFactory(SimPEGFactory):
 
             for i in local_index:
                 receiver_ids = receiver_group(i, potential_electrodes)
-                locations_m, locations_n = group_locations(
-                    potential_electrodes, receiver_ids
-                )
+                locations_m = locations["sources"][
+                    potential_electrodes.cells[receiver_ids, 0]
+                ]
+                locations_n = locations["sources"][
+                    potential_electrodes.cells[receiver_ids, 1]
+                ]
                 args.append(locations_m)
                 args.append(locations_n)
         else:
@@ -142,7 +145,7 @@ class SourcesFactory(SimPEGFactory):
 
             return sources.Dipole
 
-    def assemble_arguments(self, receivers=None, local_index=None):
+    def assemble_arguments(self, receivers=None, locations=None, local_index=None):
         """Provides implementations to assemble arguments for sources object."""
 
         args = []
@@ -152,18 +155,23 @@ class SourcesFactory(SimPEGFactory):
                 self.params.data_object
             )[0]
             current_electrodes = potential_electrodes.current_electrodes
-            electrode_a, electrode_b = group_locations(current_electrodes, local_index)
+
+            for i in local_index:
+                locations_a = locations["sources"][current_electrodes.cells[i, 0]]
+                locations_b = locations["sources"][current_electrodes.cells[i, 1]]
 
             args.append([receivers])
-            args.append(electrode_a.squeeze())
-            args.append(electrode_b.squeeze())
+            args.append(locations_a)
+            args.append(locations_b)
 
         else:
             args.append([receivers])
 
         return args
 
-    def assemble_keyword_arguments(self, receivers=None, local_index=None):
+    def assemble_keyword_arguments(
+        self, receivers=None, locations=None, local_index=None
+    ):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
         if self.factory_type in ["magnetic scalar", "magnetic vector"]:
@@ -171,8 +179,10 @@ class SourcesFactory(SimPEGFactory):
 
         return kwargs
 
-    def build(self, receivers=None, local_index=None):
-        return super().build(receivers=receivers, local_index=local_index)
+    def build(self, receivers=None, locations=None, local_index=None):
+        return super().build(
+            receivers=receivers, locations=locations, local_index=local_index
+        )
 
 
 class SurveyFactory(SimPEGFactory):
@@ -212,6 +222,7 @@ class SurveyFactory(SimPEGFactory):
         data=None,
         uncertainties=None,
         local_index=None,
+        indices=None,
     ):
         """Provides implementations to assemble arguments for receivers object."""
 
@@ -227,6 +238,9 @@ class SurveyFactory(SimPEGFactory):
             else:
                 self.local_index = local_index
 
+            if indices is not None:
+                self.local_index = np.intersect1d(indices, self.local_index)
+
             # TODO hook up tile_spatial to handle local_index handling
             sources = []
             for source_id in self.local_index:
@@ -236,7 +250,7 @@ class SurveyFactory(SimPEGFactory):
                 if receivers.nD == 0:
                     continue
                 source = SourcesFactory(self.params).build(
-                    receivers=receivers, local_index=[source_id]
+                    receivers=receivers, locations=locations, local_index=[source_id]
                 )
                 sources.append(source)
                 self.receiver_ids.append(
@@ -269,6 +283,7 @@ class SurveyFactory(SimPEGFactory):
         mesh=None,
         active_cells=None,
         local_index=None,
+        indices=None,
     ):
         """Overloads base method to add dobs, std attributes to survey class instance."""
 
@@ -277,6 +292,7 @@ class SurveyFactory(SimPEGFactory):
             data=data,
             uncertainties=uncertainties,
             local_index=local_index,
+            indices=indices,
         )
 
         components = list(data.keys())
