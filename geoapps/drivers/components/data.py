@@ -124,23 +124,17 @@ class InversionData(InversionLocations):
         self.components, self.observed, self.uncertainties = self.get_data()
 
         self.locations = self.get_locations(self.params.data_object)
-        self.has_source = True if "sources" in self.locations.keys() else False
         self.create_entity()
 
         if self.params.z_from_topo:
-            self.locations = self.set_z_from_topo(self.locations)
+            self.locations = super().set_z_from_topo(self.locations)
 
-        filt_locs = (
-            self.locations["sources"]
-            if self.has_source
-            else self.locations["receivers"]
-        )
-        self.mask = np.ones(len(filt_locs), dtype=bool)
+        self.mask = np.ones(len(self.locations), dtype=bool)
 
         if self.window is not None:
             self.mask = filter_xy(
-                filt_locs[:, 0],
-                filt_locs[:, 1],
+                self.locations[:, 0],
+                self.locations[:, 1],
                 window=self.window,
                 angle=self.angle,
                 mask=self.mask,
@@ -149,14 +143,14 @@ class InversionData(InversionLocations):
         if self.params.resolution not in [0.0, None]:
             self.resolution = self.params.resolution
             self.mask = filter_xy(
-                filt_locs[:, 0],
-                filt_locs[:, 1],
+                self.locations[:, 0],
+                self.locations[:, 1],
                 distance=self.resolution,
                 mask=self.mask,
             )
 
-        if not self.has_source:
-            self.locations["receivers"] = self.filter(self.locations["receivers"])
+        if self.params.inversion_type not in ["direct current", "induced polarization"]:
+            self.locations = self.filter(self.locations)
         self.observed = self.filter(self.observed)
         self.uncertainties = self.filter(self.uncertainties)
 
@@ -169,7 +163,7 @@ class InversionData(InversionLocations):
             self.locations = self.drape(self.locations, radar_offset)
 
         if self.is_rotated:
-            self.locations = self.rotate(self.locations)
+            self.locations = super().rotate(self.locations)
 
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
@@ -180,16 +174,6 @@ class InversionData(InversionLocations):
 
         if not self.params.forward_only:
             self.save_data()
-
-    def set_z_from_topo(self, locations):
-        """Override parent class definition to handle dictionary."""
-        for k in locations.keys():
-            locations[k] = super().set_z_from_topo(locations[k])
-        return locations
-
-    def rotate(self, locations):
-        """Override parent class definition to handle dictionary."""
-        return {k: super().rotate(locations[k]) for k in locations.keys()}
 
     def filter(self, a):
 
@@ -282,7 +266,7 @@ class InversionData(InversionLocations):
             self.entity.current_electrodes = src
 
         else:
-            self.entity = super().create_entity("Data", self.locations["receivers"])
+            self.entity = super().create_entity("Data", self.locations)
 
     def save_data(self):
 
@@ -316,7 +300,7 @@ class InversionData(InversionLocations):
 
         else:
 
-            self.entity = super().create_entity("Data", self.locations["receivers"])
+            self.entity = super().create_entity("Data", self.locations)
 
             for comp in self.components:
                 dnorm = self.normalizations[comp] * data[comp]
@@ -395,10 +379,7 @@ class InversionData(InversionLocations):
         if locs is None:
             return None
         else:
-            for k in locs.keys():
-                locs[k] = locs[k] + offset if offset is not None else 0
-
-        return locs
+            return locs + offset if offset is not None else 0
 
     def drape(self, locs: np.ndarray, radar_offset: np.ndarray) -> np.ndarray:
         """Drape data locations using radar channel offsets."""

@@ -124,9 +124,6 @@ class InversionDriver:
             cluster = LocalCluster(processes=False)
             Client(cluster)
 
-        # Create SimPEG Survey object
-        self.survey, _ = self.inversion_data.survey()
-
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
         self.models.remove_air(self.active_cells)
@@ -137,6 +134,9 @@ class InversionDriver:
         self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
+
+        # Create SimPEG Survey object
+        self.survey, _ = self.inversion_data.survey()
 
         # Tile locations
         self.tiles = self.get_tiles()
@@ -169,9 +169,9 @@ class InversionDriver:
         )
 
         # Solve forward problem, and attach dpred to inverse problem or
-        self.inverse_problem = self.inversion_data.simulate(
-            self.starting_model, self.inverse_problem, self.sorting
-        )
+        # self.inverse_problem.dpred = self.inversion_data.simulate(
+        #     self.starting_model, self.inverse_problem, self.sorting
+        # )
 
         # If forward only option enabled, stop here
         if self.params.forward_only:
@@ -355,7 +355,7 @@ class InversionDriver:
             #     tiles += [np.where(self.params.tile_spatial == ii)[0]]
         else:
             tiles = tile_locations(
-                self.locations["receivers"],
+                self.locations,
                 self.params.tile_spatial,
                 method="kmeans",
             )

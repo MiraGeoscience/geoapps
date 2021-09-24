@@ -92,16 +92,12 @@ class ReceiversFactory(SimPEGFactory):
 
             for i in local_index:
                 receiver_ids = receiver_group(i, potential_electrodes)
-                locations_m = locations["sources"][
-                    potential_electrodes.cells[receiver_ids, 0]
-                ]
-                locations_n = locations["sources"][
-                    potential_electrodes.cells[receiver_ids, 1]
-                ]
+                locations_m = locations[potential_electrodes.cells[receiver_ids, 0]]
+                locations_n = locations[potential_electrodes.cells[receiver_ids, 1]]
                 args.append(locations_m)
                 args.append(locations_n)
         else:
-            args.append(locations["receivers"][local_index])
+            args.append(locations[local_index])
 
         return args
 
@@ -157,8 +153,8 @@ class SourcesFactory(SimPEGFactory):
             current_electrodes = potential_electrodes.current_electrodes
 
             for i in local_index:
-                locations_a = locations["sources"][current_electrodes.cells[i, 0]]
-                locations_b = locations["sources"][current_electrodes.cells[i, 1]]
+                locations_a = locations[current_electrodes.cells[i, 0]]
+                locations_b = locations[current_electrodes.cells[i, 1]]
 
             args.append([receivers])
             args.append(locations_a)
@@ -264,7 +260,7 @@ class SurveyFactory(SimPEGFactory):
         else:
 
             if local_index is None:
-                self.local_index = np.arange(len(locations["receivers"]), dtype=int)
+                self.local_index = np.arange(len(locations), dtype=int)
             else:
                 self.local_index = local_index
 
