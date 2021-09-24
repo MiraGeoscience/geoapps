@@ -19,6 +19,7 @@ from uuid import UUID
 import numpy as np
 from geoh5py.objects import Grid2D, Points
 from scipy.interpolate import LinearNDInterpolator
+from scipy.spatial import cKDTree
 
 from geoapps.utils import rotate_xy
 

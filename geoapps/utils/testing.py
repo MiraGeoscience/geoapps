@@ -72,9 +72,11 @@ def setup_inversion_workspace(
     work_dir,
     background=None,
     anomaly=None,
-    n_grid_points=20,
+    n_electrodes=20,
+    n_lines=5,
     refinement=(4, 6),
     dcip=False,
+    flatten=True,
 ):
     project = os.path.join(work_dir, "inversion_test.geoh5")
     workspace = Workspace(project)
@@ -82,24 +84,30 @@ def setup_inversion_workspace(
     xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
     b = 100
     A = 50
-    zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
+    if flatten:
+        zz = np.zeros_like(xx)
+    else:
+        zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
     topo = np.c_[utils.mkvc(xx), utils.mkvc(yy), utils.mkvc(zz)]
     triang = Delaunay(topo[:, :2])
     surf = Surface.create(
         workspace, vertices=topo, cells=triang.simplices, name="topography"
     )
     # Observation points
-    n_grid_points = 4 if dcip & (n_grid_points < 4) else n_grid_points
-    xr = np.linspace(-100.0, 100.0, n_grid_points)
-    yr = np.linspace(-100.0, 100.0, n_grid_points)
+    n_electrodes = 4 if dcip & (n_electrodes < 4) else n_electrodes
+    xr = np.linspace(-100.0, 100.0, n_electrodes)
+    yr = np.linspace(-100.0, 100.0, n_lines)
     X, Y = np.meshgrid(xr, yr)
-    Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + 5.0
+    if flatten:
+        Z = np.zeros_like(X)
+    else:
+        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + 5.0
+
     vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
 
     if dcip:
 
-        parts = np.kron(np.arange(n_grid_points), np.ones(n_grid_points)).astype("int")
-        # parts = np.repeat(np.arange(n_grid_points), n_grid_points).astype("int32")
+        parts = np.repeat(np.arange(n_lines), n_electrodes).astype("int32")
         currents = CurrentElectrode.create(
             workspace, name="survey (currents)", vertices=vertices, parts=parts
         )
@@ -141,6 +149,7 @@ def setup_inversion_workspace(
             vertices=vertices,
             name="survey",
         )
+
     # Create a mesh
     h = 5
     padDist = np.ones((3, 2)) * 100
@@ -162,13 +171,22 @@ def setup_inversion_workspace(
     octree = treemesh_2_octree(workspace, mesh, name="mesh")
     active = active_from_xyz(mesh, surf.vertices, grid_reference="N")
     # Model
-    model = utils.model_builder.addBlock(
-        mesh.gridCC,
-        background * np.ones(mesh.nC),
-        np.r_[-20, -20, -20],
-        np.r_[20, 20, 20],
-        anomaly,
-    )
+    if flatten:
+        model = utils.model_builder.addBlock(
+            mesh.gridCC,
+            background * np.ones(mesh.nC),
+            np.r_[-20, -20, -30],
+            np.r_[20, 20, -70],
+            anomaly,
+        )
+    else:
+        model = utils.model_builder.addBlock(
+            mesh.gridCC,
+            background * np.ones(mesh.nC),
+            np.r_[-20, -20, -20],
+            np.r_[20, 20, 20],
+            anomaly,
+        )
     model[~active] = np.nan
     octree.add_data({"model": {"values": model[mesh._ubc_order]}})
     octree.copy()  # Keep a copy around for ref
