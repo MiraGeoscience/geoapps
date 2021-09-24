@@ -531,7 +531,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "group": "Regularization",
-        "isValue": True,
+        "isValue": False,
         "optional": True,
         "enabled": False,
         "label": "Reference model value",

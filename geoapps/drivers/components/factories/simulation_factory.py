@@ -120,7 +120,7 @@ class SimulationFactory(SimPEGFactory):
 
         return kwargs
 
-    def _magnetic_vector_keywords(self, kwargs, active_cells=None):
+    def _magnetic_scalar_keywords(self, kwargs, active_cells=None):
 
         kwargs["actInd"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
@@ -145,7 +145,7 @@ class SimulationFactory(SimPEGFactory):
     def _direct_current_keywords(self, kwargs, mesh, active_cells=None):
 
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=1e-8)
-        kwargs["sigmaMap"] = actmap
+        kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["Solver"] = self.solver
         kwargs["store_sensitivities"] = False if self.params.forward_only else True
 
