@@ -169,9 +169,9 @@ class InversionDriver:
         )
 
         # Solve forward problem, and attach dpred to inverse problem or
-        # self.inverse_problem.dpred = self.inversion_data.simulate(
-        #     self.starting_model, self.inverse_problem, self.sorting
-        # )
+        self.inverse_problem.dpred = self.inversion_data.simulate(
+            self.starting_model, self.inverse_problem, self.sorting
+        )
 
         # If forward only option enabled, stop here
         if self.params.forward_only:
