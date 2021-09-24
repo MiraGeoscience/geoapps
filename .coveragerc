@@ -1,4 +1,1 @@
 [run]
-omit =
-    geoapps/simpegEM1D/*
-    geoapps/simpegPF/*
