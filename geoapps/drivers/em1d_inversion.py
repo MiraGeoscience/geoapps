@@ -20,16 +20,7 @@ from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
-
-from geoapps.simpegEM1D import (
-    GlobalEM1DProblemFD,
-    GlobalEM1DProblemTD,
-    GlobalEM1DSurveyFD,
-    GlobalEM1DSurveyTD,
-    LateralConstraint,
-    get_2d_mesh,
-)
-from geoapps.simpegPF import (
+from simpeg_archive import (
     DataMisfit,
     Directives,
     Inversion,
@@ -38,6 +29,15 @@ from geoapps.simpegPF import (
     Optimization,
     Utils,
 )
+from simpeg_archive.simpegEM1D import (
+    GlobalEM1DProblemFD,
+    GlobalEM1DProblemTD,
+    GlobalEM1DSurveyFD,
+    GlobalEM1DSurveyTD,
+    LateralConstraint,
+    get_2d_mesh,
+)
+
 from geoapps.utils import geophysical_systems
 from geoapps.utils.utils import filter_xy, rotate_xy, running_mean
 
