@@ -210,3 +210,34 @@ validations = {
 }
 
 validations.update(base_validations)
+
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "data_object": "{7e2d17bf-b646-4392-8155-dc5cbfda8ed5}",
+    "potential_channel_bool": True,
+    "potential_channel": "{1c3119f0-8d66-496b-940b-1967dbf94ae0}",
+    "mesh_from_params": True,
+    "u_cell_size": 25.0,
+    "v_cell_size": 25.0,
+    "w_cell_size": 25.0,
+    "resolution": 50,
+    "octree_levels_topo": [0, 0, 0, 2],
+    "octree_levels_obs": [5, 5, 5, 5],
+    "depth_core": 500.0,
+    "max_distance": np.inf,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+    "upper_bound": None,
+    "max_iterations": 25,
+    "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+    "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    "z_from_topo": True,
+    "receivers_offset_x": 0,
+    "receivers_offset_y": 0,
+    "receivers_offset_z": 0,
+    "out_group": "DCInversion",
+}
