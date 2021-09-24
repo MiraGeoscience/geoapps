@@ -18,7 +18,7 @@ from geoapps.drivers.magnetic_vector_inversion import (
     MagneticVectorParams,
 )
 from geoapps.export import Export
-from geoapps.pf_inversion_app import InversionApp
+from geoapps.inversion.pf_inversion_app import InversionApp
 from geoapps.processing import (
     Calculator,
     Clustering,
