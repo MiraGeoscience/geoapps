@@ -17,8 +17,8 @@ from geoapps.utils.testing import setup_inversion_workspace
 
 target_gravity_run = {
     "data_norm": 0.00636,
-    "phi_d": 0.0001835,
-    "phi_m": 0.029,
+    "phi_d": 0.0001414,
+    "phi_m": 0.0235,
 }
 
 
@@ -53,6 +53,12 @@ def test_gravity_run(
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
     gz = workspace.get_entity("gz")[0]
+    orig_gz = gz.values.copy()
+
+    # Turn some of the values to nan
+    gz.values[0] = np.nan
+    workspace.finalize()
+
     # Run the inverse
     np.random.seed(0)
     params = GravityParams(
@@ -80,9 +86,17 @@ def test_gravity_run(
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
     )
+
+    run_ws = Workspace(driver.params.workspace.h5file)
+    residual = run_ws.get_entity("Residuals_gz")[0]
+    assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
+
+    predicted = run_ws.get_entity("Iteration_0_grav_gz")[0]
+    assert not any(np.isnan(predicted.values)), "Predicted data should not have nans."
+
     if pytest:
         np.testing.assert_almost_equal(
-            np.linalg.norm(gz.values),
+            np.linalg.norm(orig_gz),
             target_gravity_run["data_norm"],
             decimal=3,
         )
