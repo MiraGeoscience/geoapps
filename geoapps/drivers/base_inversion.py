@@ -31,7 +31,7 @@ from SimPEG import (
 from SimPEG.utils import cartesian2amplitude_dip_azimuth, tile_locations
 
 from geoapps.io import Params
-from geoapps.utils import rotate_xy
+from geoapps.utils import rotate_xy, treemesh_2_octree
 
 from .components import (
     InversionData,
@@ -139,7 +139,8 @@ class InversionDriver:
         self.survey, _ = self.inversion_data.survey()
 
         # Tile locations
-        self.tiles = self.get_tiles()
+        self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
+
         self.nTiles = len(self.tiles)
         print("Number of tiles:" + str(self.nTiles))
 
@@ -330,23 +331,16 @@ class InversionDriver:
     def get_tiles(self):
 
         if self.params.inversion_type == "direct current":
-
             tiles = []
             potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
             current_electrodes = potential_electrodes.current_electrodes
-            ab_pairs = current_electrodes.cells
-            line_indices = current_electrodes.parts
 
             for line in current_electrodes.unique_parts:
-                ind = line_indices == line
-                electrode_ind = np.arange(current_electrodes.n_vertices)[ind]
-                a_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
-                b_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
-                for ei in electrode_ind:
-                    a_ind |= ei == ab_pairs[:, 0]
-                    b_ind |= ei == ab_pairs[:, 1]
-                ab_ind = a_ind | b_ind
-                tiles.append(np.arange(current_electrodes.n_cells)[ab_ind])
+                electrode_ind = current_electrodes.parts == line
+                cells_ind = np.where(
+                    np.any(electrode_ind[current_electrodes.cells], axis=1)
+                )
+                tiles.append(cells_ind)
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
