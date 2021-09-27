@@ -171,13 +171,14 @@ class InversionData(InversionLocations):
             for k in self.locations.keys():
                 self.locations[k] = self.rotate(self.locations[k])
 
+        self.observed = self.normalize(self.observed)
+        self.save_data()
+
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
-            self.observed = self.detrend(self.observed)
-
-        self.observed = self.normalize(self.observed)
-        self.save_data()
+            self.observed, trend = self.detrend(self.observed)
+            self.save_data(label="_detrend")
 
     def get_txrx_locations(self, uid: UUID) -> dict[str, np.ndarray]:
         """
@@ -231,19 +232,22 @@ class InversionData(InversionLocations):
 
         return list(data.keys()), data, uncertainties
 
-    def save_data(self):
+    def save_data(self, label=""):
 
         if self.params.inversion_type == "direct current":
 
             rx_obj = self.workspace.get_entity(self.params.data_object)[0]
             tx_obj = self.params.workspace.get_entity(f"{rx_obj.name} (currents)")[0]
 
-            self.entity = rx_obj.copy(parent=self.params.out_group, copy_children=False)
-            self.entity.name = "Data"
-            rx_obj.get_data("A-B Cell ID")[0].copy(parent=self.entity)
-            src = tx_obj.copy(parent=self.params.out_group, copy_children=False)
-            src.name = "Data (currents)"
-            self.entity.current_electrodes = src
+            if self.entity is None:
+                self.entity = rx_obj.copy(
+                    parent=self.params.out_group, copy_children=False
+                )
+                self.entity.name = "Data"
+                rx_obj.get_data("A-B Cell ID")[0].copy(parent=self.entity)
+                src = tx_obj.copy(parent=self.params.out_group, copy_children=False)
+                src.name = "Data (currents)"
+                self.entity.current_electrodes = src
 
             if self.params.forward_only:
                 return
@@ -255,7 +259,7 @@ class InversionData(InversionLocations):
             for comp in self.components:
                 self.data_entity[comp] = self.entity.add_data(
                     {
-                        f"Observed_{comp}": {
+                        f"Observed_{comp}{label}": {
                             "values": self.observed[comp],
                             "association": "CELL",
                         }
@@ -273,7 +277,8 @@ class InversionData(InversionLocations):
 
         else:
 
-            self.entity = super().create_entity("Data", self.locations["receivers"])
+            if self.entity is None:
+                self.entity = super().create_entity("Data", self.locations["receivers"])
 
             if self.params.forward_only:
                 return
@@ -281,7 +286,7 @@ class InversionData(InversionLocations):
             for comp in self.components:
                 dnorm = self.normalizations[comp] * self.observed[comp]
                 observed_data_object = self.entity.add_data(
-                    {f"Observed_{comp}": {"values": dnorm}}
+                    {f"Observed_{comp}{label}": {"values": dnorm}}
                 )
                 self._observed_data_types[comp] = observed_data_object.entity_type
 
@@ -300,12 +305,12 @@ class InversionData(InversionLocations):
             if d is None:
                 return None
             else:
-                return np.array([unc] * len(d))
+                return np.array([float(unc)] * len(d))
         elif unc is None:
             d = self.get_data_component(component)
             return d * 0.0 + 1.0  # Default
         else:
-            return self.workspace.get_entity(unc)[0].values
+            return self.workspace.get_entity(unc)[0].values.astype(float)
 
     def parse_ignore_values(self) -> tuple[float, str]:
         """Returns an ignore value and type ('<', '>', or '=') from params data."""
@@ -335,6 +340,8 @@ class InversionData(InversionLocations):
             return None
 
         unc = uncertainties.copy()
+        unc[np.isnan(data)] = np.inf
+
         if self.ignore_value is None:
             return unc
         elif self.ignore_type == "<":
@@ -370,15 +377,17 @@ class InversionData(InversionLocations):
     def detrend(self, data) -> np.ndarray:
         """Remove trend from data."""
         d = data.copy()
+        trend = data.copy()
         for comp in self.components:
             data_trend, _ = calculate_2D_trend(
-                self.locations,
+                self.locations["receivers"],
                 d[comp],
                 self.params.detrend_order,
                 self.params.detrend_type,
             )
+            trend[comp] = data_trend
             d[comp] -= data_trend
-        return d
+        return d, trend
 
     def normalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         """
