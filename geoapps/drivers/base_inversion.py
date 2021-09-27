@@ -334,19 +334,21 @@ class InversionDriver:
             tiles = []
             potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
             current_electrodes = potential_electrodes.current_electrodes
-
-            for line in current_electrodes.unique_parts:
-                electrode_ind = current_electrodes.parts == line
-                cells_ind = np.where(
-                    np.any(electrode_ind[current_electrodes.cells], axis=1)
-                )
-                tiles.append(cells_ind)
+            line_split = np.array_split(
+                current_electrodes.unique_parts, self.params.tile_spatial
+            )
+            for split in line_split:
+                split_ind = []
+                for line in split:
+                    electrode_ind = current_electrodes.parts == line
+                    cells_ind = np.where(
+                        np.any(electrode_ind[current_electrodes.cells], axis=1)
+                    )[0]
+                    split_ind.append(cells_ind)
+                tiles.append(np.hstack(split_ind))
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
-            # tiles = []
-            # for ii in np.unique(self.params.tile_spatial).tolist():
-            #     tiles += [np.where(self.params.tile_spatial == ii)[0]]
         else:
             tiles = tile_locations(
                 self.locations,
