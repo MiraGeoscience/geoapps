@@ -321,11 +321,14 @@ def test_detrend_xy():
     )
     np.testing.assert_almost_equal(values, corner_trend)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as excinfo:
         calculate_2D_trend(xy[:3, :], nan_values[:3], order=2)
+    assert "Provided 3 values for a 2th" in str(excinfo.value)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as excinfo:
         calculate_2D_trend(xy, nan_values, order=1.1)
+    assert "Value of 1.1 provided." in str(excinfo.value)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as excinfo:
         calculate_2D_trend(xy, nan_values, order=-2)
+    assert "> 0. Value of -2" in str(excinfo.value)
