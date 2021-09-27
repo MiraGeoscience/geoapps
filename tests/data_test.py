@@ -7,6 +7,7 @@
 
 
 import numpy as np
+import requests
 import SimPEG
 from geoh5py.workspace import Workspace
 

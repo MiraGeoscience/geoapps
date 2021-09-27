@@ -12,6 +12,7 @@ from copy import deepcopy
 from typing import Any
 from uuid import UUID
 
+from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 
 from .input_file import InputFile
@@ -181,7 +182,10 @@ class Params:
                             field = "property"
                     setattr(self, key, value[field])
                 else:
-                    setattr(self, key, value)
+                    if isinstance(value, Entity):
+                        setattr(self, key, value.uid)
+                    else:
+                        setattr(self, key, value)
 
     def to_dict(self, ui_json: dict = None, ui_json_format=True):
         """Return params and values dictionary."""
