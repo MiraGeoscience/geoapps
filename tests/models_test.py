@@ -91,9 +91,9 @@ def test_permute_2_octree(tmp_path):
     lower_bound = InversionModel(ws, params, inversion_mesh, "lower_bound")
     cc = inversion_mesh.mesh.cell_centers
     center = np.mean(cc, axis=0)
-    dx = inversion_mesh.mesh.hx.min()
-    dy = inversion_mesh.mesh.hy.min()
-    dz = inversion_mesh.mesh.hz.min()
+    dx = inversion_mesh.mesh.h[0].min()
+    dy = inversion_mesh.mesh.h[1].min()
+    dz = inversion_mesh.mesh.h[2].min()
     xmin = center[0] - (5 * dx)
     xmax = center[0] + (5 * dx)
     ymin = center[1] - (5 * dy)
