@@ -64,7 +64,7 @@ inversion_defaults = {
     "f_min_change": 1e-4,
     "minGNiter": 1,
     "beta_tol": 0.5,
-    "prctile": 50,
+    "prctile": 95,
     "coolingRate": 1,
     "coolEps_q": True,
     "coolEpsFact": 1.2,
