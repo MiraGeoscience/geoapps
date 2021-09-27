@@ -29,5 +29,5 @@ dependencies:
   - ipyfilechooser
   - mkl=2020.4
   - pip:
-    - git+https://github.com/MiraGeoscience/simpeg.git@feature/remove_check_X
+    - git+https://github.com/MiraGeoscience/simpeg.git@remove_check_X
     - geoh5py==0.1.4
