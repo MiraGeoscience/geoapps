@@ -1314,17 +1314,12 @@ class InversionParams(Params):
         self.setter_validator(
             "out_group",
             val,
-            fun=lambda x: self.get_out_group(x) if isinstance(val, str) else x,
+            fun=lambda x: self.create_out_group(x) if isinstance(val, str) else x,
         )
 
-    def get_out_group(self, name: str):
+    def create_out_group(self, name: str):
         if isinstance(self.workspace, Workspace) and isinstance(name, str):
-            group = self.workspace.get_entity(name)
-
-            if len(group) == 0 or group[0] is None:
-                return ContainerGroup.create(self.workspace, name=name)
-
-            return group[0]
+            return ContainerGroup.create(self.workspace, name=name)
 
     @property
     def no_data_value(self):

@@ -235,13 +235,15 @@ class InputValidator:
         self, param: str, value: str, workspace: Workspace = None, parent: UUID = None
     ) -> None:
         """Check whether a string is a valid uuid and addresses an object in the workspace."""
-
         msg = self._general_validation_msg(param, "uuid", value)
-        try:
-            obj_uuid = UUID(value)
-        except ValueError:
-            msg += " Must be a valid uuid string."
-            raise ValueError(msg)
+        if isinstance(value, UUID):
+            obj_uuid = value
+        else:
+            try:
+                obj_uuid = UUID(value)
+            except ValueError:
+                msg += " Must be a valid uuid string."
+                raise ValueError(msg)
 
         if workspace is not None:
             obj = workspace.get_entity(obj_uuid)
