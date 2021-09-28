@@ -20,8 +20,15 @@ from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
-
-from geoapps.simpegEM1D import (
+from simpeg_archive import (
+    DataMisfit,
+    Directives,
+    Inversion,
+    InvProblem,
+    Maps,
+    Optimization,
+)
+from simpeg_archive.simpegEM1D import (
     GlobalEM1DProblemFD,
     GlobalEM1DProblemTD,
     GlobalEM1DSurveyFD,
@@ -29,15 +36,8 @@ from geoapps.simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from geoapps.simpegPF import (
-    DataMisfit,
-    Directives,
-    Inversion,
-    InvProblem,
-    Maps,
-    Optimization,
-    Utils,
-)
+from simpeg_archive.utils import Counter, mkvc
+
 from geoapps.utils import geophysical_systems
 from geoapps.utils.utils import filter_xy, rotate_xy, running_mean
 
@@ -838,8 +838,8 @@ def inversion(input_file):
         mopt = inv.run(m0)
 
     if isinstance(reference, str):
-        m0 = Utils.mkvc(np.kron(mopt, np.ones_like(hz)))
-        mref = Utils.mkvc(np.kron(mopt, np.ones_like(hz)))
+        m0 = mkvc(np.kron(mopt, np.ones_like(hz)))
+        mref = mkvc(np.kron(mopt, np.ones_like(hz)))
     else:
         mref = reference
         m0 = starting
@@ -979,7 +979,7 @@ def inversion(input_file):
         invProb,
         directiveList=directiveList,
     )
-    prob.counter = opt.counter = Utils.Counter()
+    prob.counter = opt.counter = Counter()
     opt.LSshorten = 0.5
     opt.remember("xc")
     inv.run(m0)
