@@ -73,7 +73,7 @@ class InversionLocations:
             mesh = workspace.get_entity(params.mesh)[0]
             if mesh.rotation is not None:
                 self.origin = np.asarray(mesh.origin.tolist())
-                self.angle = -1 * mesh.rotation[0]
+                self.angle = -1 * mesh.rotation
                 self.is_rotated = True
 
     @property
