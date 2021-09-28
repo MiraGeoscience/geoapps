@@ -613,7 +613,7 @@ def inversion(input_file):
         else:
             uncert[dobs == float(ignore_values)] = np.inf
 
-    uncert[(dobs > 1e-38) * (dobs < 2e-38)] = np.inf
+    uncert[np.isnan(dobs)] = np.inf
 
     if em_specs["type"] == "frequency":
         data_mapping = 1.0
@@ -623,8 +623,7 @@ def inversion(input_file):
         else:
             data_mapping = 1.0
 
-        dobs[np.isnan(dobs)] = -1e-16
-
+    dobs[np.isnan(dobs)] = -1e-16
     uncert = normalization * uncert
     dobs = data_mapping * normalization * dobs
     data_types = {}
@@ -674,12 +673,6 @@ def inversion(input_file):
             topo=topo,
         )
     else:
-
-        def get_data_time_index(vec, n_sounding, time, time_index):
-            n_time = time.size
-            vec = vec.reshape((n_sounding, n_time))
-            return vec[:, time_index].flatten()
-
         src_type = np.array([em_specs["tx_specs"]["type"]], dtype=str).repeat(
             n_sounding
         )
@@ -751,20 +744,12 @@ def inversion(input_file):
                 Solver=PardisoSolver,
             )
         else:
-            time_index = np.arange(6)
-            dobs_reduced = get_data_time_index(
-                survey.dobs, n_sounding, time, time_index
-            )
-            uncert_reduced = get_data_time_index(
-                survey.std, n_sounding, time, time_index
-            )
-
             surveyHS = GlobalEM1DSurveyTD(
                 rx_locations=xyz,
                 src_locations=xyz + tx_offsets,
                 topo=topo,
                 offset=offsets,
-                time=[time[time_index] for i in range(n_sounding)],
+                time=[time for i in range(n_sounding)],
                 src_type=src_type,
                 rx_type=np.array([em_specs["data_type"]], dtype=str).repeat(n_sounding),
                 wave_type=np.array([wave_type], dtype=str).repeat(n_sounding),
@@ -776,7 +761,7 @@ def inversion(input_file):
                 base_frequency=np.array([50.0]).repeat(n_sounding),
                 half_switch=True,
             )
-            surveyHS.dobs = dobs_reduced
+            surveyHS.dobs = dobs
             probHalfspace = GlobalEM1DProblemTD(
                 [],
                 sigmaMap=sigmaMap,
@@ -789,7 +774,7 @@ def inversion(input_file):
 
         probHalfspace.pair(surveyHS)
         dmisfit = DataMisfit.l2_DataMisfit(surveyHS)
-        dmisfit.W = 1.0 / uncert_reduced
+        dmisfit.W = 1.0 / uncert
 
         if isinstance(starting, float):
             m0 = np.ones(n_sounding) * starting

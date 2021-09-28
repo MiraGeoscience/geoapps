@@ -45,7 +45,7 @@ inversion_defaults = {
     "receivers_offset_z": 0,
     "gps_receivers_offset": None,
     "ignore_values": None,
-    "resolution": 50.0,
+    "resolution": 0.0,
     "detrend_data": False,
     "detrend_order": 0,
     "detrend_type": "all",
@@ -63,19 +63,19 @@ inversion_defaults = {
     "max_distance": np.inf,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
-    "window_center_x": 0.0,
-    "window_center_y": 0.0,
-    "window_width": 0.0,
-    "window_height": 0.0,
-    "window_azimuth": 0.0,
+    "window_center_x": None,
+    "window_center_y": None,
+    "window_width": None,
+    "window_height": None,
+    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
-    "sens_wts_threshold": 1e-3,
+    "sens_wts_threshold": 0.0,
     "every_iteration_bool": False,
     "f_min_change": 1e-4,
     "minGNiter": 1,
     "beta_tol": 0.5,
-    "prctile": 50,
+    "prctile": 95,
     "coolingRate": 1,
     "coolEps_q": True,
     "coolEpsFact": 1.2,
@@ -85,7 +85,6 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e1,
-    "initial_beta": 0.0,
     "tol_cg": 1e-16,
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -96,7 +95,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": None,
+    "reference_model": 0.0,
     "gradient_type": "total",
     "lower_bound_object": None,
     "lower_bound": None,
@@ -147,11 +146,11 @@ forward_defaults = {
     "max_distance": np.inf,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
-    "window_center_x": 0.0,
-    "window_center_y": 0.0,
-    "window_width": 0.0,
-    "window_height": 0.0,
-    "window_azimuth": 0.0,
+    "window_center_x": None,
+    "window_center_y": None,
+    "window_width": None,
+    "window_height": None,
+    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
@@ -264,6 +263,8 @@ for k, v in inversion_defaults.items():
         if "isValue" in default_ui_json[k].keys():
             if default_ui_json[k]["isValue"] == False:
                 key = "property"
+        if "enabled" in default_ui_json[k].keys() and v is not None:
+            default_ui_json[k]["enabled"] = True
         default_ui_json[k][key] = v
     else:
         default_ui_json[k] = v
@@ -286,19 +287,28 @@ validations = {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "gx_channel_bool")],
     },
-    "gx_uncertainty": {"types": [str, int, float], "reqs": [(True, "gx_channel_bool")]},
+    "gx_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "gx_channel_bool")],
+    },
     "gy_channel_bool": {"types": [bool]},
     "gy_channel": {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "gy_channel_bool")],
     },
-    "gy_uncertainty": {"types": [str, int, float], "reqs": [(True, "gy_channel_bool")]},
+    "gy_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "gy_channel_bool")],
+    },
     "gz_channel_bool": {"types": [bool]},
     "gz_channel": {
         "types": [str, UUID],
         "reqs": [("data_object"), (True, "gz_channel_bool")],
     },
-    "gz_uncertainty": {"types": [str, int, float], "reqs": [(True, "gz_channel_bool")]},
+    "gz_uncertainty": {
+        "types": [str, int, float, UUID],
+        "reqs": [(True, "gz_channel_bool")],
+    },
     "out_group": {"types": [str, ContainerGroup]},
 }
 validations.update(base_validations)

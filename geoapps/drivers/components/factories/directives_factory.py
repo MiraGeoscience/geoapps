@@ -16,8 +16,8 @@ class DirectivesFactory:
 
     _directive_2_attr = {
         "VectorInversion": ["vector_inversion_directive"],
-        "UpdateSensitivityWeights": ["update_sensitivity_weights_directive"],
         "Update_IRLS": ["update_irls_directive"],
+        "UpdateSensitivityWeights": ["update_sensitivity_weights_directive"],
         "BetaEstimate_ByEig": ["beta_estimate_by_eigenvalues_directive"],
         "UpdatePreconditioner": ["update_preconditioner_directive"],
         "SaveIterationsGeoH5": [
@@ -59,6 +59,7 @@ class DirectivesFactory:
         self.update_irls_directive = directives.Update_IRLS(
             f_min_change=self.params.f_min_change,
             max_irls_iterations=self.params.max_iterations,
+            max_beta_iterations=self.params.max_iterations,
             minGNiter=self.params.minGNiter,
             beta_tol=self.params.beta_tol,
             prctile=self.params.prctile,
