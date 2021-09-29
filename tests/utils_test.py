@@ -11,14 +11,18 @@
 #  (see LICENSE file at the root of this source code package).
 
 import itertools
+import os
 
 import numpy as np
 import pytest
 from discretize import TreeMesh
+from geoh5py.objects import BlockModel
+from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.utils import (
+    block_model_2_tensor,
     calculate_2D_trend,
     downsample_grid,
     downsample_xy,
@@ -26,6 +30,7 @@ from geoapps.utils.utils import (
     octree_2_treemesh,
     rotate_xy,
     running_mean,
+    tensor_2_block_model,
     treemesh_2_octree,
     weighted_average,
     window_xy,
@@ -332,3 +337,76 @@ def test_detrend_xy():
     with pytest.raises(ValueError) as excinfo:
         calculate_2D_trend(xy, nan_values, order=-2)
     assert "> 0. Value of -2" in str(excinfo.value)
+
+
+def test_block_model_2_tensor(tmp_path):
+
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+
+    # Generate a 3D array
+    n_x, n_y, n_z = 8, 9, 10
+
+    nodal_x = np.r_[
+        0,
+        np.cumsum(
+            np.r_[
+                np.pi / n_x * 1.5 ** np.arange(3)[::-1],
+                np.ones(n_x) * np.pi / n_x,
+                np.pi / n_x * 1.5 ** np.arange(4),
+            ]
+        ),
+    ]
+    nodal_y = np.r_[
+        0,
+        np.cumsum(
+            np.r_[
+                np.pi / n_y * 1.5 ** np.arange(5)[::-1],
+                np.ones(n_y) * np.pi / n_y,
+                np.pi / n_y * 1.5 ** np.arange(6),
+            ]
+        ),
+    ]
+    nodal_z = np.r_[
+        0,
+        np.cumsum(
+            np.r_[
+                np.pi / n_z * 1.5 ** np.arange(7)[::-1],
+                np.ones(n_z) * np.pi / n_z,
+                np.pi / n_z * 1.5 ** np.arange(8),
+            ]
+        ),
+    ]
+
+    block_model = BlockModel.create(
+        ws,
+        origin=[0, 0, 0],
+        u_cell_delimiters=nodal_x,
+        v_cell_delimiters=nodal_y,
+        z_cell_delimiters=nodal_z,
+        name="test_block_model",
+        # rotation=30,
+        allow_move=False,
+    )
+
+    data = block_model.add_data(
+        {
+            "DataValues": {
+                "association": "CELL",
+                "values": (
+                    np.cos(block_model.centroids[:, 0])
+                    * np.cos(block_model.centroids[:, 1])
+                    * np.cos(block_model.centroids[:, 2])
+                ),
+            }
+        }
+    )
+
+    tensor_mesh, model = block_model_2_tensor(block_model, models=[data.values])
+
+    block_model_test = tensor_2_block_model(
+        ws, tensor_mesh, data={"block_test": model[0]}
+    )
+
+    compare_entities(
+        block_model, block_model_test, ignore=["_uid", "_name", "_allow_move"]
+    )
