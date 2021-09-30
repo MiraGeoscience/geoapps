@@ -19,7 +19,7 @@ from copy import deepcopy
 import numpy as np
 from dask.distributed import get_client, progress
 from discretize import TreeMesh
-from geoh5py.objects import PotentialElectrode
+from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from SimPEG import data, maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 from SimPEG.utils.drivers import create_nested_mesh
@@ -113,6 +113,7 @@ class InversionData(InversionLocations):
         self.entity = None
         self.data_entity = {}
         self._observed_data_types = {}
+        self._survey = None
         self._initialize()
 
     def _initialize(self) -> None:
@@ -122,13 +123,8 @@ class InversionData(InversionLocations):
         self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
-
+        self.offset, self.radar = self.params.offset()
         self.locations = self.get_locations(self.params.data_object)
-        self.create_entity()
-
-        if self.params.z_from_topo:
-            self.locations = super().set_z_from_topo(self.locations)
-
         self.mask = np.ones(len(self.locations), dtype=bool)
 
         if self.window is not None:
@@ -149,21 +145,9 @@ class InversionData(InversionLocations):
                 mask=self.mask,
             )
 
-        if self.params.inversion_type not in ["direct current", "induced polarization"]:
-            self.locations = self.filter(self.locations)
+        self.locations = self.filter(self.locations)
         self.observed = self.filter(self.observed)
         self.uncertainties = self.filter(self.uncertainties)
-
-        self.offset, self.radar = self.params.offset()
-        if self.offset is not None:
-            self.locations = self.displace(self.locations, self.offset)
-        if self.radar is not None:
-            radar_offset = self.workspace.get_entity(self.radar)[0].values
-            radar_offset = self.filter(radar_offset)
-            self.locations = self.drape(self.locations, radar_offset)
-
-        if self.is_rotated:
-            self.locations = super().rotate(self.locations)
 
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
@@ -171,40 +155,38 @@ class InversionData(InversionLocations):
             self.observed = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
+        self.write_entity()
+        self._survey, _ = self.survey()
+        self.locations = self.get_locations(self.entity.uid)
 
         if not self.params.forward_only:
             self.save_data()
 
     def filter(self, a):
 
-        if self.params.inversion_type in ["direct current", "induced_polarization"]:
-            # convert tx mask into a data mask
+        # if self.params.inversion_type in ["direct current", "induced_polarization"]:
+        #     # convert tx mask into a data mask
+        #
+        #     potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
+        #     current_electrodes = potential_electrodes.current_electrodes
+        #     ab_ind = np.where(
+        #         np.any(self.mask[current_electrodes.cells], axis=1)
+        #     )[0]
+        #
+        #     if self.indices is None:
+        #         self.indices = ab_ind
+        #
+        #
+        #     rx_mask = ab_ind[potential_electrodes.ab_cell_id.values]
+        #     # for txi in self.indices:
+        #     #     rx_ids = receiver_group(txi, self.entity)
+        #     #     rx_mask[rx_ids] = True
+        #
+        #     a = super().filter(a, mask=rx_mask)
+        #
+        # else:
 
-            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
-            current_electrodes = potential_electrodes.current_electrodes
-            ab_pairs = current_electrodes.cells
-
-            electrode_ind = np.arange(current_electrodes.n_vertices)[self.mask]
-            a_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
-            b_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
-            for ei in electrode_ind:
-                a_ind |= ei == ab_pairs[:, 0]
-                b_ind |= ei == ab_pairs[:, 1]
-            ab_ind = a_ind | b_ind
-
-            if self.indices is None:
-                self.indices = np.where(ab_ind)[0]
-
-            rx_mask = np.zeros(self.entity.n_cells, dtype=bool)
-            for txi in self.indices:
-                rx_ids = receiver_group(txi, self.entity)
-                rx_mask[rx_ids] = True
-
-            a = super().filter(a, mask=rx_mask)
-
-        else:
-
-            a = super().filter(a)
+        a = super().filter(a)
 
         return a
 
@@ -250,23 +232,56 @@ class InversionData(InversionLocations):
 
         return list(data.keys()), data, uncertainties
 
-    def create_entity(self):
+    def write_entity(self):
 
         if self.params.inversion_type == "direct current":
 
+            def prune_from_indices(curve: Curve, cell_indices: np.ndarray):
+                cells = curve.cells[cell_indices]
+                uni_ids, ids = np.unique(cells, return_inverse=True)
+                locations = curve.vertices[uni_ids, :]
+                cells = np.arange(uni_ids.shape[0], dtype="uint32")[ids].reshape(
+                    (-1, 2)
+                )
+                return locations, cells
+
+            # Trim down receivers
             rx_obj = self.workspace.get_entity(self.params.data_object)[0]
-            tx_obj = self.params.workspace.get_entity(f"{rx_obj.name} (currents)")[0]
-
-            self.entity = rx_obj.copy(parent=self.params.out_group, copy_children=False)
-            self.entity.name = "Data"
-
-            rx_obj.get_data("A-B Cell ID")[0].copy(parent=self.entity)
-            src = tx_obj.copy(parent=self.params.out_group, copy_children=False)
-            src.name = "Data (currents)"
-            self.entity.current_electrodes = src
+            rcv_ind = np.where(np.any(self.mask[rx_obj.cells], axis=1))[0]
+            rcv_locations, rcv_cells = prune_from_indices(rx_obj, rcv_ind)
+            uni_src_ids, src_ids = np.unique(
+                rx_obj.ab_cell_id.values[rcv_ind], return_inverse=True
+            )
+            ab_cell_id = np.arange(1, uni_src_ids.shape[0] + 1)[src_ids]
+            self.entity = PotentialElectrode.create(
+                self.workspace,
+                name="Data",
+                parent=self.params.out_group,
+                vertices=self.apply_transformations(rcv_locations),
+                cells=rcv_cells,
+            )
+            self.entity.ab_cell_id = ab_cell_id
+            # Trim down sources
+            tx_obj = rx_obj.current_electrodes
+            src_ind = [
+                np.where(tx_obj.ab_cell_id.values == ind)[0] for ind in uni_src_ids
+            ]
+            src_locations, src_cells = prune_from_indices(tx_obj, src_ind)
+            new_currents = CurrentElectrode.create(
+                self.workspace,
+                name="Data (currents)",
+                parent=self.params.out_group,
+                vertices=self.apply_transformations(src_locations),
+                cells=src_cells,
+            )
+            new_currents.add_default_ab_cell_id()
+            self.entity.current_electrodes = new_currents
+            self.entity.workspace.finalize()
 
         else:
-            self.entity = super().create_entity("Data", self.locations)
+            self.entity = super().create_entity(
+                "Data", self.apply_transformations(self.locations)
+            )
 
     def save_data(self):
 
@@ -274,9 +289,9 @@ class InversionData(InversionLocations):
         basename = "Predicted" if self.params.forward_only else "Observed"
 
         if self.params.inversion_type == "direct current":
-
-            survey, _ = self.survey()
-            self.transformations["potential"] = 1 / (geometric_factor(survey) + 1e-10)
+            self.transformations["potential"] = 1 / (
+                geometric_factor(self._survey) + 1e-10
+            )
             appres = data["potential"] * self.transformations["potential"]
 
             for comp in self.components:
@@ -374,6 +389,20 @@ class InversionData(InversionLocations):
 
         return unc
 
+    def apply_transformations(self, locations: np.ndarray):
+        """Apply all coordinate transformations to locations"""
+        if self.params.z_from_topo:
+            locations = super().set_z_from_topo(locations)
+        if self.offset is not None:
+            locations = self.displace(locations, self.offset)
+        if self.radar is not None:
+            radar_offset = self.workspace.get_entity(self.radar)[0].values
+            radar_offset = self.filter(radar_offset)
+            locations = self.drape(locations, radar_offset)
+        if self.is_rotated:
+            locations = super().rotate(locations)
+        return locations
+
     def displace(self, locs: np.ndarray, offset: np.ndarray) -> np.ndarray:
         """Offset data locations in all three dimensions."""
         if locs is None:
@@ -445,20 +474,14 @@ class InversionData(InversionLocations):
             the portion of the data indexed by the local_index argument.
         :return: local_index: receiver indices belonging to a particular tile.
         """
-
         survey_factory = SurveyFactory(self.params)
         survey = survey_factory.build(
-            locations=self.locations,
-            data=self.observed,
-            uncertainties=self.uncertainties,
+            data=self,
             mesh=mesh,
             active_cells=active_cells,
             local_index=local_index,
-            indices=self.indices,
         )
-        has_rxids = True if len(survey_factory.receiver_ids) > 0 else False
-        local_index = survey_factory.receiver_ids if has_rxids else local_index
-        return survey, local_index
+        return survey
 
     def simulation(
         self,
@@ -466,6 +489,7 @@ class InversionData(InversionLocations):
         active_cells: np.ndarray,
         survey,
         tile_id: int = None,
+        padding_cells: int = 6,
     ):
         """
         Generates SimPEG simulation object.
@@ -492,8 +516,12 @@ class InversionData(InversionLocations):
             )
 
         else:
-
-            nested_mesh = create_nested_mesh(survey.unique_locations, mesh)
+            nested_mesh = create_nested_mesh(
+                survey.unique_locations,
+                mesh,
+                method="radial",
+                max_distance=np.max([mesh.h[0].min(), mesh.h[1].min()]) * padding_cells,
+            )
             kwargs = {"components": 3} if self.vector else {}
             map = maps.TileMap(mesh, active_cells, nested_mesh, **kwargs)
             sim = simulation_factory.build(

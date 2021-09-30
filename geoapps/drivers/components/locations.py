@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 from uuid import UUID
 
 import numpy as np
-from geoh5py.objects import Grid2D, Points
+from geoh5py.objects import Grid2D, Points, PotentialElectrode
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
@@ -130,6 +130,8 @@ class InversionLocations:
 
         if isinstance(data_object, Grid2D):
             locs = data_object.centroids
+        # elif isinstance(data_object, PotentialElectrode):
+        #     locs = data_object.current_electrodes.vertices
         else:
             locs = data_object.vertices
 
