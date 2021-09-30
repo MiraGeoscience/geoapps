@@ -332,7 +332,7 @@ class InversionDriver:
 
         if self.params.inversion_type == "direct current":
             tiles = []
-            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
+            potential_electrodes = self.inversion_data.entity
             current_electrodes = potential_electrodes.current_electrodes
             line_split = np.array_split(
                 current_electrodes.unique_parts, self.params.tile_spatial
@@ -345,7 +345,12 @@ class InversionDriver:
                         np.any(electrode_ind[current_electrodes.cells], axis=1)
                     )[0]
                     split_ind.append(cells_ind)
-                tiles.append(np.hstack(split_ind))
+                # Fetch all receivers attached to the currents
+                logical = np.zeros(current_electrodes.n_cells, dtype="bool")
+                logical[np.hstack(split_ind)] = True
+                tiles.append(
+                    np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
+                )
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 

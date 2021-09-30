@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from geoapps.io import Params
 
 import numpy as np
-from geoh5py.objects import CurrentElectrode, Grid2D
+from geoh5py.objects import Grid2D, PotentialElectrode
 
 
 class InversionWindow:
@@ -65,9 +65,9 @@ class InversionWindow:
             data_object = self.workspace.get_entity(self.params.data_object)[0]
             if isinstance(data_object, Grid2D):
                 locs = data_object.centroids
-            elif isinstance(data_object, CurrentElectrode):
+            elif isinstance(data_object, PotentialElectrode):
                 locs = np.vstack(
-                    [data_object.vertices, data_object.potential_electrodes.vertices]
+                    [data_object.vertices, data_object.current_electrodes.vertices]
                 )
                 locs = np.unique(locs, axis=0)
             else:

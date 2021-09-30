@@ -22,12 +22,20 @@ import pandas as pd
 from dask.diagnostics import ProgressBar
 from geoh5py.data import FloatData
 from geoh5py.groups import Group
-from geoh5py.objects import BlockModel, Grid2D, Octree, Surface
+from geoh5py.objects import (
+    BlockModel,
+    CurrentElectrode,
+    Grid2D,
+    Octree,
+    PotentialElectrode,
+    Surface,
+)
 from geoh5py.workspace import Workspace
 from osgeo import gdal
 from scipy.interpolate import interp1d
 from scipy.spatial import ConvexHull, cKDTree
 from shapely.geometry import LineString, mapping
+from SimPEG.electromagnetics.static.resistivity import Survey
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
@@ -1867,6 +1875,41 @@ def load_json_params(file: str):
             params[key] = param
 
     return params
+
+
+def direct_current_from_simpeg(
+    workspace: Workspace, survey: Survey, name: str = None, data: dict = None
+):
+    """
+    Convert a simpeg direct-current survey to geoh5 format.
+    """
+    u_src_poles, src_pole_id = np.unique(
+        np.r_[survey.locations_a, survey.locations_b], axis=0, return_inverse=True
+    )
+    n_src = int(src_pole_id.shape[0] / 2.0)
+    u_src_cells, src_id = np.unique(
+        np.c_[src_pole_id[:n_src], src_pole_id[n_src:]], axis=0, return_inverse=True
+    )
+    u_rcv_poles, rcv_pole_id = np.unique(
+        np.r_[survey.locations_m, survey.locations_n], axis=0, return_inverse=True
+    )
+    n_rcv = int(rcv_pole_id.shape[0] / 2.0)
+    u_rcv_cells = np.c_[rcv_pole_id[:n_rcv], rcv_pole_id[n_rcv:]]
+    currents = CurrentElectrode.create(
+        workspace, name=name, vertices=u_src_poles, cells=u_src_cells.astype("uint32")
+    )
+    currents.add_default_ab_cell_id()
+
+    potentials = PotentialElectrode.create(
+        workspace, name=name, vertices=u_rcv_poles, cells=u_rcv_cells.astype("uint32")
+    )
+    potentials.current_electrodes = currents
+    potentials.ab_cell_id = np.asarray(src_id + 1, dtype="int32")
+
+    if data is not None:
+        potentials.add_data({key: {"values": value} for key, value in data.items()})
+
+    return currents, potentials
 
 
 colors = [
