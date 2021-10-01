@@ -391,7 +391,7 @@ def blockmodel_tensormesh_equivalency(ws, origin, x, y, z, ignore_origin=False):
         {
             "DataValues": {
                 "association": "CELL",
-                "values": (np.random.randint(0, 100, size=len(block_model.centroids))),
+                "values": np.random.randint(0, 100, size=len(block_model.centroids)),
             }
         }
     )
@@ -452,7 +452,7 @@ def test_block_model_2_tensor_negativeh(tmp_path):
         {
             "DataValues": {
                 "association": "CELL",
-                "values": (np.random.randint(0, 100, size=len(block_model.centroids))),
+                "values": np.random.randint(0, 100, size=len(block_model.centroids)),
             }
         }
     )
