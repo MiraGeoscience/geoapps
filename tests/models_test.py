@@ -71,16 +71,23 @@ def test_model_from_object(tmp_path):
     # Test behaviour when loading model from Points object with non-matching mesh
     ws, params = setup_params(tmp_path)
     inversion_mesh = InversionMesh(ws, params)
-    cc = inversion_mesh.mesh.cell_centers[0].reshape(1, 3)
+    cc = inversion_mesh.mesh.cell_centers
+    m0 = np.array([2.0, 3.0, 1.0])
+    vals = (m0[0] * cc[:, 0]) + (m0[1] * cc[:, 1]) + (m0[2] * cc[:, 2])
     point_object = Points.create(ws, name=f"test_point", vertices=cc)
-    point_object.add_data({"test_data": {"values": np.array([3.0])}})
+    point_object.add_data({"test_data": {"values": vals}})
     data_object = ws.get_entity("test_data")[0]
     params.associations[data_object.uid] = point_object.uid
     params.lower_bound_object = point_object.uid
     params.lower_bound = data_object.uid
     lower_bound = InversionModel(ws, params, inversion_mesh, "lower_bound")
-    assert np.all((lower_bound.model - 3) < 1e-10)
-    assert len(lower_bound.model) == 3 * inversion_mesh.nC
+    nc = int(len(lower_bound.model) / 3)
+    A = lower_bound.mesh.mesh.cell_centers
+    b = lower_bound.model[:nc]
+    from scipy.linalg import lstsq
+
+    m = lstsq(A, b)[0]
+    np.testing.assert_array_almost_equal(m, m0, decimal=1)
 
 
 def test_permute_2_octree(tmp_path):
