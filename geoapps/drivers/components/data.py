@@ -155,8 +155,8 @@ class InversionData(InversionLocations):
 
         self.observed = self.normalize(self.observed)
         self.write_entity()
-        self._survey, _ = self.survey()
         self.locations = self.get_locations(self.entity.uid)
+        self._survey, _ = self.survey()
 
         if not self.params.forward_only:
             self.save_data()

@@ -130,8 +130,6 @@ class InversionLocations:
 
         if isinstance(data_object, Grid2D):
             locs = data_object.centroids
-        # elif isinstance(data_object, PotentialElectrode):
-        #     locs = data_object.current_electrodes.vertices
         else:
             locs = data_object.vertices
 
