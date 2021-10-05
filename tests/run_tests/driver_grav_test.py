@@ -83,11 +83,11 @@ def test_gravity_run(
     )
     driver = GravityDriver(params)
     driver.run()
+    run_ws = Workspace(driver.params.workspace.h5file)
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
     )
 
-    run_ws = Workspace(driver.params.workspace.h5file)
     residual = run_ws.get_entity("Residuals_gz")[0]
     assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
 
@@ -102,6 +102,10 @@ def test_gravity_run(
         )
         np.testing.assert_almost_equal(output["phi_m"][1], target_gravity_run["phi_m"])
         np.testing.assert_almost_equal(output["phi_d"][1], target_gravity_run["phi_d"])
+
+        nan_ind = np.isnan(run_ws.get_entity("Iteration_0__model")[0].values)
+        inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
+        assert np.all(nan_ind == inactive_ind)
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 
