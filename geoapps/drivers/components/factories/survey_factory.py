@@ -33,7 +33,7 @@ def receiver_group(txi, potential_electrodes):
     index_map = potential_electrodes.ab_map.map
     index_map = {int(v): k for k, v in index_map.items() if v != "Unknown"}
     ids = np.where(
-        potential_electrodes.ab_cell_id.values.astype(int) == index_map[txi + 1]
+        potential_electrodes.ab_cell_id.values.astype(int) == index_map[txi]
     )[0]
 
     return ids
@@ -217,24 +217,27 @@ class SurveyFactory(SimPEGFactory):
             self.local_index = local_index
 
         if self.factory_type == "direct current":
-            source_ids = np.unique(receiver_entity.ab_cell_id.values[self.local_index])
+            source_ids, order = np.unique(
+                receiver_entity.ab_cell_id.values[self.local_index], return_index=True
+            )
             currents = receiver_entity.current_electrodes
 
             # TODO hook up tile_spatial to handle local_index handling
             sources = []
             self.local_index = []
-            for source_id in source_ids:
-                cell_id = int(np.where(currents.ab_cell_id.values == source_id)[0])
-                local_index = receiver_group(cell_id, receiver_entity)
+            for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
+                local_index = receiver_group(source_id, receiver_entity)
                 receivers = ReceiversFactory(self.params).build(
                     locations=data.locations,
                     local_index=receiver_entity.cells[local_index],
                 )
                 if receivers.nD == 0:
                     continue
+
+                cell_ind = int(np.where(currents.ab_cell_id.values == source_id)[0])
                 source = SourcesFactory(self.params).build(
                     receivers=receivers,
-                    locations=currents.vertices[currents.cells[cell_id]],
+                    locations=currents.vertices[currents.cells[cell_ind]],
                 )
                 sources.append(source)
                 self.local_index.append(local_index)
