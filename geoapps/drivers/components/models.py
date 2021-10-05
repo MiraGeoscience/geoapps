@@ -70,12 +70,14 @@ class InversionModelCollection:
     @property
     def reference(self):
         mref = self._reference.model
-        use_log = True if self.is_sigma else False
         if mref is None:
-            self.params.alpha_s = 0.0
             mref = self.starting
-            use_log = False
-        mref = np.log(mref) if use_log else mref
+            self.params.alpha_s = 0.0
+        elif self.is_sigma & (all(mref == 0)):
+            mref = self.starting
+            self.params.alpha_s = 0.0
+        else:
+            mref = np.log(mref) if self.is_sigma else mref
         return mref
 
     @property

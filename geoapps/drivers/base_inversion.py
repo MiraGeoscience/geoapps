@@ -144,7 +144,8 @@ class InversionDriver:
             return
 
         # Tile locations
-        self.tiles = self.get_tiles()
+        self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
+
         self.nTiles = len(self.tiles)
         print("Number of tiles:" + str(self.nTiles))
 
@@ -173,9 +174,14 @@ class InversionDriver:
             global_misfit, reg, opt, beta=self.params.initial_beta
         )
 
-        self.inverse_problem.dpred = self.inverse_problem.get_dpred(
-            self.starting_model, compute_J=True
+        # Solve forward problem, and attach dpred to inverse problem or
+        self.inverse_problem.dpred = self.inversion_data.simulate(
+            self.starting_model, self.inverse_problem, self.sorting
         )
+
+        # If forward only option enabled, stop here
+        if self.params.forward_only:
+            return
 
         # Add a list of directives to the inversion
         directiveList = DirectivesFactory(self.params).build(
@@ -329,30 +335,31 @@ class InversionDriver:
         if self.params.inversion_type in ["direct current", "induced polarization"]:
 
             tiles = []
-            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
+            potential_electrodes = self.inversion_data.entity
             current_electrodes = potential_electrodes.current_electrodes
-            ab_pairs = current_electrodes.cells
-            line_indices = current_electrodes.parts
-
-            for line in current_electrodes.unique_parts:
-                ind = line_indices == line
-                electrode_ind = np.arange(current_electrodes.n_vertices)[ind]
-                a_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
-                b_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
-                for ei in electrode_ind:
-                    a_ind |= ei == ab_pairs[:, 0]
-                    b_ind |= ei == ab_pairs[:, 1]
-                ab_ind = a_ind | b_ind
-                tiles.append(np.arange(current_electrodes.n_cells)[ab_ind])
+            line_split = np.array_split(
+                current_electrodes.unique_parts, self.params.tile_spatial
+            )
+            for split in line_split:
+                split_ind = []
+                for line in split:
+                    electrode_ind = current_electrodes.parts == line
+                    cells_ind = np.where(
+                        np.any(electrode_ind[current_electrodes.cells], axis=1)
+                    )[0]
+                    split_ind.append(cells_ind)
+                # Fetch all receivers attached to the currents
+                logical = np.zeros(current_electrodes.n_cells, dtype="bool")
+                logical[np.hstack(split_ind)] = True
+                tiles.append(
+                    np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
+                )
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
-            # tiles = []
-            # for ii in np.unique(self.params.tile_spatial).tolist():
-            #     tiles += [np.where(self.params.tile_spatial == ii)[0]]
         else:
             tiles = tile_locations(
-                self.locations["receivers"],
+                self.locations,
                 self.params.tile_spatial,
                 method="kmeans",
             )

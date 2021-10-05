@@ -7,4 +7,4 @@
 
 from .directives_factory import DirectivesFactory
 from .simulation_factory import SimulationFactory
-from .survey_factory import SurveyFactory
+from .survey_factory import SurveyFactory, receiver_group

@@ -27,7 +27,6 @@ class SimulationFactory(SimPEGFactory):
     def __init__(self, params: Params):
         """
         :param params: Params object containing SimPEG object parameters.
-        :param local_index: Indices defining local part of full survey.
 
         """
         super().__init__(params)
@@ -121,7 +120,7 @@ class SimulationFactory(SimPEGFactory):
 
         return kwargs
 
-    def _magnetic_vector_keywords(self, kwargs, active_cells=None):
+    def _magnetic_scalar_keywords(self, kwargs, active_cells=None):
 
         kwargs["actInd"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
