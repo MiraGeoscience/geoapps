@@ -16,17 +16,17 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_dc_run = {
-    "data_norm": 0.00636,
-    "phi_d": 0.0002888,
-    "phi_m": 0.02895,
+    "data_norm": 0.154134,
+    "phi_d": 61.1,
+    "phi_m": 140.5,
 }
 
 
 def test_dc_run(
     tmp_path,
-    n_electrodes=20,
-    n_lines=5,
-    max_iterations=10,
+    n_electrodes=4,
+    n_lines=3,
+    max_iterations=1,
     pytest=True,
     refinement=(4, 6),
 ):
@@ -43,7 +43,7 @@ def test_dc_run(
         n_lines=n_lines,
         refinement=refinement,
         dcip=True,
-        flatten=True,
+        flatten=False,
     )
 
     tx_obj = workspace.get_entity("survey (currents)")[0]
@@ -82,10 +82,10 @@ def test_dc_run(
         potential_channel_bool=True,
         z_from_topo=False,
         potential_channel=potential,
-        potential_uncertainty=1e-4,
+        potential_uncertainty=5e-4,
         max_iterations=max_iterations,
         initial_beta=None,
-        initial_beta_ratio=1e-2,
+        initial_beta_ratio=1e0,
         prctile=100,
     )
     driver = DirectCurrentDriver(params)
@@ -99,8 +99,8 @@ def test_dc_run(
             target_dc_run["data_norm"],
             decimal=3,
         )
-        np.testing.assert_almost_equal(output["phi_m"][1], target_dc_run["phi_m"])
-        np.testing.assert_almost_equal(output["phi_d"][1], target_dc_run["phi_d"])
+        np.testing.assert_almost_equal(output["phi_m"][2], target_dc_run["phi_m"])
+        np.testing.assert_almost_equal(output["phi_d"][2], target_dc_run["phi_d"])
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 
@@ -108,7 +108,12 @@ def test_dc_run(
 if __name__ == "__main__":
     # Full run
     m_start, m_rec = test_dc_run(
-        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 6)
+        "./",
+        n_electrodes=20,
+        n_lines=5,
+        max_iterations=15,
+        pytest=False,
+        refinement=(4, 6),
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (

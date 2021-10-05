@@ -39,8 +39,10 @@ def test_susceptibility_run(
         tmp_path,
         background=0.0,
         anomaly=0.05,
-        n_grid_points=n_grid_points,
         refinement=refinement,
+        n_electrodes=n_grid_points,
+        n_lines=n_grid_points,
+        flatten=False,
     )
     model = workspace.get_entity("model")[0]
     params = MagneticScalarParams(
