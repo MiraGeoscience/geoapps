@@ -12,8 +12,10 @@ dependencies:
   - matplotlib
   - ipywidgets
   - ipykernel
+  - jupyter_client=6.1.12
   - scikit-image
   - scikit-learn
+  - jupyter_client=6.1.12
   - zarr
   - fsspec
   - xarray
@@ -28,4 +30,5 @@ dependencies:
   - mkl=2020.4
   - pip:
     - git+https://github.com/MiraGeoscience/simpeg.git@feature/tiled-simulations
+    - git+https://github.com/MiraGeoscience/simpeg.git@feature/simpeg_archive
     - geoh5py==0.1.4

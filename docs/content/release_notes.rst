@@ -1,5 +1,17 @@
 Release Notes
 =============
+
+Release 0.5.1 - 2021/09/01
+--------------------------
+
+(Hot fix)
+
+- Fix inversion application topography/receiver location from field.
+- Fix typos in docs
+- Bump requirement version geoh5py=0.4.1
+- Add unit test
+
+
 Release 0.5.0 - 2021/07/15
 --------------------------
 
