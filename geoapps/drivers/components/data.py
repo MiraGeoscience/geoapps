@@ -17,16 +17,16 @@ if TYPE_CHECKING:
 from copy import deepcopy
 
 import numpy as np
-from dask.distributed import get_client, progress
 from discretize import TreeMesh
-from geoh5py.objects import CurrentElectrode, PotentialElectrode
-from SimPEG import data, maps
+from geoh5py.objects import CurrentElectrode, Curve, PotentialElectrode
+from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 from SimPEG.utils.drivers import create_nested_mesh
+from SimPEG.utils.io_utils.io_utils_electromagnetics import read_dcip_xyz
 
-from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
+from geoapps.utils import calculate_2D_trend, filter_xy
 
-from .factories import SimulationFactory, SurveyFactory, receiver_group
+from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
 
 
@@ -118,7 +118,6 @@ class InversionData(InversionLocations):
 
     def _initialize(self) -> None:
         """Extract data from the workspace using params data."""
-
         self.vector = True if self.params.inversion_type == "magnetic vector" else False
         self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
@@ -145,7 +144,7 @@ class InversionData(InversionLocations):
                 mask=self.mask,
             )
 
-        self.locations = self.filter(self.locations)
+        self.locations = self.locations[self.mask, :]
         self.observed = self.filter(self.observed)
         self.uncertainties = self.filter(self.uncertainties)
 
@@ -163,30 +162,19 @@ class InversionData(InversionLocations):
             self.save_data()
 
     def filter(self, a):
+        """Remove vertices based on mask property."""
+        if (
+            self.params.inversion_type in ["direct current", "induced_polarization"]
+            and self.indices is None
+        ):
+            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
+            ab_ind = np.where(np.any(self.mask[potential_electrodes.cells], axis=1))[0]
+            self.indices = ab_ind
 
-        # if self.params.inversion_type in ["direct current", "induced_polarization"]:
-        #     # convert tx mask into a data mask
-        #
-        #     potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
-        #     current_electrodes = potential_electrodes.current_electrodes
-        #     ab_ind = np.where(
-        #         np.any(self.mask[current_electrodes.cells], axis=1)
-        #     )[0]
-        #
-        #     if self.indices is None:
-        #         self.indices = ab_ind
-        #
-        #
-        #     rx_mask = ab_ind[potential_electrodes.ab_cell_id.values]
-        #     # for txi in self.indices:
-        #     #     rx_ids = receiver_group(txi, self.entity)
-        #     #     rx_mask[rx_ids] = True
-        #
-        #     a = super().filter(a, mask=rx_mask)
-        #
-        # else:
+        if self.indices is None:
+            self.indices = np.where(self.mask)
 
-        a = super().filter(a)
+        a = super().filter(a, mask=self.indices)
 
         return a
 
@@ -201,7 +189,6 @@ class InversionData(InversionLocations):
             possibly also a sources and pseudo array of x, y, z locations.
 
         """
-
         data_object = self.workspace.get_entity(uid)[0]
         locs = super().get_locations(data_object)
 
@@ -219,7 +206,6 @@ class InversionData(InversionLocations):
             ignored data (specified by self.ignore_type and
             self.ignore_value).
         """
-
         components = self.params.components()
         data = {}
         uncertainties = {}
@@ -233,7 +219,7 @@ class InversionData(InversionLocations):
         return list(data.keys()), data, uncertainties
 
     def write_entity(self):
-
+        """Write out the survey to geoh5"""
         if self.params.inversion_type == "direct current":
 
             def prune_from_indices(curve: Curve, cell_indices: np.ndarray):
@@ -284,7 +270,7 @@ class InversionData(InversionLocations):
             )
 
     def save_data(self):
-
+        """Write out the data to geoh5"""
         data = self.predicted if self.params.forward_only else self.observed
         basename = "Predicted" if self.params.forward_only else "Observed"
 
@@ -537,7 +523,6 @@ class InversionData(InversionLocations):
 
     def simulate(self, model, inverse_problem, sorting):
         """Simulate fields for a particular model."""
-
         dpred = inverse_problem.get_dpred(
             model, compute_J=False if self.params.forward_only else True
         )

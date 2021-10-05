@@ -15,12 +15,9 @@ from uuid import UUID
 import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
-from geoh5py.objects import Points
 from SimPEG import (
-    dask,
     data,
     data_misfit,
-    directives,
     inverse_problem,
     inversion,
     maps,
@@ -28,10 +25,9 @@ from SimPEG import (
     optimization,
     regularization,
 )
-from SimPEG.utils import cartesian2amplitude_dip_azimuth, tile_locations
+from SimPEG.utils import tile_locations
 
 from geoapps.io import Params
-from geoapps.utils import rotate_xy, treemesh_2_octree
 
 from .components import (
     InversionData,
@@ -152,7 +148,6 @@ class InversionDriver:
         reg = self.get_regularization()
 
         # Specify optimization algorithm and set parameters
-        print("active", sum(self.active_cells))
         opt = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
             lower=self.lower_bound,
