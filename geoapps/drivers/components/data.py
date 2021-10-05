@@ -158,9 +158,6 @@ class InversionData(InversionLocations):
         self.locations = self.get_locations(self.entity.uid)
         self._survey, _ = self.survey()
 
-        if not self.params.forward_only:
-            self.save_data()
-
     def filter(self, a):
         """Remove vertices based on mask property."""
         if (
@@ -249,9 +246,9 @@ class InversionData(InversionLocations):
             self.entity.ab_cell_id = ab_cell_id
             # Trim down sources
             tx_obj = rx_obj.current_electrodes
-            src_ind = [
-                np.where(tx_obj.ab_cell_id.values == ind)[0] for ind in uni_src_ids
-            ]
+            src_ind = np.hstack(
+                [np.where(tx_obj.ab_cell_id.values == ind)[0] for ind in uni_src_ids]
+            )
             src_locations, src_cells = prune_from_indices(tx_obj, src_ind)
             new_currents = CurrentElectrode.create(
                 self.workspace,
@@ -300,9 +297,6 @@ class InversionData(InversionLocations):
             )
 
         else:
-
-            self.entity = super().create_entity("Data", self.locations)
-
             for comp in self.components:
                 dnorm = self.normalizations[comp] * data[comp]
                 self.data_entity[comp] = self.entity.add_data(

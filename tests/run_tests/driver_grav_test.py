@@ -16,9 +16,9 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_gravity_run = {
-    "data_norm": 0.00636,
-    "phi_d": 0.0002888,
-    "phi_m": 0.02895,
+    "data_norm": 0.00683,
+    "phi_d": 0.0001967,
+    "phi_m": 0.04373,
 }
 
 
@@ -38,8 +38,10 @@ def test_gravity_run(
         tmp_path,
         background=0.0,
         anomaly=0.75,
-        n_grid_points=n_grid_points,
+        n_electrodes=n_grid_points,
+        n_lines=n_grid_points,
         refinement=refinement,
+        flatten=False,
     )
     model = workspace.get_entity("model")[0]
     params = GravityParams(
@@ -56,7 +58,7 @@ def test_gravity_run(
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
-    gz = workspace.get_entity("gz")[0]
+    gz = workspace.get_entity("Predicted_gz")[0]
     # Run the inverse
     np.random.seed(0)
     params = GravityParams(
