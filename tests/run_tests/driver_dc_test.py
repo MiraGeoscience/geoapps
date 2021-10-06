@@ -17,8 +17,8 @@ from geoapps.utils.testing import setup_inversion_workspace
 
 target_dc_run = {
     "data_norm": 0.154134,
-    "phi_d": 61.1,
-    "phi_m": 140.5,
+    "phi_d": 15.76,
+    "phi_m": 143.2,
 }
 
 
@@ -82,11 +82,13 @@ def test_dc_run(
         potential_channel_bool=True,
         z_from_topo=False,
         potential_channel=potential,
-        potential_uncertainty=5e-4,
+        potential_uncertainty=1e-3,
         max_iterations=max_iterations,
         initial_beta=None,
         initial_beta_ratio=1e0,
         prctile=100,
+        upper_bound=10,
+        tile_spatial=n_lines,
     )
     driver = DirectCurrentDriver(params)
     driver.run()
@@ -113,10 +115,10 @@ if __name__ == "__main__":
         n_lines=5,
         max_iterations=15,
         pytest=False,
-        refinement=(4, 6),
+        refinement=(4, 8),
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
         residual < 20.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Susceptibility model is within 15% of the answer. Well done you!")
+    print("Conductivity model is within 15% of the answer. You are so special!")

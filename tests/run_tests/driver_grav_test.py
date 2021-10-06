@@ -16,9 +16,9 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_gravity_run = {
-    "data_norm": 0.00683,
-    "phi_d": 0.0001967,
-    "phi_m": 0.04373,
+    "data_norm": 0.0071214,
+    "phi_d": 0.0002138,
+    "phi_m": 0.04752,
 }
 
 
@@ -77,6 +77,7 @@ def test_gravity_run(
         z_from_topo=False,
         gz_channel=gz,
         gz_uncertainty=2e-3,
+        upper_bound=0.75,
         max_iterations=max_iterations,
         initial_beta_ratio=1e-2,
         prctile=100,
@@ -101,10 +102,10 @@ def test_gravity_run(
 if __name__ == "__main__":
     # Full run
     m_start, m_rec = test_gravity_run(
-        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 6)
+        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 8)
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
-        residual < 20.0
+        residual < 50.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Susceptibility model is within 15% of the answer. Well done you!")
+    print("Density model is within 15% of the answer. Let's go!!")
