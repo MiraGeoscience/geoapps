@@ -144,9 +144,14 @@ class InversionData(InversionLocations):
                 mask=self.mask,
             )
 
+        if self.radar is not None:
+            if any(np.isnan(self.radar)):
+                self.mask[np.isnan(self.radar)] = False
+
         self.locations = self.locations[self.mask, :]
         self.observed = self.filter(self.observed)
         self.uncertainties = self.filter(self.uncertainties)
+        self.radar = self.filter(self.radar)
 
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
@@ -154,7 +159,8 @@ class InversionData(InversionLocations):
             self.observed = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
-        self.write_entity()
+        self.apply_transformations(self.locations)
+        self.entity = self.write_entity()
         self.locations = self.get_locations(self.entity.uid)
         self._survey, _ = self.survey()
 
@@ -236,14 +242,14 @@ class InversionData(InversionLocations):
                 rx_obj.ab_cell_id.values[rcv_ind], return_inverse=True
             )
             ab_cell_id = np.arange(1, uni_src_ids.shape[0] + 1)[src_ids]
-            self.entity = PotentialElectrode.create(
+            entity = PotentialElectrode.create(
                 self.workspace,
                 name="Data",
                 parent=self.params.out_group,
                 vertices=self.apply_transformations(rcv_locations),
                 cells=rcv_cells,
             )
-            self.entity.ab_cell_id = ab_cell_id
+            entity.ab_cell_id = ab_cell_id
             # Trim down sources
             tx_obj = rx_obj.current_electrodes
             src_ind = np.hstack(
@@ -258,13 +264,13 @@ class InversionData(InversionLocations):
                 cells=src_cells,
             )
             new_currents.add_default_ab_cell_id()
-            self.entity.current_electrodes = new_currents
-            self.entity.workspace.finalize()
+            entity.current_electrodes = new_currents
+            entity.workspace.finalize()
 
         else:
-            self.entity = super().create_entity(
-                "Data", self.apply_transformations(self.locations)
-            )
+            entity = super().create_entity("Data", self.locations)
+
+        return entity
 
     def save_data(self):
         """Write out the data to geoh5"""
@@ -355,6 +361,8 @@ class InversionData(InversionLocations):
             return None
 
         unc = uncertainties.copy()
+        unc[np.isnan(data)] = np.inf
+
         if self.ignore_value is None:
             return unc
         elif self.ignore_type == "<":
@@ -376,9 +384,7 @@ class InversionData(InversionLocations):
         if self.offset is not None:
             locations = self.displace(locations, self.offset)
         if self.radar is not None:
-            radar_offset = self.workspace.get_entity(self.radar)[0].values
-            radar_offset = self.filter(radar_offset)
-            locations = self.drape(locations, radar_offset)
+            locations = self.drape(locations, self.radar)
         if self.is_rotated:
             locations = super().rotate(locations)
         return locations
