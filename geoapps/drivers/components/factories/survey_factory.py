@@ -279,13 +279,7 @@ class SurveyFactory(SimPEGFactory):
 
         if not self.params.forward_only:
 
-            ind = (
-                self.receiver_ids
-                if self.factory_type == "direct current"
-                else self.local_index
-            )
-
-            tiled_local_index = np.tile(ind, n_channels)
+            tiled_local_index = np.tile(self.local_index, n_channels)
             data_vec = self._stack_channels(data.observed)[tiled_local_index]
             data_vec[np.isnan(data_vec)] = self.dummy
             survey.dobs = data_vec
