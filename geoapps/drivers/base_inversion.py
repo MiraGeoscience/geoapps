@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import multiprocessing
-import warnings
 from multiprocessing.pool import ThreadPool
 from uuid import UUID
 
@@ -37,8 +36,6 @@ from .components import (
     InversionWindow,
 )
 from .components.factories import DirectivesFactory
-
-warnings.filterwarnings("ignore")
 
 
 class InversionDriver:
@@ -222,23 +219,20 @@ class InversionDriver:
         return dpred
 
     def save_residuals(self, obj, dpred):
+        residuals = self.survey.dobs - dpred
+        residuals[self.survey.dobs == self.survey.dummy] = np.nan
+
         for ii, component in enumerate(self.data.keys()):
             obj.add_data(
                 {
                     "Residuals_"
-                    + component: {
-                        "values": (
-                            self.survey.dobs[ii :: len(self.data.keys())]
-                            - dpred[ii :: len(self.data.keys())]
-                        )
-                    },
+                    + component: {"values": residuals[ii :: len(self.data.keys())]},
                     "Normalized Residuals_"
                     + component: {
                         "values": (
-                            self.survey.dobs[ii :: len(self.data.keys())]
-                            - dpred[ii :: len(self.data.keys())]
+                            residuals[ii :: len(self.data.keys())]
+                            / self.survey.std[ii :: len(self.data.keys())]
                         )
-                        / self.survey.std[ii :: len(self.data.keys())]
                     },
                 }
             )

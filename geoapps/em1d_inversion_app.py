@@ -925,6 +925,12 @@ class InversionApp(PlotSelection2D):
         self.export_directory._set_form_values(export_path, "")
         self.export_directory._apply_selection()
 
+        self._file_browser.reset(
+            path=self.working_directory,
+            filename=os.path.basename(self._h5file),
+        )
+        self._file_browser._apply_selection()
+
     @property
     def write(self):
         """"""
@@ -1290,7 +1296,7 @@ class InversionApp(PlotSelection2D):
         else:
             input_dict["receivers_offset"] = {
                 "radar_drape": string_2_list(self.sensor.offset.value)
-                + [self.sensor.data.value]
+                + [str(self.sensor.data.value)]
             }
 
         if self.topography.options.value == "Object":

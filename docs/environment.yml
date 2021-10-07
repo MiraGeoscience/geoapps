@@ -9,7 +9,7 @@ dependencies:
   - ipywidgets
   - ipykernel
   - pip:
-    - geoh5py
+    - geoh5py==0.1.4
     - numpydoc
     - sphinx==3.5.4
     - sphinx_issues
