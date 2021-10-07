@@ -171,6 +171,8 @@ class SourcesFactory(SimPEGFactory):
 class SurveyFactory(SimPEGFactory):
     """Build SimPEG sources objects based on factory type."""
 
+    dummy = -999.0
+
     def __init__(self, params: Params):
         """
         :param params: Params object containing SimPEG object parameters.
