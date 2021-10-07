@@ -17,8 +17,8 @@ from geoapps.utils.testing import setup_inversion_workspace
 
 target_gravity_run = {
     "data_norm": 0.0071214,
-    "phi_d": 0.0002138,
-    "phi_m": 0.04752,
+    "phi_d": 0.0001571,
+    "phi_m": 0.03664,
 }
 
 
@@ -61,6 +61,12 @@ def test_gravity_run(
 
     gz = workspace.get_entity("Predicted_gz")[0]
 
+    orig_gz = gz.values.copy()
+
+    # Turn some values to nan
+    gz.values[0] = np.nan
+    workspace.finalize()
+
     # Run the inverse
     np.random.seed(0)
     params = GravityParams(
@@ -99,7 +105,7 @@ def test_gravity_run(
 
     if pytest:
         np.testing.assert_almost_equal(
-            np.linalg.norm(gz.values),
+            np.linalg.norm(orig_gz),
             target_gravity_run["data_norm"],
             decimal=3,
         )
