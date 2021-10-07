@@ -799,8 +799,7 @@ class InversionApp(PlotSelection2D):
     @workspace.setter
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.lines.workspace = workspace
         self.sensor.workspace = workspace
@@ -808,19 +807,6 @@ class InversionApp(PlotSelection2D):
         self._reference_model_group.workspace = workspace
         self._starting_model_group.workspace = workspace
         self._mesh_octree.workspace = workspace
-
-        export_path = os.path.abspath(os.path.dirname(self.h5file))
-        if not os.path.exists(export_path):
-            os.mkdir(export_path)
-
-        self.export_directory._set_form_values(export_path, "")
-        self.export_directory._apply_selection()
-
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
 
     @property
     def write(self):
@@ -1532,6 +1518,8 @@ class ModelOptions(ObjectDataSelection):
     """
     Widgets for the selection of model options
     """
+
+    defaults = {}
 
     def __init__(self, identifier: str = None, **kwargs):
         self._units = "Units"
