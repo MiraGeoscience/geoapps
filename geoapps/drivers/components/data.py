@@ -148,13 +148,9 @@ class InversionData(InversionLocations):
         self.observed = self.filter(self.observed)
         self.uncertainties = self.filter(self.uncertainties)
 
-        self.observed = self.normalize(self.observed)
-        self.save_data()
-
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
-
             self.observed = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
