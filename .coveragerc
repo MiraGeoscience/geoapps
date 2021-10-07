@@ -1,4 +1,1 @@
 [run]
-omit =
-    geoh5py/handlers/*
-    geoh5py/interfaces/*
