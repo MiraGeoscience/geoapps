@@ -6,7 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import re
-from os import mkdir, path
+from os import path
 
 import discretize
 import matplotlib.pyplot as plt
@@ -171,35 +171,6 @@ class Export(ObjectDataSelection):
                 ]
             )
         return self._main
-
-    @property
-    def workspace(self):
-        """
-        geoh5py.workspace.Workspace
-        Target geoh5py workspace
-        """
-        if (
-            getattr(self, "_workspace", None) is None
-            and getattr(self, "_h5file", None) is not None
-        ):
-            self.workspace = Workspace(self.h5file)
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
-
-        # Refresh the list of objects
-        self.update_objects_list()
-
-        export_path = path.abspath(path.dirname(self.h5file))
-        if not path.exists(export_path):
-            mkdir(export_path)
-
-        self.export_directory._set_form_values(export_path, "")
-        self.export_directory._apply_selection()
 
     def trigger_click(self, _):
         if self.workspace.get_entity(self.objects.value):

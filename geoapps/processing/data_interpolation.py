@@ -317,8 +317,7 @@ class DataInterpolation(ObjectDataSelection):
     def workspace(self, workspace):
 
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.base_workspace_changes(workspace)
 
         self.update_objects_choices()
 
