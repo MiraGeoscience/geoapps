@@ -148,9 +148,13 @@ class InversionData(InversionLocations):
         self.observed = self.filter(self.observed)
         self.uncertainties = self.filter(self.uncertainties)
 
+        self.observed = self.normalize(self.observed)
+        self.save_data()
+
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
+
             self.observed = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
@@ -217,6 +221,7 @@ class InversionData(InversionLocations):
 
     def write_entity(self):
         """Write out the survey to geoh5"""
+
         if self.params.inversion_type == "direct current":
 
             def prune_from_indices(curve: Curve, cell_indices: np.ndarray):
@@ -320,12 +325,12 @@ class InversionData(InversionLocations):
             if d is None:
                 return None
             else:
-                return np.array([unc] * len(d))
+                return np.array([float(unc)] * len(d))
         elif unc is None:
             d = self.get_data_component(component)
             return d * 0.0 + 1.0  # Default
         else:
-            return self.workspace.get_entity(unc)[0].values
+            return self.workspace.get_entity(unc)[0].values.astype(float)
 
     def parse_ignore_values(self) -> tuple[float, str]:
         """Returns an ignore value and type ('<', '>', or '=') from params data."""
@@ -355,6 +360,8 @@ class InversionData(InversionLocations):
             return None
 
         unc = uncertainties.copy()
+        unc[np.isnan(data)] = np.inf
+
         if self.ignore_value is None:
             return unc
         elif self.ignore_type == "<":
@@ -404,15 +411,17 @@ class InversionData(InversionLocations):
     def detrend(self, data) -> np.ndarray:
         """Remove trend from data."""
         d = data.copy()
+        trend = data.copy()
         for comp in self.components:
             data_trend, _ = calculate_2D_trend(
-                self.locations,
+                self.locations["receivers"],
                 d[comp],
                 self.params.detrend_order,
                 self.params.detrend_type,
             )
+            trend[comp] = data_trend
             d[comp] -= data_trend
-        return d
+        return d, trend
 
     def normalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         """

@@ -90,6 +90,7 @@ def test_susceptibility_run(
     )
     driver = MagneticScalarDriver(params)
     driver.run()
+    run_ws = Workspace(driver.params.workspace.h5file)
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
     )
@@ -105,6 +106,10 @@ def test_susceptibility_run(
         np.testing.assert_almost_equal(
             output["phi_d"][1], target_susceptibility_run["phi_d"]
         )
+
+        nan_ind = np.isnan(run_ws.get_entity("Iteration_0__model")[0].values)
+        inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
+        assert np.all(nan_ind == inactive_ind)
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 
@@ -184,6 +189,7 @@ def test_magnetic_vector_run(
     )
     driver = MagneticVectorDriver(params)
     driver.run()
+    run_ws = Workspace(driver.params.workspace.h5file)
     # Re-open the workspace and get iterations
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
@@ -200,6 +206,10 @@ def test_magnetic_vector_run(
             target_magnetic_vector_run["data_norm"],
             decimal=3,
         )
+
+        nan_ind = np.isnan(run_ws.get_entity("Iteration_0__amplitude")[0].values)
+        inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
+        assert np.all(nan_ind == inactive_ind)
     else:
         return fwr_driver.starting_model, utils.spherical2cartesian(
             driver.inverse_problem.model

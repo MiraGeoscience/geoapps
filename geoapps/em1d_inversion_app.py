@@ -1283,7 +1283,7 @@ class InversionApp(PlotSelection2D):
         else:
             input_dict["receivers_offset"] = {
                 "radar_drape": string_2_list(self.sensor.offset.value)
-                + [self.sensor.data.value]
+                + [str(self.sensor.data.value)]
             }
 
         if self.topography.options.value == "Object":
