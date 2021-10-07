@@ -169,7 +169,7 @@ class InversionParams(Params):
         ]
         is_offset = any([(k != 0) for k in offsets])
         offsets = offsets if is_offset else None
-        return offsets, self.receivers_radar_drape
+        return offsets, self.workspace.get_entity(self.receivers_radar_drape)[0].values
 
     def model_norms(self) -> list[float]:
         """Returns model norm components as a list."""
