@@ -27,6 +27,7 @@ class OctreeMesh(ObjectDataSelection):
     Widget used for the creation of an octree mesh
     """
 
+    defaults = {}
     _param_class = OctreeParams
     _object_types = (Curve, Octree, Points, Surface)
     _u_cell_size = None
@@ -184,17 +185,11 @@ class OctreeMesh(ObjectDataSelection):
     @workspace.setter
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.base_workspace_changes(workspace)
         self.update_objects_choices()
         self.params.input_file.filepath = path.join(
             path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
         )
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
 
     def update_objects_choices(self):
         # Refresh the list of objects for all

@@ -13,11 +13,13 @@
 import itertools
 
 import numpy as np
+import pytest
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
 
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.utils import (
+    calculate_2D_trend,
     downsample_grid,
     downsample_xy,
     filter_xy,
@@ -299,3 +301,34 @@ def test_filter_xy():
     window["azimuth"] = -30
     combo_mask_test = filter_xy(xg_rot, yg_rot, distance=2, window=window)
     assert np.all(combo_mask_test == combo_mask)
+
+
+def test_detrend_xy():
+    xg, yg = np.meshgrid(np.arange(64), np.arange(64))
+    xy = np.c_[xg.flatten(), yg.flatten()]
+    coefficients = np.random.randn(3)
+    values = coefficients[0] + coefficients[1] * xy[:, 1] + coefficients[2] * xy[:, 0]
+    ind_nan = np.random.randint(0, high=values.shape[0] - 1, size=32)
+    nan_values = values.copy()
+    nan_values[ind_nan] = np.nan
+
+    # Should return a plane even for order=5
+    comp_trend, comp_params = calculate_2D_trend(xy, nan_values, order=5, method="all")
+    np.testing.assert_almost_equal(values, comp_trend)
+    # Should return same plane parameter for 'corners' or 'all'
+    corner_trend, corner_params = calculate_2D_trend(
+        xy, nan_values, order=1, method="corners"
+    )
+    np.testing.assert_almost_equal(values, corner_trend)
+
+    with pytest.raises(ValueError) as excinfo:
+        calculate_2D_trend(xy[:3, :], nan_values[:3], order=2)
+    assert "Provided 3 values for a 2th" in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        calculate_2D_trend(xy, nan_values, order=1.1)
+    assert "Value of 1.1 provided." in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        calculate_2D_trend(xy, nan_values, order=-2)
+    assert "> 0. Value of -2" in str(excinfo.value)
