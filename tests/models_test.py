@@ -107,7 +107,7 @@ def test_permute_2_octree(tmp_path):
     lower_bound.model[np.tile(ind, 3)] = 1
     lb_perm = lower_bound.permute_2_octree()
     octree_mesh = ws.get_entity(params.mesh)[0]
-    locs_perm = octree_mesh.centroids[lb_perm == 1, :]
+    locs_perm = octree_mesh.centroids[lb_perm[: octree_mesh.n_cells] == 1, :]
     origin = [float(octree_mesh.origin[k]) for k in ["x", "y", "z"]]
     locs_perm_rot = rotate_xy(locs_perm, origin, -octree_mesh.rotation)
     assert xmin <= locs_perm_rot[:, 0].min()

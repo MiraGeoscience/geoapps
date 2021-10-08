@@ -17,8 +17,8 @@ from geoapps.utils.testing import setup_inversion_workspace
 
 target_gravity_run = {
     "data_norm": 0.0071214,
-    "phi_d": 0.0002138,
-    "phi_m": 0.04752,
+    "phi_d": 0.0001571,
+    "phi_m": 0.03664,
 }
 
 
@@ -58,7 +58,14 @@ def test_gravity_run(
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
+
     gz = workspace.get_entity("Predicted_gz")[0]
+    orig_gz = gz.values.copy()
+
+    # Turn some values to nan
+    gz.values[0] = np.nan
+    workspace.finalize()
+
     # Run the inverse
     np.random.seed(0)
     params = GravityParams(
@@ -84,17 +91,29 @@ def test_gravity_run(
     )
     driver = GravityDriver(params)
     driver.run()
+    run_ws = Workspace(driver.params.workspace.h5file)
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
     )
+
+    residual = run_ws.get_entity("Residuals_gz")[0]
+    assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
+
+    predicted = run_ws.get_entity("Iteration_0_grav_gz")[0]
+    assert not any(np.isnan(predicted.values)), "Predicted data should not have nans."
+
     if pytest:
         np.testing.assert_almost_equal(
-            np.linalg.norm(gz.values),
+            np.linalg.norm(orig_gz),
             target_gravity_run["data_norm"],
             decimal=3,
         )
         np.testing.assert_almost_equal(output["phi_m"][1], target_gravity_run["phi_m"])
         np.testing.assert_almost_equal(output["phi_d"][1], target_gravity_run["phi_d"])
+
+        nan_ind = np.isnan(run_ws.get_entity("Iteration_0__model")[0].values)
+        inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
+        assert np.all(nan_ind == inactive_ind)
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 

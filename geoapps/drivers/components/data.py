@@ -156,10 +156,11 @@ class InversionData(InversionLocations):
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
+
             self.observed = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
-        self.apply_transformations(self.locations)
+        self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = self.get_locations(self.entity.uid)
         self._survey, _ = self.survey()
@@ -303,6 +304,7 @@ class InversionData(InversionLocations):
             )
 
         else:
+
             for comp in self.components:
                 dnorm = self.normalizations[comp] * data[comp]
                 self.data_entity[comp] = self.entity.add_data(
@@ -326,12 +328,12 @@ class InversionData(InversionLocations):
             if d is None:
                 return None
             else:
-                return np.array([unc] * len(d))
+                return np.array([float(unc)] * len(d))
         elif unc is None:
             d = self.get_data_component(component)
             return d * 0.0 + 1.0  # Default
         else:
-            return self.workspace.get_entity(unc)[0].values
+            return self.workspace.get_entity(unc)[0].values.astype(float)
 
     def parse_ignore_values(self) -> tuple[float, str]:
         """Returns an ignore value and type ('<', '>', or '=') from params data."""
@@ -410,6 +412,7 @@ class InversionData(InversionLocations):
     def detrend(self, data) -> np.ndarray:
         """Remove trend from data."""
         d = data.copy()
+        trend = data.copy()
         for comp in self.components:
             data_trend, _ = calculate_2D_trend(
                 self.locations,
@@ -417,8 +420,9 @@ class InversionData(InversionLocations):
                 self.params.detrend_order,
                 self.params.detrend_type,
             )
+            trend[comp] = data_trend
             d[comp] -= data_trend
-        return d
+        return d, trend
 
     def normalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         """

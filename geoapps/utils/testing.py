@@ -76,7 +76,7 @@ def setup_inversion_workspace(
     n_lines=5,
     refinement=(4, 6),
     dcip=False,
-    flatten=True,
+    flatten=False,
 ):
     project = os.path.join(work_dir, "inversion_test.geoh5")
     workspace = Workspace(project)
@@ -154,7 +154,7 @@ def setup_inversion_workspace(
     h = 5
     padDist = np.ones((3, 2)) * 100
     mesh = mesh_builder_xyz(
-        vertices,
+        vertices - h / 2.0,
         [h] * 3,
         depth_core=100.0,
         padding_distance=padDist,
@@ -184,7 +184,7 @@ def setup_inversion_workspace(
             mesh.gridCC,
             background * np.ones(mesh.nC),
             np.r_[-20, -20, -20],
-            np.r_[20, 20, 20],
+            np.r_[20, 20, 25],
             anomaly,
         )
     model[~active] = np.nan

@@ -281,7 +281,9 @@ class SurveyFactory(SimPEGFactory):
 
             tiled_local_index = np.tile(self.local_index, n_channels)
             data_vec = self._stack_channels(data.observed)[tiled_local_index]
-            data_vec[np.isnan(data_vec)] = self.dummy
+            data_vec[
+                np.isnan(data_vec)
+            ] = self.dummy  # Nan's handled by inf uncertainties
             survey.dobs = data_vec
             survey.std = self._stack_channels(data.uncertainties)[tiled_local_index]
 
@@ -290,6 +292,7 @@ class SurveyFactory(SimPEGFactory):
                 survey.drape_electrodes_on_topography(mesh, active_cells)
 
         survey.dummy = self.dummy
+
         return survey, self.local_index
 
     def _stack_channels(self, channel_data: dict[str, np.ndarray]):

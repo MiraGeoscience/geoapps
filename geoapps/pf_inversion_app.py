@@ -199,6 +199,7 @@ class InversionApp(PlotSelection2D):
             **self.defaults,
         )
         self._topography_group = TopographyOptions(**self.defaults)
+        self._topography_group.identifier = "topography"
         self._sensor = SensorOptions(
             objects=self._objects,
             **self.defaults,
@@ -799,8 +800,7 @@ class InversionApp(PlotSelection2D):
     @workspace.setter
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.lines.workspace = workspace
         self.sensor.workspace = workspace
@@ -808,19 +808,6 @@ class InversionApp(PlotSelection2D):
         self._reference_model_group.workspace = workspace
         self._starting_model_group.workspace = workspace
         self._mesh_octree.workspace = workspace
-
-        export_path = os.path.abspath(os.path.dirname(self.h5file))
-        if not os.path.exists(export_path):
-            os.mkdir(export_path)
-
-        self.export_directory._set_form_values(export_path, "")
-        self.export_directory._apply_selection()
-
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
 
     @property
     def write(self):
@@ -900,7 +887,7 @@ class InversionApp(PlotSelection2D):
             params["out_group"] = "GravityInversion"
             self._param_class = GravityParams
 
-        self.params = self._param_class(verbose=False, **params)
+        self.params = self._param_class(verbose=False)
         self.ga_group_name.value = self.params.defaults["out_group"]
 
         if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
@@ -1166,29 +1153,6 @@ class InversionApp(PlotSelection2D):
         self.refresh.value = True
 
     def write_trigger(self, _):
-
-        for key in self.__dict__:
-            try:
-                attr = getattr(self, key)
-                if isinstance(attr, Widget):
-                    setattr(self.params, key, attr.value)
-                else:
-                    sub_keys = []
-                    if isinstance(attr, ModelOptions):
-                        sub_keys = [attr.identifier, attr.identifier + "_object"]
-                        attr = self
-                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                        sub_keys = attr.params_keys
-                    for sub_key in sub_keys:
-                        value = getattr(attr, sub_key)
-                        if isinstance(value, Widget):
-                            value = value.value
-                        if isinstance(value, uuid.UUID):
-                            value = str(value)
-                        setattr(self.params, sub_key, value)
-
-            except AttributeError:
-                continue
         # Copy object to work geoh5
         new_workspace = Workspace(
             path.join(
@@ -1208,9 +1172,12 @@ class InversionApp(PlotSelection2D):
             obj, data = elem.get_selected_entities()
 
             if obj is not None:
-                new_obj = obj.copy(parent=new_workspace, copy_children=False)
+                new_obj = new_workspace.get_entity(obj.uid)[0]
+                if new_obj is None:
+                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
                 for d in data:
-                    d.copy(parent=new_obj)
+                    if new_workspace.get_entity(d.uid)[0] is None:
+                        d.copy(parent=new_obj)
 
         if self.inversion_type.value == "magnetic vector":
             for elem in [
@@ -1221,9 +1188,12 @@ class InversionApp(PlotSelection2D):
             ]:
                 obj, data = elem.get_selected_entities()
                 if obj is not None:
-                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
+                    new_obj = new_workspace.get_entity(obj.uid)[0]
+                    if new_obj is None:
+                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
                     for d in data:
-                        d.copy(parent=new_obj)
+                        if new_workspace.get_entity(d.uid)[0] is None:
+                            d.copy(parent=new_obj)
 
         new_obj = new_workspace.get_entity(self.objects.value)[0]
         for key in self.data_channel_choices.options:
@@ -1246,10 +1216,36 @@ class InversionApp(PlotSelection2D):
 
         self.params.geoh5 = new_workspace.h5file
         self.params.workspace = new_workspace
-        self.params.input_file.filepath = os.path.join(
-            self.export_directory.selected_path, self._ga_group_name.value + ".ui.json"
+
+        for key in self.__dict__:
+            try:
+                attr = getattr(self, key)
+                if isinstance(attr, Widget):
+                    setattr(self.params, key, attr.value)
+                else:
+                    sub_keys = []
+                    if isinstance(attr, (ModelOptions, TopographyOptions)):
+                        sub_keys = [attr.identifier, attr.identifier + "_object"]
+                        attr = self
+                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                        sub_keys = attr.params_keys
+                    for sub_key in sub_keys:
+                        value = getattr(attr, sub_key)
+                        if isinstance(value, Widget):
+                            value = value.value
+                        if isinstance(value, uuid.UUID):
+                            value = str(value)
+                        setattr(self.params, sub_key, value)
+
+            except AttributeError:
+                continue
+
+        self.params.write_input_file(
+            name=os.path.join(
+                self.export_directory.selected_path,
+                self._ga_group_name.value + ".ui.json",
+            )
         )
-        self.params.write_input_file(name=self._ga_group_name.value)
         self.write.button_style = ""
         self.trigger.button_style = "success"
 
@@ -1532,6 +1528,8 @@ class ModelOptions(ObjectDataSelection):
     """
     Widgets for the selection of model options
     """
+
+    defaults = {}
 
     def __init__(self, identifier: str = None, **kwargs):
         self._units = "Units"

@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-from os import path
 from uuid import UUID
 
 import ipywidgets as widgets
@@ -197,16 +196,10 @@ class ObjectDataSelection(BaseApplication):
     @workspace.setter
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
         self.update_objects_list()
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
 
     def get_selected_entities(self):
         """
@@ -394,6 +387,8 @@ class TopographyOptions(ObjectDataSelection):
     """
     Define the topography used by the inversion
     """
+
+    defaults = {}
 
     def __init__(
         self, option_list=["None", "Object", "Relative to Sensor", "Constant"], **kwargs
