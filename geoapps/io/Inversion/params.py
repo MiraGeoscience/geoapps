@@ -1343,10 +1343,6 @@ class InversionParams(Params):
     ):
         """Write out a ui.json with the current state of parameters"""
 
-        if name is not None:
-            if ".ui.json" not in name:
-                name += ".ui.json"
-
         if ui_json is None:
             if self.forward_only:
                 defaults = self.forward_defaults
@@ -1372,8 +1368,11 @@ class InversionParams(Params):
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
-        if getattr(self, "input_file", None) is not None:
+        if name is not None:
+            if ".ui.json" not in name:
+                name += ".ui.json"
 
+        if getattr(self, "input_file", None) is not None:
             if name is None:
                 ifile.filepath = self.input_file.filepath
             else:
@@ -1384,4 +1383,9 @@ class InversionParams(Params):
                 self.input_file.filepath = out_file
                 ifile.filepath = out_file
 
+        elif name is not None:
+            ifile.filepath = os.path.abspath(name)
+
         ifile.write_ui_json(ui_json, default=default)
+
+        self._input_file = ifile

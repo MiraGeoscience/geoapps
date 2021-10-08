@@ -104,6 +104,7 @@ class SensorOptions(ObjectDataSelection):
     Define the receiver spatial parameters
     """
 
+    defaults = {}
     _options = None
 
     def __init__(self, **kwargs):
@@ -905,8 +906,7 @@ class InversionApp(PlotSelection2D):
     @workspace.setter
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
         self.update_objects_list()
@@ -917,19 +917,6 @@ class InversionApp(PlotSelection2D):
             self.lines.workspace = workspace
             self.sensor.workspace = workspace
             self.topography.workspace = workspace
-
-        export_path = os.path.abspath(os.path.dirname(self.h5file))
-        if not os.path.exists(export_path):
-            os.mkdir(export_path)
-
-        self.export_directory._set_form_values(export_path, "")
-        self.export_directory._apply_selection()
-
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=os.path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
 
     @property
     def write(self):
