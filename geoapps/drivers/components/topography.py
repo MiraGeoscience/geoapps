@@ -56,7 +56,7 @@ class InversionTopography(InversionLocations):
 
     def _initialize(self):
 
-        self.locations = super().get_locations(self.params.topography_object)
+        self.locations = self.get_locations(self.params.topography_object)
 
         self.mask = np.ones(len(self.locations), dtype=bool)
 
