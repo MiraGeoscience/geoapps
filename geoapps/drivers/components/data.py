@@ -244,7 +244,7 @@ class InversionData(InversionLocations):
                 vertices=self.apply_transformations(rcv_locations),
                 cells=rcv_cells,
             )
-            self.entity.ab_cell_id = ab_cell_id
+            self.entity.ab_cell_id = ab_cell_id.astype("int32")
             # Trim down sources
             tx_obj = rx_obj.current_electrodes
             src_ind = np.hstack(
