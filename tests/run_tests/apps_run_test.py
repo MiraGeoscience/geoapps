@@ -91,7 +91,7 @@ def test_inversion(tmp_path):
 
     side_effects = {"starting_inclination": 35, "detrend_type": "all"}
 
-    app = InversionApp(plot_result=False)
+    app = InversionApp(h5file=project, plot_result=False)
     app.geoh5 = new_workspace
 
     for param, value in changes.items():
