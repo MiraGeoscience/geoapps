@@ -8,8 +8,6 @@
 from uuid import UUID
 
 import numpy as np
-from geoh5py.groups import ContainerGroup
-from geoh5py.workspace import Workspace
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.io.Inversion.constants import (
@@ -17,24 +15,18 @@ from geoapps.io.Inversion.constants import (
 )
 from geoapps.io.Inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
-    "title": "SimPEG Inversion - Gravity",
-    "inversion_type": "gravity",
+    "title": "SimPEG Inversion - Induced Polarization",
+    "inversion_type": "induced polarization",
     "forward_only": False,
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "gx_channel_bool": False,
-    "gx_channel": None,
-    "gx_uncertainty": 0.0,
-    "gy_channel_bool": False,
-    "gy_channel": None,
-    "gy_uncertainty": 0.0,
-    "gz_channel_bool": False,
-    "gz_channel": None,
-    "gz_uncertainty": 0.0,
+    "chargeability_channel_bool": True,
+    "chargeability_channel": None,
+    "chargeability_uncertainty": 0.0,
+    "conductivity_model_object": None,
+    "conductivity_model": None,
     "starting_model_object": None,
     "starting_model": None,
     "tile_spatial": 1,
@@ -67,15 +59,14 @@ inversion_defaults = {
     "window_center_y": None,
     "window_width": None,
     "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
-    "sens_wts_threshold": 0.0,
+    "sens_wts_threshold": 1e-3,
     "every_iteration_bool": False,
     "f_min_change": 1e-4,
     "minGNiter": 1,
     "beta_tol": 0.5,
-    "prctile": 95,
+    "prctile": 50,
     "coolingRate": 1,
     "coolEps_q": True,
     "coolEpsFact": 1.2,
@@ -85,7 +76,8 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e1,
-    "tol_cg": 1e-16,
+    "initial_beta": 0.0,
+    "tol_cg": 1e-4,
     "alpha_s": 1.0,
     "alpha_x": 1.0,
     "alpha_y": 1.0,
@@ -95,7 +87,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": 0.0,
+    "reference_model": None,
     "gradient_type": "total",
     "lower_bound_object": None,
     "lower_bound": None,
@@ -105,24 +97,24 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "GravityInversion",
+    "out_group": "InducedPolarizationInversion",
     "no_data_value": None,
     "monitoring_directory": None,
     "geoh5": None,
-    "run_command": "geoapps.drivers.grav_inversion",
+    "run_command": "geoapps.drivers.induced_polarization_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
 forward_defaults = {
-    "title": "SimPEG Forward - Gravity",
-    "inversion_type": "gravity",
+    "title": "SimPEG Forward - Induced Polarization",
+    "inversion_type": "induced polarization",
     "forward_only": True,
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "gx_channel_bool": False,
-    "gy_channel_bool": False,
-    "gz_channel_bool": False,
+    "chargeability_channel_bool": True,
+    "conductivity_model_object": None,
+    "conductivity_model": None,
     "starting_model_object": None,
     "starting_model": None,
     "tile_spatial": 1,
@@ -132,7 +124,7 @@ forward_defaults = {
     "receivers_offset_y": 0,
     "receivers_offset_z": 0,
     "gps_receivers_offset": None,
-    "resolution": 50.0,
+    "resolution": 0.0,
     "max_chunk_size": 128,
     "chunk_by_rows": False,
     "mesh": None,
@@ -150,111 +142,72 @@ forward_defaults = {
     "window_center_y": None,
     "window_width": None,
     "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "GravityForward",
+    "out_group": "InducedPolarizationForward",
     "monitoring_directory": None,
     "geoh5": None,
-    "run_command": "geoapps.drivers.grav_inversion",
+    "run_command": "geoapps.drivers.induced_polarization_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
-
 default_ui_json = {
-    "title": "SimPEG Inversion - Gravity",
-    "inversion_type": "gravity",
-    "gx_channel_bool": {
-        "default": False,
-        "group": "Data",
-        "main": True,
-        "label": "Use Gx",
-        "value": False,
-    },
-    "gx_channel": {
+    "title": "SimPEG Inversion - Induced Polarization",
+    "inversion_type": "induced polarization",
+    "chargeability_channel_bool": True,
+    "chargeability_channel": {
         "association": "Cell",
         "dataType": "Float",
         "default": None,
         "group": "Data",
         "main": True,
-        "label": "Gx channel",
+        "label": "Chargeability channel",
         "parent": "data_object",
         "value": None,
     },
-    "gx_uncertainty": {
+    "chargeability_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
         "default": 0.0,
         "group": "Data",
         "main": True,
         "isValue": True,
-        "label": "Gx uncertainty",
+        "label": "chargeability uncertainty",
         "parent": "data_object",
         "property": None,
         "value": 0.0,
     },
-    "gy_channel_bool": {
-        "default": False,
-        "group": "Data",
+    "conductivity_model_object": {
+        "group": "Starting Model",
         "main": True,
-        "label": "Use Gy",
-        "value": False,
-    },
-    "gy_channel": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": None,
-        "group": "Data",
-        "main": True,
-        "label": "Gy channel",
-        "parent": "data_object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+        ],
+        "label": "Starting conductivity model object",
         "value": None,
     },
-    "gy_uncertainty": {
+    "conductivity_model": {
         "association": "Cell",
         "dataType": "Float",
-        "default": 0.0,
-        "group": "Data",
+        "group": "Starting Model",
         "main": True,
-        "isValue": True,
-        "label": "Gy uncertainty",
-        "parent": "data_object",
+        "isValue": False,
+        "parent": "conductivity_model_object",
+        "label": "Starting conductivity model value",
         "property": None,
         "value": 0.0,
     },
-    "gz_channel_bool": {
-        "default": False,
-        "group": "Data",
-        "main": True,
-        "label": "Use Gz",
-        "value": False,
-    },
-    "gz_channel": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": None,
-        "group": "Data",
-        "main": True,
-        "label": "Gz channel",
-        "parent": "data_object",
-        "value": None,
-    },
-    "gz_uncertainty": {
-        "association": "Cell",
-        "dataType": "Float",
-        "default": 0.0,
-        "group": "Data",
-        "main": True,
-        "isValue": True,
-        "label": "Gz uncertainty",
-        "parent": "data_object",
-        "property": None,
-        "value": 0.0,
-    },
-    "out_group": {"label": "Results group name", "value": "Gravity"},
+    "resolution": {"enabled": False, "label": "resolution", "value": 0.0},
+    "out_group": {"label": "Results group name", "value": "InducedPolarization"},
 }
+
 
 default_ui_json.update(base_default_ui_json)
 for k, v in inversion_defaults.items():
@@ -263,52 +216,32 @@ for k, v in inversion_defaults.items():
         if "isValue" in default_ui_json[k].keys():
             if default_ui_json[k]["isValue"] == False:
                 key = "property"
-        if "enabled" in default_ui_json[k].keys() and v is not None:
-            default_ui_json[k]["enabled"] = True
         default_ui_json[k][key] = v
     else:
         default_ui_json[k] = v
 
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
-
-
-################ Validations #################
+default_ui_json["data_object"]["meshType"] = "{275ecee9-9c24-4378-bf94-65f3c5fbe163}"
 
 required_parameters = ["inversion_type"]
 required_parameters += base_required_parameters
-
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["gravity"],
+        "values": ["induced polarization"],
     },
-    "gx_channel_bool": {"types": [bool]},
-    "gx_channel": {
+    "chargeability_channel_bool": {"types": [bool]},
+    "chargeability_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "gx_channel_bool")],
+        "reqs": [("data_object")],
     },
-    "gx_uncertainty": {
-        "types": [str, int, float, UUID],
-        "reqs": [(True, "gx_channel_bool")],
-    },
-    "gy_channel_bool": {"types": [bool]},
-    "gy_channel": {
+    "chargeability_uncertainty": {"types": [str, int, float]},
+    "conductivity_model_object": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "gy_channel_bool")],
     },
-    "gy_uncertainty": {
-        "types": [str, int, float, UUID],
-        "reqs": [(True, "gy_channel_bool")],
+    "conductivity_model": {
+        "types": [str, UUID, int, float],
     },
-    "gz_channel_bool": {"types": [bool]},
-    "gz_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object"), (True, "gz_channel_bool")],
-    },
-    "gz_uncertainty": {
-        "types": [str, int, float, UUID],
-        "reqs": [(True, "gz_channel_bool")],
-    },
-    "out_group": {"types": [str, ContainerGroup]},
 }
+
 validations.update(base_validations)

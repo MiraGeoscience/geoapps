@@ -11,6 +11,7 @@ import gc
 import json
 import os
 import re
+from uuid import UUID
 
 import dask
 import dask.array as da
@@ -21,12 +22,20 @@ import pandas as pd
 from dask.diagnostics import ProgressBar
 from geoh5py.data import FloatData
 from geoh5py.groups import Group
-from geoh5py.objects import BlockModel, Grid2D, Octree, Surface
+from geoh5py.objects import (
+    BlockModel,
+    CurrentElectrode,
+    Grid2D,
+    Octree,
+    PotentialElectrode,
+    Surface,
+)
 from geoh5py.workspace import Workspace
 from osgeo import gdal
 from scipy.interpolate import interp1d
 from scipy.spatial import ConvexHull, cKDTree
 from shapely.geometry import LineString, mapping
+from SimPEG.electromagnetics.static.resistivity import Survey
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
@@ -319,7 +328,9 @@ def export_curve_2_shapefile(
                 c.write(res)
 
 
-def calculate_2D_trend(points, values, order=0, method="all"):
+def calculate_2D_trend(
+    points: np.ndarray, values: np.ndarray, order: int = 0, method: str = "all"
+):
     """
     detrend2D(points, values, order=0, method='all')
 
@@ -328,14 +339,13 @@ def calculate_2D_trend(points, values, order=0, method="all"):
     Parameters:
     ----------
 
-    points: ndarray or floats, shape(npoints, 2)
+    points: array or floats, shape(*, 2)
         Coordinates of input points
 
-    values: ndarray of floats, shape(npoints,)
-        Values to be detrended
+    values: array of floats, shape(*,)
+        Values to be de-trended
 
-    order: int
-        Order of the polynomial to be used
+    order: Order of the polynomial to be used
 
     method: str
         Method to be used for the detrending
@@ -346,66 +356,65 @@ def calculate_2D_trend(points, values, order=0, method="all"):
     Returns
     -------
 
-    trend: ndarray of floats, shape(npoints,)
+    trend: array of floats, shape(*,)
         Calculated trend
 
-    coefficients: ndarray of floats, shape(order+1)
+    coefficients: array of floats, shape(order+1)
         Coefficients for the polynomial describing the trend
+
         trend = c[0] + points[:, 0] * c[1] +  points[:, 1] * c[2]
-
     """
+    if not isinstance(order, int) or order < 0:
+        raise ValueError(
+            "Polynomial 'order' should be an integer > 0. "
+            f"Value of {order} provided."
+        )
 
-    assert method in ["all", "corners"], "method must be 'all', or 'corners'"
-
-    assert order in [0, 1, 2], "order must be 0, 1, or 2"
+    ind_nan = ~np.isnan(values)
+    loc_xy = points[ind_nan, :]
+    values = values[ind_nan]
 
     if method == "corners":
-        hull = ConvexHull(points[:, :2])
+        hull = ConvexHull(loc_xy[:, :2])
         # Extract only those points that make the ConvexHull
-        pts = np.c_[points[hull.vertices, :2], values[hull.vertices]]
-    else:
-        # Extract all points
-        pts = np.c_[points[:, :2], values]
+        loc_xy = loc_xy[hull.vertices, :2]
+        values = values[hull.vertices]
+    elif not method == "all":
+        raise ValueError(
+            "'method' must be either 'all', or 'corners'. " f"Value {method} provided"
+        )
 
-    if order == 0:
-        data_trend = np.mean(pts[:, 2]) * np.ones(points[:, 0].shape)
-        print(f"Removed data mean: {data_trend[0]:.6g}")
-        C = np.r_[0, 0, data_trend]
+    # Compute center of mass
+    center_x = np.sum(loc_xy[:, 0] * np.abs(values)) / np.sum(np.abs(values))
+    center_y = np.sum(loc_xy[:, 1] * np.abs(values)) / np.sum(np.abs(values))
 
-    elif order == 1:
-        # best-fit linear plane
-        A = np.c_[pts[:, 0], pts[:, 1], np.ones(pts.shape[0])]
-        C, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)  # coefficients
+    polynomial = []
+    xx, yy = np.triu_indices(order + 1)
+    for x, y in zip(xx, yy):
+        polynomial.append(
+            (loc_xy[:, 0] - center_x) ** float(x)
+            * (loc_xy[:, 1] - center_y) ** float(y - x)
+        )
+    polynomial = np.vstack(polynomial).T
 
-        # evaluate at all data locations
-        data_trend = C[0] * points[:, 0] + C[1] * points[:, 1] + C[2]
-        print(f"Removed linear trend with mean: {np.mean(data_trend):.6g}")
+    if polynomial.shape[0] <= polynomial.shape[1]:
+        raise ValueError(
+            "The number of input values must be greater than the number of coefficients in the polynomial. "
+            f"Provided {polynomial.shape[0]} values for a {order}th order polynomial with {polynomial.shape[1]} coefficients."
+        )
 
-    elif order == 2:
-        # best-fit quadratic curve
-        A = np.c_[
-            np.ones(pts.shape[0]),
-            pts[:, :2],
-            np.prod(pts[:, :2], axis=1),
-            pts[:, :2] ** 2,
-        ]
-        C, _, _, _ = np.linalg.lstsq(A, pts[:, 2], rcond=None)
-
-        # evaluate at all data locations
-        data_trend = np.dot(
-            np.c_[
-                np.ones(points[:, 0].shape),
-                points[:, 0],
-                points[:, 1],
-                points[:, 0] * points[:, 1],
-                points[:, 0] ** 2,
-                points[:, 1] ** 2,
-            ],
-            C,
-        ).reshape(points[:, 0].shape)
-
-        print(f"Removed polynomial trend with mean: {np.mean(data_trend):.6g}")
-    return data_trend, C
+    params, _, _, _ = np.linalg.lstsq(polynomial, values, rcond=None)
+    data_trend = np.zeros(points.shape[0])
+    for count, (x, y) in enumerate(zip(xx, yy)):
+        data_trend += (
+            params[count]
+            * (points[:, 0] - center_x) ** float(x)
+            * (points[:, 1] - center_y) ** float(y - x)
+        )
+    print(
+        f"Removed {order}th order polynomial trend with mean: {np.mean(data_trend):.6g}"
+    )
+    return data_trend, params
 
 
 def weighted_average(
@@ -1813,15 +1822,19 @@ def iso_surface(
     return surfaces
 
 
-def get_inversion_output(h5file, group_name):
+def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
     """
-    Recover an inversion iterations from a ContainerGroup comments.
+    Recover inversion iterations from a ContainerGroup comments.
     """
-    workspace = Workspace(h5file)
+    if isinstance(h5file, Workspace):
+        workspace = h5file
+    else:
+        workspace = Workspace(h5file)
+
     out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
 
-    if workspace.get_entity(group_name):
-        group = workspace.get_entity(group_name)[0]
+    try:
+        group = workspace.get_entity(inversion_group)[0]
 
         for comment in group.comments.values:
             if "Iteration" in comment["Author"]:
@@ -1840,7 +1853,11 @@ def get_inversion_output(h5file, group_name):
             out["phi_m"] = np.hstack(out["phi_m"])[ind]
             out["time"] = np.hstack(out["time"])[ind]
 
-    return out
+            return out
+    except IndexError:
+        raise IndexError(
+            f"Inversion group {inversion_group} could not be found in the target geoh5 {h5file}"
+        )
 
 
 def load_json_params(file: str):
@@ -1858,6 +1875,41 @@ def load_json_params(file: str):
             params[key] = param
 
     return params
+
+
+def direct_current_from_simpeg(
+    workspace: Workspace, survey: Survey, name: str = None, data: dict = None
+):
+    """
+    Convert a simpeg direct-current survey to geoh5 format.
+    """
+    u_src_poles, src_pole_id = np.unique(
+        np.r_[survey.locations_a, survey.locations_b], axis=0, return_inverse=True
+    )
+    n_src = int(src_pole_id.shape[0] / 2.0)
+    u_src_cells, src_id = np.unique(
+        np.c_[src_pole_id[:n_src], src_pole_id[n_src:]], axis=0, return_inverse=True
+    )
+    u_rcv_poles, rcv_pole_id = np.unique(
+        np.r_[survey.locations_m, survey.locations_n], axis=0, return_inverse=True
+    )
+    n_rcv = int(rcv_pole_id.shape[0] / 2.0)
+    u_rcv_cells = np.c_[rcv_pole_id[:n_rcv], rcv_pole_id[n_rcv:]]
+    currents = CurrentElectrode.create(
+        workspace, name=name, vertices=u_src_poles, cells=u_src_cells.astype("uint32")
+    )
+    currents.add_default_ab_cell_id()
+
+    potentials = PotentialElectrode.create(
+        workspace, name=name, vertices=u_rcv_poles, cells=u_rcv_cells.astype("uint32")
+    )
+    potentials.current_electrodes = currents
+    potentials.ab_cell_id = np.asarray(src_id + 1, dtype="int32")
+
+    if data is not None:
+        potentials.add_data({key: {"values": value} for key, value in data.items()})
+
+    return currents, potentials
 
 
 colors = [

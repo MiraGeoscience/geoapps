@@ -7,6 +7,7 @@
 
 from .utils import (
     calculate_2D_trend,
+    direct_current_from_simpeg,
     downsample_grid,
     downsample_xy,
     filter_xy,

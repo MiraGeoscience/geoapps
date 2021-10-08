@@ -7,6 +7,7 @@
 
 
 import numpy as np
+import requests
 import SimPEG
 from geoh5py.workspace import Workspace
 
@@ -37,8 +38,8 @@ def test_save_data(tmp_path):
     locs = ws.get_entity(params.data_object)[0].centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
-    obs = ws.get_entity("Observed_tmi")[0].values
-    assert len(obs) > 0
+
+    assert len(data.entity.vertices) > 0
 
 
 def test_get_uncertainty_component(tmp_path):

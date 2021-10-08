@@ -466,8 +466,7 @@ class Surface2D(ObjectDataSelection):
     @workspace.setter
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
         self.update_objects_list()
