@@ -103,7 +103,9 @@ class InversionDriver:
             self.workspace, self.params, self.window
         )
 
-        self.inversion_mesh = InversionMesh(self.workspace, self.params)
+        self.inversion_mesh = InversionMesh(
+            self.workspace, self.params, self.inversion_data, self.inversion_topography
+        )
 
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh
