@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from os import path
 from uuid import UUID
 
 from geoh5py.workspace import Workspace
@@ -69,24 +70,29 @@ def test_export():
 
 
 def test_inversion(tmp_path):
-    params = {
-        "w_cell_size": 60,
-        "z_from_topo": False,
-        "forward_only": True,
-        "starting_model": 0.01,
-        "topography": None,
-        "receivers_radar_drape": UUID("{6de9177a-8277-4e17-b76c-2b8b05dcf23c}"),
-    }
+
+    ws = Workspace(project)
+    new_workspace = Workspace(path.join(tmp_path, "invtest.geoh5"))
+    new_topo = ws.get_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
+        parent=new_workspace
+    )
+    topo_val = new_topo.add_data({"elev": {"values": new_topo.centroids[:, 2]}})
 
     changes = {
+        "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
         "inducing_field_inclination": 35,
         "detrend_data": True,
+        "topography_object": new_topo.uid,
+        "topography": topo_val.uid,
+        "z_from_topo": False,
+        "forward_only": False,
+        "starting_model": 0.01,
     }
 
     side_effects = {"starting_inclination": 35, "detrend_type": "all"}
 
-    app = InversionApp(h5file=project, plot_result=False, **params)
-    app.monitoring_directory = str(tmp_path)
+    app = InversionApp(plot_result=False)
+    app.geoh5 = new_workspace
 
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):
@@ -98,7 +104,7 @@ def test_inversion(tmp_path):
 
     params_reload = MagneticVectorParams.from_path(app.params.input_file.filepath)
 
-    for param, value in params.items():
+    for param, value in changes.items():
         assert (
             getattr(params_reload, param) == value
         ), f"Parameter {param} not saved and loaded correctly."

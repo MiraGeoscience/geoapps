@@ -539,7 +539,7 @@ validations.update(base_validations)
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "data_object": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f",
+    "data_object": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
     "tmi_channel_bool": True,
     "tmi_channel": "{44822654-b6ae-45b0-8886-2d845f80f422}",
     "inducing_field_strength": 60000.0,
