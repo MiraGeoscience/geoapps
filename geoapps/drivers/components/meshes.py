@@ -83,8 +83,6 @@ class InversionMesh:
 
         if self.params.mesh_from_params:
             self.build_from_params()
-            self.entity = self.workspace.get_entity("Octree_Mesh")[0]
-            self.entity.parent = self.params.out_group
         else:
             orig_octree = self.workspace.get_entity(self.params.mesh)[0]
 
@@ -155,10 +153,11 @@ class InversionMesh:
         from geoapps.create.octree_mesh import OctreeMesh
 
         octree_params = self.collect_mesh_params(self.params)
-        octree_mesh = OctreeMesh.run(octree_params)
+        self.entity = OctreeMesh.run(octree_params)
+        self.entity.parent = self.params.out_group
 
-        self.uid = octree_mesh.uid
-        self.mesh = octree_2_treemesh(octree_mesh)
+        self.uid = self.entity.uid
+        self.mesh = octree_2_treemesh(self.entity)
 
         self.nC = self.mesh.nC
         self.octree_permutation = self.mesh._ubc_order
