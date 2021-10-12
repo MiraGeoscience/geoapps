@@ -410,4 +410,4 @@ class InversionDriver:
                 self.params.n_cpu = int(multiprocessing.cpu_count() / 2)
 
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
-            dconf.set(scheduler="threads", pool=ThreadPool(2 * self.params.n_cpu))
+            dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
