@@ -13,7 +13,13 @@ import uuid
 
 import ipywidgets as widgets
 import numpy as np
-from geoh5py.objects import BlockModel, Octree, PotentialElectrode, Surface
+from geoh5py.objects import (
+    BlockModel,
+    CurrentElectrode,
+    Octree,
+    PotentialElectrode,
+    Surface,
+)
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
     Button,
@@ -49,11 +55,11 @@ def inversion_defaults():
             "induced polarization": "chargeability",
         },
         "reference_value": {
-            "direct current": 1e-2,
+            "direct current": 1e-1,
             "induced polarization": 0.0,
         },
         "starting_value": {
-            "direct current": 1e-2,
+            "direct current": 1e-1,
             "induced polarization": 1e-4,
         },
         "component": {
@@ -75,6 +81,7 @@ class InversionApp(PlotSelection2D):
     _lines = None
     _topography = None
     _object_types = (PotentialElectrode,)
+    _exclusion_types = (CurrentElectrode,)
     inversion_parameters = None
     defaults = {}
 
@@ -151,6 +158,8 @@ class InversionApp(PlotSelection2D):
         self._topography_group = TopographyOptions(**self.defaults)
         self._sensor = SensorOptions(
             objects=self._objects,
+            object_types=self._object_types,
+            exclusion_types=self._exclusion_types,
             **self.defaults,
         )
         self._alpha_s = widgets.FloatText(
@@ -475,12 +484,12 @@ class InversionApp(PlotSelection2D):
         """"""
         return self._forward_only
 
-    @property
-    def lines(self):
-        if getattr(self, "_lines", None) is None:
-            self._lines = LineOptions(workspace=self._workspace, objects=self._objects)
-            self.lines.lines.observe(self.update_selection, names="value")
-        return self._lines
+    # @property
+    # def lines(self):
+    #     if getattr(self, "_lines", None) is None:
+    #         self._lines = LineOptions(workspace=self._workspace, objects=self._objects)
+    #         self.lines.lines.observe(self.update_selection, names="value")
+    #     return self._lines
 
     @property
     def main(self):
@@ -630,7 +639,7 @@ class InversionApp(PlotSelection2D):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
-        self.lines.workspace = workspace
+        # self.lines.workspace = workspace
         self.sensor.workspace = workspace
         self._topography_group.workspace = workspace
         self._reference_model_group.workspace = workspace
@@ -850,8 +859,8 @@ class InversionApp(PlotSelection2D):
         if self.workspace.get_entity(self.objects.value):
             self.update_data_list(None)
             self.sensor.update_data_list(None)
-            self.lines.update_data_list(None)
-            self.lines.update_line_list(None)
+            # self.lines.update_data_list(None)
+            # self.lines.update_line_list(None)
             self.inversion_type_observer(None)
             self.write.button_style = "warning"
             self.trigger.button_style = "danger"
@@ -899,10 +908,10 @@ class InversionApp(PlotSelection2D):
         self.write.button_style = "warning"
         self.trigger.button_style = "danger"
 
-    def update_selection(self, _):
-        self.highlight_selection = {self.lines.data.value: self.lines.lines.value}
-        self.refresh.value = False
-        self.refresh.value = True
+    # def update_selection(self, _):
+    #     self.highlight_selection = {self.lines.data.value: self.lines.lines.value}
+    #     self.refresh.value = False
+    #     self.refresh.value = True
 
     def write_trigger(self, _):
 

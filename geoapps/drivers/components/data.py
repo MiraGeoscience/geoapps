@@ -277,17 +277,6 @@ class InversionData(InversionLocations):
                 geometric_factor(self._survey) + 1e-10
             )
             appres = data["potential"] * self.transformations["potential"]
-
-            for comp in self.components:
-                self.data_entity[comp] = self.entity.add_data(
-                    {
-                        f"{basename}_{comp}": {
-                            "values": data[comp],
-                            "association": "CELL",
-                        }
-                    }
-                )
-
             self.data_entity["apparent_resistivity"] = self.entity.add_data(
                 {
                     f"{basename}_apparent_resistivity": {
@@ -297,14 +286,16 @@ class InversionData(InversionLocations):
                 }
             )
 
-        else:
-            for comp in self.components:
-                dnorm = self.normalizations[comp] * data[comp]
-                self.data_entity[comp] = self.entity.add_data(
-                    {f"{basename}_{comp}": {"values": dnorm}}
+        for comp in self.components:
+            dnorm = self.normalizations[comp] * data[comp]
+            self.data_entity[comp] = self.entity.add_data(
+                {f"{basename}_{comp}": {"values": dnorm}}
+            )
+            if not self.params.forward_only:
+                self._observed_data_types[comp] = self.data_entity[comp].entity_type
+                self.entity.add_data(
+                    {f"Uncertainties_{comp}": {"values": self.uncertainties[comp]}}
                 )
-                if not self.params.forward_only:
-                    self._observed_data_types[comp] = self.data_entity[comp].entity_type
 
     def get_data_component(self, component: str) -> np.ndarray:
         """Get data component (channel) from params data."""
