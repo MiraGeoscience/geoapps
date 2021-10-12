@@ -13,7 +13,7 @@ import uuid
 
 import ipywidgets as widgets
 import numpy as np
-from geoh5py.objects import BlockModel, Octree, Surface
+from geoh5py.objects import BlockModel, Octree, PotentialElectrode, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
     Button,
@@ -37,27 +37,27 @@ from geoapps.utils.utils import find_value, string_2_list
 
 def inversion_defaults():
     """
-    Get defaults for gravity, magnetics and EM1D inversions
+    Get defaults for DCIP inversions
     """
     return {
         "units": {
-            "direct-current": "S/m",
+            "direct current": "S/m",
             "induced polarization": "SI",
         },
         "property": {
-            "direct-current": "conductivity",
+            "direct current": "conductivity",
             "induced polarization": "chargeability",
         },
         "reference_value": {
-            "direct-current": 1e-2,
+            "direct current": 1e-2,
             "induced polarization": 0.0,
         },
         "starting_value": {
-            "direct-current": 1e-2,
+            "direct current": 1e-2,
             "induced polarization": 1e-4,
         },
         "component": {
-            "direct-current": "potential",
+            "direct current": "potential",
             "induced polarization": "mV/V",
         },
     }
@@ -74,7 +74,7 @@ class InversionApp(PlotSelection2D):
     _sensor = None
     _lines = None
     _topography = None
-    _object_types = ["{275ecee9-9c24-4378-bf94-65f3c5fbe163}"]
+    _object_types = (PotentialElectrode,)
     inversion_parameters = None
     defaults = {}
 
@@ -101,7 +101,7 @@ class InversionApp(PlotSelection2D):
             description="Forward only",
         )
         self._inversion_type = Dropdown(
-            options=["direct-current", "induced polarization"],
+            options=["direct current", "induced polarization"],
             description="Inversion Type:",
         )
         self._write = Button(
@@ -628,8 +628,7 @@ class InversionApp(PlotSelection2D):
     @workspace.setter
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.lines.workspace = workspace
         self.sensor.workspace = workspace
@@ -637,19 +636,6 @@ class InversionApp(PlotSelection2D):
         self._reference_model_group.workspace = workspace
         self._starting_model_group.workspace = workspace
         self._mesh_octree.workspace = workspace
-
-        export_path = os.path.abspath(os.path.dirname(self.h5file))
-        if not os.path.exists(export_path):
-            os.mkdir(export_path)
-
-        self.export_directory._set_form_values(export_path, "")
-        self.export_directory._apply_selection()
-
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
 
     @property
     def write(self):
@@ -675,24 +661,6 @@ class InversionApp(PlotSelection2D):
             alphas[0] = 1.0
         self.alphas.value = ", ".join(list(map(str, alphas)))
 
-    def inducing_field_inclination_change(self, _):
-        if self.inversion_type.value == "magnetic vector":
-            self._reference_inclination_group.constant.value = (
-                self._inducing_field_inclination.value
-            )
-            self._starting_inclination_group.constant.value = (
-                self._inducing_field_inclination.value
-            )
-
-    def inducing_field_declination_change(self, _):
-        if self.inversion_type.value == "magnetic vector":
-            self._reference_declination_group.constant.value = (
-                self._inducing_field_declination.value
-            )
-            self._starting_declination_group.constant.value = (
-                self._inducing_field_declination.value
-            )
-
     def inversion_option_change(self, _):
         self._main.children[4].children[2].children = [
             self.option_choices,
@@ -709,11 +677,11 @@ class InversionApp(PlotSelection2D):
         Change the application on change of system
         """
         params = self.params.to_dict(ui_json_format=False)
-        if self.inversion_type.value == "direct-current" and not isinstance(
+        if self.inversion_type.value == "direct current" and not isinstance(
             self.params, DirectCurrentParams
         ):
-            self._param_class = MagneticVectorParams
-            params["inversion_type"] = "direct-current"
+            self._param_class = DirectCurrentParams
+            params["inversion_type"] = "direct current"
             params["out_group"] = "DCInversion"
 
         elif self.inversion_type.value == "induced polarization" and not isinstance(
@@ -726,9 +694,9 @@ class InversionApp(PlotSelection2D):
         self.params = self._param_class(verbose=False, **params)
         self.ga_group_name.value = self.params.defaults["out_group"]
 
-        if self.inversion_type.value in ["direct-current"]:
+        if self.inversion_type.value in ["direct current"]:
             data_type_list = [
-                "voltage",
+                "potential",
             ]
         else:
             data_type_list = ["apparent chargeability"]
@@ -869,7 +837,7 @@ class InversionApp(PlotSelection2D):
         self.write.button_style = "warning"
         self.trigger.button_style = "danger"
 
-        if self.inversion_type.value == "direct-current":
+        if self.inversion_type.value == "direct current":
             self._lower_bound_group.options.value = "Constant"
             self._lower_bound_group.constant.value = 1e-5
         else:
@@ -938,29 +906,6 @@ class InversionApp(PlotSelection2D):
 
     def write_trigger(self, _):
 
-        for key in self.__dict__:
-            try:
-                attr = getattr(self, key)
-                if isinstance(attr, Widget):
-                    setattr(self.params, key, attr.value)
-                else:
-                    sub_keys = []
-                    if isinstance(attr, ModelOptions):
-                        sub_keys = [attr.identifier, attr.identifier + "_object"]
-                        attr = self
-                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                        sub_keys = attr.params_keys
-                    for sub_key in sub_keys:
-                        value = getattr(attr, sub_key)
-                        if isinstance(value, Widget):
-                            value = value.value
-                        if isinstance(value, uuid.UUID):
-                            value = str(value)
-                        setattr(self.params, sub_key, value)
-
-            except AttributeError:
-                continue
-        # Copy object to work geoh5
         new_workspace = Workspace(
             path.join(
                 self.export_directory.selected_path,
@@ -977,11 +922,13 @@ class InversionApp(PlotSelection2D):
             self._upper_bound_group,
         ]:
             obj, data = elem.get_selected_entities()
-
             if obj is not None:
-                new_obj = obj.copy(parent=new_workspace, copy_children=False)
+                new_obj = new_workspace.get_entity(obj.uid)[0]
+                if new_obj is None:
+                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
                 for d in data:
-                    d.copy(parent=new_obj)
+                    if new_workspace.get_entity(d.uid)[0] is None:
+                        d.copy(parent=new_obj)
 
         new_obj = new_workspace.get_entity(self.objects.value)[0]
         for key in self.data_channel_choices.options:
@@ -1004,10 +951,36 @@ class InversionApp(PlotSelection2D):
 
         self.params.geoh5 = new_workspace.h5file
         self.params.workspace = new_workspace
-        self.params.input_file.filepath = os.path.join(
-            self.export_directory.selected_path, self._ga_group_name.value + ".ui.json"
+
+        for key in self.__dict__:
+            try:
+                attr = getattr(self, key)
+                if isinstance(attr, Widget):
+                    setattr(self.params, key, attr.value)
+                else:
+                    sub_keys = []
+                    if isinstance(attr, (ModelOptions, TopographyOptions)):
+                        sub_keys = [attr.identifier, attr.identifier + "_object"]
+                        attr = self
+                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                        sub_keys = attr.params_keys
+                    for sub_key in sub_keys:
+                        value = getattr(attr, sub_key)
+                        if isinstance(value, Widget):
+                            value = value.value
+                        if isinstance(value, uuid.UUID):
+                            value = str(value)
+                        setattr(self.params, sub_key, value)
+
+            except AttributeError:
+                continue
+
+        self.params.write_input_file(
+            name=os.path.join(
+                self.export_directory.selected_path,
+                self._ga_group_name.value + ".ui.json",
+            )
         )
-        self.params.write_input_file(name=self._ga_group_name.value)
         self.write.button_style = ""
         self.trigger.button_style = "success"
 
@@ -1039,12 +1012,8 @@ class InversionApp(PlotSelection2D):
                 with open(self.file_browser.selected) as f:
                     data = json.load(f)
 
-                if data["inversion_type"] == "gravity":
-                    self._param_class = GravityParams
-                elif data["inversion_type"] == "magnetic vector":
-                    self._param_class = MagneticVectorParams
-                elif data["inversion_type"] == "magnetic scalar":
-                    self._param_class = MagneticScalarParams
+                if data["inversion_type"] == "direct current":
+                    self._param_class = DirectCurrentParams
 
                 self.params = getattr(self, "_param_class").from_path(
                     self.file_browser.selected
