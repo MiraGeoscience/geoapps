@@ -96,8 +96,11 @@ class InversionMesh:
     def original_cc(self) -> np.ndarray:
         """Returns the cell centers of the original Octree mesh type."""
         cc = self.mesh.cell_centers
-        cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
-        return cc[self.octree_permutation]
+
+        if self.rotation is not None:
+            cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
+
+        return cc  # [self.octree_permutation]
 
     def collect_mesh_params(self, params: Params) -> OctreeParams:
         """Collect mesh params from inversion params set and return Octree Params object."""

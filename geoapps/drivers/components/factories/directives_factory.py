@@ -116,7 +116,7 @@ class DirectivesFactory:
                 if directive is not None:
                     self.directive_list.append(directive)
 
-        print(f"Generated directive list: {self.directive_list}")
+        # print(f"Generated directive list: {self.directive_list}")
         return self.directive_list
 
 
