@@ -18,6 +18,9 @@ from ..params import Params
 
 
 class InversionParams(Params):
+
+    _ga_group = None
+
     def __init__(self, **kwargs):
 
         self.forward_only = None
@@ -1314,12 +1317,19 @@ class InversionParams(Params):
         self.setter_validator(
             "out_group",
             val,
-            fun=lambda x: self.create_out_group(x) if isinstance(val, str) else x,
+            fun=lambda x: x.name if isinstance(val, ContainerGroup) else x,
         )
 
-    def create_out_group(self, name: str):
-        if isinstance(self.workspace, Workspace) and isinstance(name, str):
-            return ContainerGroup.create(self.workspace, name=name)
+    @property
+    def ga_group(self) -> ContainerGroup | None:
+        if (
+            getattr(self, "_ga_group", None) is None
+            and isinstance(self.workspace, Workspace)
+            and isinstance(self.out_group, str)
+        ):
+            self._ga_group = ContainerGroup.create(self.workspace, name=self.out_group)
+
+        return self._ga_group
 
     @property
     def no_data_value(self):
