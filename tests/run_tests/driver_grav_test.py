@@ -94,7 +94,7 @@ def test_gravity_run(
     driver.run()
     run_ws = Workspace(driver.params.workspace.h5file)
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.out_group.uid
+        driver.params.workspace.h5file, driver.params.ga_group.uid
     )
 
     residual = run_ws.get_entity("Residuals_gz")[0]

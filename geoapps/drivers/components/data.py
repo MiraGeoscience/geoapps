@@ -240,7 +240,7 @@ class InversionData(InversionLocations):
             self.entity = PotentialElectrode.create(
                 self.workspace,
                 name="Data",
-                parent=self.params.out_group,
+                parent=self.params.ga_group,
                 vertices=self.apply_transformations(rcv_locations),
                 cells=rcv_cells,
             )
@@ -254,7 +254,7 @@ class InversionData(InversionLocations):
             new_currents = CurrentElectrode.create(
                 self.workspace,
                 name="Data (currents)",
-                parent=self.params.out_group,
+                parent=self.params.ga_group,
                 vertices=self.apply_transformations(src_locations),
                 cells=src_cells,
             )
