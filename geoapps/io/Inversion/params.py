@@ -169,8 +169,8 @@ class InversionParams(Params):
         ]
         is_offset = any([(k != 0) for k in offsets])
         offsets = offsets if is_offset else None
-        radar = self.workspace.get_entity(self.receivers_radar_drape)[0]
-        radar = radar.values if radar else None
+        radar = self.workspace.get_entity(self.receivers_radar_drape)
+        radar = radar[0].values if radar else None
         return offsets, radar
 
     def model_norms(self) -> list[float]:
