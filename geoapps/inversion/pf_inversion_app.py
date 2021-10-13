@@ -1199,7 +1199,11 @@ class InversionApp(PlotSelection2D):
         for key in self.data_channel_choices.options:
             widget = getattr(self, f"{key}_uncertainty_channel")
             if widget.value is not None:
-                setattr(self.params, f"{key}_uncertainty", widget.value)
+                setattr(self.params, f"{key}_uncertainty", str(widget.value))
+                if new_workspace.get_entity(widget.value)[0] is None:
+                    self.workspace.get_entity(widget.value)[0].copy(
+                        parent=new_obj, copy_children=False
+                    )
             else:
                 widget = getattr(self, f"{key}_uncertainty_floor")
                 setattr(self.params, f"{key}_uncertainty", widget.value)
