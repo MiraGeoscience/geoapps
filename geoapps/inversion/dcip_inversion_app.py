@@ -700,7 +700,7 @@ class InversionApp(PlotSelection2D):
             params["out_group"] = "ChargeabilityInversion"
             raise NotImplemented("Chargeability inversion not yet implemented.")
 
-        self.params = self._param_class(verbose=False, **params)
+        self.params = self._param_class(verbose=False)
         self.ga_group_name.value = self.params.defaults["out_group"]
 
         if self.inversion_type.value in ["direct current"]:
