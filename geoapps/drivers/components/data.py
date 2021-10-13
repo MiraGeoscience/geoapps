@@ -132,14 +132,6 @@ class InversionData(InversionLocations):
                 self.locations[:, 1],
                 window=self.window,
                 angle=self.angle,
-                mask=self.mask,
-            )
-
-        if self.params.resolution not in [0.0, None]:
-            self.resolution = self.params.resolution
-            self.mask = filter_xy(
-                self.locations[:, 0],
-                self.locations[:, 1],
                 distance=self.resolution,
                 mask=self.mask,
             )

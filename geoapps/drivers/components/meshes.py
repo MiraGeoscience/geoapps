@@ -100,7 +100,7 @@ class InversionMesh:
         if self.rotation is not None:
             cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
 
-        return cc  # [self.octree_permutation]
+        return cc[self.octree_permutation]
 
     def collect_mesh_params(self, params: Params) -> OctreeParams:
         """Collect mesh params from inversion params set and return Octree Params object."""
