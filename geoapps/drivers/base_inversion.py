@@ -336,10 +336,11 @@ class InversionDriver:
                     split_ind.append(cells_ind)
                 # Fetch all receivers attached to the currents
                 logical = np.zeros(current_electrodes.n_cells, dtype="bool")
-                logical[np.hstack(split_ind)] = True
-                tiles.append(
-                    np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
-                )
+                if np.any(split_ind):
+                    logical[np.hstack(split_ind)] = True
+                    tiles.append(
+                        np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
+                    )
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
