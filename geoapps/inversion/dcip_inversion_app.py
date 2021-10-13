@@ -135,7 +135,7 @@ class InversionApp(PlotSelection2D):
         self._n_cpu = IntText(
             value=int(multiprocessing.cpu_count() / 2), description="Max CPUs"
         )
-        self._max_ram = FloatText(value=2.0, description="Max RAM (Gb)")
+        self._tile_spatial = IntText(value=1, description="Number of tiles")
         self._initial_beta_ratio = FloatText(
             value=1e2, description="Beta ratio (phi_d/phi_m):"
         )
@@ -148,7 +148,7 @@ class InversionApp(PlotSelection2D):
                 self._max_cg_iterations,
                 self._tol_cg,
                 self._n_cpu,
-                self._max_ram,
+                self._tile_spatial,
             ]
         )
         self._starting_model_group = ModelOptions("starting_model", **self.defaults)
@@ -339,11 +339,11 @@ class InversionApp(PlotSelection2D):
         return self._n_cpu
 
     @property
-    def max_ram(self):
+    def tile_spatial(self):
         """
         ipywidgets.IntText()
         """
-        return self._max_ram
+        return self._tile_spatial
 
     @property
     def mesh(self):
