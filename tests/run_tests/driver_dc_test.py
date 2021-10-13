@@ -101,8 +101,8 @@ def test_dc_run(
             target_dc_run["data_norm"],
             decimal=3,
         )
-        np.testing.assert_almost_equal(output["phi_m"][2], target_dc_run["phi_m"])
-        np.testing.assert_almost_equal(output["phi_d"][2], target_dc_run["phi_d"])
+        np.testing.assert_almost_equal(output["phi_m"][1], target_dc_run["phi_m"])
+        np.testing.assert_almost_equal(output["phi_d"][1], target_dc_run["phi_d"])
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 
