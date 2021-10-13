@@ -381,7 +381,7 @@ class InversionModel:
         else:
             xyz_in = parent.vertices
 
-        xyz_out = self.mesh.original_cc()
+        xyz_out = self.mesh.mesh.cell_centers
 
         return weighted_average(xyz_in, xyz_out, [obj])[0]
 
