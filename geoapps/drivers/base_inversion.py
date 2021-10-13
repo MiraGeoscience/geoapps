@@ -175,7 +175,7 @@ class InversionDriver:
             self.inversion_data,
             self.inversion_mesh,
             self.active_cells,
-            self.sorting,
+            np.argsort(np.hstack(self.sorting)),
             local_misfits,
             reg,
         )
@@ -336,7 +336,7 @@ class InversionDriver:
                     split_ind.append(cells_ind)
                 # Fetch all receivers attached to the currents
                 logical = np.zeros(current_electrodes.n_cells, dtype="bool")
-                if np.any(split_ind):
+                if len(split_ind) > 0:
                     logical[np.hstack(split_ind)] = True
                     tiles.append(
                         np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
