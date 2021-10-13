@@ -128,7 +128,7 @@ def test_dc_inversion(tmp_path):
         parent=new_workspace
     )
     # dc object
-    currents = ws.get_entity(UUID("{2f046abd-e5ab-492a-b138-c2b53984478e}"))[0]
+    currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
     currents.copy(parent=new_workspace)
 
     changes = {

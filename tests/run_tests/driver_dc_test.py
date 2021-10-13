@@ -93,7 +93,7 @@ def test_dc_run(
     driver = DirectCurrentDriver(params)
     driver.run()
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.out_group.uid
+        driver.params.workspace.h5file, driver.params.ga_group.uid
     )
     if pytest:
         np.testing.assert_almost_equal(
