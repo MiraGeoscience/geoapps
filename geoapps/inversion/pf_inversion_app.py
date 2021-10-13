@@ -802,7 +802,7 @@ class InversionApp(PlotSelection2D):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
-        self.lines.workspace = workspace
+        # self.lines.workspace = workspace
         self.sensor.workspace = workspace
         self._topography_group.workspace = workspace
         self._reference_model_group.workspace = workspace
