@@ -1073,7 +1073,7 @@ class SensorOptions(ObjectDataSelection):
                     self._receivers_offset_x,
                     self._receivers_offset_y,
                     self._receivers_offset_z,
-                    self._receivers_radar_drape,
+                    # self._receivers_radar_drape,
                 ]
             )
 
