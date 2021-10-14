@@ -152,11 +152,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 inversion_object.locations.shape[0],
             )
 
-            kwargs["transforms"] = np.kron(
-                [inversion_object.normalizations[c] for c in channels],
-                np.ones(inversion_object.locations.shape[0]),
-            )
-
             if self.factory_type == "direct current":
 
                 kwargs["association"] = "CELL"
