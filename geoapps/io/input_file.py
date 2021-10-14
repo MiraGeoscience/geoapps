@@ -150,6 +150,7 @@ class InputFile:
         self,
         ui_dict: dict[str, Any],
         default: bool = False,
+        name: str = None,
         workspace: Workspace = None,
     ) -> None:
         """
@@ -191,7 +192,14 @@ class InputFile:
                 else:
                     out[k] = v
 
-        with open(self.filepath, "w") as f:
+        if name is not None:
+            if ".ui.json" not in name:
+                name += ".ui.json"
+            out_file = os.path.join(self.workpath, name)
+        else:
+            out_file = self.filepath
+
+        with open(out_file, "w") as f:
             json.dump(self._stringify(self._demote(out)), f, indent=4)
 
     def _ui_2_py(self, ui_dict: dict[str, Any]) -> dict[str, Any]:

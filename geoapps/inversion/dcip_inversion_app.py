@@ -990,10 +990,8 @@ class InversionApp(PlotSelection2D):
                 continue
 
         self.params.write_input_file(
-            name=os.path.join(
-                self.export_directory.selected_path,
-                self._ga_group_name.value + ".ui.json",
-            )
+            name=self._ga_group_name.value + ".ui.json",
+            path=self.export_directory.selected_path,
         )
         self.write.button_style = ""
         self.trigger.button_style = "success"
