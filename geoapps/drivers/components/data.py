@@ -530,18 +530,10 @@ class InversionData(InversionLocations):
         dpred = inverse_problem.get_dpred(
             model, compute_J=False if self.params.forward_only else True
         )
-        self.predicted = {k: np.zeros_like(self.observed[k]) for k in self.components}
-        n_comps = len(self.components)
-        n_tiles = len(sorting)
-        for i in range(n_tiles):
-            tile_dpreds = dict(zip(self.components, np.array_split(dpred[i], n_comps)))
-            for c in self.components:
-                self.predicted[c][sorting[i]] = tile_dpreds[c]
 
-        #
-        # dpred = np.hstack(dpred)[np.hstack(sorting)]
-        # for i, comp in enumerate(self.components):
-        #     self.predicted[comp] = np.atleast_2d(dpred).T[:, i]
+        dpred = np.hstack(dpred).reshape(-1, len(self.components))
+        sorting = np.argsort(np.hstack(sorting))
+        self.predicted = dict(zip(self.components, dpred[sorting].T))
 
         # TODO Should rotate the x,y (and/or tensor) components of the fields if used.
 
