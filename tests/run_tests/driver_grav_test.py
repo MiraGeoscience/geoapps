@@ -60,7 +60,6 @@ def test_gravity_run(
     workspace = Workspace(workspace.h5file)
 
     gz = workspace.get_entity("Predicted_gz")[0]
-
     orig_gz = gz.values.copy()
 
     # Turn some values to nan

@@ -374,7 +374,6 @@ class InputFreeformValidator(InputValidator):
                 raise KeyError(f"{k} is not a valid parameter name.")
             else:
                 validator = self.validations[k]
-
             self.validate(k, v, validator, self.workspace, input.associations)
 
         if any(free_params_dict):
