@@ -438,7 +438,7 @@ class InversionData(InversionLocations):
         d = deepcopy(data)
         normalizations = {}
         for comp in self.components:
-            if comp == "gz":
+            if comp in ["gz", "bxz", "byz"]:
                 normalizations[comp] = -1.0
                 if d[comp] is not None:
                     d[comp] *= -1.0
