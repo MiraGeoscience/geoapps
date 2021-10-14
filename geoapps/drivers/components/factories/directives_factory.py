@@ -152,6 +152,11 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 inversion_object.locations.shape[0],
             )
 
+            kwargs["transforms"] = np.kron(
+                [inversion_object.normalizations[c] for c in channels],
+                np.ones(inversion_object.locations.shape[0]),
+            )
+
             if self.factory_type == "direct current":
 
                 kwargs["association"] = "CELL"
@@ -177,12 +182,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             if self.factory_type in ["magnetic scalar", "magnetic vector"]:
                 kwargs["components"] = ["mag"]
                 kwargs["data_type"] = {"mag": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.hstack(sorting)
+                kwargs["sorting"] = np.argsort(np.hstack(sorting))
 
             if self.factory_type == "gravity":
                 kwargs["components"] = ["grav"]
                 kwargs["data_type"] = {"grav": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.hstack(sorting)
+                kwargs["sorting"] = np.argsort(np.hstack(sorting))
 
         elif object_type == "mesh":
 

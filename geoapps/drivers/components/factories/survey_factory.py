@@ -278,14 +278,17 @@ class SurveyFactory(SimPEGFactory):
         n_channels = len(components)
 
         if not self.params.forward_only:
-
-            tiled_local_index = np.tile(self.local_index, n_channels)
-            data_vec = self._stack_channels(data.observed)[tiled_local_index]
+            local_data = {k: v[local_index] for k, v in data.observed.items()}
+            local_uncertainties = {
+                k: v[local_index] for k, v in data.uncertainties.items()
+            }
+            data_vec = self._stack_channels(local_data)
+            uncertainty_vec = self._stack_channels(local_uncertainties)
             data_vec[
                 np.isnan(data_vec)
             ] = self.dummy  # Nan's handled by inf uncertainties
             survey.dobs = data_vec
-            survey.std = self._stack_channels(data.uncertainties)[tiled_local_index]
+            survey.std = uncertainty_vec
 
         if self.factory_type == "direct current":
             if (mesh is not None) and (active_cells is not None):
@@ -297,4 +300,4 @@ class SurveyFactory(SimPEGFactory):
 
     def _stack_channels(self, channel_data: dict[str, np.ndarray]):
         """Convert dictionary of data/uncertainties to stacked array."""
-        return np.vstack([list(channel_data.values())]).ravel()
+        return np.column_stack(list(channel_data.values())).ravel()
