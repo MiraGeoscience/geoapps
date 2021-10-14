@@ -103,7 +103,9 @@ class InversionDriver:
             self.workspace, self.params, self.window
         )
 
-        self.inversion_mesh = InversionMesh(self.workspace, self.params)
+        self.inversion_mesh = InversionMesh(
+            self.workspace, self.params, self.inversion_data, self.inversion_topography
+        )
 
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh
@@ -206,17 +208,11 @@ class InversionDriver:
 
     def collect_predicted_data(self, global_misfit, mrec):
 
-        if getattr(global_misfit, "objfcts", None) is not None:
-            dpred = np.zeros_like(self.survey.dobs)
-            for ind, local_misfit in enumerate(global_misfit.objfcts):
-                mrec_sim = local_misfit.model_map * mrec
-                dpred[self.sorting[ind]] += local_misfit.simulation.dpred(
-                    mrec_sim
-                ).compute()
-        else:
-            dpred = global_misfit.survey.dpred(mrec).compute()
-
-        return dpred
+        dpred = np.hstack(self.inverse_problem.dpred).reshape(
+            -1, len(self.survey.components)
+        )
+        sorting = np.argsort(np.hstack(self.sorting))
+        return (dpred[sorting]).ravel()
 
     def save_residuals(self, obj, dpred):
         residuals = self.survey.dobs - dpred
@@ -409,4 +405,4 @@ class InversionDriver:
                 self.params.n_cpu = int(multiprocessing.cpu_count() / 2)
 
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
-            dconf.set(scheduler="threads", pool=ThreadPool(2 * self.params.n_cpu))
+            dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
