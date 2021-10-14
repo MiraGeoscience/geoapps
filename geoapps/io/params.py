@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 import warnings
 from copy import deepcopy
 from typing import Any
@@ -338,24 +339,32 @@ class Params:
         setattr(self, f"_{key}", value)
 
     def write_input_file(
-        self, ui_json: dict = None, default: bool = False, name: str = None
+        self,
+        ui_json: dict = None,
+        default: bool = False,
+        name: str = None,
+        path: str = None,
     ):
         """Write out a ui.json with the current state of parameters"""
 
         if name is not None:
             if ".ui.json" not in name:
                 name += ".ui.json"
+        else:
+            name = f"{self.__class__.__name__}.ui.json"
 
         if ui_json is None:
             ui_json = self.default_ui_json
-
-        if name is None:
-            name = f"{self.__class__.__name__}.ui.json"
 
         if default:
             ifile = InputFile()
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
+
+        if path is not None:
+            if not os.path.exists(path):
+                raise ValueError(f"Provided path {path} does not exist.")
+            ifile.workpath = path
 
         ifile.write_ui_json(ui_json, name=name, default=default)
 

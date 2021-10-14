@@ -1347,7 +1347,11 @@ class InversionParams(Params):
         self._no_data_value = val
 
     def write_input_file(
-        self, ui_json: dict = None, default: bool = False, name: str = None
+        self,
+        ui_json: dict = None,
+        default: bool = False,
+        name: str = None,
+        path: str = None,
     ):
         """Write out a ui.json with the current state of parameters"""
 
@@ -1379,21 +1383,14 @@ class InversionParams(Params):
         if name is not None:
             if ".ui.json" not in name:
                 name += ".ui.json"
+        else:
+            name = f"{self.out_group}.ui.json"
 
-        if getattr(self, "input_file", None) is not None:
-            if name is None:
-                ifile.filepath = self.input_file.filepath
-            else:
-                if self.input_file.workpath is None:
-                    out_file = os.path.abspath(name)
-                else:
-                    out_file = os.path.join(self.input_file.workpath, name)
-                self.input_file.filepath = out_file
-                ifile.filepath = out_file
+        if path is not None:
+            if not os.path.exists(path):
+                raise ValueError(f"Provided path {path} does not exist.")
+            ifile.workpath = path
 
-        elif name is not None:
-            ifile.filepath = os.path.abspath(name)
-
-        ifile.write_ui_json(ui_json, default=default)
-
+        ifile.write_ui_json(ui_json, name=name, default=default)
+        ifile.filepath = os.path.join(ifile.workpath, name)
         self._input_file = ifile
