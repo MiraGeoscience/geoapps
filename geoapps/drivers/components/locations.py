@@ -17,8 +17,9 @@ if TYPE_CHECKING:
 from uuid import UUID
 
 import numpy as np
-from geoh5py.objects import Grid2D, Points
+from geoh5py.objects import Grid2D, Points, PotentialElectrode
 from scipy.interpolate import LinearNDInterpolator
+from scipy.spatial import cKDTree
 
 from geoapps.utils import rotate_xy
 
@@ -74,7 +75,7 @@ class InversionLocations:
             if mesh.rotation is not None:
                 self.origin = np.asarray(mesh.origin.tolist())
                 self.angle = -1 * mesh.rotation
-                self.is_rotated = True
+                self.is_rotated = True if np.abs(self.angle) != 0 else False
 
     @property
     def mask(self):
@@ -139,7 +140,7 @@ class InversionLocations:
 
         return locs
 
-    def filter(self, a: dict[str, np.ndarray] | np.ndarray):
+    def filter(self, a: dict[str, np.ndarray] | np.ndarray, mask=None):
         """
         Apply accumulated self.mask to array, or dict of arrays.
 
@@ -150,18 +151,21 @@ class InversionLocations:
         :return: Filtered data.
 
         """
+
+        mask = self.mask if mask is None else mask
+
         if isinstance(a, dict):
 
             if all([v is None for v in a.values()]):
                 return a
             else:
-                return {k: v[self.mask] for k, v in a.items()}
+                return {k: v[mask] for k, v in a.items()}
         else:
 
             if a is None:
                 return None
             else:
-                return a[self.mask]
+                return a[mask]
 
     def rotate(self, locs: np.ndarray) -> np.ndarray:
         """

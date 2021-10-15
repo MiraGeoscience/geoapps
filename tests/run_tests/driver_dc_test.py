@@ -15,36 +15,42 @@ from geoapps.utils.testing import setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_gravity_run = {
-    "data_norm": 0.0071214,
-    "phi_d": 0.0001571,
-    "phi_m": 0.03664,
+target_dc_run = {
+    "data_norm": 0.154134,
+    "phi_d": 15.76,
+    "phi_m": 143.2,
 }
 
 
-def test_gravity_run(
+def test_dc_run(
     tmp_path,
-    n_grid_points=2,
+    n_electrodes=4,
+    n_lines=3,
     max_iterations=1,
     pytest=True,
-    refinement=(2,),
+    refinement=(4, 6),
 ):
-    from geoapps.drivers.grav_inversion import GravityDriver
-    from geoapps.io.Gravity.params import GravityParams
+    from geoapps.drivers.direct_current_inversion import DirectCurrentDriver
+    from geoapps.io.DirectCurrent.params import DirectCurrentParams
 
     np.random.seed(0)
     # Run the forward
     workspace = setup_inversion_workspace(
         tmp_path,
-        background=0.0,
-        anomaly=0.75,
-        n_electrodes=n_grid_points,
-        n_lines=n_grid_points,
+        background=0.01,
+        anomaly=10,
+        n_electrodes=n_electrodes,
+        n_lines=n_lines,
         refinement=refinement,
+        dcip=True,
         flatten=False,
     )
+
+    tx_obj = workspace.get_entity("survey (currents)")[0]
+    tx_obj.cells = tx_obj.cells.astype("uint32")
+
     model = workspace.get_entity("model")[0]
-    params = GravityParams(
+    params = DirectCurrentParams(
         forward_only=True,
         workspace=workspace,
         mesh=model.parent,
@@ -55,77 +61,64 @@ def test_gravity_run(
         starting_model_object=model.parent,
         starting_model=model,
     )
-    fwr_driver = GravityDriver(params)
+    fwr_driver = DirectCurrentDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
-
-    gz = workspace.get_entity("Predicted_gz")[0]
-
-    orig_gz = gz.values.copy()
-
-    # Turn some values to nan
-    gz.values[0] = np.nan
-    workspace.finalize()
-
+    potential = workspace.get_entity("Predicted_potential")[0]
     # Run the inverse
     np.random.seed(0)
-    params = GravityParams(
+    params = DirectCurrentParams(
         workspace=workspace,
         mesh=workspace.get_entity("mesh")[0],
         topography_object=workspace.get_entity("topography")[0],
         resolution=0.0,
-        data_object=gz.parent,
-        starting_model=1e-4,
+        data_object=potential.parent,
+        starting_model=1e-2,
         s_norm=0.0,
         x_norm=1.0,
         y_norm=1.0,
         z_norm=1.0,
         gradient_type="components",
-        gz_channel_bool=True,
+        potential_channel_bool=True,
         z_from_topo=False,
-        gz_channel=gz,
-        gz_uncertainty=2e-3,
-        upper_bound=0.75,
+        potential_channel=potential,
+        potential_uncertainty=1e-3,
         max_iterations=max_iterations,
-        initial_beta_ratio=1e-2,
+        initial_beta=None,
+        initial_beta_ratio=1e0,
         prctile=100,
+        upper_bound=10,
+        tile_spatial=n_lines,
     )
-    driver = GravityDriver(params)
+    driver = DirectCurrentDriver(params)
     driver.run()
-    run_ws = Workspace(driver.params.workspace.h5file)
     output = get_inversion_output(
         driver.params.workspace.h5file, driver.params.out_group.uid
     )
-
-    residual = run_ws.get_entity("Residuals_gz")[0]
-    assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
-
-    predicted = run_ws.get_entity("Iteration_0_grav_gz")[0]
-    assert not any(np.isnan(predicted.values)), "Predicted data should not have nans."
-
     if pytest:
         np.testing.assert_almost_equal(
-            np.linalg.norm(orig_gz),
-            target_gravity_run["data_norm"],
+            np.linalg.norm(potential.values),
+            target_dc_run["data_norm"],
             decimal=3,
         )
-        np.testing.assert_almost_equal(output["phi_m"][1], target_gravity_run["phi_m"])
-        np.testing.assert_almost_equal(output["phi_d"][1], target_gravity_run["phi_d"])
-
-        nan_ind = np.isnan(run_ws.get_entity("Iteration_0__model")[0].values)
-        inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
-        assert np.all(nan_ind == inactive_ind)
+        np.testing.assert_almost_equal(output["phi_m"][2], target_dc_run["phi_m"])
+        np.testing.assert_almost_equal(output["phi_d"][2], target_dc_run["phi_d"])
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    m_start, m_rec = test_gravity_run(
-        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 8)
+    m_start, m_rec = test_dc_run(
+        "./",
+        n_electrodes=20,
+        n_lines=5,
+        max_iterations=15,
+        pytest=False,
+        refinement=(4, 8),
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
-        residual < 50.0
+        residual < 20.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Density model is within 15% of the answer. Let's go!!")
+    print("Conductivity model is within 15% of the answer. You are so special!")
