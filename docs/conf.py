@@ -65,6 +65,7 @@ nbsphinx_thumbnails = {
     "content/applications/export": "_images/export_thumbnail.png",
     "content/applications/scatter": "_images/scatter_thumbnail.png",
     "content/applications/grav_mag_inversion": "_images/inversion_grav_mag_thumbnail.png",
+    "content/applications/dcip_inversion": "_images/inversion_dcip_thumbnail.png",
     "content/applications/em1d_inversion": "_images/inversion_em1d_thumbnail.png",
     "content/applications/clustering": "_images/cluster_thumbnail.png",
     "content/applications/peak_finder": "_images/peak_finder_thumbnail.png",

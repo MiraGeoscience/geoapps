@@ -14,9 +14,11 @@ from ipywidgets import Widget
 from geoapps.create.contours import ContourValues
 from geoapps.create.isosurface import IsoSurface
 from geoapps.create.surface_2d import Surface2D
+from geoapps.drivers.direct_current_inversion import DirectCurrentParams
 from geoapps.drivers.magnetic_vector_inversion import MagneticVectorParams
 from geoapps.export import Export
-from geoapps.pf_inversion_app import InversionApp
+from geoapps.inversion.dcip_inversion_app import InversionApp as DCInversionApp
+from geoapps.inversion.pf_inversion_app import InversionApp as MagInversionApp
 from geoapps.processing import (
     Calculator,
     Clustering,
@@ -26,7 +28,10 @@ from geoapps.processing import (
 )
 
 project = "./FlinFlon.geoh5"
+
 workspace = Workspace(project)
+
+project_dcip = "./FlinFlon_dcip.geoh5"
 
 
 def test_calculator():
@@ -69,8 +74,8 @@ def test_export():
     app.trigger.click()
 
 
-def test_inversion(tmp_path):
-
+def test_mag_inversion(tmp_path):
+    """Tests the jupyter application for mag-mvi"""
     ws = Workspace(project)
     new_workspace = Workspace(path.join(tmp_path, "invtest.geoh5"))
     new_topo = ws.get_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
@@ -91,7 +96,7 @@ def test_inversion(tmp_path):
 
     side_effects = {"starting_inclination": 35, "detrend_type": "all"}
 
-    app = InversionApp(h5file=project, plot_result=False)
+    app = MagInversionApp(h5file=project, plot_result=False)
     app.geoh5 = new_workspace
 
     for param, value in changes.items():
@@ -103,6 +108,50 @@ def test_inversion(tmp_path):
     app.write.click()
 
     params_reload = MagneticVectorParams.from_path(app.params.input_file.filepath)
+
+    for param, value in changes.items():
+        assert (
+            getattr(params_reload, param) == value
+        ), f"Parameter {param} not saved and loaded correctly."
+
+    for param, value in side_effects.items():
+        assert (
+            getattr(params_reload, param) == value
+        ), f"Side effect parameter {param} not saved and loaded correctly."
+
+
+def test_dc_inversion(tmp_path):
+    """Tests the jupyter application for dc inversion"""
+    ws = Workspace(project_dcip)
+    new_workspace = Workspace(path.join(tmp_path, "invtest.geoh5"))
+    new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[0].copy(
+        parent=new_workspace
+    )
+    # dc object
+    currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
+    currents.copy(parent=new_workspace)
+
+    changes = {
+        "topography_object": new_topo.uid,
+        "z_from_topo": False,
+        "forward_only": False,
+        "starting_model": 0.01,
+    }
+
+    side_effects = {}
+
+    app = DCInversionApp(h5file=project_dcip, plot_result=False)
+    app.geoh5 = new_workspace
+
+    for param, value in changes.items():
+        if isinstance(getattr(app, param), Widget):
+            getattr(app, param).value = value
+        else:
+            setattr(app, param, value)
+
+    app.write.click()
+
+    params_reload = DirectCurrentParams.from_path(app.params.input_file.filepath)
 
     for param, value in changes.items():
         assert (

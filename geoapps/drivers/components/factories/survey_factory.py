@@ -291,7 +291,11 @@ class SurveyFactory(SimPEGFactory):
             survey.std = uncertainty_vec
 
         if self.factory_type == "direct current":
-            if (mesh is not None) and (active_cells is not None):
+            if (
+                (mesh is not None)
+                and (active_cells is not None)
+                and self.params.z_from_topo
+            ):
                 survey.drape_electrodes_on_topography(mesh, active_cells)
 
         survey.dummy = self.dummy

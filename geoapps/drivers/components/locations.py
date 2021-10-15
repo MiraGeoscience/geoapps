@@ -107,7 +107,7 @@ class InversionLocations:
             self.workspace,
             name=name,
             vertices=locs,
-            parent=self.params.out_group,
+            parent=self.params.ga_group,
         )
 
         return entity

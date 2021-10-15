@@ -56,7 +56,7 @@ def test_dc_run(
         mesh=model.parent,
         topography_object=workspace.get_entity("topography")[0],
         resolution=0.0,
-        z_from_topo=False,
+        z_from_topo=True,
         data_object=workspace.get_entity("survey")[0],
         starting_model_object=model.parent,
         starting_model=model,
@@ -80,7 +80,7 @@ def test_dc_run(
         z_norm=1.0,
         gradient_type="components",
         potential_channel_bool=True,
-        z_from_topo=False,
+        z_from_topo=True,
         potential_channel=potential,
         potential_uncertainty=1e-3,
         max_iterations=max_iterations,
@@ -93,7 +93,7 @@ def test_dc_run(
     driver = DirectCurrentDriver(params)
     driver.run()
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.out_group.uid
+        driver.params.workspace.h5file, driver.params.ga_group.uid
     )
     if pytest:
         np.testing.assert_almost_equal(
@@ -101,8 +101,8 @@ def test_dc_run(
             target_dc_run["data_norm"],
             decimal=3,
         )
-        np.testing.assert_almost_equal(output["phi_m"][2], target_dc_run["phi_m"])
-        np.testing.assert_almost_equal(output["phi_d"][2], target_dc_run["phi_d"])
+        np.testing.assert_almost_equal(output["phi_m"][1], target_dc_run["phi_m"])
+        np.testing.assert_almost_equal(output["phi_d"][1], target_dc_run["phi_d"])
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 

@@ -146,7 +146,7 @@ class SimulationFactory(SimPEGFactory):
 
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
-        kwargs["Solver"] = self.solver
+        kwargs["solver"] = self.solver
         kwargs["store_sensitivities"] = False if self.params.forward_only else True
 
         return kwargs
@@ -184,7 +184,7 @@ class SimulationFactory(SimPEGFactory):
         etamap = maps.InjectActiveCells(mesh, indActive=active_cells, valInactive=0)
         kwargs["etaMap"] = etamap
         kwargs["sigma"] = actmap * maps.ExpMap() * sigma
-        kwargs["Solver"] = self.solver
+        kwargs["solver"] = self.solver
         kwargs["store_sensitivities"] = False if self.params.forward_only else True
         kwargs["max_ram"] = 1
 

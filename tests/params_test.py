@@ -165,9 +165,6 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
 
     pval = getattr(params, param)
 
-    if param == "out_group":
-        pval = pval.name
-
     assert pval == value
 
 
