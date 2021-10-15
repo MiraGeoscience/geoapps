@@ -432,11 +432,11 @@ def test_block_model_2_tensor_negative_z(tmp_path):
     ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
 
     # Generate a 3D array
-    nx, ny, nz = 21, 11, 31
+    nx, ny, nz = 6, 6, 5
 
     x = np.linspace(0, 10, nx)
-    y = np.linspace(0, 10, ny)
-    z = np.linspace(0, 10, nz)
+    y = np.linspace(0, 5, ny)
+    z = np.linspace(0, 8, nz)
 
     origin = [0.0, 0.0, 0.0]
 
@@ -462,7 +462,14 @@ def test_block_model_2_tensor_negative_z(tmp_path):
     )
 
     tensor_mesh, model = block_model_2_tensor(block_model, models=[data.values])
+
+    t2bm = []
+    for i, cc in enumerate(block_model.centroids):
+        t2bm.append(np.where(np.all(tensor_mesh.cell_centers == cc, axis=1))[0])
+    t2bm = np.array(t2bm).flatten()
+
     np.testing.assert_array_almost_equal(
-        np.unique(block_model.centroids), np.unique(tensor_mesh.cell_centers)
+        block_model.centroids, tensor_mesh.cell_centers[t2bm]
     )
     assert tensor_mesh.x0[2] == np.min(block_model.z_cell_delimiters)
+    assert np.all(model[0][t2bm].flatten() == data.values)
