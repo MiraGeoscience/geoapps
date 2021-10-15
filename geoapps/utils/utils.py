@@ -1023,18 +1023,19 @@ def tensor_2_block_model(workspace, mesh, name=None, parent=None, data={}):
     Function to convert a tensor mesh from :obj:`~discretize.TensorMesh` to
     :obj:`~geoh5py.objects.block_model.BlockModel`
     """
+
     block_model = BlockModel.create(
         workspace,
         origin=[mesh.x0[0], mesh.x0[1], mesh.x0[2]],
-        u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
-        v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
+        u_cell_delimiters=(mesh.vectorNx - mesh.x0[0]),
+        v_cell_delimiters=(mesh.vectorNy - mesh.x0[1]),
         z_cell_delimiters=(mesh.vectorNz - mesh.x0[2]),
         name=name,
         parent=parent,
     )
 
     for name, model in data.items():
-        modelMat = mesh.r(model, "CC", "CC", "M")
+        modelMat = mesh.reshape(model, "CC", "CC", "M")
 
         # Transpose the axes
         modelMatT = modelMat.transpose((2, 0, 1))
