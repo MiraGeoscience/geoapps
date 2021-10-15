@@ -157,7 +157,7 @@ class InversionMesh:
 
         octree_params = self.collect_mesh_params(self.params)
         self.entity = OctreeMesh.run(octree_params)
-        self.entity.parent = self.params.out_group
+        self.entity.parent = self.params.ga_group
 
         self.uid = self.entity.uid
         self.mesh = octree_2_treemesh(self.entity)
