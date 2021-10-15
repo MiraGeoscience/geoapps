@@ -177,7 +177,7 @@ class InversionDriver:
             self.inversion_data,
             self.inversion_mesh,
             self.active_cells,
-            self.sorting,
+            np.argsort(np.hstack(self.sorting)),
             local_misfits,
             reg,
         )
@@ -208,11 +208,11 @@ class InversionDriver:
 
     def collect_predicted_data(self, global_misfit, mrec):
 
-        dpred = np.hstack(self.inverse_problem.dpred).reshape(
-            -1, len(self.survey.components)
-        )
+        dpred = np.hstack(self.inverse_problem.dpred)
+        if getattr(self.survey, "component", None) is not None:
+            dpred = dpred.reshape(-1, len(self.survey.components))
         sorting = np.argsort(np.hstack(self.sorting))
-        return (dpred[sorting]).ravel()
+        return dpred[sorting].ravel()
 
     def save_residuals(self, obj, dpred):
         residuals = self.survey.dobs - dpred
@@ -332,10 +332,11 @@ class InversionDriver:
                     split_ind.append(cells_ind)
                 # Fetch all receivers attached to the currents
                 logical = np.zeros(current_electrodes.n_cells, dtype="bool")
-                logical[np.hstack(split_ind)] = True
-                tiles.append(
-                    np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
-                )
+                if len(split_ind) > 0:
+                    logical[np.hstack(split_ind)] = True
+                    tiles.append(
+                        np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
+                    )
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 

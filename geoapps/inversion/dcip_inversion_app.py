@@ -13,7 +13,13 @@ import uuid
 
 import ipywidgets as widgets
 import numpy as np
-from geoh5py.objects import BlockModel, Octree, Surface
+from geoh5py.objects import (
+    BlockModel,
+    CurrentElectrode,
+    Octree,
+    PotentialElectrode,
+    Surface,
+)
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
     Button,
@@ -28,45 +34,37 @@ from ipywidgets.widgets import (
     Widget,
 )
 
-from geoapps.io.Gravity.params import GravityParams
-from geoapps.io.MagneticScalar.params import MagneticScalarParams
-from geoapps.io.MagneticVector.constants import app_initializer
-from geoapps.io.MagneticVector.params import MagneticVectorParams
+from geoapps.io.DirectCurrent.constants import app_initializer
+from geoapps.io.DirectCurrent.params import DirectCurrentParams
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import LineOptions, ObjectDataSelection, TopographyOptions
-from geoapps.utils import geophysical_systems
 from geoapps.utils.utils import find_value, string_2_list
 
 
 def inversion_defaults():
     """
-    Get defaults for gravity, magnetics and EM1D inversions
+    Get defaults for DCIP inversions
     """
     return {
         "units": {
-            "gravity": "g/cc",
-            "magnetic vector": "SI",
-            "magnetic scalar": "SI",
+            "direct current": "S/m",
+            "induced polarization": "SI",
         },
         "property": {
-            "gravity": "density",
-            "magnetic vector": "effective susceptibility",
-            "magnetic scalar": "susceptibility",
+            "direct current": "conductivity",
+            "induced polarization": "chargeability",
         },
         "reference_value": {
-            "gravity": 0.0,
-            "magnetic vector": 0.0,
-            "magnetic scalar": 0.0,
+            "direct current": 1e-1,
+            "induced polarization": 0.0,
         },
         "starting_value": {
-            "gravity": 1e-4,
-            "magnetic vector": 1e-4,
-            "magnetic scalar": 1e-4,
+            "direct current": 1e-1,
+            "induced polarization": 1e-4,
         },
         "component": {
-            "gravity": "gz",
-            "magnetic vector": "tmi",
-            "magnetic scalar": "tmi",
+            "direct current": "potential",
+            "induced polarization": "mV/V",
         },
     }
 
@@ -76,12 +74,14 @@ class InversionApp(PlotSelection2D):
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = MagneticVectorParams
+    _param_class = DirectCurrentParams
     _select_multiple = True
     _add_groups = False
     _sensor = None
     _lines = None
     _topography = None
+    _object_types = (PotentialElectrode,)
+    _exclusion_types = (CurrentElectrode,)
     inversion_parameters = None
     defaults = {}
 
@@ -102,29 +102,13 @@ class InversionApp(PlotSelection2D):
         self.data_object = self.objects
         self.defaults.update(self.params.to_dict(ui_json_format=False))
         self.defaults.pop("workspace", None)
-        self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
             value=False,
             description="Forward only",
         )
-        self._inducing_field_strength = widgets.FloatText(
-            description="Amplitude (nT)",
-        )
-        self._inducing_field_inclination = widgets.FloatText(
-            description="Inclination (d.dd)",
-        )
-        self._inducing_field_inclination.observe(
-            self.inducing_field_inclination_change, names="value"
-        )
-        self._inducing_field_declination = widgets.FloatText(
-            description="Declination (d.dd)",
-        )
-        self._inducing_field_declination.observe(
-            self.inducing_field_declination_change, names="value"
-        )
         self._inversion_type = Dropdown(
-            options=["magnetic vector", "magnetic scalar", "gravity"],
+            options=["direct current", "induced polarization"],
             description="Inversion Type:",
         )
         self._write = Button(
@@ -152,7 +136,6 @@ class InversionApp(PlotSelection2D):
             value=int(multiprocessing.cpu_count() / 2), description="Max CPUs"
         )
         self._tile_spatial = IntText(value=1, description="Number of tiles")
-        # self._initial_beta = FloatText(value=1e2, description="Value:")
         self._initial_beta_ratio = FloatText(
             value=1e2, description="Beta ratio (phi_d/phi_m):"
         )
@@ -170,49 +153,16 @@ class InversionApp(PlotSelection2D):
         )
         self._starting_model_group = ModelOptions("starting_model", **self.defaults)
         self._starting_model_group.options.options = ["Constant", "Model"]
-        self._starting_inclination_group = ModelOptions(
-            "starting_inclination",
-            description="Starting Inclination",
-            units="Degree",
-            **self.defaults,
-        )
-        self._starting_inclination_group.options.options = ["Constant", "Model"]
-        self._starting_declination_group = ModelOptions(
-            "starting_declination",
-            description="Starting Declination",
-            units="Degree",
-            **self.defaults,
-        )
-        self._starting_declination_group.options.options = ["Constant", "Model"]
         self._reference_model_group = ModelOptions("reference_model", **self.defaults)
         self._reference_model_group.options.observe(self.update_ref)
-        self._reference_inclination_group = ModelOptions(
-            "reference_inclination",
-            description="Reference Inclination",
-            units="Degree",
-            **self.defaults,
-        )
-        self._reference_declination_group = ModelOptions(
-            "reference_declination",
-            description="Reference Declination",
-            units="Degree",
-            **self.defaults,
-        )
         self._topography_group = TopographyOptions(**self.defaults)
         self._topography_group.identifier = "topography"
         self._sensor = SensorOptions(
             objects=self._objects,
+            object_types=self._object_types,
+            exclusion_types=self._exclusion_types,
             **self.defaults,
         )
-        self._detrend_data = Checkbox(description="Detrend data")
-        self._detrend_order = IntText(description="Order", min=0, max=2, value=0)
-        self._detrend_type = Dropdown(
-            description="Method", options=["all", "corners"], value="all"
-        )
-        self._detrend_panel = VBox(
-            [self._detrend_data, self._detrend_order, self._detrend_type]
-        )
-        self._detrend_data.observe(self.detrend_panel_change)
         self._alpha_s = widgets.FloatText(
             min=0,
             value=1,
@@ -287,21 +237,16 @@ class InversionApp(PlotSelection2D):
             "starting model": VBox(
                 [
                     self._starting_model_group.main,
-                    self._starting_inclination_group.main,
-                    self._starting_declination_group.main,
                 ]
             ),
             "mesh": self._mesh_octree.main,
             "reference model": VBox(
                 [
                     self._reference_model_group.main,
-                    self._reference_inclination_group.main,
-                    self._reference_declination_group.main,
                 ]
             ),
             "regularization": HBox([self._alphas, self._norms]),
             "upper-lower bounds": self.bound_panel,
-            "detrend": self._detrend_panel,
             "ignore values": VBox([self._ignore_values]),
             "optimization": self._optimization,
         }
@@ -460,52 +405,6 @@ class InversionApp(PlotSelection2D):
         return self._reference_model_group.objects
 
     @property
-    def reference_inclination(self):
-        if self._reference_inclination_group.options.value == "Model":
-            return self._reference_inclination_group.data.value
-        elif self._reference_inclination_group.options.value == "Constant":
-            return self._reference_inclination_group.constant.value
-        else:
-            return None
-
-    @reference_inclination.setter
-    def reference_inclination(self, value):
-        if isinstance(value, float):
-            self._reference_inclination_group.options.value = "Constant"
-            self._reference_inclination_group.constant.value = value
-        elif value is None:
-            self._reference_inclination_group.options.value = "None"
-        else:
-            self._reference_inclination_group.data.value = value
-
-    @property
-    def reference_inclination_object(self):
-        return self._reference_inclination_group.objects
-
-    @property
-    def reference_declination(self):
-        if self._reference_declination_group.options.value == "Model":
-            return self._reference_declination_group.data.value
-        elif self._reference_declination_group.options.value == "Constant":
-            return self._reference_declination_group.constant.value
-        else:
-            return None
-
-    @reference_declination.setter
-    def reference_declination(self, value):
-        if isinstance(value, float):
-            self._reference_declination_group.options.value = "Constant"
-            self._reference_declination_group.constant.value = value
-        elif value is None:
-            self._reference_declination_group.options.value = "None"
-        else:
-            self._reference_declination_group.data.value = value
-
-    @property
-    def reference_declination_object(self):
-        return self._reference_declination_group.objects
-
-    @property
     def starting_model(self):
         if self._starting_model_group.options.value == "Model":
             return self._starting_model_group.data.value
@@ -525,52 +424,6 @@ class InversionApp(PlotSelection2D):
     @property
     def starting_model_object(self):
         return self._starting_model_group.objects
-
-    @property
-    def starting_inclination(self):
-        if self._starting_inclination_group.options.value == "Model":
-            return self._starting_inclination_group.data.value
-        elif self._starting_inclination_group.options.value == "Constant":
-            return self._starting_inclination_group.constant.value
-        else:
-            return None
-
-    @starting_inclination.setter
-    def starting_inclination(self, value):
-        if isinstance(value, float):
-            self._starting_inclination_group.options.value = "Constant"
-            self._starting_inclination_group.constant.value = value
-        elif value is None:
-            self._starting_inclination_group.options.value = "None"
-        else:
-            self._starting_inclination_group.data.value = value
-
-    @property
-    def starting_inclination_object(self):
-        return self._starting_inclination_group.objects
-
-    @property
-    def starting_declination(self):
-        if self._starting_declination_group.options.value == "Model":
-            return self._starting_declination_group.data.value
-        elif self._starting_declination_group.options.value == "Constant":
-            return self._starting_declination_group.constant.value
-        else:
-            return None
-
-    @starting_declination.setter
-    def starting_declination(self, value):
-        if isinstance(value, float):
-            self._starting_declination_group.options.value = "Constant"
-            self._starting_declination_group.constant.value = value
-        elif value is None:
-            self._starting_declination_group.options.value = "None"
-        else:
-            self._starting_declination_group.data.value = value
-
-    @property
-    def starting_declination_object(self):
-        return self._starting_declination_group.objects
 
     @property
     def lower_bound(self):
@@ -632,27 +485,12 @@ class InversionApp(PlotSelection2D):
         """"""
         return self._forward_only
 
-    @property
-    def inducing_field_strength(self):
-        """"""
-        return self._inducing_field_strength
-
-    @property
-    def inducing_field_inclination(self):
-        """"""
-        return self._inducing_field_inclination
-
-    @property
-    def inducing_field_declination(self):
-        """"""
-        return self._inducing_field_declination
-
-    @property
-    def lines(self):
-        if getattr(self, "_lines", None) is None:
-            self._lines = LineOptions(workspace=self._workspace, objects=self._objects)
-            self.lines.lines.observe(self.update_selection, names="value")
-        return self._lines
+    # @property
+    # def lines(self):
+    #     if getattr(self, "_lines", None) is None:
+    #         self._lines = LineOptions(workspace=self._workspace, objects=self._objects)
+    #         self.lines.lines.observe(self.update_selection, names="value")
+    #     return self._lines
 
     @property
     def main(self):
@@ -802,7 +640,7 @@ class InversionApp(PlotSelection2D):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
-        self.lines.workspace = workspace
+        # self.lines.workspace = workspace
         self.sensor.workspace = workspace
         self._topography_group.workspace = workspace
         self._reference_model_group.workspace = workspace
@@ -833,24 +671,6 @@ class InversionApp(PlotSelection2D):
             alphas[0] = 1.0
         self.alphas.value = ", ".join(list(map(str, alphas)))
 
-    def inducing_field_inclination_change(self, _):
-        if self.inversion_type.value == "magnetic vector":
-            self._reference_inclination_group.constant.value = (
-                self._inducing_field_inclination.value
-            )
-            self._starting_inclination_group.constant.value = (
-                self._inducing_field_inclination.value
-            )
-
-    def inducing_field_declination_change(self, _):
-        if self.inversion_type.value == "magnetic vector":
-            self._reference_declination_group.constant.value = (
-                self._inducing_field_declination.value
-            )
-            self._starting_declination_group.constant.value = (
-                self._inducing_field_declination.value
-            )
-
     def inversion_option_change(self, _):
         self._main.children[4].children[2].children = [
             self.option_choices,
@@ -867,55 +687,29 @@ class InversionApp(PlotSelection2D):
         Change the application on change of system
         """
         params = self.params.to_dict(ui_json_format=False)
-        if self.inversion_type.value == "magnetic vector" and not isinstance(
-            self.params, MagneticVectorParams
+        if self.inversion_type.value == "direct current" and not isinstance(
+            self.params, DirectCurrentParams
         ):
-            self._param_class = MagneticVectorParams
-            params["inversion_type"] = "magnetic vector"
-            params["out_group"] = "VectorInversion"
+            self._param_class = DirectCurrentParams
+            params["inversion_type"] = "direct current"
+            params["out_group"] = "DCInversion"
 
-        elif self.inversion_type.value == "magnetic scalar" and not isinstance(
-            self.params, MagneticScalarParams
+        elif self.inversion_type.value == "induced polarization" and not isinstance(
+            self.params, DirectCurrentParams
         ):
-            params["inversion_type"] = "magnetic scalar"
-            params["out_group"] = "SusceptibilityInversion"
-            self._param_class = MagneticScalarParams
-        elif self.inversion_type.value == "gravity" and not isinstance(
-            self.params, GravityParams
-        ):
-            params["inversion_type"] = "gravity"
-            params["out_group"] = "GravityInversion"
-            self._param_class = GravityParams
+            params["inversion_type"] = "induced polarization"
+            params["out_group"] = "ChargeabilityInversion"
+            raise NotImplemented("Chargeability inversion not yet implemented.")
 
         self.params = self._param_class(verbose=False)
         self.ga_group_name.value = self.params.defaults["out_group"]
 
-        if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
+        if self.inversion_type.value in ["direct current"]:
             data_type_list = [
-                "tmi",
-                "bx",
-                "by",
-                "bz",
-                "bxx",
-                "bxy",
-                "bxz",
-                "byy",
-                "byz",
-                "bzz",
+                "potential",
             ]
         else:
-            data_type_list = [
-                "gx",
-                "gy",
-                "gz",
-                "gxx",
-                "gxy",
-                "gxz",
-                "gyy",
-                "gyz",
-                "gzz",
-                "uv",
-            ]
+            data_type_list = ["apparent chargeability"]
         flag = self.inversion_type.value
         self._reference_model_group.units = inversion_defaults()["units"][flag]
         self._reference_model_group.constant.value = inversion_defaults()[
@@ -1052,45 +846,13 @@ class InversionApp(PlotSelection2D):
         ]
         self.write.button_style = "warning"
         self.trigger.button_style = "danger"
-        if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
-            self.survey_type_panel.children = [
-                self.inversion_type,
-                VBox(
-                    [
-                        Label("Inducing Field Parameters"),
-                        self.inducing_field_strength,
-                        self.inducing_field_inclination,
-                        self.inducing_field_declination,
-                    ]
-                ),
-            ]
-        else:
-            self.survey_type_panel.children = [self.inversion_type]
 
-        if self.inversion_type.value == "magnetic scalar":
+        if self.inversion_type.value == "direct current":
+            self._lower_bound_group.options.value = "Constant"
+            self._lower_bound_group.constant.value = 1e-5
+        else:
             self._lower_bound_group.options.value = "Constant"
             self._lower_bound_group.constant.value = 0.0
-        else:
-            self._lower_bound_group.options.value = "None"
-
-        if self.inversion_type.value == "magnetic vector":
-            self.inversion_options["starting model"].children = [
-                self._starting_model_group.main,
-                self._starting_inclination_group.main,
-                self._starting_declination_group.main,
-            ]
-            self.inversion_options["reference model"].children = [
-                self._reference_model_group.main,
-                self._reference_inclination_group.main,
-                self._reference_declination_group.main,
-            ]
-        else:
-            self.inversion_options["starting model"].children = [
-                self._starting_model_group.main,
-            ]
-            self.inversion_options["reference model"].children = [
-                self._reference_model_group.main,
-            ]
 
     def object_observer(self, _):
         """ """
@@ -1098,8 +860,8 @@ class InversionApp(PlotSelection2D):
         if self.workspace.get_entity(self.objects.value):
             self.update_data_list(None)
             self.sensor.update_data_list(None)
-            self.lines.update_data_list(None)
-            self.lines.update_line_list(None)
+            # self.lines.update_data_list(None)
+            # self.lines.update_line_list(None)
             self.inversion_type_observer(None)
             self.write.button_style = "warning"
             self.trigger.button_style = "danger"
@@ -1147,13 +909,13 @@ class InversionApp(PlotSelection2D):
         self.write.button_style = "warning"
         self.trigger.button_style = "danger"
 
-    def update_selection(self, _):
-        self.highlight_selection = {self.lines.data.value: self.lines.lines.value}
-        self.refresh.value = False
-        self.refresh.value = True
+    # def update_selection(self, _):
+    #     self.highlight_selection = {self.lines.data.value: self.lines.lines.value}
+    #     self.refresh.value = False
+    #     self.refresh.value = True
 
     def write_trigger(self, _):
-        # Copy object to work geoh5
+
         new_workspace = Workspace(
             path.join(
                 self.export_directory.selected_path,
@@ -1170,7 +932,6 @@ class InversionApp(PlotSelection2D):
             self._upper_bound_group,
         ]:
             obj, data = elem.get_selected_entities()
-
             if obj is not None:
                 new_obj = new_workspace.get_entity(obj.uid)[0]
                 if new_obj is None:
@@ -1179,27 +940,15 @@ class InversionApp(PlotSelection2D):
                     if new_workspace.get_entity(d.uid)[0] is None:
                         d.copy(parent=new_obj)
 
-        if self.inversion_type.value == "magnetic vector":
-            for elem in [
-                self._starting_inclination_group,
-                self._starting_declination_group,
-                self._reference_inclination_group,
-                self._reference_declination_group,
-            ]:
-                obj, data = elem.get_selected_entities()
-                if obj is not None:
-                    new_obj = new_workspace.get_entity(obj.uid)[0]
-                    if new_obj is None:
-                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
-                    for d in data:
-                        if new_workspace.get_entity(d.uid)[0] is None:
-                            d.copy(parent=new_obj)
-
         new_obj = new_workspace.get_entity(self.objects.value)[0]
         for key in self.data_channel_choices.options:
             widget = getattr(self, f"{key}_uncertainty_channel")
             if widget.value is not None:
-                setattr(self.params, f"{key}_uncertainty", widget.value)
+                setattr(self.params, f"{key}_uncertainty", str(widget.value))
+                if new_workspace.get_entity(widget.value)[0] is None:
+                    self.workspace.get_entity(widget.value)[0].copy(
+                        parent=new_obj, copy_children=False
+                    )
             else:
                 widget = getattr(self, f"{key}_uncertainty_floor")
                 setattr(self.params, f"{key}_uncertainty", widget.value)
@@ -1241,10 +990,8 @@ class InversionApp(PlotSelection2D):
                 continue
 
         self.params.write_input_file(
-            name=os.path.join(
-                self.export_directory.selected_path,
-                self._ga_group_name.value + ".ui.json",
-            )
+            name=self._ga_group_name.value + ".ui.json",
+            path=self.export_directory.selected_path,
         )
         self.write.button_style = ""
         self.trigger.button_style = "success"
@@ -1252,17 +999,11 @@ class InversionApp(PlotSelection2D):
     @staticmethod
     def run(params):
 
-        if isinstance(params, MagneticVectorParams):
-            inversion_routine = "magnetic_vector_inversion"
-        elif isinstance(params, MagneticScalarParams):
-            inversion_routine = "magnetic_scalar_inversion"
-        elif isinstance(params, GravityParams):
-            inversion_routine = "grav_inversion"
-
+        if isinstance(params, DirectCurrentParams):
+            inversion_routine = "direct_current_inversion"
         else:
             raise ValueError(
-                "Parameter 'inversion_type' must be one of "
-                "'magnetic vector', 'magnetic scalar' or 'gravity'"
+                "Parameter 'inversion_type' must be one of " "'direct current'"
             )
         os.system(
             "start cmd.exe @cmd /k "
@@ -1283,12 +1024,8 @@ class InversionApp(PlotSelection2D):
                 with open(self.file_browser.selected) as f:
                     data = json.load(f)
 
-                if data["inversion_type"] == "gravity":
-                    self._param_class = GravityParams
-                elif data["inversion_type"] == "magnetic vector":
-                    self._param_class = MagneticVectorParams
-                elif data["inversion_type"] == "magnetic scalar":
-                    self._param_class = MagneticScalarParams
+                if data["inversion_type"] == "direct current":
+                    self._param_class = DirectCurrentParams
 
                 self.params = getattr(self, "_param_class").from_path(
                     self.file_browser.selected
@@ -1336,7 +1073,7 @@ class SensorOptions(ObjectDataSelection):
                     self._receivers_offset_x,
                     self._receivers_offset_y,
                     self._receivers_offset_z,
-                    self._receivers_radar_drape,
+                    # self._receivers_radar_drape,
                 ]
             )
 
@@ -1528,8 +1265,6 @@ class ModelOptions(ObjectDataSelection):
     """
     Widgets for the selection of model options
     """
-
-    defaults = {}
 
     def __init__(self, identifier: str = None, **kwargs):
         self._units = "Units"

@@ -11,6 +11,7 @@ from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
 from geoapps.drivers.components import (
+    InversionData,
     InversionMesh,
     InversionModel,
     InversionModelCollection,
@@ -30,6 +31,9 @@ def setup_params(path):
     geotest = Geoh5Tester(
         workspace, path, "test.geoh5", default_ui_json, MagneticVectorParams
     )
+    geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
+    geotest.set_param("tmi_channel_bool", True)
+    geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
     geotest.set_param("window_center_x", 314183.0)
     geotest.set_param("window_center_y", 6071014.0)
     geotest.set_param("window_width", 1000.0)
@@ -48,8 +52,9 @@ def setup_params(path):
 def test_collection(tmp_path):
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
-    inversion_mesh = InversionMesh(ws, params)
+    inversion_data = InversionData(ws, params, inversion_window.window)
     inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     active_cells = inversion_topography.active_cells(inversion_mesh)
     models = InversionModelCollection(ws, params, inversion_mesh)
     models.remove_air(active_cells)
@@ -61,7 +66,10 @@ def test_collection(tmp_path):
 def test_initialize(tmp_path):
 
     ws, params = setup_params(tmp_path)
-    inversion_mesh = InversionMesh(ws, params)
+    inversion_window = InversionWindow(ws, params)
+    inversion_data = InversionData(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     starting_model = InversionModel(ws, params, inversion_mesh, "starting")
     assert len(starting_model.model) == 3 * inversion_mesh.nC
     assert len(np.unique(starting_model.model)) == 3
@@ -70,7 +78,10 @@ def test_initialize(tmp_path):
 def test_model_from_object(tmp_path):
     # Test behaviour when loading model from Points object with non-matching mesh
     ws, params = setup_params(tmp_path)
-    inversion_mesh = InversionMesh(ws, params)
+    inversion_window = InversionWindow(ws, params)
+    inversion_data = InversionData(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     cc = inversion_mesh.mesh.cell_centers[0].reshape(1, 3)
     point_object = Points.create(ws, name=f"test_point", vertices=cc)
     point_object.add_data({"test_data": {"values": np.array([3.0])}})
@@ -87,7 +98,10 @@ def test_permute_2_octree(tmp_path):
 
     ws, params = setup_params(tmp_path)
     params.lower_bound = 0.0
-    inversion_mesh = InversionMesh(ws, params)
+    inversion_window = InversionWindow(ws, params)
+    inversion_data = InversionData(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     lower_bound = InversionModel(ws, params, inversion_mesh, "lower_bound")
     cc = inversion_mesh.mesh.cell_centers
     center = np.mean(cc, axis=0)
@@ -142,7 +156,10 @@ def test_permute_2_treemesh(tmp_path):
     octree_mesh.add_data({"test_model": {"values": model}})
     params.upper_bound = ws.get_entity("test_model")[0].uid
     params.associations[params.upper_bound] = octree_mesh.uid
-    inversion_mesh = InversionMesh(ws, params)
+    inversion_window = InversionWindow(ws, params)
+    inversion_data = InversionData(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     upper_bound = InversionModel(ws, params, inversion_mesh, "upper_bound")
     locs = inversion_mesh.mesh.cell_centers
     locs_rot = rotate_xy(

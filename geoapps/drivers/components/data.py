@@ -132,14 +132,6 @@ class InversionData(InversionLocations):
                 self.locations[:, 1],
                 window=self.window,
                 angle=self.angle,
-                mask=self.mask,
-            )
-
-        if self.params.resolution not in [0.0, None]:
-            self.resolution = self.params.resolution
-            self.mask = filter_xy(
-                self.locations[:, 0],
-                self.locations[:, 1],
                 distance=self.resolution,
                 mask=self.mask,
             )
@@ -246,7 +238,7 @@ class InversionData(InversionLocations):
             entity = PotentialElectrode.create(
                 self.workspace,
                 name="Data",
-                parent=self.params.out_group,
+                parent=self.params.ga_group,
                 vertices=self.apply_transformations(rcv_locations),
                 cells=rcv_cells,
             )
@@ -260,7 +252,7 @@ class InversionData(InversionLocations):
             new_currents = CurrentElectrode.create(
                 self.workspace,
                 name="Data (currents)",
-                parent=self.params.out_group,
+                parent=self.params.ga_group,
                 vertices=self.apply_transformations(src_locations),
                 cells=src_cells,
             )
@@ -283,17 +275,6 @@ class InversionData(InversionLocations):
                 geometric_factor(self._survey) + 1e-10
             )
             appres = data["potential"] * self.transformations["potential"]
-
-            for comp in self.components:
-                self.data_entity[comp] = self.entity.add_data(
-                    {
-                        f"{basename}_{comp}": {
-                            "values": data[comp],
-                            "association": "CELL",
-                        }
-                    }
-                )
-
             self.data_entity["apparent_resistivity"] = self.entity.add_data(
                 {
                     f"{basename}_apparent_resistivity": {
@@ -303,15 +284,16 @@ class InversionData(InversionLocations):
                 }
             )
 
-        else:
-
-            for comp in self.components:
-                dnorm = self.normalizations[comp] * data[comp]
-                self.data_entity[comp] = self.entity.add_data(
-                    {f"{basename}_{comp}": {"values": dnorm}}
+        for comp in self.components:
+            dnorm = self.normalizations[comp] * data[comp]
+            self.data_entity[comp] = self.entity.add_data(
+                {f"{basename}_{comp}": {"values": dnorm}}
+            )
+            if not self.params.forward_only:
+                self._observed_data_types[comp] = self.data_entity[comp].entity_type
+                self.entity.add_data(
+                    {f"Uncertainties_{comp}": {"values": self.uncertainties[comp]}}
                 )
-                if not self.params.forward_only:
-                    self._observed_data_types[comp] = self.data_entity[comp].entity_type
 
     def get_data_component(self, component: str) -> np.ndarray:
         """Get data component (channel) from params data."""
