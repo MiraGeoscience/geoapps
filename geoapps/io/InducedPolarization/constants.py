@@ -16,15 +16,17 @@ from geoapps.io.Inversion.constants import (
 from geoapps.io.Inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "SimPEG Inversion - Direct Current",
-    "inversion_type": "direct current",
+    "title": "SimPEG Inversion - Induced Polarization",
+    "inversion_type": "induced polarization",
     "forward_only": False,
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "potential_channel_bool": True,
-    "potential_channel": None,
-    "potential_uncertainty": 0.0,
+    "chargeability_channel_bool": True,
+    "chargeability_channel": None,
+    "chargeability_uncertainty": 0.0,
+    "conductivity_model_object": None,
+    "conductivity_model": None,
     "starting_model_object": None,
     "starting_model": None,
     "tile_spatial": 1,
@@ -57,14 +59,15 @@ inversion_defaults = {
     "window_center_y": 0.0,
     "window_width": 0.0,
     "window_height": 0.0,
+    "window_azimuth": 0.0,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
-    "sens_wts_threshold": 0.0,
+    "sens_wts_threshold": 1e-3,
     "every_iteration_bool": False,
     "f_min_change": 1e-4,
     "minGNiter": 1,
     "beta_tol": 0.5,
-    "prctile": 95,
+    "prctile": 50,
     "coolingRate": 1,
     "coolEps_q": True,
     "coolEpsFact": 1.2,
@@ -95,23 +98,24 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "DirectCurrentInversion",
+    "out_group": "InducedPolarizationInversion",
     "no_data_value": None,
     "monitoring_directory": None,
     "geoh5": None,
-    "title": "Direct Current Inversion",
-    "run_command": "geoapps.drivers.direct_current_inversion",
+    "run_command": "geoapps.drivers.induced_polarization_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
 forward_defaults = {
-    "title": "SimPEG Forward - Direct Current",
-    "inversion_type": "direct current",
+    "title": "SimPEG Forward - Induced Polarization",
+    "inversion_type": "induced polarization",
     "forward_only": True,
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "potential_channel_bool": True,
+    "chargeability_channel_bool": True,
+    "conductivity_model_object": None,
+    "conductivity_model": None,
     "starting_model_object": None,
     "starting_model": None,
     "tile_spatial": 1,
@@ -139,62 +143,71 @@ forward_defaults = {
     "window_center_y": 0.0,
     "window_width": 0.0,
     "window_height": 0.0,
+    "window_azimuth": 0.0,
     "parallelized": True,
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "out_group": "DirectCurrentForward",
+    "out_group": "InducedPolarizationForward",
     "monitoring_directory": None,
     "geoh5": None,
-    "run_command": "geoapps.drivers.direct_current_inversion",
+    "run_command": "geoapps.drivers.induced_polarization_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
 }
 default_ui_json = {
-    "title": "SimPEG Inversion - Direct Current",
-    "inversion_type": "direct current",
-    "potential_channel_bool": True,
-    "potential_channel": {
+    "title": "SimPEG Inversion - Induced Polarization",
+    "inversion_type": "induced polarization",
+    "chargeability_channel_bool": True,
+    "chargeability_channel": {
         "association": "Cell",
         "dataType": "Float",
         "default": None,
         "group": "Data",
         "main": True,
-        "label": "Potential channel",
+        "label": "Chargeability channel",
         "parent": "data_object",
         "value": None,
     },
-    "potential_uncertainty": {
+    "chargeability_uncertainty": {
         "association": "Cell",
         "dataType": "Float",
         "default": 0.0,
         "group": "Data",
         "main": True,
         "isValue": True,
-        "label": "Potential uncertainty",
+        "label": "chargeability uncertainty",
         "parent": "data_object",
         "property": None,
         "value": 0.0,
     },
-    "resolution": {
-        "enabled": False,
-        "visible": False,
-        "label": "resolution",
+    "conductivity_model_object": {
+        "group": "Starting Model",
+        "main": True,
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+        ],
+        "label": "Starting conductivity model object",
+        "value": None,
+    },
+    "conductivity_model": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Starting Model",
+        "main": True,
+        "isValue": False,
+        "parent": "conductivity_model_object",
+        "label": "Starting conductivity model value",
+        "property": None,
         "value": 0.0,
     },
-    "detrend_order": {
-        "enabled": False,
-        "visible": False,
-        "label": "detrend order",
-        "value": 0.0,
-    },
-    "detrend_type": {
-        "enabled": False,
-        "visible": False,
-        "label": "detrend type",
-        "value": "all",
-    },
-    "out_group": {"label": "Results group name", "value": "DirectCurrent"},
+    "resolution": {"enabled": False, "label": "resolution", "value": 0.0},
+    "out_group": {"label": "Results group name", "value": "InducedPolarization"},
 }
 
 
@@ -206,8 +219,6 @@ for k, v in inversion_defaults.items():
             if default_ui_json[k]["isValue"] == False:
                 key = "property"
         default_ui_json[k][key] = v
-        if "enabled" in default_ui_json[k].keys() and v is not None:
-            default_ui_json[k]["enabled"] = True
     else:
         default_ui_json[k] = v
 
@@ -219,14 +230,20 @@ required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["direct current"],
+        "values": ["induced polarization"],
     },
-    "potential_channel_bool": {"types": [bool]},
-    "potential_channel": {
+    "chargeability_channel_bool": {"types": [bool]},
+    "chargeability_channel": {
         "types": [str, UUID],
         "reqs": [("data_object")],
     },
-    "potential_uncertainty": {"types": [str, int, float]},
+    "chargeability_uncertainty": {"types": [str, int, float]},
+    "conductivity_model_object": {
+        "types": [str, UUID],
+    },
+    "conductivity_model": {
+        "types": [str, UUID, int, float],
+    },
 }
 
 validations.update(base_validations)

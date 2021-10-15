@@ -152,3 +152,14 @@ dmypy.json
 /tests/SimPEG_PFInversion/Tile0.zarr/.zarray
 /tests/SimPEG_PFInversion/Tile0.zarr/0.0
 /tests/SimPEG_PFInversion/Tile0.zarr/0.1
+
+#cleanup
+*ui.json
+/assets/sensitivity/*
+/assets/SimPEG_PFInversion/*
+/assets/test_*
+/tests/GEOSCIENCEtemp
+/tests/Gravity*
+/tests/run_*
+/tests/FlinFlon.geoh5
+/tests/Inversion_.json

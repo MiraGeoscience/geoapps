@@ -16,9 +16,9 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_susceptibility_run = {
-    "data_norm": 7.33970,
-    "phi_d": 0.6644,
-    "phi_m": 2.112e-5,
+    "data_norm": 11.707134,
+    "phi_d": 1.769,
+    "phi_m": 6.514e-5,
 }
 
 
@@ -36,7 +36,13 @@ def test_susceptibility_run(
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
     workspace = setup_inversion_workspace(
-        tmp_path, 0.05, n_grid_points=n_grid_points, refinement=refinement
+        tmp_path,
+        background=0.0,
+        anomaly=0.05,
+        refinement=refinement,
+        n_electrodes=n_grid_points,
+        n_lines=n_grid_points,
+        flatten=False,
     )
     model = workspace.get_entity("model")[0]
     params = MagneticScalarParams(
@@ -56,7 +62,7 @@ def test_susceptibility_run(
     fwr_driver = MagneticScalarDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
-    tmi = workspace.get_entity("tmi")[0]
+    tmi = workspace.get_entity("Predicted_tmi")[0]
     # Run the inverse
     np.random.seed(0)
     params = MagneticScalarParams(
@@ -109,9 +115,9 @@ def test_susceptibility_run(
 
 
 target_magnetic_vector_run = {
-    "data_norm": 5.78921,
-    "phi_d": 0.01857,
-    "phi_m": 1.083e-5,
+    "data_norm": 8.943476,
+    "phi_d": 0.02071,
+    "phi_m": 3.527e-5,
 }
 
 
@@ -129,7 +135,12 @@ def test_magnetic_vector_run(
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
     workspace = setup_inversion_workspace(
-        tmp_path, 0.05, n_grid_points=n_grid_points, refinement=refinement
+        tmp_path,
+        background=0.0,
+        anomaly=0.05,
+        refinement=refinement,
+        n_electrodes=n_grid_points,
+        n_lines=n_grid_points,
     )
     model = workspace.get_entity("model")[0]
     params = MagneticVectorParams(
@@ -151,7 +162,7 @@ def test_magnetic_vector_run(
     fwr_driver = MagneticVectorDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
-    tmi = workspace.get_entity("tmi")[0]
+    tmi = workspace.get_entity("Predicted_tmi")[0]
     # Run the inverse
     params = MagneticVectorParams(
         workspace=workspace,
@@ -208,7 +219,7 @@ def test_magnetic_vector_run(
 if __name__ == "__main__":
     # Full run
     m_start, m_rec = test_susceptibility_run(
-        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 6)
+        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 8)
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
@@ -216,7 +227,7 @@ if __name__ == "__main__":
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
     print("Susceptibility model is within 15% of the answer. Well done you!")
     m_start, m_rec = test_magnetic_vector_run(
-        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 6)
+        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 8)
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
