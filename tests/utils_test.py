@@ -427,7 +427,7 @@ def test_block_model_2_tensor(tmp_path):
     blockmodel_tensormesh_equivalency(ws, [-10.0, -10.0, -10], x, y, z)
 
 
-def test_block_model_2_tensor_negativeh(tmp_path):
+def test_block_model_2_tensor_negative_z(tmp_path):
 
     ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
 
