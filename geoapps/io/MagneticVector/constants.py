@@ -795,6 +795,7 @@ app_initializer = {
     "window_center_y": 6072300.0,
     "window_width": 1000.0,
     "window_height": 1500.0,
+    "window_azimuth": 0.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
