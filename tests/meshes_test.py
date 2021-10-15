@@ -48,17 +48,6 @@ def test_initialize(tmp_path):
     assert inversion_mesh.rotation["angle"] == 20
 
 
-def test_original_cc(tmp_path):
-
-    ws, params = setup_params(tmp_path)
-    inversion_window = InversionWindow(ws, params)
-    inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
-    inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
-    msh = ws.get_entity(inversion_mesh.uid)[0]
-    np.testing.assert_allclose(msh.centroids, inversion_mesh.original_cc())
-
-
 def test_collect_mesh_params(tmp_path):
     ws, params = setup_params(tmp_path)
     locs = ws.get_entity(params.data_object)[0].centroids
@@ -80,6 +69,7 @@ def test_mesh_from_params(tmp_path):
     ws, params = setup_params(tmp_path)
     locs = ws.get_entity(params.data_object)[0].centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
+
     params.mesh_from_params = True
     params.mesh = None
     params.u_cell_size, params.v_cell_size, params.w_cell_size = 19, 25, 25
