@@ -208,11 +208,11 @@ class InversionDriver:
 
     def collect_predicted_data(self, global_misfit, mrec):
 
-        dpred = np.hstack(self.inverse_problem.dpred).reshape(
-            -1, len(self.survey.components)
-        )
+        dpred = np.hstack(self.inverse_problem.dpred)
+        if getattr(self.survey, "component", None) is not None:
+            dpred = dpred.reshape(-1, len(self.survey.components))
         sorting = np.argsort(np.hstack(self.sorting))
-        return (dpred[sorting]).ravel()
+        return dpred[sorting].ravel()
 
     def save_residuals(self, obj, dpred):
         residuals = self.survey.dobs - dpred
