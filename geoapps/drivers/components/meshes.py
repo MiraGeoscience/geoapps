@@ -40,10 +40,7 @@ class InversionMesh:
         origin Octree mesh order.
 
 
-    Methods
-    -------
-    original_cc() :
-        Returns the cell centers of the original Octree mesh type.
+
 
     """
 
@@ -58,7 +55,6 @@ class InversionMesh:
         :param workspace: Workspace object containing mesh data.
         :param params: Params object containing mesh parameters.
         :param window: Center and size defining window for data, topography, etc.
-        :param
 
         """
         self.workspace = workspace
@@ -88,6 +84,7 @@ class InversionMesh:
 
         else:
             orig_octree = self.workspace.get_entity(self.params.mesh)[0]
+
             self.entity = orig_octree.copy(
                 parent=self.params.ga_group, copy_children=False
             )
@@ -102,14 +99,6 @@ class InversionMesh:
 
         self.mesh = octree_2_treemesh(self.entity)
         self.octree_permutation = self.mesh._ubc_order
-
-    def original_cc(self) -> np.ndarray:
-        """Returns the cell centers of the original Octree mesh type."""
-        cc = self.mesh.cell_centers
-        if self.rotation is not None:
-            cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
-
-        return cc[self.octree_permutation]
 
     def collect_mesh_params(self, params: Params) -> OctreeParams:
         """Collect mesh params from inversion params set and return Octree Params object."""
