@@ -39,12 +39,6 @@ class InversionMesh:
         Permutation vector to restore cell centers or model values to
         origin Octree mesh order.
 
-
-    Methods
-    -------
-    original_cc() :
-        Returns the cell centers of the original Octree mesh type.
-
     """
 
     def __init__(
@@ -102,14 +96,6 @@ class InversionMesh:
 
         self.mesh = octree_2_treemesh(self.entity)
         self.octree_permutation = self.mesh._ubc_order
-
-    def original_cc(self) -> np.ndarray:
-        """Returns the cell centers of the original Octree mesh type."""
-        cc = self.mesh.cell_centers
-        if self.rotation is not None:
-            cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
-
-        return cc[self.octree_permutation]
 
     def collect_mesh_params(self, params: Params) -> OctreeParams:
         """Collect mesh params from inversion params set and return Octree Params object."""
