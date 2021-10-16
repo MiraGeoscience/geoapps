@@ -758,7 +758,7 @@ class InversionApp(PlotSelection2D):
                         np.int32,
                     ]:
                         data_widget.children[3].children[0].value = np.round(
-                            np.percentile(np.abs(values[~np.isnan(values)]), 5), 5
+                            np.percentile(np.abs(values[~np.isnan(values)]), 10), 5
                         )
 
                 # Trigger plot update
@@ -799,6 +799,17 @@ class InversionApp(PlotSelection2D):
                         style={"description_width": "initial"},
                     ),
                 )
+
+                def value_setter(self, key, value):
+                    """Assign value or channel"""
+                    if isinstance(value, float):
+                        getattr(self, key + "_floor").value = value
+                    else:
+                        getattr(self, key + "_channel").value = (
+                            uuid.UUID(value) if isinstance(value, str) else value
+                        )
+
+                setattr(InversionApp, f"{key}_uncertainty", (value_setter))
                 setattr(
                     self,
                     f"{key}_group",
