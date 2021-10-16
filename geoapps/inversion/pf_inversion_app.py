@@ -1022,6 +1022,18 @@ class InversionApp(PlotSelection2D):
                         ]
                     ),
                 )
+
+                def value_setter(self, key, value):
+                    """Assign value or channel"""
+                    if isinstance(value, float):
+                        getattr(self, key + "_floor").value = value
+                    else:
+                        getattr(self, key + "_channel").value = (
+                            uuid.UUID(value) if isinstance(value, str) else value
+                        )
+
+                setattr(InversionApp, f"{key}_uncertainty", (value_setter))
+
                 data_channel_options[key] = getattr(self, f"{key}_group")
                 data_channel_options[key].children[3].children[0].header = key
                 data_channel_options[key].children[3].children[1].header = key
