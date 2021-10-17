@@ -1210,7 +1210,12 @@ class InversionApp(PlotSelection2D):
                         if new_workspace.get_entity(d.uid)[0] is None:
                             d.copy(parent=new_obj)
 
-        new_obj = new_workspace.get_entity(self.objects.value)[0]
+        new_obj = new_workspace.get_entity(self.objects.value)
+        if len(new_obj) == 0 or new_obj[0] is None:
+            print("An object with data must be selected to write the input file.")
+            return
+
+        new_obj = new_obj[0]
         for key in self.data_channel_choices.options:
             widget = getattr(self, f"{key}_uncertainty_channel")
             if widget.value is not None:
