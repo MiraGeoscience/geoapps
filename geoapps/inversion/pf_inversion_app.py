@@ -10,6 +10,7 @@ import multiprocessing
 import os
 import os.path as path
 import uuid
+from collections import OrderedDict
 
 import ipywidgets as widgets
 import numpy as np
@@ -936,50 +937,61 @@ class InversionApp(PlotSelection2D):
 
         if self.workspace.get_entity(self.objects.value):
             obj, _ = self.get_selected_entities()
+            children_list = {child.uid: child.name for child in obj.children}
+            ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
             options = [
-                [name, obj.get_data(name)[0].uid]
-                for name in sorted(obj.get_data_list())
+                [name, uid]
+                for uid, name in ordered.items()
                 if "visual parameter" not in name.lower()
             ]
         else:
             options = []
 
-        for key in data_type_list:
-
-            def channel_setter(caller):
-                channel = caller["owner"]
-                data_widget = getattr(self, f"{channel.header}_group")
-                entity = self.workspace.get_entity(self.objects.value)[0]
-                if channel.value is None or channel.value not in [
-                    child.uid for child in entity.children
+        def channel_setter(caller):
+            channel = caller["owner"]
+            data_widget = getattr(self, f"{channel.header}_group")
+            entity = self.workspace.get_entity(self.objects.value)[0]
+            if channel.value is None or channel.value not in [
+                child.uid for child in entity.children
+            ]:
+                data_widget.children[0].value = False
+                data_widget.children[3].children[0].value = 1.0
+            else:
+                data_widget.children[0].value = True
+                values = self.workspace.get_entity(channel.value)[0].values
+                if values is not None and values.dtype in [
+                    np.float32,
+                    np.float64,
+                    np.int32,
                 ]:
-                    data_widget.children[0].value = False
-                    data_widget.children[3].children[0].value = 1.0
-                else:
-                    data_widget.children[0].value = True
-                    values = self.workspace.get_entity(channel.value)[0].values
-                    if values is not None and values.dtype in [
-                        np.float32,
-                        np.float64,
-                        np.int32,
-                    ]:
-                        data_widget.children[3].children[0].value = np.round(
-                            np.percentile(np.abs(values[~np.isnan(values)]), 5), 5
-                        )
+                    data_widget.children[3].children[0].value = np.round(
+                        np.percentile(np.abs(values[~np.isnan(values)]), 5), 5
+                    )
 
-                # Trigger plot update
-                if self.data_channel_choices.value == channel.header:
-                    self.plotting_data = channel.value
-                    self.refresh.value = False
-                    self.refresh.value = True
+            # Trigger plot update
+            if self.data_channel_choices.value == channel.header:
+                self.plotting_data = channel.value
+                self.refresh.value = False
+                self.refresh.value = True
 
-            def uncert_setter(caller):
-                channel = caller["owner"]
-                data_widget = getattr(self, f"{channel.header}_group")
-                if isinstance(channel, FloatText) and channel.value > 0:
-                    data_widget.children[3].children[1].value = None
-                elif channel.value is not None:
-                    data_widget.children[3].children[0].value = 0.0
+        def uncert_setter(caller):
+            channel = caller["owner"]
+            data_widget = getattr(self, f"{channel.header}_group")
+            if isinstance(channel, FloatText) and channel.value > 0:
+                data_widget.children[3].children[1].value = None
+            elif channel.value is not None:
+                data_widget.children[3].children[0].value = 0.0
+
+        def value_setter(self, key, value):
+            """Assign value or channel"""
+            if isinstance(value, float):
+                getattr(self, key + "_floor").value = value
+            else:
+                getattr(self, key + "_channel").value = (
+                    uuid.UUID(value) if isinstance(value, str) else value
+                )
+
+        for key in data_type_list:
 
             if hasattr(self, f"{key}_group"):
                 data_channel_options[key] = getattr(self, f"{key}_group", None)
@@ -1023,16 +1035,7 @@ class InversionApp(PlotSelection2D):
                     ),
                 )
 
-                def value_setter(self, key, value):
-                    """Assign value or channel"""
-                    if isinstance(value, float):
-                        getattr(self, key + "_floor").value = value
-                    else:
-                        getattr(self, key + "_channel").value = (
-                            uuid.UUID(value) if isinstance(value, str) else value
-                        )
-
-                setattr(InversionApp, f"{key}_uncertainty", (value_setter))
+                setattr(InversionApp, f"{key}_uncertainty", value_setter)
 
                 data_channel_options[key] = getattr(self, f"{key}_group")
                 data_channel_options[key].children[3].children[0].header = key
