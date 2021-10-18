@@ -274,22 +274,23 @@ class InversionData(InversionLocations):
         basename = "Predicted" if self.params.forward_only else "Observed"
 
         if self.params.inversion_type in ["direct current", "induced_polarization"]:
+            self.transformations["potential"] = 1 / (
+                geometric_factor(self._survey) + 1e-10
+            )
             key = (
-                "potential"
+                "resistivity"
                 if self.params.inversion_type == "direct current"
                 else "chargeability"
             )
-
-            apparent_measurement = data["potential"] * self.transformations["potential"]
-            self.data_entity["apparent_resistivity"] = self.entity.add_data(
+            apparent_property = data["potential"] * self.transformations["potential"]
+            self.data_entity[f"apparent_{key}"] = self.entity.add_data(
                 {
-                    f"Observed_{key}": {
-                        "values": apparent_measurement,
+                    f"{basename}_apparent_{key}": {
+                        "values": apparent_property,
                         "association": "CELL",
                     }
                 }
             )
-
         for comp in self.components:
             dnorm = self.normalizations[comp] * data[comp]
             self.data_entity[comp] = self.entity.add_data(

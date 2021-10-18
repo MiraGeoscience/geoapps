@@ -14,12 +14,9 @@ from uuid import UUID
 import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
-from geoh5py.objects import Points
 from SimPEG import (
-    dask,
     data,
     data_misfit,
-    directives,
     inverse_problem,
     inversion,
     maps,
@@ -27,10 +24,9 @@ from SimPEG import (
     optimization,
     regularization,
 )
-from SimPEG.utils import cartesian2amplitude_dip_azimuth, tile_locations
+from SimPEG.utils import tile_locations
 
 from geoapps.io import Params
-from geoapps.utils import rotate_xy
 
 from .components import (
     InversionData,
@@ -123,16 +119,19 @@ class InversionDriver:
             cluster = LocalCluster(processes=False)
             Client(cluster)
 
-        # Create SimPEG Survey object
-        self.survey, _ = self.inversion_data.survey()
-
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
         self.models.remove_air(self.active_cells)
+        self.active_cells_map = maps.InjectActiveCells(
+            self.mesh, self.active_cells, np.nan
+        )
         self.n_cells = int(np.sum(self.active_cells))
         self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
+
+        # Create SimPEG Survey object
+        self.survey = self.inversion_data._survey
 
         # Tile locations
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
@@ -148,7 +147,6 @@ class InversionDriver:
         reg = self.get_regularization()
 
         # Specify optimization algorithm and set parameters
-        print("active", sum(self.active_cells))
         opt = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
             lower=self.lower_bound,
@@ -318,7 +316,6 @@ class InversionDriver:
     def get_tiles(self):
 
         if self.params.inversion_type in ["direct current", "induced polarization"]:
-
             tiles = []
             potential_electrodes = self.inversion_data.entity
             current_electrodes = potential_electrodes.current_electrodes
@@ -365,15 +362,21 @@ class InversionDriver:
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, lsurvey, tile_id
             )
-            ldat = (
-                data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
-            )
-            lmisfit = data_misfit.L2DataMisfit(
-                data=ldat[0],
-                simulation=lsim,
-                model_map=lmap,
-            )
-            lmisfit.W = 1 / lsurvey.std
+
+            if self.params.forward_only:
+                lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
+            else:
+                ldat = (
+                    data.Data(
+                        lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std
+                    ),
+                )
+                lmisfit = data_misfit.L2DataMisfit(
+                    data=ldat[0],
+                    simulation=lsim,
+                    model_map=lmap,
+                )
+                lmisfit.W = 1 / lsurvey.std
 
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
