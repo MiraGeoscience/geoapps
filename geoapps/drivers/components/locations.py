@@ -107,7 +107,7 @@ class InversionLocations:
             self.workspace,
             name=name,
             vertices=locs,
-            parent=self.params.out_group,
+            parent=self.params.ga_group,
         )
 
         return entity
@@ -130,8 +130,6 @@ class InversionLocations:
 
         if isinstance(data_object, Grid2D):
             locs = data_object.centroids
-        # elif isinstance(data_object, PotentialElectrode):
-        #     locs = data_object.current_electrodes.vertices
         else:
             locs = data_object.vertices
 
@@ -192,6 +190,13 @@ class InversionLocations:
             return None
 
         topo = self.get_locations(self.params.topography_object)
+        if self.params.topography is not None:
+            if isinstance(self.params.topography, UUID):
+                z = self.workspace.get_entity(self.params.topography)[0].values
+            else:
+                z = np.ones_like(locs) * self.params.topography
+
+            topo[:, 2] = z
 
         xyz = locs.copy()
         topo_interpolator = LinearNDInterpolator(topo[:, :2], topo[:, 2])
