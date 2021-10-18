@@ -52,7 +52,7 @@ class InversionDriver:
         self.inverse_problem = None
         self.survey = None
         self.active_cells = None
-        self._initialize()
+        self.initialize()
 
     @property
     def window(self):
@@ -90,7 +90,7 @@ class InversionDriver:
     def upper_bound(self):
         return self.models.upper_bound
 
-    def _initialize(self):
+    def initialize(self):
 
         ### Collect inversion components ###
 
@@ -139,14 +139,16 @@ class InversionDriver:
         print("Number of tiles:" + str(self.nTiles))
 
         # Build tiled misfits and combine to form global misfit
-        local_misfits = self.get_tile_misfits(self.tiles)
-        global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
+        self.local_misfits = self.get_tile_misfits(self.tiles)
+        self.global_misfit = objective_function.ComboObjectiveFunction(
+            self.local_misfits
+        )
 
         # Create regularization
-        reg = self.get_regularization()
+        self.regularization = self.get_regularization()
 
         # Specify optimization algorithm and set parameters
-        opt = optimization.ProjectedGNCG(
+        self.optimization = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
             lower=self.lower_bound,
             upper=self.upper_bound,
@@ -159,7 +161,10 @@ class InversionDriver:
 
         # Create the default L2 inverse problem from the above objects
         self.inverse_problem = inverse_problem.BaseInvProblem(
-            global_misfit, reg, opt, beta=self.params.initial_beta
+            self.global_misfit,
+            self.regularization,
+            self.optimization,
+            beta=self.params.initial_beta,
         )
 
         # Solve forward problem, and attach dpred to inverse problem or
@@ -173,25 +178,30 @@ class InversionDriver:
             return
 
         # Add a list of directives to the inversion
-        directiveList = DirectivesFactory(self.params).build(
+        self.directiveList = DirectivesFactory(self.params).build(
             self.inversion_data,
             self.inversion_mesh,
             self.active_cells,
             np.argsort(np.hstack(self.sorting)),
-            local_misfits,
-            reg,
+            self.local_misfits,
+            self.regularization,
         )
 
         # Put all the parts together
-        inv = inversion.BaseInversion(self.inverse_problem, directiveList=directiveList)
+        self.inversion = inversion.BaseInversion(
+            self.inverse_problem, directiveList=self.directiveList
+        )
 
     def run(self):
         """Run inversion from params"""
 
+        if self.params.forward_only:
+            return
+
         # Run the inversion
         self.start_inversion_message()
-        mrec = inv.run(self.starting_model)
-        dpred = self.collect_predicted_data(global_misfit, mrec)
+        mrec = self.inversion.run(self.starting_model)
+        dpred = self.collect_predicted_data(self.global_misfit, mrec)
         self.save_residuals(self.inversion_data.entity, dpred)
         self.finish_inversion_message(dpred)
 

@@ -274,9 +274,7 @@ class SurveyFactory(SimPEGFactory):
             local_index=local_index,
         )
 
-        components = list(data.observed.keys())
-        n_channels = len(components)
-
+        local_index = self.local_index if local_index is None else local_index
         if not self.params.forward_only:
             local_data = {k: v[local_index] for k, v in data.observed.items()}
             local_uncertainties = {
