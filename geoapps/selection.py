@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from uuid import UUID
 
 import ipywidgets as widgets
@@ -277,9 +278,17 @@ class ObjectDataSelection(BaseApplication):
 
             if self.add_groups != "only":
                 options += [["--- Channels ---", None]]
-                for child in obj.children:
-                    if isinstance(child, (IntegerData, FloatData)):
-                        options += [[child.name, child.uid]]
+                children_list = {
+                    child.uid: child.name
+                    for child in obj.children
+                    if isinstance(child, (IntegerData, FloatData))
+                }
+                ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
+                options += [
+                    [name, uid]
+                    for uid, name in ordered.items()
+                    if "visual parameter" not in name.lower()
+                ]
 
                 options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
 
@@ -322,13 +331,15 @@ class ObjectDataSelection(BaseApplication):
                 [obj.parent.name + "/" + obj.name, obj.uid] for obj in obj_list
             ]
 
-            if value in list(dict(options).values()):  # Silent update
-                self.objects.unobserve(self.update_data_list, names="value")
-                self.objects.options = options
-                self.objects.value = value
-                self._objects.observe(self.update_data_list, names="value")
-            else:
-                self.objects.options = options
+            # if value in list(dict(options).values()):  # Silent update
+            #     self.objects.unobserve(self.update_data_list, names="value")
+            #     self.objects.options = options
+            #     self.objects.value = value
+            #     self._objects.observe(self.update_data_list, names="value")
+            # else:
+            self.objects.options = options
+            # if value in list(dict(options).values()):
+            #     self.objects.value = value
 
     def update_uid_name_map(self):
         """
