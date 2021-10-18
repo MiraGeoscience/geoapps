@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from geoh5py.objects import Octree
     from geoapps.io.params import Params
     from discretize import TreeMesh
+    from . import InversionData, InversionTopography
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -40,15 +41,24 @@ class InversionMesh:
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params) -> None:
+    def __init__(
+        self,
+        workspace: Workspace,
+        params: Params,
+        inversion_data: InversionData,
+        inversion_topography: InversionTopography,
+    ) -> None:
         """
         :param workspace: Workspace object containing mesh data.
         :param params: Params object containing mesh parameters.
         :param window: Center and size defining window for data, topography, etc.
+        :param
 
         """
         self.workspace = workspace
         self.params = params
+        self.inversion_data = inversion_data
+        self.inversion_topography = inversion_topography
         self.mesh: TreeMesh = None
         self.nC: int = None
         self.rotation: dict[str, float] = None
@@ -68,12 +78,12 @@ class InversionMesh:
         if self.params.mesh_from_params:
             self.build_from_params()
             self.entity = self.workspace.get_entity("Octree_Mesh")[0]
-            self.entity.parent = self.params.out_group
+            self.entity.parent = self.params.ga_group
+
         else:
             orig_octree = self.workspace.get_entity(self.params.mesh)[0]
-
             self.entity = orig_octree.copy(
-                parent=self.params.out_group, copy_children=False
+                parent=self.params.ga_group, copy_children=False
             )
 
         self.uid = self.entity.uid
@@ -111,13 +121,13 @@ class InversionMesh:
             k: v for k, v in mesh_params_dict.items() if k in mesh_param_names
         }
         mesh_params_dict["Refinement A"] = {
-            "object": self.workspace.get_entity("Data")[0].uid,
+            "object": self.inversion_data.entity.uid,
             "levels": params.octree_levels_obs,
             "type": "radial",
             "distance": params.max_distance,
         }
         mesh_params_dict["Refinement B"] = {
-            "object": params.topography_object,
+            "object": self.inversion_topography.entity.uid,
             "levels": params.octree_levels_topo,
             "type": "surface",
             "distance": params.max_distance,
@@ -132,10 +142,11 @@ class InversionMesh:
         from geoapps.create.octree_mesh import OctreeMesh
 
         octree_params = self.collect_mesh_params(self.params)
-        octree_mesh = OctreeMesh.run(octree_params)
+        self.entity = OctreeMesh.run(octree_params)
+        self.entity.parent = self.params.ga_group
 
-        self.uid = octree_mesh.uid
-        self.mesh = octree_2_treemesh(octree_mesh)
+        self.uid = self.entity.uid
+        self.mesh = octree_2_treemesh(self.entity)
 
         self.nC = self.mesh.nC
         self.octree_permutation = self.mesh._ubc_order

@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from uuid import UUID
 
 import ipywidgets as widgets
@@ -30,7 +31,8 @@ class ObjectDataSelection(BaseApplication):
     _objects = None
     _add_groups = False
     _select_multiple = False
-    _object_types = None
+    _object_types = ()
+    _exclusion_types = ()
     _find_label = []
 
     def __init__(self, **kwargs):
@@ -116,22 +118,41 @@ class ObjectDataSelection(BaseApplication):
         """
         Entity type
         """
-        if getattr(self, "_object_types", None) is None:
-            self._object_types = []
-
         return self._object_types
 
     @object_types.setter
     def object_types(self, entity_types):
-        if not isinstance(entity_types, list):
-            entity_types = [entity_types]
+        if not isinstance(entity_types, tuple):
+            entity_types = tuple(entity_types)
 
         for entity_type in entity_types:
             assert issubclass(
                 entity_type, ObjectBase
             ), f"Provided object_types must be instances of {ObjectBase}"
 
-        self._object_types = tuple(entity_types)
+        self._object_types = entity_types
+
+    @property
+    def exclusion_types(self):
+        """
+        Entity type
+        """
+        if getattr(self, "_exclusion_types", None) is None:
+            self._exclusion_types = []
+
+        return self._exclusion_types
+
+    @exclusion_types.setter
+    def exclusion_types(self, entity_types):
+        if not isinstance(entity_types, tuple):
+            entity_types = tuple(entity_types)
+
+        for entity_type in entity_types:
+            assert issubclass(
+                entity_type, ObjectBase
+            ), f"Provided exclusion_types must be instances of {ObjectBase}"
+
+        self._exclusion_types = tuple(entity_types)
 
     @property
     def find_label(self):
@@ -257,9 +278,17 @@ class ObjectDataSelection(BaseApplication):
 
             if self.add_groups != "only":
                 options += [["--- Channels ---", None]]
-                for child in obj.children:
-                    if isinstance(child, (IntegerData, FloatData)):
-                        options += [[child.name, child.uid]]
+                children_list = {
+                    child.uid: child.name
+                    for child in obj.children
+                    if isinstance(child, (IntegerData, FloatData))
+                }
+                ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
+                options += [
+                    [name, uid]
+                    for uid, name in ordered.items()
+                    if "visual parameter" not in name.lower()
+                ]
 
                 options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
 
@@ -293,17 +322,24 @@ class ObjectDataSelection(BaseApplication):
             else:
                 obj_list = self._workspace.objects
 
+            if len(self.exclusion_types) > 0:
+                obj_list = [
+                    obj for obj in obj_list if not isinstance(obj, self.exclusion_types)
+                ]
+
             options = [["", None]] + [
                 [obj.parent.name + "/" + obj.name, obj.uid] for obj in obj_list
             ]
 
-            if value in list(dict(options).values()):  # Silent update
-                self.objects.unobserve(self.update_data_list, names="value")
-                self.objects.options = options
-                self.objects.value = value
-                self._objects.observe(self.update_data_list, names="value")
-            else:
-                self.objects.options = options
+            # if value in list(dict(options).values()):  # Silent update
+            #     self.objects.unobserve(self.update_data_list, names="value")
+            #     self.objects.options = options
+            #     self.objects.value = value
+            #     self._objects.observe(self.update_data_list, names="value")
+            # else:
+            self.objects.options = options
+            # if value in list(dict(options).values()):
+            #     self.objects.value = value
 
     def update_uid_name_map(self):
         """

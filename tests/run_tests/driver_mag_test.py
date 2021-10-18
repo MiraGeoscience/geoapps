@@ -92,7 +92,7 @@ def test_susceptibility_run(
     driver.run()
     run_ws = Workspace(driver.params.workspace.h5file)
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.out_group.uid
+        driver.params.workspace.h5file, driver.params.ga_group.uid
     )
     if pytest:
         np.testing.assert_almost_equal(
@@ -192,7 +192,7 @@ def test_magnetic_vector_run(
     run_ws = Workspace(driver.params.workspace.h5file)
     # Re-open the workspace and get iterations
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.out_group.uid
+        driver.params.workspace.h5file, driver.params.ga_group.uid
     )
     if pytest:
         np.testing.assert_almost_equal(
