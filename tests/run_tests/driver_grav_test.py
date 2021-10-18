@@ -60,7 +60,6 @@ def test_gravity_run(
     workspace = Workspace(workspace.h5file)
 
     gz = workspace.get_entity("Predicted_gz")[0]
-
     orig_gz = gz.values.copy()
 
     # Turn some values to nan
@@ -94,7 +93,7 @@ def test_gravity_run(
     driver.run()
     run_ws = Workspace(driver.params.workspace.h5file)
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.out_group.uid
+        driver.params.workspace.h5file, driver.params.ga_group.uid
     )
 
     residual = run_ws.get_entity("Residuals_gz")[0]

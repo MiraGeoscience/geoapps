@@ -318,7 +318,7 @@ class OctreeMesh(ObjectDataSelection):
             BaseApplication.live_link_output(params.monitoring_directory, octree)
 
         print(
-            f"Octree mesh '{octree.name}' completed and exported to {workspace.h5file}"
+            f"Octree mesh '{octree.name}' completed and exported to {path.abspath(workspace.h5file)}"
         )
         return octree
 

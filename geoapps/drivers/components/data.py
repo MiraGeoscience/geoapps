@@ -132,29 +132,28 @@ class InversionData(InversionLocations):
                 self.locations[:, 1],
                 window=self.window,
                 angle=self.angle,
-                mask=self.mask,
-            )
-
-        if self.params.resolution not in [0.0, None]:
-            self.resolution = self.params.resolution
-            self.mask = filter_xy(
-                self.locations[:, 0],
-                self.locations[:, 1],
                 distance=self.resolution,
                 mask=self.mask,
             )
 
+        if self.radar is not None:
+            if any(np.isnan(self.radar)):
+                self.mask[np.isnan(self.radar)] = False
+
         self.locations = self.locations[self.mask, :]
         self.observed = self.filter(self.observed)
         self.uncertainties = self.filter(self.uncertainties)
+        self.radar = self.filter(self.radar)
 
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
+
             self.observed = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
-        self.write_entity()
+        self.locations = self.apply_transformations(self.locations)
+        self.entity = self.write_entity()
         self.locations = self.get_locations(self.entity.uid)
         self._survey, _ = self.survey()
 
@@ -217,7 +216,6 @@ class InversionData(InversionLocations):
 
     def write_entity(self):
         """Write out the survey to geoh5"""
-
         if self.params.inversion_type == "direct current":
 
             def prune_from_indices(curve: Curve, cell_indices: np.ndarray):
@@ -237,14 +235,14 @@ class InversionData(InversionLocations):
                 rx_obj.ab_cell_id.values[rcv_ind], return_inverse=True
             )
             ab_cell_id = np.arange(1, uni_src_ids.shape[0] + 1)[src_ids]
-            self.entity = PotentialElectrode.create(
+            entity = PotentialElectrode.create(
                 self.workspace,
                 name="Data",
-                parent=self.params.out_group,
+                parent=self.params.ga_group,
                 vertices=self.apply_transformations(rcv_locations),
                 cells=rcv_cells,
             )
-            self.entity.ab_cell_id = ab_cell_id.astype("int32")
+            entity.ab_cell_id = ab_cell_id
             # Trim down sources
             tx_obj = rx_obj.current_electrodes
             src_ind = np.hstack(
@@ -254,18 +252,18 @@ class InversionData(InversionLocations):
             new_currents = CurrentElectrode.create(
                 self.workspace,
                 name="Data (currents)",
-                parent=self.params.out_group,
+                parent=self.params.ga_group,
                 vertices=self.apply_transformations(src_locations),
                 cells=src_cells,
             )
             new_currents.add_default_ab_cell_id()
-            self.entity.current_electrodes = new_currents
-            self.entity.workspace.finalize()
+            entity.current_electrodes = new_currents
+            entity.workspace.finalize()
 
         else:
-            self.entity = super().create_entity(
-                "Data", self.apply_transformations(self.locations)
-            )
+            entity = super().create_entity("Data", self.locations)
+
+        return entity
 
     def save_data(self):
         """Write out the data to geoh5"""
@@ -277,17 +275,6 @@ class InversionData(InversionLocations):
                 geometric_factor(self._survey) + 1e-10
             )
             appres = data["potential"] * self.transformations["potential"]
-
-            for comp in self.components:
-                self.data_entity[comp] = self.entity.add_data(
-                    {
-                        f"{basename}_{comp}": {
-                            "values": data[comp],
-                            "association": "CELL",
-                        }
-                    }
-                )
-
             self.data_entity["apparent_resistivity"] = self.entity.add_data(
                 {
                     f"{basename}_apparent_resistivity": {
@@ -297,14 +284,16 @@ class InversionData(InversionLocations):
                 }
             )
 
-        else:
-            for comp in self.components:
-                dnorm = self.normalizations[comp] * data[comp]
-                self.data_entity[comp] = self.entity.add_data(
-                    {f"{basename}_{comp}": {"values": dnorm}}
+        for comp in self.components:
+            dnorm = self.normalizations[comp] * data[comp]
+            self.data_entity[comp] = self.entity.add_data(
+                {f"{basename}_{comp}": {"values": dnorm}}
+            )
+            if not self.params.forward_only:
+                self._observed_data_types[comp] = self.data_entity[comp].entity_type
+                self.entity.add_data(
+                    {f"Uncertainties_{comp}": {"values": self.uncertainties[comp]}}
                 )
-                if not self.params.forward_only:
-                    self._observed_data_types[comp] = self.data_entity[comp].entity_type
 
     def get_data_component(self, component: str) -> np.ndarray:
         """Get data component (channel) from params data."""
@@ -379,9 +368,7 @@ class InversionData(InversionLocations):
         if self.offset is not None:
             locations = self.displace(locations, self.offset)
         if self.radar is not None:
-            radar_offset = self.workspace.get_entity(self.radar)[0].values
-            radar_offset = self.filter(radar_offset)
-            locations = self.drape(locations, radar_offset)
+            locations = self.drape(locations, self.radar)
         if self.is_rotated:
             locations = super().rotate(locations)
         return locations
@@ -410,7 +397,7 @@ class InversionData(InversionLocations):
         trend = data.copy()
         for comp in self.components:
             data_trend, _ = calculate_2D_trend(
-                self.locations["receivers"],
+                self.locations,
                 d[comp],
                 self.params.detrend_order,
                 self.params.detrend_type,
@@ -433,7 +420,7 @@ class InversionData(InversionLocations):
         d = deepcopy(data)
         normalizations = {}
         for comp in self.components:
-            if comp == "gz":
+            if comp in ["gz", "bxz", "byz"]:
                 normalizations[comp] = -1.0
                 if d[comp] is not None:
                     d[comp] *= -1.0
@@ -525,10 +512,11 @@ class InversionData(InversionLocations):
         dpred = inverse_problem.get_dpred(
             model, compute_J=False if self.params.forward_only else True
         )
-        dpred = np.hstack(dpred)[np.hstack(sorting)]
-        for i, comp in enumerate(self.components):
-            self.predicted[comp] = np.atleast_2d(dpred).T[:, i]
 
-            # TODO Should rotate the x,y (and/or tensor) components of the fields if used.
+        dpred = np.hstack(dpred).reshape(-1, len(self.components))
+        sorting = np.argsort(np.hstack(sorting))
+        self.predicted = dict(zip(self.components, dpred[sorting].T))
+
+        # TODO Should rotate the x,y (and/or tensor) components of the fields if used.
 
         self.save_data()

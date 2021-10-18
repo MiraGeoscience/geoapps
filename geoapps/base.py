@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import time
+import types
 import uuid
 from os import mkdir, path
 from shutil import copyfile, move
@@ -123,6 +124,8 @@ class BaseApplication:
                         getattr(self, "_" + key, None), BaseApplication
                     ):
                         setattr(self, "_" + key, value)
+                    elif type(getattr(self, key, None)) is types.MethodType:
+                        getattr(self, key, None)(key, value)
                     else:
                         setattr(self, key, value)
                 except:
