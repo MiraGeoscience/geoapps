@@ -5,12 +5,15 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
 
 import numpy as np
 import requests
 import SimPEG
+from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
+from geoapps.drivers.base_inversion import InversionDriver
 from geoapps.drivers.components import InversionData
 from geoapps.io.MagneticVector import MagneticVectorParams
 from geoapps.io.MagneticVector.constants import default_ui_json
@@ -31,6 +34,58 @@ def setup_params(tmp):
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     geotest.set_param("out_group", "MVIInversion")
     return geotest.make()
+
+
+def test_survey_data(tmp_path):
+    X, Y, Z = np.meshgrid(np.linspace(0, 100, 3), np.linspace(0, 100, 3), 0)
+    verts = np.column_stack([X.ravel(), Y.ravel(), Z.ravel()])
+    ws = Workspace(os.path.join(tmp_path, "test_ws"))
+    test_data_object = Points.create(ws, vertices=verts, name="test_data_object")
+    _ = test_data_object.add_data(
+        {
+            "bxx": {
+                "association": "VERTEX",
+                "values": np.arange(len(verts)).astype(float),
+            },
+            "byy": {
+                "association": "VERTEX",
+                "values": len(verts) + np.arange(len(verts)).astype(float),
+            },
+            "bzz": {
+                "association": "VERTEX",
+                "values": 2 * len(verts) + np.arange(len(verts)).astype(float),
+            },
+        }
+    )
+    test_topo_object = Points.create(ws, vertices=verts, name="test_topo_object")
+    _ = test_topo_object.add_data(
+        {"elev": {"association": "VERTEX", "values": 100 * np.ones(len(verts))}}
+    )
+    params = MagneticVectorParams(
+        geoh5=ws,
+        data_object=test_data_object.uid,
+        topography_object=test_topo_object,
+        topography=ws.get_entity("elev")[0].uid,
+        tmi_channel_bool=False,
+        bxx_channel_bool=True,
+        bxx_channel=ws.get_entity("bxx")[0].uid,
+        bxx_uncertainty=0.1,
+        byy_channel_bool=True,
+        byy_channel=ws.get_entity("byy")[0].uid,
+        byy_uncertainty=0.2,
+        bzz_channel_bool=True,
+        bzz_channel=ws.get_entity("bzz")[0].uid,
+        bzz_uncertainty=0.3,
+        starting_model=0.0,
+        tile_spatial=2,
+        z_from_topo=True,
+        receivers_offset_z=50.0,
+        resolution=0,
+        mesh_from_params=True,
+    )
+
+    driver = InversionDriver(params, warmstart=False)
+    driver.inverse_problem
 
 
 def test_save_data(tmp_path):

@@ -39,8 +39,9 @@ from .components.factories import DirectivesFactory
 
 
 class InversionDriver:
-    def __init__(self, params: Params):
+    def __init__(self, params: Params, warmstart=True):
         self.params = params
+        self.warmstart = warmstart
         self.workspace = params.workspace
         self.inversion_type = params.inversion_type
         self.inversion_window = None
@@ -111,8 +112,6 @@ class InversionDriver:
             self.workspace, self.params, self.inversion_mesh
         )
 
-    def run(self):
-        """Run inversion from params"""
         try:
             get_client()
         except ValueError:
@@ -164,9 +163,10 @@ class InversionDriver:
         )
 
         # Solve forward problem, and attach dpred to inverse problem or
-        self.inverse_problem.dpred = self.inversion_data.simulate(
-            self.starting_model, self.inverse_problem, self.sorting
-        )
+        if self.warmstart or self.params.forward_only:
+            self.inverse_problem.dpred = self.inversion_data.simulate(
+                self.starting_model, self.inverse_problem, self.sorting
+            )
 
         # If forward only option enabled, stop here
         if self.params.forward_only:
@@ -184,6 +184,9 @@ class InversionDriver:
 
         # Put all the parts together
         inv = inversion.BaseInversion(self.inverse_problem, directiveList=directiveList)
+
+    def run(self):
+        """Run inversion from params"""
 
         # Run the inversion
         self.start_inversion_message()
