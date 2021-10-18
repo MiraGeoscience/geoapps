@@ -56,7 +56,7 @@ class InversionTopography(InversionLocations):
 
     def _initialize(self):
 
-        self.locations = super().get_locations(self.params.topography_object)
+        self.locations = self.get_locations(self.params.topography_object)
 
         self.mask = np.ones(len(self.locations), dtype=bool)
 
@@ -74,6 +74,8 @@ class InversionTopography(InversionLocations):
 
         if self.is_rotated:
             self.locations = super().rotate(self.locations)
+
+        self.entity = self.write_entity()
 
     def active_cells(self, mesh: InversionMesh) -> np.ndarray:
         """
@@ -113,3 +115,10 @@ class InversionTopography(InversionLocations):
                 locs[:, 2] = elev
 
         return locs
+
+    def write_entity(self):
+        """Write out the survey to geoh5"""
+
+        entity = super().create_entity("Topo", self.locations)
+
+        return entity

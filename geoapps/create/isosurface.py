@@ -155,26 +155,3 @@ class IsoSurface(ObjectDataSelection):
         ipywidgets.FloatText()
         """
         return self._resolution
-
-    @property
-    def workspace(self):
-        """
-        Target geoh5py workspace
-        """
-        if (
-            getattr(self, "_workspace", None) is None
-            and getattr(self, "_h5file", None) is not None
-        ):
-            self.workspace = Workspace(self.h5file)
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"`workspace` must be of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
-
-        # Refresh the list of objects
-        self.update_objects_list()

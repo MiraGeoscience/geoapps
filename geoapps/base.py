@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import time
+import types
 import uuid
 from os import mkdir, path
 from shutil import copyfile, move
@@ -123,6 +124,8 @@ class BaseApplication:
                         getattr(self, "_" + key, None), BaseApplication
                     ):
                         setattr(self, "_" + key, value)
+                    elif type(getattr(self, key, None)) is types.MethodType:
+                        getattr(self, key, None)(key, value)
                     else:
                         setattr(self, key, value)
                 except:
@@ -389,13 +392,7 @@ class BaseApplication:
     @workspace.setter
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
+        self.base_workspace_changes(workspace)
 
     @property
     def working_directory(self):
@@ -447,6 +444,22 @@ class BaseApplication:
     @staticmethod
     def run(cls, params):
         ...
+
+    def base_workspace_changes(self, workspace: Workspace):
+        self._workspace = workspace
+        self._h5file = workspace.h5file
+        self._file_browser.reset(
+            path=self.working_directory,
+            filename=path.basename(self._h5file),
+        )
+        self._file_browser._apply_selection()
+
+        export_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
+        if not path.exists(export_path):
+            mkdir(export_path)
+
+        self.export_directory._set_form_values(export_path, "")
+        self.export_directory._apply_selection()
 
 
 def working_copy(h5file):

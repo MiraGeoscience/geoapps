@@ -97,6 +97,7 @@ class DirectivesFactory:
                 inversion_object=inversion_data,
                 active_cells=active_cells,
                 sorting=sorting,
+                save_objective_function=True,
             )
 
             if self.factory_type in ["direct current", "induced polarization"]:
@@ -121,7 +122,7 @@ class DirectivesFactory:
                 if directive is not None:
                     self.directive_list.append(directive)
 
-        print(f"Generated directive list: {self.directive_list}")
+        # print(f"Generated directive list: {self.directive_list}")
         return self.directive_list
 
 
@@ -134,35 +135,43 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         return directives.SaveIterationsGeoH5
 
     def assemble_arguments(
-        self, inversion_object=None, active_cells=None, sorting=None, transform=None
+        self,
+        inversion_object=None,
+        active_cells=None,
+        sorting=None,
+        transform=None,
+        save_objective_function=False,
     ):
         return [inversion_object.entity]
 
     def assemble_keyword_arguments(
-        self, inversion_object=None, active_cells=None, sorting=None, transform=None
+        self,
+        inversion_object=None,
+        active_cells=None,
+        sorting=None,
+        transform=None,
+        save_objective_function=False,
     ):
 
         object_type = "mesh" if hasattr(inversion_object, "mesh") else "data"
 
         kwargs = {}
+        kwargs["save_objective_function"] = save_objective_function
 
         if object_type == "data":
 
-            channels = inversion_object.observed.keys()
+            channels = list(inversion_object.observed.keys())
             kwargs["channels"] = channels
             kwargs["attribute_type"] = "predicted"
-            kwargs["save_objective_function"] = True
             kwargs["transforms"] = [
                 np.tile(
                     [inversion_object.normalizations[c] for c in channels],
-                    (len(inversion_object.observed), 1),
+                    inversion_object.observed[channels[0]].shape[0],
                 )
             ]
 
             if self.factory_type in ["direct current", "induced polarization"]:
-
                 is_dc = True if self.factory_type == "direct current" else False
-
                 component = "dc" if is_dc else "ip"
                 kwargs["association"] = "CELL"
                 kwargs["components"] = [component]
@@ -174,7 +183,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
                 # Include an apparent resistivity mapper
                 if transform is not None:
-
                     property = "resistivity" if is_dc else "chargeability"
                     kwargs["transforms"].append(transform)
                     kwargs["channels"] = [f"apparent_{property}"]
@@ -190,12 +198,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             if self.factory_type in ["magnetic scalar", "magnetic vector"]:
                 kwargs["components"] = ["mag"]
                 kwargs["data_type"] = {"mag": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.hstack(sorting)
+                kwargs["sorting"] = np.argsort(np.hstack(sorting))
 
             if self.factory_type == "gravity":
                 kwargs["components"] = ["grav"]
                 kwargs["data_type"] = {"grav": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.hstack(sorting)
+                kwargs["sorting"] = np.argsort(np.hstack(sorting))
 
         elif object_type == "mesh":
 
@@ -221,11 +229,17 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         return kwargs
 
     def build(
-        self, inversion_object=None, active_cells=None, sorting=None, transform=None
+        self,
+        inversion_object=None,
+        active_cells=None,
+        sorting=None,
+        transform=None,
+        save_objective_function=False,
     ):
         return super().build(
             inversion_object=inversion_object,
             active_cells=active_cells,
             sorting=sorting,
             transform=transform,
+            save_objective_function=save_objective_function,
         )

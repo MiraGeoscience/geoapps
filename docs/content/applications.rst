@@ -57,6 +57,7 @@ Geophysical Data Inversion
 
     applications/grav_mag_inversion
     applications/em1d_inversion
+    applications/dcip_inversion
 
 
 Need help? Contact us at support@mirageoscience.com
@@ -100,6 +101,10 @@ Need help? Contact us at support@mirageoscience.com
     :width: 0
 
 .. figure:: applications/images/inversion_grav_mag_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/inversion_dcip_thumbnail.png
     :align: center
     :width: 0
 

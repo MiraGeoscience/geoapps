@@ -259,7 +259,9 @@ class SurveyFactory(SimPEGFactory):
         else:
 
             if local_index is None:
-                self.local_index = np.arange(len(locations["receivers"]), dtype=int)
+                self.local_index = np.arange(
+                    len(self.locations["receivers"]), dtype=int
+                )
             else:
                 self.local_index = local_index
 
@@ -291,16 +293,30 @@ class SurveyFactory(SimPEGFactory):
         n_channels = len(components)
 
         if not self.params.forward_only:
-            tiled_local_index = np.tile(self.local_index, n_channels)
-            survey.dobs = self._stack_channels(data.observed)[tiled_local_index]
-            survey.std = self._stack_channels(data.uncertainties)[tiled_local_index]
+            local_data = {k: v[local_index] for k, v in data.observed.items()}
+            local_uncertainties = {
+                k: v[local_index] for k, v in data.uncertainties.items()
+            }
+            data_vec = self._stack_channels(local_data)
+            uncertainty_vec = self._stack_channels(local_uncertainties)
+            data_vec[
+                np.isnan(data_vec)
+            ] = self.dummy  # Nan's handled by inf uncertainties
+            survey.dobs = data_vec
+            survey.std = uncertainty_vec
 
         if self.factory_type in ["direct current", "induced_polarization"]:
-            if (mesh is not None) and (active_cells is not None):
+            if (
+                (mesh is not None)
+                and (active_cells is not None)
+                and self.params.z_from_topo
+            ):
                 survey.drape_electrodes_on_topography(mesh, active_cells)
+
+        survey.dummy = self.dummy
 
         return survey, self.local_index
 
     def _stack_channels(self, channel_data: dict[str, np.ndarray]):
         """Convert dictionary of data/uncertainties to stacked array."""
-        return np.vstack([list(channel_data.values())]).ravel()
+        return np.column_stack(list(channel_data.values())).ravel()

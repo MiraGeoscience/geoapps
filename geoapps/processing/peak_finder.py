@@ -653,18 +653,12 @@ class PeakFinder(ObjectDataSelection):
     @workspace.setter
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
+        self.base_workspace_changes(workspace)
         self.params.input_file.filepath = path.join(
             path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
         )
         self.update_objects_list()
         self.lines._workspace = workspace
-        self._file_browser.reset(
-            path=self.working_directory,
-            filename=path.basename(self._h5file),
-        )
-        self._file_browser._apply_selection()
 
     @property
     def x_label(self) -> ToggleButtons:

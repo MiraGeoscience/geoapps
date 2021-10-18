@@ -11,3 +11,8 @@ project = "FlinFlon.geoh5"
 url = "https://github.com/MiraGeoscience/geoapps/raw/main/assets/FlinFlon.geoh5"
 r = requests.get(url)
 open(project, "wb").write(r.content)
+
+project_dcip = "FlinFlon_dcip.geoh5"
+url = "https://github.com/MiraGeoscience/geoapps/raw/develop/assets/FlinFlon_dcip.geoh5"
+r = requests.get(url)
+open(project_dcip, "wb").write(r.content)

@@ -107,7 +107,9 @@ class InversionDriver:
             self.workspace, self.params, self.window
         )
 
-        self.inversion_mesh = InversionMesh(self.workspace, self.params)
+        self.inversion_mesh = InversionMesh(
+            self.workspace, self.params, self.inversion_data, self.inversion_topography
+        )
 
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh
@@ -131,17 +133,6 @@ class InversionDriver:
         self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
-
-        # If forward only is true simulate fields, save to workspace and exit.
-        if self.params.forward_only:
-            self.inversion_data.simulate(
-                self.mesh,
-                self.starting_model,
-                self.survey,
-                self.active_cells,
-                save=True,
-            )
-            return
 
         # Tile locations
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
@@ -188,7 +179,7 @@ class InversionDriver:
             self.inversion_data,
             self.inversion_mesh,
             self.active_cells,
-            self.sorting,
+            np.argsort(np.hstack(self.sorting)),
             local_misfits,
             reg,
         )
@@ -219,17 +210,11 @@ class InversionDriver:
 
     def collect_predicted_data(self, global_misfit, mrec):
 
-        if getattr(global_misfit, "objfcts", None) is not None:
-            dpred = np.zeros_like(self.survey.dobs)
-            for ind, local_misfit in enumerate(global_misfit.objfcts):
-                mrec_sim = local_misfit.model_map * mrec
-                dpred[self.sorting[ind]] += local_misfit.simulation.dpred(
-                    mrec_sim
-                ).compute()
-        else:
-            dpred = global_misfit.survey.dpred(mrec).compute()
-
-        return dpred
+        dpred = np.hstack(self.inverse_problem.dpred)
+        if getattr(self.survey, "component", None) is not None:
+            dpred = dpred.reshape(-1, len(self.survey.components))
+        sorting = np.argsort(np.hstack(self.sorting))
+        return dpred[sorting].ravel()
 
     def save_residuals(self, obj, dpred):
         residuals = self.survey.dobs - dpred
@@ -350,10 +335,11 @@ class InversionDriver:
                     split_ind.append(cells_ind)
                 # Fetch all receivers attached to the currents
                 logical = np.zeros(current_electrodes.n_cells, dtype="bool")
-                logical[np.hstack(split_ind)] = True
-                tiles.append(
-                    np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
-                )
+                if len(split_ind) > 0:
+                    logical[np.hstack(split_ind)] = True
+                    tiles.append(
+                        np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
+                    )
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
@@ -416,4 +402,4 @@ class InversionDriver:
                 self.params.n_cpu = int(multiprocessing.cpu_count() / 2)
 
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
-            dconf.set(scheduler="threads", pool=ThreadPool(2 * self.params.n_cpu))
+            dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
