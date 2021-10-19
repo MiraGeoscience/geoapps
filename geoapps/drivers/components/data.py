@@ -160,7 +160,7 @@ class InversionData(InversionLocations):
     def filter(self, a):
         """Remove vertices based on mask property."""
         if (
-            self.params.inversion_type in ["direct current", "induced_polarization"]
+            self.params.inversion_type in ["direct current", "induced polarization"]
             and self.indices is None
         ):
             potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
@@ -273,7 +273,12 @@ class InversionData(InversionLocations):
         data = self.predicted if self.params.forward_only else self.observed
         basename = "Predicted" if self.params.forward_only else "Observed"
 
-        if self.params.inversion_type in ["direct current", "induced_polarization"]:
+        if self.params.inversion_type in ["direct current"]:
+            data_key = (
+                "potential"
+                if self.params.inversion_type == "direct current"
+                else "chargeability"
+            )
             self.transformations["potential"] = 1 / (
                 geometric_factor(self._survey) + 1e-10
             )
@@ -282,7 +287,7 @@ class InversionData(InversionLocations):
                 if self.params.inversion_type == "direct current"
                 else "chargeability"
             )
-            apparent_property = data["potential"] * self.transformations["potential"]
+            apparent_property = data[data_key] * self.transformations[data_key]
             self.data_entity[f"apparent_{key}"] = self.entity.add_data(
                 {
                     f"{basename}_apparent_{key}": {

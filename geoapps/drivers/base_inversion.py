@@ -138,7 +138,6 @@ class InversionDriver:
 
         self.nTiles = len(self.tiles)
         print("Number of tiles:" + str(self.nTiles))
-
         # Build tiled misfits and combine to form global misfit
         local_misfits = self.get_tile_misfits(self.tiles)
         global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
@@ -164,6 +163,10 @@ class InversionDriver:
         )
 
         # Solve forward problem, and attach dpred to inverse problem or
+        if self.params.forward_only:
+            print("Running forward simulation ...")
+        else:
+            print("Pre-computing sensitivities ...")
         self.inverse_problem.dpred = self.inversion_data.simulate(
             self.starting_model, self.inverse_problem, self.sorting
         )
@@ -362,6 +365,8 @@ class InversionDriver:
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, lsurvey, tile_id
             )
+            if self.inversion_type == "induced polarization":
+                lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
 
             if self.params.forward_only:
                 lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
