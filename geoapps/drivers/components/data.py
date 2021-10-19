@@ -90,8 +90,6 @@ class InversionData(InversionLocations):
         """
         super().__init__(workspace, params, window)
 
-        self.resolution: int = None
-        self.resolution: int = None
         self.offset: list[float] = None
         self.radar: np.ndarray = None
         self.ignore_value: float = None
@@ -131,7 +129,7 @@ class InversionData(InversionLocations):
             self.locations[:, 1],
             window=self.window,
             angle=self.angle,
-            distance=self.resolution,
+            distance=self.params.resolution,
             mask=self.mask,
         )
 
