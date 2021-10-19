@@ -32,7 +32,13 @@ class InversionModelCollection:
 
     """
 
-    model_types = ["starting", "reference", "lower_bound", "upper_bound"]
+    model_types = [
+        "starting",
+        "reference",
+        "lower_bound",
+        "upper_bound",
+        "conductivity",
+    ]
 
     def __init__(self, workspace, params, mesh):
         """
@@ -59,6 +65,7 @@ class InversionModelCollection:
         self._reference = None
         self._lower_bound = None
         self._upper_bound = None
+        self._conductivity = None
         self._initialize()
 
     @property
@@ -96,6 +103,12 @@ class InversionModelCollection:
                 ubound[i] = np.log(ubound[i]) if np.isfinite(ubound[i]) else ubound[i]
         return ubound
 
+    @property
+    def conductivity(self):
+        mstart = self._conductivity.model
+        mstart = np.log(mstart) if self.is_sigma else mstart
+        return mstart
+
     def _initialize(self):
 
         self.is_sigma = (
@@ -116,6 +129,9 @@ class InversionModelCollection:
         )
         self._upper_bound = InversionModel(
             self.workspace, self.params, self.mesh, "upper_bound"
+        )
+        self._conductivity = InversionModel(
+            self.workspace, self.params, self.mesh, "conductivity"
         )
 
     def _model_method_wrapper(self, method, name=None, **kwargs):
@@ -262,8 +278,7 @@ class InversionModel:
 
         if model is not None:
             self.model = mkvc(model)
-
-        self.save_model()
+            self.save_model()
 
     def remove_air(self, active_cells):
         """Use active cells vector to remove air cells from model"""

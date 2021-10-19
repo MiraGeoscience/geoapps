@@ -94,7 +94,17 @@ class ReceiversFactory(SimPEGFactory):
             locations_m = locations[local_index[:, 0], :]
             locations_n = locations[local_index[:, 1], :]
             args.append(locations_m)
-            args.append(locations_n)
+
+            if np.all(locations_m == locations_n):
+                if self.factory_type == "direct current":
+                    from SimPEG.electromagnetics.static.resistivity import receivers
+                else:
+                    from SimPEG.electromagnetics.static.induced_polarization import (
+                        receivers,
+                    )
+                self.simpeg_object = receivers.Pole
+            else:
+                args.append(locations_n)
         else:
             args.append(locations[local_index])
 
@@ -149,13 +159,22 @@ class SourcesFactory(SimPEGFactory):
         """Provides implementations to assemble arguments for sources object."""
 
         args = []
-        if self.factory_type == "direct current":
+        if self.factory_type in ["direct current", "induced polarization"]:
             locations_a = locations[0]
             locations_b = locations[1]
-
             args.append([receivers])
             args.append(locations_a)
-            args.append(locations_b)
+
+            if np.all(locations_a == locations_b):
+                if self.factory_type == "direct current":
+                    from SimPEG.electromagnetics.static.resistivity import sources
+                else:
+                    from SimPEG.electromagnetics.static.induced_polarization import (
+                        sources,
+                    )
+                self.simpeg_object = sources.Pole
+            else:
+                args.append(locations_b)
 
         else:
             args.append([receivers])
@@ -198,17 +217,16 @@ class SurveyFactory(SimPEGFactory):
         if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import survey
 
-            return survey.Survey
-
         elif self.factory_type == "gravity":
             from SimPEG.potential_fields.gravity import survey
-
-            return survey.Survey
 
         elif self.factory_type == "direct current":
             from SimPEG.electromagnetics.static.resistivity import survey
 
-            return survey.Survey
+        elif self.factory_type == "induced polarization":
+            from SimPEG.electromagnetics.static.induced_polarization import survey
+
+        return survey.Survey
 
     def assemble_arguments(
         self,
@@ -228,7 +246,7 @@ class SurveyFactory(SimPEGFactory):
         else:
             self.local_index = local_index
 
-        if self.factory_type in ["direct current", "induced_polarization"]:
+        if self.factory_type in ["direct current", "induced polarization"]:
             source_ids, order = np.unique(
                 receiver_entity.ab_cell_id.values[self.local_index], return_index=True
             )
@@ -245,6 +263,9 @@ class SurveyFactory(SimPEGFactory):
                 )
                 if receivers.nD == 0:
                     continue
+
+                if self.factory_type == "induced polarization":
+                    receivers.data_type = "volt"
 
                 cell_ind = int(np.where(currents.ab_cell_id.values == source_id)[0])
                 source = SourcesFactory(self.params).build(
@@ -300,7 +321,7 @@ class SurveyFactory(SimPEGFactory):
             survey.dobs = data_vec
             survey.std = uncertainty_vec
 
-        if self.factory_type in ["direct current", "induced_polarization"]:
+        if self.factory_type in ["direct current", "induced polarization"]:
             if (
                 (mesh is not None)
                 and (active_cells is not None)
