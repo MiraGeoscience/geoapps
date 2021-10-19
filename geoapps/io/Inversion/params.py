@@ -1394,5 +1394,8 @@ class InversionParams(Params):
             ifile.workpath = path
 
         ifile.write_ui_json(ui_json, name=name, default=default)
-        ifile.filepath = os.path.join(ifile.workpath, name)
+        if ifile.workpath is not None:
+            ifile.filepath = os.path.join(ifile.workpath, name)
+        else:
+            ifile.filepath = os.path.abspath(name)
         self._input_file = ifile
