@@ -454,10 +454,10 @@ default_ui_json = {
         "group": "Optimization",
         "optional": True,
         "enabled": False,
-        "dependency": "provide_beta",
-        "dependencyType": "enabled",
+        "dependency": "initial_beta_ratio",
+        "dependencyType": "disabled",
         "label": "Initial beta",
-        "value": "",
+        "value": 0.0,
     },
     "tol_cg": {
         "min": 0,
