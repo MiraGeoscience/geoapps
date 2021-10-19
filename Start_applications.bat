@@ -1,7 +1,9 @@
-set PATH=%PATH%;%USERPROFILE%\anaconda3\Scripts;%USERPROFILE%\anaconda3\Library\bin;%USERPROFILE%\anaconda3\envs;%USERPROFILE%\anaconda3\envs\geoapps\Library\bin
-set PYTHONPATH=%PYTHONPATH%;%CD%
-call activate.bat
-call activate geoapps
-cd geoapps/applications
-jupyter notebook Index.ipynb
+set CONDA_EXE=conda
+:: if Conda executable is not in the PATH, uncomment and set the executable location below
+::set CONDA_EXE=%USERPROFILE%\AppData\Local\Continuum\anaconda3\Library\bin\conda.bat
+
+set THIS_DIR=%~dp0
+set PYTHONPATH=%THIS_DIR%;%PYTHONPATH%
+cd %THIS_DIR%\geoapps\applications
+call %CONDA_EXE% activate geoapps && jupyter notebook Index.ipynb
 cmd /k
