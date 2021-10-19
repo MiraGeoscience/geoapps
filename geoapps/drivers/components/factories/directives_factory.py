@@ -100,7 +100,7 @@ class DirectivesFactory:
                 save_objective_function=True,
             )
 
-            if self.factory_type in ["direct current", "induced polarization"]:
+            if self.factory_type in ["direct current"]:
                 key = (
                     "potential"
                     if self.factory_type == "direct current"
