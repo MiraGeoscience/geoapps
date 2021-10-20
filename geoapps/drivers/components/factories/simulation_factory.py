@@ -102,9 +102,7 @@ class SimulationFactory(SimPEGFactory):
             return self._induced_polarization_keywords(
                 kwargs,
                 mesh,
-                global_mesh=global_mesh,
                 active_cells=active_cells,
-                map=map,
             )
 
     def _magnetic_vector_keywords(self, kwargs, active_cells=None):
@@ -154,31 +152,8 @@ class SimulationFactory(SimPEGFactory):
         self,
         kwargs,
         mesh,
-        global_mesh=None,
         active_cells=None,
-        map=None,
     ):
-
-        # TODO use inversionModel to handle this case (adds
-        # interpolation for case where parent isn't the mesh)
-        # Find a way to bypass overhead where possible -
-        # implemented before, but needed to create mesh save
-        # mesh, etc.. too slow.
-
-        # ws = self.params.workspace
-        # sigma = self.params.conductivity_model
-        #
-        # if isinstance(sigma, UUID):
-        #     sigma = ws.get_entity(sigma)[0].values
-        #     sigma = sigma[np.argsort(global_mesh._ubc_order)]
-        #
-        # elif isinstance(sigma, (int, float)):
-        #     sigma *= np.ones(mesh.nC)
-        #
-        # is_tiled = True if hasattr(map, "local_active") else False
-        # sigma = (
-        #     map * sigma[map.global_active] if is_tiled else map * sigma[active_cells]
-        # )
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=1e-8)
         etamap = maps.InjectActiveCells(mesh, indActive=active_cells, valInactive=0)
         kwargs["etaMap"] = etamap
