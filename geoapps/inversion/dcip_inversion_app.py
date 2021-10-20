@@ -704,7 +704,7 @@ class InversionApp(PlotSelection2D):
         self.alphas.value = ", ".join(list(map(str, alphas)))
 
     def inversion_option_change(self, _):
-        self._main.children[4].children[2].children = [
+        self.main.children[4].children[2].children = [
             self.option_choices,
             self.inversion_options[self.option_choices.value],
         ]
