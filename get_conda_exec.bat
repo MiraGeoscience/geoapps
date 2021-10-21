@@ -27,6 +27,9 @@ if !ERRORLEVEL! equ 0 (
   goto success
 )
 
+:: reset error level
+call (exit /B 0)
+
 set usual_conda_paths=^
   %USERPROFILE%\anaconda3;^
   %USERPROFILE%\miniconda3;^
@@ -51,3 +54,4 @@ exit /B 1
 :success
   echo Using Conda: !MY_CONDA_EXE!
   endlocal & set MY_CONDA_EXE=%MY_CONDA_EXE%
+  exit /B 0
