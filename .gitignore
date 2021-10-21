@@ -163,3 +163,4 @@ dmypy.json
 /tests/run_*
 /tests/FlinFlon.geoh5
 /tests/Inversion_.json
+/get_custom_conda.bat
