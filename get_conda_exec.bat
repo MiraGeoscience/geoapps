@@ -38,8 +38,9 @@ set usual_conda_paths=^
 set conda_bat_subpath=Library\bin\conda.bat
 
 for %%p in (%usual_conda_paths%) do (
-  if exist %%p\%conda_bat_subpath% (
-    set MY_CONDA_EXE=%%p\%conda_bat_subpath%
+  set conda_path=%%p\%conda_bat_subpath%
+  if exist !conda_path! (
+    set MY_CONDA_EXE=!conda_path!
     goto success
   )
 )
