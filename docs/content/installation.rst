@@ -8,41 +8,36 @@ Whether you are developer or an end-user, this page will help you get started wi
 Installation
 ------------
 
-- Make sure that you have `Anaconda 3.7 <https://www.anaconda.com/download/>`_ or higher installed.
+1- Make sure that you have `Anaconda 3.7 <https://www.anaconda.com/download/>`_ or higher installed.
 
 	.. figure:: ../images/Anaconda_Install.png
 	    :align: center
 	    :width: 200
 
-- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
-
-- Extract the package to your drive (SSD if available).
-
-	.. figure:: ../images/extract.png
-	    :align: center
-	    :width: 50%
-
-- Run ``Install_Update.bat``. The same batch file can be used to update the package dependencies.
-  A conda environment named ``geoapps`` will be created to prevent conflicts with other software that may rely on Python.
-
-	.. figure:: ../images/run_install.png
-	    :align: center
-	    :width: 50%
-
-
-.. attention:: The assumption is made that Anaconda has been installed in the default directory:
-        ``%USERPROFILE%\anaconda3``
+.. note:: The assumption is made that Anaconda will be installed in one
+   of the directories that are generally used (see below). If for some reason
+   Anaconda has been installed elsewhere, users will need to edit the
+   ``get_conda_exec.bat`` file in order to add their custom path:
 
         .. figure:: ../images/Install_start_bat.png
             :align: center
             :width: 100%
 
-      If this is not the case, users will need to edit the ``Install_Update.bat`` and
-      ``Start_applications.bat`` files in order to point to the Anaconda directory. Common alternatives are:
+2- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
 
-        - ``%USERPROFILE%\AppData\Local\Continuum\anaconda3``
-        - ``C:\ProgramData\anaconda3``
+3- Extract the package to your drive (SSD if available).
 
+	.. figure:: ../images/extract.png
+	    :align: center
+	    :width: 50%
+
+
+4- Run ``Install_Update.bat``. The same batch file can be used to update the package dependencies.
+  A conda environment named ``geoapps`` will be created to prevent conflicts with other software that may rely on Python.
+
+	.. figure:: ../images/run_install.png
+	    :align: center
+	    :width: 50%
 
 
 
