@@ -195,7 +195,10 @@ class InputFile:
         if name is not None:
             if ".ui.json" not in name:
                 name += ".ui.json"
-            out_file = os.path.join(self.workpath, name)
+            if self.workpath is not None:
+                out_file = os.path.join(self.workpath, name)
+            else:
+                out_file = os.path.abspath(name)
         else:
             out_file = self.filepath
 
