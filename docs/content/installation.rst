@@ -9,8 +9,8 @@ Installation
 ------------
 
 1- Install Conda for Python 3.7 or higher. Two recommended options:
-    - `Miniconda <https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links>`_: ~300 Mb of disk space
-    - `Anaconda <https://www.anaconda.com/download/>`_: ~2 Gb of disk space
+    - `Miniconda <https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links>`_: ~400 Mb of disk space
+    - `Anaconda <https://www.anaconda.com/download/>`_: ~3 GB of disk space
 
 	.. figure:: ../images/Anaconda_Install.png
 	    :align: center
