@@ -189,12 +189,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             if self.factory_type in ["magnetic scalar", "magnetic vector"]:
                 kwargs["components"] = ["mag"]
                 kwargs["data_type"] = {"mag": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.argsort(np.hstack(sorting))
+                kwargs["sorting"] = np.hstack(sorting)
 
             if self.factory_type == "gravity":
                 kwargs["components"] = ["grav"]
                 kwargs["data_type"] = {"grav": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.argsort(np.hstack(sorting))
+                kwargs["sorting"] = np.hstack(sorting)
 
         elif object_type == "mesh":
 
