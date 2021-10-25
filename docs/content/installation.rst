@@ -8,20 +8,13 @@ Whether you are developer or an end-user, this page will help you get started wi
 Installation
 ------------
 
-1- Make sure that you have `Anaconda 3.7 <https://www.anaconda.com/download/>`_ or higher installed.
+1- Install Conda for Python 3.7 or higher. Two recommended options:
+    - `Miniconda <https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links>`_: ~300 Mb of disk space
+    - `Anaconda <https://www.anaconda.com/download/>`_: ~2 Gb of disk space
 
 	.. figure:: ../images/Anaconda_Install.png
 	    :align: center
 	    :width: 200
-
-.. note:: The assumption is made that Anaconda will be installed in one
-   of the directories that are generally used (see below). If for some reason
-   Anaconda has been installed elsewhere, users will need to edit the
-   ``get_conda_exec.bat`` file in order to add their custom path:
-
-        .. figure:: ../images/Install_start_bat.png
-            :align: center
-            :width: 100%
 
 2- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
 
@@ -32,14 +25,28 @@ Installation
 	    :width: 50%
 
 
-4- Run ``Install_Update.bat``. The same batch file can be used to update the package dependencies.
+4- Run ``Install_Update.bat`` **(see notes below)**.
+
+  The same batch file can be used to update the package dependencies.
   A conda environment named ``geoapps`` will be created to prevent conflicts with other software that may rely on Python.
 
 	.. figure:: ../images/run_install.png
 	    :align: center
 	    :width: 50%
 
+.. note:: The assumption is made that Conda has been installed in one
+   of the default directories:
 
+    - %USERPROFILE%\\ana[mini]conda3\\
+    - %LOCALAPPDATA%\\Continuum\\ana[mini]conda3\\
+    - C:\\ProgramData\\ana[mini]conda3\\
+
+   If Conda gets installed in a different directory, users will need to add/edit a
+   ``get_custom_conda.bat`` file to add their custom path to the ``conda.bat`` file:
+
+        .. figure:: ../images/Install_start_bat.png
+            :align: center
+            :width: 75%
 
 Running the applications
 ------------------------
