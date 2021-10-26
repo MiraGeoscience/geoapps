@@ -40,6 +40,9 @@ class InversionMesh:
         Permutation vector to restore cell centers or model values to
         origin Octree mesh order.
 
+
+
+
     """
 
     def __init__(
@@ -53,7 +56,6 @@ class InversionMesh:
         :param workspace: Workspace object containing mesh data.
         :param params: Params object containing mesh parameters.
         :param window: Center and size defining window for data, topography, etc.
-        :param
 
         """
         self.workspace = workspace
@@ -80,6 +82,7 @@ class InversionMesh:
             self.build_from_params()
         else:
             orig_octree = self.workspace.get_entity(self.params.mesh)[0]
+
             self.entity = orig_octree.copy(
                 parent=self.params.ga_group, copy_children=False
             )

@@ -127,15 +127,14 @@ class InversionData(InversionLocations):
         self.locations = self.get_locations(self.params.data_object)
         self.mask = np.ones(len(self.locations), dtype=bool)
 
-        if self.window is not None:
-            self.mask = filter_xy(
-                self.locations[:, 0],
-                self.locations[:, 1],
-                window=self.window,
-                angle=self.angle,
-                distance=self.resolution,
-                mask=self.mask,
-            )
+        self.mask = filter_xy(
+            self.locations[:, 0],
+            self.locations[:, 1],
+            window=self.window,
+            angle=self.angle,
+            distance=self.params.resolution,
+            mask=self.mask,
+        )
 
         if self.radar is not None:
             if any(np.isnan(self.radar)):
@@ -149,7 +148,7 @@ class InversionData(InversionLocations):
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
 
-            self.observed = self.detrend(self.observed)
+            self.observed, self.trend = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
         self.locations = self.apply_transformations(self.locations)
@@ -432,7 +431,7 @@ class InversionData(InversionLocations):
         d = deepcopy(data)
         normalizations = {}
         for comp in self.components:
-            if comp in ["gz", "bxz", "byz"]:
+            if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
                 normalizations[comp] = -1.0
                 if d[comp] is not None:
                     d[comp] *= -1.0
