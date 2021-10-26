@@ -125,7 +125,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": 0.0,
+    "reference_model": None,
     "reference_inclination_object": None,
     "reference_declination_object": None,
     "reference_inclination": None,
