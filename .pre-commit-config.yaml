@@ -41,7 +41,7 @@ repos:
     hooks:
     -   id: pylint
         name: pylint
-        entry: conda activate .\\.conda-env && pylint
+        entry: .\\devtools\\conda_env_pylint.bat
         language: system
         require_serial: true  # pylint does its own parallelism
         types: [python]
