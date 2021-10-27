@@ -142,7 +142,7 @@ class InversionData(InversionLocations):
         self.uncertainties = self.filter(self.uncertainties)
         self.radar = self.filter(self.radar)
 
-        if self.params.detrend_data:
+        if self.params.detrend_type is not None:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
 

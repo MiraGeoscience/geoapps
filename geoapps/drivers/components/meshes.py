@@ -77,14 +77,14 @@ class InversionMesh:
         original the Octree mesh type.
         """
 
-        if self.params.mesh_from_params:
-            self.build_from_params()
-        else:
+        if self.params.mesh is not None:
             orig_octree = self.workspace.get_entity(self.params.mesh)[0]
 
             self.entity = orig_octree.copy(
                 parent=self.params.ga_group, copy_children=False
             )
+        else:
+            self.build_from_params()
 
         self.uid = self.entity.uid
         self.nC = self.entity.n_cells
