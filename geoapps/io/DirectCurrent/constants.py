@@ -25,7 +25,7 @@ inversion_defaults = {
     "topography": None,
     "potential_channel_bool": True,
     "potential_channel": None,
-    "potential_uncertainty": 0.0,
+    "potential_uncertainty": None,
     "starting_model_object": None,
     "starting_model": None,
     "tile_spatial": 1,
