@@ -265,7 +265,7 @@ class SurveyFactory(SimPEGFactory):
                     continue
 
                 if self.factory_type == "induced polarization":
-                    receivers.data_type = "volt"
+                    receivers.data_type = "apparent_chargeability"
 
                 cell_ind = int(np.where(currents.ab_cell_id.values == source_id)[0])
                 source = SourcesFactory(self.params).build(
