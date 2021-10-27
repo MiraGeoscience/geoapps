@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
+from ipywidgets import Widget
 
 from geoapps.processing.peak_finder import PeakFinder
 
@@ -35,21 +36,32 @@ def test_peak_finder_app(tmp_path):
     line = curve.add_data({"line_id": {"values": np.ones_like(x)}})
     curve.add_data_to_group(line, name="Line")
 
-    app = PeakFinder(
-        h5file=str(h5file_path),
-        objects=str(curve.uid),
-        data=str(curve.find_or_create_property_group(name="obs").uid),
-        line_field=str(line.uid),
-        line_id=1.0,
-        width=10,
-        center=1,
-        min_amplitude=1e-2,
-        min_width=1e-2,
-        max_migration=1,
-        plot_result=False,
-    )
-    anomalies = app.lines.anomalies
+    app = PeakFinder(plot_result=False)
 
+    changes = {
+        "objects": curve.uid,
+        "data": curve.find_or_create_property_group(name="obs").uid,
+        "line_field": line.uid,
+        "line_id": 1.0,
+        "width": 10,
+        "center": 1,
+        "min_amplitude": 1e-2,
+        "min_width": 1e-2,
+        "max_migration": 1,
+        "plot_result": False,
+        "group_auto": True,
+    }
+    app.geoh5 = ws
+
+    for param, value in changes.items():
+        if isinstance(getattr(app, param), Widget):
+            getattr(app, param).value = value
+        else:
+            setattr(app, param, value)
+
+    app.trigger.click()
+
+    anomalies = app.lines.anomalies
     assert len(anomalies) == 3, f"Expected 3 groups. Found {len(anomalies)}"
     assert all(
         [aa["azimuth"] == 270 for aa in anomalies]
