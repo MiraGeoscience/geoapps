@@ -118,7 +118,6 @@ class InversionData(InversionLocations):
 
     def _initialize(self) -> None:
         """Extract data from the workspace using params data."""
-
         self.vector = True if self.params.inversion_type == "magnetic vector" else False
         self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
@@ -126,7 +125,6 @@ class InversionData(InversionLocations):
         self.offset, self.radar = self.params.offset()
         self.locations = self.get_locations(self.params.data_object)
         self.mask = np.ones(len(self.locations), dtype=bool)
-
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
@@ -142,12 +140,12 @@ class InversionData(InversionLocations):
 
         self.locations = self.locations[self.mask, :]
         self.observed = self.filter(self.observed)
+        self.radar = self.filter(self.radar)
         self.uncertainties = self.filter(self.uncertainties)
 
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
-
             self.observed, self.trend = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
