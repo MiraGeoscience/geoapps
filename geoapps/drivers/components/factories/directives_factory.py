@@ -101,12 +101,7 @@ class DirectivesFactory:
             )
 
             if self.factory_type in ["direct current"]:
-                key = (
-                    "potential"
-                    if self.factory_type == "direct current"
-                    else "chargeability"
-                )
-                transform = inversion_data.transformations[key]
+                transform = inversion_data.transformations["potential"]
                 self.save_iteration_apparent_resistivity_directive = (
                     SaveIterationGeoh5Factory(self.params).build(
                         inversion_object=inversion_data,
