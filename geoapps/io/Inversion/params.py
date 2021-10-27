@@ -144,7 +144,7 @@ class InversionParams(Params):
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
         for k, v in self.__dict__.items():
-            if ("channel_bool" in k) & (v is True):
+            if ("channel" in k) & (v is not None):
                 comps.append(k.split("_")[1])
         return comps
 
@@ -172,8 +172,11 @@ class InversionParams(Params):
         ]
         is_offset = any([(k != 0) for k in offsets])
         offsets = offsets if is_offset else None
-        radar = self.workspace.get_entity(self.receivers_radar_drape)
-        radar = radar[0].values if radar else None
+        if isinstance(self.receivers_radar_drape, str):
+            radar = self.workspace.get_entity(self.receivers_radar_drape)
+            radar = radar[0].values if radar else None
+        else:
+            radar = None
         return offsets, radar
 
     def model_norms(self) -> list[float]:
