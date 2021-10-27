@@ -1314,12 +1314,30 @@ class PeakFinder(ObjectDataSelection):
             self.line_update(None)
 
     def trigger_click(self, _):
+
+        new_workspace = Workspace(
+            path.join(
+                self.export_directory.selected_path,
+                self._ga_group_name.value + ".geoh5",
+            )
+        )
+        obj, data = self.get_selected_entities()
+
+        new_obj = new_workspace.get_entity(obj.uid)[0]
+        if new_obj is None:
+            obj.copy(parent=new_workspace, copy_children=True)
+
+        self.params.geoh5 = new_workspace.h5file
+        self.params.workspace = new_workspace
+
         for key, value in self.__dict__.items():
             try:
                 if isinstance(getattr(self, key), Widget):
                     setattr(self.params, key, getattr(self, key).value)
             except AttributeError:
                 continue
+
+        self.params.line_field = self.lines.data.value
 
         self.params._free_params_dict = {}
         ui_json = default_ui_json.copy()
@@ -1338,7 +1356,13 @@ class PeakFinder(ObjectDataSelection):
 
         self.params.param_names = list(ui_json.keys())
         self.params.group_auto = False
-        self.params.write_input_file(ui_json=ui_json, name=self.params.ga_group_name)
+        self.params.write_input_file(
+            ui_json=ui_json,
+            name=path.join(
+                self.export_directory.selected_path,
+                self._ga_group_name.value + ".ui.json",
+            ),
+        )
         self.run(self.params, output_group=self.ga_group)
 
     def update_center(self, _):
