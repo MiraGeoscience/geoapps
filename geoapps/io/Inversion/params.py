@@ -1396,7 +1396,19 @@ class InversionParams(Params):
                 raise ValueError(f"Provided path {path} does not exist.")
             ifile.workpath = path
 
-        ifile.write_ui_json(ui_json, name=name, default=default)
+        none_map = {
+            "detrend_order": 0,
+            "detrend_type": "all",
+            "initial_beta": 1.0,
+            "window_center_x": 0.0,
+            "window_center_y": 0.0,
+            "window_width": 0.0,
+            "window_height": 0.0,
+            "window_azimuth": 0.0,
+            "n_cpu": 1.0,
+        }
+
+        ifile.write_ui_json(ui_json, name=name, default=default, none_map=none_map)
         if ifile.workpath is not None:
             ifile.filepath = os.path.join(ifile.workpath, name)
         else:
