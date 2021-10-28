@@ -144,7 +144,7 @@ class InversionParams(Params):
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
         for k, v in self.__dict__.items():
-            if ("channel" in k) & (v is not None):
+            if ("channel" in k) & (v not in [False, None]):
                 comps.append(k.split("_")[1])
         return comps
 
