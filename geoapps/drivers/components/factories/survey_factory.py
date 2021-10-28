@@ -33,7 +33,7 @@ def receiver_group(txi, potential_electrodes):
     index_map = potential_electrodes.ab_map.map
     index_map = {int(v): k for k, v in index_map.items() if v != "Unknown"}
     ids = np.where(
-        potential_electrodes.ab_cell_id.values.astype(int) == index_map[txi + 1]
+        potential_electrodes.ab_cell_id.values.astype(int) == index_map[txi]
     )[0]
 
     return ids
@@ -85,20 +85,13 @@ class ReceiversFactory(SimPEGFactory):
 
         args = []
         if self.factory_type == "direct current":
-
-            potential_electrodes = self.params.workspace.get_entity(
-                self.params.data_object
-            )[0]
-
-            for i in local_index:
-                receiver_ids = receiver_group(i, potential_electrodes)
-                locations_m, locations_n = group_locations(
-                    potential_electrodes, receiver_ids
-                )
-                args.append(locations_m)
-                args.append(locations_n)
+            local_index = np.vstack(local_index)
+            locations_m = locations[local_index[:, 0], :]
+            locations_n = locations[local_index[:, 1], :]
+            args.append(locations_m)
+            args.append(locations_n)
         else:
-            args.append(locations["receivers"][local_index])
+            args.append(locations[local_index])
 
         return args
 
@@ -142,28 +135,26 @@ class SourcesFactory(SimPEGFactory):
 
             return sources.Dipole
 
-    def assemble_arguments(self, receivers=None, local_index=None):
+    def assemble_arguments(self, receivers=None, locations=None, local_index=None):
         """Provides implementations to assemble arguments for sources object."""
 
         args = []
         if self.factory_type == "direct current":
-
-            potential_electrodes = self.params.workspace.get_entity(
-                self.params.data_object
-            )[0]
-            current_electrodes = potential_electrodes.current_electrodes
-            electrode_a, electrode_b = group_locations(current_electrodes, local_index)
+            locations_a = locations[0]
+            locations_b = locations[1]
 
             args.append([receivers])
-            args.append(electrode_a.squeeze())
-            args.append(electrode_b.squeeze())
+            args.append(locations_a)
+            args.append(locations_b)
 
         else:
             args.append([receivers])
 
         return args
 
-    def assemble_keyword_arguments(self, receivers=None, local_index=None):
+    def assemble_keyword_arguments(
+        self, receivers=None, locations=None, local_index=None
+    ):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
         if self.factory_type in ["magnetic scalar", "magnetic vector"]:
@@ -171,8 +162,10 @@ class SourcesFactory(SimPEGFactory):
 
         return kwargs
 
-    def build(self, receivers=None, local_index=None):
-        return super().build(receivers=receivers, local_index=local_index)
+    def build(self, receivers=None, locations=None, local_index=None):
+        return super().build(
+            receivers=receivers, locations=locations, local_index=local_index
+        )
 
 
 class SurveyFactory(SimPEGFactory):
@@ -189,7 +182,6 @@ class SurveyFactory(SimPEGFactory):
         super().__init__(params)
         self.simpeg_object = self.concrete_object()
         self.local_index = None
-        self.receiver_ids = []
 
     def concrete_object(self):
 
@@ -210,54 +202,58 @@ class SurveyFactory(SimPEGFactory):
 
     def assemble_arguments(
         self,
-        locations=None,
         data=None,
-        uncertainties=None,
         local_index=None,
     ):
         """Provides implementations to assemble arguments for receivers object."""
 
-        if self.factory_type == "direct current":
+        receiver_entity = data.entity
 
-            potential_electrodes = self.params.workspace.get_entity(
-                self.params.data_object
-            )[0]
-            current_electrodes = potential_electrodes.current_electrodes
-
-            if local_index is None:
-                self.local_index = np.arange(len(current_electrodes.cells))
+        if local_index is None:
+            if getattr(receiver_entity, "n_cells", None) is not None:
+                n_data = receiver_entity.n_cells
             else:
-                self.local_index = local_index
+                n_data = receiver_entity.n_vertices
+            self.local_index = np.arange(n_data)
+        else:
+            self.local_index = local_index
+
+        if self.factory_type == "direct current":
+            source_ids, order = np.unique(
+                receiver_entity.ab_cell_id.values[self.local_index], return_index=True
+            )
+            currents = receiver_entity.current_electrodes
 
             # TODO hook up tile_spatial to handle local_index handling
             sources = []
-            for source_id in self.local_index:
+            self.local_index = []
+            for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
+                local_index = receiver_group(source_id, receiver_entity)
                 receivers = ReceiversFactory(self.params).build(
-                    locations=locations, data=data, local_index=[source_id]
+                    locations=data.locations,
+                    local_index=receiver_entity.cells[local_index],
                 )
                 if receivers.nD == 0:
                     continue
+
+                cell_ind = int(np.where(currents.ab_cell_id.values == source_id)[0])
                 source = SourcesFactory(self.params).build(
-                    receivers=receivers, local_index=[source_id]
+                    receivers=receivers,
+                    locations=currents.vertices[currents.cells[cell_ind]],
                 )
                 sources.append(source)
-                self.receiver_ids.append(
-                    receiver_group(source_id, potential_electrodes)
-                )
+                self.local_index.append(local_index)
 
-            self.receiver_ids = np.hstack(self.receiver_ids)
+            self.local_index = np.hstack(self.local_index)
 
             return [sources]
 
         else:
 
-            if local_index is None:
-                self.local_index = np.arange(len(locations["receivers"]), dtype=int)
-            else:
-                self.local_index = local_index
-
             receivers = ReceiversFactory(self.params).build(
-                locations=locations, data=data, local_index=self.local_index
+                locations=data.locations,
+                data=data.observed,
+                local_index=self.local_index,
             )
             sources = SourcesFactory(self.params).build(receivers)
 
@@ -265,46 +261,45 @@ class SurveyFactory(SimPEGFactory):
 
     def build(
         self,
-        locations=None,
         data=None,
-        uncertainties=None,
         mesh=None,
         active_cells=None,
         local_index=None,
+        indices=None,
     ):
         """Overloads base method to add dobs, std attributes to survey class instance."""
 
         survey = super().build(
-            locations=locations,
             data=data,
-            uncertainties=uncertainties,
             local_index=local_index,
         )
 
-        components = list(data.keys())
-        n_channels = len(components)
-
+        local_index = self.local_index if local_index is None else local_index
         if not self.params.forward_only:
-            ind = (
-                self.receiver_ids
-                if self.factory_type == "direct current"
-                else self.local_index
-            )
-            tiled_local_index = np.tile(ind, n_channels)
-            data_vec = self._stack_channels(data)[tiled_local_index]
+            local_data = {k: v[local_index] for k, v in data.observed.items()}
+            local_uncertainties = {
+                k: v[local_index] for k, v in data.uncertainties.items()
+            }
+            data_vec = self._stack_channels(local_data)
+            uncertainty_vec = self._stack_channels(local_uncertainties)
             data_vec[
                 np.isnan(data_vec)
             ] = self.dummy  # Nan's handled by inf uncertainties
             survey.dobs = data_vec
-            survey.std = self._stack_channels(uncertainties)[tiled_local_index]
+            survey.std = uncertainty_vec
 
         if self.factory_type == "direct current":
-            if (mesh is not None) and (active_cells is not None):
+            if (
+                (mesh is not None)
+                and (active_cells is not None)
+                and self.params.z_from_topo
+            ):
                 survey.drape_electrodes_on_topography(mesh, active_cells)
 
         survey.dummy = self.dummy
-        return survey
+
+        return survey, self.local_index
 
     def _stack_channels(self, channel_data: dict[str, np.ndarray]):
         """Convert dictionary of data/uncertainties to stacked array."""
-        return np.vstack([list(channel_data.values())]).ravel()
+        return np.column_stack(list(channel_data.values())).ravel()

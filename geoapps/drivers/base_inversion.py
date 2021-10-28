@@ -14,12 +14,9 @@ from uuid import UUID
 import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
-from geoh5py.objects import Points
 from SimPEG import (
-    dask,
     data,
     data_misfit,
-    directives,
     inverse_problem,
     inversion,
     maps,
@@ -27,10 +24,9 @@ from SimPEG import (
     optimization,
     regularization,
 )
-from SimPEG.utils import cartesian2amplitude_dip_azimuth, tile_locations
+from SimPEG.utils import tile_locations
 
 from geoapps.io import Params
-from geoapps.utils import rotate_xy
 
 from .components import (
     InversionData,
@@ -43,8 +39,9 @@ from .components.factories import DirectivesFactory
 
 
 class InversionDriver:
-    def __init__(self, params: Params):
+    def __init__(self, params: Params, warmstart=True):
         self.params = params
+        self.warmstart = warmstart
         self.workspace = params.workspace
         self.inversion_type = params.inversion_type
         self.inversion_window = None
@@ -55,7 +52,7 @@ class InversionDriver:
         self.inverse_problem = None
         self.survey = None
         self.active_cells = None
-        self._initialize()
+        self.initialize()
 
     @property
     def window(self):
@@ -93,7 +90,7 @@ class InversionDriver:
     def upper_bound(self):
         return self.models.upper_bound
 
-    def _initialize(self):
+    def initialize(self):
 
         ### Collect inversion components ###
 
@@ -107,22 +104,19 @@ class InversionDriver:
             self.workspace, self.params, self.window
         )
 
-        self.inversion_mesh = InversionMesh(self.workspace, self.params)
+        self.inversion_mesh = InversionMesh(
+            self.workspace, self.params, self.inversion_data, self.inversion_topography
+        )
 
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh
         )
 
-    def run(self):
-        """Run inversion from params"""
         try:
             get_client()
         except ValueError:
             cluster = LocalCluster(processes=False)
             Client(cluster)
-
-        # Create SimPEG Survey object
-        self.survey, _ = self.inversion_data.survey()
 
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
@@ -135,32 +129,26 @@ class InversionDriver:
         self.n_blocks = 3 if self.is_vector else 1
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
-        # If forward only is true simulate fields, save to workspace and exit.
-        if self.params.forward_only:
-            self.inversion_data.simulate(
-                self.mesh,
-                self.starting_model,
-                self.survey,
-                self.active_cells,
-                save=True,
-            )
-            return
+        # Create SimPEG Survey object
+        self.survey = self.inversion_data._survey
 
         # Tile locations
-        self.tiles = self.get_tiles()
+        self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
+
         self.nTiles = len(self.tiles)
         print("Number of tiles:" + str(self.nTiles))
 
         # Build tiled misfits and combine to form global misfit
-        local_misfits = self.get_tile_misfits(self.tiles)
-        global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
+        self.local_misfits = self.get_tile_misfits(self.tiles)
+        self.global_misfit = objective_function.ComboObjectiveFunction(
+            self.local_misfits
+        )
 
         # Create regularization
-        reg = self.get_regularization()
+        self.regularization = self.get_regularization()
 
         # Specify optimization algorithm and set parameters
-        print("active", sum(self.active_cells))
-        opt = optimization.ProjectedGNCG(
+        self.optimization = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
             lower=self.lower_bound,
             upper=self.upper_bound,
@@ -173,30 +161,47 @@ class InversionDriver:
 
         # Create the default L2 inverse problem from the above objects
         self.inverse_problem = inverse_problem.BaseInvProblem(
-            global_misfit, reg, opt, beta=self.params.initial_beta
+            self.global_misfit,
+            self.regularization,
+            self.optimization,
+            beta=self.params.initial_beta,
         )
 
-        self.inverse_problem.dpred = self.inverse_problem.get_dpred(
-            self.starting_model, compute_J=True
-        )
+        # Solve forward problem, and attach dpred to inverse problem or
+        if self.warmstart or self.params.forward_only:
+            self.inverse_problem.dpred = self.inversion_data.simulate(
+                self.starting_model, self.inverse_problem, self.sorting
+            )
+
+        # If forward only option enabled, stop here
+        if self.params.forward_only:
+            return
 
         # Add a list of directives to the inversion
-        directiveList = DirectivesFactory(self.params).build(
+        self.directiveList = DirectivesFactory(self.params).build(
             self.inversion_data,
             self.inversion_mesh,
             self.active_cells,
-            self.sorting,
-            local_misfits,
-            reg,
+            np.argsort(np.hstack(self.sorting)),
+            self.local_misfits,
+            self.regularization,
         )
 
         # Put all the parts together
-        inv = inversion.BaseInversion(self.inverse_problem, directiveList=directiveList)
+        self.inversion = inversion.BaseInversion(
+            self.inverse_problem, directiveList=self.directiveList
+        )
+
+    def run(self):
+        """Run inversion from params"""
+
+        if self.params.forward_only:
+            return
 
         # Run the inversion
         self.start_inversion_message()
-        mrec = inv.run(self.starting_model)
-        dpred = self.collect_predicted_data(global_misfit, mrec)
+        mrec = self.inversion.run(self.starting_model)
+        dpred = self.collect_predicted_data(self.global_misfit, mrec)
         self.save_residuals(self.inversion_data.entity, dpred)
         self.finish_inversion_message(dpred)
 
@@ -216,17 +221,11 @@ class InversionDriver:
 
     def collect_predicted_data(self, global_misfit, mrec):
 
-        if getattr(global_misfit, "objfcts", None) is not None:
-            dpred = np.zeros_like(self.survey.dobs)
-            for ind, local_misfit in enumerate(global_misfit.objfcts):
-                mrec_sim = local_misfit.model_map * mrec
-                dpred[self.sorting[ind]] += local_misfit.simulation.dpred(
-                    mrec_sim
-                ).compute()
-        else:
-            dpred = global_misfit.survey.dpred(mrec).compute()
-
-        return dpred
+        dpred = np.hstack(self.inverse_problem.dpred)
+        if getattr(self.survey, "component", None) is not None:
+            dpred = dpred.reshape(-1, len(self.survey.components))
+        sorting = np.argsort(np.hstack(self.sorting))
+        return dpred[sorting].ravel()
 
     def save_residuals(self, obj, dpred):
         residuals = self.survey.dobs - dpred
@@ -330,32 +329,33 @@ class InversionDriver:
     def get_tiles(self):
 
         if self.params.inversion_type == "direct current":
-
             tiles = []
-            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
+            potential_electrodes = self.inversion_data.entity
             current_electrodes = potential_electrodes.current_electrodes
-            ab_pairs = current_electrodes.cells
-            line_indices = current_electrodes.parts
-
-            for line in current_electrodes.unique_parts:
-                ind = line_indices == line
-                electrode_ind = np.arange(current_electrodes.n_vertices)[ind]
-                a_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
-                b_ind = np.zeros(current_electrodes.n_cells, dtype=bool)
-                for ei in electrode_ind:
-                    a_ind |= ei == ab_pairs[:, 0]
-                    b_ind |= ei == ab_pairs[:, 1]
-                ab_ind = a_ind | b_ind
-                tiles.append(np.arange(current_electrodes.n_cells)[ab_ind])
+            line_split = np.array_split(
+                current_electrodes.unique_parts, self.params.tile_spatial
+            )
+            for split in line_split:
+                split_ind = []
+                for line in split:
+                    electrode_ind = current_electrodes.parts == line
+                    cells_ind = np.where(
+                        np.any(electrode_ind[current_electrodes.cells], axis=1)
+                    )[0]
+                    split_ind.append(cells_ind)
+                # Fetch all receivers attached to the currents
+                logical = np.zeros(current_electrodes.n_cells, dtype="bool")
+                if len(split_ind) > 0:
+                    logical[np.hstack(split_ind)] = True
+                    tiles.append(
+                        np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
+                    )
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
-            # tiles = []
-            # for ii in np.unique(self.params.tile_spatial).tolist():
-            #     tiles += [np.where(self.params.tile_spatial == ii)[0]]
         else:
             tiles = tile_locations(
-                self.locations["receivers"],
+                self.locations,
                 self.params.tile_spatial,
                 method="kmeans",
             )
@@ -375,15 +375,21 @@ class InversionDriver:
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, lsurvey, tile_id
             )
-            ldat = (
-                data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
-            )
-            lmisfit = data_misfit.L2DataMisfit(
-                data=ldat[0],
-                simulation=lsim,
-                model_map=lmap,
-            )
-            lmisfit.W = 1 / lsurvey.std
+
+            if self.params.forward_only:
+                lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
+            else:
+                ldat = (
+                    data.Data(
+                        lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std
+                    ),
+                )
+                lmisfit = data_misfit.L2DataMisfit(
+                    data=ldat[0],
+                    simulation=lsim,
+                    model_map=lmap,
+                )
+                lmisfit.W = 1 / lsurvey.std
 
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
@@ -412,4 +418,4 @@ class InversionDriver:
                 self.params.n_cpu = int(multiprocessing.cpu_count() / 2)
 
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
-            dconf.set(scheduler="threads", pool=ThreadPool(2 * self.params.n_cpu))
+            dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))

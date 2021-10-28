@@ -18,6 +18,9 @@ from ..params import Params
 
 
 class InversionParams(Params):
+
+    _ga_group = None
+
     def __init__(self, **kwargs):
 
         self.forward_only = None
@@ -141,7 +144,7 @@ class InversionParams(Params):
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
         for k, v in self.__dict__.items():
-            if ("channel_bool" in k) & (v is True):
+            if ("channel" in k) & (v is not None):
                 comps.append(k.split("_")[1])
         return comps
 
@@ -169,7 +172,12 @@ class InversionParams(Params):
         ]
         is_offset = any([(k != 0) for k in offsets])
         offsets = offsets if is_offset else None
-        return offsets, self.receivers_radar_drape
+        if isinstance(self.receivers_radar_drape, str):
+            radar = self.workspace.get_entity(self.receivers_radar_drape)
+            radar = radar[0].values if radar else None
+        else:
+            radar = None
+        return offsets, radar
 
     def model_norms(self) -> list[float]:
         """Returns model norm components as a list."""
@@ -1314,12 +1322,19 @@ class InversionParams(Params):
         self.setter_validator(
             "out_group",
             val,
-            fun=lambda x: self.create_out_group(x) if isinstance(val, str) else x,
+            fun=lambda x: x.name if isinstance(val, ContainerGroup) else x,
         )
 
-    def create_out_group(self, name: str):
-        if isinstance(self.workspace, Workspace) and isinstance(name, str):
-            return ContainerGroup.create(self.workspace, name=name)
+    @property
+    def ga_group(self) -> ContainerGroup | None:
+        if (
+            getattr(self, "_ga_group", None) is None
+            and isinstance(self.workspace, Workspace)
+            and isinstance(self.out_group, str)
+        ):
+            self._ga_group = ContainerGroup.create(self.workspace, name=self.out_group)
+
+        return self._ga_group
 
     @property
     def no_data_value(self):
@@ -1337,13 +1352,13 @@ class InversionParams(Params):
         self._no_data_value = val
 
     def write_input_file(
-        self, ui_json: dict = None, default: bool = False, name: str = None
+        self,
+        ui_json: dict = None,
+        default: bool = False,
+        name: str = None,
+        path: str = None,
     ):
         """Write out a ui.json with the current state of parameters"""
-
-        if name is not None:
-            if ".ui.json" not in name:
-                name += ".ui.json"
 
         if ui_json is None:
             if self.forward_only:
@@ -1370,16 +1385,32 @@ class InversionParams(Params):
         else:
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
 
-        if getattr(self, "input_file", None) is not None:
+        if name is not None:
+            if ".ui.json" not in name:
+                name += ".ui.json"
+        else:
+            name = f"{self.out_group}.ui.json"
 
-            if name is None:
-                ifile.filepath = self.input_file.filepath
-            else:
-                if self.input_file.workpath is None:
-                    out_file = os.path.abspath(name)
-                else:
-                    out_file = os.path.join(self.input_file.workpath, name)
-                self.input_file.filepath = out_file
-                ifile.filepath = out_file
+        if path is not None:
+            if not os.path.exists(path):
+                raise ValueError(f"Provided path {path} does not exist.")
+            ifile.workpath = path
 
-        ifile.write_ui_json(ui_json, default=default)
+        none_map = {
+            "detrend_order": 0,
+            "detrend_type": "all",
+            "initial_beta": 1.0,
+            "window_center_x": 0.0,
+            "window_center_y": 0.0,
+            "window_width": 0.0,
+            "window_height": 0.0,
+            "window_azimuth": 0.0,
+            "n_cpu": 1.0,
+        }
+
+        ifile.write_ui_json(ui_json, name=name, default=default, none_map=none_map)
+        if ifile.workpath is not None:
+            ifile.filepath = os.path.join(ifile.workpath, name)
+        else:
+            ifile.filepath = os.path.abspath(name)
+        self._input_file = ifile

@@ -7,7 +7,7 @@
 
 from geoh5py.workspace import Workspace
 
-from geoapps.em1d_inversion_app import InversionApp
+from geoapps.inversion.em1d_inversion_app import InversionApp
 
 project = "FlinFlon.geoh5"
 workspace = Workspace(project)

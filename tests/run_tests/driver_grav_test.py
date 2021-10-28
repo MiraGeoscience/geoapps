@@ -16,9 +16,9 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_gravity_run = {
-    "data_norm": 0.00636,
-    "phi_d": 0.0001414,
-    "phi_m": 0.0235,
+    "data_norm": 0.0071214,
+    "phi_d": 0.0001571,
+    "phi_m": 0.03664,
 }
 
 
@@ -35,7 +35,13 @@ def test_gravity_run(
     np.random.seed(0)
     # Run the forward
     workspace = setup_inversion_workspace(
-        tmp_path, 0.75, n_grid_points=n_grid_points, refinement=refinement
+        tmp_path,
+        background=0.0,
+        anomaly=0.75,
+        n_electrodes=n_grid_points,
+        n_lines=n_grid_points,
+        refinement=refinement,
+        flatten=False,
     )
     model = workspace.get_entity("model")[0]
     params = GravityParams(
@@ -52,10 +58,11 @@ def test_gravity_run(
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
-    gz = workspace.get_entity("gz")[0]
+
+    gz = workspace.get_entity("Predicted_gz")[0]
     orig_gz = gz.values.copy()
 
-    # Turn some of the values to nan
+    # Turn some values to nan
     gz.values[0] = np.nan
     workspace.finalize()
 
@@ -77,6 +84,7 @@ def test_gravity_run(
         z_from_topo=False,
         gz_channel=gz,
         gz_uncertainty=2e-3,
+        upper_bound=0.75,
         max_iterations=max_iterations,
         initial_beta_ratio=1e-2,
         prctile=100,
@@ -85,7 +93,7 @@ def test_gravity_run(
     driver.run()
     run_ws = Workspace(driver.params.workspace.h5file)
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.out_group.uid
+        driver.params.workspace.h5file, driver.params.ga_group.uid
     )
 
     residual = run_ws.get_entity("Residuals_gz")[0]
@@ -113,10 +121,10 @@ def test_gravity_run(
 if __name__ == "__main__":
     # Full run
     m_start, m_rec = test_gravity_run(
-        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 6)
+        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 8)
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
-        residual < 20.0
+        residual < 50.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Susceptibility model is within 15% of the answer. Well done you!")
+    print("Density model is within 15% of the answer. Let's go!!")
