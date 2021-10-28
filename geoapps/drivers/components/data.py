@@ -17,14 +17,15 @@ if TYPE_CHECKING:
 from copy import deepcopy
 
 import numpy as np
+from dask.distributed import get_client, progress
 from discretize import TreeMesh
 from geoh5py.objects import CurrentElectrode, Curve, PotentialElectrode
-from SimPEG import maps
+from SimPEG import data, maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 from SimPEG.utils.drivers import create_nested_mesh
 from SimPEG.utils.io_utils.io_utils_electromagnetics import read_dcip_xyz
 
-from geoapps.utils import calculate_2D_trend, filter_xy
+from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
 from .factories import SimulationFactory, SurveyFactory
 from .locations import InversionLocations
@@ -90,13 +91,14 @@ class InversionData(InversionLocations):
         """
         super().__init__(workspace, params, window)
 
+        self.resolution: int = None
         self.offset: list[float] = None
         self.radar: np.ndarray = None
         self.ignore_value: float = None
         self.ignore_type: str = None
         self.detrend_order: float = None
         self.detrend_type: str = None
-        self.locations: dict[str, Any] = None
+        self.locations: np.ndarray = None
         self.has_pseudo: bool = False
         self.mask: np.ndarray = None
         self.indices: np.ndarray = None
@@ -123,7 +125,6 @@ class InversionData(InversionLocations):
         self.offset, self.radar = self.params.offset()
         self.locations = self.get_locations(self.params.data_object)
         self.mask = np.ones(len(self.locations), dtype=bool)
-
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
@@ -139,13 +140,12 @@ class InversionData(InversionLocations):
 
         self.locations = self.locations[self.mask, :]
         self.observed = self.filter(self.observed)
-        self.uncertainties = self.filter(self.uncertainties)
         self.radar = self.filter(self.radar)
+        self.uncertainties = self.filter(self.uncertainties)
 
         if self.params.detrend_data:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
-
             self.observed, self.trend = self.detrend(self.observed)
 
         self.observed = self.normalize(self.observed)
@@ -157,7 +157,7 @@ class InversionData(InversionLocations):
     def filter(self, a):
         """Remove vertices based on mask property."""
         if (
-            self.params.inversion_type in ["direct current", "induced_polarization"]
+            self.params.inversion_type in ["direct current", "induced polarization"]
             and self.indices is None
         ):
             potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
@@ -182,6 +182,7 @@ class InversionData(InversionLocations):
             possibly also a sources and pseudo array of x, y, z locations.
 
         """
+
         data_object = self.workspace.get_entity(uid)[0]
         locs = super().get_locations(data_object)
 
@@ -199,6 +200,7 @@ class InversionData(InversionLocations):
             ignored data (specified by self.ignore_type and
             self.ignore_value).
         """
+
         components = self.params.components()
         data = {}
         uncertainties = {}
@@ -213,7 +215,8 @@ class InversionData(InversionLocations):
 
     def write_entity(self):
         """Write out the survey to geoh5"""
-        if self.params.inversion_type == "direct current":
+
+        if self.params.inversion_type in ["direct current", "induced polarization"]:
 
             def prune_from_indices(curve: Curve, cell_indices: np.ndarray):
                 cells = curve.cells[cell_indices]
@@ -271,16 +274,15 @@ class InversionData(InversionLocations):
             self.transformations["potential"] = 1 / (
                 geometric_factor(self._survey) + 1e-10
             )
-            appres = data["potential"] * self.transformations["potential"]
-            self.data_entity["apparent_resistivity"] = self.entity.add_data(
+            apparent_property = data["potential"] * self.transformations["potential"]
+            self.data_entity[f"apparent_resistivity"] = self.entity.add_data(
                 {
                     f"{basename}_apparent_resistivity": {
-                        "values": appres,
+                        "values": apparent_property,
                         "association": "CELL",
                     }
                 }
             )
-
         for comp in self.components:
             dnorm = self.normalizations[comp] * data[comp]
             self.data_entity[comp] = self.entity.add_data(
@@ -443,6 +445,7 @@ class InversionData(InversionLocations):
             the portion of the data indexed by the local_index argument.
         :return: local_index: receiver indices belonging to a particular tile.
         """
+
         survey_factory = SurveyFactory(self.params)
         survey = survey_factory.build(
             data=self,

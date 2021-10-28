@@ -260,9 +260,14 @@ def geotiff_2_grid(
     assert isinstance(grid, Grid2D), "Parent object must be a Grid2D"
 
     # Replace 0 to nan
-    temp[temp == 0] = np.nan
-    grid.add_data({file_name: {"values": temp.ravel()}})
+    values = temp.ravel()
+    if np.issubdtype(values.dtype, np.integer):
+        values = values.astype("int32")
+        print(values)
+    else:
+        values[values == 0] = np.nan
 
+    grid.add_data({file_name: {"values": values}})
     del tiff_object
     return grid
 
