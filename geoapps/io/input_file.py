@@ -150,7 +150,9 @@ class InputFile:
         self,
         ui_dict: dict[str, Any],
         default: bool = False,
+        name: str = None,
         workspace: Workspace = None,
+        none_map: dict[str, Any] = {},
     ) -> None:
         """
         Writes a ui.json formatted file from InputFile data
@@ -164,6 +166,10 @@ class InputFile:
             Name of the file
         workspace : optional
             Provide a geoh5 path to simulate auto-generated field in Geoscience ANALYST.
+        none_map : optional
+            Map parameter None values to non-null numeric types.  The parameters in the
+            dictionary will also be map optional and disabled, ensuring that if not
+            updated by the user they would read back as None.
         """
         out = deepcopy(ui_dict)
 
@@ -181,7 +187,7 @@ class InputFile:
                         else:
                             if "dataType" in out[k].keys():
                                 if ("dataType" == "Float") & (v is None):
-                                    v = 0
+                                    v = 0.0
                                     warnings.warn(msg)
 
                     out[k][field] = v
@@ -191,8 +197,18 @@ class InputFile:
                 else:
                     out[k] = v
 
-        with open(self.filepath, "w") as f:
-            json.dump(self._stringify(self._demote(out)), f, indent=4)
+        if name is not None:
+            if ".ui.json" not in name:
+                name += ".ui.json"
+            if self.workpath is not None:
+                out_file = os.path.join(self.workpath, name)
+            else:
+                out_file = os.path.abspath(name)
+        else:
+            out_file = self.filepath
+
+        with open(out_file, "w") as f:
+            json.dump(self._stringify(self._demote(out), none_map), f, indent=4)
 
     def _ui_2_py(self, ui_dict: dict[str, Any]) -> dict[str, Any]:
         """
@@ -225,7 +241,9 @@ class InputFile:
 
         return data
 
-    def _stringify(self, d: dict[str, Any]) -> dict[str, Any]:
+    def _stringify(
+        self, d: dict[str, Any], none_map: dict[str, Any] = {}
+    ) -> dict[str, Any]:
         """
         Convert inf, none, and list types to strings within a dictionary
 
@@ -243,12 +261,12 @@ class InputFile:
         """
 
         # map [...] to "[...]"
-        excl = ["choiceList", "meshType"]
+        excl = ["choiceList", "meshType", "dataType", "association"]
         list2str = (
             lambda k, v: str(v)[1:-1] if isinstance(v, list) & (k not in excl) else v
         )
         uuid2str = lambda k, v: str(v) if isinstance(v, UUID) else v
-        none2str = lambda k, v: "" if v is None else v  # map None to ""
+        none2str = lambda k, v: "" if v is None else v
 
         def inf2str(k, v):  # map np.inf to "inf"
             if not isinstance(v, (int, float)):
@@ -257,7 +275,21 @@ class InputFile:
                 return str(v) if not np.isfinite(v) else v
 
         for k, v in d.items():
-            v = self._dict_mapper(k, v, [list2str, none2str, inf2str, uuid2str])
+            # Handle special cases of None values
+            if isinstance(v, dict):
+                if v["value"] is None:
+                    if k in none_map.keys():
+                        v["value"] = none_map[k]
+                        v["optional"] = True
+                        v["enabled"] = False
+                    elif "meshType" in v.keys():
+                        v["value"] = ""
+                    elif "isValue" in v.keys():
+                        v["isValue"] = False
+                        v["property"] = ""
+                        v["value"] = 0.0
+
+            v = self._dict_mapper(k, v, [list2str, inf2str, uuid2str, none2str])
             d[k] = v
 
         return d

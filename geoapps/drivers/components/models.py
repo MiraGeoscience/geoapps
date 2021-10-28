@@ -70,12 +70,14 @@ class InversionModelCollection:
     @property
     def reference(self):
         mref = self._reference.model
-        use_log = True if self.is_sigma else False
         if mref is None:
-            self.params.alpha_s = 0.0
             mref = self.starting
-            use_log = False
-        mref = np.log(mref) if use_log else mref
+            self.params.alpha_s = 0.0
+        elif self.is_sigma & (all(mref == 0)):
+            mref = self.starting
+            self.params.alpha_s = 0.0
+        else:
+            mref = np.log(mref) if self.is_sigma else mref
         return mref
 
     @property
@@ -269,6 +271,10 @@ class InversionModel:
 
         :return: Vector of model values reordered for Octree mesh.
         """
+        if self.is_vector:
+            return mkvc(
+                self.model.reshape((-1, 3), order="F")[self.mesh.octree_permutation, :]
+            )
         return self.model[self.mesh.octree_permutation]
 
     def permute_2_treemesh(self, model):
@@ -285,6 +291,11 @@ class InversionModel:
         """Resort model to the Octree object's ordering and save to workspace."""
 
         remapped_model = self.permute_2_octree()
+        if self.is_vector:
+            remapped_model = np.linalg.norm(
+                remapped_model.reshape((-1, 3), order="F"), axis=1
+            )
+
         self.entity.add_data({f"{self.model_type}_model": {"values": remapped_model}})
 
     def _get(self, name: str):
@@ -370,7 +381,7 @@ class InversionModel:
         else:
             xyz_in = parent.vertices
 
-        xyz_out = self.mesh.original_cc()
+        xyz_out = self.mesh.mesh.cell_centers
 
         return weighted_average(xyz_in, xyz_out, [obj])[0]
 

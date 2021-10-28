@@ -76,29 +76,6 @@ class Calculator(ObjectDataSelection):
 
         return self._use
 
-    @property
-    def workspace(self):
-        """
-        geoh5py.workspace.Workspace
-        Target geoh5py workspace
-        """
-        if (
-            getattr(self, "_workspace", None) is None
-            and getattr(self, "_h5file", None) is not None
-        ):
-            self.workspace = Workspace(self.h5file)
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
-        self.update_objects_list()
-        # self.store._workspace = self.workspace
-        # self.store.objects = self.objects
-        # self.store.update_data_list(None)
-
     def click_use(self, _):
         """
         Add the data channel to the list of variables and expression window

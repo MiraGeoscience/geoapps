@@ -5,12 +5,15 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
 
 import numpy as np
 import requests
 import SimPEG
+from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
+from geoapps.drivers.base_inversion import InversionDriver
 from geoapps.drivers.components import InversionData
 from geoapps.io.MagneticVector import MagneticVectorParams
 from geoapps.io.MagneticVector.constants import default_ui_json
@@ -33,13 +36,99 @@ def setup_params(tmp):
     return geotest.make()
 
 
+def test_survey_data(tmp_path):
+    X, Y, Z = np.meshgrid(np.linspace(0, 100, 3), np.linspace(0, 100, 3), 0)
+    verts = np.column_stack([X.ravel(), Y.ravel(), Z.ravel()])
+    ws = Workspace(os.path.join(tmp_path, "test_ws.geoh5"))
+    test_data_object = Points.create(ws, vertices=verts, name="test_data_object")
+    bxx_data, byy_data, bzz_data = test_data_object.add_data(
+        {
+            "bxx": {
+                "association": "VERTEX",
+                "values": np.arange(len(verts)).astype(float),
+            },
+            "byy": {
+                "association": "VERTEX",
+                "values": len(verts) + np.arange(len(verts)).astype(float),
+            },
+            "bzz": {
+                "association": "VERTEX",
+                "values": 2 * len(verts) + np.arange(len(verts)).astype(float),
+            },
+        }
+    )
+    test_topo_object = Points.create(ws, vertices=verts, name="test_topo_object")
+    _ = test_topo_object.add_data(
+        {"elev": {"association": "VERTEX", "values": 100 * np.ones(len(verts))}}
+    )
+    params = MagneticVectorParams(
+        geoh5=ws,
+        data_object=test_data_object.uid,
+        topography_object=test_topo_object,
+        topography=ws.get_entity("elev")[0].uid,
+        tmi_channel_bool=False,
+        bxx_channel_bool=True,
+        bxx_channel=bxx_data.uid,
+        bxx_uncertainty=0.1,
+        byy_channel_bool=True,
+        byy_channel=byy_data.uid,
+        byy_uncertainty=0.2,
+        bzz_channel_bool=True,
+        bzz_channel=bzz_data.uid,
+        bzz_uncertainty=0.3,
+        starting_model=0.0,
+        tile_spatial=2,
+        z_from_topo=True,
+        receivers_offset_z=50.0,
+        resolution=0,
+        mesh_from_params=True,
+    )
+
+    driver = InversionDriver(params, warmstart=False)
+    local_survey_a = driver.inverse_problem.dmisfit.objfcts[0].simulation.survey
+    local_survey_b = driver.inverse_problem.dmisfit.objfcts[1].simulation.survey
+
+    # test locations
+
+    np.testing.assert_array_equal(
+        verts[driver.sorting[0], :2], local_survey_a.receiver_locations[:, :2]
+    )
+    np.testing.assert_array_equal(
+        verts[driver.sorting[1], :2], local_survey_b.receiver_locations[:, :2]
+    )
+    assert all(
+        local_survey_a.receiver_locations[:, 2] == 150.0
+    )  # 150 = 100 (z_from_topo) + 50 (receivers_offset_z)
+    assert all(local_survey_b.receiver_locations[:, 2] == 150.0)
+
+    # test observed data
+
+    sorting = np.hstack(driver.sorting)
+    expected_dobs = np.column_stack(
+        [bxx_data.values, byy_data.values, bzz_data.values]
+    )[sorting].ravel()
+    survey_dobs = np.hstack([local_survey_a.dobs, local_survey_b.dobs])
+    np.testing.assert_array_equal(expected_dobs, survey_dobs)
+
+    # test savegeoh5iteration data
+
+    driver.directiveList[-1].save_components(99, survey_dobs)
+    bxx_test = ws.get_entity("Iteration_99_mag_bxx")[0].values
+    byy_test = ws.get_entity("Iteration_99_mag_byy")[0].values
+    bzz_test = ws.get_entity("Iteration_99_mag_bzz")[0].values
+
+    np.testing.assert_array_equal(bxx_test, bxx_data.values)
+    np.testing.assert_array_equal(byy_test, byy_data.values)
+    np.testing.assert_array_equal(bzz_test, bzz_data.values)
+
+
 def test_save_data(tmp_path):
     ws, params = setup_params(tmp_path)
     locs = ws.get_entity(params.data_object)[0].centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
-    obs = ws.get_entity("Observed_tmi")[0].values
-    assert len(obs) > 0
+
+    assert len(data.entity.vertices) > 0
 
 
 def test_get_uncertainty_component(tmp_path):

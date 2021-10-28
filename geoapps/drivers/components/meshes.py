@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from geoh5py.objects import Octree
     from geoapps.io.params import Params
     from discretize import TreeMesh
+    from . import InversionData, InversionTopography
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -39,14 +40,17 @@ class InversionMesh:
         origin Octree mesh order.
 
 
-    Methods
-    -------
-    original_cc() :
-        Returns the cell centers of the original Octree mesh type.
+
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params) -> None:
+    def __init__(
+        self,
+        workspace: Workspace,
+        params: Params,
+        inversion_data: InversionData,
+        inversion_topography: InversionTopography,
+    ) -> None:
         """
         :param workspace: Workspace object containing mesh data.
         :param params: Params object containing mesh parameters.
@@ -55,6 +59,8 @@ class InversionMesh:
         """
         self.workspace = workspace
         self.params = params
+        self.inversion_data = inversion_data
+        self.inversion_topography = inversion_topography
         self.mesh: TreeMesh = None
         self.nC: int = None
         self.rotation: dict[str, float] = None
@@ -71,16 +77,14 @@ class InversionMesh:
         original the Octree mesh type.
         """
 
-        if self.params.mesh_from_params:
-            self.build_from_params()
-            self.entity = self.workspace.get_entity("Octree_Mesh")[0]
-            self.entity.parent = self.params.out_group
-        else:
+        if self.params.mesh is not None:
             orig_octree = self.workspace.get_entity(self.params.mesh)[0]
 
             self.entity = orig_octree.copy(
-                parent=self.params.out_group, copy_children=False
+                parent=self.params.ga_group, copy_children=False
             )
+        else:
+            self.build_from_params()
 
         self.uid = self.entity.uid
         self.nC = self.entity.n_cells
@@ -92,12 +96,6 @@ class InversionMesh:
 
         self.mesh = octree_2_treemesh(self.entity)
         self.octree_permutation = self.mesh._ubc_order
-
-    def original_cc(self) -> np.ndarray:
-        """Returns the cell centers of the original Octree mesh type."""
-        cc = self.mesh.cell_centers
-        cc = rotate_xy(cc, self.rotation["origin"], self.rotation["angle"])
-        return cc[self.octree_permutation]
 
     def collect_mesh_params(self, params: Params) -> OctreeParams:
         """Collect mesh params from inversion params set and return Octree Params object."""
@@ -123,13 +121,13 @@ class InversionMesh:
             k: v for k, v in mesh_params_dict.items() if k in mesh_param_names
         }
         mesh_params_dict["Refinement A"] = {
-            "object": self.workspace.get_entity("Data")[0].uid,
+            "object": self.inversion_data.entity.uid,
             "levels": params.octree_levels_obs,
             "type": "radial",
             "distance": params.max_distance,
         }
         mesh_params_dict["Refinement B"] = {
-            "object": params.topography_object,
+            "object": self.inversion_topography.entity.uid,
             "levels": params.octree_levels_topo,
             "type": "surface",
             "distance": params.max_distance,
@@ -144,10 +142,11 @@ class InversionMesh:
         from geoapps.create.octree_mesh import OctreeMesh
 
         octree_params = self.collect_mesh_params(self.params)
-        octree_mesh = OctreeMesh.run(octree_params)
+        self.entity = OctreeMesh.run(octree_params)
+        self.entity.parent = self.params.ga_group
 
-        self.uid = octree_mesh.uid
-        self.mesh = octree_2_treemesh(octree_mesh)
+        self.uid = self.entity.uid
+        self.mesh = octree_2_treemesh(self.entity)
 
         self.nC = self.mesh.nC
         self.octree_permutation = self.mesh._ubc_order
