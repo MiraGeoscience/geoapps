@@ -245,6 +245,12 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
+    "tmi_channel_bool": {
+        "group": "Data",
+        "main": True,
+        "label": "Use TMI",
+        "value": False,
+    },
     "tmi_channel": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
