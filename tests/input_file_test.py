@@ -160,7 +160,6 @@ def test_ui_json_io(tmp_path):
     validator = InputValidator(required_parameters, validations)
     ifile = InputFile(ifile.filepath, validator)
     for k, v in d_u_j.items():
-        print(k)
         if isinstance(v, dict):
             check_default = True
             for field in ["enabled", "visible"]:
