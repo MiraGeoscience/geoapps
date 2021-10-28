@@ -69,7 +69,6 @@ default_ui_json = {
         ],
         "label": "Object",
         "value": None,
-        "enabled": True,
     },
     "starting_model": {
         "association": ["Cell", "Vertex"],
