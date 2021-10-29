@@ -124,14 +124,12 @@ class InversionData(InversionLocations):
         self.components, self.observed, self.uncertainties = self.get_data()
         self.offset, self.radar = self.params.offset()
         self.locations = self.get_locations(self.params.data_object)
-        self.mask = np.ones(len(self.locations), dtype=bool)
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
             window=self.window,
             angle=self.angle,
             distance=self.params.resolution,
-            mask=self.mask,
         )
 
         if self.radar is not None:
