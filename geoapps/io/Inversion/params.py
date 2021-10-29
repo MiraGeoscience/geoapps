@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 from uuid import UUID
 
+import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
@@ -143,9 +144,22 @@ class InversionParams(Params):
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
-        for k, v in self.__dict__.items():
-            if ("channel" in k) & (v not in [False, None]):
-                comps.append(k.split("_")[1])
+        channels = np.unique(
+            [
+                k.lstrip("_").split("_")[0]
+                for k in self.__dict__.keys()
+                if "channel" in k
+            ]
+        )
+        for c in channels:
+            use_ch = False
+            if getattr(self, f"{c}_channel", 99) is not None:
+                use_ch = True
+            if getattr(self, f"{c}_channel_bool", 99) is True:
+                use_ch = True
+            if use_ch:
+                comps.append(c)
+
         return comps
 
     def window(self) -> dict[str, float]:
