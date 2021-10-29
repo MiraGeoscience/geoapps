@@ -57,6 +57,7 @@ inversion_defaults = {
     "window_center_y": None,
     "window_width": None,
     "window_height": None,
+    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "sens_wts_threshold": 0.0,
@@ -161,8 +162,6 @@ default_ui_json = {
         "main": True,
         "label": "Potential channel",
         "parent": "data_object",
-        "optional": True,
-        "enabled": False,
         "value": None,
     },
     "potential_uncertainty": {
@@ -172,11 +171,20 @@ default_ui_json = {
         "main": True,
         "isValue": True,
         "label": "Potential uncertainty",
-        "dependency": "potential_channel",
-        "dependencyType": "enabled",
         "parent": "data_object",
         "property": None,
         "value": 1.0,
+    },
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Starting Model",
+        "main": True,
+        "isValue": False,
+        "parent": "starting_model_object",
+        "label": "Conductivity (Siemens/m)",
+        "property": None,
+        "value": 0.0,
     },
     "resolution": {
         "enabled": False,
@@ -199,8 +207,8 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "DirectCurrent"},
 }
 
-
-default_ui_json.update(base_default_ui_json)
+base_default_ui_json.update(default_ui_json)
+default_ui_json = base_default_ui_json
 for k, v in inversion_defaults.items():
     if isinstance(default_ui_json[k], dict):
         key = "value"

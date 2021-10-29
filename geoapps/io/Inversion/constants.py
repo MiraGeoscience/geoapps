@@ -11,7 +11,7 @@ import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
-required_parameters = []
+required_parameters = ["starting_model", "data_object", "topography_object"]
 
 default_ui_json = {
     "forward_only": False,
@@ -166,6 +166,7 @@ default_ui_json = {
         "label": "Downsampling resolution",
         "value": 0.0,
     },
+    "detrend_data": False,
     "detrend_order": {
         "min": 0,
         "group": "Data pre-processing",
@@ -195,6 +196,7 @@ default_ui_json = {
         "label": "Chunk by rows",
         "value": False,
     },
+    "mesh_from_params": False,
     "mesh": {
         "group": "Mesh",
         "main": True,
@@ -706,7 +708,7 @@ validations = {
     },
     "detrend_order": {
         "types": [int],
-        "values": [0, 1, 2],
+        "values": [0, 1, 2, 3],
     },
     "detrend_type": {
         "types": [str],
