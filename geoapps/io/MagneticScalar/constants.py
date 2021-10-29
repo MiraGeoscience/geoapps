@@ -590,92 +590,82 @@ validations = {
     "tmi_channel_bool": {"types": [bool]},
     "tmi_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "tmi_channel_bool")],
+        "reqs": [("data_object")],
     },
     "tmi_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "tmi_channel_bool")],
     },
     "bxx_channel_bool": {"types": [bool]},
     "bxx_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "xx_channel_bool")],
+        "reqs": [("data_object")],
     },
     "bxx_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "xx_channel_bool")],
     },
     "bxy_channel_bool": {"types": [bool]},
     "bxy_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "xy_channel_bool")],
+        "reqs": [("data_object")],
     },
     "bxy_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "xy_channel_bool")],
     },
     "bxz_channel_bool": {"types": [bool]},
     "bxz_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "xz_channel_bool")],
+        "reqs": [("data_object")],
     },
     "bxz_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "xz_channel_bool")],
     },
     "byy_channel_bool": {"types": [bool]},
     "byy_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "yy_channel_bool")],
+        "reqs": [("data_object")],
     },
     "byy_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "yy_channel_bool")],
     },
     "byz_channel_bool": {"types": [bool]},
     "byz_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "yz_channel_bool")],
+        "reqs": [("data_object")],
     },
     "byz_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "yz_channel_bool")],
     },
     "bzz_channel_bool": {"types": [bool]},
     "bzz_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "zz_channel_bool")],
+        "reqs": [("data_object")],
     },
     "bzz_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "zz_channel_bool")],
     },
     "bx_channel_bool": {"types": [bool]},
     "bx_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "x_channel_bool")],
+        "reqs": [("data_object")],
     },
     "bx_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "x_channel_bool")],
     },
     "by_channel_bool": {"types": [bool]},
     "by_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "y_channel_bool")],
+        "reqs": [("data_object")],
     },
     "by_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "y_channel_bool")],
     },
     "bz_channel_bool": {"types": [bool]},
     "bz_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object"), (True, "z_channel_bool")],
+        "reqs": [("data_object")],
     },
     "bz_uncertainty": {
         "types": [str, int, float, UUID],
-        "reqs": [(True, "z_channel_bool")],
     },
     "out_group": {"types": [str, ContainerGroup]},
 }
