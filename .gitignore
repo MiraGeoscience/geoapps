@@ -168,4 +168,4 @@ dmypy.json
 tests/**/*.geoh5
 /assets/**/*ui.json
 /tests/**/*ui.json
-/tests/dask-worker-space/worker-mpfbwmy7.dirlock
+/tests/dask-worker-space/*
