@@ -11,7 +11,7 @@ import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
-required_parameters = ["starting_model", "data_object", "topography_object"]
+required_parameters = []
 
 default_ui_json = {
     "forward_only": False,
