@@ -138,6 +138,7 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
+    "geoh5": None,
     "out_group": "VectorInversion",
     "no_data_value": None,
     "monitoring_directory": None,
@@ -202,9 +203,9 @@ forward_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "workspace": None,
+    "geoh5": None,
     "out_group": "MVIForward",
     "monitoring_directory": None,
-    "geoh5": None,
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
@@ -576,6 +577,17 @@ default_ui_json = {
         "label": "Starting declination object",
         "value": None,
     },
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Starting Model",
+        "main": True,
+        "isValue": False,
+        "parent": "starting_model_object",
+        "label": "Susceptibility (SI)",
+        "property": None,
+        "value": 0.0,
+    },
     "starting_inclination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
@@ -585,7 +597,7 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "parent": "starting_inclination_object",
-        "label": "Starting inclination value",
+        "label": "Inclination (degree from North)",
         "property": None,
         "value": 0.0,
     },
@@ -598,7 +610,7 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "parent": "starting_declination_object",
-        "label": "Starting declination value",
+        "label": "Declination (degree from horizontal)",
         "property": None,
         "value": 0.0,
     },
@@ -655,7 +667,8 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "VectorInversion"},
 }
 
-default_ui_json.update(base_default_ui_json)
+base_default_ui_json.update(default_ui_json)
+default_ui_json = base_default_ui_json
 for k, v in inversion_defaults.items():
     if isinstance(default_ui_json[k], dict):
         key = "value"

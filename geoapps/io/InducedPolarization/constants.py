@@ -107,7 +107,7 @@ inversion_defaults = {
     "conda_environment": "geoapps",
 }
 forward_defaults = {
-    "title": "SimPEG Induced Polarization Inversion",
+    "title": "SimPEG Induced Polarization Forward",
     "inversion_type": "induced polarization",
     "forward_only": True,
     "topography_object": None,
@@ -162,13 +162,10 @@ default_ui_json = {
     "chargeability_channel": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "default": None,
         "group": "Data",
         "main": True,
         "label": "Chargeability channel",
         "parent": "data_object",
-        "optional": True,
-        "enabled": False,
         "value": None,
     },
     "chargeability_uncertainty": {
@@ -177,15 +174,38 @@ default_ui_json = {
         "group": "Data",
         "main": True,
         "isValue": True,
-        "label": "chargeability uncertainty",
+        "label": "Chargeability uncertainty",
         "parent": "data_object",
-        "dependency": "chargeability_channel",
-        "dependencyType": "enabled",
         "property": None,
         "value": 1.0,
     },
+    "starting_model_object": {
+        "group": "Starting Models",
+        "main": True,
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        ],
+        "label": "Chargeability object",
+        "value": None,
+    },
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Starting Models",
+        "main": True,
+        "isValue": False,
+        "parent": "starting_model_object",
+        "label": "Chargeability (V/V)",
+        "property": None,
+        "value": 0.0,
+    },
     "conductivity_model_object": {
-        "group": "Starting Model",
+        "group": "Starting Models",
         "main": True,
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -195,19 +215,17 @@ default_ui_json = {
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
             "{4EA87376-3ECE-438B-BF12-3479733DED46}",
         ],
-        "label": "Starting conductivity model object",
+        "label": "Conductivity object",
         "value": None,
     },
     "conductivity_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Starting Model",
+        "group": "Starting Models",
         "main": True,
         "isValue": False,
-        "optional": True,
-        "enabled": False,
         "parent": "conductivity_model_object",
-        "label": "Starting conductivity model value",
+        "label": "Conductivity (Siemens/m)",
         "property": None,
         "value": 0.0,
     },
@@ -215,8 +233,8 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "InducedPolarization"},
 }
 
-
-default_ui_json.update(base_default_ui_json)
+base_default_ui_json.update(default_ui_json)
+default_ui_json = base_default_ui_json
 for k, v in inversion_defaults.items():
     if isinstance(default_ui_json[k], dict):
         key = "value"

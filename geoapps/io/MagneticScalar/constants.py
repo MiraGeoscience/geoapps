@@ -537,10 +537,22 @@ default_ui_json = {
         "property": None,
         "value": 1.0,
     },
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Starting Model",
+        "main": True,
+        "isValue": False,
+        "parent": "starting_model_object",
+        "label": "Susceptibility (SI)",
+        "property": None,
+        "value": 0.0,
+    },
     "out_group": {"label": "Results group name", "value": "SusceptibilityInversion"},
 }
 
-default_ui_json.update(base_default_ui_json)
+base_default_ui_json.update(default_ui_json)
+default_ui_json = base_default_ui_json
 for k, v in inversion_defaults.items():
     if isinstance(default_ui_json[k], dict):
         key = "value"
