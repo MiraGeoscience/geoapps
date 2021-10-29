@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from . import InversionData, InversionTopography
 
 import numpy as np
+from geoh5py.objects import PotentialElectrode
 from geoh5py.workspace import Workspace
 
 from geoapps.io import Params
@@ -132,7 +133,16 @@ class InversionMesh:
             "type": "surface",
             "distance": params.max_distance,
         }
-        mesh_params_dict["objects"] = self.workspace.get_entity("Data")[0].uid
+
+        if isinstance(self.inversion_data.entity, PotentialElectrode):
+            mesh_params_dict["Refinement C"] = {
+                "object": self.inversion_data.entity.current_electrodes.uid,
+                "levels": params.octree_levels_obs,
+                "type": "radial",
+                "distance": params.max_distance,
+            }
+
+        mesh_params_dict["objects"] = self.inversion_data.entity.uid
 
         return OctreeParams(**mesh_params_dict)
 
@@ -144,9 +154,3 @@ class InversionMesh:
         octree_params = self.collect_mesh_params(self.params)
         self.entity = OctreeMesh.run(octree_params)
         self.entity.parent = self.params.ga_group
-
-        self.uid = self.entity.uid
-        self.mesh = octree_2_treemesh(self.entity)
-
-        self.nC = self.mesh.nC
-        self.octree_permutation = self.mesh._ubc_order
