@@ -1,4 +1,4 @@
-name: geoapps
+name: geoapps-docs
 
 channels:
   - conda-forge

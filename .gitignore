@@ -162,10 +162,11 @@ dmypy.json
 /tests/run_*
 /tests/FlinFlon.geoh5
 /tests/Inversion_.json
+
 /assets/Temp/*
 *.lock
 /tests/Temp/*
 tests/**/*.geoh5
 /assets/**/*ui.json
 /tests/**/*ui.json
-/tests/dask-worker-space/worker-mpfbwmy7.dirlock
+get_custom_conda.bat
