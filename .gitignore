@@ -160,7 +160,7 @@ dmypy.json
 /assets/test_*
 /tests/GEOSCIENCEtemp
 /tests/Gravity*
-/tests/run_*
+/tests/run_tests/*.geoh5
 /tests/FlinFlon.geoh5
 /tests/Inversion_.json
 /get_custom_conda.bat
