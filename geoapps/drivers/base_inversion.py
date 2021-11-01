@@ -52,6 +52,7 @@ class InversionDriver:
         self.inverse_problem = None
         self.survey = None
         self.active_cells = None
+        self.workers = None
         self.initialize()
 
     @property
@@ -112,11 +113,13 @@ class InversionDriver:
             self.workspace, self.params, self.inversion_mesh
         )
 
-        try:
-            get_client()
-        except ValueError:
-            cluster = LocalCluster(processes=False)
-            Client(cluster)
+        # TODO Need to setup/test workers with address
+        if self.workers is not None:
+            try:
+                get_client()
+            except ValueError:
+                cluster = LocalCluster(processes=False)
+                Client(cluster)
 
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
