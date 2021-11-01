@@ -206,11 +206,13 @@ class Params:
                             field = "property"
                         else:
                             ui_json[k]["isValue"] = True
+                        ui_json[k][field] = new_val
 
                     elif ui_json[k][field] != new_val:
                         ui_json[k]["enabled"] = True
                         ui_json[k]["visible"] = True
                         ui_json[k][field] = new_val
+
                 else:
                     ui_json[k] = new_val
 
