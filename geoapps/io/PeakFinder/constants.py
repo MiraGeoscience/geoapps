@@ -312,6 +312,9 @@ validations = {
     "plot_result": {
         "types": [bool],
     },
+    "workspace_geoh5": {
+        "types": [str],
+    },
 }
 
 app_initializer = {

@@ -30,3 +30,5 @@ dependencies:
     - git+https://github.com/MiraGeoscience/simpeg.git@feature/tiled-simulations
     - git+https://github.com/MiraGeoscience/simpeg.git@feature/simpeg_archive
     - git+https://github.com/MiraGeoscience/geoh5py.git@develop
+variables:
+  KMP_WARNINGS: 0
