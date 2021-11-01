@@ -1113,8 +1113,6 @@ class InversionApp(PlotSelection2D):
         if self.workspace.get_entity(self.objects.value):
             self.update_data_list(None)
             self.sensor.update_data_list(None)
-            self.lines.update_data_list(None)
-            self.lines.update_line_list(None)
             self.inversion_type_observer(None)
             self.write.button_style = "warning"
             self.trigger.button_style = "danger"

@@ -8,43 +8,45 @@ Whether you are developer or an end-user, this page will help you get started wi
 Installation
 ------------
 
-- Make sure that you have `Anaconda 3.7 <https://www.anaconda.com/download/>`_ or higher installed.
+1- Install Conda for Python 3.7 or higher. Two recommended options:
+    - `Miniconda <https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links>`_: ~400 MB of disk space
+    - `Anaconda <https://www.anaconda.com/download/>`_: ~3 GB of disk space
 
 	.. figure:: ../images/Anaconda_Install.png
 	    :align: center
 	    :width: 200
 
-- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
+2- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
 
-- Extract the package to your drive (SSD if available).
+3- Extract the package to your drive (SSD if available).
 
 	.. figure:: ../images/extract.png
 	    :align: center
 	    :width: 50%
 
-- Run ``Install_Update.bat``. The same batch file can be used to update the package dependencies.
+
+4- Run ``Install_Update.bat`` **(see notes below)**.
+
+  The same batch file can be used to update the package dependencies.
   A conda environment named ``geoapps`` will be created to prevent conflicts with other software that may rely on Python.
 
 	.. figure:: ../images/run_install.png
 	    :align: center
 	    :width: 50%
 
+.. note:: The assumption is made that Conda has been installed in one
+   of the default directories:
 
-.. attention:: The assumption is made that Anaconda has been installed in the default directory:
-        ``%USERPROFILE%\anaconda3``
+    - %USERPROFILE%\\ana[mini]conda3\\
+    - %LOCALAPPDATA%\\Continuum\\ana[mini]conda3\\
+    - C:\\ProgramData\\ana[mini]conda3\\
+
+   If Conda gets installed in a different directory, users will need to add/edit a
+   ``get_custom_conda.bat`` file to add their custom path to the ``conda.bat`` file:
 
         .. figure:: ../images/Install_start_bat.png
             :align: center
-            :width: 100%
-
-      If this is not the case, users will need to edit the ``Install_Update.bat`` and
-      ``Start_applications.bat`` files in order to point to the Anaconda directory. Common alternatives are:
-
-        - ``%USERPROFILE%\AppData\Local\Continuum\anaconda3``
-        - ``C:\ProgramData\anaconda3``
-
-
-
+            :width: 75%
 
 Running the applications
 ------------------------

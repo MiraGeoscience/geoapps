@@ -828,6 +828,7 @@ app_initializer = {
     "data_object": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
     "tmi_channel_bool": True,
     "tmi_channel": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "tmi_uncertainty": 10,
     "inducing_field_strength": 60000.0,
     "inducing_field_inclination": 79.0,
     "inducing_field_declination": 11.0,
