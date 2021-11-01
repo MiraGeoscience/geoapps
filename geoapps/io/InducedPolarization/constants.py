@@ -229,7 +229,6 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
-    "resolution": {"enabled": False, "label": "resolution", "value": 0.0},
     "out_group": {"label": "Results group name", "value": "InducedPolarization"},
 }
 
