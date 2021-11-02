@@ -87,6 +87,7 @@ def test_susceptibility_run(
         tmi_uncertainty=4.0,
         max_iterations=max_iterations,
         initial_beta_ratio=1e0,
+        distributed_workers=True,
     )
     driver = MagneticScalarDriver(params)
     driver.run()
@@ -158,6 +159,7 @@ def test_magnetic_vector_run(
         starting_model=model,
         starting_inclination=45,
         starting_declination=270,
+        distributed_workers=True,
     )
     fwr_driver = MagneticVectorDriver(params)
     fwr_driver.run()
@@ -186,6 +188,7 @@ def test_magnetic_vector_run(
         max_iterations=max_iterations,
         initial_beta_ratio=1e1,
         prctile=100,
+        distributed_workers=True,
     )
     driver = MagneticVectorDriver(params)
     driver.run()

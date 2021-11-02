@@ -134,6 +134,7 @@ inversion_defaults = {
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 forward_defaults = {
     "title": "SimPEG Gravity Forward",
@@ -190,6 +191,7 @@ forward_defaults = {
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 
 default_ui_json = {
