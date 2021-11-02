@@ -69,7 +69,6 @@ default_ui_json = {
         ],
         "label": "Object",
         "value": None,
-        "enabled": True,
     },
     "starting_model": {
         "association": ["Cell", "Vertex"],
@@ -167,6 +166,7 @@ default_ui_json = {
         "label": "Downsampling resolution",
         "value": 0.0,
     },
+    "detrend_data": False,
     "detrend_order": {
         "min": 0,
         "group": "Data pre-processing",
@@ -196,6 +196,7 @@ default_ui_json = {
         "label": "Chunk by rows",
         "value": False,
     },
+    "mesh_from_params": False,
     "mesh": {
         "group": "Mesh",
         "main": True,
@@ -707,7 +708,7 @@ validations = {
     },
     "detrend_order": {
         "types": [int],
-        "values": [0, 1, 2],
+        "values": [0, 1, 2, 3],
     },
     "detrend_type": {
         "types": [str],

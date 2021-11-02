@@ -285,9 +285,10 @@ class InputFile:
                     elif "meshType" in v.keys():
                         v["value"] = ""
                     elif "isValue" in v.keys():
-                        v["isValue"] = False
-                        v["property"] = ""
-                        v["value"] = 0.0
+                        if v["isValue"]:
+                            v["isValue"] = False
+                            v["property"] = ""
+                            v["value"] = 0.0
 
             v = self._dict_mapper(k, v, [list2str, inf2str, uuid2str, none2str])
             d[k] = v
