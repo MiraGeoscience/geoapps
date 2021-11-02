@@ -10,7 +10,7 @@ ci:
 
 repos:
 -   repo: https://github.com/psf/black
-    rev: 21.9b0
+    rev: 21.10b0
     hooks:
     -   id: black
 -   repo: https://github.com/PyCQA/isort
@@ -41,7 +41,7 @@ repos:
     hooks:
     -   id: pylint
         name: pylint
-        entry: conda activate .\\.conda-env && pylint
+        entry: .\\devtools\\conda_env_pylint.bat
         language: system
         require_serial: true  # pylint does its own parallelism
         types: [python]
