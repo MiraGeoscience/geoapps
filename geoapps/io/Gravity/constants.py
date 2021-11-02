@@ -22,6 +22,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 inversion_defaults = {
     "title": "SimPEG Gravity Inversion",
     "inversion_type": "gravity",
+    "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
     "topography": None,
@@ -130,7 +131,6 @@ inversion_defaults = {
     "out_group": "GravityInversion",
     "no_data_value": None,
     "monitoring_directory": None,
-    "geoh5": None,
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
@@ -138,6 +138,7 @@ inversion_defaults = {
 forward_defaults = {
     "title": "SimPEG Gravity Forward",
     "inversion_type": "gravity",
+    "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
     "topography": None,
@@ -186,7 +187,6 @@ forward_defaults = {
     "workspace": None,
     "out_group": "GravityForward",
     "monitoring_directory": None,
-    "geoh5": None,
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",

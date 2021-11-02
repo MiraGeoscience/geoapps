@@ -22,6 +22,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 inversion_defaults = {
     "title": "SimPEG Magnetic Vector Inversion",
     "inversion_type": "magnetic vector",
+    "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -138,7 +139,6 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": 2,
     "workspace": None,
-    "geoh5": None,
     "out_group": "VectorInversion",
     "no_data_value": None,
     "monitoring_directory": None,
@@ -150,6 +150,7 @@ inversion_defaults = {
 forward_defaults = {
     "title": "SimPEG Magnetic Vector Forward",
     "inversion_type": "magnetic vector",
+    "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -203,7 +204,6 @@ forward_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "workspace": None,
-    "geoh5": None,
     "out_group": "MVIForward",
     "monitoring_directory": None,
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
