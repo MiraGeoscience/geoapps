@@ -69,6 +69,7 @@ def test_mesh_from_params(tmp_path):
     ws, params = setup_params(tmp_path)
     locs = ws.get_entity(params.data_object)[0].centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
+
     params.mesh_from_params = True
     params.mesh = None
     params.u_cell_size, params.v_cell_size, params.w_cell_size = 19, 25, 25
