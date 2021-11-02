@@ -145,7 +145,6 @@ dmypy.json
 /tests/run_tests/Temp/
 
 #cleanup
-*ui.json
 /assets/sensitivity/*
 /assets/SimPEG_PFInversion/*
 /assets/test_*
@@ -154,4 +153,12 @@ dmypy.json
 /tests/run_tests/*.geoh5
 /tests/FlinFlon.geoh5
 /tests/Inversion_.json
-/get_custom_conda.bat
+
+/assets/Temp/*
+*.lock
+/tests/Temp/*
+tests/**/*.geoh5
+/assets/**/*ui.json
+/tests/**/*ui.json
+get_custom_conda.bat
+/tests/dask-worker-space/*
