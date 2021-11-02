@@ -1381,6 +1381,7 @@ class InversionParams(Params):
                 defaults = self.inversion_defaults
 
             ui_json = {k: self.default_ui_json[k] for k in defaults}
+            ui_json["geoh5"] = self.workspace
             self.title = defaults["title"]
             self.run_command = defaults["run_command"]
 
