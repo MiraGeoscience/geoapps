@@ -74,7 +74,7 @@ def test_mesh_from_params(tmp_path):
     params.mesh = None
     params.u_cell_size, params.v_cell_size, params.w_cell_size = 19, 25, 25
     inversion_window = InversionWindow(ws, params)
-    inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_data = InversionData(ws, params, window)
+    inversion_topography = InversionTopography(ws, params, window)
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     assert all(inversion_mesh.mesh.h[0] == 19)
