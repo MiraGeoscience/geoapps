@@ -54,6 +54,7 @@ def test_gravity_run(
         data_object=workspace.get_entity("survey")[0],
         starting_model_object=model.parent,
         starting_model=model,
+        distributed_workers=True,
     )
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
@@ -88,6 +89,7 @@ def test_gravity_run(
         max_iterations=max_iterations,
         initial_beta_ratio=1e-2,
         prctile=100,
+        distributed_workers=True,
     )
     driver = GravityDriver(params)
     driver.run()

@@ -103,6 +103,7 @@ class InversionParams(Params):
         self.monitoring_directory: str = None
         self.workspace_geoh5: str = None
         self.geoh5 = None
+        self.distributed_workers = None
         self.run_command: str = None
         self.run_command_boolean: bool = None
         self.conda_environment: str = None
@@ -1292,6 +1293,21 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._parallelized = val
+
+    @property
+    def distributed_workers(self):
+        return self._distributed_workers
+
+    @distributed_workers.setter
+    def distributed_workers(self, val):
+        if val is None:
+            self._distributed_workers = val
+            return
+        p = "distributed_workers"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._distributed_workers = val
 
     @property
     def n_cpu(self):
