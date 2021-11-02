@@ -433,13 +433,6 @@ def test_validate_resolution(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_validate_detrend_data(tmp_path):
-    param = "detrend_data"
-    newval = True
-    param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
-
-
 def test_validate_detrend_order(tmp_path):
     param = "detrend_order"
     newval = 2

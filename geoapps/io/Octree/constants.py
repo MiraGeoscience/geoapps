@@ -159,6 +159,9 @@ validations = {
     "title": {
         "types": [str],
     },
+    "workspace_geoh5": {
+        "types": [str],
+    },
     "geoh5": {
         "types": [str, Workspace],
     },

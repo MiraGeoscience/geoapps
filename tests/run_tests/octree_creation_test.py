@@ -20,25 +20,18 @@ from geoapps.utils.utils import treemesh_2_octree
 
 def test_create_octree_app(tmp_path):
     project = path.join(tmp_path, "testOctree.geoh5")
-
     # Create temp workspace
     ws = Workspace(project)
-
     n_data = 12
     xyz = np.random.randn(n_data, 3) * 100
-
     points = Points.create(ws, vertices=xyz)
-
     x, y = np.meshgrid(np.arange(-10, 10), np.arange(-10, 10))
     x, y = x.ravel() * 100, y.ravel() * 100
     z = np.random.randn(x.shape[0]) * 10
-
     surf = spatial.Delaunay(np.c_[x, y])
     simplices = getattr(surf, "simplices")
-
     # Create a geoh5 surface
     topo = Surface.create(ws, vertices=np.c_[x, y, z], cells=simplices)
-
     h = [5.0, 10.0, 15.0]
     depth_core = 400
     horizontal_padding = 500
@@ -48,11 +41,9 @@ def test_create_octree_app(tmp_path):
         [horizontal_padding, horizontal_padding],
         [vertical_padding, vertical_padding],
     ]
-
     max_distance = 200
     refine_A = [4, 4, 4]
     refine_B = [0, 0, 4]
-
     # Create a tree mesh from discretize
     treemesh = mesh_builder_xyz(
         points.vertices,
@@ -61,7 +52,6 @@ def test_create_octree_app(tmp_path):
         mesh_type="tree",
         depth_core=depth_core,
     )
-
     treemesh = refine_tree_xyz(
         treemesh,
         points.vertices,
@@ -70,7 +60,6 @@ def test_create_octree_app(tmp_path):
         max_distance=max_distance,
         finalize=False,
     )
-
     treemesh = refine_tree_xyz(
         treemesh,
         topo.vertices,
@@ -97,7 +86,6 @@ def test_create_octree_app(tmp_path):
             "distance": max_distance,
         },
     }
-
     app = OctreeMesh(
         geoh5=str(ws.h5file),
         objects=str(points.uid),
@@ -109,11 +97,8 @@ def test_create_octree_app(tmp_path):
         depth_core=depth_core,
         **refinements,
     )
-    print(app.h5file)
     app.trigger.click()
-
     # Re-load the new mesh and compare
     ws_B = Workspace(app.h5file)
     rec_octree = ws_B.get_entity("Octree_Mesh")[0]
-
     compare_entities(octree, rec_octree, ignore=["_name", "_uid"])
