@@ -18,6 +18,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 inversion_defaults = {
     "title": "SimPEG Direct Current Inversion",
     "inversion_type": "direct current",
+    "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
     "topography": None,
@@ -99,7 +100,6 @@ inversion_defaults = {
     "out_group": "DirectCurrentInversion",
     "no_data_value": None,
     "monitoring_directory": None,
-    "geoh5": None,
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
@@ -107,6 +107,7 @@ inversion_defaults = {
 forward_defaults = {
     "title": "SimPEG Direct Current Forward",
     "inversion_type": "direct current",
+    "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
     "topography": None,
@@ -146,7 +147,6 @@ forward_defaults = {
     "workspace": None,
     "out_group": "DirectCurrentForward",
     "monitoring_directory": None,
-    "geoh5": None,
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
