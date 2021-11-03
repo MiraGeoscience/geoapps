@@ -658,6 +658,7 @@ default_ui_json = {
         "main": True,
     },
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 
 validations = {
@@ -922,4 +923,5 @@ validations = {
         "types": [bool],
     },
     "out_group": {"types": [str, ContainerGroup]},
+    "distributed_workers": {"types": [str, bool]},
 }
