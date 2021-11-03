@@ -112,11 +112,13 @@ class InversionDriver:
             self.workspace, self.params, self.inversion_mesh
         )
 
-        try:
-            get_client()
-        except ValueError:
-            cluster = LocalCluster(processes=False)
-            Client(cluster)
+        # TODO Need to setup/test workers with address
+        if self.params.distributed_workers is not None:
+            try:
+                get_client()
+            except ValueError:
+                cluster = LocalCluster(processes=False)
+                Client(cluster)
 
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
@@ -382,6 +384,9 @@ class InversionDriver:
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, lsurvey, tile_id
             )
+
+            # TODO Parse workers to simulations
+            lsim.workers = self.params.distributed_workers
             if self.inversion_type == "induced polarization":
                 lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
 
