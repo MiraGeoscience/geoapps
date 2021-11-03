@@ -318,10 +318,6 @@ class InversionApp(PlotSelection2D):
         return self._chi_factor
 
     @property
-    def detrend_data(self):
-        return self._detrend_data
-
-    @property
     def detrend_order(self):
         return self._detrend_order
 
@@ -683,16 +679,6 @@ class InversionApp(PlotSelection2D):
     def write(self):
         """"""
         return self._write
-
-    def detrend_panel_change(self, _):
-        if self.detrend_data.value:
-            self._detrend_panel.children = [
-                self.detrend_data,
-                self.detrend_order,
-                self.detrend_type,
-            ]
-        else:
-            self._detrend_panel.children = [self.detrend_data]
 
     # Observers
     def update_ref(self, _):
@@ -1164,7 +1150,6 @@ class MeshOctreeOptions(ObjectDataSelection):
 
     params_keys = [
         "mesh",
-        "mesh_from_params",
         "u_cell_size",
         "v_cell_size",
         "w_cell_size",
@@ -1178,8 +1163,6 @@ class MeshOctreeOptions(ObjectDataSelection):
 
     def __init__(self, **kwargs):
         self._mesh = self.objects
-        self._mesh_from_params = Checkbox(value=False, description="Create")
-        self._mesh_from_params.observe(self.from_params_choice, names="value")
         self._u_cell_size = widgets.FloatText(
             value=25.0,
             description="",
@@ -1232,7 +1215,7 @@ class MeshOctreeOptions(ObjectDataSelection):
                 self._depth_core,
             ]
         )
-        self._main = VBox([self.objects, self.mesh_from_params])
+        self._main = VBox([self.objects, self._parameters])
         self._objects.observe(self.mesh_selection, names="value")
 
         super().__init__(**kwargs)
@@ -1244,10 +1227,6 @@ class MeshOctreeOptions(ObjectDataSelection):
     @property
     def mesh(self):
         return self._mesh
-
-    @property
-    def mesh_from_params(self):
-        return self._mesh_from_params
 
     @property
     def u_cell_size(self):
@@ -1297,21 +1276,14 @@ class MeshOctreeOptions(ObjectDataSelection):
     def main(self):
         return self._main
 
-    def from_params_choice(self, _):
-        if self._mesh_from_params.value:
+    def mesh_selection(self, _):
+        if self._mesh.value is None:
             self._main.children = [
                 self.objects,
-                self.mesh_from_params,
                 self._parameters,
             ]
-            if self._objects.value is not None:
-                self._objects.value = None
         else:
-            self._main.children = [self.objects, self.mesh_from_params]
-
-    def mesh_selection(self, _):
-        if self._objects.value is not None:
-            self._mesh_from_params.value = False
+            self._main.children = [self.objects]
 
 
 class ModelOptions(ObjectDataSelection):
