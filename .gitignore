@@ -157,7 +157,6 @@ dmypy.json
 *.lock
 /tests/Temp/*
 tests/**/*.geoh5
-/assets/**/*ui.json
 /tests/**/*ui.json
 get_custom_conda.bat
 /tests/dask-worker-space/*
