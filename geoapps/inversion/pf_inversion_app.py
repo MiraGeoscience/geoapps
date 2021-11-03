@@ -1442,7 +1442,7 @@ class MeshOctreeOptions(ObjectDataSelection):
                 self._depth_core,
             ]
         )
-        self._main = self.objects
+        self._main = VBox([self.objects, self._parameters])
         self._objects.observe(self.mesh_selection, names="value")
 
         super().__init__(**kwargs)
