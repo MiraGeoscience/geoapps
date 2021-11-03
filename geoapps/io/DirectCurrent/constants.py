@@ -101,6 +101,7 @@ inversion_defaults = {
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 forward_defaults = {
     "title": "SimPEG Direct Current Forward",
@@ -147,6 +148,7 @@ forward_defaults = {
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 default_ui_json = {
     "title": "SimPEG Inversion - Direct Current",

@@ -143,6 +143,7 @@ inversion_defaults = {
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 
 forward_defaults = {
@@ -206,6 +207,7 @@ forward_defaults = {
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 default_ui_json = {
     "title": "SimPEG Magnetic Vector Inversion",

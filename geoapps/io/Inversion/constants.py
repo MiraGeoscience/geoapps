@@ -84,6 +84,8 @@ default_ui_json = {
     "tile_spatial": {
         "group": "Receivers location options",
         "label": "Number of tiles",
+        "parent": "data_object",
+        "property": None,
         "value": 1,
         "min": 1,
         "max": 1000,
@@ -147,6 +149,7 @@ default_ui_json = {
         "group": "Data pre-processing",
         "enabled": False,
         "optional": True,
+        "enabled": False,
         "label": "Values to ignore",
         "value": None,
     },
@@ -170,6 +173,8 @@ default_ui_json = {
         "min": 0,
         "group": "Data pre-processing",
         "enabled": False,
+        "dependency": "detrend_data",
+        "dependencyType": "enabled",
         "label": "Detrend order",
         "optional": True,
         "value": 0,
@@ -179,6 +184,7 @@ default_ui_json = {
         "group": "Data pre-processing",
         "dependency": "detrend_order",
         "dependencyType": "enabled",
+        "enabled": False,
         "label": "Detrend type",
         "value": "all",
     },
@@ -198,6 +204,10 @@ default_ui_json = {
     "mesh": {
         "group": "Mesh",
         "main": True,
+        "optional": True,
+        "enabled": False,
+        "dependency": "mesh_from_params",
+        "dependencyType": "disable",
         "label": "Mesh",
         "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
         "value": None,
@@ -338,63 +348,51 @@ default_ui_json = {
     },
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
-        "groupOptional": True,
-        "enabled": False,
         "label": "Update sensitivity weight threshold",
         "value": 1e-3,
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
-        "enabled": False,
         "label": "Update every iteration",
         "value": False,
     },
     "f_min_change": {
         "group": "Update IRLS directive",
-        "groupOptional": True,
-        "enabled": False,
         "label": "f min change",
         "value": 1e-4,
     },
     "minGNiter": {
         "group": "Update IRLS directive",
-        "enabled": False,
         "label": "Minimum Gauss-Newton iterations",
         "value": 1,
     },
     "beta_tol": {
         "group": "Update IRLS directive",
-        "enabled": False,
         "label": "Beta tolerance",
         "value": 0.5,
     },
     "prctile": {
         "group": "Update IRLS directive",
-        "enabled": False,
         "label": "percentile",
         "value": 95,
     },
     "coolingRate": {
         "group": "Update IRLS directive",
-        "enabled": False,
         "label": "Beta cooling rate",
         "value": 1,
     },
     "coolEps_q": {
         "group": "Update IRLS directive",
-        "enabled": False,
         "label": "Cool epsilon q",
         "value": True,
     },
     "coolEpsFact": {
         "group": "Update IRLS directive",
-        "enabled": False,
         "label": "Cool epsilon fact",
         "value": 1.2,
     },
     "beta_search": {
         "group": "Update IRLS directive",
-        "enabled": False,
         "label": "Perform beta search",
         "value": False,
     },
@@ -432,12 +430,15 @@ default_ui_json = {
         "group": "Optimization",
         "optional": True,
         "enabled": True,
+        "dependency": "initial_beta",
+        "dependencyType": "disabled",
         "label": "Initial beta ratio",
         "value": 10.0,
     },
     "initial_beta": {
         "min": 0.0,
         "group": "Optimization",
+        "optional": True,
         "enabled": False,
         "dependency": "initial_beta_ratio",
         "dependencyType": "disabled",
@@ -648,6 +649,7 @@ default_ui_json = {
         "main": True,
     },
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 
 validations = {
@@ -682,7 +684,7 @@ validations = {
         "types": [str, int, float],
     },
     "z_from_topo": {"types": [bool]},
-    "receivers_radar_drape": {"types": [str, float], "reqs": [("data_object")]},
+    "receivers_radar_drape": {"types": [str], "reqs": [("data_object")]},
     "receivers_offset_x": {
         "types": [int, float],
     },
@@ -703,7 +705,6 @@ validations = {
     },
     "detrend_order": {
         "types": [int],
-        "values": [0, 1, 2, 3],
     },
     "detrend_type": {
         "types": [str],
@@ -908,4 +909,5 @@ validations = {
         "types": [bool],
     },
     "out_group": {"types": [str, ContainerGroup]},
+    "distributed_workers": {"types": [str, bool]},
 }

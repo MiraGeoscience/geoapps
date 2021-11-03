@@ -138,20 +138,11 @@ dmypy.json
 /tests/run_em1d.py
 /tests/run_mvi.py
 /tests/run_pf.py
-/assets/dask-worker-space/global.lock
-/assets/dask-worker-space/purge.lock
-/assets/SimPEG_PFInversion/ActiveSurface.act
-/assets/SimPEG_PFInversion/OctreeMeshGlobal.msh
-/assets/SimPEG_PFInversion/Tile0.zarr/.zarray
-/assets/SimPEG_PFInversion/Tile0.zarr/0.0
-/tests/dask-worker-space/global.lock
-/tests/dask-worker-space/purge.lock
-/tests/dask-worker-space/worker-lpuxcvfb.dirlock
-/tests/SimPEG_PFInversion/ActiveSurface.act
-/tests/SimPEG_PFInversion/OctreeMeshGlobal.msh
-/tests/SimPEG_PFInversion/Tile0.zarr/.zarray
-/tests/SimPEG_PFInversion/Tile0.zarr/0.0
-/tests/SimPEG_PFInversion/Tile0.zarr/0.1
+/assets/dask-worker-space/
+/assets/SimPEG_PFInversion/
+/assets/Temp/
+/tests/Temp/
+/tests/run_tests/Temp/
 
 #cleanup
 /assets/sensitivity/*
@@ -159,7 +150,7 @@ dmypy.json
 /assets/test_*
 /tests/GEOSCIENCEtemp
 /tests/Gravity*
-/tests/run_*
+/tests/run_tests/*.geoh5
 /tests/FlinFlon.geoh5
 /tests/Inversion_.json
 /assets/Temp/*
