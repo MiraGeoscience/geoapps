@@ -25,7 +25,7 @@ inversion_defaults = {
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
-    "topography": None,
+    "topography": 0.0,
     "data_object": None,
     "gz_channel_bool": False,
     "gz_channel": None,
@@ -139,7 +139,7 @@ forward_defaults = {
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
-    "topography": None,
+    "topography": 0.0,
     "data_object": None,
     "gz_channel_bool": False,
     "guv_channel_bool": False,

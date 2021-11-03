@@ -173,7 +173,6 @@ default_ui_json = {
         "min": 0,
         "group": "Data pre-processing",
         "enabled": False,
-        "dependency": "detrend_data",
         "dependencyType": "enabled",
         "label": "Detrend order",
         "optional": True,
