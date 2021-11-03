@@ -105,6 +105,7 @@ inversion_defaults = {
     "run_command": "geoapps.drivers.induced_polarization_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 forward_defaults = {
     "title": "SimPEG Induced Polarization Forward",
@@ -154,6 +155,7 @@ forward_defaults = {
     "run_command": "geoapps.drivers.induced_polarization_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 default_ui_json = {
     "title": "SimPEG Induced Polarization Inversion",
