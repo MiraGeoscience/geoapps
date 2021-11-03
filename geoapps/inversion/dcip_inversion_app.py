@@ -36,6 +36,7 @@ from ipywidgets.widgets import (
 
 from geoapps.io.DirectCurrent.constants import app_initializer
 from geoapps.io.DirectCurrent.params import DirectCurrentParams
+from geoapps.io.InducedPolarization.params import InducedPolarizationParams
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import LineOptions, ObjectDataSelection, TopographyOptions
 from geoapps.utils.utils import find_value, string_2_list
@@ -48,7 +49,7 @@ def inversion_defaults():
     return {
         "units": {
             "direct current": "S/m",
-            "induced polarization": "SI",
+            "induced polarization": "V/V",
         },
         "property": {
             "direct current": "conductivity",
@@ -64,7 +65,7 @@ def inversion_defaults():
         },
         "component": {
             "direct current": "potential",
-            "induced polarization": "mV/V",
+            "induced polarization": "chargeability",
         },
     }
 
@@ -153,6 +154,10 @@ class InversionApp(PlotSelection2D):
         )
         self._starting_model_group = ModelOptions("starting_model", **self.defaults)
         self._starting_model_group.options.options = ["Constant", "Model"]
+        self._conductivity_model_group = ModelOptions(
+            "conductivity_model", **self.defaults
+        )
+        self._conductivity_model_group.options.options = ["Model"]
         self._reference_model_group = ModelOptions("reference_model", **self.defaults)
         self._reference_model_group.options.observe(self.update_ref)
         self._topography_group = TopographyOptions(**self.defaults)
@@ -234,6 +239,11 @@ class InversionApp(PlotSelection2D):
         )
         self._mesh_octree = MeshOctreeOptions(**self.defaults)
         self.inversion_options = {
+            "conductivity model": VBox(
+                [
+                    self._conductivity_model_group.main,
+                ]
+            ),
             "starting model": VBox(
                 [
                     self._starting_model_group.main,
@@ -251,8 +261,8 @@ class InversionApp(PlotSelection2D):
             "optimization": self._optimization,
         }
         self.option_choices = widgets.Dropdown(
-            options=list(self.inversion_options.keys()),
-            value=list(self.inversion_options.keys())[0],
+            options=list(self.inversion_options.keys())[1:],
+            value=list(self.inversion_options.keys())[1],
             disabled=False,
         )
         self.option_choices.observe(self.inversion_option_change, names="value")
@@ -424,6 +434,27 @@ class InversionApp(PlotSelection2D):
     @property
     def starting_model_object(self):
         return self._starting_model_group.objects
+
+    @property
+    def conductivity_model(self):
+        if self._conductivity_model_group.options.value == "Model":
+            return self._conductivity_model_group.data.value
+        elif self._conductivity_model_group.options.value == "Constant":
+            return self._conductivity_model_group.constant.value
+        else:
+            return None
+
+    @conductivity_model.setter
+    def conductivity_model(self, value):
+        if isinstance(value, float):
+            self._conductivity_model_group.options.value = "Constant"
+            self._conductivity_model_group.constant.value = value
+        else:
+            self._conductivity_model_group.data.value = value
+
+    @property
+    def conductivity_model_object(self):
+        return self._conductivity_model_group.objects
 
     @property
     def lower_bound(self):
@@ -645,6 +676,7 @@ class InversionApp(PlotSelection2D):
         self._topography_group.workspace = workspace
         self._reference_model_group.workspace = workspace
         self._starting_model_group.workspace = workspace
+        self._conductivity_model_group.workspace = workspace
         self._mesh_octree.workspace = workspace
 
     @property
@@ -672,7 +704,7 @@ class InversionApp(PlotSelection2D):
         self.alphas.value = ", ".join(list(map(str, alphas)))
 
     def inversion_option_change(self, _):
-        self._main.children[4].children[2].children = [
+        self.main.children[4].children[2].children = [
             self.option_choices,
             self.inversion_options[self.option_choices.value],
         ]
@@ -693,23 +725,25 @@ class InversionApp(PlotSelection2D):
             self._param_class = DirectCurrentParams
             params["inversion_type"] = "direct current"
             params["out_group"] = "DCInversion"
+            self.option_choices.options = list(self.inversion_options.keys())[1:]
 
         elif self.inversion_type.value == "induced polarization" and not isinstance(
-            self.params, DirectCurrentParams
+            self.params, InducedPolarizationParams
         ):
+            self._param_class = InducedPolarizationParams
             params["inversion_type"] = "induced polarization"
             params["out_group"] = "ChargeabilityInversion"
-            raise NotImplemented("Chargeability inversion not yet implemented.")
+            self.option_choices.options = list(self.inversion_options.keys())
 
         self.params = self._param_class(verbose=False)
-        self.ga_group_name.value = self.params.defaults["out_group"]
 
         if self.inversion_type.value in ["direct current"]:
-            data_type_list = [
-                "potential",
-            ]
+            data_type_list = ["potential"]
         else:
-            data_type_list = ["apparent chargeability"]
+            data_type_list = ["chargeability"]
+
+        self.ga_group_name.value = self.params.defaults["out_group"]
+
         flag = self.inversion_type.value
         self._reference_model_group.units = inversion_defaults()["units"][flag]
         self._reference_model_group.constant.value = inversion_defaults()[
@@ -920,12 +954,16 @@ class InversionApp(PlotSelection2D):
         self.write.button_style = "warning"
         self.trigger.button_style = "danger"
 
-    # def update_selection(self, _):
-    #     self.highlight_selection = {self.lines.data.value: self.lines.lines.value}
-    #     self.refresh.value = False
-    #     self.refresh.value = True
-
     def write_trigger(self, _):
+
+        if (
+            self.inversion_type.value == "induced polarization"
+            and self._conductivity_model_group.data.value is None
+        ):
+            print(
+                "A conductivity model is required for IP inversion. Check your inversion options."
+            )
+            return
 
         new_workspace = Workspace(
             path.join(
@@ -933,11 +971,13 @@ class InversionApp(PlotSelection2D):
                 self._ga_group_name.value + ".geoh5",
             )
         )
+
         for elem in [
             self,
             self._mesh_octree,
             self._topography_group,
             self._starting_model_group,
+            self._conductivity_model_group,
             self._reference_model_group,
             self._lower_bound_group,
             self._upper_bound_group,
@@ -1013,9 +1053,8 @@ class InversionApp(PlotSelection2D):
         if isinstance(params, DirectCurrentParams):
             inversion_routine = "direct_current_inversion"
         else:
-            raise ValueError(
-                "Parameter 'inversion_type' must be one of " "'direct current'"
-            )
+            inversion_routine = "induced_polarization_inversion"
+
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m geoapps.drivers.{inversion_routine} "
@@ -1037,6 +1076,9 @@ class InversionApp(PlotSelection2D):
 
                 if data["inversion_type"] == "direct current":
                     self._param_class = DirectCurrentParams
+
+                elif data["inversion_type"] == "induced polarization":
+                    self._param_class = InducedPolarizationParams
 
                 self.params = getattr(self, "_param_class").from_path(
                     self.file_browser.selected
