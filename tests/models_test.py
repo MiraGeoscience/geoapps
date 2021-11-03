@@ -170,10 +170,13 @@ def test_permute_2_treemesh(tmp_path):
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     upper_bound = InversionModel(ws, params, inversion_mesh, "upper_bound")
     locs = inversion_mesh.mesh.cell_centers
-    locs = locs[upper_bound.model[: inversion_mesh.mesh.nC] == 1, :]
-    assert xmin <= locs[:, 0].min()
-    assert xmax >= locs[:, 0].max()
-    assert ymin <= locs[:, 1].min()
-    assert ymax >= locs[:, 1].max()
-    assert zmin <= locs[:, 2].min()
-    assert zmax >= locs[:, 2].max()
+    locs_rot = rotate_xy(
+        locs, inversion_mesh.rotation["origin"], inversion_mesh.rotation["angle"]
+    )
+    locs_rot = locs_rot[upper_bound.model[: inversion_mesh.mesh.nC] == 1, :]
+    assert xmin <= locs_rot[:, 0].min()
+    assert xmax >= locs_rot[:, 0].max()
+    assert ymin <= locs_rot[:, 1].min()
+    assert ymax >= locs_rot[:, 1].max()
+    assert zmin <= locs_rot[:, 2].min()
+    assert zmax >= locs_rot[:, 2].max()

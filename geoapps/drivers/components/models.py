@@ -18,7 +18,7 @@ from SimPEG.utils.mat_utils import (
 )
 
 from geoapps.io import Params
-from geoapps.utils import weighted_average
+from geoapps.utils import rotate_xy, weighted_average
 
 from . import InversionMesh
 
@@ -427,12 +427,17 @@ class InversionModel:
 
         """
 
+        xyz_out = self.mesh.mesh.cell_centers
+
         if hasattr(parent, "centroids"):
             xyz_in = parent.centroids
+            if self.mesh.rotation is not None:
+                xyz_out = rotate_xy(
+                    xyz_out, self.mesh.rotation["origin"], self.mesh.rotation["angle"]
+                )
+
         else:
             xyz_in = parent.vertices
-
-        xyz_out = self.mesh.mesh.cell_centers
 
         return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
 
