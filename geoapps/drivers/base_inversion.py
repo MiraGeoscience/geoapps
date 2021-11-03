@@ -52,7 +52,6 @@ class InversionDriver:
         self.inverse_problem = None
         self.survey = None
         self.active_cells = None
-        self.workers = None
         self.initialize()
 
     @property
@@ -114,7 +113,7 @@ class InversionDriver:
         )
 
         # TODO Need to setup/test workers with address
-        if self.workers is not None:
+        if self.params.distributed_workers is not None:
             try:
                 get_client()
             except ValueError:
@@ -382,6 +381,9 @@ class InversionDriver:
             lsim, lmap = self.inversion_data.simulation(
                 self.mesh, self.active_cells, lsurvey, tile_id
             )
+
+            # TODO Parse workers to simulations
+            lsim.workers = self.params.distributed_workers
             if self.inversion_type == "induced polarization":
                 lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
 
