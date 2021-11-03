@@ -220,8 +220,6 @@ for k, v in inversion_defaults.items():
             if default_ui_json[k]["isValue"] == False:
                 key = "property"
         default_ui_json[k][key] = v
-        if "enabled" in default_ui_json[k].keys() and v is not None:
-            default_ui_json[k]["enabled"] = True
     else:
         default_ui_json[k] = v
 
