@@ -20,7 +20,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Gravity Inversion",
+    "title": "SimPEG Magnetic Susceptibility Inversion",
     "inversion_type": "magnetic scalar",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -28,7 +28,7 @@ inversion_defaults = {
     "inducing_field_inclination": 90.0,
     "inducing_field_declination": 0.0,
     "topography_object": None,
-    "topography": None,
+    "topography": 0.0,
     "data_object": None,
     "tmi_channel_bool": True,
     "tmi_channel": None,
@@ -146,7 +146,7 @@ forward_defaults = {
     "inducing_field_inclination": 90.0,
     "inducing_field_declination": 0.0,
     "topography_object": None,
-    "topography": None,
+    "topography": 0.0,
     "data_object": None,
     "tmi_channel_bool": False,
     "bxx_channel_bool": False,
