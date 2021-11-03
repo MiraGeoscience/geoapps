@@ -10,7 +10,11 @@ from uuid import UUID
 
 import numpy as np
 from geoh5py.workspace import Workspace
-from SimPEG.utils.mat_utils import dip_azimuth2cartesian, mkvc
+from SimPEG.utils.mat_utils import (
+    cartesian2amplitude_dip_azimuth,
+    dip_azimuth2cartesian,
+    mkvc,
+)
 
 from geoapps.io import Params
 from geoapps.utils import weighted_average
@@ -313,9 +317,19 @@ class InversionModel:
 
         remapped_model = self.permute_2_octree()
         if self.is_vector:
-            remapped_model = np.linalg.norm(
-                remapped_model.reshape((-1, 3), order="F"), axis=1
-            )
+            if self.model_type in ["starting", "reference"]:
+                aid = cartesian2amplitude_dip_azimuth(remapped_model)
+                self.entity.add_data(
+                    {f"{self.model_type}_inclination": {"values": aid[:, 1]}}
+                )
+                self.entity.add_data(
+                    {f"{self.model_type}_declination": {"values": aid[:, 2]}}
+                )
+                remapped_model = aid[:, 0]
+            else:
+                remapped_model = np.linalg.norm(
+                    remapped_model.reshape((-1, 3), order="F"), axis=1
+                )
 
         self.entity.add_data({f"{self.model_type}_model": {"values": remapped_model}})
 
@@ -374,7 +388,6 @@ class InversionModel:
         :return: Model vector with data interpolated into cell centers of
             the inversion mesh.
         """
-
         parent_uuid = self.params.parent(model)
         parent = self.fetch(parent_uuid)
         model = self.fetch(model)
