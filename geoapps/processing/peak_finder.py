@@ -658,7 +658,7 @@ class PeakFinder(ObjectDataSelection):
             path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
         )
         self.update_objects_list()
-        self.lines._workspace = workspace
+        self.lines.workspace = workspace
 
     @property
     def x_label(self) -> ToggleButtons:
@@ -744,6 +744,7 @@ class PeakFinder(ObjectDataSelection):
                 self.update_data_list(None)
                 self.set_data(None)
         self.group_auto.value = False
+        self._group_auto.button_style = "success"
 
     @staticmethod
     def default_groups_from_property_group(property_group, start_index=0):
@@ -843,7 +844,6 @@ class PeakFinder(ObjectDataSelection):
         """
         Re-compute derivatives
         """
-
         if (
             getattr(self, "survey", None) is None
             or len(self.workspace.get_entity(self.lines.data.value)) == 0
@@ -969,17 +969,22 @@ class PeakFinder(ObjectDataSelection):
         if (
             self.pause_refresh
             or not self.refresh.value
-            or getattr(self, "survey", None) is None
             or self.plot_trigger.value is False
-            or len(self.active_channels) == 0
-            or getattr(self.survey, "line_indices", None) is None
-            or len(self.survey.line_indices) < 2
             or not self.plot_result
         ):
             return
 
         self.figure = plt.figure(figsize=(12, 6))
         axs = plt.subplot()
+
+        if (
+            getattr(self, "survey", None) is None
+            or getattr(self.survey, "line_indices", None) is None
+            or len(self.survey.line_indices) < 2
+            or len(self.active_channels) == 0
+        ):
+            return
+
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
             [
@@ -1256,6 +1261,7 @@ class PeakFinder(ObjectDataSelection):
         Observer of :obj:`geoapps.processing.PeakFinder.data`
         Populate the list of available channels and refresh groups
         """
+        self._group_auto.button_style = "warning"
         if getattr(self, "survey", None) is not None and self.data.value is not None:
             self.pause_refresh = True
             self.active_channels = {}
@@ -1363,7 +1369,7 @@ class PeakFinder(ObjectDataSelection):
                 self._ga_group_name.value + ".ui.json",
             ),
         )
-        self.run(self.params, output_group=self.ga_group)
+        self.run(self.params)
 
     def update_center(self, _):
         """
