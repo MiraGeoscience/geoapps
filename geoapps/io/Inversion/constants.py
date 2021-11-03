@@ -350,73 +350,51 @@ default_ui_json = {
     },
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
-        "groupOptional": True,
-        "visible": True,
-        "enabled": True,
         "label": "Update sensitivity weight threshold",
         "value": 1e-3,
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
-        "visible": True,
-        "enabled": True,
         "label": "Update every iteration",
         "value": False,
     },
     "f_min_change": {
         "group": "Update IRLS directive",
-        "groupOptional": True,
-        "visible": True,
-        "enabled": True,
         "label": "f min change",
         "value": 1e-4,
     },
     "minGNiter": {
         "group": "Update IRLS directive",
-        "visible": True,
-        "enabled": True,
         "label": "Minimum Gauss-Newton iterations",
         "value": 1,
     },
     "beta_tol": {
         "group": "Update IRLS directive",
-        "visible": True,
-        "enabled": False,
         "label": "Beta tolerance",
         "value": 0.5,
     },
     "prctile": {
         "group": "Update IRLS directive",
-        "visible": True,
-        "enabled": False,
         "label": "percentile",
         "value": 95,
     },
     "coolingRate": {
         "group": "Update IRLS directive",
-        "visible": True,
-        "enabled": False,
         "label": "Beta cooling rate",
         "value": 1,
     },
     "coolEps_q": {
         "group": "Update IRLS directive",
-        "visible": True,
-        "enabled": False,
         "label": "Cool epsilon q",
         "value": True,
     },
     "coolEpsFact": {
         "group": "Update IRLS directive",
-        "visible": True,
-        "enabled": False,
         "label": "Cool epsilon fact",
         "value": 1.2,
     },
     "beta_search": {
         "group": "Update IRLS directive",
-        "visible": True,
-        "enabled": False,
         "label": "Perform beta search",
         "value": False,
     },
@@ -658,6 +636,7 @@ default_ui_json = {
         "main": True,
     },
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 
 validations = {
@@ -922,4 +901,5 @@ validations = {
         "types": [bool],
     },
     "out_group": {"types": [str, ContainerGroup]},
+    "distributed_workers": {"types": [str, bool]},
 }

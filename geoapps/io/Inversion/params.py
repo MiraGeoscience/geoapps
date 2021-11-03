@@ -106,6 +106,7 @@ class InversionParams(Params):
         self.run_command_boolean: bool = None
         self.conda_environment: str = None
         self.conda_environment_boolean: bool = None
+        self.distributed_workers = None
 
         for k, v in self.default_ui_json.items():
             if isinstance(v, dict):
@@ -1347,6 +1348,21 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._no_data_value = val
+
+    @property
+    def distributed_workers(self):
+        return self._distributed_workers
+
+    @distributed_workers.setter
+    def distributed_workers(self, val):
+        if val is None:
+            self._distributed_workers = val
+            return
+        p = "distributed_workers"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._distributed_workers = val
 
     def write_input_file(
         self,
