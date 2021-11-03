@@ -166,7 +166,6 @@ default_ui_json = {
         "label": "Downsampling resolution",
         "value": 0.0,
     },
-    "detrend_data": False,
     "detrend_order": {
         "min": 0,
         "group": "Data pre-processing",
@@ -196,7 +195,6 @@ default_ui_json = {
         "label": "Chunk by rows",
         "value": False,
     },
-    "mesh_from_params": False,
     "mesh": {
         "group": "Mesh",
         "main": True,
@@ -703,9 +701,6 @@ validations = {
     "resolution": {
         "types": [int, float],
     },
-    "detrend_data": {
-        "types": [bool],
-    },
     "detrend_order": {
         "types": [int],
         "values": [0, 1, 2, 3],
@@ -725,7 +720,6 @@ validations = {
         "uuid": [],
         "types": [str, UUID],
     },
-    "mesh_from_params": {"types": [bool], "reqs": [(True, "u_cell_size")]},
     "u_cell_size": {
         "types": [int, float],
     },
