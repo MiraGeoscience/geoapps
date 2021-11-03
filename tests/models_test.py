@@ -159,8 +159,8 @@ def test_permute_2_treemesh(tmp_path):
     yind = (cc[:, 1] > ymin) & (cc[:, 1] < ymax)
     zind = (cc[:, 2] > zmin) & (cc[:, 2] < zmax)
     ind = xind & yind & zind
-    model = np.zeros(3 * octree_mesh.n_cells, dtype=float)
-    model[np.tile(ind, 3)] = 1
+    model = np.zeros(octree_mesh.n_cells, dtype=float)
+    model[ind] = 1
     octree_mesh.add_data({"test_model": {"values": model}})
     params.upper_bound = ws.get_entity("test_model")[0].uid
     params.associations[params.upper_bound] = octree_mesh.uid
@@ -170,13 +170,10 @@ def test_permute_2_treemesh(tmp_path):
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     upper_bound = InversionModel(ws, params, inversion_mesh, "upper_bound")
     locs = inversion_mesh.mesh.cell_centers
-    locs_rot = rotate_xy(
-        locs, inversion_mesh.rotation["origin"], inversion_mesh.rotation["angle"]
-    )
-    locs_rot = locs_rot[upper_bound.model[: inversion_mesh.mesh.nC] == 1, :]
-    assert xmin <= locs_rot[:, 0].min()
-    assert xmax >= locs_rot[:, 0].max()
-    assert ymin <= locs_rot[:, 1].min()
-    assert ymax >= locs_rot[:, 1].max()
-    assert zmin <= locs_rot[:, 2].min()
-    assert zmax >= locs_rot[:, 2].max()
+    locs = locs[upper_bound.model[: inversion_mesh.mesh.nC] == 1, :]
+    assert xmin <= locs[:, 0].min()
+    assert xmax >= locs[:, 0].max()
+    assert ymin <= locs[:, 1].min()
+    assert ymax >= locs[:, 1].max()
+    assert zmin <= locs[:, 2].min()
+    assert zmax >= locs[:, 2].max()
