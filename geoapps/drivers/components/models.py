@@ -434,7 +434,7 @@ class InversionModel:
 
         xyz_out = self.mesh.mesh.cell_centers
 
-        return weighted_average(xyz_in, xyz_out, [obj])[0]
+        return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
 
     @property
     def model_type(self):
