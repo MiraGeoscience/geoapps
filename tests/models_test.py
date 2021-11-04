@@ -159,8 +159,8 @@ def test_permute_2_treemesh(tmp_path):
     yind = (cc[:, 1] > ymin) & (cc[:, 1] < ymax)
     zind = (cc[:, 2] > zmin) & (cc[:, 2] < zmax)
     ind = xind & yind & zind
-    model = np.zeros(3 * octree_mesh.n_cells, dtype=float)
-    model[np.tile(ind, 3)] = 1
+    model = np.zeros(octree_mesh.n_cells, dtype=float)
+    model[ind] = 1
     octree_mesh.add_data({"test_model": {"values": model}})
     params.upper_bound = ws.get_entity("test_model")[0].uid
     params.associations[params.upper_bound] = octree_mesh.uid

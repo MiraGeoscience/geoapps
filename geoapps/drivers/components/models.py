@@ -9,11 +9,16 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import Data
 from geoh5py.workspace import Workspace
-from SimPEG.utils.mat_utils import dip_azimuth2cartesian, mkvc
+from SimPEG.utils.mat_utils import (
+    cartesian2amplitude_dip_azimuth,
+    dip_azimuth2cartesian,
+    mkvc,
+)
 
 from geoapps.io import Params
-from geoapps.utils import weighted_average
+from geoapps.utils import rotate_xy, weighted_average
 
 from . import InversionMesh
 
@@ -175,6 +180,14 @@ class InversionModelCollection:
         """
         return self._model_method_wrapper("permute_2_treemesh", name=name, model=model)
 
+    def edit_ndv_model(self, actives: np.ndarray):
+        """
+        Change values in models recorded in geoh5 for no-data-values.
+
+        :param actives: Array of bool defining the air: False | ground: True.
+        """
+        return self._model_method_wrapper("edit_ndv_model", name=None, model=actives)
+
 
 class InversionModel:
     """
@@ -257,6 +270,8 @@ class InversionModel:
                     if self.mesh.rotation is not None:
                         declination += self.mesh.rotation["angle"]
 
+                inclination[np.isnan(inclination)] = 0
+                declination[np.isnan(declination)] = 0
                 field_vecs = dip_azimuth2cartesian(
                     dip=inclination,
                     azm_N=declination,
@@ -273,7 +288,7 @@ class InversionModel:
                 bound = -np.inf if self.model_type == "lower_bound" else np.inf
                 model = np.full(self.mesh.nC, bound)
 
-            if self.is_vector:
+            if self.is_vector and model.shape[0] == self.mesh.nC:
                 model = np.tile(model, self.n_blocks)
 
         if model is not None:
@@ -310,14 +325,35 @@ class InversionModel:
 
     def save_model(self):
         """Resort model to the Octree object's ordering and save to workspace."""
-
         remapped_model = self.permute_2_octree()
         if self.is_vector:
-            remapped_model = np.linalg.norm(
-                remapped_model.reshape((-1, 3), order="F"), axis=1
-            )
+            if self.model_type in ["starting", "reference"]:
+                aid = cartesian2amplitude_dip_azimuth(remapped_model)
+                aid[np.isnan(aid[:, 0]), 1:] = np.nan
+                self.entity.add_data(
+                    {f"{self.model_type}_inclination": {"values": aid[:, 1]}}
+                )
+                self.entity.add_data(
+                    {f"{self.model_type}_declination": {"values": aid[:, 2]}}
+                )
+                remapped_model = aid[:, 0]
+            else:
+                remapped_model = np.linalg.norm(
+                    remapped_model.reshape((-1, 3), order="F"), axis=1
+                )
 
         self.entity.add_data({f"{self.model_type}_model": {"values": remapped_model}})
+
+    def edit_ndv_model(self, model):
+        """Change values to NDV on models and save to workspace."""
+        for field in ["model", "inclination", "declination"]:
+            data_obj = self.entity.get_data(f"{self.model_type}_{field}")
+            if any(data_obj) and isinstance(data_obj[0], Data):
+                values = data_obj[0].values
+                values[~model] = np.nan
+                data_obj[0].values = values
+
+        self.workspace.finalize
 
     def _get(self, name: str):
         """
@@ -374,16 +410,10 @@ class InversionModel:
         :return: Model vector with data interpolated into cell centers of
             the inversion mesh.
         """
-
         parent_uuid = self.params.parent(model)
         parent = self.fetch(parent_uuid)
         model = self.fetch(model)
-
-        if self.params.mesh != parent_uuid:
-            model = self._obj_2_mesh(model, parent)
-        else:
-            model = self.permute_2_treemesh(model)
-
+        model = self._obj_2_mesh(model, parent)
         return model
 
     def _obj_2_mesh(self, obj, parent):
@@ -397,14 +427,19 @@ class InversionModel:
 
         """
 
+        xyz_out = self.mesh.mesh.cell_centers
+
         if hasattr(parent, "centroids"):
             xyz_in = parent.centroids
+            if self.mesh.rotation is not None:
+                xyz_out = rotate_xy(
+                    xyz_out, self.mesh.rotation["origin"], self.mesh.rotation["angle"]
+                )
+
         else:
             xyz_in = parent.vertices
 
-        xyz_out = self.mesh.mesh.cell_centers
-
-        return weighted_average(xyz_in, xyz_out, [obj])[0]
+        return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
 
     @property
     def model_type(self):
