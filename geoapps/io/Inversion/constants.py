@@ -35,7 +35,7 @@ default_ui_json = {
         "dataType": ["Float", "Geometric"],
         "group": "Topography",
         "main": True,
-        "isValue": True,
+        "isValue": False,
         "label": "Elevation",
         "parent": "topography_object",
         "property": None,
