@@ -1404,7 +1404,7 @@ class InversionParams(Params):
             "window_width": 0.0,
             "window_height": 0.0,
             "window_azimuth": 0.0,
-            "n_cpu": 1.0,
+            "n_cpu": 1,
         }
 
         ifile.write_ui_json(ui_json, name=name, default=default, none_map=none_map)
