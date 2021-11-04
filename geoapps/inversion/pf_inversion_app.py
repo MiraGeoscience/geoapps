@@ -802,6 +802,10 @@ class InversionApp(PlotSelection2D):
         self._reference_model_group.workspace = workspace
         self._starting_model_group.workspace = workspace
         self._mesh_octree.workspace = workspace
+        self._starting_inclination_group.workspace = workspace
+        self._starting_declination_group.workspace = workspace
+        self._reference_inclination_group.workspace = workspace
+        self._reference_declination_group.workspace = workspace
 
     @property
     def write(self):

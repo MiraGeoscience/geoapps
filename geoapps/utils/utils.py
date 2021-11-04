@@ -452,23 +452,26 @@ def weighted_average(
         [vals.shape[0] == xyz_in.shape[0] for vals in values]
     ), "Input 'values' must have the same shape as input 'locations'"
 
-    tree = cKDTree(xyz_in)
-    rad, ind = tree.query(xyz_out, n)
-    ind = np.c_[ind]
-    rad = np.c_[rad]
-    rad[rad > max_distance] = np.nan
     avg_values = []
     for value in values:
+        sub = ~np.isnan(value)
+        tree = cKDTree(xyz_in[sub, :])
+        rad, ind = tree.query(xyz_out, n)
+        ind = np.c_[ind]
+        rad = np.c_[rad]
+        rad[rad > max_distance] = np.nan
+
         values_interp = np.zeros(xyz_out.shape[0])
         weight = np.zeros(xyz_out.shape[0])
 
         for ii in range(n):
-            v = value[ind[:, ii]] / (rad[:, ii] + threshold)
+            v = value[sub][ind[:, ii]] / (rad[:, ii] + threshold)
             values_interp = np.nansum([values_interp, v], axis=0)
             w = 1.0 / (rad[:, ii] + threshold)
             weight = np.nansum([weight, w], axis=0)
 
         values_interp[weight > 0] = values_interp[weight > 0] / weight[weight > 0]
+        values_interp[weight == 0] = np.nan
         avg_values += [values_interp]
 
     if return_indices:
