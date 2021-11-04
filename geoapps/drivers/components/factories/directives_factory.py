@@ -211,7 +211,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             kwargs["transforms"] = [active_cells_map]
 
             if self.factory_type == "magnetic vector":
-                kwargs["channels"] = ["amplitude", "dip", "azimuth"]
+                kwargs["channels"] = ["amplitude", "inclination", "declination"]
                 kwargs["transforms"] = [
                     cartesian2amplitude_dip_azimuth,
                     active_cells_map,
