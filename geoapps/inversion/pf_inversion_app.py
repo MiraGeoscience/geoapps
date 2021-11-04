@@ -1210,9 +1210,10 @@ class InversionApp(PlotSelection2D):
                 setattr(self.params, f"{key}_uncertainty", widget.value)
 
             if getattr(self, f"{key}_channel_bool").value:
-                self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
-                    0
-                ].copy(parent=new_obj)
+                if not self.forward_only:
+                    self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
+                        0
+                    ].copy(parent=new_obj)
 
         if self.receivers_radar_drape.value is not None:
             self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
