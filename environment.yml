@@ -26,6 +26,7 @@ dependencies:
   - empymod
   - ipyfilechooser
   - pydiso
+  - setuptools=58.4
   - pip:
     - git+https://github.com/MiraGeoscience/simpeg.git@feature/tiled-simulations
     - git+https://github.com/MiraGeoscience/simpeg.git@feature/simpeg_archive
