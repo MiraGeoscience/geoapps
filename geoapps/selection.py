@@ -418,6 +418,9 @@ class LineOptions(ObjectDataSelection):
             else:
                 self.lines.options = [""] + np.unique(data[0].values).tolist()
 
+        else:
+            self.lines.options = [""]
+
 
 class TopographyOptions(ObjectDataSelection):
     """
