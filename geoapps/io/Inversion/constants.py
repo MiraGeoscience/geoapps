@@ -35,12 +35,11 @@ default_ui_json = {
         "dataType": ["Float", "Geometric"],
         "group": "Topography",
         "main": True,
-        "isValue": True,
+        "isValue": False,
         "label": "Elevation",
         "parent": "topography_object",
         "property": None,
         "value": 0.0,
-        "enabled": False,
     },
     "data_object": {
         "main": True,
@@ -169,12 +168,10 @@ default_ui_json = {
         "label": "Downsampling resolution",
         "value": 0.0,
     },
-    "detrend_data": False,
     "detrend_order": {
         "min": 0,
         "group": "Data pre-processing",
         "enabled": False,
-        "dependency": "detrend_data",
         "dependencyType": "enabled",
         "label": "Detrend order",
         "optional": True,
@@ -202,7 +199,6 @@ default_ui_json = {
         "label": "Chunk by rows",
         "value": False,
     },
-    "mesh_from_params": False,
     "mesh": {
         "group": "Mesh",
         "main": True,
@@ -705,9 +701,6 @@ validations = {
     "resolution": {
         "types": [int, float],
     },
-    "detrend_data": {
-        "types": [bool],
-    },
     "detrend_order": {
         "types": [int],
     },
@@ -726,7 +719,6 @@ validations = {
         "uuid": [],
         "types": [str, UUID],
     },
-    "mesh_from_params": {"types": [bool], "reqs": [(True, "u_cell_size")]},
     "u_cell_size": {
         "types": [int, float],
     },
