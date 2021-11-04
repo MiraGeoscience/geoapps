@@ -194,11 +194,11 @@ def test_params_initialize():
 
 def test_update(tmp_path):
     new_params = {
-        "mesh_from_params": True,
+        "u_cell_size": 5,
     }
     params = MagneticVectorParams()
     params.update(new_params)
-    assert params.mesh_from_params == True
+    assert params.u_cell_size == 5
 
     new_params = {
         "topography_object": {
@@ -437,7 +437,7 @@ def test_validate_detrend_order(tmp_path):
     param = "detrend_order"
     newval = 2
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, 9, "value", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_detrend_type(tmp_path):
@@ -473,13 +473,6 @@ def test_validate_mesh(tmp_path):
     newval = "{c02e0470-0c3e-4119-8ac1-0aacba5334af}"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
-
-
-def test_validate_mesh_from_params(tmp_path):
-    param = "mesh_from_params"
-    newval = True
-    # param_test_generator(tmp_path, param, newval)
-    catch_invalid_generator(tmp_path, param, "sdf", "type", workspace=workspace)
 
 
 def test_validate_u_cell_size(tmp_path):
