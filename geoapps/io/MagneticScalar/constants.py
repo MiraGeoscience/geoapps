@@ -20,7 +20,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Gravity Inversion",
+    "title": "SimPEG Magnetic Susceptibility Inversion",
     "inversion_type": "magnetic scalar",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -72,13 +72,11 @@ inversion_defaults = {
     "gps_receivers_offset": None,
     "ignore_values": None,
     "resolution": 0.0,
-    "detrend_data": False,
     "detrend_order": None,
     "detrend_type": None,
     "max_chunk_size": 128,
     "chunk_by_rows": False,
     "mesh": None,
-    "mesh_from_params": False,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
@@ -174,7 +172,6 @@ forward_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": False,
     "mesh": None,
-    "mesh_from_params": False,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
