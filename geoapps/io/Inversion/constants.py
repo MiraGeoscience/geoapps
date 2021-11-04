@@ -40,7 +40,6 @@ default_ui_json = {
         "parent": "topography_object",
         "property": None,
         "value": 0.0,
-        "enabled": False,
     },
     "data_object": {
         "main": True,
