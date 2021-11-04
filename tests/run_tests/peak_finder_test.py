@@ -17,7 +17,10 @@ from geoapps.processing.peak_finder import PeakFinder
 
 
 def test_peak_finder_app(tmp_path):
-    h5file_path = Path(tmp_path) / r"testOctree.geoh5"
+    project = "./FlinFlon.geoh5"
+    app = PeakFinder(h5file=project, plot_result=False)
+
+    h5file_path = Path(tmp_path) / r"testPeakFinder.geoh5"
 
     # Create temp workspace
     ws = Workspace(h5file_path)
@@ -35,9 +38,6 @@ def test_peak_finder_app(tmp_path):
 
     line = curve.add_data({"line_id": {"values": np.ones_like(x)}})
     curve.add_data_to_group(line, name="Line")
-
-    app = PeakFinder(plot_result=False)
-
     changes = {
         "objects": curve.uid,
         "data": curve.find_or_create_property_group(name="obs").uid,
