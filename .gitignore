@@ -148,11 +148,13 @@ dmypy.json
 /assets/sensitivity/*
 /assets/SimPEG_PFInversion/*
 /assets/test_*
+/tests/SimPEG_PFInversion/*
 /tests/GEOSCIENCEtemp
 /tests/Gravity*
-/tests/run_tests/*.geoh5
+/tests/run_tests/
 /tests/FlinFlon.geoh5
 /tests/Inversion_.json
+/tests/run*
 /assets/Temp/*
 *.lock
 /tests/Temp/*
