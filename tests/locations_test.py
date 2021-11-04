@@ -24,6 +24,7 @@ def setup_params(tmp):
     )
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
+    geotest.set_param("topography", None)
     return geotest.make()
 
 
