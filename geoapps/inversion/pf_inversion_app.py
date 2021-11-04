@@ -102,6 +102,7 @@ class InversionApp(PlotSelection2D):
 
         self.data_object = self.objects
         self.defaults.update(self.params.to_dict(ui_json_format=False))
+
         self.defaults.pop("workspace", None)
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
@@ -205,15 +206,11 @@ class InversionApp(PlotSelection2D):
             objects=self._objects,
             **self.defaults,
         )
-        self._detrend_data = Checkbox(description="Detrend data")
-        self._detrend_order = IntText(description="Order", min=0, max=2, value=0)
         self._detrend_type = Dropdown(
-            description="Method", options=["all", "corners"], value="all"
+            description="Method", options=["", "all", "corners"], value="all"
         )
-        self._detrend_panel = VBox(
-            [self._detrend_data, self._detrend_order, self._detrend_type]
-        )
-        self._detrend_data.observe(self.detrend_panel_change)
+        self._detrend_order = widgets.IntText(description="Order", min=0, value=0)
+        self._detrend_panel = VBox([self._detrend_type, self._detrend_order])
         self._alpha_s = widgets.FloatText(
             min=0,
             value=1,
@@ -362,10 +359,6 @@ class InversionApp(PlotSelection2D):
     @property
     def chi_factor(self):
         return self._chi_factor
-
-    @property
-    def detrend_data(self):
-        return self._detrend_data
 
     @property
     def detrend_order(self):
@@ -815,16 +808,6 @@ class InversionApp(PlotSelection2D):
         """"""
         return self._write
 
-    def detrend_panel_change(self, _):
-        if self.detrend_data.value:
-            self._detrend_panel.children = [
-                self.detrend_data,
-                self.detrend_order,
-                self.detrend_type,
-            ]
-        else:
-            self._detrend_panel.children = [self.detrend_data]
-
     # Observers
     def update_ref(self, _):
         alphas = [alpha.value for alpha in self.alphas.children]
@@ -1227,9 +1210,10 @@ class InversionApp(PlotSelection2D):
                 setattr(self.params, f"{key}_uncertainty", widget.value)
 
             if getattr(self, f"{key}_channel_bool").value:
-                self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
-                    0
-                ].copy(parent=new_obj)
+                if not self.forward_only:
+                    self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
+                        0
+                    ].copy(parent=new_obj)
 
         if self.receivers_radar_drape.value is not None:
             self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
@@ -1394,7 +1378,6 @@ class MeshOctreeOptions(ObjectDataSelection):
 
     params_keys = [
         "mesh",
-        "mesh_from_params",
         "u_cell_size",
         "v_cell_size",
         "w_cell_size",
@@ -1408,8 +1391,6 @@ class MeshOctreeOptions(ObjectDataSelection):
 
     def __init__(self, **kwargs):
         self._mesh = self.objects
-        self._mesh_from_params = Checkbox(value=False, description="Create")
-        self._mesh_from_params.observe(self.from_params_choice, names="value")
         self._u_cell_size = widgets.FloatText(
             value=25.0,
             description="",
@@ -1462,7 +1443,7 @@ class MeshOctreeOptions(ObjectDataSelection):
                 self._depth_core,
             ]
         )
-        self._main = VBox([self.objects, self.mesh_from_params])
+        self._main = VBox([self.objects, self._parameters])
         self._objects.observe(self.mesh_selection, names="value")
 
         super().__init__(**kwargs)
@@ -1474,10 +1455,6 @@ class MeshOctreeOptions(ObjectDataSelection):
     @property
     def mesh(self):
         return self._mesh
-
-    @property
-    def mesh_from_params(self):
-        return self._mesh_from_params
 
     @property
     def u_cell_size(self):
@@ -1527,21 +1504,14 @@ class MeshOctreeOptions(ObjectDataSelection):
     def main(self):
         return self._main
 
-    def from_params_choice(self, _):
-        if self._mesh_from_params.value:
+    def mesh_selection(self, _):
+        if self._mesh.value is None:
             self._main.children = [
                 self.objects,
-                self.mesh_from_params,
                 self._parameters,
             ]
-            if self._objects.value is not None:
-                self._objects.value = None
         else:
-            self._main.children = [self.objects, self.mesh_from_params]
-
-    def mesh_selection(self, _):
-        if self._objects.value is not None:
-            self._mesh_from_params.value = False
+            self._main.children = [self.objects]
 
 
 class ModelOptions(ObjectDataSelection):

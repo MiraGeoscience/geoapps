@@ -40,14 +40,13 @@ def test_mag_inversion(tmp_path):
         "data_object": new_obj.uid,
         "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
         "inducing_field_inclination": 35,
-        "detrend_data": True,
         "topography_object": new_topo.uid,
         "topography": topo_val.uid,
         "z_from_topo": False,
         "forward_only": False,
         "starting_model": 0.01,
     }
-    side_effects = {"starting_inclination": 35, "detrend_type": "all"}
+    side_effects = {"starting_inclination": 35}
     app = MagInversionApp(h5file=project, plot_result=False)
     app.geoh5 = new_workspace
 

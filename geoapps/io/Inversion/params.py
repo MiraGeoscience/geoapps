@@ -39,14 +39,12 @@ class InversionParams(Params):
         self.gps_receivers_offset = None
         self.ignore_values: str = None
         self.resolution: float = None
-        self.detrend_data: bool = None
         self.detrend_order: int = None
         self.detrend_type: str = None
         self.max_chunk_size: int = None
         self.chunk_by_rows: bool = None
         self.output_tile_files: bool = None
         self.mesh = None
-        self.mesh_from_params: bool = None
         self.u_cell_size: float = None
         self.v_cell_size: float = None
         self.w_cell_size: float = None
@@ -107,6 +105,7 @@ class InversionParams(Params):
         self.run_command_boolean: bool = None
         self.conda_environment: str = None
         self.conda_environment_boolean: bool = None
+        self.distributed_workers = None
 
         for k, v in self.default_ui_json.items():
             if isinstance(v, dict):
@@ -439,21 +438,6 @@ class InversionParams(Params):
         self._resolution = val
 
     @property
-    def detrend_data(self):
-        return self._detrend_data
-
-    @detrend_data.setter
-    def detrend_data(self, val):
-        if val is None:
-            self._detrend_data = val
-            return
-        p = "detrend_data"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._detrend_data = val
-
-    @property
     def detrend_order(self):
         return self._detrend_order
 
@@ -542,21 +526,6 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._mesh = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def mesh_from_params(self):
-        return self._mesh_from_params
-
-    @mesh_from_params.setter
-    def mesh_from_params(self, val):
-        if val is None:
-            self._mesh_from_params = val
-            return
-        p = "mesh_from_params"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._mesh_from_params = val
 
     @property
     def u_cell_size(self):
@@ -1365,6 +1334,21 @@ class InversionParams(Params):
         )
         self._no_data_value = val
 
+    @property
+    def distributed_workers(self):
+        return self._distributed_workers
+
+    @distributed_workers.setter
+    def distributed_workers(self, val):
+        if val is None:
+            self._distributed_workers = val
+            return
+        p = "distributed_workers"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._distributed_workers = val
+
     def write_input_file(
         self,
         ui_json: dict = None,
@@ -1381,6 +1365,7 @@ class InversionParams(Params):
                 defaults = self.inversion_defaults
 
             ui_json = {k: self.default_ui_json[k] for k in defaults}
+            ui_json["geoh5"] = self.workspace
             self.title = defaults["title"]
             self.run_command = defaults["run_command"]
 
