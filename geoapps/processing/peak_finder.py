@@ -658,7 +658,7 @@ class PeakFinder(ObjectDataSelection):
             path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
         )
         self.update_objects_list()
-        self.lines._workspace = workspace
+        self.lines.workspace = workspace
 
     @property
     def x_label(self) -> ToggleButtons:
@@ -744,6 +744,7 @@ class PeakFinder(ObjectDataSelection):
                 self.update_data_list(None)
                 self.set_data(None)
         self.group_auto.value = False
+        self._group_auto.button_style = "success"
 
     @staticmethod
     def default_groups_from_property_group(property_group, start_index=0):
@@ -843,7 +844,6 @@ class PeakFinder(ObjectDataSelection):
         """
         Re-compute derivatives
         """
-
         if (
             getattr(self, "survey", None) is None
             or len(self.workspace.get_entity(self.lines.data.value)) == 0
@@ -969,17 +969,22 @@ class PeakFinder(ObjectDataSelection):
         if (
             self.pause_refresh
             or not self.refresh.value
-            or getattr(self, "survey", None) is None
             or self.plot_trigger.value is False
-            or len(self.active_channels) == 0
-            or getattr(self.survey, "line_indices", None) is None
-            or len(self.survey.line_indices) < 2
             or not self.plot_result
         ):
             return
 
         self.figure = plt.figure(figsize=(12, 6))
         axs = plt.subplot()
+
+        if (
+            getattr(self, "survey", None) is None
+            or getattr(self.survey, "line_indices", None) is None
+            or len(self.survey.line_indices) < 2
+            or len(self.active_channels) == 0
+        ):
+            return
+
         lims = np.searchsorted(
             self.lines.profile.locations_resampled,
             [
@@ -1256,6 +1261,7 @@ class PeakFinder(ObjectDataSelection):
         Observer of :obj:`geoapps.processing.PeakFinder.data`
         Populate the list of available channels and refresh groups
         """
+        self._group_auto.button_style = "warning"
         if getattr(self, "survey", None) is not None and self.data.value is not None:
             self.pause_refresh = True
             self.active_channels = {}
@@ -1314,12 +1320,30 @@ class PeakFinder(ObjectDataSelection):
             self.line_update(None)
 
     def trigger_click(self, _):
+
+        new_workspace = Workspace(
+            path.join(
+                self.export_directory.selected_path,
+                self._ga_group_name.value + ".geoh5",
+            )
+        )
+        obj, data = self.get_selected_entities()
+
+        new_obj = new_workspace.get_entity(obj.uid)[0]
+        if new_obj is None:
+            obj.copy(parent=new_workspace, copy_children=True)
+
+        self.params.geoh5 = new_workspace.h5file
+        self.params.workspace = new_workspace
+
         for key, value in self.__dict__.items():
             try:
                 if isinstance(getattr(self, key), Widget):
                     setattr(self.params, key, getattr(self, key).value)
             except AttributeError:
                 continue
+
+        self.params.line_field = self.lines.data.value
 
         self.params._free_params_dict = {}
         ui_json = default_ui_json.copy()
@@ -1338,8 +1362,14 @@ class PeakFinder(ObjectDataSelection):
 
         self.params.param_names = list(ui_json.keys())
         self.params.group_auto = False
-        self.params.write_input_file(ui_json=ui_json, name=self.params.ga_group_name)
-        self.run(self.params, output_group=self.ga_group)
+        self.params.write_input_file(
+            ui_json=ui_json,
+            name=path.join(
+                self.export_directory.selected_path,
+                self._ga_group_name.value + ".ui.json",
+            ),
+        )
+        self.run(self.params)
 
     def update_center(self, _):
         """
