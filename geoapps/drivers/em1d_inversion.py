@@ -56,7 +56,6 @@ def inversion(input_file):
 
     lower_bound = input_param["lower_bound"][0]
     upper_bound = input_param["upper_bound"][0]
-    chi_target = input_param["chi_factor"]
     workspace = Workspace(input_param["workspace"])
 
     selection = input_param["lines"]
@@ -153,29 +152,52 @@ def inversion(input_file):
             f"Workspace {workspace.h5file}"
         )
 
+    # Find out which frequency has at least one component selected
+
+    if em_specs["type"] == "frequency":
+        frequencies = []
+        for ind, key in enumerate(em_specs["channels"]):
+            if key in input_param["data"]["channels"]:
+                frequencies.append(em_specs["channels"][key])
+
+        frequencies = np.unique(np.hstack(frequencies))
+
     data = []
     uncertainties = []
-    channels = []
+    channels = {}
     channel_values = []
     offsets = {}
-    for channel, parameters in input_param["data"]["channels"].items():
-        uid = uuid.UUID(parameters["name"])
-        if uid in [child.uid for child in entity.children]:
-            data.append(workspace.get_entity(uid)[0].values)
-        else:
-            assert False, (
-                f"Data {parameters['name']} could not be found associated with "
-                f"target {entity.name} object."
+    for ind, (key, value) in enumerate(em_specs["channels"].items()):
+        if key in input_param["data"]["channels"]:
+            channels[key] = True
+            parameters = input_param["data"]["channels"][key]
+            uid = uuid.UUID(parameters["name"])
+
+            try:
+                data.append(workspace.get_entity(uid)[0].values)
+            except IndexError:
+                raise IndexError(
+                    f"Data {parameters['name']} could not be found associated with "
+                    f"target {entity.name} object."
+                )
+
+            uncertainties.append(
+                np.abs(data[-1]) * parameters["uncertainties"][0]
+                + parameters["uncertainties"][1]
             )
-        uncertainties.append(
-            np.abs(data[-1]) * parameters["uncertainties"][0]
-            + parameters["uncertainties"][1]
-        )
-        channels += [channel]
-        channel_values += [parameters["value"]]
-        offsets[channel.lower()] = np.linalg.norm(
-            np.asarray(parameters["offsets"]).astype(float)
-        )
+            channel_values += parameters["value"]
+            offsets[key.lower()] = np.linalg.norm(
+                np.asarray(parameters["offsets"]).astype(float)
+            )
+
+        elif em_specs["type"] == "frequency" and value in frequencies:
+            channels[key] = False
+            data.append(np.zeros(entity.n_vertices))
+            uncertainties.append(np.ones(entity.n_vertices) * np.inf)
+            offsets[key.lower()] = np.linalg.norm(
+                np.asarray(em_specs["tx_offsets"][ind]).astype(float)
+            )
+            channel_values += [value]
 
     offsets = list(offsets.values())
 
@@ -628,17 +650,17 @@ def inversion(input_file):
     dobs = data_mapping * normalization * dobs
     data_types = {}
     for ind, channel in enumerate(channels):
-        if channel in list(input_param["data"]["channels"].keys()):
-            d_i = curve.add_data(
-                {
-                    channel: {
-                        "association": "VERTEX",
-                        "values": data_mapping * dobs[ind::block][data_ordering],
-                    }
+        # if channel in list(input_param["data"]["channels"].keys()):
+        d_i = curve.add_data(
+            {
+                channel: {
+                    "association": "VERTEX",
+                    "values": data_mapping * dobs[ind::block][data_ordering],
                 }
-            )
-            curve.add_data_to_group(d_i, f"Observed")
-            data_types[channel] = d_i.entity_type
+            }
+        )
+        curve.add_data_to_group(d_i, f"Observed")
+        data_types[channel] = d_i.entity_type
 
     xyz = locations[stn_id, :]
     topo = np.c_[xyz[:, :2], dem[stn_id, 2]]
@@ -709,10 +731,16 @@ def inversion(input_file):
         reference = starting
         print("**** Running Forward Only ****")
 
+    else:
+        print(f"Number of data in simulation: {n_data}")
+        print(f"Number of active data: {n_data - np.isinf(uncert).sum()}")
+        chi_target = input_param["chi_factor"] / (
+            (n_data - np.isinf(uncert).sum()) / n_data
+        )
+        print(f"Input chi factor: {input_param['chi_factor']} -> target: {chi_target}")
+
     if isinstance(reference, str):
         print("**** Best-fitting halfspace inversion ****")
-        print(f"Target: {n_data}")
-
         hz_BFHS = np.r_[1.0]
         expmap = Maps.ExpMap(nP=n_sounding)
         sigmaMap = expmap
@@ -890,12 +918,12 @@ def inversion(input_file):
                     + pc_floor[1] * normalization
                 )
 
-            temp = uncert[ind::block][data_ordering]
-            temp[temp == np.inf] = 0
-            d_i = curve.add_data(
-                {"Uncertainties_" + channel: {"association": "VERTEX", "values": temp}}
-            )
-            curve.add_data_to_group(d_i, f"Uncertainties")
+        temp = uncert[ind::block][data_ordering]
+        temp[temp == np.inf] = 0
+        d_i = curve.add_data(
+            {"Uncertainties_" + channel: {"association": "VERTEX", "values": temp}}
+        )
+        curve.add_data_to_group(d_i, f"Uncertainties")
 
         uncert[ind::block][uncert_orig[ind::block] == np.inf] = np.inf
 
@@ -1008,5 +1036,5 @@ def inversion(input_file):
 if __name__ == "__main__":
 
     input_file = sys.argv[1]
-
+    # input_file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\EM1DInversion_Inv.json"
     inversion(input_file)
