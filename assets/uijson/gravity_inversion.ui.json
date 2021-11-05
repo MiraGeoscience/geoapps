@@ -443,6 +443,8 @@
     "output_tile_files": {
         "group": "Receivers location options",
         "label": "Output tile files",
+        "visible": false,
+        "enabled": true,
         "value": false
     },
     "z_from_topo": {
@@ -549,7 +551,7 @@
     "chunk_by_rows": {
         "group": "Data pre-processing",
         "label": "Chunk by rows",
-        "value": false
+        "value": true
     },
     "mesh": {
         "group": "Mesh",
