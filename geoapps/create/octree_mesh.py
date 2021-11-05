@@ -296,7 +296,7 @@ class OctreeMesh(ObjectDataSelection):
                 continue
 
             if any(entity):
-                print(f"Applying refinement {label} on: {entity[0].name}")
+                print(f"Applying {label} on: {entity[0].name}")
                 treemesh = refine_tree_xyz(
                     treemesh,
                     entity[0].vertices,
