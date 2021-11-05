@@ -3,7 +3,7 @@ Applications
 
 Gallery of applications currently available
 
-Core Utilities
+Base selection
 --------------
 
 .. nbgallery::
@@ -11,28 +11,29 @@ Core Utilities
     :glob:
     :reversed:
 
-    applications/export
     applications/view_selection
     applications/object_data_selection
     applications/base_application
-    applications/scatter
 
 
-Create Objects & Data
----------------------
+
+Utilities
+---------
 
 .. nbgallery::
     :name: object_creation
     :glob:
     :reversed:
 
-    applications/calculator
-    applications/contouring
+    applications/scatter
+    applications/export
+    applications/create_octree
     applications/create_surface
     applications/create_isosurface
-    applications/create_octree
-    applications/coordinate_transformation
     applications/data_interpolation
+    applications/coordinate_transformation
+    applications/contouring
+    applications/calculator
 
 
 Machine Learning
@@ -55,9 +56,9 @@ Geophysical Data Inversion
     :glob:
     :reversed:
 
-    applications/grav_mag_inversion
-    applications/em1d_inversion
     applications/dcip_inversion
+    applications/em1d_inversion
+    applications/grav_mag_inversion
 
 
 Need help? Contact us at support@mirageoscience.com

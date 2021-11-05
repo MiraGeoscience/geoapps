@@ -1044,7 +1044,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m geoapps.drivers.{inversion_routine} "
-            + f"{params.input_file.filepath}"
+            + f'"{params.input_file.filepath}"'
         )
 
     def file_browser_change(self, _):
