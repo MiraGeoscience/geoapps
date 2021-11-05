@@ -22,6 +22,7 @@ from geoapps.io.Inversion.constants import validations as base_validations
 inversion_defaults = {
     "title": "SimPEG Gravity Inversion",
     "inversion_type": "magnetic scalar",
+    "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -133,14 +134,15 @@ inversion_defaults = {
     "out_group": "SusceptibilityInversion",
     "no_data_value": None,
     "monitoring_directory": None,
-    "geoh5": None,
     "run_command": "geoapps.drivers.magnetic_scalar_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 forward_defaults = {
     "title": "SimPEG Magnetic Susceptibility Forward",
     "inversion_type": "magnetic scalar",
+    "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "inducing_field_strength": 50000.0,
     "inducing_field_inclination": 90.0,
@@ -192,10 +194,10 @@ forward_defaults = {
     "workspace": None,
     "out_group": "MagneticScalarForward",
     "monitoring_directory": None,
-    "geoh5": None,
     "run_command": "geoapps.drivers.magnetic_scalar_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
 }
 
 default_ui_json = {
