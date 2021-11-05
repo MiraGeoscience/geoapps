@@ -32,7 +32,7 @@ default_ui_json = {
     },
     "topography": {
         "association": "Vertex",
-        "dataType": ["Float", "Geometric"],
+        "dataType": "Float",
         "group": "Topography",
         "main": True,
         "isValue": False,
@@ -92,6 +92,8 @@ default_ui_json = {
     "output_tile_files": {
         "group": "Receivers location options",
         "label": "Output tile files",
+        "visible": False,
+        "enabled": False,
         "value": False,
     },
     "z_from_topo": {
@@ -197,7 +199,7 @@ default_ui_json = {
     "chunk_by_rows": {
         "group": "Data pre-processing",
         "label": "Chunk by rows",
-        "value": False,
+        "value": True,
     },
     "mesh": {
         "group": "Mesh",

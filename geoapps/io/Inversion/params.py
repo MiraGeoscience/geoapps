@@ -185,8 +185,10 @@ class InversionParams(Params):
         ]
         is_offset = any([(k != 0) for k in offsets])
         offsets = offsets if is_offset else None
-        if isinstance(self.receivers_radar_drape, str):
-            radar = self.workspace.get_entity(self.receivers_radar_drape)
+        r = self.receivers_radar_drape
+        if isinstance(r, (str, UUID)):
+            r = UUID(r) if isinstance(r, str) else r
+            radar = self.workspace.get_entity(r)
             radar = radar[0].values if radar else None
         else:
             radar = None
@@ -1404,7 +1406,7 @@ class InversionParams(Params):
             "window_width": 0.0,
             "window_height": 0.0,
             "window_azimuth": 0.0,
-            "n_cpu": 1.0,
+            "n_cpu": 1,
         }
 
         ifile.write_ui_json(ui_json, name=name, default=default, none_map=none_map)

@@ -969,6 +969,12 @@ class InversionApp(PlotSelection2D):
             elif channel.value is not None:
                 data_widget.children[3].children[0].value = 0.0
 
+        def checkbox_setter(caller):
+            channel = caller["owner"]
+            data_widget = getattr(self, f"{channel.header}_group")
+            if not channel.value:
+                data_widget.children[1].value = None
+
         def value_setter(self, key, value):
             """Assign value or channel"""
             if isinstance(value, float):
@@ -1027,6 +1033,10 @@ class InversionApp(PlotSelection2D):
                 data_channel_options[key] = getattr(self, f"{key}_group")
                 data_channel_options[key].children[3].children[0].header = key
                 data_channel_options[key].children[3].children[1].header = key
+                data_channel_options[key].children[0].header = key
+                data_channel_options[key].children[0].observe(
+                    checkbox_setter, names="value"
+                )
                 data_channel_options[key].children[1].header = key
                 data_channel_options[key].children[1].observe(
                     channel_setter, names="value"
@@ -1214,7 +1224,7 @@ class InversionApp(PlotSelection2D):
                 setattr(self.params, f"{key}_uncertainty", widget.value)
 
             if getattr(self, f"{key}_channel_bool").value:
-                if not self.forward_only:
+                if not self.forward_only.value:
                     self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
                         0
                     ].copy(parent=new_obj)
@@ -1272,10 +1282,11 @@ class InversionApp(PlotSelection2D):
                 "Parameter 'inversion_type' must be one of "
                 "'magnetic vector', 'magnetic scalar' or 'gravity'"
             )
+
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m geoapps.drivers.{inversion_routine} "
-            + f"{params.input_file.filepath}"
+            + f'"{params.input_file.filepath}"'
         )
 
     def file_browser_change(self, _):
