@@ -15,10 +15,10 @@ from geoapps.utils.testing import setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_dc_run = {
+target_ip_run = {
     "data_norm": 0.00796,
-    "phi_d": 1.661,
-    "phi_m": 0.1439,
+    "phi_d": 8.086,
+    "phi_m": 0.1146,
 }
 
 
@@ -100,11 +100,11 @@ def test_ip_run(
     if pytest:
         np.testing.assert_almost_equal(
             np.linalg.norm(potential.values),
-            target_dc_run["data_norm"],
+            target_ip_run["data_norm"],
             decimal=3,
         )
-        np.testing.assert_almost_equal(output["phi_m"][1], target_dc_run["phi_m"])
-        np.testing.assert_almost_equal(output["phi_d"][1], target_dc_run["phi_d"])
+        np.testing.assert_almost_equal(output["phi_m"][1], target_ip_run["phi_m"])
+        np.testing.assert_almost_equal(output["phi_d"][1], target_ip_run["phi_d"])
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 
