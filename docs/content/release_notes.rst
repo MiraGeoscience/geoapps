@@ -6,29 +6,31 @@ Release 0.6.0 - 2021/11/08
 
 **(Major Release)**
 
-**New Application** - Direct-current and IP 3D inversion
+**New Application** - Direct current and induced polarization 3D inversion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The application provides an interface to the open-source `SimPEG <https://simpeg.xyz/>`_ package for the inversion of direct-current (DC) and induced polarization (IP) data using a Laterally Constrained 1D approach.
+The application provides an interface to the open-source `SimPEG <https://simpeg.xyz/>`_ package for 3D inversion of direct current (DC) and induced polarization (IP) data.
 
- - Direct-current (potential) data inversion for the recovery of conductivity (S/m).
+ - Direct current (potential) data inversion for the recovery of conductivity (S/m).
  - Apparent chargeability (V/V) data for the recovery of chargeability (SI).
 
-All inversion are performed on a 3D octree mesh.
+All inversions are performed on a 3D octree mesh.
 
 Application Updates
 ^^^^^^^^^^^^^^^^^^^
 
 - All 3D inversions have been updated to SimPEG v0.5.1.
-  The transition also includes several updates to parallelization allowing computations on distributed systems.
+  - The transition also includes several updates to parallelization allowing computations on distributed systems.
 - Magnetic and gravity inversions now relies on the ui.json input file format.
   - Inversion parameters can be re-imported from existing ui.json files.
   - Alternatively, the ui.json can be loaded in Geoscience ANALYST as a custom UI.
-- Update to Octree Mesh Creation and Peak Finder applications to the ui.json format.
-- Added unittests
+- Magnetic vector inversions can now be run with starting and reference models consisting of amplitude, inclination, and declination components.
+- Inversion apps now include a detrending option to remove an nth order polynomial using either all the data or just the perimeter points.
+- Octree Mesh Creation and Peak Finder applications also now rely on the ui.json format.
+- Added unit tests
 - Bug fixes
-
-
+- This release will be accompanied by a Geoscience ANALYST release (v3.4) that exposes geoapps applications to Pro Geophysics users via dropdown menu.
+    - follow the release link (`Geoscience ANALYST v3.4 <https://mirageoscience.com/geoscience-analyst-v3-4/>`_) to learn more and find out what else is included.
 Installation Updates
 ^^^^^^^^^^^^^^^^^^^^
 
