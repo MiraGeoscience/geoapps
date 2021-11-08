@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 from uuid import UUID
 
+import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
@@ -38,14 +39,12 @@ class InversionParams(Params):
         self.gps_receivers_offset = None
         self.ignore_values: str = None
         self.resolution: float = None
-        self.detrend_data: bool = None
         self.detrend_order: int = None
         self.detrend_type: str = None
         self.max_chunk_size: int = None
         self.chunk_by_rows: bool = None
         self.output_tile_files: bool = None
         self.mesh = None
-        self.mesh_from_params: bool = None
         self.u_cell_size: float = None
         self.v_cell_size: float = None
         self.w_cell_size: float = None
@@ -144,9 +143,22 @@ class InversionParams(Params):
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
-        for k, v in self.__dict__.items():
-            if ("channel_bool" in k) & (v is True):
-                comps.append(k.split("_")[1])
+        channels = np.unique(
+            [
+                k.lstrip("_").split("_")[0]
+                for k in self.__dict__.keys()
+                if "channel" in k
+            ]
+        )
+        for c in channels:
+            use_ch = False
+            if getattr(self, f"{c}_channel", 99) is not None:
+                use_ch = True
+            if getattr(self, f"{c}_channel_bool", 99) is True:
+                use_ch = True
+            if use_ch:
+                comps.append(c)
+
         return comps
 
     def window(self) -> dict[str, float]:
@@ -173,8 +185,13 @@ class InversionParams(Params):
         ]
         is_offset = any([(k != 0) for k in offsets])
         offsets = offsets if is_offset else None
-        radar = self.workspace.get_entity(self.receivers_radar_drape)
-        radar = radar[0].values if radar else None
+        r = self.receivers_radar_drape
+        if isinstance(r, (str, UUID)):
+            r = UUID(r) if isinstance(r, str) else r
+            radar = self.workspace.get_entity(r)
+            radar = radar[0].values if radar else None
+        else:
+            radar = None
         return offsets, radar
 
     def model_norms(self) -> list[float]:
@@ -423,21 +440,6 @@ class InversionParams(Params):
         self._resolution = val
 
     @property
-    def detrend_data(self):
-        return self._detrend_data
-
-    @detrend_data.setter
-    def detrend_data(self, val):
-        if val is None:
-            self._detrend_data = val
-            return
-        p = "detrend_data"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._detrend_data = val
-
-    @property
     def detrend_order(self):
         return self._detrend_order
 
@@ -526,21 +528,6 @@ class InversionParams(Params):
             p, val, self.validations[p], self.workspace, self.associations
         )
         self._mesh = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def mesh_from_params(self):
-        return self._mesh_from_params
-
-    @mesh_from_params.setter
-    def mesh_from_params(self, val):
-        if val is None:
-            self._mesh_from_params = val
-            return
-        p = "mesh_from_params"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._mesh_from_params = val
 
     @property
     def u_cell_size(self):
@@ -1380,6 +1367,7 @@ class InversionParams(Params):
                 defaults = self.inversion_defaults
 
             ui_json = {k: self.default_ui_json[k] for k in defaults}
+            ui_json["geoh5"] = self.workspace
             self.title = defaults["title"]
             self.run_command = defaults["run_command"]
 
@@ -1409,7 +1397,19 @@ class InversionParams(Params):
                 raise ValueError(f"Provided path {path} does not exist.")
             ifile.workpath = path
 
-        ifile.write_ui_json(ui_json, name=name, default=default)
+        none_map = {
+            "detrend_order": 0,
+            "detrend_type": "all",
+            "initial_beta": 1.0,
+            "window_center_x": 0.0,
+            "window_center_y": 0.0,
+            "window_width": 0.0,
+            "window_height": 0.0,
+            "window_azimuth": 0.0,
+            "n_cpu": 1,
+        }
+
+        ifile.write_ui_json(ui_json, name=name, default=default, none_map=none_map)
         if ifile.workpath is not None:
             ifile.filepath = os.path.join(ifile.workpath, name)
         else:

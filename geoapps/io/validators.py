@@ -159,12 +159,13 @@ class InputValidator:
             for req in pvalidations["reqs"]:
                 self._validate_parameter_req(param, value, req)
         if "uuid" in pvalidations.keys():
-            try:
-                child_uuid = UUID(value) if isinstance(value, str) else value
-                parent = associations[child_uuid]
-            except (KeyError, TypeError):
-                parent = None
-            self._validate_parameter_uuid(param, value, ws, parent)
+            if isinstance(value, str):
+                try:
+                    child_uuid = UUID(value)
+                    parent = associations[child_uuid]
+                except (KeyError, TypeError):
+                    parent = None
+                self._validate_parameter_uuid(param, value, ws, parent)
         if "property_groups" in pvalidations.keys():
             try:
                 parent = associations[value]
