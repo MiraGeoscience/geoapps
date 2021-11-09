@@ -15,13 +15,13 @@ import pytest
 from geoh5py.workspace import Workspace
 
 from geoapps.io import InputFile, Params
+from geoapps.io.DirectCurrent import DirectCurrentParams
 from geoapps.io.Gravity import GravityParams
+from geoapps.io.InducedPolarization import InducedPolarizationParams
 from geoapps.io.MagneticScalar import MagneticScalarParams
 from geoapps.io.MagneticVector import MagneticVectorParams
 from geoapps.io.MagneticVector.constants import default_ui_json as MVI_defaults
 from geoapps.io.MagneticVector.constants import validations as MVI_validations
-from geoapps.io.DirectCurrent import DirectCurrentParams
-from geoapps.io.InducedPolarization import InducedPolarizationParams
 from geoapps.io.Octree import OctreeParams
 from geoapps.io.PeakFinder import PeakFinderParams
 from geoapps.utils.testing import Geoh5Tester
