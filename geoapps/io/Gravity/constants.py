@@ -124,7 +124,7 @@ inversion_defaults = {
     "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
-    "max_ram": 2,
+    "max_ram": None,
     "workspace": None,
     "out_group": "GravityInversion",
     "no_data_value": None,
@@ -507,7 +507,7 @@ default_ui_json = {
 }
 
 base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json
+default_ui_json = base_default_ui_json.copy()
 for k, v in inversion_defaults.items():
     if isinstance(default_ui_json[k], dict):
         key = "value"

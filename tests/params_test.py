@@ -216,6 +216,8 @@ def test_default_input_file(tmp_path):
         for k, v in ifile.data.items():
             if " " in k:
                 continue
+            if v != params.defaults[k]:
+                print(k, v, params.defaults[k], params_class)
             check.append(v == params.defaults[k])
         assert all(check)
 
