@@ -141,7 +141,7 @@ class InversionData(InversionLocations):
         self.radar = self.filter(self.radar)
         self.uncertainties = self.filter(self.uncertainties)
 
-        if self.params.detrend_data:
+        if self.params.detrend_type is not None:
             self.detrend_order = self.params.detrend_order
             self.detrend_type = self.params.detrend_type
             self.observed, self.trend = self.detrend(self.observed)
@@ -288,9 +288,9 @@ class InversionData(InversionLocations):
             )
             if not self.params.forward_only:
                 self._observed_data_types[comp] = self.data_entity[comp].entity_type
-                self.entity.add_data(
-                    {f"Uncertainties_{comp}": {"values": self.uncertainties[comp]}}
-                )
+                uncerts = self.uncertainties[comp].copy()
+                uncerts[np.isinf(uncerts)] = np.nan
+                self.entity.add_data({f"Uncertainties_{comp}": {"values": uncerts}})
 
     def get_data_component(self, component: str) -> np.ndarray:
         """Get data component (channel) from params data."""

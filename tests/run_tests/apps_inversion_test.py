@@ -40,14 +40,13 @@ def test_mag_inversion(tmp_path):
         "data_object": new_obj.uid,
         "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
         "inducing_field_inclination": 35,
-        "detrend_data": True,
         "topography_object": new_topo.uid,
         "topography": topo_val.uid,
         "z_from_topo": False,
         "forward_only": False,
         "starting_model": 0.01,
     }
-    side_effects = {"starting_inclination": 35, "detrend_type": "all"}
+    side_effects = {"starting_inclination": 35}
     app = MagInversionApp(h5file=project, plot_result=False)
     app.geoh5 = new_workspace
 
@@ -59,6 +58,15 @@ def test_mag_inversion(tmp_path):
 
     app.write.click()
     params_reload = MagneticVectorParams.from_path(app.params.input_file.filepath)
+    objs = params_reload.workspace.list_entities_name
+    check_objs = [
+        new_obj.uid,
+        UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+        new_topo.uid,
+        topo_val.uid,
+    ]
+    for o in check_objs:
+        assert o in objs.keys()
 
     for param, value in changes.items():
         assert (
