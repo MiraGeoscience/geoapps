@@ -86,6 +86,7 @@ class Params:
         self.associations = None
         self.workspace = None
         self._verbose = verbose
+
         self.update(self.defaults, validate=False)
         if kwargs:
             self._handle_kwargs(kwargs, validate)
@@ -106,29 +107,21 @@ class Params:
         p._input_file = input_file
         p.workpath = input_file.workpath
         p.associations = input_file.associations
-
-        if workspace is not None:
-            p.workspace = (
-                Workspace(workspace) if isinstance(workspace, str) else workspace
-            )
-        elif isinstance(input_file.workspace, Workspace):
-            p.workspace = input_file.workspace
-
-        for v in ["geoh5", "workspace"]:
-            if v in input_file.data.keys():
-                if (
-                    input_file.data[v] is not None
-                    and getattr(p, "workspace", None) is None
-                ):
-                    ws_param = input_file.data[v]
-                    ws = Workspace(ws_param) if isinstance(ws_param, str) else ws_param
-                    p.workspace = ws
-
-            input_file.data.pop(v, None)
-
-        p.geoh5 = p.workspace
         p.update(input_file.data)
 
+        if workspace is not None:
+            p.workspace = workspace
+
+        elif input_file.workspace is not None:
+            p.workspace = input_file.workspace
+
+        else:
+            for attr in ["geoh5", "workspace"]:
+                if attr in input_file.data.keys():
+                    if input_file.data[attr] is not None:
+                        p.workspace = input_file.data[attr]
+
+        p.geoh5 = p.workspace
         return p
 
     @classmethod
@@ -160,6 +153,11 @@ class Params:
     def update(self, params_dict: Dict[str, Any], default: bool = False, validate=True):
         """Update parameters with dictionary contents."""
 
+        if "geoh5" in params_dict.keys():
+            setattr(self, "workspace", params_dict["geoh5"])
+        if "workspace" in params_dict.keys():
+            setattr(self, "workspace", params_dict["workspace"])
+            
         for key, value in params_dict.items():
 
             if " " in key:
