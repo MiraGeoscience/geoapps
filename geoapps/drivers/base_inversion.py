@@ -141,13 +141,13 @@ class InversionDriver:
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
 
         self.nTiles = len(self.tiles)
-        print("Number of tiles:" + str(self.nTiles))
+        print(f"Setting up {self.nTiles} tiles ...")
         # Build tiled misfits and combine to form global misfit
         self.local_misfits = self.get_tile_misfits(self.tiles)
         self.global_misfit = objective_function.ComboObjectiveFunction(
             self.local_misfits
         )
-
+        print(f"Done.")
         # Create regularization
         self.regularization = self.get_regularization()
 

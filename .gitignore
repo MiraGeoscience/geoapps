@@ -145,13 +145,20 @@ dmypy.json
 /tests/run_tests/Temp/
 
 #cleanup
-*ui.json
 /assets/sensitivity/*
 /assets/SimPEG_PFInversion/*
 /assets/test_*
+/tests/SimPEG_PFInversion/*
 /tests/GEOSCIENCEtemp
 /tests/Gravity*
-/tests/run_tests/*.geoh5
+/tests/run_tests/
 /tests/FlinFlon.geoh5
 /tests/Inversion_.json
-/get_custom_conda.bat
+/tests/run*
+/assets/Temp/*
+*.lock
+/tests/Temp/*
+tests/**/*.geoh5
+/tests/**/*ui.json
+get_custom_conda.bat
+/tests/dask-worker-space/*

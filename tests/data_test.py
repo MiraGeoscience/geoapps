@@ -29,7 +29,6 @@ def setup_params(tmp):
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
-    geotest.set_param("tmi_channel_bool", True)
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     geotest.set_param("out_group", "MVIInversion")
@@ -66,14 +65,10 @@ def test_survey_data(tmp_path):
         data_object=test_data_object.uid,
         topography_object=test_topo_object,
         topography=ws.get_entity("elev")[0].uid,
-        tmi_channel_bool=False,
-        bxx_channel_bool=True,
         bxx_channel=bxx_data.uid,
         bxx_uncertainty=0.1,
-        byy_channel_bool=True,
         byy_channel=byy_data.uid,
         byy_uncertainty=0.2,
-        bzz_channel_bool=True,
         bzz_channel=bzz_data.uid,
         bzz_uncertainty=0.3,
         starting_model=0.0,
@@ -133,7 +128,8 @@ def test_save_data(tmp_path):
 
 def test_get_uncertainty_component(tmp_path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     params.tmi_uncertainty = 1
     data = InversionData(ws, params, window)
     unc = data.get_uncertainty_component("tmi")
@@ -144,7 +140,8 @@ def test_get_uncertainty_component(tmp_path):
 
 def test_parse_ignore_values(tmp_path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     params.ignore_values = "<99"
     data = InversionData(ws, params, window)
     val, type = data.parse_ignore_values()
@@ -166,7 +163,8 @@ def test_parse_ignore_values(tmp_path):
 
 def test_set_infinity_uncertainties(tmp_path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     test_data = np.array([0, 1, 2, 3, 4, 5])
     test_unc = np.array([0.1] * 6)
@@ -199,7 +197,8 @@ def test_set_infinity_uncertainties(tmp_path):
 
 def test_displace(tmp_path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     test_locs = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]])
     test_offset = np.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
@@ -220,7 +219,8 @@ def test_displace(tmp_path):
 
 def test_drape(tmp_path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     test_locs = np.array([[1.0, 2.0, 1.0], [2.0, 1.0, 1.0], [8.0, 9.0, 1.0]])
     radar_ch = np.array([1.0, 2.0, 3.0])
@@ -232,7 +232,8 @@ def test_drape(tmp_path):
 
 def test_normalize(tmp_path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     data.data = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
     data.components = list(data.data.keys())
@@ -243,7 +244,8 @@ def test_normalize(tmp_path):
 
 def test_get_survey(tmp_path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
+    locs = ws.get_entity(params.data_object)[0].centroids
+    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     survey, _ = data.survey()
     assert isinstance(survey, SimPEG.potential_fields.magnetics.Survey)
