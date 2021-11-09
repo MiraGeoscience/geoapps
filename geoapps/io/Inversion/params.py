@@ -1398,6 +1398,7 @@ class InversionParams(Params):
             ifile.workpath = path
 
         none_map = {
+            "resolution": 0.0,
             "detrend_order": 0,
             "detrend_type": "all",
             "initial_beta": 1.0,
