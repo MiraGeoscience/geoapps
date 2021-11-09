@@ -159,7 +159,7 @@ class Params:
         if "workspace" in params_dict.keys():
             if params_dict["workspace"] is not None:
                 setattr(self, "workspace", params_dict["workspace"])
-            
+
         for key, value in params_dict.items():
 
             if " " in key:
