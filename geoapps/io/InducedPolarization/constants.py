@@ -77,7 +77,7 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
     "initial_beta_ratio": 1e1,
-    "initial_beta": 0.0,
+    "initial_beta": None,
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
     "alpha_x": 1.0,

@@ -14,11 +14,14 @@ import numpy as np
 import pytest
 from geoh5py.workspace import Workspace
 
-from geoapps.io import InputFile
+from geoapps.io import InputFile, Params
 from geoapps.io.Gravity import GravityParams
+from geoapps.io.MagneticScalar import MagneticScalarParams
 from geoapps.io.MagneticVector import MagneticVectorParams
 from geoapps.io.MagneticVector.constants import default_ui_json as MVI_defaults
 from geoapps.io.MagneticVector.constants import validations as MVI_validations
+from geoapps.io.DirectCurrent import DirectCurrentParams
+from geoapps.io.InducedPolarization import InducedPolarizationParams
 from geoapps.io.Octree import OctreeParams
 from geoapps.io.PeakFinder import PeakFinderParams
 from geoapps.utils.testing import Geoh5Tester
@@ -170,8 +173,11 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
 
 def test_params_initialize():
     for params in [
+        MagneticScalarParams(),
         MagneticVectorParams(),
         GravityParams(),
+        DirectCurrentParams(),
+        InducedPolarizationParams(),
         OctreeParams(),
         PeakFinderParams(),
     ]:
@@ -190,6 +196,44 @@ def test_params_initialize():
     assert params.vertical_padding == 500
     params = PeakFinderParams(center=1000, validate=True, workspace=workspace)
     assert params.center == 1000
+
+
+def test_default_input_file(tmp_path):
+
+    for params_class in [
+        MagneticScalarParams,
+        MagneticVectorParams,
+        GravityParams,
+        DirectCurrentParams,
+        InducedPolarizationParams,
+    ]:
+        filename = os.path.join(tmp_path, "test.ui.json")
+        params = params_class()
+        params.write_input_file(name=filename, default=True)
+        ifile = InputFile(filename)
+
+        check = []
+        for k, v in ifile.data.items():
+            if " " in k:
+                continue
+            check.append(v == params.defaults[k])
+        assert all(check)
+
+        params2 = params_class.from_path(filename)
+        check = []
+        for k, v in params2.to_dict(ui_json_format=False).items():
+            if " " in k:
+                continue
+            check.append(v == ifile.data[k])
+        assert all(check)
+
+        params3 = params_class.from_input_file(ifile)
+        check = []
+        for k, v in params3.to_dict(ui_json_format=False).items():
+            if " " in k:
+                continue
+            check.append(v == ifile.data[k])
+        assert all(check)
 
 
 def test_update(tmp_path):
