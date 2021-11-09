@@ -154,9 +154,11 @@ class Params:
         """Update parameters with dictionary contents."""
 
         if "geoh5" in params_dict.keys():
-            setattr(self, "workspace", params_dict["geoh5"])
+            if params_dict["geoh5"] is not None:
+                setattr(self, "workspace", params_dict["geoh5"])
         if "workspace" in params_dict.keys():
-            setattr(self, "workspace", params_dict["workspace"])
+            if params_dict["workspace"] is not None:
+                setattr(self, "workspace", params_dict["workspace"])
             
         for key, value in params_dict.items():
 
