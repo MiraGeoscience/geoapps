@@ -212,6 +212,7 @@ def test_default_input_file(tmp_path):
         params.write_input_file(name=filename, default=True)
         ifile = InputFile(filename)
 
+        # check that reads back into input file with defaults
         check = []
         for k, v in ifile.data.items():
             if " " in k:
@@ -221,6 +222,7 @@ def test_default_input_file(tmp_path):
             check.append(v == params.defaults[k])
         assert all(check)
 
+        # check that params constructed from_path is defaulted
         params2 = params_class.from_path(filename)
         check = []
         for k, v in params2.to_dict(ui_json_format=False).items():
@@ -229,6 +231,7 @@ def test_default_input_file(tmp_path):
             check.append(v == ifile.data[k])
         assert all(check)
 
+        # check that params constructed from_input_file is defaulted
         params3 = params_class.from_input_file(ifile)
         check = []
         for k, v in params3.to_dict(ui_json_format=False).items():
