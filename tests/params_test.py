@@ -231,7 +231,7 @@ def test_default_input_file(tmp_path):
             check.append(v == ifile.data[k])
         assert all(check)
 
-        # check that params constructed from_input_file is defaulted
+        # check that params constructed from_input_fil is defaulted
         params3 = params_class.from_input_file(ifile)
         check = []
         for k, v in params3.to_dict(ui_json_format=False).items():
