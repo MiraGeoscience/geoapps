@@ -68,7 +68,9 @@ class DirectivesFactory:
             coolEps_q=self.params.coolEps_q,
             coolEpsFact=self.params.coolEpsFact,
             beta_search=self.params.beta_search,
-            chifact_start=self.params.starting_chi_factor if has_chi_start else self.params.chi_factor,
+            chifact_start=self.params.starting_chi_factor
+            if has_chi_start
+            else self.params.chi_factor,
             chifact_target=self.params.chi_factor,
         )
 

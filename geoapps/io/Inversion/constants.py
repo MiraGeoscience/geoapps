@@ -396,7 +396,7 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "value": 1.0,
-        "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin."
+        "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin.",
     },
     "max_iterations": {
         "min": 0,

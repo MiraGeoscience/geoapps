@@ -409,5 +409,3 @@ class Params:
             self._free_params_dict = self.input_file._free_params_dict
 
         return self._free_params_dict
-
-
