@@ -217,14 +217,21 @@ class InversionDriver:
     def start_inversion_message(self):
 
         # SimPEG reports half phi_d, so we scale to match
+        has_chi_start = self.params.starting_chi_factor is not None
+        chi_start = self.params.starting_chi_factor if has_chi_start else self.params.chi_factor
+        print(f"Starting {self.params.inversion_style} inversion...")
         print(
-            "Start Inversion: "
-            + self.params.inversion_style
-            + "\nTarget Misfit: %.2e (%.0f data with chifact = %g) / 2"
-            % (
+            "Target Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
                 0.5 * self.params.chi_factor * len(self.survey.std),
                 len(self.survey.std),
-                self.params.chi_factor,
+                self.params.chi_factor
+            )
+        )
+        print(
+            "IRLS Start Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
+                0.5 * chi_start * len(self.survey.std),
+                len(self.survey.std),
+                chi_start
             )
         )
 
