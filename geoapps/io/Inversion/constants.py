@@ -390,6 +390,14 @@ default_ui_json = {
         "label": "Perform beta search",
         "value": False,
     },
+    "starting_chi_factor": {
+        "group": "Update IRLS directive",
+        "label": "IRLS start chi factor",
+        "optional": True,
+        "enabled": False,
+        "value": 1.0,
+        "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin."
+    },
     "max_iterations": {
         "min": 0,
         "group": "Optimization",
@@ -796,6 +804,9 @@ validations = {
     },
     "beta_search": {
         "types": [bool],
+    },
+    "starting_chi_factor": {
+        "types": [int, float],
     },
     "max_iterations": {
         "types": [int, float],
