@@ -91,6 +91,73 @@ class Params:
         if kwargs:
             self._handle_kwargs(kwargs, validate)
 
+    def _handle_kwargs(self, kwargs, validate):
+        """Updates attributes with kwargs, validates and attaches input file attributes."""
+
+        for key, value in kwargs.items():
+            if key in self.default_ui_json and isinstance(
+                self.default_ui_json[key], dict
+            ):
+                self.default_ui_json[key]["visible"] = True
+                if value is not None:
+                    self.default_ui_json[key]["enabled"] = True
+
+        self.update(kwargs, validate=False)
+
+        if validate:
+            ifile = InputFile.from_dict(self.to_dict(), self.validator)
+        else:
+            ifile = InputFile.from_dict(self.to_dict())
+
+        if "workspace" in kwargs:
+            ifile.data["workspace"] = kwargs["workspace"]
+            ifile.workspace = kwargs["workspace"]
+        if "geoh5" in kwargs:
+            ifile.data["workspace"] = kwargs["geoh5"]
+            ifile.workspace = kwargs["geoh5"]
+
+        self._input_file = ifile
+        cls = self.from_input_file(ifile)
+        self.__dict__.update(cls.__dict__)
+
+    def update(self, params_dict: Dict[str, Any], default: bool = False, validate=True):
+        """Update parameters with dictionary contents."""
+
+        if "geoh5" in params_dict.keys():
+            if params_dict["geoh5"] is not None:
+                setattr(self, "workspace", params_dict["geoh5"])
+        if "workspace" in params_dict.keys():
+            if params_dict["workspace"] is not None:
+                setattr(self, "workspace", params_dict["workspace"])
+
+        for key, value in params_dict.items():
+
+            if " " in key:
+                continue
+
+            if not validate:
+                key = f"_{key}"
+
+            if getattr(self, key, "invalid_param") == "invalid_param" and self._verbose:
+                warnings.warn(
+                    f"Skipping dictionary entry: {key}.  Not a valid attribute."
+                )
+                continue
+            else:
+                if isinstance(value, dict):
+                    field = "value"
+                    if default:
+                        field = "default"
+                    elif "isValue" in value.keys():
+                        if not value["isValue"]:
+                            field = "property"
+                    setattr(self, key, value[field])
+                else:
+                    if isinstance(value, Entity):
+                        setattr(self, key, value.uid)
+                    else:
+                        setattr(self, key, value)
+
     @classmethod
     def from_input_file(
         cls, input_file: InputFile, workspace: Workspace = None
@@ -149,44 +216,6 @@ class Params:
     def validations(self):
         """Encoded parameter validator type and associated validations."""
         return self._validations
-
-    def update(self, params_dict: Dict[str, Any], default: bool = False, validate=True):
-        """Update parameters with dictionary contents."""
-
-        if "geoh5" in params_dict.keys():
-            if params_dict["geoh5"] is not None:
-                setattr(self, "workspace", params_dict["geoh5"])
-        if "workspace" in params_dict.keys():
-            if params_dict["workspace"] is not None:
-                setattr(self, "workspace", params_dict["workspace"])
-
-        for key, value in params_dict.items():
-
-            if " " in key:
-                continue
-
-            if not validate:
-                key = f"_{key}"
-
-            if getattr(self, key, "invalid_param") == "invalid_param" and self._verbose:
-                warnings.warn(
-                    f"Skipping dictionary entry: {key}.  Not a valid attribute."
-                )
-                continue
-            else:
-                if isinstance(value, dict):
-                    field = "value"
-                    if default:
-                        field = "default"
-                    elif "isValue" in value.keys():
-                        if not value["isValue"]:
-                            field = "property"
-                    setattr(self, key, value[field])
-                else:
-                    if isinstance(value, Entity):
-                        setattr(self, key, value.uid)
-                    else:
-                        setattr(self, key, value)
 
     def to_dict(self, ui_json: dict = None, ui_json_format=True):
         """Return params and values dictionary."""
@@ -381,31 +410,4 @@ class Params:
 
         return self._free_params_dict
 
-    def _handle_kwargs(self, kwargs, validate):
-        """Updates attributes with kwargs, validates and attaches input file attributes."""
 
-        for key, value in kwargs.items():
-            if key in self.default_ui_json and isinstance(
-                self.default_ui_json[key], dict
-            ):
-                self.default_ui_json[key]["visible"] = True
-                if value is not None:
-                    self.default_ui_json[key]["enabled"] = True
-
-        self.update(kwargs, validate=False)
-
-        if validate:
-            ifile = InputFile.from_dict(self.to_dict(), self.validator)
-        else:
-            ifile = InputFile.from_dict(self.to_dict())
-
-        if "workspace" in kwargs:
-            ifile.data["workspace"] = kwargs["workspace"]
-            ifile.workspace = kwargs["workspace"]
-        if "geoh5" in kwargs:
-            ifile.data["workspace"] = kwargs["geoh5"]
-            ifile.workspace = kwargs["geoh5"]
-
-        self._input_file = ifile
-        cls = self.from_input_file(ifile)
-        self.__dict__.update(cls.__dict__)
