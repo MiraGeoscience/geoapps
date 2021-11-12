@@ -31,7 +31,7 @@ class ContourValues(PlotSelection2D):
     }
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self._contours = Text(
             value="", description="Contours", disabled=False, continuous_update=False
         )

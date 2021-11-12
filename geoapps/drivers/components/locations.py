@@ -11,13 +11,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from uuid import UUID
     from geoh5py.workspace import Workspace
     from geoapps.io.params import Params
 
+from uuid import UUID
+
 import numpy as np
-from geoh5py.objects import Grid2D
+from geoh5py.objects import Grid2D, Points, PotentialElectrode
 from scipy.interpolate import LinearNDInterpolator
+from scipy.spatial import cKDTree
 
 from geoapps.utils import rotate_xy
 
@@ -65,12 +67,15 @@ class InversionLocations:
         self.angle: float = None
         self.is_rotated: bool = False
         self.locations: np.ndarray = None
+        self.has_pseudo: bool = False
+        self.pseudo_locations: np.ndarray = None
 
-        mesh = workspace.get_entity(params.mesh)[0]
-        if mesh.rotation is not None:
-            self.origin = np.asarray(mesh.origin.tolist())
-            self.angle = -1 * mesh.rotation[0]
-            self.is_rotated = True
+        if params.mesh is not None:
+            mesh = workspace.get_entity(params.mesh)[0]
+            if mesh.rotation is not None:
+                self.origin = np.asarray(mesh.origin.tolist())
+                self.angle = -1 * mesh.rotation
+                self.is_rotated = True if np.abs(self.angle) != 0 else False
 
     @property
     def mask(self):
@@ -88,7 +93,26 @@ class InversionLocations:
             raise (ValueError(msg))
         self._mask = v
 
-    def get_locations(self, uid: UUID) -> np.ndarray:
+    def create_entity(self, name, locs: np.ndarray):
+        """Create Data group and Points object with observed data."""
+
+        if self.is_rotated:
+            locs[:, :2] = rotate_xy(
+                locs[:, :2],
+                self.origin,
+                -self.angle,
+            )
+
+        entity = Points.create(
+            self.workspace,
+            name=name,
+            vertices=locs,
+            parent=self.params.ga_group,
+        )
+
+        return entity
+
+    def get_locations(self, obj) -> np.ndarray:
         """
         Returns locations of data object centroids or vertices.
 
@@ -99,7 +123,10 @@ class InversionLocations:
 
         """
 
-        data_object = self.workspace.get_entity(uid)[0]
+        if isinstance(obj, UUID):
+            data_object = self.workspace.get_entity(obj)[0]
+        else:
+            data_object = obj
 
         if isinstance(data_object, Grid2D):
             locs = data_object.centroids
@@ -113,7 +140,7 @@ class InversionLocations:
 
         return locs
 
-    def filter(self, a: dict[str, np.ndarray] | np.ndarray):
+    def filter(self, a: dict[str, np.ndarray] | np.ndarray, mask=None):
         """
         Apply accumulated self.mask to array, or dict of arrays.
 
@@ -124,10 +151,21 @@ class InversionLocations:
         :return: Filtered data.
 
         """
+
+        mask = self.mask if mask is None else mask
+
         if isinstance(a, dict):
-            return {k: v[self.mask] for k, v in a.items()}
+
+            if all([v is None for v in a.values()]):
+                return a
+            else:
+                return {k: v[mask] for k, v in a.items()}
         else:
-            return a[self.mask]
+
+            if a is None:
+                return None
+            else:
+                return a[mask]
 
     def rotate(self, locs: np.ndarray) -> np.ndarray:
         """
@@ -138,13 +176,27 @@ class InversionLocations:
 
         :param locs: Array of xyz locations.
         """
+
+        if locs is None:
+            return None
+
         xy = rotate_xy(locs[:, :2], self.origin, self.angle)
         return np.c_[xy, locs[:, 2]]
 
     def set_z_from_topo(self, locs: np.ndarray):
         """interpolate locations z data from topography."""
 
+        if locs is None:
+            return None
+
         topo = self.get_locations(self.params.topography_object)
+        if self.params.topography is not None:
+            if isinstance(self.params.topography, UUID):
+                z = self.workspace.get_entity(self.params.topography)[0].values
+            else:
+                z = np.ones_like(locs) * self.params.topography
+
+            topo[:, 2] = z
 
         xyz = locs.copy()
         topo_interpolator = LinearNDInterpolator(topo[:, :2], topo[:, 2])

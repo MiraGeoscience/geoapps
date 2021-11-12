@@ -38,7 +38,7 @@ class CoordinateTransformation(ObjectDataSelection):
 
     def __init__(self, **kwargs):
 
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
 
         self.code_out.observe(self.set_wkt_out, names="value")
         self.code_in.observe(self.set_wkt_in, names="value")
@@ -204,25 +204,6 @@ class CoordinateTransformation(ObjectDataSelection):
         if getattr(self, "_wkt_out", None) is None:
             self._wkt_out = Textarea(description="<=> WKT", layout=Layout(width="50%"))
         return self._wkt_out
-
-    @property
-    def workspace(self):
-        """
-        Target geoh5py workspace
-        """
-        if (
-            getattr(self, "_workspace", None) is None
-            and getattr(self, "_h5file", None) is not None
-        ):
-            self.workspace = Workspace(self.h5file)
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
-        self.update_objects_list()
 
     def set_wkt_in(self, _):
         datasetSRS = osr.SpatialReference()

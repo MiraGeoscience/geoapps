@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from geoapps.io import Params
 
 import numpy as np
-from geoh5py.objects import Grid2D
+from geoh5py.objects import Grid2D, PotentialElectrode
 
 
 class InversionWindow:
@@ -65,6 +65,11 @@ class InversionWindow:
             data_object = self.workspace.get_entity(self.params.data_object)[0]
             if isinstance(data_object, Grid2D):
                 locs = data_object.centroids
+            elif isinstance(data_object, PotentialElectrode):
+                locs = np.vstack(
+                    [data_object.vertices, data_object.current_electrodes.vertices]
+                )
+                locs = np.unique(locs, axis=0)
             else:
                 locs = data_object.vertices
 
@@ -84,8 +89,13 @@ class InversionWindow:
 
     def is_empty(self) -> bool:
         """Check if window data is empty."""
-        center_x_null = True if self.window["center"][0] is None else False
-        center_y_null = True if self.window["center"][1] is None else False
-        size_x_null = True if self.window["size"][0] is None else False
-        size_y_null = True if self.window["size"][1] is None else False
-        return center_x_null & center_y_null & size_x_null & size_y_null
+        if self.window is None:
+            return True
+        elif (self.window["size"][0] == 0) & (self.window["size"][1] == 0):
+            return True
+        else:
+            center_x_null = True if self.window["center"][0] is None else False
+            center_y_null = True if self.window["center"][1] is None else False
+            size_x_null = True if self.window["size"][0] is None else False
+            size_y_null = True if self.window["size"][1] is None else False
+            return center_x_null & center_y_null & size_x_null & size_y_null

@@ -10,54 +10,64 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
-from geoapps.io.Octree import (
-    OctreeValidator,
-    default_ui_json,
-    required_parameters,
-    validations,
-)
-
 from ..input_file import InputFile
 from ..params import Params
+from ..validators import InputFreeformValidator
+from . import default_ui_json, defaults, required_parameters, validations
 
 
 class OctreeParams(Params):
 
-    _default_ui_json = default_ui_json
+    _required_parameters = required_parameters
+    _validations = validations
+    param_names = list(default_ui_json.keys())
+    _free_param_keys = ["object", "levels", "type", "distance"]
+    _free_param_identifier = "refinement"
 
-    def __init__(self, **kwargs):
+    def __init__(self, validate=True, **kwargs):
 
-        self.validations: dict[str, Any] = validations
-        self.validator: OctreeValidator = OctreeValidator(
-            required_parameters, validations
+        self.validator: InputFreeformValidator = InputFreeformValidator(
+            required_parameters, validations, free_params_keys=self._free_param_keys
         )
-        self.geoh5 = None
-        self.objects = None
-        self.u_cell_size = None
-        self.v_cell_size = None
-        self.w_cell_size = None
-        self.horizontal_padding = None
-        self.vertical_padding = None
-        self.depth_core = None
-        self.ga_group_name = None
-        self.monitoring_directory = None
-        self.workspace_geoh5 = None
-        self.run_command = None
-        self.run_command_boolean = None
-        self.conda_environment = None
-        self.conda_environment_boolean = None
-        self._refinements = None
-        self._input_file = InputFile()
+        self._title = None
+        self._objects = None
+        self._u_cell_size = None
+        self._v_cell_size = None
+        self._w_cell_size = None
+        self._horizontal_padding = None
+        self._vertical_padding = None
+        self._depth_core = None
+        self._ga_group_name = None
 
-        super().__init__(**kwargs)
+        self.defaults = defaults
+        self.default_ui_json = default_ui_json
 
-    def _set_defaults(self) -> None:
-        """Wraps Params._set_defaults"""
-        return super()._set_defaults(self.default_ui_json)
+        super().__init__(validate, **kwargs)
+
+        free_params_dict = {}
+        for k, v in kwargs.items():
+            if self._free_param_identifier in k.lower():
+                for param in self._free_param_keys:
+                    if param not in v.keys():
+                        raise ValueError(
+                            f"Provided free parameter {k} should have a key argument {param}"
+                        )
+                free_params_dict[k] = v
+
+        if any(free_params_dict):
+            self._free_params_dict = free_params_dict
 
     def default(self, param) -> Any:
         """Wraps Params.default."""
         return super().default(self.default_ui_json, param)
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, val):
+        self.setter_validator("title", val)
 
     @property
     def objects(self):
@@ -65,7 +75,9 @@ class OctreeParams(Params):
 
     @objects.setter
     def objects(self, val):
-        self.setter_validator("objects", val, fun=lambda x: UUID(x))
+        self.setter_validator(
+            "objects", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
+        )
 
     @property
     def u_cell_size(self):
@@ -116,12 +128,9 @@ class OctreeParams(Params):
         self.setter_validator("depth_core", val)
 
     @property
-    def refinements(self):
-        if getattr(self, "_refinements", None) is None:
-            self._refinements = self.validator.refinements
+    def ga_group_name(self):
+        return self._ga_group_name
 
-        return self._refinements
-
-    def _init_params(self, inputfile: InputFile) -> None:
-        """Wraps Params._init_params."""
-        super()._init_params(inputfile, required_parameters, validations)
+    @ga_group_name.setter
+    def ga_group_name(self, val):
+        self.setter_validator("ga_group_name", val)

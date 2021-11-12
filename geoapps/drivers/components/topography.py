@@ -75,6 +75,8 @@ class InversionTopography(InversionLocations):
         if self.is_rotated:
             self.locations = super().rotate(self.locations)
 
+        self.entity = self.write_entity()
+
     def active_cells(self, mesh: InversionMesh) -> np.ndarray:
         """
         Return mask that restricts models to set of earth cells.
@@ -83,7 +85,14 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
-        active_cells = active_from_xyz(mesh, self.locations, grid_reference="N")
+        active_cells = active_from_xyz(mesh.mesh, self.locations, grid_reference="N")
+        mesh.entity.add_data(
+            {
+                "active_cells": {
+                    "values": active_cells[mesh.octree_permutation].astype("float64")
+                }
+            }
+        )
 
         return active_cells
 
@@ -106,3 +115,10 @@ class InversionTopography(InversionLocations):
                 locs[:, 2] = elev
 
         return locs
+
+    def write_entity(self):
+        """Write out the survey to geoh5"""
+
+        entity = super().create_entity("Topo", self.locations)
+
+        return entity

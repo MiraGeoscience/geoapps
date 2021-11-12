@@ -27,7 +27,7 @@ class Calculator(ObjectDataSelection):
     _select_multiple = True
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.var = {}
         self._channel = Text(description="Name: ")
         self._equation = Textarea(layout=Layout(width="75%"))
@@ -75,29 +75,6 @@ class Calculator(ObjectDataSelection):
             self._use = Button(description=">> Add >>")
 
         return self._use
-
-    @property
-    def workspace(self):
-        """
-        geoh5py.workspace.Workspace
-        Target geoh5py workspace
-        """
-        if (
-            getattr(self, "_workspace", None) is None
-            and getattr(self, "_h5file", None) is not None
-        ):
-            self.workspace = Workspace(self.h5file)
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
-        self._workspace = workspace
-        self._h5file = workspace.h5file
-        self.update_objects_list()
-        # self.store._workspace = self.workspace
-        # self.store.objects = self.objects
-        # self.store.update_data_list(None)
 
     def click_use(self, _):
         """

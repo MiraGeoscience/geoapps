@@ -18,22 +18,61 @@ from geoh5py.workspace import Workspace
 from ...utils.geophysical_systems import parameters
 
 required_parameters = []
-defaults = {}
 
+defaults = {
+    "title": "Peak Finder Parameters",
+    "geoh5": None,
+    "tem_checkbox": False,
+    "objects": None,
+    "data": None,
+    "flip_sign": False,
+    "line_field": None,
+    "system": None,
+    "smoothing": 6,
+    "min_amplitude": 1,
+    "min_value": None,
+    "min_width": 100,
+    "max_migration": 25,
+    "min_channels": 1,
+    "ga_group_name": "PeakFinder",
+    "structural_markers": False,
+    "line_id": None,
+    "group_auto": True,
+    "center": None,
+    "width": None,
+    "Template Data": None,
+    "Template Color": None,
+    "run_command": ("geoapps.processing.peak_finder"),
+    "run_command_boolean": None,
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": None,
+    "template_data": None,
+    "template_color": None,
+    "workspace": None,
+    "monitoring_directory": None,
+}
 
 default_ui_json = {
     "title": "Peak Finder Parameters",
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": None,
+    "tem_checkbox": {
+        "default": False,
+        "main": True,
+        "label": "TEM type",
+        "value": False,
+    },
     "objects": {
+        "default": None,
         "main": True,
         "group": "Data",
         "label": "Object",
         "meshType": [
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
         ],
-        "value": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+        "value": None,
     },
     "data": {
+        "default": None,
         "association": "Vertex",
         "dataType": "Float",
         "group": "Data",
@@ -41,73 +80,78 @@ default_ui_json = {
         "dataGroupType": "Multi-element",
         "label": "Channels",
         "parent": "objects",
-        "value": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}",
+        "value": None,
     },
     "flip_sign": {
+        "default": False,
         "main": True,
         "group": "Data",
         "label": "Flip sign",
         "value": False,
     },
     "line_field": {
+        "default": None,
         "association": "Vertex",
         "dataType": "Float",
         "group": "Data",
         "main": True,
         "label": "Line Field",
         "parent": "objects",
-        "value": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}",
-    },
-    "tem_checkbox": {
-        "main": True,
-        "label": "TEM type",
-        "value": True,
+        "value": None,
     },
     "system": {
+        "default": None,
         "choiceList": list(parameters().keys()),
         "main": True,
         "label": "TEM system",
         "dependency": "tem_checkbox",
         "dependencyType": "enabled",
-        "value": "",
+        "value": None,
     },
     "smoothing": {
+        "default": 6,
         "group": "Detection Parameters",
         "label": "Smoothing window",
         "main": True,
         "value": 6,
     },
     "min_amplitude": {
+        "default": 1,
         "group": "Detection Parameters",
         "label": "Minimum Amplitude (%)",
         "value": 1,
         "main": True,
     },
     "min_value": {
+        "default": None,
         "group": "Detection Parameters",
         "label": "Minimum Value",
-        "value": "",
+        "value": None,
         "main": True,
     },
     "min_width": {
+        "default": 100,
         "group": "Detection Parameters",
         "label": "Minimum Width (m)",
         "value": 100,
         "main": True,
     },
     "max_migration": {
+        "default": 25,
         "group": "Detection Parameters",
         "label": "Maximum Peak Migration (m)",
         "value": 25,
         "main": True,
     },
     "min_channels": {
+        "default": 1,
         "group": "Detection Parameters",
         "label": "Minimum # Channels",
         "value": 1,
         "main": True,
     },
     "ga_group_name": {
+        "default": "PeakFinder",
         "visible": True,
         "enabled": True,
         "main": True,
@@ -116,31 +160,33 @@ default_ui_json = {
         "value": "PeakFinder",
     },
     "structural_markers": {
+        "default": False,
         "main": True,
         "group": "Python run preferences",
         "label": "Export all markers",
         "value": False,
     },
-    "line_id": 6073400.0,
+    "line_id": None,
     "group_auto": {
+        "default": True,
         "label": "Auto-group",
         "value": True,
     },
     "center": {
+        "default": None,
         "group": "Window",
         "label": "Window center",
-        "value": 4050,
-        "default": 4050,
+        "value": None,
         "visible": False,
     },
     "width": {
+        "default": None,
         "group": "Window",
         "label": "Window width",
-        "value": 1000,
-        "default": 1000,
+        "value": None,
         "visible": False,
     },
-    "Property Group Data": {
+    "Template Data": {
         "association": "Vertex",
         "dataType": "Float",
         "group": "Property Group",
@@ -149,22 +195,26 @@ default_ui_json = {
         "parent": "objects",
         "dependency": "group_auto",
         "dependencyType": "disabled",
-        "value": "",
+        "value": None,
     },
-    "Property Group Color": {
+    "Template Color": {
         "dataType": "Text",
         "group": "Property Group",
         "label": "Color",
         "dependency": "group_auto",
         "dependencyType": "disabled",
-        "value": "",
+        "value": None,
     },
     "run_command": ("geoapps.processing.peak_finder"),
+    "run_command_boolean": None,
     "conda_environment": "geoapps",
-    "monitoring_directory": "",
+    "conda_environment_boolean": None,
+    "template_data": None,
+    "template_color": None,
+    "workspace": None,
+    "monitoring_directory": None,
+    "plot_result": True,
 }
-
-required_parameters = []
 
 validations = {
     "title": {
@@ -172,6 +222,9 @@ validations = {
     },
     "geoh5": {
         "types": [str, Workspace],
+    },
+    "tem_checkbox": {
+        "types": [bool],
     },
     "objects": {
         "types": [str, UUID],
@@ -185,34 +238,14 @@ validations = {
     "flip_sign": {
         "types": [bool],
     },
-    "structural_markers": {
-        "types": [bool],
-    },
-    "group_auto": {
-        "types": [bool],
-    },
-    "property_group_data": {
-        "types": [str, UUID],
-        "reqs": [("objects")],
-        "property_groups": ["objects"],
-    },
-    "property_group_color": {
-        "types": [str],
-    },
-    "tem_checkbox": {
-        "types": [bool],
-    },
-    "system": {
-        "types": [str],
-        "values": list(parameters().keys()),
-    },
     "line_field": {
         "types": [str, UUID, int, float],
         "reqs": [("objects")],
         "uuid": ["objects"],
     },
-    "line_id": {
-        "types": [int, float],
+    "system": {
+        "types": [str],
+        "values": list(parameters().keys()) + [None],
     },
     "smoothing": {
         "types": [int, float],
@@ -232,20 +265,23 @@ validations = {
     "min_channels": {
         "types": [int, float],
     },
+    "ga_group_name": {
+        "types": [str],
+    },
+    "structural_markers": {
+        "types": [bool],
+    },
+    "line_id": {
+        "types": [int, float, str],
+    },
+    "group_auto": {
+        "types": [bool],
+    },
     "center": {
         "types": [int, float],
     },
     "width": {
         "types": [int, float],
-    },
-    "ga_group_name": {
-        "types": [str],
-    },
-    "monitoring_directory": {
-        "types": [str],
-    },
-    "workspace_geoh5": {
-        "types": [str, Workspace],
     },
     "run_command": {
         "types": [str],
@@ -259,7 +295,35 @@ validations = {
     "conda_environment_boolean": {
         "types": [bool],
     },
+    "template_data": {
+        "types": [str, UUID],
+        "reqs": [("objects")],
+        "property_groups": ["objects"],
+    },
+    "template_color": {
+        "types": [str],
+    },
     "workspace": {
         "types": [str, Workspace],
     },
+    "monitoring_directory": {
+        "types": [str],
+    },
+    "plot_result": {
+        "types": [bool],
+    },
+    "workspace_geoh5": {
+        "types": [str],
+    },
+}
+
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+    "data": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}",
+    "line_field": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}",
+    "system": "VTEM (2007)",
+    "line_id": 6073400.0,
+    "center": 4050,
+    "width": 1000,
 }

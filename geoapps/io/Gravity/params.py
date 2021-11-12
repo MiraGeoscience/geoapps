@@ -7,148 +7,84 @@
 
 from __future__ import annotations
 
-from typing import Any
 from uuid import UUID
 
-from ..input_file import InputFile
-from ..params import Params
+from geoapps.io.Inversion import InversionParams
+
 from ..validators import InputValidator
-from .constants import default_ui_json, required_parameters, validations
+from .constants import (
+    default_ui_json,
+    forward_defaults,
+    inversion_defaults,
+    required_parameters,
+    validations,
+)
 
 
-class GravityParams(Params):
+class GravityParams(InversionParams):
 
-    _default_ui_json = default_ui_json
+    _required_parameters = required_parameters
+    _validations = validations
+    forward_defaults = forward_defaults
+    inversion_defaults = inversion_defaults
+    _directive_list = [
+        "UpdateSensitivityWeights",
+        "Update_IRLS",
+        "BetaEstimate_ByEig",
+        "UpdatePreconditioner",
+        "SaveIterationsGeoH5",
+    ]
 
     def __init__(self, **kwargs):
 
-        self.validations: dict[str, Any] = validations
         self.validator: InputValidator = InputValidator(
             required_parameters, validations
         )
-        self.associations: dict[str | UUID, str | UUID] = None
-        self.forward_only: bool = None
-        self.topography_object: UUID = None
-        self.topography = None
-        self.data_object = None
+        self.inversion_type = "gravity"
+        self.gz_channel_bool = None
         self.gz_channel = None
         self.gz_uncertainty = None
-        self.starting_model_object = None
-        self.starting_model = None
-        self.tile_spatial = None
-        self.z_from_topo = None
-        self.receivers_radar_drape = None
-        self.receivers_offset_x = None
-        self.receivers_offset_y = None
-        self.receivers_offset_z = None
-        self.gps_receivers_offset = None
-        self.ignore_values = None
-        self.resolution = None
-        self.detrend_data = None
-        self.detrend_order = None
-        self.detrend_type = None
-        self.max_chunk_size = None
-        self.chunk_by_rows = None
-        self.output_tile_files = None
-        self.mesh = None
-        self.mesh_from_params = None
-        self.core_cell_size_x = None
-        self.core_cell_size_y = None
-        self.core_cell_size_z = None
-        self.octree_levels_topo = None
-        self.octree_levels_obs = None
-        self.octree_levels_padding = None
-        self.depth_core = None
-        self.max_distance = None
-        self.padding_distance_x = None
-        self.padding_distance_y = None
-        self.padding_distance_z = None
-        self.window_center_x = None
-        self.window_center_y = None
-        self.window_width = None
-        self.window_height = None
-        self.inversion_style = None
-        self.chi_factor = None
-        self.max_iterations = None
-        self.max_cg_iterations = None
-        self.max_global_iterations = None
-        self.initial_beta = None
-        self.initial_beta_ratio = None
-        self.tol_cg = None
-        self.alpha_s = None
-        self.alpha_x = None
-        self.alpha_y = None
-        self.alpha_z = None
-        self.smallness_norm = None
-        self.x_norm = None
-        self.y_norm = None
-        self.z_norm = None
-        self.reference_model_object = None
-        self.reference_model = None
-        self.gradient_type = None
-        self.lower_bound = None
-        self.upper_bound = None
-        self.parallelized = None
-        self.n_cpu = None
-        self.max_ram = None
-        self.inversion_type = None
+        self.guv_channel_bool = None
+        self.guv_channel = None
+        self.guv_uncertainty = None
+        self.gxy_channel_bool = None
+        self.gxy_channel = None
+        self.gxy_uncertainty = None
+        self.gxx_channel_bool = None
+        self.gxx_channel = None
+        self.gxx_uncertainty = None
+        self.gyy_channel_bool = None
+        self.gyy_channel = None
+        self.gyy_uncertainty = None
+        self.gzz_channel_bool = None
+        self.gzz_channel = None
+        self.gzz_uncertainty = None
+        self.gxz_channel_bool = None
+        self.gxz_channel = None
+        self.gxz_uncertainty = None
+        self.gyz_channel_bool = None
+        self.gyz_channel = None
+        self.gyz_uncertainty = None
+        self.gx_channel_bool = None
+        self.gx_channel = None
+        self.gx_uncertainty = None
+        self.gy_channel_bool = None
+        self.gy_channel = None
+        self.gy_uncertainty = None
         self.out_group = None
-        self.no_data_value = None
-        self._input_file = InputFile()
+        self.defaults = inversion_defaults
+        self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
+        self.param_names = list(self.default_ui_json.keys())
 
         super().__init__(**kwargs)
 
-    def _set_defaults(self) -> None:
-        """Wraps Params._set_defaults"""
-        return super()._set_defaults(self.default_ui_json)
-
-    def default(self, param) -> Any:
-        """Wraps Params.default."""
-        return super().default(self.default_ui_json, param)
-
     def components(self) -> list[str]:
-        """Retrieve component names used to index channel, uncertainty data."""
-        return [k.split("_")[0] for k in self.active_set() if "channel" in k]
-
-    def uncertainty(self, component: str) -> float:
-        """Returns uncertainty for chosen data component."""
-        return self.__getattribute__("_".join([component, "uncertainty"]))
-
-    def channel(self, component: str) -> UUID:
-        """Returns channel uuid for chosen data component."""
-        return self.__getattribute__("_".join([component, "channel"]))
-
-    def window(self) -> dict[str, float]:
-        """Returns window dictionary"""
-        win = {
-            "center_x": self.window_center_x,
-            "center_y": self.window_center_y,
-            "width": self.window_width,
-            "height": self.window_height,
-            "center": [self.window_center_x, self.window_center_y],
-            "size": [self.window_width, self.window_height],
-        }
-        return win if any([v is not None for v in win.values()]) else None
-
-    def offset(self) -> tuple[list[float], UUID]:
-        """Returns offset components as list and drape data."""
-        offsets = [
-            self.receivers_offset_x,
-            self.receivers_offset_y,
-            self.receivers_offset_z,
-        ]
-        is_offset = any([(k != 0) for k in offsets])
-        offsets = offsets if is_offset else None
-        return offsets, self.receivers_radar_drape
-
-    def model_norms(self) -> list[float]:
-        """Returns model norm components as a list."""
-        return [
-            self.smallness_norm,
-            self.x_norm,
-            self.y_norm,
-            self.z_norm,
-        ]
+        """Retrieve component names used to index channel and uncertainty data."""
+        comps = super().components()
+        if self.forward_only:
+            if len(comps) == 0:
+                comps = ["gz"]
+        return comps
 
     @property
     def inversion_type(self):
@@ -166,64 +102,19 @@ class GravityParams(Params):
         self._inversion_type = val
 
     @property
-    def forward_only(self):
-        return self._forward_only
+    def gz_channel_bool(self):
+        return self._gz_channel_bool
 
-    @forward_only.setter
-    def forward_only(self, val):
+    @gz_channel_bool.setter
+    def gz_channel_bool(self, val):
         if val is None:
-            self._forward_only = val
+            self._gz_channel_bool = val
             return
-        p = "forward_only"
+        p = "gz_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._forward_only = val
-
-    @property
-    def topography_object(self):
-        return self._topography_object
-
-    @topography_object.setter
-    def topography_object(self, val):
-        if val is None:
-            self._topography_object = val
-            return
-        p = "topography_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._topography_object = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def topography(self):
-        return self._topography
-
-    @topography.setter
-    def topography(self, val):
-        if val is None:
-            self._topography = val
-            return
-        p = "topography"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._topography = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def data_object(self):
-        return self._data_object
-
-    @data_object.setter
-    def data_object(self, val):
-        if val is None:
-            self._data_object = val
-            return
-        p = "data_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._data_object = UUID(val) if isinstance(val, str) else val
+        self._gz_channel_bool = val
 
     @property
     def gz_channel(self):
@@ -256,905 +147,406 @@ class GravityParams(Params):
         self._gz_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
-    def starting_model_object(self):
-        return self._starting_model_object
+    def guv_channel_bool(self):
+        return self._guv_channel_bool
 
-    @starting_model_object.setter
-    def starting_model_object(self, val):
+    @guv_channel_bool.setter
+    def guv_channel_bool(self, val):
         if val is None:
-            self._starting_model_object = val
+            self._guv_channel_bool = val
             return
-        p = "starting_model_object"
+        p = "guv_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._starting_model_object = UUID(val) if isinstance(val, str) else val
+        self._guv_channel_bool = val
 
     @property
-    def starting_model(self):
-        return self._starting_model
+    def guv_channel(self):
+        return self._guv_channel
 
-    @starting_model.setter
-    def starting_model(self, val):
+    @guv_channel.setter
+    def guv_channel(self, val):
         if val is None:
-            self._starting_model = val
+            self._guv_channel = val
             return
-        p = "starting_model"
+        p = "guv_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._starting_model = UUID(val) if isinstance(val, str) else val
+        self._guv_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def tile_spatial(self):
-        return self._tile_spatial
+    def guv_uncertainty(self):
+        return self._guv_uncertainty
 
-    @tile_spatial.setter
-    def tile_spatial(self, val):
+    @guv_uncertainty.setter
+    def guv_uncertainty(self, val):
         if val is None:
-            self._tile_spatial = val
+            self._guv_uncertainty = val
             return
-        p = "tile_spatial"
+        p = "guv_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._tile_spatial = UUID(val) if isinstance(val, str) else val
+        self._guv_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
-    def z_from_topo(self):
-        return self._z_from_topo
+    def gxy_channel_bool(self):
+        return self._gxy_channel_bool
 
-    @z_from_topo.setter
-    def z_from_topo(self, val):
+    @gxy_channel_bool.setter
+    def gxy_channel_bool(self, val):
         if val is None:
-            self._z_from_topo = val
+            self._gxy_channel_bool = val
             return
-        p = "z_from_topo"
+        p = "gxy_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._z_from_topo = val
+        self._gxy_channel_bool = val
 
     @property
-    def receivers_radar_drape(self):
-        return self._receivers_radar_drape
+    def gxy_channel(self):
+        return self._gxy_channel
 
-    @receivers_radar_drape.setter
-    def receivers_radar_drape(self, val):
+    @gxy_channel.setter
+    def gxy_channel(self, val):
         if val is None:
-            self._receivers_radar_drape = val
+            self._gxy_channel = val
             return
-        p = "receivers_radar_drape"
+        p = "gxy_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._receivers_radar_drape = UUID(val) if isinstance(val, str) else val
+        self._gxy_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def receivers_offset_x(self):
-        return self._receivers_offset_x
+    def gxy_uncertainty(self):
+        return self._gxy_uncertainty
 
-    @receivers_offset_x.setter
-    def receivers_offset_x(self, val):
+    @gxy_uncertainty.setter
+    def gxy_uncertainty(self, val):
         if val is None:
-            self._receivers_offset_x = val
+            self._gxy_uncertainty = val
             return
-        p = "receivers_offset_x"
+        p = "gxy_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._receivers_offset_x = val
+        self._gxy_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
-    def receivers_offset_y(self):
-        return self._receivers_offset_y
+    def gxx_channel_bool(self):
+        return self._gxx_channel_bool
 
-    @receivers_offset_y.setter
-    def receivers_offset_y(self, val):
+    @gxx_channel_bool.setter
+    def gxx_channel_bool(self, val):
         if val is None:
-            self._receivers_offset_y = val
+            self._gxx_channel_bool = val
             return
-        p = "receivers_offset_y"
+        p = "gxx_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._receivers_offset_y = val
+        self._gxx_channel_bool = val
 
     @property
-    def receivers_offset_z(self):
-        return self._receivers_offset_z
+    def gxx_channel(self):
+        return self._gxx_channel
 
-    @receivers_offset_z.setter
-    def receivers_offset_z(self, val):
+    @gxx_channel.setter
+    def gxx_channel(self, val):
         if val is None:
-            self._receivers_offset_z = val
+            self._gxx_channel = val
             return
-        p = "receivers_offset_z"
+        p = "gxx_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._receivers_offset_z = val
+        self._gxx_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def gps_receivers_offset(self):
-        return self._gps_receivers_offset
+    def gxx_uncertainty(self):
+        return self._gxx_uncertainty
 
-    @gps_receivers_offset.setter
-    def gps_receivers_offset(self, val):
+    @gxx_uncertainty.setter
+    def gxx_uncertainty(self, val):
         if val is None:
-            self._gps_receivers_offset = val
+            self._gxx_uncertainty = val
             return
-        p = "gps_receivers_offset"
+        p = "gxx_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._gps_receivers_offset = UUID(val) if isinstance(val, str) else val
+        self._gxx_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
-    def ignore_values(self):
-        return self._ignore_values
+    def gyy_channel_bool(self):
+        return self._gyy_channel_bool
 
-    @ignore_values.setter
-    def ignore_values(self, val):
+    @gyy_channel_bool.setter
+    def gyy_channel_bool(self, val):
         if val is None:
-            self._ignore_values = val
+            self._gyy_channel_bool = val
             return
-        p = "ignore_values"
+        p = "gyy_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._ignore_values = val
+        self._gyy_channel_bool = val
 
     @property
-    def resolution(self):
-        return self._resolution
+    def gyy_channel(self):
+        return self._gyy_channel
 
-    @resolution.setter
-    def resolution(self, val):
+    @gyy_channel.setter
+    def gyy_channel(self, val):
         if val is None:
-            self._resolution = val
+            self._gyy_channel = val
             return
-        p = "resolution"
+        p = "gyy_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._resolution = val
+        self._gyy_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def detrend_data(self):
-        return self._detrend_data
+    def gyy_uncertainty(self):
+        return self._gyy_uncertainty
 
-    @detrend_data.setter
-    def detrend_data(self, val):
+    @gyy_uncertainty.setter
+    def gyy_uncertainty(self, val):
         if val is None:
-            self._detrend_data = val
+            self._gyy_uncertainty = val
             return
-        p = "detrend_data"
+        p = "gyy_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._detrend_data = val
+        self._gyy_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
-    def detrend_order(self):
-        return self._detrend_order
+    def gzz_channel_bool(self):
+        return self._gzz_channel_bool
 
-    @detrend_order.setter
-    def detrend_order(self, val):
+    @gzz_channel_bool.setter
+    def gzz_channel_bool(self, val):
         if val is None:
-            self._detrend_order = val
+            self._gzz_channel_bool = val
             return
-        p = "detrend_order"
+        p = "gzz_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._detrend_order = val
+        self._gzz_channel_bool = val
 
     @property
-    def detrend_type(self):
-        return self._detrend_type
+    def gzz_channel(self):
+        return self._gzz_channel
 
-    @detrend_type.setter
-    def detrend_type(self, val):
+    @gzz_channel.setter
+    def gzz_channel(self, val):
         if val is None:
-            self._detrend_type = val
+            self._gzz_channel = val
             return
-        p = "detrend_type"
+        p = "gzz_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._detrend_type = val
+        self._gzz_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def max_chunk_size(self):
-        return self._max_chunk_size
+    def gzz_uncertainty(self):
+        return self._gzz_uncertainty
 
-    @max_chunk_size.setter
-    def max_chunk_size(self, val):
+    @gzz_uncertainty.setter
+    def gzz_uncertainty(self, val):
         if val is None:
-            self._max_chunk_size = val
+            self._gzz_uncertainty = val
             return
-        p = "max_chunk_size"
+        p = "gzz_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._max_chunk_size = val
+        self._gzz_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
-    def chunk_by_rows(self):
-        return self._chunk_by_rows
+    def gxz_channel_bool(self):
+        return self._gxz_channel_bool
 
-    @chunk_by_rows.setter
-    def chunk_by_rows(self, val):
+    @gxz_channel_bool.setter
+    def gxz_channel_bool(self, val):
         if val is None:
-            self._chunk_by_rows = val
+            self._gxz_channel_bool = val
             return
-        p = "chunk_by_rows"
+        p = "gxz_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._chunk_by_rows = val
+        self._gxz_channel_bool = val
 
     @property
-    def output_tile_files(self):
-        return self._output_tile_files
+    def gxz_channel(self):
+        return self._gxz_channel
 
-    @output_tile_files.setter
-    def output_tile_files(self, val):
+    @gxz_channel.setter
+    def gxz_channel(self, val):
         if val is None:
-            self._output_tile_files = val
+            self._gxz_channel = val
             return
-        p = "output_tile_files"
+        p = "gxz_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._output_tile_files = val
+        self._gxz_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def mesh(self):
-        return self._mesh
+    def gxz_uncertainty(self):
+        return self._gxz_uncertainty
 
-    @mesh.setter
-    def mesh(self, val):
+    @gxz_uncertainty.setter
+    def gxz_uncertainty(self, val):
         if val is None:
-            self._mesh = val
+            self._gxz_uncertainty = val
             return
-        p = "mesh"
+        p = "gxz_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._mesh = UUID(val) if isinstance(val, str) else val
+        self._gxz_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
-    def mesh_from_params(self):
-        return self._mesh_from_params
+    def gyz_channel_bool(self):
+        return self._gyz_channel_bool
 
-    @mesh_from_params.setter
-    def mesh_from_params(self, val):
+    @gyz_channel_bool.setter
+    def gyz_channel_bool(self, val):
         if val is None:
-            self._mesh_from_params = val
+            self._gyz_channel_bool = val
             return
-        p = "mesh_from_params"
+        p = "gyz_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._mesh_from_params = val
+        self._gyz_channel_bool = val
 
     @property
-    def core_cell_size_x(self):
-        return self._core_cell_size_x
+    def gyz_channel(self):
+        return self._gyz_channel
 
-    @core_cell_size_x.setter
-    def core_cell_size_x(self, val):
+    @gyz_channel.setter
+    def gyz_channel(self, val):
         if val is None:
-            self._core_cell_size_x = val
+            self._gyz_channel = val
             return
-        p = "core_cell_size_x"
+        p = "gyz_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._core_cell_size_x = val
+        self._gyz_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def core_cell_size_y(self):
-        return self._core_cell_size_y
+    def gyz_uncertainty(self):
+        return self._gyz_uncertainty
 
-    @core_cell_size_y.setter
-    def core_cell_size_y(self, val):
+    @gyz_uncertainty.setter
+    def gyz_uncertainty(self, val):
         if val is None:
-            self._core_cell_size_y = val
+            self._gyz_uncertainty = val
             return
-        p = "core_cell_size_y"
+        p = "gyz_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._core_cell_size_y = val
+        self._gyz_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
-    def core_cell_size_z(self):
-        return self._core_cell_size_z
+    def gx_channel_bool(self):
+        return self._gx_channel_bool
 
-    @core_cell_size_z.setter
-    def core_cell_size_z(self, val):
+    @gx_channel_bool.setter
+    def gx_channel_bool(self, val):
         if val is None:
-            self._core_cell_size_z = val
+            self._gx_channel_bool = val
             return
-        p = "core_cell_size_z"
+        p = "gx_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._core_cell_size_z = val
+        self._gx_channel_bool = val
 
     @property
-    def octree_levels_topo(self):
-        return self._octree_levels_topo
+    def gx_channel(self):
+        return self._gx_channel
 
-    @octree_levels_topo.setter
-    def octree_levels_topo(self, val):
+    @gx_channel.setter
+    def gx_channel(self, val):
         if val is None:
-            self._octree_levels_topo = val
+            self._gx_channel = val
             return
-        p = "octree_levels_topo"
+        p = "gx_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._octree_levels_topo = val
+        self._gx_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def octree_levels_obs(self):
-        return self._octree_levels_obs
+    def gx_uncertainty(self):
+        return self._gx_uncertainty
 
-    @octree_levels_obs.setter
-    def octree_levels_obs(self, val):
+    @gx_uncertainty.setter
+    def gx_uncertainty(self, val):
         if val is None:
-            self._octree_levels_obs = val
+            self._gx_uncertainty = val
             return
-        p = "octree_levels_obs"
+        p = "gx_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._octree_levels_obs = val
+        self._gx_uncertainty = UUID(val) if isinstance(val, str) else val
 
     @property
-    def octree_levels_padding(self):
-        return self._octree_levels_padding
+    def gy_channel_bool(self):
+        return self._gy_channel_bool
 
-    @octree_levels_padding.setter
-    def octree_levels_padding(self, val):
+    @gy_channel_bool.setter
+    def gy_channel_bool(self, val):
         if val is None:
-            self._octree_levels_padding = val
+            self._gy_channel_bool = val
             return
-        p = "octree_levels_padding"
+        p = "gy_channel_bool"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._octree_levels_padding = val
+        self._gy_channel_bool = val
 
     @property
-    def depth_core(self):
-        return self._depth_core
+    def gy_channel(self):
+        return self._gy_channel
 
-    @depth_core.setter
-    def depth_core(self, val):
+    @gy_channel.setter
+    def gy_channel(self, val):
         if val is None:
-            self._depth_core = val
+            self._gy_channel = val
             return
-        p = "depth_core"
+        p = "gy_channel"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._depth_core = val
+        self._gy_channel = UUID(val) if isinstance(val, str) else val
 
     @property
-    def max_distance(self):
-        return self._max_distance
+    def gy_uncertainty(self):
+        return self._gy_uncertainty
 
-    @max_distance.setter
-    def max_distance(self, val):
+    @gy_uncertainty.setter
+    def gy_uncertainty(self, val):
         if val is None:
-            self._max_distance = val
+            self._gy_uncertainty = val
             return
-        p = "max_distance"
+        p = "gy_uncertainty"
         self.validator.validate(
             p, val, self.validations[p], self.workspace, self.associations
         )
-        self._max_distance = val
-
-    @property
-    def padding_distance_x(self):
-        return self._padding_distance_x
-
-    @padding_distance_x.setter
-    def padding_distance_x(self, val):
-        if val is None:
-            self._padding_distance_x = val
-            return
-        p = "padding_distance_x"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._padding_distance_x = val
-
-    @property
-    def padding_distance_y(self):
-        return self._padding_distance_y
-
-    @padding_distance_y.setter
-    def padding_distance_y(self, val):
-        if val is None:
-            self._padding_distance_y = val
-            return
-        p = "padding_distance_y"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._padding_distance_y = val
-
-    @property
-    def padding_distance_z(self):
-        return self._padding_distance_z
-
-    @padding_distance_z.setter
-    def padding_distance_z(self, val):
-        if val is None:
-            self._padding_distance_z = val
-            return
-        p = "padding_distance_z"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._padding_distance_z = val
-
-    @property
-    def window_center_x(self):
-        return self._window_center_x
-
-    @window_center_x.setter
-    def window_center_x(self, val):
-        if val is None:
-            self._window_center_x = val
-            return
-        p = "window_center_x"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._window_center_x = val
-
-    @property
-    def window_center_y(self):
-        return self._window_center_y
-
-    @window_center_y.setter
-    def window_center_y(self, val):
-        if val is None:
-            self._window_center_y = val
-            return
-        p = "window_center_y"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._window_center_y = val
-
-    @property
-    def window_width(self):
-        return self._window_width
-
-    @window_width.setter
-    def window_width(self, val):
-        if val is None:
-            self._window_width = val
-            return
-        p = "window_width"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._window_width = val
-
-    @property
-    def window_height(self):
-        return self._window_height
-
-    @window_height.setter
-    def window_height(self, val):
-        if val is None:
-            self._window_height = val
-            return
-        p = "window_height"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._window_height = val
-
-    @property
-    def inversion_style(self):
-        return self._inversion_style
-
-    @inversion_style.setter
-    def inversion_style(self, val):
-        if val is None:
-            self._inversion_style = val
-            return
-        p = "inversion_style"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inversion_style = val
-
-    @property
-    def chi_factor(self):
-        return self._chi_factor
-
-    @chi_factor.setter
-    def chi_factor(self, val):
-        if val is None:
-            self._chi_factor = val
-            return
-        p = "chi_factor"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._chi_factor = val
-
-    @property
-    def max_iterations(self):
-        return self._max_iterations
-
-    @max_iterations.setter
-    def max_iterations(self, val):
-        if val is None:
-            self._max_iterations = val
-            return
-        p = "max_iterations"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._max_iterations = val
-
-    @property
-    def max_cg_iterations(self):
-        return self._max_cg_iterations
-
-    @max_cg_iterations.setter
-    def max_cg_iterations(self, val):
-        if val is None:
-            self._max_cg_iterations = val
-            return
-        p = "max_cg_iterations"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._max_cg_iterations = val
-
-    @property
-    def max_global_iterations(self):
-        return self._max_global_iterations
-
-    @max_global_iterations.setter
-    def max_global_iterations(self, val):
-        if val is None:
-            self._max_global_iterations = val
-            return
-        p = "max_global_iterations"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._max_global_iterations = val
-
-    @property
-    def initial_beta(self):
-        return self._initial_beta
-
-    @initial_beta.setter
-    def initial_beta(self, val):
-        if val is None:
-            self._initial_beta = val
-            return
-        p = "initial_beta"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._initial_beta = val
-
-    @property
-    def initial_beta_ratio(self):
-        return self._initial_beta_ratio
-
-    @initial_beta_ratio.setter
-    def initial_beta_ratio(self, val):
-        if val is None:
-            self._initial_beta_ratio = val
-            return
-        p = "initial_beta_ratio"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._initial_beta_ratio = val
-
-    @property
-    def tol_cg(self):
-        return self._tol_cg
-
-    @tol_cg.setter
-    def tol_cg(self, val):
-        if val is None:
-            self._tol_cg = val
-            return
-        p = "tol_cg"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._tol_cg = val
-
-    @property
-    def alpha_s(self):
-        return self._alpha_s
-
-    @alpha_s.setter
-    def alpha_s(self, val):
-        if val is None:
-            self._alpha_s = val
-            return
-        p = "alpha_s"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._alpha_s = val
-
-    @property
-    def alpha_x(self):
-        return self._alpha_x
-
-    @alpha_x.setter
-    def alpha_x(self, val):
-        if val is None:
-            self._alpha_x = val
-            return
-        p = "alpha_x"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._alpha_x = val
-
-    @property
-    def alpha_y(self):
-        return self._alpha_y
-
-    @alpha_y.setter
-    def alpha_y(self, val):
-        if val is None:
-            self._alpha_y = val
-            return
-        p = "alpha_y"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._alpha_y = val
-
-    @property
-    def alpha_z(self):
-        return self._alpha_z
-
-    @alpha_z.setter
-    def alpha_z(self, val):
-        if val is None:
-            self._alpha_z = val
-            return
-        p = "alpha_z"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._alpha_z = val
-
-    @property
-    def smallness_norm(self):
-        return self._smallness_norm
-
-    @smallness_norm.setter
-    def smallness_norm(self, val):
-        if val is None:
-            self._smallness_norm = val
-            return
-        p = "smallness_norm"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._smallness_norm = val
-
-    @property
-    def x_norm(self):
-        return self._x_norm
-
-    @x_norm.setter
-    def x_norm(self, val):
-        if val is None:
-            self._x_norm = val
-            return
-        p = "x_norm"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._x_norm = val
-
-    @property
-    def y_norm(self):
-        return self._y_norm
-
-    @y_norm.setter
-    def y_norm(self, val):
-        if val is None:
-            self._y_norm = val
-            return
-        p = "y_norm"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._y_norm = val
-
-    @property
-    def z_norm(self):
-        return self._z_norm
-
-    @z_norm.setter
-    def z_norm(self, val):
-        if val is None:
-            self._z_norm = val
-            return
-        p = "z_norm"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._z_norm = val
-
-    @property
-    def reference_model_object(self):
-        return self._reference_model_object
-
-    @reference_model_object.setter
-    def reference_model_object(self, val):
-        if val is None:
-            self._reference_model_object = val
-            return
-        p = "reference_model_object"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_model_object = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def reference_model(self):
-        return self._reference_model
-
-    @reference_model.setter
-    def reference_model(self, val):
-        if val is None:
-            self._reference_model = val
-            return
-        p = "reference_model"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._reference_model = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def gradient_type(self):
-        return self._gradient_type
-
-    @gradient_type.setter
-    def gradient_type(self, val):
-        if val is None:
-            self._gradient_type = val
-            return
-        p = "gradient_type"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._gradient_type = val
-
-    @property
-    def lower_bound(self):
-        return self._lower_bound
-
-    @lower_bound.setter
-    def lower_bound(self, val):
-        if val is None:
-            self._lower_bound = val
-            return
-        p = "lower_bound"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._lower_bound = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def upper_bound(self):
-        return self._upper_bound
-
-    @upper_bound.setter
-    def upper_bound(self, val):
-        if val is None:
-            self._upper_bound = val
-            return
-        p = "upper_bound"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._upper_bound = UUID(val) if isinstance(val, str) else val
-
-    @property
-    def parallelized(self):
-        return self._parallelized
-
-    @parallelized.setter
-    def parallelized(self, val):
-        if val is None:
-            self._parallelized = val
-            return
-        p = "parallelized"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._parallelized = val
-
-    @property
-    def n_cpu(self):
-        return self._n_cpu
-
-    @n_cpu.setter
-    def n_cpu(self, val):
-        if val is None:
-            self._n_cpu = val
-            return
-        p = "n_cpu"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._n_cpu = val
-
-    @property
-    def max_ram(self):
-        return self._max_ram
-
-    @max_ram.setter
-    def max_ram(self, val):
-        if val is None:
-            self._max_ram = val
-            return
-        p = "max_ram"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._max_ram = val
-
-    @property
-    def out_group(self):
-        return self._out_group
-
-    @out_group.setter
-    def out_group(self, val):
-        if val is None:
-            self._out_group = val
-            return
-        p = "out_group"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._out_group = val
-
-    @property
-    def no_data_value(self):
-        return self._no_data_value
-
-    @no_data_value.setter
-    def no_data_value(self, val):
-        if val is None:
-            self._no_data_value = val
-            return
-        p = "no_data_value"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._no_data_value = val
-
-    def _init_params(self, inputfile: InputFile) -> None:
-        """Wraps Params._init_params."""
-        super()._init_params(inputfile, required_parameters, validations)
+        self._gy_uncertainty = UUID(val) if isinstance(val, str) else val

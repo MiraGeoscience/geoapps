@@ -3,68 +3,62 @@ Applications
 
 Gallery of applications currently available
 
-
-Workspace
----------
+Base selection
+--------------
 
 .. nbgallery::
     :name: base_applications
     :glob:
     :reversed:
 
-    applications/export
     applications/view_selection
     applications/object_data_selection
     applications/base_application
 
 
-Object/Data Utilities
----------------------
+
+Utilities
+---------
 
 .. nbgallery::
     :name: object_creation
     :glob:
     :reversed:
 
-    applications/calculator
-    applications/contouring
+    applications/scatter
+    applications/export
+    applications/create_octree
     applications/create_surface
     applications/create_isosurface
-    applications/create_octree
-    applications/coordinate_transformation
     applications/data_interpolation
+    applications/coordinate_transformation
+    applications/contouring
+    applications/calculator
 
 
-Processing
-----------
+Machine Learning
+----------------
 
 .. nbgallery::
-    :name: data_manipulation
+    :name: machine_learning
     :glob:
     :reversed:
 
     applications/edge_detection
-    applications/geophysical_inversion
     applications/clustering
     applications/peak_finder
 
-
-
-Visualization
--------------
+Geophysical Data Inversion
+--------------------------
 
 .. nbgallery::
-    :name: data_viz
+    :name: inversion
     :glob:
     :reversed:
 
-    applications/scatter
-
-
-
-
-
-
+    applications/dcip_inversion
+    applications/em1d_inversion
+    applications/grav_mag_inversion
 
 
 Need help? Contact us at support@mirageoscience.com
@@ -103,7 +97,15 @@ Need help? Contact us at support@mirageoscience.com
     :align: center
     :width: 0
 
-.. figure:: applications/images/inversion_thumbnail.png
+.. figure:: applications/images/inversion_em1d_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/inversion_grav_mag_thumbnail.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/inversion_dcip_thumbnail.png
     :align: center
     :width: 0
 

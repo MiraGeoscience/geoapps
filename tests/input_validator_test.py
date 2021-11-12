@@ -8,16 +8,17 @@
 import pytest
 
 from geoapps.io import InputFile
-from geoapps.io.MVI.constants import required_parameters, validations
+from geoapps.io.MagneticVector.constants import required_parameters, validations
 from geoapps.io.validators import InputValidator
 
 ######################  Setup  ###########################
 
-ifile = InputFile("test.ui.json")
-ifile.data = {"mesh_from_params": True, "core_cell_size_x": 2}
+ifile = InputFile()
+ifile.filpath = "test.ui.json"
+ifile.data = {"mesh_from_params": True, "u_cell_size": 2}
 validator = InputValidator(required_parameters, validations, input=ifile)
 
-input_dict = {"inversion_type": "mvi", "core_cell_size": 2}
+input_dict = {"inversion_type": "mvi", "u_cell_size": 2}
 tmpfile = lambda path: os.path.join(path, "test.json")
 
 
@@ -92,7 +93,7 @@ def test_validate_parameter_req():
     value = "sdetselkj"
     validations = ("topography_object",)
     vtype = "reqs"
-    ifile.data["core_cell_size"] = None
+    ifile.data["u_cell_size"] = None
     with pytest.raises(KeyError) as excinfo:
         validator._validate_parameter_req(param, value, validations)
     msg = f"Unsatisfied '{param}' requirement. Input file must contain "
@@ -102,7 +103,7 @@ def test_validate_parameter_req():
     value = True
     validations = (
         True,
-        "core_cell_size",
+        "u_cell_size",
     )
     vtype = "reqs"
     input_keys = ["mesh_from_param", "topography"]
