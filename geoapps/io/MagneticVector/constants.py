@@ -75,7 +75,7 @@ inversion_defaults = {
     "receivers_offset_z": 0.0,
     "gps_receivers_offset": None,
     "ignore_values": None,
-    "resolution": 0.0,
+    "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
     "max_chunk_size": 128,
@@ -135,7 +135,7 @@ inversion_defaults = {
     "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
-    "max_ram": 2,
+    "max_ram": None,
     "workspace": None,
     "out_group": "VectorInversion",
     "no_data_value": None,
@@ -181,7 +181,7 @@ forward_defaults = {
     "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
     "gps_receivers_offset": None,
-    "resolution": 0.0,
+    "resolution": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "mesh": None,
@@ -652,7 +652,7 @@ default_ui_json = {
 }
 
 base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json
+default_ui_json = base_default_ui_json.copy()
 for k, v in inversion_defaults.items():
     if isinstance(default_ui_json[k], dict):
         key = "value"

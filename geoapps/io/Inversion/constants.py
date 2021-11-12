@@ -89,13 +89,7 @@ default_ui_json = {
         "min": 1,
         "max": 1000,
     },
-    "output_tile_files": {
-        "group": "Receivers location options",
-        "label": "Output tile files",
-        "visible": False,
-        "enabled": False,
-        "value": False,
-    },
+    "output_tile_files": False,
     "z_from_topo": {
         "main": False,
         "group": "Receivers location options",

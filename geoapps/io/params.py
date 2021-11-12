@@ -86,79 +86,49 @@ class Params:
         self.associations = None
         self.workspace = None
         self._verbose = verbose
+
         self.update(self.defaults, validate=False)
         if kwargs:
             self._handle_kwargs(kwargs, validate)
 
-    @classmethod
-    def from_input_file(
-        cls, input_file: InputFile, workspace: Workspace = None
-    ) -> Params:
-        """Construct Params object from InputFile instance.
+    def _handle_kwargs(self, kwargs, validate):
+        """Updates attributes with kwargs, validates and attaches input file attributes."""
 
-        Parameters
-        ----------
-        input_file : InputFile
-            class instance to handle loading input file
-        """
+        for key, value in kwargs.items():
+            if key in self.default_ui_json and isinstance(
+                self.default_ui_json[key], dict
+            ):
+                self.default_ui_json[key]["visible"] = True
+                if value is not None:
+                    self.default_ui_json[key]["enabled"] = True
 
-        p = cls()
-        p._input_file = input_file
-        p.workpath = input_file.workpath
-        p.associations = input_file.associations
+        self.update(kwargs, validate=False)
 
-        if workspace is not None:
-            p.workspace = (
-                Workspace(workspace) if isinstance(workspace, str) else workspace
-            )
-        elif isinstance(input_file.workspace, Workspace):
-            p.workspace = input_file.workspace
+        if validate:
+            ifile = InputFile.from_dict(self.to_dict(), self.validator)
+        else:
+            ifile = InputFile.from_dict(self.to_dict())
 
-        for v in ["geoh5", "workspace"]:
-            if v in input_file.data.keys():
-                if (
-                    input_file.data[v] is not None
-                    and getattr(p, "workspace", None) is None
-                ):
-                    ws_param = input_file.data[v]
-                    ws = Workspace(ws_param) if isinstance(ws_param, str) else ws_param
-                    p.workspace = ws
+        if "workspace" in kwargs:
+            ifile.data["workspace"] = kwargs["workspace"]
+            ifile.workspace = kwargs["workspace"]
+        if "geoh5" in kwargs:
+            ifile.data["workspace"] = kwargs["geoh5"]
+            ifile.workspace = kwargs["geoh5"]
 
-            input_file.data.pop(v, None)
-
-        p.geoh5 = p.workspace
-        p.update(input_file.data)
-
-        return p
-
-    @classmethod
-    def from_path(cls, file_path: str, workspace: Workspace = None) -> Params:
-        """
-        Construct Params object from path to input file.
-
-        Parameters
-        ----------
-        file_path : str
-            path to input file.
-        """
-        p = cls()
-        input_file = InputFile(file_path, p.validator, workspace)
-        p = cls.from_input_file(input_file, workspace)
-
-        return p
-
-    @property
-    def required_parameters(self):
-        """Parameters required on initialization."""
-        return self._required_parameters
-
-    @property
-    def validations(self):
-        """Encoded parameter validator type and associated validations."""
-        return self._validations
+        self._input_file = ifile
+        cls = self.from_input_file(ifile)
+        self.__dict__.update(cls.__dict__)
 
     def update(self, params_dict: Dict[str, Any], default: bool = False, validate=True):
         """Update parameters with dictionary contents."""
+
+        if "geoh5" in params_dict.keys():
+            if params_dict["geoh5"] is not None:
+                setattr(self, "workspace", params_dict["geoh5"])
+        if "workspace" in params_dict.keys():
+            if params_dict["workspace"] is not None:
+                setattr(self, "workspace", params_dict["workspace"])
 
         for key, value in params_dict.items():
 
@@ -187,6 +157,65 @@ class Params:
                         setattr(self, key, value.uid)
                     else:
                         setattr(self, key, value)
+
+    @classmethod
+    def from_input_file(
+        cls, input_file: InputFile, workspace: Workspace = None
+    ) -> Params:
+        """Construct Params object from InputFile instance.
+
+        Parameters
+        ----------
+        input_file : InputFile
+            class instance to handle loading input file
+        """
+
+        p = cls()
+        p._input_file = input_file
+        p.workpath = input_file.workpath
+        p.associations = input_file.associations
+        p.update(input_file.data)
+
+        if workspace is not None:
+            p.workspace = workspace
+
+        elif input_file.workspace is not None:
+            p.workspace = input_file.workspace
+
+        else:
+            for attr in ["geoh5", "workspace"]:
+                if attr in input_file.data.keys():
+                    if input_file.data[attr] is not None:
+                        p.workspace = input_file.data[attr]
+
+        p.geoh5 = p.workspace
+        return p
+
+    @classmethod
+    def from_path(cls, file_path: str, workspace: Workspace = None) -> Params:
+        """
+        Construct Params object from path to input file.
+
+        Parameters
+        ----------
+        file_path : str
+            path to input file.
+        """
+        p = cls()
+        input_file = InputFile(file_path, p.validator, workspace)
+        p = cls.from_input_file(input_file, workspace)
+
+        return p
+
+    @property
+    def required_parameters(self):
+        """Parameters required on initialization."""
+        return self._required_parameters
+
+    @property
+    def validations(self):
+        """Encoded parameter validator type and associated validations."""
+        return self._validations
 
     def to_dict(self, ui_json: dict = None, ui_json_format=True):
         """Return params and values dictionary."""
@@ -380,32 +409,3 @@ class Params:
             self._free_params_dict = self.input_file._free_params_dict
 
         return self._free_params_dict
-
-    def _handle_kwargs(self, kwargs, validate):
-        """Updates attributes with kwargs, validates and attaches input file attributes."""
-
-        for key, value in kwargs.items():
-            if key in self.default_ui_json and isinstance(
-                self.default_ui_json[key], dict
-            ):
-                self.default_ui_json[key]["visible"] = True
-                if value is not None:
-                    self.default_ui_json[key]["enabled"] = True
-
-        self.update(kwargs, validate=False)
-
-        if validate:
-            ifile = InputFile.from_dict(self.to_dict(), self.validator)
-        else:
-            ifile = InputFile.from_dict(self.to_dict())
-
-        if "workspace" in kwargs:
-            ifile.data["workspace"] = kwargs["workspace"]
-            ifile.workspace = kwargs["workspace"]
-        if "geoh5" in kwargs:
-            ifile.data["workspace"] = kwargs["geoh5"]
-            ifile.workspace = kwargs["geoh5"]
-
-        self._input_file = ifile
-        cls = self.from_input_file(ifile)
-        self.__dict__.update(cls.__dict__)
