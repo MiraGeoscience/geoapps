@@ -7,18 +7,16 @@
 
 from __future__ import annotations
 
+import multiprocessing
 from multiprocessing.pool import ThreadPool
 from uuid import UUID
 
 import numpy as np
 from dask import config as dconf
-from dask.distributed import Client, LocalCluster
-from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Points
+from dask.distributed import Client, LocalCluster, get_client
 from SimPEG import (
     data,
     data_misfit,
-    directives,
     inverse_problem,
     inversion,
     maps,
@@ -29,7 +27,6 @@ from SimPEG import (
 from SimPEG.utils import tile_locations
 
 from geoapps.io import Params
-from geoapps.utils import rotate_xy
 
 from .components import (
     InversionData,
@@ -38,12 +35,13 @@ from .components import (
     InversionTopography,
     InversionWindow,
 )
+from .components.factories import DirectivesFactory
 
 
 class InversionDriver:
-    def __init__(self, params: Params):
-
+    def __init__(self, params: Params, warmstart=True):
         self.params = params
+        self.warmstart = warmstart
         self.workspace = params.workspace
         self.inversion_type = params.inversion_type
         self.inversion_window = None
@@ -51,9 +49,10 @@ class InversionDriver:
         self.inversion_topography = None
         self.inversion_mesh = None
         self.inversion_models = None
+        self.inverse_problem = None
         self.survey = None
         self.active_cells = None
-        self._initialize()
+        self.initialize()
 
     @property
     def window(self):
@@ -61,7 +60,11 @@ class InversionDriver:
 
     @property
     def data(self):
-        return self.inversion_data.data
+        return self.inversion_data.observed
+
+    @property
+    def locations(self):
+        return self.inversion_data.locations
 
     @property
     def topography(self):
@@ -87,7 +90,11 @@ class InversionDriver:
     def upper_bound(self):
         return self.models.upper_bound
 
-    def _initialize(self):
+    def initialize(self):
+
+        ### Collect inversion components ###
+
+        self.configure_dask()
 
         self.inversion_window = InversionWindow(self.workspace, self.params)
 
@@ -97,59 +104,59 @@ class InversionDriver:
             self.workspace, self.params, self.window
         )
 
-        self.inversion_mesh = InversionMesh(self.workspace, self.params)
+        self.inversion_mesh = InversionMesh(
+            self.workspace, self.params, self.inversion_data, self.inversion_topography
+        )
 
         self.models = InversionModelCollection(
             self.workspace, self.params, self.inversion_mesh
         )
 
-        self.configure_dask()
-        cluster = LocalCluster(processes=False)
-        client = Client(cluster)
-
-    def run(self):
-        """Run inversion from params"""
-
-        # Create SimPEG Survey object
-        self.survey = self.inversion_data.survey()
+        # TODO Need to setup/test workers with address
+        if self.params.distributed_workers is not None:
+            try:
+                get_client()
+            except ValueError:
+                cluster = LocalCluster(processes=False)
+                Client(cluster)
 
         # Build active cells array and reduce models active set
-        self.active_cells = self.inversion_topography.active_cells(self.mesh)
+        self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
+        self.models.edit_ndv_model(
+            self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
+        )
         self.models.remove_air(self.active_cells)
-        self.active_cells_map = maps.InjectActiveCells(self.mesh, self.active_cells, 0)
-
+        self.active_cells_map = maps.InjectActiveCells(
+            self.mesh, self.active_cells, np.nan
+        )
         self.n_cells = int(np.sum(self.active_cells))
         self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
-        ###############################################################################
-        # Processing
+        # Create SimPEG Survey object
+        self.survey = self.inversion_data._survey
 
         # Tile locations
-        self.tiles = self.get_tiles()
+        self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
+
         self.nTiles = len(self.tiles)
-        print("Number of tiles:" + str(self.nTiles))
-
+        print(f"Setting up {self.nTiles} tiles ...")
         # Build tiled misfits and combine to form global misfit
-        local_misfits = self.get_tile_misfits(self.tiles)
-        global_misfit = objective_function.ComboObjectiveFunction(local_misfits)
-
-        # Trigger sensitivity calcs
-        for local in local_misfits:
-            local.simulation.Jmatrix
-
+        self.local_misfits = self.get_tile_misfits(self.tiles)
+        self.global_misfit = objective_function.ComboObjectiveFunction(
+            self.local_misfits
+        )
+        print(f"Done.")
         # Create regularization
-        wr = self.get_weighting_matrix(global_misfit)
-        reg = self.get_regularization(wr)
+        self.regularization = self.get_regularization()
 
         # Specify optimization algorithm and set parameters
-        print("active", sum(self.active_cells))
-        opt = optimization.ProjectedGNCG(
+        self.optimization = optimization.ProjectedGNCG(
             maxIter=self.params.max_iterations,
-            lower=self.models.lower_bound,
-            upper=self.models.upper_bound,
-            maxIterLS=20,
+            lower=self.lower_bound,
+            upper=self.upper_bound,
+            maxIterLS=self.params.max_line_search_iterations,
             maxIterCG=self.params.max_cg_iterations,
             tolCG=self.params.tol_cg,
             stepOffBoundsFact=1e-8,
@@ -157,139 +164,55 @@ class InversionDriver:
         )
 
         # Create the default L2 inverse problem from the above objects
-        prob = inverse_problem.BaseInvProblem(
-            global_misfit, reg, opt, beta=self.params.initial_beta
+        self.inverse_problem = inverse_problem.BaseInvProblem(
+            self.global_misfit,
+            self.regularization,
+            self.optimization,
+            beta=self.params.initial_beta,
         )
+
+        # Solve forward problem, and attach dpred to inverse problem or
+        if self.params.forward_only:
+            print("Running forward simulation ...")
+        else:
+            print("Pre-computing sensitivities ...")
+
+        if self.warmstart or self.params.forward_only:
+            self.inverse_problem.dpred = self.inversion_data.simulate(
+                self.starting_model, self.inverse_problem, self.sorting
+            )
+
+        # If forward only option enabled, stop here
+        if self.params.forward_only:
+            return
 
         # Add a list of directives to the inversion
-        directiveList = []
-
-        # MVI or not
-        if self.is_vector:
-            directiveList.append(
-                directives.VectorInversion(
-                    chifact_target=self.params.chi_factor * 2,
-                )
-            )
-            cool_eps_fact = 1.5
-            prctile = 75
-        else:
-            cool_eps_fact = 1.2
-            prctile = 50
-
-        # Pre-conditioner
-        directiveList.append(
-            directives.Update_IRLS(
-                f_min_change=1e-4,
-                max_irls_iterations=self.params.max_iterations,
-                minGNiter=1,
-                beta_tol=0.5,
-                prctile=prctile,
-                coolingRate=1,
-                coolEps_q=True,
-                coolEpsFact=cool_eps_fact,
-                beta_search=False,
-                chifact_target=self.params.chi_factor,
-            )
+        self.directiveList = DirectivesFactory(self.params).build(
+            self.inversion_data,
+            self.inversion_mesh,
+            self.active_cells,
+            np.argsort(np.hstack(self.sorting)),
+            self.local_misfits,
+            self.regularization,
         )
 
-        # Beta estimate
-        if self.params.initial_beta is None:
-            directiveList.append(
-                directives.BetaEstimate_ByEig(
-                    beta0_ratio=self.params.initial_beta_ratio,
-                    method="old",
-                )
-            )
-
-        directiveList.append(directives.UpdatePreconditioner())
-
-        # Save model
-        if self.params.geoh5 is not None:
-
-            channels = ["model"]
-            if self.inversion_type == "mvi":
-                channels = ["amplitude", "theta", "phi"]
-
-            out_group = ContainerGroup.create(
-                self.workspace, name=self.params.out_group
-            )
-
-            outmesh = self.fetch("mesh").copy(parent=out_group, copy_children=False)
-
-            directiveList.append(
-                directives.SaveIterationsGeoH5(
-                    h5_object=outmesh,
-                    channels=channels,
-                    mapping=self.active_cells_map,
-                    attribute_type="mvi_angles" if self.is_vector else "model",
-                    association="CELL",
-                    sorting=self.mesh._ubc_order,
-                )
-            )
-
-            rx_locs = self.survey.receiver_locations
-            if self.is_rotated:
-                rx_locs[:, :2] = rotate_xy(
-                    rx_locs[:, :2],
-                    self.inversion_mesh.rotation["origin"],
-                    self.inversion_mesh.rotation["angle"],
-                )
-            predicted_data_object = Points.create(
-                self.workspace,
-                name=f"Predicted",
-                vertices=rx_locs,
-                parent=out_group,
-            )
-
-            comps, norms = self.survey.components, self.inversion_data.normalizations
-            data_type = {}
-            for ii, (comp, norm) in enumerate(zip(comps, norms)):
-                val = norm * self.survey.dobs[ii :: len(comps)]
-                observed_data_object = predicted_data_object.add_data(
-                    {f"Observed_{comp}": {"values": val}}
-                )
-                data_type[comp] = observed_data_object.entity_type
-
-            directiveList.append(
-                directives.SaveIterationsGeoH5(
-                    h5_object=predicted_data_object,
-                    channels=self.survey.components,
-                    mapping=np.hstack(self.inversion_data.normalizations),
-                    attribute_type="predicted",
-                    data_type=data_type,
-                    sorting=tuple(self.sorting),
-                    save_objective_function=True,
-                )
-            )
-
         # Put all the parts together
-        inv = inversion.BaseInversion(prob, directiveList=directiveList)
+        self.inversion = inversion.BaseInversion(
+            self.inverse_problem, directiveList=self.directiveList
+        )
+
+    def run(self):
+        """Run inversion from params"""
+
+        if self.params.forward_only:
+            return
 
         # Run the inversion
         self.start_inversion_message()
-        mrec = inv.run(self.starting_model)
-        dpred = self.collect_predicted_data(global_misfit, mrec)
-        self.save_residuals(predicted_data_object, dpred)
+        mrec = self.inversion.run(self.starting_model)
+        dpred = self.collect_predicted_data(self.global_misfit, mrec)
+        self.save_residuals(self.inversion_data.entity, dpred)
         self.finish_inversion_message(dpred)
-
-    def get_weighting_matrix(self, global_misfit):
-        """Calculate diagonal weighting matrix for regularization.
-        :param global_misfit: global misfit function.
-        :return: wr: Diagonal weighting matrix.
-
-        """
-
-        wr = np.zeros(self.n_cells * self.n_blocks)
-        norm = np.tile(self.mesh.cell_volumes[self.active_cells] ** 2.0, self.n_blocks)
-
-        for ii, dmisfit in enumerate(global_misfit.objfcts):
-            wr += dmisfit.getJtJdiag(self.starting_model) / norm
-
-        wr **= 0.5
-        wr = wr / wr.max()
-
-        return wr
 
     def start_inversion_message(self):
 
@@ -307,36 +230,27 @@ class InversionDriver:
 
     def collect_predicted_data(self, global_misfit, mrec):
 
-        if getattr(global_misfit, "objfcts", None) is not None:
-            dpred = np.zeros_like(self.survey.dobs)
-            for ind, local_misfit in enumerate(global_misfit.objfcts):
-                mrec_sim = local_misfit.model_map * mrec
-                dpred[self.sorting[ind]] += local_misfit.simulation.dpred(
-                    mrec_sim
-                ).compute()
-        else:
-            dpred = global_misfit.survey.dpred(mrec).compute()
-
-        return dpred
+        dpred = np.hstack(self.inverse_problem.dpred)
+        if getattr(self.survey, "component", None) is not None:
+            dpred = dpred.reshape(-1, len(self.survey.components))
+        sorting = np.argsort(np.hstack(self.sorting))
+        return dpred[sorting].ravel()
 
     def save_residuals(self, obj, dpred):
-        for ii, component in enumerate(self.survey.components):
+        residuals = self.survey.dobs - dpred
+        residuals[self.survey.dobs == self.survey.dummy] = np.nan
+
+        for ii, component in enumerate(self.data.keys()):
             obj.add_data(
                 {
                     "Residuals_"
-                    + component: {
-                        "values": (
-                            self.survey.dobs[ii :: len(self.survey.components)]
-                            - dpred[ii :: len(self.survey.components)]
-                        )
-                    },
+                    + component: {"values": residuals[ii :: len(self.data.keys())]},
                     "Normalized Residuals_"
                     + component: {
                         "values": (
-                            self.survey.dobs[ii :: len(self.survey.components)]
-                            - dpred[ii :: len(self.survey.components)]
+                            residuals[ii :: len(self.data.keys())]
+                            / self.survey.std[ii :: len(self.data.keys())]
                         )
-                        / self.survey.std[ii :: len(self.survey.components)]
                     },
                 }
             )
@@ -355,10 +269,9 @@ class InversionDriver:
             % (0.5 * np.sum(((self.survey.dobs - dpred) / self.survey.std) ** 2.0))
         )
 
-    def get_regularization(self, wr):
+    def get_regularization(self):
 
-        if self.inversion_type == "mvi":
-
+        if self.inversion_type == "magnetic vector":
             wires = maps.Wires(
                 ("p", self.n_cells), ("s", self.n_cells), ("t", self.n_cells)
             )
@@ -373,10 +286,8 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
+                mref=self.reference_model,
             )
-            reg_p.cell_weights = wires.p * wr
-            reg_p.mref = self.reference_model
-
             reg_s = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
@@ -387,10 +298,8 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
+                mref=self.reference_model,
             )
-
-            reg_s.cell_weights = wires.s * wr
-            reg_s.mref = self.reference_model
 
             reg_t = regularization.Sparse(
                 self.mesh,
@@ -402,10 +311,8 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
+                mref=self.reference_model,
             )
-
-            reg_t.cell_weights = wires.t * wr
-            reg_t.mref = self.reference_model
 
             # Assemble the 3-component regularizations
             reg = reg_p + reg_s + reg_t
@@ -423,21 +330,41 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
+                mref=self.reference_model,
             )
-            reg.cell_weights = wr
-            reg.mref = self.reference_model
 
         return reg
 
     def get_tiles(self):
 
-        if isinstance(self.params.tile_spatial, UUID):
+        if self.params.inversion_type in ["direct current", "induced polarization"]:
             tiles = []
-            for ii in np.unique(self.params.tile_spatial).to_list():
-                tiles += [np.where(self.params.tile_spatial == ii)[0]]
+            potential_electrodes = self.inversion_data.entity
+            current_electrodes = potential_electrodes.current_electrodes
+            line_split = np.array_split(
+                current_electrodes.unique_parts, self.params.tile_spatial
+            )
+            for split in line_split:
+                split_ind = []
+                for line in split:
+                    electrode_ind = current_electrodes.parts == line
+                    cells_ind = np.where(
+                        np.any(electrode_ind[current_electrodes.cells], axis=1)
+                    )[0]
+                    split_ind.append(cells_ind)
+                # Fetch all receivers attached to the currents
+                logical = np.zeros(current_electrodes.n_cells, dtype="bool")
+                if len(split_ind) > 0:
+                    logical[np.hstack(split_ind)] = True
+                    tiles.append(
+                        np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
+                    )
+
+            # TODO Figure out how to handle a tile_spatial object to replace above
+
         else:
             tiles = tile_locations(
-                self.survey.receiver_locations,
+                self.locations,
                 self.params.tile_spatial,
                 method="kmeans",
             )
@@ -446,33 +373,42 @@ class InversionDriver:
 
     def get_tile_misfits(self, tiles):
 
-        local_misfits, self.sorting = [], []
+        local_misfits, self.sorting, = (
+            [],
+            [],
+        )
         for tile_id, local_index in enumerate(tiles):
-            lsurvey = self.inversion_data.survey(local_index)
+            lsurvey, local_index = self.inversion_data.survey(
+                self.mesh, self.active_cells, local_index
+            )
             lsim, lmap = self.inversion_data.simulation(
-                self.mesh, self.active_cells, local_index, tile_id
+                self.mesh, self.active_cells, lsurvey, tile_id
             )
-            ldat = (
-                data.Data(lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std),
-            )
-            lmisfit = data_misfit.L2DataMisfit(
-                data=ldat[0],
-                simulation=lsim,
-                model_map=lmap,
-            )
+
+            # TODO Parse workers to simulations
+            lsim.workers = self.params.distributed_workers
+            if self.inversion_type == "induced polarization":
+                lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
+
+            if self.params.forward_only:
+                lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
+            else:
+                ldat = (
+                    data.Data(
+                        lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std
+                    ),
+                )
+                lmisfit = data_misfit.L2DataMisfit(
+                    data=ldat[0],
+                    simulation=lsim,
+                    model_map=lmap,
+                )
+                lmisfit.W = 1 / lsurvey.std
+
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
 
         return local_misfits
-
-    def models(self):
-        """Return all models with data"""
-        return [
-            self.inversion_starting_model,
-            self.inversion_reference_model,
-            self.inversion_lower_bound,
-            self.inversion_upper_bound,
-        ]
 
     def fetch(self, p: str | UUID):
         """Fetch the object addressed by uuid from the workspace."""
@@ -489,10 +425,11 @@ class InversionDriver:
             return self.workspace.get_entity(p)[0]
 
     def configure_dask(self):
+        """Sets Dask config settings."""
 
         if self.params.parallelized:
             if self.params.n_cpu is None:
-                self.params.n_cpu = multiprocessing.cpu_count() / 2
+                self.params.n_cpu = int(multiprocessing.cpu_count() / 2)
 
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))

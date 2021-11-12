@@ -5,57 +5,74 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 from uuid import UUID
+
+from geoh5py.workspace import Workspace
 
 from ..input_file import InputFile
 from ..params import Params
-from .constants import default_ui_json, required_parameters, validations
-from .validators import PeakFinderValidator
+from ..validators import InputFreeformValidator
+from .constants import default_ui_json, defaults, required_parameters, validations
 
 
 class PeakFinderParams(Params):
 
-    _default_ui_json = default_ui_json
+    _required_parameters = required_parameters
+    _validations = validations
+    _free_param_keys: list = ["data", "color"]
+    _free_param_identifier: str = "group"
 
-    def __init__(self, **kwargs):
+    def __init__(self, validate=True, **kwargs):
 
-        self.validations: Dict[str, Any] = validations
-        self.validator: PeakFinderValidator = PeakFinderValidator(
-            required_parameters, validations
+        self.validator: InputFreeformValidator = InputFreeformValidator(
+            required_parameters, validations, free_params_keys=self._free_param_keys
         )
 
-        self.geoh5 = None
-        self.objects = None
-        self.data = None
-        self.ga_group_name = None
+        self._title = None
+        self._objects = None
+        self._data = None
+        self._flip_sign = None
+        self._line_field = None
+        self._tem_checkbox = None
+        self._system = None
+        self._smoothing = None
+        self._min_amplitude = None
+        self._min_value = None
+        self._min_width = None
+        self._max_migration = None
+        self._min_channels = None
+        self._ga_group_name = None
+        self._structural_markers = None
+        self._line_id = None
+        self._group_auto = None
+        self._center = None
+        self._width = None
+        self._template_data = None
+        self._template_color = None
+        self._free_params_dict = None
+        self._plot_result = True
 
-        self.line_field = None
-        self.line_id = None
-        self.monitoring_directory = None
-        self.center = None
-        self.width = None
-        self.min_width = None
-        self.min_amplitude = None
-        self.min_channels = None
-        self.max_migration = None
-        self.smoothing = None
-        self.tem_checkbox = None
+        self.defaults = defaults
+        self.default_ui_json = default_ui_json
+        self.param_names = list(self.default_ui_json.keys())
 
-        self.run_command = None
-        self.conda_environment = None
-        self._input_file = InputFile()
-        self._input_file.input_from_dict(
-            self.default_ui_json,
-            required_parameters=required_parameters,
-            validations=validations,
-        )
-        self._groups = None
-        super().__init__(**kwargs)
+        super().__init__(validate, **kwargs)
 
-    def _set_defaults(self) -> None:
-        """Wraps Params._set_defaults"""
-        return super()._set_defaults(self.default_ui_json)
+        free_params_dict = {}
+        for k, v in kwargs.items():
+            if self._free_param_identifier in k.lower():
+                for param in self._free_param_keys:
+                    if param not in v.keys():
+                        raise ValueError(
+                            f"Provided free parameter {k} should have a key argument {param}"
+                        )
+                free_params_dict[k] = v
+
+        if any(free_params_dict):
+            self._free_params_dict = free_params_dict
 
     def default(self, param) -> Any:
         """Wraps Params.default."""
@@ -70,12 +87,30 @@ class PeakFinderParams(Params):
         self.setter_validator("center", val)
 
     @property
+    def conda_environment(self):
+        return self._conda_environment
+
+    @conda_environment.setter
+    def conda_environment(self, val):
+        self.setter_validator("conda_environment", val)
+
+    @property
+    def conda_environment_boolean(self):
+        return self._conda_environment_boolean
+
+    @conda_environment_boolean.setter
+    def conda_environment_boolean(self, val):
+        self.setter_validator("conda_environment_boolean", val)
+
+    @property
     def data(self):
         return self._data
 
     @data.setter
     def data(self, val):
-        self.setter_validator("data", val, fun=lambda x: UUID(x))
+        self.setter_validator(
+            "data", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
+        )
 
     @property
     def flip_sign(self):
@@ -94,13 +129,21 @@ class PeakFinderParams(Params):
         self.setter_validator("ga_group_name", val)
 
     @property
+    def group_auto(self):
+        return self._group_auto
+
+    @group_auto.setter
+    def group_auto(self, val):
+        self.setter_validator("group_auto", val)
+
+    @property
     def line_field(self):
         return self._line_field
 
     @line_field.setter
     def line_field(self, val):
         self.setter_validator(
-            "line_field", val, fun=lambda x: UUID(x) if isinstance(x, str) else x
+            "line_field", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
         )
 
     @property
@@ -152,12 +195,46 @@ class PeakFinderParams(Params):
         self.setter_validator("min_width", val)
 
     @property
+    def monitoring_directory(self):
+        return self._monitoring_directory
+
+    @monitoring_directory.setter
+    def monitoring_directory(self, val):
+        self.setter_validator("monitoring_directory", val)
+
+    @property
     def objects(self):
         return self._objects
 
     @objects.setter
     def objects(self, val):
-        self.setter_validator("objects", val, fun=lambda x: UUID(x))
+        self.setter_validator(
+            "objects", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
+        )
+
+    @property
+    def plot_result(self):
+        return self._plot_result
+
+    @plot_result.setter
+    def plot_result(self, val):
+        self._plot_result = val
+
+    @property
+    def run_command(self):
+        return self._run_command
+
+    @run_command.setter
+    def run_command(self, val):
+        self.setter_validator("run_command", val)
+
+    @property
+    def run_command_boolean(self):
+        return self._run_command_boolean
+
+    @run_command_boolean.setter
+    def run_command_boolean(self, val):
+        self.setter_validator("run_command_boolean", val)
 
     @property
     def smoothing(self):
@@ -192,20 +269,33 @@ class PeakFinderParams(Params):
         self.setter_validator("tem_checkbox", val)
 
     @property
+    def template_data(self):
+        return self._template_data
+
+    @template_data.setter
+    def template_data(self, val):
+        self.setter_validator("template_data", val)
+
+    @property
+    def template_color(self):
+        return self._template_color
+
+    @template_color.setter
+    def template_color(self, val):
+        self.setter_validator("template_color", val)
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, val):
+        self.setter_validator("title", val)
+
+    @property
     def width(self):
         return self._width
 
     @width.setter
     def width(self, val):
         self.setter_validator("width", val)
-
-    @property
-    def groups(self):
-        if getattr(self, "_groups", None) is None:
-            self._groups = self.validator.groups
-
-        return self._groups
-
-    def _init_params(self, inputfile: InputFile) -> None:
-        """Wraps Params._init_params."""
-        super()._init_params(inputfile, required_parameters, validations)

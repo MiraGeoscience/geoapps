@@ -12,14 +12,16 @@ from geoh5py.workspace import Workspace
 
 from geoapps.drivers.components import InversionMesh
 from geoapps.drivers.components.locations import InversionLocations
-from geoapps.io.MVI import MVIParams, default_ui_json
+from geoapps.io.MagneticVector import MagneticVectorParams, default_ui_json
 from geoapps.utils.testing import Geoh5Tester
 
 workspace = Workspace("./FlinFlon.geoh5")
 
 
 def setup_params(tmp):
-    geotest = Geoh5Tester(workspace, tmp, "test.geoh5", default_ui_json, MVIParams)
+    geotest = Geoh5Tester(
+        workspace, tmp, "test.geoh5", default_ui_json, MagneticVectorParams
+    )
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     return geotest.make()
@@ -92,6 +94,5 @@ def test_z_from_topo(tmp_path):
     ws, params = setup_params(tmp_path)
     window = params.window()
     locations = InversionLocations(ws, params, window)
-    locations.locs = np.array([[315674, 6070832, 0]])
-    locs = locations.set_z_from_topo(locations.locs)
+    locs = locations.set_z_from_topo(np.array([[315674, 6070832, 0]]))
     assert locs[0, 2] == 326

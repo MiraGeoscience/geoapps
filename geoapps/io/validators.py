@@ -71,8 +71,6 @@ class InputValidator:
     @input.setter
     def input(self, val):
         self._input = val
-        if val is not None:
-            self.validate_input(val)
 
     def validate_input(self, input) -> None:
         """
@@ -91,6 +89,7 @@ class InputValidator:
         it's value/type/shape/requirement validations.
         """
 
+        self.input = input
         self._validate_requirements(input.data)
 
         for k, v in input.data.items():
@@ -160,12 +159,13 @@ class InputValidator:
             for req in pvalidations["reqs"]:
                 self._validate_parameter_req(param, value, req)
         if "uuid" in pvalidations.keys():
-            try:
-                child_uuid = UUID(value) if isinstance(value, str) else value
-                parent = associations[child_uuid]
-            except (KeyError, TypeError):
-                parent = None
-            self._validate_parameter_uuid(param, value, ws, parent)
+            if isinstance(value, str):
+                try:
+                    child_uuid = UUID(value)
+                    parent = associations[child_uuid]
+                except (KeyError, TypeError):
+                    parent = None
+                self._validate_parameter_uuid(param, value, ws, parent)
         if "property_groups" in pvalidations.keys():
             try:
                 parent = associations[value]
@@ -236,13 +236,15 @@ class InputValidator:
         self, param: str, value: str, workspace: Workspace = None, parent: UUID = None
     ) -> None:
         """Check whether a string is a valid uuid and addresses an object in the workspace."""
-
         msg = self._general_validation_msg(param, "uuid", value)
-        try:
-            obj_uuid = UUID(value)
-        except ValueError:
-            msg += " Must be a valid uuid string."
-            raise ValueError(msg)
+        if isinstance(value, UUID):
+            obj_uuid = value
+        else:
+            try:
+                obj_uuid = UUID(value)
+            except ValueError:
+                msg += " Must be a valid uuid string."
+                raise ValueError(msg)
 
         if workspace is not None:
             obj = workspace.get_entity(obj_uuid)
@@ -329,3 +331,62 @@ class InputValidator:
             return False if (checklen and (len(v) == 1)) else True
         else:
             return False
+
+
+class InputFreeformValidator(InputValidator):
+    """
+    Validations for Octree driver parameters.
+    """
+
+    _free_params_keys = []
+
+    def __init__(
+        self,
+        requirements: list[str],
+        validations: dict[str, Any],
+        workspace: Workspace = None,
+        input=None,
+        free_params_keys: list = [],
+    ):
+        super().__init__(requirements, validations, workspace=workspace, input=input)
+        self._free_params_keys = free_params_keys
+
+    def validate_input(self, input) -> None:
+        self._validate_requirements(input.data)
+        free_params_dict = {}
+        for k, v in input.data.items():
+            if " " in k:
+
+                if "template" in k.lower():
+                    continue
+
+                for param in self.free_params_keys:
+                    if param in k.lower():
+                        group = k.lower().replace(param, "").lstrip()
+                        if group not in list(free_params_dict.keys()):
+                            free_params_dict[group] = {}
+
+                        free_params_dict[group][param] = v
+                        validator = self.validations[f"template_{param}"]
+
+                        break
+
+            elif k not in self.validations.keys():
+                raise KeyError(f"{k} is not a valid parameter name.")
+            else:
+                validator = self.validations[k]
+            self.validate(k, v, validator, self.workspace, input.associations)
+
+        if any(free_params_dict):
+            for key, group in free_params_dict.items():
+                if not len(list(group.values())) == len(self.free_params_keys):
+                    raise ValueError(
+                        f"Freeformat parameter {key} must contain one of each: "
+                        + f"{self.free_params_keys}"
+                    )
+
+            input._free_params_dict = free_params_dict
+
+    @property
+    def free_params_keys(self):
+        return self._free_params_keys

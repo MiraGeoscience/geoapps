@@ -71,7 +71,7 @@ class ScatterPlots(ObjectDataSelection):
     _size = None
 
     def __init__(self, **kwargs):
-        self.defaults = self.update_defaults(**kwargs)
+        self.defaults.update(**kwargs)
         self.custom_colormap = []
         self._indices = None
 

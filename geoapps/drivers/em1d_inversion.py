@@ -20,8 +20,15 @@ from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
-
-from geoapps.simpegEM1D import (
+from simpeg_archive import (
+    DataMisfit,
+    Directives,
+    Inversion,
+    InvProblem,
+    Maps,
+    Optimization,
+)
+from simpeg_archive.simpegEM1D import (
     GlobalEM1DProblemFD,
     GlobalEM1DProblemTD,
     GlobalEM1DSurveyFD,
@@ -29,15 +36,8 @@ from geoapps.simpegEM1D import (
     LateralConstraint,
     get_2d_mesh,
 )
-from geoapps.simpegPF import (
-    DataMisfit,
-    Directives,
-    Inversion,
-    InvProblem,
-    Maps,
-    Optimization,
-    Utils,
-)
+from simpeg_archive.utils import Counter, mkvc
+
 from geoapps.utils import geophysical_systems
 from geoapps.utils.utils import filter_xy, rotate_xy, running_mean
 
@@ -56,7 +56,6 @@ def inversion(input_file):
 
     lower_bound = input_param["lower_bound"][0]
     upper_bound = input_param["upper_bound"][0]
-    chi_target = input_param["chi_factor"]
     workspace = Workspace(input_param["workspace"])
 
     selection = input_param["lines"]
@@ -153,29 +152,52 @@ def inversion(input_file):
             f"Workspace {workspace.h5file}"
         )
 
+    # Find out which frequency has at least one component selected
+
+    if em_specs["type"] == "frequency":
+        frequencies = []
+        for ind, key in enumerate(em_specs["channels"]):
+            if key in input_param["data"]["channels"]:
+                frequencies.append(em_specs["channels"][key])
+
+        frequencies = np.unique(np.hstack(frequencies))
+
     data = []
     uncertainties = []
-    channels = []
+    channels = {}
     channel_values = []
     offsets = {}
-    for channel, parameters in input_param["data"]["channels"].items():
-        uid = uuid.UUID(parameters["name"])
-        if uid in [child.uid for child in entity.children]:
-            data.append(workspace.get_entity(uid)[0].values)
-        else:
-            assert False, (
-                f"Data {parameters['name']} could not be found associated with "
-                f"target {entity.name} object."
+    for ind, (key, value) in enumerate(em_specs["channels"].items()):
+        if key in input_param["data"]["channels"]:
+            channels[key] = True
+            parameters = input_param["data"]["channels"][key]
+            uid = uuid.UUID(parameters["name"])
+
+            try:
+                data.append(workspace.get_entity(uid)[0].values)
+            except IndexError:
+                raise IndexError(
+                    f"Data {parameters['name']} could not be found associated with "
+                    f"target {entity.name} object."
+                )
+
+            uncertainties.append(
+                np.abs(data[-1]) * parameters["uncertainties"][0]
+                + parameters["uncertainties"][1]
             )
-        uncertainties.append(
-            np.abs(data[-1]) * parameters["uncertainties"][0]
-            + parameters["uncertainties"][1]
-        )
-        channels += [channel]
-        channel_values += [parameters["value"]]
-        offsets[channel.lower()] = np.linalg.norm(
-            np.asarray(parameters["offsets"]).astype(float)
-        )
+            channel_values += parameters["value"]
+            offsets[key.lower()] = np.linalg.norm(
+                np.asarray(parameters["offsets"]).astype(float)
+            )
+
+        elif em_specs["type"] == "frequency" and value in frequencies:
+            channels[key] = False
+            data.append(np.zeros(entity.n_vertices))
+            uncertainties.append(np.ones(entity.n_vertices) * np.inf)
+            offsets[key.lower()] = np.linalg.norm(
+                np.asarray(em_specs["tx_offsets"][ind]).astype(float)
+            )
+            channel_values += [value]
 
     offsets = list(offsets.values())
 
@@ -613,7 +635,7 @@ def inversion(input_file):
         else:
             uncert[dobs == float(ignore_values)] = np.inf
 
-    uncert[(dobs > 1e-38) * (dobs < 2e-38)] = np.inf
+    uncert[np.isnan(dobs)] = np.inf
 
     if em_specs["type"] == "frequency":
         data_mapping = 1.0
@@ -623,23 +645,22 @@ def inversion(input_file):
         else:
             data_mapping = 1.0
 
-        dobs[np.isnan(dobs)] = -1e-16
-
+    dobs[np.isnan(dobs)] = -1e-16
     uncert = normalization * uncert
     dobs = data_mapping * normalization * dobs
     data_types = {}
     for ind, channel in enumerate(channels):
-        if channel in list(input_param["data"]["channels"].keys()):
-            d_i = curve.add_data(
-                {
-                    channel: {
-                        "association": "VERTEX",
-                        "values": data_mapping * dobs[ind::block][data_ordering],
-                    }
+        # if channel in list(input_param["data"]["channels"].keys()):
+        d_i = curve.add_data(
+            {
+                channel: {
+                    "association": "VERTEX",
+                    "values": data_mapping * dobs[ind::block][data_ordering],
                 }
-            )
-            curve.add_data_to_group(d_i, f"Observed")
-            data_types[channel] = d_i.entity_type
+            }
+        )
+        curve.add_data_to_group(d_i, f"Observed")
+        data_types[channel] = d_i.entity_type
 
     xyz = locations[stn_id, :]
     topo = np.c_[xyz[:, :2], dem[stn_id, 2]]
@@ -674,12 +695,6 @@ def inversion(input_file):
             topo=topo,
         )
     else:
-
-        def get_data_time_index(vec, n_sounding, time, time_index):
-            n_time = time.size
-            vec = vec.reshape((n_sounding, n_time))
-            return vec[:, time_index].flatten()
-
         src_type = np.array([em_specs["tx_specs"]["type"]], dtype=str).repeat(
             n_sounding
         )
@@ -716,10 +731,16 @@ def inversion(input_file):
         reference = starting
         print("**** Running Forward Only ****")
 
+    else:
+        print(f"Number of data in simulation: {n_data}")
+        print(f"Number of active data: {n_data - np.isinf(uncert).sum()}")
+        chi_target = input_param["chi_factor"] / (
+            (n_data - np.isinf(uncert).sum()) / n_data
+        )
+        print(f"Input chi factor: {input_param['chi_factor']} -> target: {chi_target}")
+
     if isinstance(reference, str):
         print("**** Best-fitting halfspace inversion ****")
-        print(f"Target: {n_data}")
-
         hz_BFHS = np.r_[1.0]
         expmap = Maps.ExpMap(nP=n_sounding)
         sigmaMap = expmap
@@ -751,20 +772,12 @@ def inversion(input_file):
                 Solver=PardisoSolver,
             )
         else:
-            time_index = np.arange(6)
-            dobs_reduced = get_data_time_index(
-                survey.dobs, n_sounding, time, time_index
-            )
-            uncert_reduced = get_data_time_index(
-                survey.std, n_sounding, time, time_index
-            )
-
             surveyHS = GlobalEM1DSurveyTD(
                 rx_locations=xyz,
                 src_locations=xyz + tx_offsets,
                 topo=topo,
                 offset=offsets,
-                time=[time[time_index] for i in range(n_sounding)],
+                time=[time for i in range(n_sounding)],
                 src_type=src_type,
                 rx_type=np.array([em_specs["data_type"]], dtype=str).repeat(n_sounding),
                 wave_type=np.array([wave_type], dtype=str).repeat(n_sounding),
@@ -776,7 +789,7 @@ def inversion(input_file):
                 base_frequency=np.array([50.0]).repeat(n_sounding),
                 half_switch=True,
             )
-            surveyHS.dobs = dobs_reduced
+            surveyHS.dobs = dobs
             probHalfspace = GlobalEM1DProblemTD(
                 [],
                 sigmaMap=sigmaMap,
@@ -789,7 +802,7 @@ def inversion(input_file):
 
         probHalfspace.pair(surveyHS)
         dmisfit = DataMisfit.l2_DataMisfit(surveyHS)
-        dmisfit.W = 1.0 / uncert_reduced
+        dmisfit.W = 1.0 / uncert
 
         if isinstance(starting, float):
             m0 = np.ones(n_sounding) * starting
@@ -853,8 +866,8 @@ def inversion(input_file):
         mopt = inv.run(m0)
 
     if isinstance(reference, str):
-        m0 = Utils.mkvc(np.kron(mopt, np.ones_like(hz)))
-        mref = Utils.mkvc(np.kron(mopt, np.ones_like(hz)))
+        m0 = mkvc(np.kron(mopt, np.ones_like(hz)))
+        mref = mkvc(np.kron(mopt, np.ones_like(hz)))
     else:
         mref = reference
         m0 = starting
@@ -905,12 +918,12 @@ def inversion(input_file):
                     + pc_floor[1] * normalization
                 )
 
-            temp = uncert[ind::block][data_ordering]
-            temp[temp == np.inf] = 0
-            d_i = curve.add_data(
-                {"Uncertainties_" + channel: {"association": "VERTEX", "values": temp}}
-            )
-            curve.add_data_to_group(d_i, f"Uncertainties")
+        temp = uncert[ind::block][data_ordering]
+        temp[temp == np.inf] = 0
+        d_i = curve.add_data(
+            {"Uncertainties_" + channel: {"association": "VERTEX", "values": temp}}
+        )
+        curve.add_data_to_group(d_i, f"Uncertainties")
 
         uncert[ind::block][uncert_orig[ind::block] == np.inf] = np.inf
 
@@ -994,7 +1007,7 @@ def inversion(input_file):
         invProb,
         directiveList=directiveList,
     )
-    prob.counter = opt.counter = Utils.Counter()
+    prob.counter = opt.counter = Counter()
     opt.LSshorten = 0.5
     opt.remember("xc")
     inv.run(m0)
@@ -1023,5 +1036,5 @@ def inversion(input_file):
 if __name__ == "__main__":
 
     input_file = sys.argv[1]
-
+    # input_file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\EM1DInversion_Inv.json"
     inversion(input_file)

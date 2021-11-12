@@ -64,7 +64,9 @@ nbsphinx_thumbnails = {
     "content/applications/data_interpolation": "_images/data_interp_thumbnail.png",
     "content/applications/export": "_images/export_thumbnail.png",
     "content/applications/scatter": "_images/scatter_thumbnail.png",
-    "content/applications/geophysical_inversion": "_images/inversion_thumbnail.png",
+    "content/applications/grav_mag_inversion": "_images/inversion_grav_mag_thumbnail.png",
+    "content/applications/dcip_inversion": "_images/inversion_dcip_thumbnail.png",
+    "content/applications/em1d_inversion": "_images/inversion_em1d_thumbnail.png",
     "content/applications/clustering": "_images/cluster_thumbnail.png",
     "content/applications/peak_finder": "_images/peak_finder_thumbnail.png",
     "content/applications/create_octree": "_images/octree_mesh_creation.png",
@@ -92,9 +94,9 @@ master_doc = "index"
 project = "geoapps"
 
 # The short X.Y version.
-version = "0.5.1"
+version = "0.6.0"
 # The full version, including alpha/beta/rc tags.
-release = "0.5.1"
+release = "0.6.0"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
