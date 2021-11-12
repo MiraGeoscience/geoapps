@@ -39,7 +39,7 @@ inversion_defaults = {
     "receivers_offset_z": 0.0,
     "gps_receivers_offset": None,
     "ignore_values": None,
-    "resolution": 0.0,
+    "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
     "max_chunk_size": 128,
@@ -75,7 +75,7 @@ inversion_defaults = {
     "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
     "max_global_iterations": 100,
-    "initial_beta_ratio": 10.0,
+    "initial_beta_ratio": 1e1,
     "initial_beta": None,
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
@@ -95,7 +95,7 @@ inversion_defaults = {
     "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
-    "max_ram": 2,
+    "max_ram": None,
     "workspace": None,
     "out_group": "InducedPolarizationInversion",
     "no_data_value": None,
@@ -126,7 +126,7 @@ forward_defaults = {
     "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
     "gps_receivers_offset": None,
-    "resolution": 0.0,
+    "resolution": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "mesh": None,
@@ -157,6 +157,13 @@ forward_defaults = {
 default_ui_json = {
     "title": "SimPEG Induced Polarization Inversion",
     "inversion_type": "induced polarization",
+    "data_object": {
+        "main": True,
+        "group": "Data",
+        "label": "Object",
+        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
+        "value": None,
+    },
     "chargeability_channel_bool": True,
     "chargeability_channel": {
         "association": ["Cell", "Vertex"],
@@ -232,7 +239,7 @@ default_ui_json = {
 }
 
 base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json
+default_ui_json = base_default_ui_json.copy()
 for k, v in inversion_defaults.items():
     if isinstance(default_ui_json[k], dict):
         key = "value"
@@ -244,8 +251,6 @@ for k, v in inversion_defaults.items():
         default_ui_json[k] = v
 
 default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
-default_ui_json["data_object"]["meshType"] = "{275ecee9-9c24-4378-bf94-65f3c5fbe163}"
-
 required_parameters = ["inversion_type"]
 required_parameters += base_required_parameters
 validations = {
