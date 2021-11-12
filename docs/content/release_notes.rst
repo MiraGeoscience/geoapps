@@ -19,7 +19,7 @@ All inversions are performed on a 3D octree mesh.
 Application Updates
 ^^^^^^^^^^^^^^^^^^^
 
-- All 3D inversions have been updated to SimPEG v0.5.1.
+- All 3D inversions have been updated to SimPEG v0.15.1.
     - The transition also includes several updates to parallelization allowing computations on distributed systems.
 - Magnetic and gravity inversions now relies on the ui.json input file format.
     - Inversion parameters can be re-imported from existing ui.json files.
