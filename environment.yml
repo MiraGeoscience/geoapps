@@ -28,8 +28,8 @@ dependencies:
   - pydiso
   - setuptools=58.4
   - pip:
-    - git+https://github.com/MiraGeoscience/simpeg.git@feature/tiled-simulations
-    - git+https://github.com/MiraGeoscience/simpeg.git@feature/simpeg_archive
-    - geoh5py==0.1.5rc1
+    - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.6.0
+    - git+https://github.com/MiraGeoscience/simpeg.git@v0.9.1.dev1+geoapps.0.6.0
+    - geoh5py==0.1.5
 variables:
   KMP_WARNINGS: 0
