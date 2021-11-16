@@ -176,5 +176,3 @@ def test_ui_json_io(tmp_path):
     ifile = InputFile(ifile.filepath, validator)
     assert ifile.data["inducing_field_strength"] == 99
     assert ifile.data["inversion_type"] == "magnetic vector"
-
-
