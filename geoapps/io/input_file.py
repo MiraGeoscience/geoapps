@@ -379,7 +379,6 @@ class InputFile:
             else:
                 continue
 
-
     @staticmethod
     def flatten(d: dict[str, Any]) -> dict[str, Any]:
         """Flattens ui.json format to simple key/value pair."""
