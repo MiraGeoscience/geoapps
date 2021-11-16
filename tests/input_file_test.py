@@ -178,5 +178,3 @@ def test_ui_json_io(tmp_path):
     assert ifile.data["inversion_type"] == "magnetic vector"
 
 
-def test_validations(tmp_path):
-    assert True

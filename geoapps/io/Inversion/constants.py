@@ -104,7 +104,7 @@ default_ui_json = {
         "label": "Drape receivers with radar channel",
         "optional": True,
         "parent": "data_object",
-        "value": "",
+        "value": None,
         "enabled": False,
     },
     "receivers_offset_x": {
@@ -128,18 +128,7 @@ default_ui_json = {
         "value": 0.0,
         "enabled": True,
     },
-    "gps_receivers_offset": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Receivers location options",
-        "enabled": False,
-        "visible": False,
-        "isValue": False,
-        "label": "Set data offsets",
-        "parent": "data_object",
-        "property": None,
-        "value": 0.0,
-    },
+    "gps_receivers_offset": None,
     "ignore_values": {
         "group": "Data pre-processing",
         "enabled": False,
@@ -154,7 +143,7 @@ default_ui_json = {
         "enabled": False,
         "visible": False,
         "label": "No data value",
-        "value": "",
+        "value": None,
     },
     "resolution": {
         "min": 0.0,
@@ -569,7 +558,6 @@ default_ui_json = {
     },
     "upper_bound_object": {
         "group": "Regularization",
-        "visible": True,
         "label": "Upper bound object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -644,7 +632,6 @@ default_ui_json = {
     },
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": {
-        "default": False,
         "value": False,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",
