@@ -50,6 +50,14 @@ def test_mag_inversion(tmp_path):
     app = MagInversionApp(h5file=project, plot_result=False)
     app.geoh5 = new_workspace
 
+    assert (
+        len(app._lower_bound_group.objects.options) == 2
+    ), "Lower bound group did not reset properly on workspace change."
+
+    assert (
+        len(app._upper_bound_group.objects.options) == 2
+    ), "Upper bound group did not reset properly on workspace change."
+
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):
             getattr(app, param).value = value
