@@ -105,10 +105,7 @@ def test_ui_2_py():
 
     tdict = {"run_command": "blah", "max_distance": "notgettinsaved"}
     tdict.update({"inversion_type": {"value": "mvi"}})
-    tdict.update({"detrend_order": {"default": 0, "enabled": False, "value": "ohya"}})
-    tdict.update(
-        {"detrend_type": {"default": "all", "visible": False, "value": "ohno"}}
-    )
+    tdict.update({"detrend_order": {"enabled": False, "value": "ohya"}})
     tdict.update({"topography": {"isValue": True, "property": "yep", "value": 2}})
     tdict.update({"topography2": {"isValue": False, "property": "yep", "value": 2}})
     tdict.update({"tmi_channel": {"value": "ldskfjsld"}})
@@ -117,7 +114,6 @@ def test_ui_2_py():
     assert data["run_command"] == "blah"
     assert data["inversion_type"] == "mvi"
     assert data["detrend_order"] is None
-    assert data["detrend_type"] is None
     assert data["topography"] == 2
     assert data["topography2"] == "yep"
     assert data["tmi_channel"] == "ldskfjsld"

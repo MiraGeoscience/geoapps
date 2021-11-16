@@ -400,23 +400,25 @@ class UIJson:
     def __init__(self, ui : dict[str, Any]):
         self.ui = ui
 
-    def data(self) -> dict[str, Any]:
+    @staticmethod
+    def _data(d: dict[str, Any]) -> dict[str, Any]:
         """Flattens ui.json format to simple key/value pair."""
         data = {}
-        for k, v in self.ui.items():
+        for k, v in d.items():
             if isinstance(v, dict):
-                field = 'value'
-                if "isValue" in v.keys():
-                    field = "value" if v["isValue"] else "property"
-                if "enabled" in v.keys():
-                    if v["enabled"] is False:
-                        data[k] = None
-                    else:
-                        data[k] = v[field]
+                field = "value" if UIJson._truth(d, k, "isValue") else "property"
+                if not UIJson._truth(d, k, "enabled"):
+                    data[k] = None
+                else:
+                    data[k] = v[field]
             else:
                 data[k] = v
 
         return data
+
+    def data(self):
+        """Applies _data to self.ui."""
+        return UIJson._data(self.ui)
 
     @staticmethod
     def _collect(d: dict[str, Any], field: str, value: Any = None) -> dict[str, Any]:
