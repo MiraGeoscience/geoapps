@@ -56,6 +56,7 @@ class DirectivesFactory:
             chifact_target=self.params.chi_factor * 2,
         )
 
+        has_chi_start = self.params.starting_chi_factor is not None
         self.update_irls_directive = directives.Update_IRLS(
             f_min_change=self.params.f_min_change,
             max_irls_iterations=self.params.max_iterations,
@@ -67,6 +68,9 @@ class DirectivesFactory:
             coolEps_q=self.params.coolEps_q,
             coolEpsFact=self.params.coolEpsFact,
             beta_search=self.params.beta_search,
+            chifact_start=self.params.starting_chi_factor
+            if has_chi_start
+            else self.params.chi_factor,
             chifact_target=self.params.chi_factor,
         )
 

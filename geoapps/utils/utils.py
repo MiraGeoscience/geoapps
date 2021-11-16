@@ -355,7 +355,7 @@ def calculate_2D_trend(
     method: str
         Method to be used for the detrending
             "all": USe all points
-            "corners": Only use points on the convex hull
+            "perimeter": Only use points on the convex hull
 
 
     Returns
@@ -379,14 +379,14 @@ def calculate_2D_trend(
     loc_xy = points[ind_nan, :]
     values = values[ind_nan]
 
-    if method == "corners":
+    if method == "perimeter":
         hull = ConvexHull(loc_xy[:, :2])
         # Extract only those points that make the ConvexHull
         loc_xy = loc_xy[hull.vertices, :2]
         values = values[hull.vertices]
     elif not method == "all":
         raise ValueError(
-            "'method' must be either 'all', or 'corners'. " f"Value {method} provided"
+            "'method' must be either 'all', or 'perimeter'. " f"Value {method} provided"
         )
 
     # Compute center of mass

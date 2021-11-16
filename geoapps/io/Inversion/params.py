@@ -71,6 +71,7 @@ class InversionParams(Params):
         self.coolEps_q: bool = None
         self.coolEpsFact: float = None
         self.beta_search: bool = None
+        self.starting_chi_factor: float = None
         self.max_iterations: int = None
         self.max_line_search_iterations: int = None
         self.max_cg_iterations: int = None
@@ -920,6 +921,21 @@ class InversionParams(Params):
         self._beta_search = val
 
     @property
+    def starting_chi_factor(self):
+        return self._starting_chi_factor
+
+    @starting_chi_factor.setter
+    def starting_chi_factor(self, val):
+        if val is None:
+            self._starting_chi_factor = val
+            return
+        p = "starting_chi_factor"
+        self.validator.validate(
+            p, val, self.validations[p], self.workspace, self.associations
+        )
+        self._starting_chi_factor = val
+
+    @property
     def max_iterations(self):
         return self._max_iterations
 
@@ -1398,6 +1414,8 @@ class InversionParams(Params):
             ifile.workpath = path
 
         none_map = {
+            "starting_chi_factor": 1.0,
+            "resolution": 0.0,
             "detrend_order": 0,
             "detrend_type": "all",
             "initial_beta": 1.0,
