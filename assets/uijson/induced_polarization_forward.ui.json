@@ -1,6 +1,6 @@
 {
-    "title": "SimPEG Direct Current Forward",
-    "inversion_type": "direct current",
+    "title": "SimPEG Induced Polarization Forward",
+    "inversion_type": "induced polarization",
     "geoh5": "",
     "forward_only": true,
     "topography_object": {
@@ -36,9 +36,37 @@
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": ""
     },
-    "potential_channel_bool": true,
+    "chargeability_channel_bool": true,
+    "conductivity_model_object": {
+        "group": "Starting Models",
+        "main": true,
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}"
+        ],
+        "label": "Conductivity object",
+        "value": ""
+    },
+    "conductivity_model": {
+        "association": [
+            "Cell",
+            "Vertex"
+        ],
+        "dataType": "Float",
+        "group": "Starting Models",
+        "main": true,
+        "isValue": false,
+        "parent": "conductivity_model_object",
+        "label": "Conductivity (Siemens/m)",
+        "property": "",
+        "value": 0.0
+    },
     "starting_model_object": {
-        "group": "Starting Model",
+        "group": "Starting Models",
         "main": true,
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -48,7 +76,7 @@
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
             "{4ea87376-3ece-438b-bf12-3479733ded46}"
         ],
-        "label": "Object",
+        "label": "Chargeability object",
         "value": ""
     },
     "starting_model": {
@@ -57,11 +85,11 @@
             "Vertex"
         ],
         "dataType": "Float",
-        "group": "Starting Model",
+        "group": "Starting Models",
         "main": true,
         "isValue": false,
         "parent": "starting_model_object",
-        "label": "Conductivity (Siemens/m)",
+        "label": "Chargeability (V/V)",
         "property": "",
         "value": 0.0
     },
@@ -294,14 +322,14 @@
     },
     "out_group": {
         "label": "Results group name",
-        "value": "DirectCurrentForward"
+        "value": "InducedPolarizationForward"
     },
     "monitoring_directory": {
         "default": "",
         "enabled": false,
         "value": ""
     },
-    "run_command": "geoapps.drivers.direct_current_inversion",
+    "run_command": "geoapps.drivers.induced_polarization_inversion",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
