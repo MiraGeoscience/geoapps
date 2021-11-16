@@ -101,24 +101,6 @@ def test_numify():
     assert ndict["test_l2"] == [1]
 
 
-def test_ui_2_py():
-
-    tdict = {"run_command": "blah", "max_distance": "notgettinsaved"}
-    tdict.update({"inversion_type": {"value": "mvi"}})
-    tdict.update({"detrend_order": {"enabled": False, "value": "ohya"}})
-    tdict.update({"topography": {"isValue": True, "property": "yep", "value": 2}})
-    tdict.update({"topography2": {"isValue": False, "property": "yep", "value": 2}})
-    tdict.update({"tmi_channel": {"value": "ldskfjsld"}})
-    ifile = InputFile()
-    data = ifile._ui_2_py(tdict)
-    assert data["run_command"] == "blah"
-    assert data["inversion_type"] == "mvi"
-    assert data["detrend_order"] is None
-    assert data["topography"] == 2
-    assert data["topography2"] == "yep"
-    assert data["tmi_channel"] == "ldskfjsld"
-
-
 def test_set_associations():
 
     o_uuid = "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"
@@ -172,3 +154,36 @@ def test_ui_json_io(tmp_path):
     ifile = InputFile(ifile.filepath, validator)
     assert ifile.data["inducing_field_strength"] == 99
     assert ifile.data["inversion_type"] == "magnetic vector"
+
+
+def test_group():
+    window_group = InputFile.group(d_u_j, "Data window")
+    check = [
+        "window_center_x",
+        "window_center_y",
+        "window_width",
+        "window_height",
+        "window_azimuth",
+    ]
+    assert np.all(np.sort(check) == np.sort(list(window_group.keys())))
+
+def test_collect():
+    enabled_params = InputFile.collect(d_u_j, "enabled", value=True)
+    assert all(["enabled" in v for v in enabled_params.values()])
+    assert all([v["enabled"] for v in enabled_params.values()])
+
+def test_data():
+    data = InputFile.flatten(d_u_j)
+    assert data["starting_model"] is None
+    assert data["tile_spatial"] == 1
+    assert data["forward_only"] == False
+    assert data["resolution"] == None
+
+def test_group_enabled():
+    assert not InputFile.group_enabled(d_u_j, "Data window")
+
+def test_truth():
+    assert not InputFile.truth(d_u_j, "detrend_order", "enabled")
+    assert InputFile.truth(d_u_j, "max_chunk_size", "enabled")
+    assert InputFile.truth(d_u_j, "chunk_by_rows", "enabled")
+    assert not InputFile.truth(d_u_j, "chunk_by_rows", "optional")
