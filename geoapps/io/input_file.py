@@ -263,8 +263,8 @@ class InputFile:
                 if v["value"] is None:
                     if k in none_map.keys():
                         v["value"] = none_map[k]
-                        if ("group" in v.keys()):
-                            if (uijson._group_optional(d, v["group"])):
+                        if "group" in v.keys():
+                            if uijson._group_optional(d, v["group"]):
                                 v["enabled"] = False
                             else:
                                 v["optional"] = True
@@ -397,7 +397,7 @@ class InputFile:
 class UIJson:
     """Encodes the ui.json format and provides utilities."""
 
-    def __init__(self, ui : dict[str, Any]):
+    def __init__(self, ui: dict[str, Any]):
         self.ui = ui
 
     @staticmethod
@@ -415,7 +415,6 @@ class UIJson:
                 data[k] = v
 
         return data
-
     def data(self):
         """Applies _data to self.ui."""
         return UIJson._data(self.ui)
@@ -486,7 +485,9 @@ class UIJson:
         elif field in default_states.keys():
             return default_states[field]
         else:
-            raise ValueError(f"Field: {field} was not provided in ui.json and does not have a default state.")
+            raise ValueError(
+                f"Field: {field} was not provided in ui.json and does not have a default state."
+            )
 
     def truth(self, name: str, field: str) -> bool:
         """Applies _truth to self.ui."""
