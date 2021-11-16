@@ -167,10 +167,12 @@ def test_group():
     ]
     assert np.all(np.sort(check) == np.sort(list(window_group.keys())))
 
+
 def test_collect():
     enabled_params = InputFile.collect(d_u_j, "enabled", value=True)
     assert all(["enabled" in v for v in enabled_params.values()])
     assert all([v["enabled"] for v in enabled_params.values()])
+
 
 def test_data():
     data = InputFile.flatten(d_u_j)
@@ -179,8 +181,10 @@ def test_data():
     assert data["forward_only"] == False
     assert data["resolution"] == None
 
+
 def test_group_enabled():
     assert not InputFile.group_enabled(d_u_j, "Data window")
+
 
 def test_truth():
     assert not InputFile.truth(d_u_j, "detrend_order", "enabled")
