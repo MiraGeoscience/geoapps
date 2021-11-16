@@ -393,7 +393,6 @@ class InputFile:
                 continue
 
 
-
 class UIJson:
     """Encodes the ui.json format and provides utilities."""
 
@@ -415,6 +414,7 @@ class UIJson:
                 data[k] = v
 
         return data
+
     def data(self):
         """Applies _data to self.ui."""
         return UIJson._data(self.ui)
