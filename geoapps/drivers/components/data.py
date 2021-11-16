@@ -51,7 +51,7 @@ class InversionData(InversionLocations):
     detrend_order :
         Polynomial degree for detrending (0, 1, or 2).
     detrend_type :
-        Detrend type option. 'all': use all data, 'corners': use the convex
+        Detrend type option. 'all': use all data, 'perimeter': use the convex
         hull only.
     locations :
         Data locations.

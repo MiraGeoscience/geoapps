@@ -89,13 +89,7 @@ default_ui_json = {
         "min": 1,
         "max": 1000,
     },
-    "output_tile_files": {
-        "group": "Receivers location options",
-        "label": "Output tile files",
-        "visible": False,
-        "enabled": False,
-        "value": False,
-    },
+    "output_tile_files": False,
     "z_from_topo": {
         "main": False,
         "group": "Receivers location options",
@@ -180,7 +174,7 @@ default_ui_json = {
         "value": 0,
     },
     "detrend_type": {
-        "choiceList": ["all", "corners"],
+        "choiceList": ["all", "perimeter"],
         "group": "Data pre-processing",
         "dependency": "detrend_order",
         "dependencyType": "enabled",
@@ -395,6 +389,14 @@ default_ui_json = {
         "group": "Update IRLS directive",
         "label": "Perform beta search",
         "value": False,
+    },
+    "starting_chi_factor": {
+        "group": "Update IRLS directive",
+        "label": "IRLS start chi factor",
+        "optional": True,
+        "enabled": False,
+        "value": 1.0,
+        "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin.",
     },
     "max_iterations": {
         "min": 0,
@@ -708,7 +710,7 @@ validations = {
     },
     "detrend_type": {
         "types": [str],
-        "values": ["all", "corners"],
+        "values": ["all", "perimeter"],
     },
     "max_chunk_size": {"types": [int, float]},
     "chunk_by_rows": {
@@ -802,6 +804,9 @@ validations = {
     },
     "beta_search": {
         "types": [bool],
+    },
+    "starting_chi_factor": {
+        "types": [int, float],
     },
     "max_iterations": {
         "types": [int, float],

@@ -207,7 +207,7 @@ class InversionApp(PlotSelection2D):
             **self.defaults,
         )
         self._detrend_type = Dropdown(
-            description="Method", options=["", "all", "corners"], value="all"
+            description="Method", options=["", "all", "perimeter"], value="all"
         )
         self._detrend_order = widgets.IntText(description="Order", min=0, value=0)
         self._detrend_panel = VBox([self._detrend_type, self._detrend_order])
