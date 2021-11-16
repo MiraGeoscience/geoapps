@@ -125,8 +125,12 @@ class InversionApp(PlotSelection2D):
         self._chi_factor = FloatText(
             value=1, description="Target misfit", disabled=False
         )
-        self._lower_bound_group = ModelOptions("lower_bound", **self.defaults)
-        self._upper_bound_group = ModelOptions("upper_bound", **self.defaults)
+        self._lower_bound_group = ModelOptions(
+            "lower_bound", add_xyz=False, **self.defaults
+        )
+        self._upper_bound_group = ModelOptions(
+            "upper_bound", add_xyz=False, **self.defaults
+        )
         self._ignore_values = widgets.Text(
             description="Value (i.e. '<0' for no negatives)",
         )
@@ -152,20 +156,25 @@ class InversionApp(PlotSelection2D):
                 self._tile_spatial,
             ]
         )
-        self._starting_model_group = ModelOptions("starting_model", **self.defaults)
+        self._starting_model_group = ModelOptions(
+            "starting_model", add_xyz=False, **self.defaults
+        )
         self._starting_model_group.options.options = ["Constant", "Model"]
         self._conductivity_model_group = ModelOptions(
-            "conductivity_model", **self.defaults
+            "conductivity_model", add_xyz=False, **self.defaults
         )
         self._conductivity_model_group.options.options = ["Model"]
-        self._reference_model_group = ModelOptions("reference_model", **self.defaults)
+        self._reference_model_group = ModelOptions(
+            "reference_model", add_xyz=False, **self.defaults
+        )
         self._reference_model_group.options.observe(self.update_ref)
-        self._topography_group = TopographyOptions(**self.defaults)
+        self._topography_group = TopographyOptions(add_xyz=False, **self.defaults)
         self._topography_group.identifier = "topography"
         self._sensor = SensorOptions(
             objects=self._objects,
             object_types=self._object_types,
             exclusion_types=self._exclusion_types,
+            add_xyz=False,
             **self.defaults,
         )
         self._alpha_s = widgets.FloatText(
