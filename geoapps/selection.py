@@ -375,6 +375,7 @@ class LineOptions(ObjectDataSelection):
 
     defaults = {"find_label": "line"}
     _multiple_lines = None
+    _add_xyz = False
 
     def __init__(self, **kwargs):
 
