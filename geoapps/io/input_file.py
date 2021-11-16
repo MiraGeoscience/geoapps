@@ -59,6 +59,7 @@ class InputFile:
         self.filepath = filepath
         self.validator = validator
         self.workspace = workspace
+        self.ui: dict[str, Any] = {}
         self.data: dict[str, Any] = {}
         self.associations: dict[str | UUID, str | UUID] = {}
         self.is_loaded: bool = False
@@ -85,9 +86,9 @@ class InputFile:
         input_dict = self._numify(input_dict)
         input_dict = self._demote(input_dict)
         self._set_associations(input_dict)
-        self.input_dict = input_dict
+        self.ui = input_dict
 
-        self.data = self._ui_2_py(input_dict)
+        self.data = InputFile.flatten(input_dict)
 
         for p in ["geoh5", "workspace"]:
             if p in self.data.keys() and self.workspace is None:
@@ -210,18 +211,6 @@ class InputFile:
         with open(out_file, "w") as f:
             json.dump(self._stringify(self._demote(out), none_map), f, indent=4)
 
-    def _ui_2_py(self, ui_dict: dict[str, Any]) -> dict[str, Any]:
-        """
-        Flatten ui.json format to simple key/value structure.
-
-        Parameters
-        ----------
-
-        ui_dict :
-            dictionary containing all keys, values, fields of a ui.json formatted file
-        """
-        return UIJson._data(ui_dict)
-
     def _stringify(
         self, d: dict[str, Any], none_map: dict[str, Any] = {}
     ) -> dict[str, Any]:
@@ -241,7 +230,6 @@ class InputFile:
 
         """
 
-        uijson = UIJson(d)
         # map [...] to "[...]"
         excl = ["choiceList", "meshType", "dataType", "association"]
         list2str = (
@@ -263,7 +251,7 @@ class InputFile:
                     if k in none_map.keys():
                         v["value"] = none_map[k]
                         if "group" in v.keys():
-                            if uijson._group_optional(d, v["group"]):
+                            if InputFile.group_optional(d, v["group"]):
                                 v["enabled"] = False
                             else:
                                 v["optional"] = True
@@ -392,20 +380,14 @@ class InputFile:
                 continue
 
 
-class UIJson:
-    """Encodes the ui.json format and provides utilities."""
-
-    def __init__(self, ui: dict[str, Any]):
-        self.ui = ui
-
     @staticmethod
-    def _data(d: dict[str, Any]) -> dict[str, Any]:
+    def flatten(d: dict[str, Any]) -> dict[str, Any]:
         """Flattens ui.json format to simple key/value pair."""
         data = {}
         for k, v in d.items():
             if isinstance(v, dict):
-                field = "value" if UIJson._truth(d, k, "isValue") else "property"
-                if not UIJson._truth(d, k, "enabled"):
+                field = "value" if InputFile.truth(d, k, "isValue") else "property"
+                if not InputFile.truth(d, k, "enabled"):
                     data[k] = None
                 else:
                     data[k] = v[field]
@@ -414,12 +396,8 @@ class UIJson:
 
         return data
 
-    def data(self):
-        """Applies _data to self.ui."""
-        return UIJson._data(self.ui)
-
     @staticmethod
-    def _collect(d: dict[str, Any], field: str, value: Any = None) -> dict[str, Any]:
+    def collect(d: dict[str, Any], field: str, value: Any = None) -> dict[str, Any]:
         """Collects ui parameters with common field and optional value."""
         data = {}
         for k, v in d.items():
@@ -432,46 +410,30 @@ class UIJson:
                             data[k] = v
         return data if data else None
 
-    def collect(self, field: str, value: Any = None) -> dict[str, Any]:
-        """Applies _collect to self.ui."""
-        return UIJson._collect(self.ui, field, value)
-
     @staticmethod
-    def _group(d: dict[str, Any], name: str) -> dict[str, Any]:
+    def group(d: dict[str, Any], name: str) -> dict[str, Any]:
         """Retrieves ui elements with common group name."""
-        return UIJson._collect(d, "group", name)
-
-    def group(self, name: str):
-        """Applies _group to self.ui."""
-        return UIJson._group(self.ui, name)
+        return InputFile.collect(d, "group", name)
 
     @staticmethod
-    def _group_optional(d: dict[str, Any], name: str) -> bool:
+    def group_optional(d: dict[str, Any], name: str) -> bool:
         """Returns groupOptional bool for group name."""
-        group = UIJson._group(d, name)
-        param = UIJson._collect(group, "groupOptional")
+        group = InputFile.group(d, name)
+        param = InputFile.collect(group, "groupOptional")
         return list(param.values())[0]["groupOptional"] if param is not None else False
 
-    def group_optional(self, name: str) -> bool:
-        """Applies _group_enabled to self.ui."""
-        return UIJson._group_enabled(self.ui, name)
-
     @staticmethod
-    def _group_enabled(d: dict[str, Any], name: str) -> bool:
+    def group_enabled(d: dict[str, Any], name: str) -> bool:
         """Returns enabled status of member of group containing groupOptional:True field."""
-        group = UIJson._group(d, name)
-        if UIJson._group_optional(group, name):
-            param = UIJson._collect(group, "groupOptional")
+        group = InputFile.group(d, name)
+        if InputFile.group_optional(group, name):
+            param = InputFile.collect(group, "groupOptional")
             return list(param.values())[0]["enabled"]
         else:
             return True
 
-    def group_enabled(self, name: str) -> bool:
-        """Applies _group_enabled to self.ui."""
-        return UIJson._group_enabled(self.ui, name)
-
     @staticmethod
-    def _truth(d: dict[str, Any], name: str, field: str) -> bool:
+    def truth(d: dict[str, Any], name: str, field: str) -> bool:
         default_states = {
             "enabled": True,
             "optional": False,
@@ -487,7 +449,3 @@ class UIJson:
             raise ValueError(
                 f"Field: {field} was not provided in ui.json and does not have a default state."
             )
-
-    def truth(self, name: str, field: str) -> bool:
-        """Applies _truth to self.ui."""
-        return UIJson._truth(self.ui, name, field)
