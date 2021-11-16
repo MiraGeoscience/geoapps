@@ -489,7 +489,7 @@ def test_validate_detrend_order(tmp_path):
 
 def test_validate_detrend_type(tmp_path):
     param = "detrend_type"
-    newval = "corners"
+    newval = "perimeter"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "sdf", "value", workspace=workspace)
 

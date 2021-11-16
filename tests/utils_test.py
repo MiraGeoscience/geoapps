@@ -320,9 +320,9 @@ def test_detrend_xy():
     # Should return a plane even for order=5
     comp_trend, comp_params = calculate_2D_trend(xy, nan_values, order=5, method="all")
     np.testing.assert_almost_equal(values, comp_trend)
-    # Should return same plane parameter for 'corners' or 'all'
+    # Should return same plane parameter for 'perimeter' or 'all'
     corner_trend, corner_params = calculate_2D_trend(
-        xy, nan_values, order=1, method="corners"
+        xy, nan_values, order=1, method="perimeter"
     )
     np.testing.assert_almost_equal(values, corner_trend)
 
