@@ -220,26 +220,8 @@ class InputFile:
         ui_dict :
             dictionary containing all keys, values, fields of a ui.json formatted file
         """
-
-        data = {}
-        for k, v in ui_dict.items():
-            if isinstance(v, dict):
-                field = "value"
-                if "isValue" in v.keys():
-                    field = "value" if v["isValue"] else "property"
-                if "enabled" in v.keys():
-                    if not v["enabled"]:
-                        data[k] = None
-                        continue
-                if "visible" in v.keys():
-                    if not v["visible"]:
-                        data[k] = None
-                        continue
-                data[k] = v[field]
-            else:
-                data[k] = v
-
-        return data
+        uijson = UIJson(ui_dict)
+        return uijson.data()
 
     def _stringify(
         self, d: dict[str, Any], none_map: dict[str, Any] = {}
@@ -260,6 +242,7 @@ class InputFile:
 
         """
 
+        uijson = UIJson(d)
         # map [...] to "[...]"
         excl = ["choiceList", "meshType", "dataType", "association"]
         list2str = (
@@ -280,8 +263,15 @@ class InputFile:
                 if v["value"] is None:
                     if k in none_map.keys():
                         v["value"] = none_map[k]
-                        v["optional"] = True
-                        v["enabled"] = False
+                        if ("group" in v.keys()):
+                            if (uijson._group_optional(d, v["group"])):
+                                v["enabled"] = False
+                            else:
+                                v["optional"] = True
+                                v["enabled"] = False
+                        else:
+                            v["optional"] = True
+                            v["enabled"] = False
                     elif "meshType" in v.keys():
                         v["value"] = ""
                     elif "isValue" in v.keys():
@@ -401,3 +391,101 @@ class InputFile:
 
             else:
                 continue
+
+
+
+class UIJson:
+    """Encodes the ui.json format and provides utilities."""
+
+    def __init__(self, ui : dict[str, Any]):
+        self.ui = ui
+
+    def data(self) -> dict[str, Any]:
+        """Flattens ui.json format to simple key/value pair."""
+        data = {}
+        for k, v in self.ui.items():
+            if isinstance(v, dict):
+                field = 'value'
+                if "isValue" in v.keys():
+                    field = "value" if v["isValue"] else "property"
+                if "enabled" in v.keys():
+                    if v["enabled"] is False:
+                        data[k] = None
+                    else:
+                        data[k] = v[field]
+            else:
+                data[k] = v
+
+        return data
+
+    @staticmethod
+    def _collect(d: dict[str, Any], field: str, value: Any = None) -> dict[str, Any]:
+        """Collects ui parameters with common field and optional value."""
+        data = {}
+        for k, v in d.items():
+            if isinstance(v, dict):
+                if field in v.keys():
+                    if value is None:
+                        data[k] = v
+                    else:
+                        if v[field] == value:
+                            data[k] = v
+        return data if data else None
+
+    def collect(self, field: str, value: Any = None) -> dict[str, Any]:
+        """Applies _collect to self.ui."""
+        return UIJson._collect(self.ui, field, value)
+
+    @staticmethod
+    def _group(d: dict[str, Any], name: str) -> dict[str, Any]:
+        """Retrieves ui elements with common group name."""
+        return UIJson._collect(d, "group", name)
+
+    def group(self, name: str):
+        """Applies _group to self.ui."""
+        return UIJson._group(self.ui, name)
+
+    @staticmethod
+    def _group_optional(d: dict[str, Any], name: str) -> bool:
+        """Returns groupOptional bool for group name."""
+        group = UIJson._group(d, name)
+        param = UIJson._collect(group, "groupOptional")
+        return list(param.values())[0]["groupOptional"] if param is not None else False
+
+    def group_optional(self, name: str) -> bool:
+        """Applies _group_enabled to self.ui."""
+        return UIJson._group_enabled(self.ui, name)
+
+    @staticmethod
+    def _group_enabled(d: dict[str, Any], name: str) -> bool:
+        """Returns enabled status of member of group containing groupOptional:True field."""
+        group = UIJson._group(d, name)
+        if UIJson._group_optional(group, name):
+            param = UIJson._collect(group, "groupOptional")
+            return list(param.values())[0]["enabled"]
+        else:
+            return True
+
+    def group_enabled(self, name: str) -> bool:
+        """Applies _group_enabled to self.ui."""
+        return UIJson._group_enabled(self.ui, name)
+
+    @staticmethod
+    def _truth(d: dict[str, Any], name: str, field: str) -> bool:
+        default_states = {
+            "enabled": True,
+            "optional": False,
+            "groupOptional": False,
+            "main": False,
+            "isValue": True,
+        }
+        if field in d[name].keys():
+            return d[name][field]
+        elif field in default_states.keys():
+            return default_states[field]
+        else:
+            raise ValueError(f"Field: {field} was not provided in ui.json and does not have a default state.")
+
+    def truth(self, name: str, field: str) -> bool:
+        """Applies _truth to self.ui."""
+        return UIJson._truth(self.ui, name, field)
