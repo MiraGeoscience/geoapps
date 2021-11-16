@@ -174,7 +174,7 @@ default_ui_json = {
         "value": 0,
     },
     "detrend_type": {
-        "choiceList": ["all", "corners"],
+        "choiceList": ["all", "perimeter"],
         "group": "Data pre-processing",
         "dependency": "detrend_order",
         "dependencyType": "enabled",
@@ -710,7 +710,7 @@ validations = {
     },
     "detrend_type": {
         "types": [str],
-        "values": ["all", "corners"],
+        "values": ["all", "perimeter"],
     },
     "max_chunk_size": {"types": [int, float]},
     "chunk_by_rows": {
