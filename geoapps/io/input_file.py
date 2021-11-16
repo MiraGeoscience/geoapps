@@ -220,8 +220,7 @@ class InputFile:
         ui_dict :
             dictionary containing all keys, values, fields of a ui.json formatted file
         """
-        uijson = UIJson(ui_dict)
-        return uijson.data()
+        return UIJson._data(ui_dict)
 
     def _stringify(
         self, d: dict[str, Any], none_map: dict[str, Any] = {}
