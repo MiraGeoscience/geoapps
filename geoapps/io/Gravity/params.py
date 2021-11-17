@@ -25,8 +25,8 @@ class GravityParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
-    forward_defaults = forward_defaults
-    inversion_defaults = inversion_defaults
+    _forward_defaults = forward_defaults
+    _inversion_defaults = inversion_defaults
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -72,9 +72,8 @@ class GravityParams(InversionParams):
         self.gy_channel = None
         self.gy_uncertainty = None
         self.out_group = None
-        self.defaults = inversion_defaults
-        self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
-        self.param_names = list(self.default_ui_json.keys())
+        self.default_ui_json = default_ui_json
+        self.param_names = list(self.defaults.keys())
 
         super().__init__(**kwargs)
 

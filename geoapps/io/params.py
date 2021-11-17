@@ -87,9 +87,10 @@ class Params:
         self.workspace = None
         self._verbose = verbose
 
-        self.update(self.defaults, validate=False)
+        self.update(self.defaults, validate=False, )
         if kwargs:
             self._handle_kwargs(kwargs, validate)
+
 
     def _handle_kwargs(self, kwargs, validate):
         """Updates attributes with kwargs, validates and attaches input file attributes."""
