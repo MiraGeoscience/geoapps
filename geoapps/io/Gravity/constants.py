@@ -27,34 +27,24 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "gz_channel_bool": False,
     "gz_channel": None,
     "gz_uncertainty": 1.0,
-    "guv_channel_bool": False,
     "guv_channel": None,
     "guv_uncertainty": 1.0,
-    "gxy_channel_bool": False,
     "gxy_channel": None,
     "gxy_uncertainty": 1.0,
-    "gxx_channel_bool": False,
     "gxx_channel": None,
     "gxx_uncertainty": 1.0,
-    "gyy_channel_bool": False,
     "gyy_channel": None,
     "gyy_uncertainty": 1.0,
-    "gzz_channel_bool": False,
     "gzz_channel": None,
     "gzz_uncertainty": 1.0,
-    "gxz_channel_bool": False,
     "gxz_channel": None,
     "gxz_uncertainty": 1.0,
-    "gyz_channel_bool": False,
     "gyz_channel": None,
     "gyz_uncertainty": 1.0,
-    "gx_channel_bool": False,
     "gx_channel": None,
     "gx_uncertainty": 1.0,
-    "gy_channel_bool": False,
     "gy_channel": None,
     "gy_uncertainty": 1.0,
     "starting_model_object": None,
@@ -133,6 +123,7 @@ inversion_defaults = {
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None
 }
 forward_defaults = {
     "title": "SimPEG Gravity Forward",
@@ -188,6 +179,7 @@ forward_defaults = {
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None
 }
 
 default_ui_json = {
@@ -509,19 +501,19 @@ default_ui_json = {
 
 base_default_ui_json.update(default_ui_json)
 default_ui_json = base_default_ui_json.copy()
-for k, v in inversion_defaults.items():
-    if isinstance(default_ui_json[k], dict):
-        key = "value"
-        if "isValue" in default_ui_json[k].keys():
-            if default_ui_json[k]["isValue"] == False:
-                key = "property"
-        if "enabled" in default_ui_json[k].keys() and v is not None:
-            default_ui_json[k]["enabled"] = True
-        default_ui_json[k][key] = v
-    else:
-        default_ui_json[k] = v
+# for k, v in inversion_defaults.items():
+#     if isinstance(default_ui_json[k], dict):
+#         key = "value"
+#         if "isValue" in default_ui_json[k].keys():
+#             if default_ui_json[k]["isValue"] == False:
+#                 key = "property"
+#         if "enabled" in default_ui_json[k].keys() and v is not None:
+#             default_ui_json[k]["enabled"] = True
+#         default_ui_json[k][key] = v
+#     else:
+#         default_ui_json[k] = v
 
-default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
+# default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 
 
 ################ Validations #################

@@ -23,7 +23,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "chargeability_channel_bool": True,
     "chargeability_channel": None,
     "chargeability_uncertainty": 1.0,
     "conductivity_model_object": None,

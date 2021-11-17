@@ -108,18 +108,42 @@ class InversionParams(Params):
         self.conda_environment_boolean: bool = None
         self.distributed_workers = None
 
-        for k, v in self.default_ui_json.items():
-            if isinstance(v, dict):
-                field = "value"
-                if "isValue" in v.keys():
-                    if not v["isValue"] or self.defaults[k] is None:
-                        v["isValue"] = False
-                        field = "property"
-                self.default_ui_json[k][field] = self.defaults[k]
-            else:
-                self.default_ui_json[k] = self.defaults[k]
-
         super().__init__(**kwargs)
+
+    @classmethod
+    def from_input_file(
+        cls, input_file: InputFile, workspace: Workspace = None
+    ) -> Params:
+        """Construct Params object from InputFile instance.
+
+        Parameters
+        ----------
+        input_file : InputFile
+            class instance to handle loading input file
+        """
+
+        p = cls()
+        fwd = input_file.data["forward_only"]
+        p.defaults = p._forward_defaults if fwd else p._inversion_defaults
+        p._input_file = input_file
+        p.workpath = input_file.workpath
+        p.associations = input_file.associations
+        p.update(input_file.data)
+
+        if workspace is not None:
+            p.workspace = workspace
+
+        elif input_file.workspace is not None:
+            p.workspace = input_file.workspace
+
+        else:
+            for attr in ["geoh5", "workspace"]:
+                if attr in input_file.data.keys():
+                    if input_file.data[attr] is not None:
+                        p.workspace = input_file.data[attr]
+
+        p.geoh5 = p.workspace
+        return p
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""
