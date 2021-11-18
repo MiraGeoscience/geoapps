@@ -115,11 +115,12 @@ inversion_defaults = {
     "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
+    "workspace": None
     "max_ram": None,
-    "workspace": None,
     "out_group": "GravityInversion",
     "no_data_value": None,
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
@@ -176,6 +177,7 @@ forward_defaults = {
     "workspace": None,
     "out_group": "GravityForward",
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
@@ -501,19 +503,6 @@ default_ui_json = {
 
 base_default_ui_json.update(default_ui_json)
 default_ui_json = base_default_ui_json.copy()
-# for k, v in inversion_defaults.items():
-#     if isinstance(default_ui_json[k], dict):
-#         key = "value"
-#         if "isValue" in default_ui_json[k].keys():
-#             if default_ui_json[k]["isValue"] == False:
-#                 key = "property"
-#         if "enabled" in default_ui_json[k].keys() and v is not None:
-#             default_ui_json[k]["enabled"] = True
-#         default_ui_json[k][key] = v
-#     else:
-#         default_ui_json[k] = v
-
-# default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 
 
 ################ Validations #################

@@ -16,7 +16,8 @@ from .base_inversion import InversionDriver
 def start_inversion(filepath=None):
     """Starts inversion with parameters defined in input file."""
 
-    params = GravityParams.from_path(filepath)
+    input_file = InputFile(filepath)
+    params = GravityParams(input_file)
     driver = GravityDriver(params)
     driver.run()
 
