@@ -143,7 +143,7 @@ class InversionMesh:
             }
 
         mesh_params_dict["objects"] = self.inversion_data.entity.uid
-        mesh_params_dict["geoh5"] = self.workspace.h5file
+        mesh_params_dict["geoh5"] = self.workspace
 
         return OctreeParams(**mesh_params_dict)
 
@@ -155,3 +155,4 @@ class InversionMesh:
         octree_params = self.collect_mesh_params(self.params)
         self.entity = OctreeMesh.run(octree_params)
         self.entity.parent = self.params.ga_group
+

@@ -9,6 +9,7 @@
 import sys
 
 from geoapps.io.Gravity import GravityParams
+from geoapps.io import InputFile
 
 from .base_inversion import InversionDriver
 

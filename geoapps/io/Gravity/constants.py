@@ -115,7 +115,7 @@ inversion_defaults = {
     "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
-    "workspace": None
+    "workspace": None,
     "max_ram": None,
     "out_group": "GravityInversion",
     "no_data_value": None,
