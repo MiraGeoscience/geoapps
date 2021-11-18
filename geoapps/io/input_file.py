@@ -84,7 +84,6 @@ class InputFile:
         """Load data from dictionary and validate."""
 
         input_dict = self._numify(input_dict)
-        input_dict = self._demote(input_dict)
         self.ui = input_dict
         self._set_associations(input_dict)
         self.data = InputFile.flatten(input_dict)

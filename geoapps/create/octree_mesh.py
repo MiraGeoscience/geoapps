@@ -251,8 +251,7 @@ class OctreeMesh(ObjectDataSelection):
         Create an octree mesh from input values
         """
 
-        workspace = params.workspace
-        obj = workspace.get_entity(params.objects)
+        obj = params.workspace.get_entity(params.objects)
 
         if not any(obj):
             return
@@ -290,7 +289,7 @@ class OctreeMesh(ObjectDataSelection):
                     if isinstance(value["object"], str)
                     else value["object"]
                 )
-                entity = workspace.get_entity(uid)
+                entity = params.workspace.get_entity(uid)
 
             except (ValueError, TypeError):
                 continue
@@ -310,7 +309,7 @@ class OctreeMesh(ObjectDataSelection):
         treemesh.finalize()
 
         print("Writing to file ")
-        octree = treemesh_2_octree(workspace, treemesh, name=params.ga_group_name)
+        octree = treemesh_2_octree(params.workspace, treemesh, name=params.ga_group_name)
 
         if params.monitoring_directory is not None and path.exists(
             params.monitoring_directory
@@ -318,8 +317,10 @@ class OctreeMesh(ObjectDataSelection):
             BaseApplication.live_link_output(params.monitoring_directory, octree)
 
         print(
-            f"Octree mesh '{octree.name}' completed and exported to {path.abspath(workspace.h5file)}"
+            f"Octree mesh '{octree.name}' completed and exported to {path.abspath(params.workspace.h5file)}"
         )
+
+        assert octree.workspace is not None
         return octree
 
     def add_refinement_widget(self, label: str, params: dict):
