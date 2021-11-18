@@ -72,35 +72,22 @@ class InputFile:
         if self.filepath is not None:
             with open(self.filepath) as f:
                 data = json.load(f)
-                self.load(data, self.validator)
+                self.load(data)
 
     @classmethod
     def from_dict(cls, dict: dict[str, Any], validator: InputValidator = None):
         ifile = cls()
-        ifile.load(dict, validator)
+        ifile.load(dict)
         return ifile
 
-    def load(self, input_dict: dict[str, Any], validator: InputValidator = None):
+    def load(self, input_dict: dict[str, Any]):
         """Load data from dictionary and validate."""
 
         input_dict = self._numify(input_dict)
         input_dict = self._demote(input_dict)
-        self._set_associations(input_dict)
         self.ui = input_dict
-
+        self._set_associations(input_dict)
         self.data = InputFile.flatten(input_dict)
-
-        for p in ["geoh5", "workspace"]:
-            if p in self.data.keys() and self.workspace is None:
-                if self.data[p] is not None:
-                    if validator is not None:
-                        validator.validate(p, self.data[p], validator.validations[p])
-                    self.workspace = Workspace(self.data[p])
-
-        if validator is not None:
-            validator.workspace = self.workspace
-            validator.validate_input(self)
-
         self.is_formatted = True
         self.is_loaded = True
 
@@ -385,11 +372,12 @@ class InputFile:
         data = {}
         for k, v in d.items():
             if isinstance(v, dict):
-                field = "value" if InputFile.truth(d, k, "isValue") else "property"
-                if not InputFile.truth(d, k, "enabled"):
-                    data[k] = None
-                else:
-                    data[k] = v[field]
+                if InputFile.is_uijson({k: v}):
+                    field = "value" if InputFile.truth(d, k, "isValue") else "property"
+                    if not InputFile.truth(d, k, "enabled"):
+                        data[k] = None
+                    else:
+                        data[k] = v[field]
             else:
                 data[k] = v
 
@@ -448,3 +436,23 @@ class InputFile:
             raise ValueError(
                 f"Field: {field} was not provided in ui.json and does not have a default state."
             )
+
+    @staticmethod
+    def is_uijson(d):
+        uijson_keys = [
+            "title", "monitoring_directory", "run_command", "conda_environment",
+            "geoh5", "workspace_geoh5"
+        ]
+        is_uijson = True
+        if len(d.keys()) > 1:
+            for k in uijson_keys:
+                if k not in d.keys():
+                    is_uijson = False
+
+        for k, v in d.items():
+            if isinstance(v, dict):
+                for name in ["label", "value"]:
+                    if name not in v.keys():
+                        is_uijson = False
+
+        return is_uijson

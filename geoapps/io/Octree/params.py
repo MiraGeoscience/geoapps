@@ -20,29 +20,13 @@ class OctreeParams(Params):
 
     _required_parameters = required_parameters
     _validations = validations
+    default_ui_json = default_ui_json
     param_names = list(default_ui_json.keys())
     _free_param_keys = ["object", "levels", "type", "distance"]
     _free_param_identifier = "refinement"
 
-    def __init__(self, validate=True, **kwargs):
-
-        self.validator: InputFreeformValidator = InputFreeformValidator(
-            required_parameters, validations, free_params_keys=self._free_param_keys
-        )
-        self._title = None
-        self._objects = None
-        self._u_cell_size = None
-        self._v_cell_size = None
-        self._w_cell_size = None
-        self._horizontal_padding = None
-        self._vertical_padding = None
-        self._depth_core = None
-        self._ga_group_name = None
-
-        self.defaults = defaults
-        self.default_ui_json = default_ui_json
-
-        super().__init__(validate, **kwargs)
+    def __init__(self, input_file=None, validate=True, **kwargs):
+        super().__init__(input_file, validate, **kwargs)
 
         free_params_dict = {}
         for k, v in kwargs.items():
@@ -56,6 +40,34 @@ class OctreeParams(Params):
 
         if any(free_params_dict):
             self._free_params_dict = free_params_dict
+
+        self._initialize(kwargs)
+
+    def _initialize(self, kwargs):
+
+        if self.input_file is not None:
+            self.input_file.data.update(kwargs)
+        elif kwargs:
+            self.input_file = InputFile.from_dict(kwargs)
+        else:
+            self.input_file = InputFile()
+
+        self.apply_defaults()
+        self.workspace = self.input_file.data["geoh5"]
+        self.validator: InputFreeformValidator = InputFreeformValidator(
+            required_parameters, validations, self.workspace,
+            free_params_keys=self._free_param_keys, input=self.input_file.data
+        )
+        self.update(self.input_file.data)
+
+    def apply_defaults(self):
+        validate = self.validate
+        self.validate = False
+        self.defaults = defaults
+        self.param_names = list(self.defaults.keys())
+        self.update(self.defaults)
+        self.validate = validate
+
 
     def default(self, param) -> Any:
         """Wraps Params.default."""
