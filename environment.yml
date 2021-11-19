@@ -28,7 +28,7 @@ dependencies:
   - pydiso
   - setuptools=58.4
   - pip:
-    - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.6.0
+    - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.6.1
     - git+https://github.com/MiraGeoscience/simpeg.git@v0.9.1.dev1+geoapps.0.6.0
     - geoh5py==0.1.5
 variables:
