@@ -43,34 +43,45 @@ class InversionParams(Params):
             self.input_file = InputFile()
 
         self.apply_defaults()
-        self.workspace = self.input_file.data["geoh5"]
-        self.validator: InputValidator = InputValidator(
-            required_parameters, validations, self.workspace,
-            input=self.input_file.data
-        )
+        if self.validate:
+            self.workspace = self.input_file.data["geoh5"]
+            self.validator: InputValidator = InputValidator(
+                required_parameters, validations, self.workspace,
+                input=self.input_file
+            )
         self.update(self.input_file.data)
 
     def apply_defaults(self):
+
         validate = self.validate
         self.validate = False
+
+        # All parameters start as None
+        for k in self.default_ui_json.keys():
+            setattr(self, k, None)
+
+        # Determine if foward or inverse
         if self.input_file.data:
             fwd = self.input_file.data["forward_only"]
         else:
             fwd = False
+
+        # Use appropriate defaults
         self.defaults = self._forward_defaults if fwd else self._inversion_defaults
-        self.default_ui_json = {k: self.default_ui_json[k] for k in self.defaults.keys()}
         self.param_names = list(self.defaults.keys())
+        self.default_ui_json = {k: self.default_ui_json[k] for k in self.param_names}
+
         self.update(self.defaults)
         self.validate = validate
 
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""
-        return self.__getattribute__("_".join([component, "uncertainty"]))
+        return getattr(self, "_".join([component, "uncertainty"]), None)
 
     def channel(self, component: str) -> UUID:
         """Returns channel uuid for chosen data component."""
-        return self.__getattribute__("_".join([component, "channel"]))
+        return getattr(self, "_".join([component, "channel"]), None)
 
     def cell_size(self):
         """Returns core cell size in all 3 dimensions."""
@@ -96,9 +107,9 @@ class InversionParams(Params):
         )
         for c in channels:
             use_ch = False
-            if getattr(self, f"{c}_channel", 99) is not None:
+            if getattr(self, f"{c}_channel", None) is not None:
                 use_ch = True
-            if getattr(self, f"{c}_channel_bool", 99) is True:
+            if getattr(self, f"{c}_channel_bool", None) is True:
                 use_ch = True
             if use_ch:
                 comps.append(c)

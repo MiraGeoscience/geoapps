@@ -37,7 +37,7 @@ class Geoh5Tester:
             self.input_file = InputFile()
             self.input_file.data["geoh5"] = None
             self.input_file.data["workspace"] = None
-            self.params = params_class.from_input_file(self.input_file, workspace=ws)
+            self.params = params_class(input_file=self.input_file, workspace=ws)
             self.ws = self.params.workspace
             self.has_params = True
 
