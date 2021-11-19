@@ -29,6 +29,90 @@ class InversionParams(Params):
     _ga_group = None
 
     def __init__(self, input_file=None, validate=True, **kwargs):
+
+        self.forward_only: bool = None
+        self.topography_object: UUID = None
+        self.topography: UUID | float = None
+        self.data_object: UUID = None
+        self.starting_model_object: UUID = None
+        self.starting_model: UUID | float = None
+        self.tile_spatial = None
+        self.z_from_topo: bool = None
+        self.receivers_radar_drape = None
+        self.receivers_offset_x: float = None
+        self.receivers_offset_y: float = None
+        self.receivers_offset_z: float = None
+        self.gps_receivers_offset = None
+        self.ignore_values: str = None
+        self.resolution: float = None
+        self.detrend_order: int = None
+        self.detrend_type: str = None
+        self.max_chunk_size: int = None
+        self.chunk_by_rows: bool = None
+        self.output_tile_files: bool = None
+        self.mesh = None
+        self.u_cell_size: float = None
+        self.v_cell_size: float = None
+        self.w_cell_size: float = None
+        self.octree_levels_topo: list[int] = None
+        self.octree_levels_obs: list[int] = None
+        self.depth_core: float = None
+        self.max_distance: float = None
+        self.horizontal_padding: float = None
+        self.vertical_padding: float = None
+        self.window_azimuth: float = None
+        self.window_center_x: float = None
+        self.window_center_y: float = None
+        self.window_height: float = None
+        self.window_width: float = None
+        self.inversion_style: str = None
+        self.chi_factor: float = None
+        self.sens_wts_threshold: float = None
+        self.every_iteration_bool: bool = None
+        self.f_min_change: float = None
+        self.minGNiter: float = None
+        self.beta_tol: float = None
+        self.prctile: float = None
+        self.coolingRate: float = None
+        self.coolEps_q: bool = None
+        self.coolEpsFact: float = None
+        self.beta_search: bool = None
+        self.starting_chi_factor: float = None
+        self.max_iterations: int = None
+        self.max_line_search_iterations: int = None
+        self.max_cg_iterations: int = None
+        self.max_global_iterations: int = None
+        self.initial_beta: float = None
+        self.initial_beta_ratio: float = None
+        self.tol_cg: float = None
+        self.alpha_s: float = None
+        self.alpha_x: float = None
+        self.alpha_y: float = None
+        self.alpha_z: float = None
+        self.s_norm: float = None
+        self.x_norm: float = None
+        self.y_norm: float = None
+        self.z_norm: float = None
+        self.reference_model_object: UUID = None
+        self.reference_model = None
+        self.gradient_type: str = None
+        self.lower_bound_object: UUID = None
+        self.lower_bound = None
+        self.upper_bound_object: UUID = None
+        self.upper_bound = None
+        self.parallelized: bool = None
+        self.n_cpu: int = None
+        self.max_ram: float = None
+        self.out_group = None
+        self.no_data_value: float = None
+        self.monitoring_directory: str = None
+        self.workspace_geoh5: str = None
+        self.geoh5 = None
+        self.run_command: str = None
+        self.run_command_boolean: bool = None
+        self.conda_environment: str = None
+        self.conda_environment_boolean: bool = None
+        self.distributed_workers = None
         super().__init__(input_file, validate, **kwargs)
 
         self._initialize(kwargs)
@@ -55,10 +139,6 @@ class InversionParams(Params):
 
         validate = self.validate
         self.validate = False
-
-        # All parameters start as None
-        for k in self.default_ui_json.keys():
-            setattr(self, k, None)
 
         # Determine if foward or inverse
         if self.input_file.data:

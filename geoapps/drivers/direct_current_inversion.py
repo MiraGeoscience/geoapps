@@ -8,6 +8,7 @@
 import sys
 
 from geoapps.io.DirectCurrent import DirectCurrentParams
+from geoapps.io import InputFile
 
 from .base_inversion import InversionDriver
 
@@ -15,7 +16,8 @@ from .base_inversion import InversionDriver
 def start_inversion(filepath=None):
     """Starts inversion with parameters defined in input file."""
 
-    params = DirectCurrentParams.from_path(filepath)
+    input_file = InputFile(filepath)
+    params = DirectCurrentParams(input_file)
     driver = DirectCurrentDriver(params)
     driver.run()
 

@@ -29,8 +29,8 @@ class MagneticScalarParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
-    forward_defaults = forward_defaults
-    inversion_defaults = inversion_defaults
+    _forward_defaults = forward_defaults
+    _inversion_defaults = inversion_defaults
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -39,11 +39,10 @@ class MagneticScalarParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(self, **kwargs):
+    def __init__(self, input_file=None, validate=True, **kwargs):
 
-        self.validator: InputValidator = InputValidator(
-            required_parameters, validations
-        )
+        self.validate = False
+        self.default_ui_json = default_ui_json
         self.inversion_type = "magnetic scalar"
         self.inducing_field_strength: float = None
         self.inducing_field_inclination: float = None
@@ -79,11 +78,8 @@ class MagneticScalarParams(InversionParams):
         self.bz_channel = None
         self.bz_uncertainty = None
         self.out_group = None
-        self.defaults = inversion_defaults
-        self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
-        self.param_names = list(self.default_ui_json.keys())
 
-        super().__init__(**kwargs)
+        super().__init__(input_file, validate, **kwargs)
 
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""

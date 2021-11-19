@@ -201,6 +201,15 @@ forward_defaults = {
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
 }
 default_ui_json = {
     "title": "SimPEG Magnetic Vector Inversion",
@@ -642,23 +651,19 @@ default_ui_json = {
         "value": 0.0,
     },
     "out_group": {"label": "Results group name", "value": "VectorInversion"},
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
 }
 
 base_default_ui_json.update(default_ui_json)
 default_ui_json = base_default_ui_json.copy()
-for k, v in inversion_defaults.items():
-    if isinstance(default_ui_json[k], dict):
-        key = "value"
-        if "isValue" in default_ui_json[k].keys():
-            if default_ui_json[k]["isValue"] == False:
-                key = "property"
-        default_ui_json[k][key] = v
-        if "enabled" in default_ui_json[k].keys() and v is not None:
-            default_ui_json[k]["enabled"] = True
-    else:
-        default_ui_json[k] = v
-
-default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
 
 
 ################ Validations #################

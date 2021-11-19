@@ -25,8 +25,8 @@ class InducedPolarizationParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
-    forward_defaults = forward_defaults
-    inversion_defaults = inversion_defaults
+    _forward_defaults = forward_defaults
+    _inversion_defaults = inversion_defaults
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -35,11 +35,11 @@ class InducedPolarizationParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(self, forward=False, **kwargs):
 
-        self.validator: InputValidator = InputValidator(
-            required_parameters, validations
-        )
+    def __init__(self, input_file=None, validate=True, **kwargs):
+
+        self.validate = False
+        self.default_ui_json = default_ui_json
         self.inversion_type = "induced polarization"
         self.chargeability_channel_bool = None
         self.chargeability_channel = None
@@ -48,21 +48,8 @@ class InducedPolarizationParams(InversionParams):
         self.conductivity_model = None
         self.out_group = None
 
-        self.defaults = forward_defaults if forward else inversion_defaults
-        self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
-        self.param_names = list(self.default_ui_json.keys())
+        super().__init__(input_file, validate, **kwargs)
 
-        for k, v in self.default_ui_json.items():
-            if isinstance(v, dict):
-                field = "value"
-                if "isValue" in v.keys():
-                    if not v["isValue"]:
-                        field = "property"
-                self.default_ui_json[k][field] = self.defaults[k]
-            else:
-                self.default_ui_json[k] = self.defaults[k]
-
-        super().__init__(**kwargs)
 
     @property
     def inversion_type(self):
