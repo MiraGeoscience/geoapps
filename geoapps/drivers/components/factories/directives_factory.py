@@ -23,6 +23,7 @@ class DirectivesFactory:
         "SaveIterationsGeoH5": [
             "save_iteration_model_directive",
             "save_iteration_data_directive",
+            "save_iteration_residual_directive",
             "save_iteration_apparent_resistivity_directive",
         ],
     }
@@ -38,6 +39,7 @@ class DirectivesFactory:
         self.update_preconditioner_directive = None
         self.save_iteration_model_directive = None
         self.save_iteration_data_directive = None
+        self.save_iteration_residual_directive = None
         self.save_iteration_apparent_resistivity_directive = None
 
     def build(
@@ -99,6 +101,19 @@ class DirectivesFactory:
                 sorting=sorting,
                 save_objective_function=True,
             )
+
+            self.save_iteration_residual_directive = SaveIterationGeoh5Factory(
+                self.params
+            ).build(
+                inversion_object=inversion_data,
+                active_cells=active_cells,
+                sorting=sorting,
+                transform=lambda x: np.column_stack(
+                    list(inversion_data.observed.values())
+                ).ravel()
+                - x,
+            )
+            self.save_iteration_residual_directive.label = "Residual"
 
             if self.factory_type in ["direct current"]:
                 transform = inversion_data.transformations["potential"]
@@ -179,7 +194,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 # Include an apparent resistivity mapper
                 if transform is not None:
                     property = "resistivity" if is_dc else "chargeability"
-                    kwargs["transforms"].append(transform)
                     kwargs["channels"] = [f"apparent_{property}"]
                     apparent_measurement_entity_type = self.params.workspace.get_entity(
                         f"Observed_apparent_{property}"
@@ -189,6 +203,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                             f"apparent_{property}": apparent_measurement_entity_type
                         }
                     }
+            if transform is not None:
+                kwargs["transforms"].append(transform)
 
             if self.factory_type in ["magnetic scalar", "magnetic vector"]:
                 kwargs["components"] = ["mag"]
