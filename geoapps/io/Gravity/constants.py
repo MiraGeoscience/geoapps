@@ -181,7 +181,16 @@ forward_defaults = {
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
-    "distributed_workers": None
+    "distributed_workers": None,
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
 }
 
 default_ui_json = {
@@ -499,6 +508,15 @@ default_ui_json = {
         "value": 0.0,
     },
     "out_group": {"label": "Results group name", "value": "Gravity"},
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
 }
 
 base_default_ui_json.update(default_ui_json)
