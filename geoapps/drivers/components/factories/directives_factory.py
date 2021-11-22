@@ -192,8 +192,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 }
 
                 # Include an apparent resistivity mapper
-                if transform is not None:
-                    property = "resistivity" if is_dc else "chargeability"
+                if transform is not None and is_dc:
+                    property = "resistivity"
                     kwargs["channels"] = [f"apparent_{property}"]
                     apparent_measurement_entity_type = self.params.workspace.get_entity(
                         f"Observed_apparent_{property}"
