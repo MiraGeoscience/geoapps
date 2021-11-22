@@ -149,6 +149,7 @@ class InversionParams(Params):
         # Use appropriate defaults
         self.defaults = self._forward_defaults if fwd else self._inversion_defaults
         self.param_names = list(self.defaults.keys())
+        self.default_ui_json.update(self.forward_ui_json if fwd else self.inversion_ui_json)
         self.default_ui_json = {k: self.default_ui_json[k] for k in self.param_names}
 
         self.update(self.defaults)
