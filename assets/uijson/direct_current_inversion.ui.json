@@ -100,13 +100,7 @@
         "min": 1,
         "max": 1000
     },
-    "output_tile_files": {
-        "group": "Receivers location options",
-        "label": "Output tile files",
-        "visible": false,
-        "enabled": true,
-        "value": false
-    },
+    "output_tile_files": false,
     "z_from_topo": {
         "main": false,
         "group": "Receivers location options",
@@ -148,21 +142,7 @@
         "value": 0.0,
         "enabled": true
     },
-    "gps_receivers_offset": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Receivers location options",
-        "enabled": false,
-        "visible": false,
-        "isValue": false,
-        "label": "Set data offsets",
-        "parent": "data_object",
-        "property": "",
-        "value": 0.0
-    },
+    "gps_receivers_offset": "",
     "ignore_values": {
         "group": "Data pre-processing",
         "enabled": false,
@@ -171,10 +151,11 @@
         "value": ""
     },
     "resolution": {
-        "enabled": true,
+        "enabled": false,
         "visible": false,
         "label": "resolution",
-        "value": 0.0
+        "value": 0.0,
+        "optional": true
     },
     "detrend_order": {
         "enabled": false,
@@ -307,31 +288,27 @@
         "enabled": false,
         "groupOptional": true,
         "label": "Window center easting",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_center_y": {
         "group": "Data window",
         "enabled": false,
         "label": "Window center northing",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_width": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window width",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_height": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window height",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_azimuth": {
         "min": -180,
@@ -339,8 +316,7 @@
         "group": "Data window",
         "enabled": false,
         "label": "Window azimuth",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "inversion_style": "voxel",
     "chi_factor": {
@@ -354,7 +330,7 @@
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
         "label": "Update sensitivity weight threshold",
-        "value": 0.0
+        "value": 30
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
@@ -400,6 +376,14 @@
         "group": "Update IRLS directive",
         "label": "Perform beta search",
         "value": false
+    },
+    "starting_chi_factor": {
+        "group": "Update IRLS directive",
+        "label": "IRLS start chi factor",
+        "optional": true,
+        "enabled": false,
+        "value": 1.0,
+        "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin."
     },
     "max_iterations": {
         "min": 0,
@@ -581,7 +565,6 @@
     },
     "upper_bound_object": {
         "group": "Regularization",
-        "visible": true,
         "label": "Upper bound object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -627,9 +610,9 @@
         "dependency": "parallelized",
         "dependencyType": "enabled",
         "optional": true,
-        "enabled": true,
+        "enabled": false,
         "label": "Set RAM limit",
-        "value": 2,
+        "value": "",
         "visible": false
     },
     "workspace": {
@@ -658,7 +641,6 @@
     },
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": {
-        "default": false,
         "value": false,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",

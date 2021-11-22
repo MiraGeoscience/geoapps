@@ -458,14 +458,6 @@ def test_validate_receivers_offset_z(tmp_path):
     catch_invalid_generator(tmp_path, param, "test", "type", workspace=workspace)
 
 
-def test_validate_gps_receivers_offset(tmp_path):
-    param = "gps_receivers_offset"
-    newval = str(uuid4())
-    invalidval = {}
-    param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, invalidval, "type", workspace=workspace)
-
-
 def test_validate_ignore_values(tmp_path):
     param = "ignore_values"
     newval = "12345"
