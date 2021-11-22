@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from uuid import UUID
+from copy import deepcopy
 
 from geoapps.io.Inversion import InversionParams
 
@@ -15,6 +16,8 @@ from .constants import (
     default_ui_json,
     forward_defaults,
     inversion_defaults,
+    forward_ui_json,
+    inversion_ui_json,
     required_parameters,
     validations,
 )
@@ -26,6 +29,8 @@ class GravityParams(InversionParams):
     _validations = validations
     _forward_defaults = forward_defaults
     _inversion_defaults = inversion_defaults
+    forward_ui_json = forward_ui_json
+    inversion_ui_json = inversion_ui_json
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -37,7 +42,7 @@ class GravityParams(InversionParams):
     def __init__(self, input_file=None, validate=True, **kwargs):
 
         self.validate = False
-        self.default_ui_json = default_ui_json
+        self.default_ui_json = deepcopy(default_ui_json)
         self.inversion_type = "gravity"
         self.gz_channel_bool = None
         self.gz_channel = None

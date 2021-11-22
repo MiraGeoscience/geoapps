@@ -124,7 +124,17 @@ inversion_defaults = {
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
-    "distributed_workers": None
+    "distributed_workers": None,
+    "gz_channel_bool": False,
+    "guv_channel_bool": False,
+    "gxy_channel_bool": False,
+    "gxx_channel_bool": False,
+    "gyy_channel_bool": False,
+    "gzz_channel_bool": False,
+    "gxz_channel_bool": False,
+    "gyz_channel_bool": False,
+    "gx_channel_bool": False,
+    "gy_channel_bool": False,
 }
 forward_defaults = {
     "title": "SimPEG Gravity Forward",
@@ -182,6 +192,43 @@ forward_defaults = {
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+}
+
+forward_ui_json = {
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+}
+
+inversion_ui_json = {
+    "gz_channel_bool": False,
+    "guv_channel_bool": False,
+    "gxy_channel_bool": False,
+    "gxx_channel_bool": False,
+    "gyy_channel_bool": False,
+    "gzz_channel_bool": False,
+    "gxz_channel_bool": False,
+    "gyz_channel_bool": False,
+    "gx_channel_bool": False,
+    "gy_channel_bool": False,
+}
+
+forward_ui_json = {
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -509,14 +556,6 @@ default_ui_json = {
     },
     "out_group": {"label": "Results group name", "value": "Gravity"},
     "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 base_default_ui_json.update(default_ui_json)
