@@ -40,7 +40,7 @@ class OctreeMesh(ObjectDataSelection):
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
-            self.params = self._param_class.from_path(ui_json)
+            self.params = self._param_class(InputFile(ui_json))
         else:
             if "h5file" in app_initializer.keys():
                 app_initializer["geoh5"] = app_initializer.pop("h5file")
@@ -381,5 +381,5 @@ class OctreeMesh(ObjectDataSelection):
 
 
 if __name__ == "__main__":
-    params = OctreeParams.from_path(sys.argv[1])
+    params = OctreeParams(InputFile(sys.argv[1]))
     OctreeMesh.run(params)

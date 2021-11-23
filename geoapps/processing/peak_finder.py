@@ -46,6 +46,7 @@ from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
 from geoapps.utils.utils import LineDataDerivatives, hex_to_rgb, running_mean
 
+from ..io import InputFile
 from ..io.PeakFinder import PeakFinderParams
 from ..io.PeakFinder.constants import app_initializer, default_ui_json
 
@@ -115,7 +116,7 @@ class PeakFinder(ObjectDataSelection):
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
-            self.params = self._param_class.from_path(ui_json)
+            self.params = self._param_class(InputFile(ui_json))
         else:
             if "h5file" in app_initializer.keys():
                 app_initializer["geoh5"] = app_initializer.pop("h5file")
@@ -2033,5 +2034,5 @@ def groups_from_params_dict(entity: Entity, params_dict: dict):
 
 
 if __name__ == "__main__":
-    params = PeakFinderParams.from_path(sys.argv[1])
+    params = PeakFinderParams(InputFile(sys.argv[1]))
     PeakFinder.run(params)

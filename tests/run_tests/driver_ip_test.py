@@ -52,7 +52,7 @@ def test_ip_run(
     model = workspace.get_entity("model")[0]
     params = InducedPolarizationParams(
         forward_only=True,
-        workspace=workspace,
+        geoh5=workspace,
         mesh=model.parent,
         topography_object=workspace.get_entity("topography")[0],
         resolution=0.0,
@@ -69,7 +69,7 @@ def test_ip_run(
     # Run the inverse
     np.random.seed(0)
     params = InducedPolarizationParams(
-        workspace=workspace,
+        geoh5=workspace,
         mesh=workspace.get_entity("mesh")[0],
         topography_object=workspace.get_entity("topography")[0],
         resolution=0.0,

@@ -105,7 +105,9 @@ inversion_defaults = {
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "chargeability_channel_bool": True,
 }
+
 forward_defaults = {
     "title": "SimPEG Induced Polarization Forward",
     "inversion_type": "induced polarization",
@@ -164,6 +166,22 @@ forward_defaults = {
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
+}
+inversion_ui_json = {
+    "chargeability_channel_bool": True,
+}
+
+forward_ui_json = {
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+
 }
 default_ui_json = {
     "title": "SimPEG Induced Polarization Inversion",
@@ -247,15 +265,6 @@ default_ui_json = {
         "value": 0.0,
     },
     "out_group": {"label": "Results group name", "value": "InducedPolarization"},
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 base_default_ui_json.update(default_ui_json)

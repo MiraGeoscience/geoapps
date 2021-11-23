@@ -56,6 +56,7 @@ class InputFile:
         validator: InputValidator = None,
         workspace: Workspace = None,
     ):
+        self.workpath = os.path.abspath('.')
         self.filepath = filepath
         self.validator = validator
         self.workspace = workspace
@@ -78,6 +79,7 @@ class InputFile:
     def from_dict(cls, dict: dict[str, Any], validator: InputValidator = None):
         ifile = cls()
         ifile.load(dict)
+        ifile.workpath = os.path.abspath('.')
         return ifile
 
     def load(self, input_dict: dict[str, Any]):
@@ -85,7 +87,7 @@ class InputFile:
 
         input_dict = self._numify(input_dict)
         self.ui = input_dict
-        self._set_associations(input_dict)
+        self.associations = InputFile.associations(input_dict)
         self.data = InputFile.flatten(input_dict)
         self.is_formatted = True
         self.is_loaded = True
@@ -333,7 +335,8 @@ class InputFile:
                 val = f(key, val)
             return val
 
-    def _set_associations(self, d: dict[str, Any]) -> None:
+    @staticmethod
+    def associations(d: dict[str, Any]) -> None:
         """
         Set parent/child associations for ui.json fields.
 
@@ -343,6 +346,7 @@ class InputFile:
         d :
             Dictionary containing ui.json keys/values/fields.
         """
+        associations = {}
         for k, v in d.items():
             if isinstance(v, dict):
                 if "isValue" in v.keys():
@@ -352,18 +356,20 @@ class InputFile:
                 if "parent" in v.keys():
                     if v["parent"] is not None:
                         try:
-                            self.associations[k] = v["parent"]
+                            associations[k] = v["parent"]
                             try:
                                 child_key = UUID(v[field])
                             except (ValueError, TypeError):
                                 child_key = v[field]
                             parent_uuid = UUID(d[v["parent"]]["value"])
-                            self.associations[child_key] = parent_uuid
+                            associations[child_key] = parent_uuid
                         except:
                             continue
 
             else:
                 continue
+
+        return associations
 
     @staticmethod
     def flatten(d: dict[str, Any]) -> dict[str, Any]:
@@ -455,3 +461,11 @@ class InputFile:
                         is_uijson = False
 
         return is_uijson
+
+    @staticmethod
+    def is_uuid(s):
+        try:
+            UUID(str(s))
+            return True
+        except ValueError:
+            return False

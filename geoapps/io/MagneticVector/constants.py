@@ -136,6 +136,17 @@ inversion_defaults = {
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "tmi_channel_bool": False,
+    "bxx_channel_bool": False,
+    "bxy_channel_bool": False,
+    "bxz_channel_bool": False,
+    "byy_channel_bool": False,
+    "byz_channel_bool": False,
+    "bzz_channel_bool": False,
+    "bx_channel_bool": False,
+    "by_channel_bool": False,
+    "bz_channel_bool": False,
+
 }
 
 forward_defaults = {
@@ -211,6 +222,32 @@ forward_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
 }
+
+inversion_ui_json = {
+    "tmi_channel_bool": False,
+    "bxx_channel_bool": False,
+    "bxy_channel_bool": False,
+    "bxz_channel_bool": False,
+    "byy_channel_bool": False,
+    "byz_channel_bool": False,
+    "bzz_channel_bool": False,
+    "bx_channel_bool": False,
+    "by_channel_bool": False,
+    "bz_channel_bool": False,
+}
+
+forward_ui_json = {
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+}
+
 default_ui_json = {
     "title": "SimPEG Magnetic Vector Inversion",
     "inversion_type": "magnetic vector",
@@ -651,15 +688,6 @@ default_ui_json = {
         "value": 0.0,
     },
     "out_group": {"label": "Results group name", "value": "VectorInversion"},
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 base_default_ui_json.update(default_ui_json)
@@ -797,6 +825,7 @@ validations.update(base_validations)
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
+    "forward_only": False,
     "data_object": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
     "tmi_channel_bool": True,
     "tmi_channel": "{44822654-b6ae-45b0-8886-2d845f80f422}",

@@ -23,14 +23,11 @@ class InputValidator:
     requirements : List of required parameters.
     validations : Validations dictionary with matching set of input parameter keys.
     workspace (optional) : Workspace instance needed to validate uuid types.
-    input (optional) : Input file contents parsed to dict.
 
     Methods
     -------
-    validate_uuid(uuid)
-        validates string as a valid uuid.
-    validate_input(input)
-        Validates input params and contents/type/shape/keys of values.
+    validate_chunk(chunk)
+        Validates chunk of params and contents/type/shape/keys/reqs of values.
     validate(param value)
         Validates parameter values, types, shapes, and keys.
 
@@ -41,12 +38,10 @@ class InputValidator:
         requirements: list[str],
         validations: dict[str, Any],
         workspace: Workspace = None,
-        input=None,
     ):
         self.requirements = requirements
         self.validations = validations
         self.workspace = workspace
-        self.input = input
 
     @property
     def requirements(self):
@@ -64,17 +59,9 @@ class InputValidator:
     def validations(self, val):
         self._validations = val
 
-    @property
-    def input(self):
-        return self._input
-
-    @input.setter
-    def input(self, val):
-        self._input = val
-
-    def validate_input(self, input) -> None:
+    def validate_chunk(self, chunk, associations) -> None:
         """
-        Validates input params and contents/type/shape/requirements of values.
+        Validates chunk of params and contents/type/shape/requirements of values.
 
         Calls validate method on individual key/value pairs in input, and
         handles validations requiring knowledge of other parameters.
@@ -89,15 +76,14 @@ class InputValidator:
         it's value/type/shape/requirement validations.
         """
 
-        self.input = input
-        self._validate_requirements(input.data)
+        self._validate_requirements(chunk)
 
-        for k, v in input.data.items():
+        for k, v in chunk.items():
             if k not in self.validations.keys():
                 raise KeyError(f"{k} is not a valid parameter name.")
             else:
                 self.validate(
-                    k, v, self.validations[k], self.workspace, input.associations
+                    k, v, self.validations[k], self.workspace, chunk, associations
                 )
 
     def validate(
@@ -106,6 +92,7 @@ class InputValidator:
         value: Any,
         pvalidations: dict[str, list[Any]],
         workspace: Workspace = None,
+        chunk: dict[str, Any] = None,
         associations: dict[str | UUID, str | UUID] = None,
     ) -> None:
         """
@@ -140,7 +127,7 @@ class InputValidator:
                     vkeys = [k for k in pvalidations.keys() if k not in exclusions]
                     msg = self._iterable_validation_msg(param, "keys", k, vkeys)
                     raise KeyError(msg)
-                self.validate(k, v, pvalidations[k], workspace, associations)
+                self.validate(k, v, pvalidations[k], workspace, chunk, associations)
 
         if value is None:
             if param in self.requirements:
@@ -155,9 +142,9 @@ class InputValidator:
             self._validate_parameter_type(param, value, pvalidations["types"])
         if "shapes" in pvalidations.keys():
             self._validate_parameter_shape(param, value, pvalidations["shapes"])
-        if ("reqs" in pvalidations.keys()) & (self.input is not None):
+        if ("reqs" in pvalidations.keys()) & (chunk is not None):
             for req in pvalidations["reqs"]:
-                self._validate_parameter_req(param, value, req)
+                self._validate_parameter_req(param, value, req, chunk)
         if "uuid" in pvalidations.keys():
             if isinstance(value, str):
                 try:
@@ -202,7 +189,7 @@ class InputValidator:
             msg = self._iterable_validation_msg(param, "shape", pshape, vshape)
             raise ValueError(msg)
 
-    def _validate_parameter_req(self, param: str, value: Any, req: tuple) -> None:
+    def _validate_parameter_req(self, param: str, value: Any, req: tuple, chunk: dict[str, Any]) -> None:
         """Raise a KeyError if parameter requirement is not satisfied."""
 
         hasval = len(req) > 1  # req[0] contains value for which param req[1] must exist
@@ -213,8 +200,8 @@ class InputValidator:
             if value != req[0]:
                 return
 
-        if preq in self.input.data.keys():
-            noreq = True if self.input.data[preq] == None else False
+        if preq in chunk.keys():
+            noreq = True if chunk[preq] == None else False
         else:
             noreq = True
 
@@ -225,7 +212,7 @@ class InputValidator:
     def _req_validation_msg(self, param, preq, val=None):
         """Generate unsatisfied parameter requirement message."""
 
-        msg = f"Unsatisfied '{param}' requirement. Input file must contain "
+        msg = f"Unsatisfied '{param}' requirement. Data must contain "
         if val is not None:
             msg += f"'{preq}' if '{param}' is '{str(val)}'."
         else:
@@ -288,27 +275,27 @@ class InputValidator:
         return msg
 
     def _validate_requirements(
-        self, input: dict[str, Any], requirements: list[str] = None
+        self, chunk: dict[str, Any], requirements: list[str] = None
     ) -> None:
         """
-        Ensures that all required input file keys are present.
+        Ensures that all required keys are present.
 
         Parameters
         ----------
-        input : Input file contents parsed to dict.
+        chunk : Chunk of parameter data.
 
         Raises
         ------
         ValueError
             If a required parameter (stored in constants.required_parameters)
-            is missing from the input file contents.
+            is missing from the chunk contents.
 
         """
         reqs = self.requirements if requirements is None else requirements
 
         missing = []
         for param in reqs:
-            if param not in input.keys():
+            if param not in chunk.keys():
                 missing.append(param)
         if missing:
             raise ValueError(f"Missing required parameter(s): {*missing,}.")
@@ -345,16 +332,15 @@ class InputFreeformValidator(InputValidator):
         requirements: list[str],
         validations: dict[str, Any],
         workspace: Workspace = None,
-        input=None,
         free_params_keys: list = [],
     ):
-        super().__init__(requirements, validations, workspace=workspace, input=input)
+        super().__init__(requirements, validations, workspace=workspace)
         self._free_params_keys = free_params_keys
 
-    def validate_input(self, input) -> None:
-        self._validate_requirements(input.data)
+    def validate_chunk(self, chunk, associations) -> None:
+        self._validate_requirements(chunk)
         free_params_dict = {}
-        for k, v in input.data.items():
+        for k, v in chunk.items():
             if " " in k:
 
                 if "template" in k.lower():
@@ -375,7 +361,7 @@ class InputFreeformValidator(InputValidator):
                 raise KeyError(f"{k} is not a valid parameter name.")
             else:
                 validator = self.validations[k]
-            self.validate(k, v, validator, self.workspace, input.associations)
+            self.validate(k, v, validator, self.workspace, chunk, associations)
 
         if any(free_params_dict):
             for key, group in free_params_dict.items():
@@ -385,7 +371,7 @@ class InputFreeformValidator(InputValidator):
                         + f"{self.free_params_keys}"
                     )
 
-            input._free_params_dict = free_params_dict
+            return free_params_dict
 
     @property
     def free_params_keys(self):

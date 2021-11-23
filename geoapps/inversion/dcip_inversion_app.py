@@ -34,6 +34,7 @@ from ipywidgets.widgets import (
     Widget,
 )
 
+from geoapps.io import InputFile
 from geoapps.io.DirectCurrent.constants import app_initializer
 from geoapps.io.DirectCurrent.params import DirectCurrentParams
 from geoapps.io.InducedPolarization.params import InducedPolarizationParams
@@ -92,7 +93,7 @@ class InversionApp(PlotSelection2D):
 
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
-            self.params = self._param_class.from_path(ui_json)
+            self.params = self._param_class(InputFile(ui_json))
         else:
             if "h5file" in app_initializer.keys():
                 app_initializer["geoh5"] = app_initializer.pop("h5file")
@@ -1066,8 +1067,8 @@ class InversionApp(PlotSelection2D):
                 elif data["inversion_type"] == "induced polarization":
                     self._param_class = InducedPolarizationParams
 
-                self.params = getattr(self, "_param_class").from_path(
-                    self.file_browser.selected
+                self.params = getattr(self, "_param_class")(
+                    InputFile(self.file_browser.selected)
                 )
                 self.refresh.value = False
                 self.__populate__(**self.params.to_dict(ui_json_format=False))

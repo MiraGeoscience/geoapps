@@ -121,18 +121,23 @@ class InversionMesh:
         mesh_params_dict = {
             k: v for k, v in mesh_params_dict.items() if k in mesh_param_names
         }
-        mesh_params_dict["Refinement A"] = {
-            "object": self.inversion_data.entity.uid,
-            "levels": params.octree_levels_obs,
-            "type": "radial",
-            "distance": params.max_distance,
-        }
-        mesh_params_dict["Refinement B"] = {
-            "object": self.inversion_topography.entity.uid,
-            "levels": params.octree_levels_topo,
-            "type": "surface",
-            "distance": params.max_distance,
-        }
+        mesh_params_dict["Refinement A Object"] = self.inversion_data.entity.uid
+        mesh_params_dict["Refinement A levels"] = params.octree_levels_obs
+        mesh_params_dict["Refinement A type"] = "radial"
+        mesh_params_dict["Refinement A distance"] = params.max_distance
+
+        # mesh_params_dict["Refinement A"] = {
+        #     "object": self.inversion_data.entity.uid,
+        #     "levels": params.octree_levels_obs,
+        #     "type": "radial",
+        #     "distance": params.max_distance,
+        # }
+        # mesh_params_dict["Refinement B"] = {
+        #     "object": self.inversion_topography.entity.uid,
+        #     "levels": params.octree_levels_topo,
+        #     "type": "surface",
+        #     "distance": params.max_distance,
+        # }
 
         if isinstance(self.inversion_data.entity, PotentialElectrode):
             mesh_params_dict["Refinement C"] = {
