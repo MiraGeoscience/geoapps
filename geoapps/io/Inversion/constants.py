@@ -332,7 +332,7 @@ default_ui_json = {
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
         "label": "Update sensitivity weight threshold",
-        "value": 1e-3,
+        "value": 0.0,
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
@@ -424,7 +424,7 @@ default_ui_json = {
         "dependency": "initial_beta",
         "dependencyType": "disabled",
         "label": "Initial beta ratio",
-        "value": 10.0,
+        "value": 100.0,
     },
     "initial_beta": {
         "min": 0.0,

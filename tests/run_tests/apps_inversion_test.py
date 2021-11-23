@@ -11,6 +11,7 @@ from uuid import UUID
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
+from geoapps.io import InputFile
 from geoapps.drivers.direct_current_inversion import DirectCurrentParams
 from geoapps.drivers.induced_polarization_inversion import InducedPolarizationParams
 from geoapps.drivers.magnetic_vector_inversion import MagneticVectorParams
@@ -57,7 +58,8 @@ def test_mag_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write.click()
-    params_reload = MagneticVectorParams.from_path(app.params.input_file.filepath)
+    ifile = InputFile(app.params.input_file.filepath)
+    params_reload = MagneticVectorParams(ifile)
     objs = params_reload.workspace.list_entities_name
     check_objs = [
         new_obj.uid,
@@ -106,7 +108,8 @@ def test_dc_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write.click()
-    params_reload = DirectCurrentParams.from_path(app.params.input_file.filepath)
+    ifile = InputFile(app.params.input_file.filepath)
+    params_reload = DirectCurrentParams(ifile)
 
     for param, value in changes.items():
         assert (
@@ -154,7 +157,8 @@ def test_ip_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write.click()
-    params_reload = InducedPolarizationParams.from_path(app.params.input_file.filepath)
+    ifile = InputFile(app.params.input_file.filepath)
+    params_reload = InducedPolarizationParams(ifile)
 
     for param, value in changes.items():
         if param not in side_effects.keys():

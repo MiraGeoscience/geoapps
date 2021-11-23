@@ -136,8 +136,7 @@ def test_ui_json_io(tmp_path):
     ifile = InputFile()
     ifile.filepath = os.path.join(tmp_path, "test.ui.json")
     ifile.write_ui_json(d_u_j, default=True)
-    validator = InputValidator(required_parameters, validations)
-    ifile = InputFile(ifile.filepath, validator)
+    ifile = InputFile(ifile.filepath)
     for k, v in d_u_j.items():
         if isinstance(v, dict):
             check_default = True
@@ -151,7 +150,7 @@ def test_ui_json_io(tmp_path):
             assert ifile.data[k] == v
     ifile.data["inducing_field_strength"] = 99
     ifile.write_ui_json(d_u_j)
-    ifile = InputFile(ifile.filepath, validator)
+    ifile = InputFile(ifile.filepath)
     assert ifile.data["inducing_field_strength"] == 99
     assert ifile.data["inversion_type"] == "magnetic vector"
 

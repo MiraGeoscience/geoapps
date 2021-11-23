@@ -66,7 +66,7 @@ def test_survey_data(tmp_path):
         forward_only=False,
         geoh5=ws,
         data_object=test_data_object.uid,
-        topography_object=test_topo_object,
+        topography_object=test_topo_object.uid,
         topography=ws.get_entity("elev")[0].uid,
         bxx_channel=bxx_data.uid,
         bxx_uncertainty=0.1,

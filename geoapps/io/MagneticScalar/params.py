@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from uuid import UUID
+from copy import deepcopy
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
@@ -20,6 +21,8 @@ from .constants import (
     default_ui_json,
     forward_defaults,
     inversion_defaults,
+    forward_ui_json,
+    inversion_ui_json,
     required_parameters,
     validations,
 )
@@ -31,6 +34,8 @@ class MagneticScalarParams(InversionParams):
     _validations = validations
     _forward_defaults = forward_defaults
     _inversion_defaults = inversion_defaults
+    forward_ui_json = forward_ui_json
+    inversion_ui_json = inversion_ui_json
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -39,10 +44,10 @@ class MagneticScalarParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(self, input_file=None, validate=True, **kwargs):
+    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
 
         self.validate = False
-        self.default_ui_json = default_ui_json
+        self.default_ui_json = deepcopy(default_ui_json)
         self.inversion_type = "magnetic scalar"
         self.inducing_field_strength: float = None
         self.inducing_field_inclination: float = None
@@ -79,7 +84,7 @@ class MagneticScalarParams(InversionParams):
         self.bz_uncertainty = None
         self.out_group = None
 
-        super().__init__(input_file, validate, **kwargs)
+        super().__init__(input_file, default, validate, **kwargs)
 
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""

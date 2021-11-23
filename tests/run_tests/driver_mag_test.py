@@ -47,7 +47,7 @@ def test_susceptibility_run(
     model = workspace.get_entity("model")[0]
     params = MagneticScalarParams(
         forward_only=True,
-        workspace=workspace,
+        geoh5=workspace,
         mesh=model.parent,
         topography_object=workspace.get_entity("topography")[0],
         inducing_field_strength=inducing_field[0],
@@ -66,7 +66,7 @@ def test_susceptibility_run(
     # Run the inverse
     np.random.seed(0)
     params = MagneticScalarParams(
-        workspace=workspace,
+        geoh5=workspace,
         mesh=workspace.get_entity("mesh")[0],
         topography_object=workspace.get_entity("topography")[0],
         inducing_field_strength=inducing_field[0],
@@ -145,7 +145,7 @@ def test_magnetic_vector_run(
     model = workspace.get_entity("model")[0]
     params = MagneticVectorParams(
         forward_only=True,
-        workspace=workspace,
+        geoh5=workspace,
         mesh=model.parent,
         topography_object=workspace.get_entity("topography")[0],
         inducing_field_strength=inducing_field[0],
@@ -165,7 +165,7 @@ def test_magnetic_vector_run(
     tmi = workspace.get_entity("Predicted_tmi")[0]
     # Run the inverse
     params = MagneticVectorParams(
-        workspace=workspace,
+        geoh5=workspace,
         mesh=workspace.get_entity("mesh")[0],
         topography_object=workspace.get_entity("topography")[0],
         inducing_field_strength=inducing_field[0],

@@ -29,6 +29,7 @@ from ipywidgets.widgets import (
     Widget,
 )
 
+from geoapps.io import InputFile
 from geoapps.io.Gravity.params import GravityParams
 from geoapps.io.MagneticScalar.params import MagneticScalarParams
 from geoapps.io.MagneticVector.constants import app_initializer
@@ -92,14 +93,15 @@ class InversionApp(PlotSelection2D):
 
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
-            self.params = self._param_class.from_path(ui_json)
+            ifile = Inputfile(ui_json)
+            self.params = self._param_class(ifile, **kwargs)
         else:
             if "h5file" in app_initializer.keys():
                 app_initializer["geoh5"] = app_initializer.pop("h5file")
                 app_initializer["workspace"] = app_initializer["geoh5"]
 
             self.params = self._param_class(**app_initializer)
-
+            print(self.params.to_dict(ui_json_format=False))
         self.data_object = self.objects
         self.defaults.update(self.params.to_dict(ui_json_format=False))
 
@@ -875,7 +877,7 @@ class InversionApp(PlotSelection2D):
             params["out_group"] = "GravityInversion"
             self._param_class = GravityParams
 
-        self.params = self._param_class(verbose=False)
+        self.params = self._param_class(validate=False, verbose=False)
         self.ga_group_name.value = self.params.defaults["out_group"]
 
         if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
@@ -1309,8 +1311,8 @@ class InversionApp(PlotSelection2D):
                 elif data["inversion_type"] == "magnetic scalar":
                     self._param_class = MagneticScalarParams
 
-                self.params = getattr(self, "_param_class").from_path(
-                    self.file_browser.selected
+                self.params = getattr(self, "_param_class")(
+                    InputFile(self.file_browser.selected)
                 )
                 self.refresh.value = False
                 self.__populate__(**self.params.to_dict(ui_json_format=False))

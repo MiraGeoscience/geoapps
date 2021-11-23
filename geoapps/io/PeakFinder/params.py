@@ -10,8 +10,6 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
-from geoh5py.workspace import Workspace
-
 from ..input_file import InputFile
 from ..params import Params
 from ..validators import InputFreeformValidator
@@ -22,14 +20,12 @@ class PeakFinderParams(Params):
 
     _required_parameters = required_parameters
     _validations = validations
+    default_ui_json = default_ui_json
+    param_names = list(default_ui_json.keys())
     _free_param_keys: list = ["data", "color"]
     _free_param_identifier: str = "group"
 
-    def __init__(self, validate=True, **kwargs):
-
-        self.validator: InputFreeformValidator = InputFreeformValidator(
-            required_parameters, validations, free_params_keys=self._free_param_keys
-        )
+    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
 
         self._title = None
         self._objects = None
@@ -55,11 +51,7 @@ class PeakFinderParams(Params):
         self._free_params_dict = None
         self._plot_result = True
 
-        self.defaults = defaults
-        self.default_ui_json = default_ui_json
-        self.param_names = list(self.default_ui_json.keys())
-
-        super().__init__(validate, **kwargs)
+        super().__init__(input_file, default, validate, **kwargs)
 
         free_params_dict = {}
         for k, v in kwargs.items():
@@ -73,6 +65,39 @@ class PeakFinderParams(Params):
 
         if any(free_params_dict):
             self._free_params_dict = free_params_dict
+
+        self._initialize(kwargs)
+
+    def _initialize(self, params_dict):
+
+        # Collect params_dict from superposition of kwargs onto input_file.data
+        # and determine forward_only state.
+        fwd = False
+        if self.input_file:
+            params_dict = dict(self.input_file.data, **params_dict)
+        if "forward_only" in params_dict.keys():
+            fwd = params_dict["forward_only"]
+
+        # Use forward_only state to determine defaults and default_ui_json.
+        self.defaults = defaults
+        self.param_names = list(self.defaults.keys())
+
+        # Superimpose params_dict onto defaults.
+        if self.default:
+            params_dict = dict(self.defaults, **params_dict)
+
+        # Validate.
+        if self.validate:
+            self.workspace = params_dict["geoh5"]
+            self.associations = self.get_associations(params_dict)
+            self.validator: InputFreeformValidator = InputFreeformValidator(
+                required_parameters, validations, self.workspace,
+                free_params_keys=self._free_param_keys
+            )
+
+        # Set params attributes from validated input.
+        self.update(params_dict)
+
 
     def default(self, param) -> Any:
         """Wraps Params.default."""

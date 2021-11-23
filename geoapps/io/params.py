@@ -58,13 +58,6 @@ class Params:
     default(default_ui, param) :
         return default value for param stored in default_ui.
 
-    Constructors
-    ------------
-    from_input_file(input_file)
-        Construct Params object from InputFile instance.
-    from_path(path)
-        Construct Params object from path to input file (wraps from_input_file constructor).
-
     """
 
     associations: dict[str | UUID, str | UUID] = None
@@ -80,9 +73,10 @@ class Params:
     _monitoring_directory = None
     _free_param_keys: list = None
 
-    def __init__(self, input_file=None, validate=True, **kwargs):
+    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
 
         self.input_file = input_file
+        self.default = default
         self.validate = validate
         self.workspace = None
 
@@ -332,3 +326,13 @@ class Params:
             self._free_params_dict = self.input_file._free_params_dict
 
         return self._free_params_dict
+
+    def get_associations(self, params_dict: dict[str, Any]):
+        associations = InputFile.associations(self.default_ui_json)
+        uuid_associations = {}
+        for k, v in associations.items():
+            if all([p in params_dict.keys() for p in [k, v]]):
+                if all([InputFile.is_uuid(params_dict[p]) for p in [k, v]]):
+                    uuid_associations[params_dict[k]] = params_dict[v]
+        associations.update(uuid_associations)
+        return associations
