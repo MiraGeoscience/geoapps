@@ -1492,7 +1492,7 @@ class InversionParams(Params):
             ifile = InputFile.from_dict(ui_json)
         else:
             idict = self.to_dict(ui_json=ui_json)
-            #TODO insert validate_input call here
+            #TODO insert validate_chunk call here
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
 
         if name is not None:
