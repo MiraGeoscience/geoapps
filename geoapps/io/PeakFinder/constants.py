@@ -319,9 +319,9 @@ validations = {
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "objects": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
-    "data": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}",
-    "line_field": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}",
+    "objects": UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"),
+    "data": UUID("{b834a590-dea9-48cb-abe3-8c714bb0bb7c}"),
+    "line_field": UUID("{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}"),
     "system": "VTEM (2007)",
     "line_id": 6073400.0,
     "center": 4050,
