@@ -188,9 +188,6 @@ class OctreeMesh(ObjectDataSelection):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_choices()
-        self.params.input_file.filepath = path.join(
-            path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
-        )
 
     def update_objects_choices(self):
         # Refresh the list of objects for all

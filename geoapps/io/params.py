@@ -328,16 +328,6 @@ class Params:
 
         ifile.write_ui_json(ui_json, name=name, default=default)
 
-    @property
-    def free_params_dict(self):
-        if (
-            getattr(self, "_free_params_dict", None) is None
-            and getattr(self, "_free_param_keys", None) is not None
-        ):
-            self._free_params_dict = self.input_file._free_params_dict
-
-        return self._free_params_dict
-
     def get_associations(self, params_dict: dict[str, Any]):
         associations = InputFile.get_associations(self.default_ui_json)
         uuid_associations = {}
