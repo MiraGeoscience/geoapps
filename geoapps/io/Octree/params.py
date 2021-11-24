@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 from uuid import UUID
+from copy import deepcopy
 
 from geoh5py.shared import Entity
 
@@ -29,6 +30,19 @@ class OctreeParams(Params):
     _free_param_dict = {}
 
     def __init__(self, input_file=None, default=True, validate=True, **kwargs):
+
+        self.validate = False
+        self.default_ui_json = deepcopy(default_ui_json)
+        self.title = None
+        self.objects = None
+        self.u_cell_size = None
+        self.v_cell_size = None
+        self.w_cell_size = None
+        self.horizontal_padding = None
+        self.vertical_padding = None
+        self.depth_core = None
+        self.ga_group_name = None
+
         super().__init__(input_file, default, validate, **kwargs)
 
         self._initialize(kwargs)
