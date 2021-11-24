@@ -8,16 +8,16 @@
 from __future__ import annotations
 
 import os
-from uuid import UUID
 from copy import deepcopy
+from uuid import UUID
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
 
 from ..input_file import InputFile
-from ..validators import InputValidator
 from ..params import Params
+from ..validators import InputValidator
 from .constants import required_parameters, validations
 
 
@@ -126,8 +126,12 @@ class InversionParams(Params):
 
         # Use forward_only state to determine defaults and default_ui_json.
         self.defaults = self._forward_defaults if fwd else self._inversion_defaults
-        self.default_ui_json.update(self.forward_ui_json if fwd else self.inversion_ui_json)
-        self.default_ui_json = {k: self.default_ui_json[k] for k in self.defaults.keys()}
+        self.default_ui_json.update(
+            self.forward_ui_json if fwd else self.inversion_ui_json
+        )
+        self.default_ui_json = {
+            k: self.default_ui_json[k] for k in self.defaults.keys()
+        }
         self.param_names = list(self.defaults.keys())
 
         # Superimpose params_dict onto defaults.
@@ -139,13 +143,14 @@ class InversionParams(Params):
             self.workspace = params_dict["geoh5"]
             self.associations = self.get_associations(params_dict)
             self.validator: InputValidator = InputValidator(
-                self._required_parameters, self._validations, self.workspace,
+                self._required_parameters,
+                self._validations,
+                self.workspace,
             )
             self.validator.validate_chunk(params_dict, self.associations)
 
         # Set params attributes from validated input.
         self.update(params_dict, validate=False)
-
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""
@@ -229,7 +234,6 @@ class InversionParams(Params):
             self.y_norm,
             self.z_norm,
         ]
-
 
     @property
     def forward_only(self):
@@ -1489,7 +1493,7 @@ class InversionParams(Params):
             ifile = InputFile.from_dict(ui_json)
         else:
             idict = self.to_dict(ui_json=ui_json)
-            #TODO insert validate_chunk call here
+            # TODO insert validate_chunk call here
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
 
         if name is not None:
