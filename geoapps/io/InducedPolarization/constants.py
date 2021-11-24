@@ -181,7 +181,6 @@ forward_ui_json = {
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
-
 }
 default_ui_json = {
     "title": "SimPEG Induced Polarization Inversion",

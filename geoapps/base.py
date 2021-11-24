@@ -19,7 +19,7 @@ from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
 
-from geoapps.io import Params, InputFile
+from geoapps.io import InputFile, Params
 from geoapps.utils.formatters import string_name
 
 

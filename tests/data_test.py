@@ -6,10 +6,10 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
+from copy import deepcopy
 
 import numpy as np
 import requests
-from copy import deepcopy
 import SimPEG
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
@@ -25,9 +25,7 @@ workspace = Workspace("./FlinFlon.geoh5")
 
 def setup_params(tmp):
     d_u_j = deepcopy(default_ui_json)
-    geotest = Geoh5Tester(
-        workspace, tmp, "test.geoh5", d_u_j, MagneticVectorParams
-    )
+    geotest = Geoh5Tester(workspace, tmp, "test.geoh5", d_u_j, MagneticVectorParams)
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")

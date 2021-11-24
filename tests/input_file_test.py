@@ -196,6 +196,7 @@ def test_truth():
     assert InputFile.truth(d_u_j, "chunk_by_rows", "enabled")
     assert not InputFile.truth(d_u_j, "chunk_by_rows", "optional")
 
+
 def test_is_uijson():
     d_u_j = deepcopy(default_ui_json)
     assert InputFile.is_uijson(d_u_j)

@@ -91,13 +91,14 @@ class PeakFinderParams(Params):
             self.workspace = params_dict["geoh5"]
             self.associations = self.get_associations(params_dict)
             self.validator: InputFreeformValidator = InputFreeformValidator(
-                required_parameters, validations, self.workspace,
-                free_params_keys=self._free_param_keys
+                required_parameters,
+                validations,
+                self.workspace,
+                free_params_keys=self._free_param_keys,
             )
 
         # Set params attributes from validated input.
         self.update(params_dict)
-
 
     def default(self, param) -> Any:
         """Wraps Params.default."""
