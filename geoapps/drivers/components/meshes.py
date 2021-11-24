@@ -152,4 +152,3 @@ class InversionMesh:
         octree_params = self.collect_mesh_params(self.params)
         self.entity = OctreeMesh.run(octree_params)
         self.entity.parent = self.params.ga_group
-

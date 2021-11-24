@@ -298,13 +298,20 @@ def test_params_constructors(tmp_path):
     ui["geoh5"] = wrkstr
     ifile.write_ui_json(ui)
 
-    params1 = MagneticVectorParams(input_file=InputFile(filepath), validate=False, geoh5=workspace)
+    params1 = MagneticVectorParams(
+        input_file=InputFile(filepath), validate=False, geoh5=workspace
+    )
     params2 = MagneticVectorParams(input_file=ifile, validate=False, geoh5=workspace)
 
 
 def test_active_set():
     params = MagneticVectorParams(
-        default=False, validate=False, forward_only=True, geoh5=workspace, inversion_type="magnetic vector", u_cell_size=2
+        default=False,
+        validate=False,
+        forward_only=True,
+        geoh5=workspace,
+        inversion_type="magnetic vector",
+        u_cell_size=2,
     )
     assert "inversion_type" in params.active_set()
     assert "u_cell_size" in params.active_set()
@@ -315,6 +322,7 @@ def test_validate_inversion_type(tmp_path):
     newval = "magnetic scalar"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "em", "value", workspace=workspace)
+
 
 def test_validate_inducing_field_strength(tmp_path):
     param = "inducing_field_strength"

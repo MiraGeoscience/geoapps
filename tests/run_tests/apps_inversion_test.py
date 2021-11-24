@@ -11,12 +11,12 @@ from uuid import UUID
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
-from geoapps.io import InputFile
 from geoapps.drivers.direct_current_inversion import DirectCurrentParams
 from geoapps.drivers.induced_polarization_inversion import InducedPolarizationParams
 from geoapps.drivers.magnetic_vector_inversion import MagneticVectorParams
 from geoapps.inversion.dcip_inversion_app import InversionApp as DCInversionApp
 from geoapps.inversion.pf_inversion_app import InversionApp as MagInversionApp
+from geoapps.io import InputFile
 
 project = "./FlinFlon.geoh5"
 

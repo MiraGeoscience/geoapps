@@ -7,8 +7,8 @@
 
 import sys
 
-from geoapps.io.DirectCurrent import DirectCurrentParams
 from geoapps.io import InputFile
+from geoapps.io.DirectCurrent import DirectCurrentParams
 
 from .base_inversion import InversionDriver
 
