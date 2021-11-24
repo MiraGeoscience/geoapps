@@ -146,7 +146,6 @@ inversion_defaults = {
     "bx_channel_bool": False,
     "by_channel_bool": False,
     "bz_channel_bool": False,
-
 }
 
 forward_defaults = {

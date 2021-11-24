@@ -8,8 +8,8 @@
 
 import sys
 
-from geoapps.io.InducedPolarization import InducedPolarizationParams
 from geoapps.io import InputFile
+from geoapps.io.InducedPolarization import InducedPolarizationParams
 
 from .base_inversion import InversionDriver
 

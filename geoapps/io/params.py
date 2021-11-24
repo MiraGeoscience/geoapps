@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import os
-import warnings
 from copy import deepcopy
 from typing import Any
 from uuid import UUID
@@ -75,12 +74,11 @@ class Params:
 
     def __init__(self, input_file=None, default=True, validate=True, **kwargs):
 
-        self.workpath = '.'
+        self.workpath = "."
         self.input_file = input_file
         self.default = default
         self.validate = validate
         self.workspace = None
-
 
     def update(self, params_dict: Dict[str, Any], validate=True):
         """Update parameters with dictionary contents."""
@@ -97,13 +95,13 @@ class Params:
         for key, value in params_dict.items():
 
             if key == "workspace":
-                continue # ignores deprecated workspace name
+                continue  # ignores deprecated workspace name
 
             if " " in key:
-                continue # ignores grouped parameter names
+                continue  # ignores grouped parameter names
 
             if key not in self.default_ui_json.keys():
-                continue # ignores keys not in default_ui_json
+                continue  # ignores keys not in default_ui_json
 
             if isinstance(value, dict):
                 field = "value"
