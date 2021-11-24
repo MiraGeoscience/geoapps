@@ -73,18 +73,14 @@ def test_create_octree_app(tmp_path):
 
     # Repeat the creation using the app
     refinements = {
-        "Refinement A": {
-            "object": str(points.uid),
-            "levels": "".join([str(val) for val in refine_A]),
-            "type": "radial",
-            "distance": max_distance,
-        },
-        "Refinement B": {
-            "object": str(topo.uid),
-            "levels": "".join([str(val) for val in refine_B]),
-            "type": "surface",
-            "distance": max_distance,
-        },
+        "Refinement A object": points.uid,
+        "Refinement A levels": refine_A,
+        "Refinement A type": "radial",
+        "Refinement A distance": max_distance,
+        "Refinement B object": topo.uid,
+        "Refinement B levels": refine_B,
+        "Refinement B type": "surface",
+        "Refinement B distance": max_distance,
     }
     app = OctreeMesh(
         geoh5=str(ws.h5file),
