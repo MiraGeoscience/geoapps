@@ -124,7 +124,7 @@ def test_set_associations():
         }
     )
     ifile = InputFile()
-    ifile.associations(tdict)
+    ifile.associations = ifile.get_associations(tdict)
     assert ifile.associations[UUID(f_uuid)] == UUID(o_uuid)
     assert ifile.associations[UUID(f_uuid2)] == UUID(o_uuid2)
     assert ifile.associations["field"] == "obj"

@@ -90,6 +90,7 @@ class InversionApp(PlotSelection2D):
     def __init__(self, ui_json=None, **kwargs):
         if "plot_result" in kwargs:
             self.plot_result = kwargs["plot_result"]
+            kwargs.pop("plot_result")
 
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
@@ -101,7 +102,6 @@ class InversionApp(PlotSelection2D):
                 app_initializer["workspace"] = app_initializer["geoh5"]
 
             self.params = self._param_class(**app_initializer)
-            print(self.params.to_dict(ui_json_format=False))
         self.data_object = self.objects
         self.defaults.update(self.params.to_dict(ui_json_format=False))
 

@@ -863,7 +863,7 @@ app_initializer = {
     "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
     "z_from_topo": True,
     "detrend_order": 0,
-    "detrend_type": "",
+    "detrend_type": None,
     "receivers_offset_x": 0,
     "receivers_offset_y": 0,
     "receivers_offset_z": 60,

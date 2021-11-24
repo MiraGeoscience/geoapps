@@ -690,7 +690,7 @@ validations = {
     },
     "detrend_type": {
         "types": [str],
-        "values": ["all", "corners"],
+        "values": ["all", "perimeter"],
     },
     "max_chunk_size": {"types": [int, float]},
     "chunk_by_rows": {
