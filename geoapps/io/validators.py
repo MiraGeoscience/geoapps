@@ -190,7 +190,9 @@ class InputValidator:
             msg = self._iterable_validation_msg(param, "shape", pshape, vshape)
             raise ValueError(msg)
 
-    def _validate_parameter_req(self, param: str, value: Any, req: tuple, chunk: dict[str, Any]) -> None:
+    def _validate_parameter_req(
+        self, param: str, value: Any, req: tuple, chunk: dict[str, Any]
+    ) -> None:
         """Raise a KeyError if parameter requirement is not satisfied."""
 
         hasval = len(req) > 1  # req[0] contains value for which param req[1] must exist
@@ -364,6 +366,7 @@ class InputFreeformValidator(InputValidator):
                 validator = self.validations[k]
             self.validate(k, v, validator, self.workspace, chunk, associations)
 
+        # TODO This check should be handled by a group validator
         if any(free_params_dict):
             for key, group in free_params_dict.items():
                 if not len(list(group.values())) == len(self.free_params_keys):
@@ -372,7 +375,7 @@ class InputFreeformValidator(InputValidator):
                         + f"{self.free_params_keys}"
                     )
 
-            return free_params_dict
+            # return free_params_dict
 
     @property
     def free_params_keys(self):
