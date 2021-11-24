@@ -20,6 +20,7 @@ from geoapps.io.Octree.constants import app_initializer, default_ui_json
 from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
 from geoapps.utils.utils import string_2_list, treemesh_2_octree
+from geoapps.io import InputFile
 
 
 class OctreeMesh(ObjectDataSelection):
