@@ -612,7 +612,6 @@ default_ui_json = {
         "value": None,
     },
     "no_data_value": {
-        "default": 0,
         "group": "Data Options",
         "optional": True,
         "enabled": False,
