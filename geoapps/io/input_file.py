@@ -56,7 +56,7 @@ class InputFile:
         validator: InputValidator = None,
         workspace: Workspace = None,
     ):
-        self.workpath = os.path.abspath('.')
+        self.workpath = os.path.abspath(".")
         self.filepath = filepath
         self.validator = validator
         self.workspace = workspace
@@ -79,7 +79,7 @@ class InputFile:
     def from_dict(cls, dict: dict[str, Any], validator: InputValidator = None):
         ifile = cls()
         ifile.load(dict)
-        ifile.workpath = os.path.abspath('.')
+        ifile.workpath = os.path.abspath(".")
         return ifile
 
     def load(self, input_dict: dict[str, Any]):
@@ -445,8 +445,12 @@ class InputFile:
     @staticmethod
     def is_uijson(d):
         uijson_keys = [
-            "title", "monitoring_directory", "run_command", "conda_environment",
-            "geoh5", "workspace_geoh5"
+            "title",
+            "monitoring_directory",
+            "run_command",
+            "conda_environment",
+            "geoh5",
+            "workspace_geoh5",
         ]
         is_uijson = True
         if len(d.keys()) > 1:

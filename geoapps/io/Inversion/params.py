@@ -18,10 +18,7 @@ from geoh5py.workspace import Workspace
 from ..input_file import InputFile
 from ..validators import InputValidator
 from ..params import Params
-from .constants import (
-    required_parameters,
-    validations,
-)
+from .constants import required_parameters, validations
 
 
 class InversionParams(Params):
