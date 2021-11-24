@@ -75,6 +75,7 @@ class Params:
 
     def __init__(self, input_file=None, default=True, validate=True, **kwargs):
 
+        self.workpath = '.'
         self.input_file = input_file
         self.default = default
         self.validate = validate
@@ -83,6 +84,9 @@ class Params:
 
     def update(self, params_dict: Dict[str, Any], validate=True):
         """Update parameters with dictionary contents."""
+
+        original_validate_state = self.validate
+        self.validate = validate
 
         # Pull out workspace data for validations and forward_only for defaults.
 
@@ -113,6 +117,15 @@ class Params:
                 else:
                     setattr(self, key, value)
 
+        self.validate = original_validate_state
+
+    @property
+    def workpath(self):
+        return os.path.abspath(self._workpath)
+
+    @workpath.setter
+    def workpath(self, val):
+        self._workpath = val
 
     @property
     def required_parameters(self):
@@ -328,7 +341,7 @@ class Params:
         return self._free_params_dict
 
     def get_associations(self, params_dict: dict[str, Any]):
-        associations = InputFile.associations(self.default_ui_json)
+        associations = InputFile.get_associations(self.default_ui_json)
         uuid_associations = {}
         for k, v in associations.items():
             if all([p in params_dict.keys() for p in [k, v]]):

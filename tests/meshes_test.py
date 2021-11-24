@@ -58,7 +58,9 @@ def test_collect_mesh_params(tmp_path):
     inversion_topography = InversionTopography(ws, params, inversion_window.window)
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     octree_params = inversion_mesh.collect_mesh_params(params)
-    assert "Refinement A" in octree_params.free_params_dict.keys()
+    print(octree_params._free_param_dict)
+    assert "refinement a" in octree_params._free_param_dict.keys()
+    assert "refinement b" in octree_params._free_param_dict.keys()
     with pytest.raises(ValueError) as excinfo:
         params.u_cell_size = None
         octree_params = inversion_mesh.collect_mesh_params(params)

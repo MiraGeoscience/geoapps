@@ -147,7 +147,7 @@ class InversionParams(Params):
             self.validator.validate_chunk(params_dict, self.associations)
 
         # Set params attributes from validated input.
-        self.update(params_dict)
+        self.update(params_dict, validate=False)
 
 
     def uncertainty(self, component: str) -> float:

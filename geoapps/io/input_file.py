@@ -87,7 +87,7 @@ class InputFile:
 
         input_dict = self._numify(input_dict)
         self.ui = input_dict
-        self.associations = InputFile.associations(input_dict)
+        self.associations = InputFile.get_associations(input_dict)
         self.data = InputFile.flatten(input_dict)
         self.is_formatted = True
         self.is_loaded = True
@@ -336,9 +336,9 @@ class InputFile:
             return val
 
     @staticmethod
-    def associations(d: dict[str, Any]) -> None:
+    def get_associations(d: dict[str, Any]) -> None:
         """
-        Set parent/child associations for ui.json fields.
+        get parent/child associations for ui.json fields.
 
         Parameters
         ----------
