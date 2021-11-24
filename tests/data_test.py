@@ -79,7 +79,6 @@ def test_survey_data(tmp_path):
         z_from_topo=True,
         receivers_offset_z=50.0,
         resolution=0,
-        mesh_from_params=True,
     )
 
     driver = InversionDriver(params, warmstart=False)

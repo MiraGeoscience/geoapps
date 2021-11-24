@@ -650,8 +650,8 @@ validations = {
     },
     "topography": {
         "types": [str, UUID, int, float],
-        "reqs": [("topography_object")],
-        "uuid": ["topography_object"],
+        "reqs": [("topography_object",)],
+        "uuid": [],
     },
     "data_object": {
         "types": [str, UUID],

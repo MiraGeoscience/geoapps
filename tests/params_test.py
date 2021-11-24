@@ -315,8 +315,6 @@ def test_validate_inversion_type(tmp_path):
     newval = "magnetic scalar"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "em", "value", workspace=workspace)
-    # catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
-
 
 def test_validate_inducing_field_strength(tmp_path):
     param = "inducing_field_strength"
@@ -353,10 +351,7 @@ def test_validate_topography(tmp_path):
     newval = "{79b719bc-d996-4f52-9af0-10aa9c7bb941}"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, True, "type", workspace=workspace)
-    catch_invalid_generator(tmp_path, param, "lsdkfj", "uuid", workspace=workspace)
-    catch_invalid_generator(
-        tmp_path, param, "", "uuid", workspace=workspace, parent="topography_object"
-    )
+    catch_invalid_generator(tmp_path, param, newval, "reqs", workspace=workspace)
 
 
 def test_validate_data_object(tmp_path):
@@ -370,62 +365,62 @@ def test_validate_tmi_channel(tmp_path):
     param = "tmi_channel"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, 4, "type", workspace=workspace)
 
 
 def test_validate_tmi_uncertainty(tmp_path):
     param = "tmi_uncertainty"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_starting_model_object(tmp_path):
     param = "starting_model_object"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_starting_inclination_object(tmp_path):
     param = "starting_inclination_object"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_starting_declination_object(tmp_path):
     param = "starting_declination_object"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_starting_model(tmp_path):
     param = "starting_model"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_starting_inclination(tmp_path):
     param = "starting_inclination"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_starting_declination(tmp_path):
     param = "starting_declination"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_tile_spatial(tmp_path):
     param = "tile_spatial"
     newval = 9
-    invalidval = {"value":{}}
+    invalidval = {}
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, invalidval, "type", workspace=workspace)
 
@@ -433,7 +428,7 @@ def test_validate_tile_spatial(tmp_path):
 def test_validate_receivers_radar_drape(tmp_path):
     param = "receivers_radar_drape"
     newval = str(uuid4())
-    invalidval = {"value":{}}
+    invalidval = {}
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, invalidval, "type", workspace=workspace)
 
@@ -463,21 +458,21 @@ def test_validate_ignore_values(tmp_path):
     param = "ignore_values"
     newval = "12345"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_resolution(tmp_path):
     param = "resolution"
     newval = 10
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_detrend_order(tmp_path):
     param = "detrend_order"
     newval = 2
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_detrend_type(tmp_path):
@@ -512,7 +507,7 @@ def test_validate_mesh(tmp_path):
     param = "mesh"
     newval = "{c02e0470-0c3e-4119-8ac1-0aacba5334af}"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_u_cell_size(tmp_path):
@@ -540,70 +535,70 @@ def test_validate_octree_levels_topo(tmp_path):
     param = "octree_levels_topo"
     newval = [1, 2, 3]
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_octree_levels_obs(tmp_path):
     param = "octree_levels_obs"
     newval = [1, 2, 3]
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_depth_core(tmp_path):
     param = "depth_core"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_max_distance(tmp_path):
     param = "max_distance"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_horizontal_padding(tmp_path):
     param = "horizontal_padding"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_vertical_padding(tmp_path):
     param = "vertical_padding"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_window_center_x(tmp_path):
     param = "window_center_x"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_window_center_y(tmp_path):
     param = "window_center_y"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_window_width(tmp_path):
     param = "window_width"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_window_height(tmp_path):
     param = "window_height"
     newval = 99
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_inversion_style(tmp_path):
@@ -722,42 +717,42 @@ def test_validate_reference_model_object(tmp_path):
     param = "reference_model_object"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_reference_inclination_object(tmp_path):
     param = "reference_inclination_object"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_reference_declination_object(tmp_path):
     param = "reference_declination_object"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_reference_model(tmp_path):
     param = "reference_model"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_reference_inclination(tmp_path):
     param = "reference_inclination"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_reference_declination(tmp_path):
     param = "reference_declination"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_gradient_type(tmp_path):
@@ -771,14 +766,14 @@ def test_validate_lower_bound(tmp_path):
     param = "lower_bound"
     newval = -1000
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_upper_bound(tmp_path):
     param = "upper_bound"
     newval = 1000
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_parallelized(tmp_path):
@@ -806,21 +801,21 @@ def test_validate_workspace(tmp_path):
     param = "workspace"
     newval = "../assets/something.geoh5py"
     # param_test_generator(tmp_path, param, newval)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_out_group(tmp_path):
     param = "out_group"
     newval = "test_"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_validate_no_data_value(tmp_path):
     param = "no_data_value"
     newval = 5
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {"value":{}}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
 def test_isValue(tmp_path):
