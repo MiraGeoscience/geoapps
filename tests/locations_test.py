@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 from geoh5py.objects import Grid2D, Points
 from geoh5py.workspace import Workspace
+from copy import deepcopy
 
 from geoapps.drivers.components import InversionMesh
 from geoapps.drivers.components.locations import InversionLocations
@@ -20,7 +21,7 @@ workspace = Workspace("./FlinFlon.geoh5")
 
 def setup_params(tmp):
     geotest = Geoh5Tester(
-        workspace, tmp, "test.geoh5", default_ui_json, MagneticVectorParams
+        workspace, tmp, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
     )
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")

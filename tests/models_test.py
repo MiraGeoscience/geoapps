@@ -9,6 +9,7 @@
 import numpy as np
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
+from copy import deepcopy
 
 from geoapps.drivers.components import (
     InversionData,
@@ -29,7 +30,7 @@ workspace = Workspace("./FlinFlon.geoh5")
 def setup_params(path):
 
     geotest = Geoh5Tester(
-        workspace, path, "test.geoh5", default_ui_json, MagneticVectorParams
+        workspace, path, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
     )
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("tmi_channel_bool", True)
