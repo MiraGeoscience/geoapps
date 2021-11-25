@@ -107,7 +107,7 @@ def test_susceptibility_run(
             output["phi_d"][1], target_susceptibility_run["phi_d"]
         )
 
-        nan_ind = np.isnan(run_ws.get_entity("Iteration_0__model")[0].values)
+        nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
     else:
@@ -207,7 +207,7 @@ def test_magnetic_vector_run(
             decimal=3,
         )
 
-        nan_ind = np.isnan(run_ws.get_entity("Iteration_0__amplitude")[0].values)
+        nan_ind = np.isnan(run_ws.get_entity("Iteration_0_amplitude")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
     else:
