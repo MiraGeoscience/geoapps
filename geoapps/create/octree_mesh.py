@@ -7,8 +7,8 @@
 
 import sys
 import uuid
-from os import path
 from copy import deepcopy
+from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, Octree, Points, Surface

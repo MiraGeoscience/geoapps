@@ -8,11 +8,10 @@
 from uuid import UUID
 
 import numpy as np
-from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Points, Surface, Octree
 from geoh5py.data import FloatData
+from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Octree, Points, Surface
 from geoh5py.workspace import Workspace
-
 
 required_parameters = []
 

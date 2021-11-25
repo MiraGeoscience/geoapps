@@ -203,6 +203,7 @@ def test_is_uijson():
     assert InputFile.is_uijson({"test": {"label": "me", "value": 2}})
     assert not InputFile.is_uijson({"test": {"label": "me"}})
 
+
 def test_field():
     d_u_j = deepcopy(default_ui_json)
     assert InputFile.field(d_u_j["starting_model"]) == "property"
