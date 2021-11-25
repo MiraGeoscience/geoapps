@@ -111,7 +111,7 @@ def test_gravity_run(
         np.testing.assert_almost_equal(output["phi_m"][1], target_gravity_run["phi_m"])
         np.testing.assert_almost_equal(output["phi_d"][1], target_gravity_run["phi_d"])
 
-        nan_ind = np.isnan(run_ws.get_entity("Iteration_0__model")[0].values)
+        nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
     else:
