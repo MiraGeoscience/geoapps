@@ -8,6 +8,7 @@
 import numpy as np
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
+from copy import deepcopy
 
 from geoapps.drivers.components import InversionWindow
 from geoapps.io.Gravity import GravityParams, default_ui_json
@@ -23,7 +24,7 @@ def test_initialize(tmp_path):
         workspace,
         tmp_path,
         "test.geoh5",
-        ui=default_ui_json,
+        ui=deepcopy(default_ui_json),
         params_class=GravityParams,
     )
 
