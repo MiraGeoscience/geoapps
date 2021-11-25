@@ -292,7 +292,9 @@ class InputFile:
             lambda k, v: float(v) if v in ["inf", "-inf"] else v
         )  # map "inf" to np.inf
 
-        s2u = lambda k, v: UUID(str(v)) if InputFile.is_uuid(v) else v # map '{...}' to UUID('...')
+        s2u = (
+            lambda k, v: UUID(str(v)) if InputFile.is_uuid(v) else v
+        )  # map '{...}' to UUID('...')
         for k, v in d.items():
             mappers = [s2n, s2i, s2u] if k == "ignore_values" else [s2l, s2n, s2i, s2u]
             v = self._dict_mapper(k, v, mappers)
@@ -480,5 +482,3 @@ class InputFile:
             return "value" if d["isValue"] else "property"
         else:
             return "value"
-
-

@@ -7,9 +7,9 @@
 
 import sys
 import uuid
+from copy import deepcopy
 from os import path
 from typing import Optional
-from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
