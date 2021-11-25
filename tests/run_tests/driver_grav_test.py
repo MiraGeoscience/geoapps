@@ -96,7 +96,7 @@ def test_gravity_run(
         driver.params.workspace.h5file, driver.params.ga_group.uid
     )
 
-    residual = run_ws.get_entity("Residuals_gz")[0]
+    residual = run_ws.get_entity("Iteration_1_grav_gz_Residual")[0]
     assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
 
     predicted = run_ws.get_entity("Iteration_0_grav_gz")[0]
