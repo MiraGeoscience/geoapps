@@ -309,12 +309,12 @@ class PlotSelection2D(ObjectDataSelection):
         height = lim_y[1] - lim_y[0]
 
         self.refresh.value = False
-        self.window_center_x.min = -np.inf
+        self.window_center_x.min = -1e8
         self.window_center_x.max = lim_x[1] + width * 0.1
         self.window_center_x.value = np.mean(lim_x)
         self.window_center_x.min = lim_x[0] - width * 0.1
 
-        self.window_center_y.min = -np.inf
+        self.window_center_y.min = -1e8
         self.window_center_y.max = lim_y[1] + height * 0.1
         self.window_center_y.value = np.mean(lim_y)
         self.window_center_y.min = lim_y[0] - height * 0.1

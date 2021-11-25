@@ -267,7 +267,6 @@ app_initializer = {
     "octree_levels_topo": [0, 0, 0, 2],
     "octree_levels_obs": [5, 5, 5, 5],
     "depth_core": 500.0,
-    "max_distance": np.inf,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
     "s_norm": 0.0,
