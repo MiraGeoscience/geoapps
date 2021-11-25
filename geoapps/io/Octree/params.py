@@ -23,7 +23,6 @@ class OctreeParams(Params):
 
     _required_parameters = required_parameters
     _validations = validations
-    default_ui_json = default_ui_json
     param_names = list(default_ui_json.keys())
     _free_param_keys = ["object", "levels", "type", "distance"]
     _free_param_identifier = "refinement"

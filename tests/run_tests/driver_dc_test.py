@@ -53,13 +53,13 @@ def test_dc_run(
     params = DirectCurrentParams(
         forward_only=True,
         geoh5=workspace,
-        mesh=model.parent,
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=model.parent.uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
         z_from_topo=True,
-        data_object=workspace.get_entity("survey")[0],
-        starting_model_object=model.parent,
-        starting_model=model,
+        data_object=workspace.get_entity("survey")[0].uid,
+        starting_model_object=model.parent.uid,
+        starting_model=model.uid,
     )
     fwr_driver = DirectCurrentDriver(params)
     fwr_driver.run()
@@ -69,10 +69,10 @@ def test_dc_run(
     np.random.seed(0)
     params = DirectCurrentParams(
         geoh5=workspace,
-        mesh=workspace.get_entity("mesh")[0],
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=workspace.get_entity("mesh")[0].uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
-        data_object=potential.parent,
+        data_object=potential.parent.uid,
         starting_model=1e-2,
         s_norm=0.0,
         x_norm=1.0,
@@ -81,7 +81,7 @@ def test_dc_run(
         gradient_type="components",
         potential_channel_bool=True,
         z_from_topo=True,
-        potential_channel=potential,
+        potential_channel=potential.uid,
         potential_uncertainty=1e-3,
         max_iterations=max_iterations,
         initial_beta=None,

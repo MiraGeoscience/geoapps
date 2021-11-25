@@ -153,7 +153,6 @@ class Params:
                             field = "property"
                         else:
                             ui_json[k]["isValue"] = True
-                        ui_json[k][field] = new_val
 
                     if ui_json[k][field] != new_val:
                         ui_json[k]["enabled"] = True
@@ -332,7 +331,11 @@ class Params:
         uuid_associations = {}
         for k, v in associations.items():
             if all([p in params_dict.keys() for p in [k, v]]):
-                if all([InputFile.is_uuid(params_dict[p]) for p in [k, v]]):
-                    uuid_associations[params_dict[k]] = params_dict[v]
+                child = params_dict[k]
+                parent = params_dict[v]
+                child = child.uid if isinstance(child, Entity) else child
+                parent = parent.uid if isinstance(parent, Entity) else parent
+                if all([InputFile.is_uuid(p) for p in [child, parent]]):
+                    uuid_associations[child] = parent
         associations.update(uuid_associations)
         return associations

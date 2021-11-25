@@ -47,12 +47,12 @@ def test_gravity_run(
     params = GravityParams(
         forward_only=True,
         geoh5=workspace,
-        mesh=model.parent,
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=model.parent.uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
         z_from_topo=False,
-        data_object=workspace.get_entity("survey")[0],
-        starting_model_object=model.parent,
+        data_object=workspace.get_entity("survey")[0].uid,
+        starting_model_object=model.parent.uid,
         starting_model=model,
     )
     fwr_driver = GravityDriver(params)
@@ -70,10 +70,10 @@ def test_gravity_run(
     np.random.seed(0)
     params = GravityParams(
         geoh5=workspace,
-        mesh=workspace.get_entity("mesh")[0],
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=workspace.get_entity("mesh")[0].uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
-        data_object=gz.parent,
+        data_object=gz.parent.uid,
         starting_model=1e-4,
         s_norm=0.0,
         x_norm=1.0,
@@ -82,7 +82,7 @@ def test_gravity_run(
         gradient_type="components",
         gz_channel_bool=True,
         z_from_topo=False,
-        gz_channel=gz,
+        gz_channel=gz.uid,
         gz_uncertainty=2e-3,
         upper_bound=0.75,
         max_iterations=max_iterations,
