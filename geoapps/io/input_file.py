@@ -291,8 +291,10 @@ class InputFile:
         s2i = (
             lambda k, v: float(v) if v in ["inf", "-inf"] else v
         )  # map "inf" to np.inf
+
+        s2u = lambda k, v: UUID(str(v)) if InputFile.is_uuid(v) else v # map '{...}' to UUID('...')
         for k, v in d.items():
-            mappers = [s2n, s2i] if k == "ignore_values" else [s2l, s2n, s2i]
+            mappers = [s2n, s2i, s2u] if k == "ignore_values" else [s2l, s2n, s2i, s2u]
             v = self._dict_mapper(k, v, mappers)
             d[k] = v
 
@@ -349,10 +351,7 @@ class InputFile:
         associations = {}
         for k, v in d.items():
             if isinstance(v, dict):
-                if "isValue" in v.keys():
-                    field = "value" if v["isValue"] else "property"
-                else:
-                    field = "value"
+                field = InputFile.field(v)
                 if "parent" in v.keys():
                     if v["parent"] is not None:
                         try:
@@ -365,7 +364,6 @@ class InputFile:
                             associations[child_key] = parent_uuid
                         except:
                             continue
-
             else:
                 continue
 
@@ -473,3 +471,14 @@ class InputFile:
             return True
         except ValueError:
             return False
+
+    @staticmethod
+    def field(d: dict[str, Any]) -> str:
+        """Returns field in ui_json block that contains data ('value' or 'property')."""
+
+        if "isValue" in d.keys():
+            return "value" if d["isValue"] else "property"
+        else:
+            return "value"
+
+

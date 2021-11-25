@@ -572,8 +572,7 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "SusceptibilityInversion"},
 }
 
-base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json.copy()
+default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
@@ -677,4 +676,5 @@ validations = {
     },
     "out_group": {"types": [str, ContainerGroup]},
 }
-validations.update(base_validations)
+
+validations = dict(base_validations, **validations)

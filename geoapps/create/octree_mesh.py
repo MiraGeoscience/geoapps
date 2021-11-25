@@ -8,6 +8,7 @@
 import sys
 import uuid
 from os import path
+from copy import deepcopy
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, Octree, Points, Surface
@@ -208,7 +209,7 @@ class OctreeMesh(ObjectDataSelection):
                 continue
 
         self.params._free_param_dict = {}
-        ui_json = default_ui_json.copy()
+        ui_json = deepcopy(default_ui_json)
         for group, refinement in zip("ABCDFEGH", self.refinement_list.children):
             self.params._free_param_dict[refinement.children[0].value] = {
                 "object": refinement.children[1].value,

@@ -9,6 +9,7 @@ from uuid import UUID
 
 import numpy as np
 
+from geoh5py.objects.surveys.direct_current import PotentialElectrode
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.io.Inversion.constants import (
     required_parameters as base_required_parameters,
@@ -242,8 +243,7 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "DirectCurrent"},
 }
 
-base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json.copy()
+default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
@@ -255,22 +255,25 @@ validations = {
         "types": [str],
         "values": ["direct current"],
     },
+    "data_object": {
+        "types": [UUID, PotentialElectrode]
+    },
     "potential_channel_bool": {"types": [bool]},
     "potential_channel": {
         "types": [str, UUID],
         "reqs": [("data_object")],
     },
-    "potential_uncertainty": {"types": [str, int, float]},
+    "potential_uncertainty": {"types": [str, int, float, UUID]},
 }
 
-validations.update(base_validations)
+validations = dict(base_validations, **validations)
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon_dcip.geoh5",
-    "data_object": "{6e14de2c-9c2f-4976-84c2-b330d869cb82}",
+    "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
     "potential_channel_bool": True,
-    "potential_channel": "{502e7256-aafa-4016-969f-5cc3a4f27315}",
-    "potential_uncertainty": "{62746129-3d82-427e-a84c-78cded00c0bc}",
+    "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
+    "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
     "reference_model": 1e-1,
     "starting_model": 1e-1,
     "u_cell_size": 25.0,
@@ -295,8 +298,8 @@ app_initializer = {
     "upper_bound": 100.0,
     "lower_bound": 1e-5,
     "max_iterations": 25,
-    "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-    "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "receivers_offset_x": 0,
     "receivers_offset_y": 0,

@@ -9,6 +9,7 @@ import sys
 import uuid
 from os import path
 from typing import Optional
+from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -1344,7 +1345,7 @@ class PeakFinder(ObjectDataSelection):
         self.params.line_field = self.lines.data.value
 
         self.params._free_param_dict = {}
-        ui_json = default_ui_json.copy()
+        ui_json = deepcopy(default_ui_json)
         for group, values in self.channel_groups.items():
             self.params._free_param_dict[group] = {
                 "data": values["data"],

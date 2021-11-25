@@ -53,13 +53,13 @@ def test_ip_run(
     params = InducedPolarizationParams(
         forward_only=True,
         geoh5=workspace,
-        mesh=model.parent,
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=model.parent.uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
         z_from_topo=True,
-        data_object=workspace.get_entity("survey")[0],
-        starting_model_object=model.parent,
-        starting_model=model,
+        data_object=workspace.get_entity("survey")[0].uid,
+        starting_model_object=model.parent.uid,
+        starting_model=model.uid,
         conductivity_model=1e-2,
     )
     fwr_driver = InducedPolarizationDriver(params)
@@ -70,10 +70,10 @@ def test_ip_run(
     np.random.seed(0)
     params = InducedPolarizationParams(
         geoh5=workspace,
-        mesh=workspace.get_entity("mesh")[0],
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=workspace.get_entity("mesh")[0].uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
-        data_object=potential.parent,
+        data_object=potential.parent.uid,
         conductivity_model=1e-2,
         starting_model=1e-6,
         s_norm=0.0,
@@ -83,7 +83,7 @@ def test_ip_run(
         gradient_type="components",
         chargeability_channel_bool=True,
         z_from_topo=True,
-        chargeability_channel=potential,
+        chargeability_channel=potential.uid,
         chargeability_uncertainty=2e-4,
         max_iterations=max_iterations,
         initial_beta=None,

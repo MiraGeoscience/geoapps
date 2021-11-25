@@ -90,6 +90,7 @@ class InversionApp(PlotSelection2D):
     def __init__(self, ui_json=None, **kwargs):
         if "plot_result" in kwargs:
             self.plot_result = kwargs["plot_result"]
+            kwargs.pop("plot_result")
 
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
@@ -722,7 +723,7 @@ class InversionApp(PlotSelection2D):
             params["out_group"] = "ChargeabilityInversion"
             self.option_choices.options = list(self.inversion_options.keys())
 
-        self.params = self._param_class(verbose=False)
+        self.params = self._param_class()
 
         if self.inversion_type.value in ["direct current"]:
             data_type_list = ["potential"]
