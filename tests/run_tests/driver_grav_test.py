@@ -12,6 +12,9 @@ from SimPEG import utils
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
 
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
+
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
@@ -53,7 +56,7 @@ def test_gravity_run(
         z_from_topo=False,
         data_object=workspace.get_entity("survey")[0].uid,
         starting_model_object=model.parent.uid,
-        starting_model=model,
+        starting_model=model.uid,
     )
     fwr_driver = GravityDriver(params)
     fwr_driver.run()

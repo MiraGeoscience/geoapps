@@ -59,6 +59,7 @@ def test_susceptibility_run(
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
+
     fwr_driver = MagneticScalarDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
@@ -88,6 +89,7 @@ def test_susceptibility_run(
         max_iterations=max_iterations,
         initial_beta_ratio=1e0,
     )
+
     driver = MagneticScalarDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.workspace.h5file)
