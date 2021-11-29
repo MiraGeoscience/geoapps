@@ -18,7 +18,7 @@ from scipy import spatial
 from geoapps.create.octree_mesh import OctreeMesh
 from geoapps.utils.utils import treemesh_2_octree
 
-pytest.skip("eliminating conflicting test.", allow_module_level=True)
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
 def test_create_octree_app(tmp_path):
