@@ -18,8 +18,8 @@ from geoapps.inversion.dcip_inversion_app import InversionApp as DCInversionApp
 from geoapps.inversion.pf_inversion_app import InversionApp as MagInversionApp
 from geoapps.io import InputFile
 
-import pytest
-pytest.skip("eliminating conflicting test.", allow_module_level=True)
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 project = "./FlinFlon.geoh5"
 
