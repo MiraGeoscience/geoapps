@@ -826,6 +826,326 @@ def test_validate_no_data_value(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
+def test_input_file_construction(tmp_path):
+
+    params_files_classes = {
+        "../assets/uijson/gravity_inversion.ui.json": GravityParams,
+        "../assets/uijson/gravity_forward.ui.json": GravityParams,
+        "../assets/uijson/magnetic_scalar_inversion.ui.json": MagneticScalarParams,
+        "../assets/uijson/magnetic_scalar_forward.ui.json": MagneticScalarParams,
+        "../assets/uijson/magnetic_vector_inversion.ui.json": MagneticVectorParams,
+        "../assets/uijson/magnetic_vector_forward.ui.json": MagneticVectorParams,
+        "../assets/uijson/direct_current_inversion.ui.json": DirectCurrentParams,
+        "../assets/uijson/direct_current_forward.ui.json": DirectCurrentParams,
+        "../assets/uijson/induced_polarization_inversion.ui.json": InducedPolarizationParams,
+        "../assets/uijson/induced_polarization_forward.ui.json": InducedPolarizationParams,
+        "../assets/uijson/octree_mesh.ui.json": OctreeParams,
+        "../assets/uijson/peak_finder.ui.json": PeakFinderParams,
+    }
+
+    for filename, params_class in params_files_classes.items():
+
+        ifile = InputFile(filename)
+        params = params_class(ifile, validate=False)
+
+        check = []
+        for k, v in params.defaults.items():
+            if " " in k:
+                continue
+                check.append(getattr(params, k) == v)
+
+        assert all(check)
+
+def test_gravity_inversion_type():
+    params = GravityParams(validate=True)
+    params.inversion_type = "gravity"
+    with pytest.raises(ValueError) as excinfo:
+        params.inversion_type = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["inversion_type", "alskdj", "gravity"]])
+
+
+def test_gz_channel_bool():
+    params = GravityParams(validate=True)
+    params.gz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gz_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["gz_channel_bool", "type", "str", "bool"]])
+
+def test_gz_channel():
+    params = GravityParams(validate=True)
+    params.gz_channel = str(uuid4())
+    params.gz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gz_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["gz_channel", "type", "int", "str", "UUID"]])
+
+def test_gz_uncertainty():
+    params = GravityParams(validate=True)
+    params.gz_uncertainty = str(uuid4())
+    params.gz_uncertainty = uuid4()
+    params.gz_uncertainty = 4
+    params.gz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gz_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["gz_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+def test_guv_channel_bool():
+    params = GravityParams(validate=True)
+    params.guv_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.guv_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["guv_channel_bool", "type", "str", "bool"]])
+
+def test_guv_channel():
+    params = GravityParams(validate=True)
+    params.guv_channel = str(uuid4())
+    params.guv_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.guv_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["guv_channel", "type", "int", "str", "UUID"]])
+
+def test_guv_uncertainty():
+    params = GravityParams(validate=True)
+    params.guv_uncertainty = str(uuid4())
+    params.guv_uncertainty = uuid4()
+    params.guv_uncertainty = 4
+    params.guv_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.guv_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["guv_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+def test_gxy_channel_bool():
+    params = GravityParams(validate=True)
+    params.gxy_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gxy_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["gxy_channel_bool", "type", "str", "bool"]])
+
+def test_gxy_channel():
+    params = GravityParams(validate=True)
+    params.gxy_channel = str(uuid4())
+    params.gxy_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gxy_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["gxy_channel", "type", "int", "str", "UUID"]])
+
+def test_gxy_uncertainty():
+    params = GravityParams(validate=True)
+    params.gxy_uncertainty = str(uuid4())
+    params.gxy_uncertainty = uuid4()
+    params.gxy_uncertainty = 4
+    params.gxy_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gxy_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["gxy_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+def test_gxx_channel_bool():
+    params = GravityParams(validate=True)
+    params.gxx_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gxx_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["gxx_channel_bool", "type", "str", "bool"]])
+
+def test_gxx_channel():
+    params = GravityParams(validate=True)
+    params.gxx_channel = str(uuid4())
+    params.gxx_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gxx_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["gxx_channel", "type", "int", "str", "UUID"]])
+
+def test_gxx_uncertainty():
+    params = GravityParams(validate=True)
+    params.gxx_uncertainty = str(uuid4())
+    params.gxx_uncertainty = uuid4()
+    params.gxx_uncertainty = 4
+    params.gxx_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gxx_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["gxx_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+def test_gyy_channel_bool():
+    params = GravityParams(validate=True)
+    params.gyy_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gyy_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["gyy_channel_bool", "type", "str", "bool"]])
+
+def test_gyy_channel():
+    params = GravityParams(validate=True)
+    params.gyy_channel = str(uuid4())
+    params.gyy_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gyy_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["gyy_channel", "type", "int", "str", "UUID"]])
+
+def test_gyy_uncertainty():
+    params = GravityParams(validate=True)
+    params.gyy_uncertainty = str(uuid4())
+    params.gyy_uncertainty = uuid4()
+    params.gyy_uncertainty = 4
+    params.gyy_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gyy_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["gyy_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+def test_gzz_channel_bool():
+    params = GravityParams(validate=True)
+    params.gzz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gzz_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["gzz_channel_bool", "type", "str", "bool"]])
+
+def test_gzz_channel():
+    params = GravityParams(validate=True)
+    params.gzz_channel = str(uuid4())
+    params.gzz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gzz_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["gzz_channel", "type", "int", "str", "UUID"]])
+
+def test_gzz_uncertainty():
+    params = GravityParams(validate=True)
+    params.gzz_uncertainty = str(uuid4())
+    params.gzz_uncertainty = uuid4()
+    params.gzz_uncertainty = 4
+    params.gzz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gzz_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["gzz_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+def test_gxz_channel_bool():
+    params = GravityParams(validate=True)
+    params.gxz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gxz_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["gxz_channel_bool", "type", "str", "bool"]])
+
+def test_gxz_channel():
+    params = GravityParams(validate=True)
+    params.gxz_channel = str(uuid4())
+    params.gxz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gxz_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["gxz_channel", "type", "int", "str", "UUID"]])
+
+def test_gxz_uncertainty():
+    params = GravityParams(validate=True)
+    params.gxz_uncertainty = str(uuid4())
+    params.gxz_uncertainty = uuid4()
+    params.gxz_uncertainty = 4
+    params.gxz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gxz_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["gxz_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+def test_gyz_channel_bool():
+    params = GravityParams(validate=True)
+    params.gyz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gyz_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["gyz_channel_bool", "type", "str", "bool"]])
+
+def test_gyz_channel():
+    params = GravityParams(validate=True)
+    params.gyz_channel = str(uuid4())
+    params.gyz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gyz_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["gyz_channel", "type", "int", "str", "UUID"]])
+
+def test_gyz_uncertainty():
+    params = GravityParams(validate=True)
+    params.gyz_uncertainty = str(uuid4())
+    params.gyz_uncertainty = uuid4()
+    params.gyz_uncertainty = 4
+    params.gyz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gyz_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["gyz_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+def test_gx_channel_bool():
+    params = GravityParams(validate=True)
+    params.gx_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gx_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["gx_channel_bool", "type", "str", "bool"]])
+
+def test_gx_channel():
+    params = GravityParams(validate=True)
+    params.gx_channel = str(uuid4())
+    params.gx_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gx_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["gx_channel", "type", "int", "str", "UUID"]])
+
+def test_gx_uncertainty():
+    params = GravityParams(validate=True)
+    params.gx_uncertainty = str(uuid4())
+    params.gx_uncertainty = uuid4()
+    params.gx_uncertainty = 4
+    params.gx_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gx_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["gx_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+def test_gy_channel_bool():
+    params = GravityParams(validate=True)
+    params.gy_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gy_channel_bool = "alskdj"
+
+    assert all([s in str(excinfo.value) for s in ["gy_channel_bool", "type", "str", "bool"]])
+
+def test_gy_channel():
+    params = GravityParams(validate=True)
+    params.gy_channel = str(uuid4())
+    params.gy_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gy_channel = 4
+
+    assert all([s in str(excinfo.value) for s in ["gy_channel", "type", "int", "str", "UUID"]])
+
+def test_gy_uncertainty():
+    params = GravityParams(validate=True)
+    params.gy_uncertainty = str(uuid4())
+    params.gy_uncertainty = uuid4()
+    params.gy_uncertainty = 4
+    params.gy_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gy_uncertainty = workspace
+
+    assert all([s in str(excinfo.value) for s in ["gy_uncertainty", "type", "Workspace", "str", "int", "float", "UUID"]])
+
+
 def test_isValue(tmp_path):
     # "starting_model"
     filepath = tmpfile(tmp_path)
