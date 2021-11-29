@@ -826,7 +826,7 @@ def test_validate_no_data_value(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_input_file_construction(tmp_path):
+def test_input_file_construction():
 
     params_files_classes = {
         "../assets/uijson/gravity_inversion.ui.json": GravityParams,
