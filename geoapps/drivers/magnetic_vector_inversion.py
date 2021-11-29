@@ -7,8 +7,8 @@
 
 import sys
 
-from geoapps.io.MagneticVector import MagneticVectorParams
 from geoapps.io import InputFile
+from geoapps.io.MagneticVector import MagneticVectorParams
 
 from .base_inversion import InversionDriver
 

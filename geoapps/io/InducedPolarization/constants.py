@@ -8,6 +8,7 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.io.Inversion.constants import (
@@ -181,7 +182,6 @@ forward_ui_json = {
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
-
 }
 default_ui_json = {
     "title": "SimPEG Induced Polarization Inversion",
@@ -267,8 +267,7 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "InducedPolarization"},
 }
 
-base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json.copy()
+default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
@@ -280,12 +279,13 @@ validations = {
         "types": [str],
         "values": ["induced polarization"],
     },
+    "data_object": {"types": [UUID, PotentialElectrode]},
     "chargeability_channel_bool": {"types": [bool]},
     "chargeability_channel": {
         "types": [str, UUID],
         "reqs": [("data_object")],
     },
-    "chargeability_uncertainty": {"types": [str, int, float]},
+    "chargeability_uncertainty": {"types": [str, int, float, UUID]},
     "conductivity_model_object": {
         "types": [str, UUID],
     },
@@ -294,4 +294,4 @@ validations = {
     },
 }
 
-validations.update(base_validations)
+validations = dict(base_validations, **validations)

@@ -7,16 +7,16 @@
 
 from __future__ import annotations
 
-from uuid import UUID
 from copy import deepcopy
+from uuid import UUID
 
 from geoapps.io.Inversion import InversionParams
 
 from .constants import (
     default_ui_json,
     forward_defaults,
-    inversion_defaults,
     forward_ui_json,
+    inversion_defaults,
     inversion_ui_json,
     required_parameters,
     validations,
@@ -77,7 +77,6 @@ class GravityParams(InversionParams):
         self.out_group = None
 
         super().__init__(input_file, default, validate, **kwargs)
-
 
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""

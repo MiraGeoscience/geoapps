@@ -12,6 +12,9 @@ from SimPEG import utils
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
 
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
+
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
@@ -48,17 +51,19 @@ def test_susceptibility_run(
     params = MagneticScalarParams(
         forward_only=True,
         geoh5=workspace,
-        mesh=model.parent,
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=model.parent.uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
-        data_object=workspace.get_entity("survey")[0],
-        starting_model_object=model.parent,
-        starting_model=model,
+        data_object=workspace.get_entity("survey")[0].uid,
+        starting_model_object=model.parent.uid,
+        starting_model=model.uid,
     )
+    params.workpath = tmp_path
+
     fwr_driver = MagneticScalarDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
@@ -67,13 +72,13 @@ def test_susceptibility_run(
     np.random.seed(0)
     params = MagneticScalarParams(
         geoh5=workspace,
-        mesh=workspace.get_entity("mesh")[0],
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=workspace.get_entity("mesh")[0].uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
-        data_object=tmi.parent,
+        data_object=tmi.parent.uid,
         starting_model=1e-4,
         s_norm=0.0,
         x_norm=0.0,
@@ -83,11 +88,13 @@ def test_susceptibility_run(
         lower_bound=0.0,
         tmi_channel_bool=True,
         z_from_topo=False,
-        tmi_channel=tmi,
+        tmi_channel=tmi.uid,
         tmi_uncertainty=4.0,
         max_iterations=max_iterations,
         initial_beta_ratio=1e0,
     )
+    params.workpath = tmp_path
+
     driver = MagneticScalarDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.workspace.h5file)
@@ -146,16 +153,16 @@ def test_magnetic_vector_run(
     params = MagneticVectorParams(
         forward_only=True,
         geoh5=workspace,
-        mesh=model.parent,
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=model.parent.uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
-        data_object=workspace.get_entity("survey")[0],
-        starting_model_object=model.parent,
-        starting_model=model,
+        data_object=workspace.get_entity("survey")[0].uid,
+        starting_model_object=model.parent.uid,
+        starting_model=model.uid,
         starting_inclination=45,
         starting_declination=270,
     )
@@ -166,13 +173,13 @@ def test_magnetic_vector_run(
     # Run the inverse
     params = MagneticVectorParams(
         geoh5=workspace,
-        mesh=workspace.get_entity("mesh")[0],
-        topography_object=workspace.get_entity("topography")[0],
+        mesh=workspace.get_entity("mesh")[0].uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
-        data_object=tmi.parent,
+        data_object=tmi.parent.uid,
         starting_model=1e-4,
         s_norm=0.0,
         x_norm=1.0,
@@ -181,7 +188,7 @@ def test_magnetic_vector_run(
         gradient_type="components",
         tmi_channel_bool=True,
         z_from_topo=False,
-        tmi_channel=tmi,
+        tmi_channel=tmi.uid,
         tmi_uncertainty=4.0,
         max_iterations=max_iterations,
         initial_beta_ratio=1e1,

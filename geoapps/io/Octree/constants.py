@@ -214,17 +214,13 @@ validations = {
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-    "Refinement A": {
-        "object": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-        "levels": [4.0, 4.0, 4.0],
-        "type": "radial",
-        "distance": 1000,
-    },
-    "Refinement B": {
-        "object": "",
-        "levels": [0.0, 0.0, 2.0],
-        "type": "surface",
-        "distance": 1000,
-    },
+    "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
+    "Refinement A object": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
+    "Refinement A levels": [4.0, 4.0, 4.0],
+    "Refinement A type": "radial",
+    "Refinement A distance": 1000,
+    "Refinement B object": None,
+    "Refinement B levels": [0.0, 0.0, 2.0],
+    "Refinement B type": "surface",
+    "Refinement B distance": 1000,
 }

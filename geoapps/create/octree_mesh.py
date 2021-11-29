@@ -7,6 +7,7 @@
 
 import sys
 import uuid
+from copy import deepcopy
 from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
@@ -16,11 +17,11 @@ from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
+from geoapps.io import InputFile
 from geoapps.io.Octree.constants import app_initializer, default_ui_json
 from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
 from geoapps.utils.utils import string_2_list, treemesh_2_octree
-from geoapps.io import InputFile
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -90,7 +91,7 @@ class OctreeMesh(ObjectDataSelection):
         super().__populate__(**kwargs)
 
         refinement_list = []
-        for label, params in self.params.free_params_dict.items():
+        for label, params in self.params._free_param_dict.items():
             refinement_list += [self.add_refinement_widget(label, params)]
 
         self.refinement_list.children = refinement_list
@@ -188,9 +189,6 @@ class OctreeMesh(ObjectDataSelection):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_choices()
-        self.params.input_file.filepath = path.join(
-            path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
-        )
 
     def update_objects_choices(self):
         # Refresh the list of objects for all
@@ -210,38 +208,15 @@ class OctreeMesh(ObjectDataSelection):
             except AttributeError:
                 continue
 
-        self.params._free_params_dict = {}
-        ui_json = default_ui_json.copy()
+        self.params._free_param_dict = {}
+        ui_json = deepcopy(default_ui_json)
         for group, refinement in zip("ABCDFEGH", self.refinement_list.children):
-            self.params.free_params_dict[refinement.children[0].value] = {
+            self.params._free_param_dict[refinement.children[0].value] = {
                 "object": refinement.children[1].value,
                 "levels": string_2_list(refinement.children[2].value),
                 "type": refinement.children[3].value,
                 "distance": refinement.children[4].value,
             }
-            ui_json[f"Refinement {group} Object"] = default_ui_json[
-                f"Template Object"
-            ].copy()
-            ui_json[f"Refinement {group} Object"]["group"] = f"Refinement {group}"
-            ui_json[f"Refinement {group} Levels"] = default_ui_json[
-                f"Template Levels"
-            ].copy()
-            ui_json[f"Refinement {group} Levels"]["group"] = f"Refinement {group}"
-            ui_json[f"Refinement {group} Type"] = default_ui_json[
-                f"Template Type"
-            ].copy()
-            ui_json[f"Refinement {group} Type"]["group"] = f"Refinement {group}"
-            ui_json[f"Refinement {group} Distance"] = default_ui_json[
-                f"Template Distance"
-            ].copy()
-            ui_json[f"Refinement {group} Distance"]["group"] = f"Refinement {group}"
-
-        del ui_json[f"Template Object"]
-        del ui_json[f"Template Levels"]
-        del ui_json[f"Template Type"]
-        del ui_json[f"Template Distance"]
-
-        self.params.param_names = list(ui_json.keys())
 
         self.params.write_input_file(ui_json=ui_json, name=self.params.ga_group_name)
         self.run(self.params)
@@ -282,7 +257,7 @@ class OctreeMesh(ObjectDataSelection):
             depth_core=params.depth_core,
         )
 
-        for label, value in params.free_params_dict.items():
+        for label, value in params._free_param_dict.items():
 
             try:
                 uid = (
@@ -310,7 +285,9 @@ class OctreeMesh(ObjectDataSelection):
         treemesh.finalize()
 
         print("Writing to file ")
-        octree = treemesh_2_octree(params.workspace, treemesh, name=params.ga_group_name)
+        octree = treemesh_2_octree(
+            params.workspace, treemesh, name=params.ga_group_name
+        )
 
         if params.monitoring_directory is not None and path.exists(
             params.monitoring_directory
@@ -333,11 +310,6 @@ class OctreeMesh(ObjectDataSelection):
             attr_name = (label + f" {key}").title()
 
             if "object" in key:
-                try:
-                    value = uuid.UUID(value)
-                except (ValueError, TypeError):
-                    value = None
-
                 setattr(
                     self,
                     attr_name,

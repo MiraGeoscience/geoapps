@@ -146,7 +146,6 @@ inversion_defaults = {
     "bx_channel_bool": False,
     "by_channel_bool": False,
     "bz_channel_bool": False,
-
 }
 
 forward_defaults = {
@@ -690,8 +689,7 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "VectorInversion"},
 }
 
-base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json.copy()
+default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
@@ -806,29 +804,30 @@ validations = {
         "types": [str, UUID, int, float],
     },
     "reference_inclination_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "reference_declination_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "reference_inclination": {
-        "types": [str, int, float],
+        "types": [str, int, float, UUID],
         "reqs": [("reference_inclination_object")],
     },
     "reference_declination": {
-        "types": [str, int, float],
+        "types": [str, int, float, UUID],
         "reqs": [("reference_declination_object")],
     },
     "out_group": {"types": [str, ContainerGroup]},
 }
-validations.update(base_validations)
+
+validations = dict(base_validations, **validations)
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
     "forward_only": False,
-    "data_object": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "tmi_channel_bool": True,
-    "tmi_channel": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
     "tmi_uncertainty": 10,
     "inducing_field_strength": 60000.0,
     "inducing_field_inclination": 79.0,
@@ -859,11 +858,11 @@ app_initializer = {
     "reference_inclination": None,
     "reference_declination": None,
     "max_iterations": 25,
-    "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-    "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "detrend_order": 0,
-    "detrend_type": "",
+    "detrend_type": None,
     "receivers_offset_x": 0,
     "receivers_offset_y": 0,
     "receivers_offset_z": 60,

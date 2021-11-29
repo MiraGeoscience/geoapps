@@ -8,7 +8,9 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Octree, Points, Surface
 from geoh5py.workspace import Workspace
 
 required_parameters = []
@@ -644,25 +646,25 @@ validations = {
         ],
     },
     "topography_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Surface],
         "uuid": [],
     },
     "topography": {
-        "types": [str, UUID, int, float],
-        "reqs": [("topography_object")],
-        "uuid": ["topography_object"],
+        "types": [str, UUID, int, float, FloatData],
+        "reqs": [("topography_object",)],
+        "uuid": [],
     },
     "data_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Points],
     },
     "starting_model_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Octree],
     },
     "starting_model": {
-        "types": [str, UUID, int, float],
+        "types": [str, UUID, int, float, FloatData],
     },
     "tile_spatial": {
-        "types": [str, int, float],
+        "types": [str, int, float, FloatData],
     },
     "z_from_topo": {"types": [bool]},
     "receivers_radar_drape": {"types": [str], "reqs": [("data_object")]},
@@ -689,7 +691,7 @@ validations = {
     },
     "detrend_type": {
         "types": [str],
-        "values": ["all", "corners"],
+        "values": ["all", "perimeter"],
     },
     "max_chunk_size": {"types": [int, float]},
     "chunk_by_rows": {
@@ -700,7 +702,7 @@ validations = {
     },
     "mesh": {
         "uuid": [],
-        "types": [str, UUID],
+        "types": [str, UUID, Octree],
     },
     "u_cell_size": {
         "types": [int, float],
@@ -834,10 +836,10 @@ validations = {
         "types": [int, float],
     },
     "reference_model_object": {
-        "types": [str],
+        "types": [str, UUID, Octree],
     },
     "reference_model": {
-        "types": [str, int, float],
+        "types": [str, int, float, UUID, FloatData],
         "reqs": [("reference_model_object")],
     },
     "gradient_type": {
@@ -845,16 +847,16 @@ validations = {
         "values": ["total", "components"],
     },
     "lower_bound_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Octree],
     },
     "lower_bound": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "upper_bound_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Octree],
     },
     "upper_bound": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "parallelized": {
         "types": [bool],

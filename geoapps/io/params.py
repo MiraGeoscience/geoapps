@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import os
-import warnings
 from copy import deepcopy
 from typing import Any
 from uuid import UUID
@@ -75,14 +74,17 @@ class Params:
 
     def __init__(self, input_file=None, default=True, validate=True, **kwargs):
 
+        self.workpath = "."
         self.input_file = input_file
         self.default = default
         self.validate = validate
         self.workspace = None
 
-
     def update(self, params_dict: Dict[str, Any], validate=True):
         """Update parameters with dictionary contents."""
+
+        original_validate_state = self.validate
+        self.validate = validate
 
         # Pull out workspace data for validations and forward_only for defaults.
 
@@ -93,13 +95,13 @@ class Params:
         for key, value in params_dict.items():
 
             if key == "workspace":
-                continue # ignores deprecated workspace name
+                continue  # ignores deprecated workspace name
 
             if " " in key:
-                continue # ignores grouped parameter names
+                continue  # ignores grouped parameter names
 
             if key not in self.default_ui_json.keys():
-                continue # ignores keys not in default_ui_json
+                continue  # ignores keys not in default_ui_json
 
             if isinstance(value, dict):
                 field = "value"
@@ -113,6 +115,15 @@ class Params:
                 else:
                     setattr(self, key, value)
 
+        self.validate = original_validate_state
+
+    @property
+    def workpath(self):
+        return os.path.abspath(self._workpath)
+
+    @workpath.setter
+    def workpath(self, val):
+        self._workpath = val
 
     @property
     def required_parameters(self):
@@ -142,11 +153,9 @@ class Params:
                             field = "property"
                         else:
                             ui_json[k]["isValue"] = True
-                        ui_json[k][field] = new_val
 
-                    elif ui_json[k][field] != new_val:
+                    if ui_json[k][field] != new_val:
                         ui_json[k]["enabled"] = True
-                        ui_json[k]["visible"] = True
                         ui_json[k][field] = new_val
 
                 else:
@@ -317,22 +326,16 @@ class Params:
 
         ifile.write_ui_json(ui_json, name=name, default=default)
 
-    @property
-    def free_params_dict(self):
-        if (
-            getattr(self, "_free_params_dict", None) is None
-            and getattr(self, "_free_param_keys", None) is not None
-        ):
-            self._free_params_dict = self.input_file._free_params_dict
-
-        return self._free_params_dict
-
     def get_associations(self, params_dict: dict[str, Any]):
-        associations = InputFile.associations(self.default_ui_json)
+        associations = InputFile.get_associations(self.default_ui_json)
         uuid_associations = {}
         for k, v in associations.items():
             if all([p in params_dict.keys() for p in [k, v]]):
-                if all([InputFile.is_uuid(params_dict[p]) for p in [k, v]]):
-                    uuid_associations[params_dict[k]] = params_dict[v]
+                child = params_dict[k]
+                parent = params_dict[v]
+                child = child.uid if isinstance(child, Entity) else child
+                parent = parent.uid if isinstance(parent, Entity) else parent
+                if all([InputFile.is_uuid(p) for p in [child, parent]]):
+                    uuid_associations[child] = parent
         associations.update(uuid_associations)
         return associations

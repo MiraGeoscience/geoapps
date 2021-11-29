@@ -124,7 +124,7 @@ def test_set_associations():
         }
     )
     ifile = InputFile()
-    ifile._set_associations(tdict)
+    ifile.associations = ifile.get_associations(tdict)
     assert ifile.associations[UUID(f_uuid)] == UUID(o_uuid)
     assert ifile.associations[UUID(f_uuid2)] == UUID(o_uuid2)
     assert ifile.associations["field"] == "obj"
@@ -196,8 +196,16 @@ def test_truth():
     assert InputFile.truth(d_u_j, "chunk_by_rows", "enabled")
     assert not InputFile.truth(d_u_j, "chunk_by_rows", "optional")
 
+
 def test_is_uijson():
     d_u_j = deepcopy(default_ui_json)
     assert InputFile.is_uijson(d_u_j)
     assert InputFile.is_uijson({"test": {"label": "me", "value": 2}})
     assert not InputFile.is_uijson({"test": {"label": "me"}})
+
+
+def test_field():
+    d_u_j = deepcopy(default_ui_json)
+    assert InputFile.field(d_u_j["starting_model"]) == "property"
+    assert InputFile.field(d_u_j["tmi_uncertainty"]) == "value"
+    assert InputFile.field(d_u_j["resolution"]) == "value"

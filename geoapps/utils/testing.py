@@ -58,6 +58,9 @@ class Geoh5Tester:
 
     def make(self):
         if self.has_params:
+            self.params.associations = self.params.get_associations(
+                self.params.to_dict(ui_json_format=False)
+            )
             return self.ws, self.params
         else:
             return self.ws

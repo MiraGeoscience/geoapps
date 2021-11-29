@@ -7,8 +7,8 @@
 
 from __future__ import annotations
 
-from uuid import UUID
 from copy import deepcopy
+from uuid import UUID
 
 from geoapps.io.Inversion import InversionParams
 
@@ -16,8 +16,8 @@ from ..validators import InputValidator
 from .constants import (
     default_ui_json,
     forward_defaults,
-    inversion_defaults,
     forward_ui_json,
+    inversion_defaults,
     inversion_ui_json,
     required_parameters,
     validations,
@@ -89,7 +89,6 @@ class MagneticVectorParams(InversionParams):
         self.reference_declination = None
 
         super().__init__(input_file, default, validate, **kwargs)
-
 
     def components(self) -> list[str]:
         comps = super().components()
