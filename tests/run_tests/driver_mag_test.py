@@ -12,6 +12,9 @@ from SimPEG import utils
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
 
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
+
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
@@ -59,6 +62,7 @@ def test_susceptibility_run(
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
+    params.workpath = tmp_path
 
     fwr_driver = MagneticScalarDriver(params)
     fwr_driver.run()
@@ -89,6 +93,7 @@ def test_susceptibility_run(
         max_iterations=max_iterations,
         initial_beta_ratio=1e0,
     )
+    params.workpath = tmp_path
 
     driver = MagneticScalarDriver(params)
     driver.run()

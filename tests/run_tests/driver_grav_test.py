@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
+import shutil
 import numpy as np
 from geoh5py.workspace import Workspace
 from SimPEG import utils
@@ -58,6 +60,7 @@ def test_gravity_run(
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
+    params.workpath = tmp_path
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
@@ -92,6 +95,7 @@ def test_gravity_run(
         initial_beta_ratio=1e-2,
         prctile=100,
     )
+    params.workpath = tmp_path
     driver = GravityDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.workspace.h5file)
@@ -131,3 +135,4 @@ if __name__ == "__main__":
         residual < 50.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
     print("Density model is within 15% of the answer. Let's go!!")
+

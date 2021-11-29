@@ -12,8 +12,8 @@ from SimPEG import utils
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
 
-import pytest
-pytest.skip("eliminating conflicting test.", allow_module_level=True)
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
@@ -65,6 +65,7 @@ def test_ip_run(
         starting_model=model.uid,
         conductivity_model=1e-2,
     )
+    params.workpath = tmp_path
     fwr_driver = InducedPolarizationDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
@@ -95,6 +96,7 @@ def test_ip_run(
         upper_bound=0.1,
         tile_spatial=n_lines,
     )
+    params.workpath = tmp_path
     driver = InducedPolarizationDriver(params)
     driver.run()
     output = get_inversion_output(

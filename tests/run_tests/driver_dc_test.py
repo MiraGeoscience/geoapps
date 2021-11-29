@@ -12,8 +12,8 @@ from SimPEG import utils
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
 
-import pytest
-pytest.skip("eliminating conflicting test.", allow_module_level=True)
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
@@ -64,6 +64,7 @@ def test_dc_run(
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
+    params.workpath = tmp_path
     fwr_driver = DirectCurrentDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
@@ -93,6 +94,7 @@ def test_dc_run(
         upper_bound=10,
         tile_spatial=n_lines,
     )
+    params.workpath = tmp_path
     driver = DirectCurrentDriver(params)
     driver.run()
     output = get_inversion_output(
