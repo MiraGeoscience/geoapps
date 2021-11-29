@@ -8,6 +8,7 @@
 from os import path
 
 import numpy as np
+import pytest
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Points, Surface
 from geoh5py.shared.utils import compare_entities
@@ -17,8 +18,8 @@ from scipy import spatial
 from geoapps.create.octree_mesh import OctreeMesh
 from geoapps.utils.utils import treemesh_2_octree
 
-# import pytest
-# pytest.skip("eliminating conflicting test.", allow_module_level=True)
+pytest.skip("eliminating conflicting test.", allow_module_level=True)
+
 
 def test_create_octree_app(tmp_path):
     project = path.join(tmp_path, "testOctree.geoh5")
