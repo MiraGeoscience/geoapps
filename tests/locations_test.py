@@ -5,11 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from copy import deepcopy
+
 import numpy as np
 import pytest
 from geoh5py.objects import Grid2D, Points
 from geoh5py.workspace import Workspace
-from copy import deepcopy
 
 from geoapps.drivers.components import InversionMesh
 from geoapps.drivers.components.locations import InversionLocations
