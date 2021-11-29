@@ -829,9 +829,13 @@ def test_validate_no_data_value(tmp_path):
 def test_input_file_construction():
 
     params_classes = [
-        GravityParams, MagneticScalarParams, MagneticVectorParams,
-        DirectCurrentParams, InducedPolarizationParams,
-        OctreeParams, PeakFinderParams
+        GravityParams,
+        MagneticScalarParams,
+        MagneticVectorParams,
+        DirectCurrentParams,
+        InducedPolarizationParams,
+        OctreeParams,
+        PeakFinderParams,
     ]
 
     for params_class in params_classes:
