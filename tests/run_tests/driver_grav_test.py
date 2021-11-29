@@ -5,8 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
-import shutil
+
 import numpy as np
 from geoh5py.workspace import Workspace
 from SimPEG import utils
@@ -135,4 +134,3 @@ if __name__ == "__main__":
         residual < 50.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
     print("Density model is within 15% of the answer. Let's go!!")
-
