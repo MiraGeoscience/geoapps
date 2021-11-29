@@ -824,35 +824,29 @@ def test_validate_no_data_value(tmp_path):
     catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
 
 
-def test_input_file_construction(tmp_path):
+def test_input_file_construction():
 
-    params_files_classes = {
-        "../assets/uijson/gravity_inversion.ui.json": GravityParams,
-        "../assets/uijson/gravity_forward.ui.json": GravityParams,
-        "../assets/uijson/magnetic_scalar_inversion.ui.json": MagneticScalarParams,
-        "../assets/uijson/magnetic_scalar_forward.ui.json": MagneticScalarParams,
-        "../assets/uijson/magnetic_vector_inversion.ui.json": MagneticVectorParams,
-        "../assets/uijson/magnetic_vector_forward.ui.json": MagneticVectorParams,
-        "../assets/uijson/direct_current_inversion.ui.json": DirectCurrentParams,
-        "../assets/uijson/direct_current_forward.ui.json": DirectCurrentParams,
-        "../assets/uijson/induced_polarization_inversion.ui.json": InducedPolarizationParams,
-        "../assets/uijson/induced_polarization_forward.ui.json": InducedPolarizationParams,
-        "../assets/uijson/octree_mesh.ui.json": OctreeParams,
-        "../assets/uijson/peak_finder.ui.json": PeakFinderParams,
-    }
+    params_classes = [
+        GravityParams, MagneticScalarParams, MagneticVectorParams,
+        DirectCurrentParams, InducedPolarizationParams,
+        OctreeParams, PeakFinderParams
+    ]
 
-    for filename, params_class in params_files_classes.items():
+    for params_class in params_classes:
+        filename = "test.ui.json"
+        for forward_only in [True, False]:
+            params = params_class(forward_only=forward_only, validate=False)
+            params.write_input_file(name=filename, default=True)
+            ifile = InputFile(filename)
+            params = params_class(ifile, validate=False)
 
-        ifile = InputFile(filename)
-        params = params_class(ifile, validate=False)
+            check = []
+            for k, v in params.defaults.items():
+                if " " in k:
+                    continue
+                    check.append(getattr(params, k) == v)
 
-        check = []
-        for k, v in params.defaults.items():
-            if " " in k:
-                continue
-                check.append(getattr(params, k) == v)
-
-        assert all(check)
+            assert all(check)
 
 
 def test_gravity_inversion_type():
