@@ -121,23 +121,15 @@ class InversionMesh:
         mesh_params_dict = {
             k: v for k, v in mesh_params_dict.items() if k in mesh_param_names
         }
-        # mesh_params_dict["Refinement A Object"] = self.inversion_data.entity.uid
-        # mesh_params_dict["Refinement A levels"] = params.octree_levels_obs
-        # mesh_params_dict["Refinement A type"] = "radial"
-        # mesh_params_dict["Refinement A distance"] = params.max_distance
+        mesh_params_dict["Refinement A Object"] = self.inversion_data.entity.uid
+        mesh_params_dict["Refinement A levels"] = params.octree_levels_obs
+        mesh_params_dict["Refinement A type"] = "radial"
+        mesh_params_dict["Refinement A distance"] = params.max_distance
 
-        mesh_params_dict["Refinement A"] = {
-            "object": self.inversion_data.entity.uid,
-            "levels": params.octree_levels_obs,
-            "type": "radial",
-            "distance": params.max_distance,
-        }
-        mesh_params_dict["Refinement B"] = {
-            "object": self.inversion_topography.entity.uid,
-            "levels": params.octree_levels_topo,
-            "type": "surface",
-            "distance": params.max_distance,
-        }
+        mesh_params_dict["Refinement B Object"] = self.inversion_topography.entity.uid
+        mesh_params_dict["Refinement B levels"] = params.octree_levels_topo
+        mesh_params_dict["Refinement B type"] = "surface"
+        mesh_params_dict["Refinement B distance"] = params.max_distance
 
         if isinstance(self.inversion_data.entity, PotentialElectrode):
             mesh_params_dict["Refinement C"] = {
@@ -150,7 +142,7 @@ class InversionMesh:
         mesh_params_dict["objects"] = self.inversion_data.entity.uid
         mesh_params_dict["geoh5"] = self.workspace
 
-        return OctreeParams(**mesh_params_dict)
+        return OctreeParams(**mesh_params_dict, validate=False)
 
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
@@ -160,4 +152,3 @@ class InversionMesh:
         octree_params = self.collect_mesh_params(self.params)
         self.entity = OctreeMesh.run(octree_params)
         self.entity.parent = self.params.ga_group
-

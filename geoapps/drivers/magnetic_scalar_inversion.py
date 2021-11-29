@@ -7,8 +7,8 @@
 
 import sys
 
-from geoapps.io.MagneticScalar import MagneticScalarParams
 from geoapps.io import InputFile
+from geoapps.io.MagneticScalar import MagneticScalarParams
 
 from .base_inversion import InversionDriver
 

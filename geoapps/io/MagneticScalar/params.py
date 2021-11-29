@@ -7,8 +7,8 @@
 
 from __future__ import annotations
 
-from uuid import UUID
 from copy import deepcopy
+from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
@@ -20,8 +20,8 @@ from ..validators import InputValidator
 from .constants import (
     default_ui_json,
     forward_defaults,
-    inversion_defaults,
     forward_ui_json,
+    inversion_defaults,
     inversion_ui_json,
     required_parameters,
     validations,
