@@ -29,4 +29,3 @@ jobs:
       - name: write default ui.json files
         run: |
           python ./geoapps/io/write_default_uijson.py ../../assets/uijson
-
