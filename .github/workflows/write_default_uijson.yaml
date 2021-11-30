@@ -26,6 +26,14 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
+      - name: Setup conda env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: geoapps
+          python-version: ${{ matrix.python_ver }}
+          channel-priority: strict
+          environment-file: environment.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: write default ui.json files
         run: |
           python ./geoapps/io/write_default_uijson.py ../../assets/uijson
