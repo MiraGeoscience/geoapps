@@ -6,16 +6,20 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from geoapps.io.DirectCurrent import constants as direct_current_constants
 from geoapps.io.Gravity import constants as gravity_constants
+from geoapps.io.InducedPolarization import constants as induced_polarization_constants
 from geoapps.io.MagneticScalar import constants as magnetic_scalar_constants
 from geoapps.io.MagneticVector import constants as magnetic_vector_constants
-from geoapps.io.DirectCurrent import constants as direct_current_constants
-from geoapps.io.InducedPolarization import constants as induced_polarization_constants
 
 constants = [
-    gravity_constants, magnetic_scalar_constants, magnetic_vector_constants,
-    direct_current_constants, induced_polarization_constants,
+    gravity_constants,
+    magnetic_scalar_constants,
+    magnetic_vector_constants,
+    direct_current_constants,
+    induced_polarization_constants,
 ]
+
 
 def test_deprecated_uijson_fields():
     deprecated_fields = ["default"]
