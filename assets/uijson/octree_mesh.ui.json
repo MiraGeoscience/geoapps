@@ -2,7 +2,6 @@
     "title": "Octree Mesh Creator",
     "geoh5": "",
     "objects": {
-        "default": "",
         "enabled": true,
         "group": "1- Core",
         "label": "Core hull extent",
@@ -15,7 +14,6 @@
         "value": ""
     },
     "u_cell_size": {
-        "default": 25,
         "enabled": true,
         "group": "2- Core cell size",
         "label": "Easting (m)",
@@ -23,7 +21,6 @@
         "value": 25
     },
     "v_cell_size": {
-        "default": 25,
         "enabled": true,
         "group": "2- Core cell size",
         "label": "Northing (m)",
@@ -31,7 +28,6 @@
         "value": 25
     },
     "w_cell_size": {
-        "default": 25,
         "enabled": true,
         "group": "2- Core cell size",
         "label": "Vertical (m)",
@@ -39,7 +35,6 @@
         "value": 25
     },
     "horizontal_padding": {
-        "default": 1000.0,
         "enabled": true,
         "group": "3- Padding distance",
         "label": "Horizontal (m)",
@@ -47,7 +42,6 @@
         "value": 1000.0
     },
     "vertical_padding": {
-        "default": 1000.0,
         "enabled": true,
         "group": "3- Padding distance",
         "label": "Vertical (m)",
@@ -55,7 +49,6 @@
         "value": 1000.0
     },
     "depth_core": {
-        "default": 500.0,
         "enabled": true,
         "group": "1- Core",
         "label": "Minimum Depth (m)",
@@ -63,52 +56,13 @@
         "value": 500.0
     },
     "ga_group_name": {
-        "default": "Octree_Mesh",
         "enabled": true,
         "group": "",
         "label": "Name:",
         "value": "Octree_Mesh"
     },
-    "Template Object": {
-        "default": "",
-        "enabled": true,
-        "group": "Refinement A",
-        "label": "Object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
-        ],
-        "value": ""
-    },
-    "Template Levels": {
-        "default": "4,4,4",
-        "enabled": true,
-        "group": "Refinement A",
-        "label": "Levels",
-        "value": "4,4,4"
-    },
-    "Template Type": {
-        "default": "radial",
-        "choiceList": [
-            "surface",
-            "radial"
-        ],
-        "enabled": true,
-        "group": "Refinement A",
-        "label": "Type",
-        "value": "radial"
-    },
-    "Template Distance": {
-        "default": 1000.0,
-        "enabled": true,
-        "group": "Refinement A",
-        "label": "Distance",
-        "value": 1000.0
-    },
     "run_command": "geoapps.create.octree_mesh",
     "run_command_boolean": {
-        "default": false,
         "value": false,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",

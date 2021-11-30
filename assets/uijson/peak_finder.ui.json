@@ -2,13 +2,11 @@
     "title": "Peak Finder Parameters",
     "geoh5": "",
     "tem_checkbox": {
-        "default": false,
         "main": true,
         "label": "TEM type",
         "value": false
     },
     "objects": {
-        "default": "",
         "main": true,
         "group": "Data",
         "label": "Object",
@@ -18,7 +16,6 @@
         "value": ""
     },
     "data": {
-        "default": "",
         "association": "Vertex",
         "dataType": "Float",
         "group": "Data",
@@ -29,14 +26,12 @@
         "value": ""
     },
     "flip_sign": {
-        "default": false,
         "main": true,
         "group": "Data",
         "label": "Flip sign",
         "value": false
     },
     "line_field": {
-        "default": "",
         "association": "Vertex",
         "dataType": "Float",
         "group": "Data",
@@ -46,7 +41,6 @@
         "value": ""
     },
     "system": {
-        "default": "",
         "choiceList": [
             "AeroTEM (2007)",
             "AeroTEM (2010)",
@@ -84,50 +78,42 @@
         "value": ""
     },
     "smoothing": {
-        "default": 6,
         "group": "Detection Parameters",
         "label": "Smoothing window",
         "main": true,
         "value": 6
     },
     "min_amplitude": {
-        "default": 1,
         "group": "Detection Parameters",
         "label": "Minimum Amplitude (%)",
         "value": 1,
         "main": true
     },
     "min_value": {
-        "default": "",
         "group": "Detection Parameters",
         "label": "Minimum Value",
         "value": "",
         "main": true
     },
     "min_width": {
-        "default": 100,
         "group": "Detection Parameters",
         "label": "Minimum Width (m)",
         "value": 100,
         "main": true
     },
     "max_migration": {
-        "default": 25,
         "group": "Detection Parameters",
         "label": "Maximum Peak Migration (m)",
         "value": 25,
         "main": true
     },
     "min_channels": {
-        "default": 1,
         "group": "Detection Parameters",
         "label": "Minimum # Channels",
         "value": 1,
         "main": true
     },
     "ga_group_name": {
-        "default": "PeakFinder",
-        "visible": true,
         "enabled": true,
         "main": true,
         "group": "Python run preferences",
@@ -135,7 +121,6 @@
         "value": "PeakFinder"
     },
     "structural_markers": {
-        "default": false,
         "main": true,
         "group": "Python run preferences",
         "label": "Export all markers",
@@ -143,43 +128,11 @@
     },
     "line_id": "",
     "group_auto": {
-        "default": true,
         "label": "Auto-group",
         "value": true
     },
-    "center": {
-        "default": "",
-        "group": "Window",
-        "label": "Window center",
-        "value": "",
-        "visible": false
-    },
-    "width": {
-        "default": "",
-        "group": "Window",
-        "label": "Window width",
-        "value": "",
-        "visible": false
-    },
-    "Template Data": {
-        "association": "Vertex",
-        "dataType": "Float",
-        "group": "Property Group",
-        "dataGroupType": "Multi-element",
-        "label": "Property Group",
-        "parent": "objects",
-        "dependency": "group_auto",
-        "dependencyType": "disabled",
-        "value": ""
-    },
-    "Template Color": {
-        "dataType": "Text",
-        "group": "Property Group",
-        "label": "Color",
-        "dependency": "group_auto",
-        "dependencyType": "disabled",
-        "value": ""
-    },
+    "center": "",
+    "width": "",
     "run_command": "geoapps.processing.peak_finder",
     "run_command_boolean": "",
     "conda_environment": "geoapps",
