@@ -36,7 +36,6 @@
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": ""
     },
-    "potential_channel_bool": true,
     "potential_channel": {
         "association": [
             "Cell",
@@ -150,27 +149,9 @@
         "label": "Values to ignore",
         "value": ""
     },
-    "resolution": {
-        "enabled": false,
-        "visible": false,
-        "label": "resolution",
-        "value": 0.0,
-        "optional": true
-    },
-    "detrend_order": {
-        "enabled": false,
-        "visible": false,
-        "label": "detrend order",
-        "value": 0,
-        "optional": true
-    },
-    "detrend_type": {
-        "enabled": false,
-        "visible": false,
-        "label": "detrend type",
-        "value": "all",
-        "optional": true
-    },
+    "resolution": "",
+    "detrend_order": "",
+    "detrend_type": "",
     "max_chunk_size": {
         "min": 0,
         "group": "Data pre-processing",
@@ -192,7 +173,7 @@
         "dependency": "mesh_from_params",
         "dependencyType": "disable",
         "label": "Mesh",
-        "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
+        "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
         "value": ""
     },
     "u_cell_size": {
@@ -604,41 +585,15 @@
         "label": "Number of cpu",
         "value": 1
     },
-    "max_ram": {
-        "min": 0,
-        "group": "Compute",
-        "dependency": "parallelized",
-        "dependencyType": "enabled",
-        "optional": true,
-        "enabled": false,
-        "label": "Set RAM limit",
-        "value": "",
-        "visible": false
-    },
-    "workspace": {
-        "visible": false,
-        "enabled": false,
-        "label": "Path to workspace",
-        "value": ""
-    },
+    "max_ram": "",
+    "workspace": "",
     "out_group": {
         "label": "Results group name",
         "value": "DirectCurrentInversion"
     },
-    "no_data_value": {
-        "default": 0,
-        "group": "Data Options",
-        "optional": true,
-        "enabled": false,
-        "visible": false,
-        "label": "No data value",
-        "value": ""
-    },
-    "monitoring_directory": {
-        "default": "",
-        "enabled": false,
-        "value": ""
-    },
+    "no_data_value": "",
+    "monitoring_directory": "",
+    "workspace_geoh5": "",
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": {
         "value": false,
@@ -647,5 +602,6 @@
         "main": true
     },
     "conda_environment": "geoapps",
-    "distributed_workers": ""
+    "distributed_workers": "",
+    "potential_channel_bool": true
 }

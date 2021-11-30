@@ -117,13 +117,7 @@
         "enabled": true
     },
     "gps_receivers_offset": "",
-    "resolution": {
-        "enabled": false,
-        "visible": false,
-        "label": "resolution",
-        "value": 0.0,
-        "optional": true
-    },
+    "resolution": "",
     "max_chunk_size": {
         "min": 0,
         "group": "Data pre-processing",
@@ -145,7 +139,7 @@
         "dependency": "mesh_from_params",
         "dependencyType": "disable",
         "label": "Mesh",
-        "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
+        "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
         "value": ""
     },
     "u_cell_size": {
@@ -286,21 +280,13 @@
         "label": "Number of cpu",
         "value": 1
     },
-    "workspace": {
-        "visible": false,
-        "enabled": false,
-        "label": "Path to workspace",
-        "value": ""
-    },
+    "workspace": "",
     "out_group": {
         "label": "Results group name",
         "value": "DirectCurrentForward"
     },
-    "monitoring_directory": {
-        "default": "",
-        "enabled": false,
-        "value": ""
-    },
+    "monitoring_directory": "",
+    "workspace_geoh5": "",
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": {
         "value": false,
@@ -309,5 +295,14 @@
         "main": true
     },
     "conda_environment": "geoapps",
-    "distributed_workers": ""
+    "distributed_workers": "",
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0
 }
