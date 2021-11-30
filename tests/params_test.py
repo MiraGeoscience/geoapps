@@ -197,6 +197,7 @@ def test_params_initialize():
     params = PeakFinderParams(center=1000, validate=False, geoh5=workspace)
     assert params.center == 1000
 
+
 def test_input_file_construction():
 
     params_classes = [
@@ -224,6 +225,7 @@ def test_input_file_construction():
                     check.append(getattr(params, k) == v)
 
             assert all(check)
+
 
 def test_default_input_file(tmp_path):
 
@@ -1339,6 +1341,7 @@ def test_gy_uncertainty():
         ]
     )
 
+
 def test_magnetic_scalar_inversion_type():
     params = MagneticScalarParams(validate=True)
     params.inversion_type = "magnetic scalar"
@@ -1346,8 +1349,12 @@ def test_magnetic_scalar_inversion_type():
         params.inversion_type = "alskdj"
 
     assert all(
-        [s in str(excinfo.value) for s in ["inversion_type", "alskdj", "magnetic scalar"]]
+        [
+            s in str(excinfo.value)
+            for s in ["inversion_type", "alskdj", "magnetic scalar"]
+        ]
     )
+
 
 def test_inducing_field_strength():
     params = MagneticScalarParams(validate=False)
@@ -1358,7 +1365,10 @@ def test_inducing_field_strength():
         params.inducing_field_strength = "alskdj"
 
     assert all(
-        [s in str(excinfo.value) for s in ["inducing_field_strength", "type", "str", "float"]]
+        [
+            s in str(excinfo.value)
+            for s in ["inducing_field_strength", "type", "str", "float"]
+        ]
     )
 
 
@@ -1371,7 +1381,10 @@ def test_inducing_field_inclination():
         params.inducing_field_inclination = "alskdj"
 
     assert all(
-        [s in str(excinfo.value) for s in ["inducing_field_inclination", "type", "str", "float"]]
+        [
+            s in str(excinfo.value)
+            for s in ["inducing_field_inclination", "type", "str", "float"]
+        ]
     )
 
 
@@ -1384,8 +1397,12 @@ def test_inducing_field_declination():
         params.inducing_field_declination = "alskdj"
 
     assert all(
-        [s in str(excinfo.value) for s in ["inducing_field_declination", "type", "str", "float"]]
+        [
+            s in str(excinfo.value)
+            for s in ["inducing_field_declination", "type", "str", "float"]
+        ]
     )
+
 
 def test_tmi_channel_bool():
     params = MagneticScalarParams(validate=True)
@@ -1433,6 +1450,7 @@ def test_tmi_uncertainty():
             ]
         ]
     )
+
 
 def test_bxx_channel_bool():
     params = MagneticScalarParams(validate=True)
@@ -1481,6 +1499,7 @@ def test_bxx_uncertainty():
         ]
     )
 
+
 def test_bxy_channel_bool():
     params = MagneticScalarParams(validate=True)
     params.bxy_channel_bool = True
@@ -1527,6 +1546,7 @@ def test_bxy_uncertainty():
             ]
         ]
     )
+
 
 def test_bxz_channel_bool():
     params = MagneticScalarParams(validate=True)
@@ -1575,6 +1595,7 @@ def test_bxz_uncertainty():
         ]
     )
 
+
 def test_byy_channel_bool():
     params = MagneticScalarParams(validate=True)
     params.byy_channel_bool = True
@@ -1621,6 +1642,7 @@ def test_byy_uncertainty():
             ]
         ]
     )
+
 
 def test_byz_channel_bool():
     params = MagneticScalarParams(validate=True)
@@ -1669,6 +1691,7 @@ def test_byz_uncertainty():
         ]
     )
 
+
 def test_bzz_channel_bool():
     params = MagneticScalarParams(validate=True)
     params.bzz_channel_bool = True
@@ -1715,6 +1738,7 @@ def test_bzz_uncertainty():
             ]
         ]
     )
+
 
 def test_bx_channel_bool():
     params = MagneticScalarParams(validate=True)
@@ -1763,6 +1787,7 @@ def test_bx_uncertainty():
         ]
     )
 
+
 def test_by_channel_bool():
     params = MagneticScalarParams(validate=True)
     params.by_channel_bool = True
@@ -1809,6 +1834,7 @@ def test_by_uncertainty():
             ]
         ]
     )
+
 
 def test_bz_channel_bool():
     params = MagneticScalarParams(validate=True)
@@ -1857,6 +1883,7 @@ def test_bz_uncertainty():
         ]
     )
 
+
 def test_tmi_channel_bool():
     params = MagneticScalarParams(validate=True)
     params.tmi_channel_bool = True
@@ -1904,6 +1931,7 @@ def test_tmi_uncertainty():
         ]
     )
 
+
 def test_direct_current_inversion_type():
     params = DirectCurrentParams(validate=True)
     params.inversion_type = "direct current"
@@ -1911,8 +1939,12 @@ def test_direct_current_inversion_type():
         params.inversion_type = "alskdj"
 
     assert all(
-        [s in str(excinfo.value) for s in ["inversion_type", "alskdj", "direct current"]]
+        [
+            s in str(excinfo.value)
+            for s in ["inversion_type", "alskdj", "direct current"]
+        ]
     )
+
 
 def test_direct_current_data_object():
     params = DirectCurrentParams(validate=True)
@@ -1922,8 +1954,12 @@ def test_direct_current_data_object():
         params.data_object = 4
 
     assert all(
-        [s in str(excinfo.value) for s in ["data_object", "type", "int", "UUID", "PotentialElectrode"]]
+        [
+            s in str(excinfo.value)
+            for s in ["data_object", "type", "int", "UUID", "PotentialElectrode"]
+        ]
     )
+
 
 def test_potential_channel_bool():
     params = DirectCurrentParams(validate=True)
@@ -1932,7 +1968,10 @@ def test_potential_channel_bool():
         params.potential_channel_bool = "alskdj"
 
     assert all(
-        [s in str(excinfo.value) for s in ["potential_channel_bool", "type", "str", "bool"]]
+        [
+            s in str(excinfo.value)
+            for s in ["potential_channel_bool", "type", "str", "bool"]
+        ]
     )
 
 
@@ -1944,7 +1983,10 @@ def test_potential_channel():
         params.potential_channel = 4
 
     assert all(
-        [s in str(excinfo.value) for s in ["potential_channel", "type", "int", "str", "UUID"]]
+        [
+            s in str(excinfo.value)
+            for s in ["potential_channel", "type", "int", "str", "UUID"]
+        ]
     )
 
 
@@ -1972,6 +2014,7 @@ def test_potential_uncertainty():
         ]
     )
 
+
 def test_induced_polarization_inversion_type():
     params = InducedPolarizationParams(validate=True)
     params.inversion_type = "induced polarization"
@@ -1979,8 +2022,12 @@ def test_induced_polarization_inversion_type():
         params.inversion_type = "alskdj"
 
     assert all(
-        [s in str(excinfo.value) for s in ["inversion_type", "alskdj", "induced polarization"]]
+        [
+            s in str(excinfo.value)
+            for s in ["inversion_type", "alskdj", "induced polarization"]
+        ]
     )
+
 
 def test_direct_current_data_object():
     params = InducedPolarizationParams(validate=True)
@@ -1990,8 +2037,12 @@ def test_direct_current_data_object():
         params.data_object = 4
 
     assert all(
-        [s in str(excinfo.value) for s in ["data_object", "type", "int", "UUID", "PotentialElectrode"]]
+        [
+            s in str(excinfo.value)
+            for s in ["data_object", "type", "int", "UUID", "PotentialElectrode"]
+        ]
     )
+
 
 def test_chargeability_channel_bool():
     params = InducedPolarizationParams(validate=True)
@@ -2000,7 +2051,10 @@ def test_chargeability_channel_bool():
         params.chargeability_channel_bool = "alskdj"
 
     assert all(
-        [s in str(excinfo.value) for s in ["chargeability_channel_bool", "type", "str", "bool"]]
+        [
+            s in str(excinfo.value)
+            for s in ["chargeability_channel_bool", "type", "str", "bool"]
+        ]
     )
 
 
@@ -2012,7 +2066,10 @@ def test_chargeability_channel():
         params.chargeability_channel = 4
 
     assert all(
-        [s in str(excinfo.value) for s in ["chargeability_channel", "type", "int", "str", "UUID"]]
+        [
+            s in str(excinfo.value)
+            for s in ["chargeability_channel", "type", "int", "str", "UUID"]
+        ]
     )
 
 
@@ -2040,6 +2097,7 @@ def test_chargeability_uncertainty():
         ]
     )
 
+
 def conductivity_model_object():
     params = InducedPolarizationParams(validate=True)
     params.conductivity_model_object = str(uuid4())
@@ -2048,8 +2106,12 @@ def conductivity_model_object():
         params.conductivity_model_object = 4
 
     assert all(
-        [s in str(excinfo.value) for s in ["conductivity_model_object", "type", "int", "str", "UUID"]]
+        [
+            s in str(excinfo.value)
+            for s in ["conductivity_model_object", "type", "int", "str", "UUID"]
+        ]
     )
+
 
 def test_conductivity_model():
     params = InducedPolarizationParams(validate=True)
@@ -2074,6 +2136,7 @@ def test_conductivity_model():
             ]
         ]
     )
+
 
 def test_isValue(tmp_path):
     # "starting_model"
