@@ -1,0 +1,27 @@
+name: default ui.json
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
+
+jobs:
+  build:
+    runs-on:
+      ubuntu-latest
+
+      steps:
+        - name: checkout repo content
+          uses: actions/checkout@v2 # checkout the repository content to github runner.
+        - name: setup python
+          uses: actions/setup-python@v2
+          with:
+            - python-version 3.8
+        - name: write default ui.json files
+          run: |
+            python ./geoapps/io/write_default_uijson.py ../../assets/uijson
+
