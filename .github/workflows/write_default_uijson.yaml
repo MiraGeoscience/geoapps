@@ -1,6 +1,13 @@
 name: default ui.json
 
 on:
+  pull_request:
+    branches:
+      - develop
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
   push:
     branches:
       - develop
@@ -10,15 +17,16 @@ on:
       - hotfix/**
 
 jobs:
-  build:
+  write_default_uijson:
     runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2 # checkout the repository content to github runner.
-        - name: setup python
-          uses: actions/setup-python@v2
-          with:
-            - python-version 3.8
-        - name: write default ui.json files
-          run: |
-            python ./geoapps/io/write_default_uijson.py ../../assets/uijson
+    steps:
+      - name: checkout repo content
+      - uses: actions/checkout@v2
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          - python-version 3.9
+      - name: write default ui.json files
+        run: |
+          python ./geoapps/io/write_default_uijson.py ../../assets/uijson
 
