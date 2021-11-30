@@ -270,7 +270,7 @@ default_ui_json = {
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
-################ Validations #################
+################ Validations ##################
 
 required_parameters = ["inversion_type"]
 required_parameters += base_required_parameters
