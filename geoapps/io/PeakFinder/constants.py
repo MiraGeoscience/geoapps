@@ -139,7 +139,6 @@ default_ui_json = {
         "main": True,
     },
     "ga_group_name": {
-        "visible": True,
         "enabled": True,
         "main": True,
         "group": "Python run preferences",
@@ -157,18 +156,8 @@ default_ui_json = {
         "label": "Auto-group",
         "value": True,
     },
-    "center": {
-        "group": "Window",
-        "label": "Window center",
-        "value": None,
-        "visible": False,
-    },
-    "width": {
-        "group": "Window",
-        "label": "Window width",
-        "value": None,
-        "visible": False,
-    },
+    "center": None,
+    "width": None,
     "Template Data": {
         "association": "Vertex",
         "dataType": "Float",
