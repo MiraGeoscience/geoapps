@@ -1,4 +1,4 @@
-name: default ui.json
+name: write default ui.json
 
 on:
   pull_request:
