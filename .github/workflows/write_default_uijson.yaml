@@ -25,7 +25,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v2
         with:
-          - python-version 3.9
+          python-version: 3.8
       - name: write default ui.json files
         run: |
           python ./geoapps/io/write_default_uijson.py ../../assets/uijson
