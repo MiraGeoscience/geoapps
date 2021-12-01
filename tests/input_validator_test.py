@@ -87,6 +87,7 @@ def test_validate_parameter_shape():
     msg = f"Invalid '{param}' {vtype}: '(2,)'. Must be: '(3,)'."
     assert msg in str(excinfo.value)
 
+
 def test_validate_parameter_req():
     param = "topography"
     value = "sdetselkj"
@@ -95,7 +96,12 @@ def test_validate_parameter_req():
     ifile.data["u_cell_size"] = None
     with pytest.raises(KeyError) as excinfo:
         validator._validate_parameter_req(param, value, validations, chunk=ifile.data)
-    assert all([k in str(excinfo.value) for k in ["topography", "requirement", "topography_object"]])
+    assert all(
+        [
+            k in str(excinfo.value)
+            for k in ["topography", "requirement", "topography_object"]
+        ]
+    )
 
     param = "mesh_from_params"
     value = True
