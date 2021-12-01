@@ -1,0 +1,192 @@
+{
+    "title": "Peak Finder Parameters",
+    "geoh5": "",
+    "tem_checkbox": {
+        "default": false,
+        "main": true,
+        "label": "TEM type",
+        "value": false
+    },
+    "objects": {
+        "default": "",
+        "main": true,
+        "group": "Data",
+        "label": "Object",
+        "meshType": [
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}"
+        ],
+        "value": ""
+    },
+    "data": {
+        "default": "",
+        "association": "Vertex",
+        "dataType": "Float",
+        "group": "Data",
+        "main": true,
+        "dataGroupType": "Multi-element",
+        "label": "Channels",
+        "parent": "objects",
+        "value": ""
+    },
+    "flip_sign": {
+        "default": false,
+        "main": true,
+        "group": "Data",
+        "label": "Flip sign",
+        "value": false
+    },
+    "line_field": {
+        "default": "",
+        "association": "Vertex",
+        "dataType": "Float",
+        "group": "Data",
+        "main": true,
+        "label": "Line Field",
+        "parent": "objects",
+        "value": ""
+    },
+    "system": {
+        "default": "",
+        "choiceList": [
+            "AeroTEM (2007)",
+            "AeroTEM (2010)",
+            "DIGHEM",
+            "GENESIS (2014)",
+            "GEOTEM 75 Hz - 2082 Pulse",
+            "HELITEM2 (25C, 7.5Hz)",
+            "HELITEM (35C)",
+            "Hummingbird",
+            "QUESTEM (1996)",
+            "Resolve",
+            "SandersGFEM",
+            "Skytem 304M (HM)",
+            "Skytem 306HP (LM)",
+            "Skytem 306M HP (HM)",
+            "Skytem 312HP (HM)",
+            "Skytem 312HP v2 (HM)",
+            "Skytem 312HP v3 (HM)",
+            "Skytem 312HP v2 (LM)",
+            "Skytem 312HP v3 (LM)",
+            "Skytem 516M (HM)",
+            "Spectrem (2000)",
+            "Spectrem Plus",
+            "Spectrem (2003)",
+            "VTEM (2007)",
+            "VTEM Plus",
+            "VTEM Max",
+            "Xcite",
+            "Zonge 8Hz"
+        ],
+        "main": true,
+        "label": "TEM system",
+        "dependency": "tem_checkbox",
+        "dependencyType": "enabled",
+        "value": ""
+    },
+    "smoothing": {
+        "default": 6,
+        "group": "Detection Parameters",
+        "label": "Smoothing window",
+        "main": true,
+        "value": 6
+    },
+    "min_amplitude": {
+        "default": 1,
+        "group": "Detection Parameters",
+        "label": "Minimum Amplitude (%)",
+        "value": 1,
+        "main": true
+    },
+    "min_value": {
+        "default": "",
+        "group": "Detection Parameters",
+        "label": "Minimum Value",
+        "value": "",
+        "main": true
+    },
+    "min_width": {
+        "default": 100,
+        "group": "Detection Parameters",
+        "label": "Minimum Width (m)",
+        "value": 100,
+        "main": true
+    },
+    "max_migration": {
+        "default": 25,
+        "group": "Detection Parameters",
+        "label": "Maximum Peak Migration (m)",
+        "value": 25,
+        "main": true
+    },
+    "min_channels": {
+        "default": 1,
+        "group": "Detection Parameters",
+        "label": "Minimum # Channels",
+        "value": 1,
+        "main": true
+    },
+    "ga_group_name": {
+        "default": "PeakFinder",
+        "visible": true,
+        "enabled": true,
+        "main": true,
+        "group": "Python run preferences",
+        "label": "Save As",
+        "value": "PeakFinder"
+    },
+    "structural_markers": {
+        "default": false,
+        "main": true,
+        "group": "Python run preferences",
+        "label": "Export all markers",
+        "value": false
+    },
+    "line_id": "",
+    "group_auto": {
+        "default": true,
+        "label": "Auto-group",
+        "value": true
+    },
+    "center": {
+        "default": "",
+        "group": "Window",
+        "label": "Window center",
+        "value": "",
+        "visible": false
+    },
+    "width": {
+        "default": "",
+        "group": "Window",
+        "label": "Window width",
+        "value": "",
+        "visible": false
+    },
+    "Template Data": {
+        "association": "Vertex",
+        "dataType": "Float",
+        "group": "Property Group",
+        "dataGroupType": "Multi-element",
+        "label": "Property Group",
+        "parent": "objects",
+        "dependency": "group_auto",
+        "dependencyType": "disabled",
+        "value": ""
+    },
+    "Template Color": {
+        "dataType": "Text",
+        "group": "Property Group",
+        "label": "Color",
+        "dependency": "group_auto",
+        "dependencyType": "disabled",
+        "value": ""
+    },
+    "run_command": "geoapps.processing.peak_finder",
+    "run_command_boolean": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": "",
+    "template_data": "",
+    "template_color": "",
+    "workspace": "",
+    "monitoring_directory": "",
+    "plot_result": true
+}

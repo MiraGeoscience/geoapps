@@ -8,6 +8,7 @@
 from os import path
 
 import numpy as np
+import pytest
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Points, Surface
 from geoh5py.shared.utils import compare_entities
@@ -16,6 +17,8 @@ from scipy import spatial
 
 from geoapps.create.octree_mesh import OctreeMesh
 from geoapps.utils.utils import treemesh_2_octree
+
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
 def test_create_octree_app(tmp_path):
@@ -73,18 +76,14 @@ def test_create_octree_app(tmp_path):
 
     # Repeat the creation using the app
     refinements = {
-        "Refinement A": {
-            "object": str(points.uid),
-            "levels": "".join([str(val) for val in refine_A]),
-            "type": "radial",
-            "distance": max_distance,
-        },
-        "Refinement B": {
-            "object": str(topo.uid),
-            "levels": "".join([str(val) for val in refine_B]),
-            "type": "surface",
-            "distance": max_distance,
-        },
+        "Refinement A object": points.uid,
+        "Refinement A levels": refine_A,
+        "Refinement A type": "radial",
+        "Refinement A distance": max_distance,
+        "Refinement B object": topo.uid,
+        "Refinement B levels": refine_B,
+        "Refinement B type": "surface",
+        "Refinement B distance": max_distance,
     }
     app = OctreeMesh(
         geoh5=str(ws.h5file),

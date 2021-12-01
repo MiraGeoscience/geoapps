@@ -5,12 +5,16 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
 import numpy as np
 from geoh5py.workspace import Workspace
 from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
+
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
@@ -46,15 +50,16 @@ def test_gravity_run(
     model = workspace.get_entity("model")[0]
     params = GravityParams(
         forward_only=True,
-        workspace=workspace,
-        mesh=model.parent,
-        topography_object=workspace.get_entity("topography")[0],
+        geoh5=workspace,
+        mesh=model.parent.uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
         z_from_topo=False,
-        data_object=workspace.get_entity("survey")[0],
-        starting_model_object=model.parent,
-        starting_model=model,
+        data_object=workspace.get_entity("survey")[0].uid,
+        starting_model_object=model.parent.uid,
+        starting_model=model.uid,
     )
+    params.workpath = tmp_path
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
@@ -69,11 +74,11 @@ def test_gravity_run(
     # Run the inverse
     np.random.seed(0)
     params = GravityParams(
-        workspace=workspace,
-        mesh=workspace.get_entity("mesh")[0],
-        topography_object=workspace.get_entity("topography")[0],
+        geoh5=workspace,
+        mesh=workspace.get_entity("mesh")[0].uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
-        data_object=gz.parent,
+        data_object=gz.parent.uid,
         starting_model=1e-4,
         s_norm=0.0,
         x_norm=1.0,
@@ -82,13 +87,14 @@ def test_gravity_run(
         gradient_type="components",
         gz_channel_bool=True,
         z_from_topo=False,
-        gz_channel=gz,
+        gz_channel=gz.uid,
         gz_uncertainty=2e-3,
         upper_bound=0.75,
         max_iterations=max_iterations,
         initial_beta_ratio=1e-2,
         prctile=100,
     )
+    params.workpath = tmp_path
     driver = GravityDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.workspace.h5file)

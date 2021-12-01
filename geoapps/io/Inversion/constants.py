@@ -8,7 +8,9 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Octree, Points, Surface
 from geoh5py.workspace import Workspace
 
 required_parameters = []
@@ -332,7 +334,7 @@ default_ui_json = {
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
         "label": "Update sensitivity weight threshold",
-        "value": 1e-3,
+        "value": 0.0,
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
@@ -424,7 +426,7 @@ default_ui_json = {
         "dependency": "initial_beta",
         "dependencyType": "disabled",
         "label": "Initial beta ratio",
-        "value": 10.0,
+        "value": 100.0,
     },
     "initial_beta": {
         "min": 0.0,
@@ -620,16 +622,9 @@ default_ui_json = {
         "label": "No data value",
         "value": 0,
     },
-    "monitoring_directory": {
-        "default": None,
-        "enabled": False,
-        "value": None,
-    },
-    "geoh5": {
-        "default": None,
-        "enabled": False,
-        "value": None,
-    },
+    "monitoring_directory": None,
+    "workspace_geoh5": None,
+    "geoh5": None,
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": {
         "value": False,
@@ -652,25 +647,25 @@ validations = {
         ],
     },
     "topography_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Surface],
         "uuid": [],
     },
     "topography": {
-        "types": [str, UUID, int, float],
-        "reqs": [("topography_object")],
-        "uuid": ["topography_object"],
+        "types": [str, UUID, int, float, FloatData],
+        "reqs": [("topography_object",)],
+        "uuid": [],
     },
     "data_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Points],
     },
     "starting_model_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Octree],
     },
     "starting_model": {
-        "types": [str, UUID, int, float],
+        "types": [str, UUID, int, float, FloatData],
     },
     "tile_spatial": {
-        "types": [str, int, float],
+        "types": [str, int, float, FloatData],
     },
     "z_from_topo": {"types": [bool]},
     "receivers_radar_drape": {"types": [str], "reqs": [("data_object")]},
@@ -708,7 +703,7 @@ validations = {
     },
     "mesh": {
         "uuid": [],
-        "types": [str, UUID],
+        "types": [str, UUID, Octree],
     },
     "u_cell_size": {
         "types": [int, float],
@@ -842,10 +837,10 @@ validations = {
         "types": [int, float],
     },
     "reference_model_object": {
-        "types": [str],
+        "types": [str, UUID, Octree],
     },
     "reference_model": {
-        "types": [str, int, float],
+        "types": [str, int, float, UUID, FloatData],
         "reqs": [("reference_model_object")],
     },
     "gradient_type": {
@@ -853,16 +848,16 @@ validations = {
         "values": ["total", "components"],
     },
     "lower_bound_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Octree],
     },
     "lower_bound": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "upper_bound_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Octree],
     },
     "upper_bound": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "parallelized": {
         "types": [bool],

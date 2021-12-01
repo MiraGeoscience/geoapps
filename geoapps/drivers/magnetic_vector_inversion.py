@@ -7,6 +7,7 @@
 
 import sys
 
+from geoapps.io import InputFile
 from geoapps.io.MagneticVector import MagneticVectorParams
 
 from .base_inversion import InversionDriver
@@ -15,7 +16,8 @@ from .base_inversion import InversionDriver
 def start_inversion(filepath=None):
     """Starts inversion with parameters defined in input file."""
 
-    params = MagneticVectorParams.from_path(filepath)
+    input_file = InputFile(filepath)
+    params = MagneticVectorParams(input_file)
     driver = MagneticVectorDriver(params)
     driver.run()
 

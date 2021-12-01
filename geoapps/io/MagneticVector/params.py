@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from uuid import UUID
 
 from geoapps.io.Inversion import InversionParams
@@ -15,7 +16,9 @@ from ..validators import InputValidator
 from .constants import (
     default_ui_json,
     forward_defaults,
+    forward_ui_json,
     inversion_defaults,
+    inversion_ui_json,
     required_parameters,
     validations,
 )
@@ -25,8 +28,10 @@ class MagneticVectorParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
-    forward_defaults = forward_defaults
-    inversion_defaults = inversion_defaults
+    _forward_defaults = forward_defaults
+    _inversion_defaults = inversion_defaults
+    forward_ui_json = forward_ui_json
+    inversion_ui_json = inversion_ui_json
     _directive_list = [
         "VectorInversion",
         "Update_IRLS",
@@ -36,10 +41,10 @@ class MagneticVectorParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(self, forward=False, **kwargs):
-        self.validator: InputValidator = InputValidator(
-            required_parameters, validations
-        )
+    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
+
+        self.validate = False
+        self.default_ui_json = deepcopy(default_ui_json)
         self.inversion_type: str = "magnetic vector"
         self.inducing_field_strength: float = None
         self.inducing_field_inclination: float = None
@@ -82,11 +87,8 @@ class MagneticVectorParams(InversionParams):
         self.reference_declination_object: UUID = None
         self.reference_inclination = None
         self.reference_declination = None
-        self.defaults = inversion_defaults
-        self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
-        self.param_names = list(self.default_ui_json.keys())
 
-        super().__init__(**kwargs)
+        super().__init__(input_file, default, validate, **kwargs)
 
     def components(self) -> list[str]:
         comps = super().components()

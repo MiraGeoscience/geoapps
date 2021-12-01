@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
@@ -19,7 +20,9 @@ from ..validators import InputValidator
 from .constants import (
     default_ui_json,
     forward_defaults,
+    forward_ui_json,
     inversion_defaults,
+    inversion_ui_json,
     required_parameters,
     validations,
 )
@@ -29,8 +32,10 @@ class MagneticScalarParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
-    forward_defaults = forward_defaults
-    inversion_defaults = inversion_defaults
+    _forward_defaults = forward_defaults
+    _inversion_defaults = inversion_defaults
+    forward_ui_json = forward_ui_json
+    inversion_ui_json = inversion_ui_json
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -39,11 +44,10 @@ class MagneticScalarParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(self, **kwargs):
+    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
 
-        self.validator: InputValidator = InputValidator(
-            required_parameters, validations
-        )
+        self.validate = False
+        self.default_ui_json = deepcopy(default_ui_json)
         self.inversion_type = "magnetic scalar"
         self.inducing_field_strength: float = None
         self.inducing_field_inclination: float = None
@@ -79,11 +83,8 @@ class MagneticScalarParams(InversionParams):
         self.bz_channel = None
         self.bz_uncertainty = None
         self.out_group = None
-        self.defaults = inversion_defaults
-        self.default_ui_json = {k: default_ui_json[k] for k in self.defaults}
-        self.param_names = list(self.default_ui_json.keys())
 
-        super().__init__(**kwargs)
+        super().__init__(input_file, default, validate, **kwargs)
 
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""

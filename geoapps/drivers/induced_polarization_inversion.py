@@ -8,6 +8,7 @@
 
 import sys
 
+from geoapps.io import InputFile
 from geoapps.io.InducedPolarization import InducedPolarizationParams
 
 from .base_inversion import InversionDriver
@@ -16,7 +17,8 @@ from .base_inversion import InversionDriver
 def start_inversion(filepath=None):
     """Starts inversion with parameters defined in input file."""
 
-    params = InducedPolarizationParams.from_path(filepath)
+    input_file = InputFile(filepath)
+    params = InducedPolarizationParams(input_file)
     driver = InducedPolarizationDriver(params)
     driver.run()
 
