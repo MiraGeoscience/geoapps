@@ -70,6 +70,7 @@ def catch_invalid_generator(
         "reqs": "reqs",
         "uuid": "uuid",
     }
+    validator_opts = {"ignore_requirements": True}
     pvalidations = MVI_validations[param][key_map[validation_type]]
     filepath = tmpfile(tmp_path)
     ifile = InputFile()
@@ -104,6 +105,7 @@ def catch_invalid_generator(
         assertions = ["Must be", param, "shape", *(str(s) for s in shapes)]
     elif validation_type == "reqs":
         err = KeyError
+        validator_opts = {}
         assertions = ["Unsatisfied", param]
         req = pvalidations[0]
         hasval = len(req) > 1
@@ -131,7 +133,9 @@ def catch_invalid_generator(
 
     with pytest.raises(err) as excinfo:
         ifile = InputFile(filepath)
-        MagneticVectorParams(ifile, geoh5=workspace)
+        MagneticVectorParams(
+            ifile, geoh5=workspace, validate=True, validator_opts=validator_opts
+        )
 
     for a in assertions:
         assert a in str(excinfo.value)
