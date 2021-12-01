@@ -7,7 +7,6 @@
 
 from uuid import UUID
 
-import numpy as np
 from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Octree, Points, Surface
@@ -133,13 +132,11 @@ default_ui_json = {
     "gps_receivers_offset": None,
     "ignore_values": {
         "group": "Data pre-processing",
-        "enabled": False,
         "optional": True,
         "enabled": False,
         "label": "Values to ignore",
         "value": None,
     },
-    "no_data_value": None,
     "resolution": {
         "min": 0.0,
         "group": "Data pre-processing",
@@ -189,8 +186,6 @@ default_ui_json = {
         "label": "Mesh",
         "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
         "value": None,
-        "optional": True,
-        "enabled": True,
     },
     "u_cell_size": {
         "min": 0.0,
@@ -380,7 +375,8 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "value": 1.0,
-        "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin.",
+        "tooltip": "This chi factor will be used to determine the misfit"
+        " threshold after which IRLS iterations begin.",
     },
     "max_iterations": {
         "min": 0,
@@ -606,7 +602,7 @@ default_ui_json = {
     "distributed_workers": None,
 }
 
-######################### Validations #############################
+######################## Validations ###########################
 
 validations = {
     "title": {
