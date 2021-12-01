@@ -852,6 +852,7 @@ app_initializer = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "upper_bound": None,
+    "starting_model": 1e-4,
     "starting_inclination": 79.0,
     "starting_declination": 11.0,
     "reference_inclination": None,
