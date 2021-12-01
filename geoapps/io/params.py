@@ -72,12 +72,15 @@ class Params:
     _monitoring_directory = None
     _free_param_keys: list = None
 
-    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
+    def __init__(
+        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
+    ):
 
         self.workpath = "."
         self.input_file = input_file
         self.default = default
         self.validate = validate
+        self.validator_opts = validator_opts
         self.workspace = None
 
     def update(self, params_dict: Dict[str, Any], validate=True):
