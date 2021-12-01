@@ -170,7 +170,7 @@
         "group": "Mesh",
         "main": true,
         "optional": true,
-        "enabled": true,
+        "enabled": false,
         "dependency": "mesh_from_params",
         "dependencyType": "disable",
         "label": "Mesh",

@@ -172,8 +172,8 @@
     "gps_receivers_offset": "",
     "ignore_values": {
         "group": "Data pre-processing",
-        "enabled": false,
         "optional": true,
+        "enabled": false,
         "label": "Values to ignore",
         "value": ""
     },
@@ -224,7 +224,7 @@
         "group": "Mesh",
         "main": true,
         "optional": true,
-        "enabled": true,
+        "enabled": false,
         "dependency": "mesh_from_params",
         "dependencyType": "disable",
         "label": "Mesh",

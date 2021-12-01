@@ -82,6 +82,15 @@ repos:
         files: '.rst'
         language: python
         additional_dependencies: [rstcheck, sphinx]
+    -   id: activate_conda_env
+        name: activate_conda_env
+        entry: activate geoapps
+        language: system
+    -   id: write_default_uijson
+        name: write_default_uijson
+        entry: python -m geoapps.io.write_default_uijson ./assets/uijson
+        language: system
+        types: [ python ]
 -   repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.9.0
     hooks:
