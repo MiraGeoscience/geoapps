@@ -606,6 +606,8 @@ default_ui_json = {
     "distributed_workers": None,
 }
 
+######################### Validations #############################
+
 validations = {
     "title": {
         "types": [str],
