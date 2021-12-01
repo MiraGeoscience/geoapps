@@ -56,13 +56,11 @@ default_ui_json = {
     "title": "Peak Finder Parameters",
     "geoh5": None,
     "tem_checkbox": {
-        "default": False,
         "main": True,
         "label": "TEM type",
         "value": False,
     },
     "objects": {
-        "default": None,
         "main": True,
         "group": "Data",
         "label": "Object",
@@ -72,7 +70,6 @@ default_ui_json = {
         "value": None,
     },
     "data": {
-        "default": None,
         "association": "Vertex",
         "dataType": "Float",
         "group": "Data",
@@ -83,14 +80,12 @@ default_ui_json = {
         "value": None,
     },
     "flip_sign": {
-        "default": False,
         "main": True,
         "group": "Data",
         "label": "Flip sign",
         "value": False,
     },
     "line_field": {
-        "default": None,
         "association": "Vertex",
         "dataType": "Float",
         "group": "Data",
@@ -100,7 +95,6 @@ default_ui_json = {
         "value": None,
     },
     "system": {
-        "default": None,
         "choiceList": list(parameters().keys()),
         "main": True,
         "label": "TEM system",
@@ -109,49 +103,42 @@ default_ui_json = {
         "value": None,
     },
     "smoothing": {
-        "default": 6,
         "group": "Detection Parameters",
         "label": "Smoothing window",
         "main": True,
         "value": 6,
     },
     "min_amplitude": {
-        "default": 1,
         "group": "Detection Parameters",
         "label": "Minimum Amplitude (%)",
         "value": 1,
         "main": True,
     },
     "min_value": {
-        "default": None,
         "group": "Detection Parameters",
         "label": "Minimum Value",
         "value": None,
         "main": True,
     },
     "min_width": {
-        "default": 100,
         "group": "Detection Parameters",
         "label": "Minimum Width (m)",
         "value": 100,
         "main": True,
     },
     "max_migration": {
-        "default": 25,
         "group": "Detection Parameters",
         "label": "Maximum Peak Migration (m)",
         "value": 25,
         "main": True,
     },
     "min_channels": {
-        "default": 1,
         "group": "Detection Parameters",
         "label": "Minimum # Channels",
         "value": 1,
         "main": True,
     },
     "ga_group_name": {
-        "default": "PeakFinder",
         "visible": True,
         "enabled": True,
         "main": True,
@@ -160,7 +147,6 @@ default_ui_json = {
         "value": "PeakFinder",
     },
     "structural_markers": {
-        "default": False,
         "main": True,
         "group": "Python run preferences",
         "label": "Export all markers",
@@ -168,19 +154,16 @@ default_ui_json = {
     },
     "line_id": None,
     "group_auto": {
-        "default": True,
         "label": "Auto-group",
         "value": True,
     },
     "center": {
-        "default": None,
         "group": "Window",
         "label": "Window center",
         "value": None,
         "visible": False,
     },
     "width": {
-        "default": None,
         "group": "Window",
         "label": "Window width",
         "value": None,

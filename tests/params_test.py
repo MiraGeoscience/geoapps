@@ -252,7 +252,6 @@ def test_update(tmp_path):
 
     new_params = {
         "topography_object": {
-            "default": None,
             "main": True,
             "group": "Topography",
             "label": "Object",
@@ -273,7 +272,6 @@ def test_update(tmp_path):
         "topography": {
             "association": "Vertex",
             "dataType": "Float",
-            "default": None,
             "group": "Topography",
             "main": True,
             "dependency": "forward_only",
