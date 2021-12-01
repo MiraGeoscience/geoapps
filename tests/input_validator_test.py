@@ -87,31 +87,25 @@ def test_validate_parameter_shape():
     msg = f"Invalid '{param}' {vtype}: '(2,)'. Must be: '(3,)'."
     assert msg in str(excinfo.value)
 
+def test_validate_parameter_req():
+    param = "topography"
+    value = "sdetselkj"
+    validations = ("topography_object",)
 
-# def test_validate_parameter_req():
-#     param = "topography"
-#     value = "sdetselkj"
-#     validations = ("topography_object",)
-#     vtype = "reqs"
-#     ifile.data["u_cell_size"] = None
-#     with pytest.raises(KeyError) as excinfo:
-#         validator._validate_parameter_req(param, value, validations, chunk=ifile.req)
-#     msg = f"Unsatisfied '{param}' requirement. Input file must contain "
-#     msg += f"'{validations[0]}' if '{param}' is provided."
-#     assert msg in str(excinfo.value)
-#     param = "mesh_from_params"
-#     value = True
-#     validations = (
-#         True,
-#         "u_cell_size",
-#     )
-#     vtype = "reqs"
-#     input_keys = ["mesh_from_param", "topography"]
-#     with pytest.raises(KeyError) as excinfo:
-#         validator._validate_parameter_req(param, value, validations)
-#     msg = f"Unsatisfied '{param}' requirement. Input file must contain "
-#     msg += f"'{validations[1]}' if '{param}' is '{str(value)}'."
-#     assert msg in str(excinfo.value)
+    ifile.data["u_cell_size"] = None
+    with pytest.raises(KeyError) as excinfo:
+        validator._validate_parameter_req(param, value, validations, chunk=ifile.data)
+    assert all([k in str(excinfo.value) for k in ["topography", "requirement", "topography_object"]])
+
+    param = "mesh_from_params"
+    value = True
+    validations = (
+        True,
+        "u_cell_size",
+    )
+
+    with pytest.raises(KeyError) as excinfo:
+        validator._validate_parameter_req(param, value, validations, chunk=ifile.data)
 
 
 def test_validate_parameter_uuid():
