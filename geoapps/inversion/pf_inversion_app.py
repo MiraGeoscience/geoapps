@@ -144,8 +144,12 @@ class InversionApp(PlotSelection2D):
         self._chi_factor = FloatText(
             value=1, description="Target misfit", disabled=False
         )
-        self._lower_bound_group = ModelOptions("lower_bound", **self.defaults)
-        self._upper_bound_group = ModelOptions("upper_bound", **self.defaults)
+        self._lower_bound_group = ModelOptions(
+            "lower_bound", add_xyz=False, **self.defaults
+        )
+        self._upper_bound_group = ModelOptions(
+            "upper_bound", add_xyz=False, **self.defaults
+        )
         self._ignore_values = widgets.Text(
             description="Value (i.e. '<0' for no negatives)",
         )
@@ -172,12 +176,15 @@ class InversionApp(PlotSelection2D):
                 self._tile_spatial,
             ]
         )
-        self._starting_model_group = ModelOptions("starting_model", **self.defaults)
+        self._starting_model_group = ModelOptions(
+            "starting_model", add_xyz=False, **self.defaults
+        )
         self._starting_model_group.options.options = ["Constant", "Model"]
         self._starting_inclination_group = ModelOptions(
             "starting_inclination",
             description="Starting Inclination",
             units="Degree",
+            add_xyz=False,
             **self.defaults,
         )
         self._starting_inclination_group.options.options = ["Constant", "Model"]
@@ -185,31 +192,37 @@ class InversionApp(PlotSelection2D):
             "starting_declination",
             description="Starting Declination",
             units="Degree",
+            add_xyz=False,
             **self.defaults,
         )
         self._starting_declination_group.options.options = ["Constant", "Model"]
-        self._reference_model_group = ModelOptions("reference_model", **self.defaults)
+        self._reference_model_group = ModelOptions(
+            "reference_model", add_xyz=False, **self.defaults
+        )
         self._reference_model_group.options.observe(self.update_ref)
         self._reference_inclination_group = ModelOptions(
             "reference_inclination",
             description="Reference Inclination",
             units="Degree",
+            add_xyz=False,
             **self.defaults,
         )
         self._reference_declination_group = ModelOptions(
             "reference_declination",
             description="Reference Declination",
             units="Degree",
+            add_xyz=False,
             **self.defaults,
         )
-        self._topography_group = TopographyOptions(**self.defaults)
+        self._topography_group = TopographyOptions(add_xyz=False, **self.defaults)
         self._topography_group.identifier = "topography"
         self._sensor = SensorOptions(
             objects=self._objects,
+            add_xyz=False,
             **self.defaults,
         )
         self._detrend_type = Dropdown(
-            description="Method", options=["", "all", "corners"], value="all"
+            description="Method", options=["", "all", "perimeter"], value="all"
         )
         self._detrend_order = widgets.IntText(description="Order", min=0, value=0)
         self._detrend_panel = VBox([self._detrend_type, self._detrend_order])
@@ -808,6 +821,8 @@ class InversionApp(PlotSelection2D):
         self._starting_declination_group.workspace = workspace
         self._reference_inclination_group.workspace = workspace
         self._reference_declination_group.workspace = workspace
+        self._upper_bound_group.workspace = workspace
+        self._lower_bound_group.workspace = workspace
 
     @property
     def write(self):

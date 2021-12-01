@@ -102,7 +102,7 @@ def test_gravity_run(
         driver.params.workspace.h5file, driver.params.ga_group.uid
     )
 
-    residual = run_ws.get_entity("Residuals_gz")[0]
+    residual = run_ws.get_entity("Iteration_1_grav_gz_Residual")[0]
     assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
 
     predicted = run_ws.get_entity("Iteration_0_grav_gz")[0]
@@ -117,7 +117,7 @@ def test_gravity_run(
         np.testing.assert_almost_equal(output["phi_m"][1], target_gravity_run["phi_m"])
         np.testing.assert_almost_equal(output["phi_d"][1], target_gravity_run["phi_d"])
 
-        nan_ind = np.isnan(run_ws.get_entity("Iteration_0__model")[0].values)
+        nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
     else:
