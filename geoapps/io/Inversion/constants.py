@@ -12,7 +12,7 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Octree, Points, Surface
 from geoh5py.workspace import Workspace
 
-required_parameters = []
+required_parameters = ["data_object", "topography_object", "starting_model"]
 
 default_ui_json = {
     "forward_only": False,
