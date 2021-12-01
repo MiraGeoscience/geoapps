@@ -30,34 +30,24 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "tmi_channel_bool": True,
     "tmi_channel": None,
     "tmi_uncertainty": 1.0,
-    "bxx_channel_bool": False,
     "bxx_channel": None,
     "bxx_uncertainty": 1.0,
-    "bxy_channel_bool": False,
     "bxy_channel": None,
     "bxy_uncertainty": 1.0,
-    "bxz_channel_bool": False,
     "bxz_channel": None,
     "bxz_uncertainty": 1.0,
-    "byy_channel_bool": False,
     "byy_channel": None,
     "byy_uncertainty": 1.0,
-    "byz_channel_bool": False,
     "byz_channel": None,
     "byz_uncertainty": 1.0,
-    "bzz_channel_bool": False,
     "bzz_channel": None,
     "bzz_uncertainty": 1.0,
-    "bx_channel_bool": False,
     "bx_channel": None,
     "bx_uncertainty": 1.0,
-    "by_channel_bool": False,
     "by_channel": None,
     "by_uncertainty": 1.0,
-    "bz_channel_bool": False,
     "bz_channel": None,
     "bz_uncertainty": 1.0,
     "starting_model_object": None,
@@ -133,10 +123,21 @@ inversion_defaults = {
     "out_group": "SusceptibilityInversion",
     "no_data_value": None,
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.magnetic_scalar_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "tmi_channel_bool": False,
+    "bxx_channel_bool": False,
+    "bxy_channel_bool": False,
+    "bxz_channel_bool": False,
+    "byy_channel_bool": False,
+    "byz_channel_bool": False,
+    "bzz_channel_bool": False,
+    "bx_channel_bool": False,
+    "by_channel_bool": False,
+    "bz_channel_bool": False,
 }
 forward_defaults = {
     "title": "SimPEG Magnetic Susceptibility Forward",
@@ -192,10 +193,45 @@ forward_defaults = {
     "workspace": None,
     "out_group": "MagneticScalarForward",
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.magnetic_scalar_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+}
+
+inversion_ui_json = {
+    "tmi_channel_bool": False,
+    "bxx_channel_bool": False,
+    "bxy_channel_bool": False,
+    "bxz_channel_bool": False,
+    "byy_channel_bool": False,
+    "byz_channel_bool": False,
+    "bzz_channel_bool": False,
+    "bx_channel_bool": False,
+    "by_channel_bool": False,
+    "bz_channel_bool": False,
+}
+
+forward_ui_json = {
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
 }
 
 default_ui_json = {
@@ -536,21 +572,7 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "SusceptibilityInversion"},
 }
 
-base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json.copy()
-for k, v in inversion_defaults.items():
-    if isinstance(default_ui_json[k], dict):
-        key = "value"
-        if "isValue" in default_ui_json[k].keys():
-            if default_ui_json[k]["isValue"] == False:
-                key = "property"
-        default_ui_json[k][key] = v
-        if "enabled" in default_ui_json[k].keys() and v is not None:
-            default_ui_json[k]["enabled"] = True
-    else:
-        default_ui_json[k] = v
-
-default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
+default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
@@ -654,4 +676,5 @@ validations = {
     },
     "out_group": {"types": [str, ContainerGroup]},
 }
-validations.update(base_validations)
+
+validations = dict(base_validations, **validations)

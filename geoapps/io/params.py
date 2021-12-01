@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import os
-import warnings
 from copy import deepcopy
 from typing import Any
 from uuid import UUID
@@ -58,13 +57,6 @@ class Params:
     default(default_ui, param) :
         return default value for param stored in default_ui.
 
-    Constructors
-    ------------
-    from_input_file(input_file)
-        Construct Params object from InputFile instance.
-    from_path(path)
-        Construct Params object from path to input file (wraps from_input_file constructor).
-
     """
 
     associations: dict[str | UUID, str | UUID] = None
@@ -79,133 +71,59 @@ class Params:
     _title = None
     _monitoring_directory = None
     _free_param_keys: list = None
-    _verbose = True
 
-    def __init__(self, validate=True, verbose=True, **kwargs):
+    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
 
-        self.associations = None
+        self.workpath = "."
+        self.input_file = input_file
+        self.default = default
+        self.validate = validate
         self.workspace = None
-        self._verbose = verbose
 
-        self.update(self.defaults, validate=False)
-        if kwargs:
-            self._handle_kwargs(kwargs, validate)
-
-    def _handle_kwargs(self, kwargs, validate):
-        """Updates attributes with kwargs, validates and attaches input file attributes."""
-
-        for key, value in kwargs.items():
-            if key in self.default_ui_json and isinstance(
-                self.default_ui_json[key], dict
-            ):
-                self.default_ui_json[key]["visible"] = True
-                if value is not None:
-                    self.default_ui_json[key]["enabled"] = True
-
-        self.update(kwargs, validate=False)
-
-        if validate:
-            ifile = InputFile.from_dict(self.to_dict(), self.validator)
-        else:
-            ifile = InputFile.from_dict(self.to_dict())
-
-        if "workspace" in kwargs:
-            ifile.data["workspace"] = kwargs["workspace"]
-            ifile.workspace = kwargs["workspace"]
-        if "geoh5" in kwargs:
-            ifile.data["workspace"] = kwargs["geoh5"]
-            ifile.workspace = kwargs["geoh5"]
-
-        self._input_file = ifile
-        cls = self.from_input_file(ifile)
-        self.__dict__.update(cls.__dict__)
-
-    def update(self, params_dict: Dict[str, Any], default: bool = False, validate=True):
+    def update(self, params_dict: Dict[str, Any], validate=True):
         """Update parameters with dictionary contents."""
+
+        original_validate_state = self.validate
+        self.validate = validate
+
+        # Pull out workspace data for validations and forward_only for defaults.
 
         if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
                 setattr(self, "workspace", params_dict["geoh5"])
-        if "workspace" in params_dict.keys():
-            if params_dict["workspace"] is not None:
-                setattr(self, "workspace", params_dict["workspace"])
 
         for key, value in params_dict.items():
 
+            if key == "workspace":
+                continue  # ignores deprecated workspace name
+
             if " " in key:
-                continue
+                continue  # ignores grouped parameter names
 
-            if not validate:
-                key = f"_{key}"
+            if key not in self.default_ui_json.keys():
+                continue  # ignores keys not in default_ui_json
 
-            if getattr(self, key, "invalid_param") == "invalid_param" and self._verbose:
-                warnings.warn(
-                    f"Skipping dictionary entry: {key}.  Not a valid attribute."
-                )
-                continue
+            if isinstance(value, dict):
+                field = "value"
+                if "isValue" in value.keys():
+                    if not value["isValue"]:
+                        field = "property"
+                setattr(self, key, value[field])
             else:
-                if isinstance(value, dict):
-                    field = "value"
-                    if default:
-                        field = "default"
-                    elif "isValue" in value.keys():
-                        if not value["isValue"]:
-                            field = "property"
-                    setattr(self, key, value[field])
+                if isinstance(value, Entity):
+                    setattr(self, key, value.uid)
                 else:
-                    if isinstance(value, Entity):
-                        setattr(self, key, value.uid)
-                    else:
-                        setattr(self, key, value)
+                    setattr(self, key, value)
 
-    @classmethod
-    def from_input_file(
-        cls, input_file: InputFile, workspace: Workspace = None
-    ) -> Params:
-        """Construct Params object from InputFile instance.
+        self.validate = original_validate_state
 
-        Parameters
-        ----------
-        input_file : InputFile
-            class instance to handle loading input file
-        """
+    @property
+    def workpath(self):
+        return os.path.abspath(self._workpath)
 
-        p = cls()
-        p._input_file = input_file
-        p.workpath = input_file.workpath
-        p.associations = input_file.associations
-        p.update(input_file.data)
-
-        if workspace is not None:
-            p.workspace = workspace
-
-        elif input_file.workspace is not None:
-            p.workspace = input_file.workspace
-
-        else:
-            for attr in ["geoh5", "workspace"]:
-                if attr in input_file.data.keys():
-                    if input_file.data[attr] is not None:
-                        p.workspace = input_file.data[attr]
-
-        p.geoh5 = p.workspace
-        return p
-
-    @classmethod
-    def from_path(cls, file_path: str, workspace: Workspace = None) -> Params:
-        """
-        Construct Params object from path to input file.
-
-        Parameters
-        ----------
-        file_path : str
-            path to input file.
-        """
-        p = cls()
-        input_file = InputFile(file_path, p.validator, workspace)
-        p = cls.from_input_file(input_file, workspace)
-
-        return p
+    @workpath.setter
+    def workpath(self, val):
+        self._workpath = val
 
     @property
     def required_parameters(self):
@@ -235,11 +153,9 @@ class Params:
                             field = "property"
                         else:
                             ui_json[k]["isValue"] = True
-                        ui_json[k][field] = new_val
 
-                    elif ui_json[k][field] != new_val:
+                    if ui_json[k][field] != new_val:
                         ui_json[k]["enabled"] = True
-                        ui_json[k]["visible"] = True
                         ui_json[k][field] = new_val
 
                 else:
@@ -358,15 +274,25 @@ class Params:
     def input_file(self):
         return self._input_file
 
+    @input_file.setter
+    def input_file(self, ifile):
+        if ifile is None:
+            self._input_file = None
+            return
+        self.associations = ifile.associations
+        self.workpath = ifile.workpath
+        self._input_file = ifile
+
     def setter_validator(self, key: str, value, fun=lambda x: x):
 
         if value is None:
             setattr(self, f"_{key}", value)
             return
 
-        self.validator.validate(
-            key, value, self.validations[key], self.workspace, self.associations
-        )
+        if self.validate:
+            self.validator.validate(
+                key, value, self.validations[key], self.workspace, self.associations
+            )
         value = fun(value)
         setattr(self, f"_{key}", value)
 
@@ -400,12 +326,16 @@ class Params:
 
         ifile.write_ui_json(ui_json, name=name, default=default)
 
-    @property
-    def free_params_dict(self):
-        if (
-            getattr(self, "_free_params_dict", None) is None
-            and getattr(self, "_free_param_keys", None) is not None
-        ):
-            self._free_params_dict = self.input_file._free_params_dict
-
-        return self._free_params_dict
+    def get_associations(self, params_dict: dict[str, Any]):
+        associations = InputFile.get_associations(self.default_ui_json)
+        uuid_associations = {}
+        for k, v in associations.items():
+            if all([p in params_dict.keys() for p in [k, v]]):
+                child = params_dict[k]
+                parent = params_dict[v]
+                child = child.uid if isinstance(child, Entity) else child
+                parent = parent.uid if isinstance(parent, Entity) else parent
+                if all([InputFile.is_uuid(p) for p in [child, parent]]):
+                    uuid_associations[child] = parent
+        associations.update(uuid_associations)
+        return associations

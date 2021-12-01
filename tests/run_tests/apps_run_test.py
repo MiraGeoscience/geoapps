@@ -20,6 +20,9 @@ from geoapps.processing import (
     EdgeDetectionApp,
 )
 
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
+
 project = "./FlinFlon.geoh5"
 
 workspace = Workspace(project)
