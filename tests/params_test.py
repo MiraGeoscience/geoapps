@@ -255,7 +255,9 @@ def test_default_input_file(tmp_path):
 
         # check that params constructed from_path is defaulted
         ifile = InputFile(filename)
-        params2 = params_class(ifile)
+        params2 = params_class(
+            ifile,
+        )
         check = []
         for k, v in params2.to_dict(ui_json_format=False).items():
             if " " in k:
@@ -333,6 +335,51 @@ def test_params_constructors(tmp_path):
     params2 = MagneticVectorParams(input_file=ifile, validate=False, geoh5=workspace)
 
 
+def test_chunk_validation():
+
+    from geoapps.io.MagneticVector.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = MagneticVectorParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("data_object")
+        params = MagneticVectorParams(**test_dict)
+    for a in ["Missing required", "data_object"]:
+        assert a in str(excinfo.value)
+
+    from geoapps.io.Gravity.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = GravityParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("starting_model")
+        params = GravityParams(**test_dict)
+    for a in ["Missing required", "starting_model"]:
+        assert a in str(excinfo.value)
+
+    from geoapps.io.DirectCurrent.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = DirectCurrentParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("topography_object")
+        params = DirectCurrentParams(**test_dict)
+    for a in ["Missing required", "topography_object"]:
+        assert a in str(excinfo.value)
+
+    from geoapps.io.Octree.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = OctreeParams(**test_dict)
+    # TODO - add requirements to Octree .constants
+
+    from geoapps.io.PeakFinder.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = PeakFinderParams(**test_dict)
+    # TODO - add requirements to PeakFinder .constants
+
+
 def test_active_set():
     params = MagneticVectorParams(
         default=False,
@@ -388,7 +435,6 @@ def test_validate_topography(tmp_path):
     newval = "{79b719bc-d996-4f52-9af0-10aa9c7bb941}"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, True, "type", workspace=workspace)
-    catch_invalid_generator(tmp_path, param, newval, "reqs", workspace=workspace)
 
 
 def test_validate_data_object(tmp_path):

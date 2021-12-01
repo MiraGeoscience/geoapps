@@ -323,6 +323,8 @@ class InputValidator:
         for param in reqs:
             if param not in chunk.keys():
                 missing.append(param)
+            elif chunk[param] is None:
+                missing.append(param)
         if missing:
             raise ValueError(f"Missing required parameter(s): {*missing,}.")
 

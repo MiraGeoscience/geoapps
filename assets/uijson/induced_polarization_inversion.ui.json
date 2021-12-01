@@ -197,7 +197,7 @@
     "detrend_type": {
         "choiceList": [
             "all",
-            "corners"
+            "perimeter"
         ],
         "group": "Data pre-processing",
         "dependency": "detrend_order",
