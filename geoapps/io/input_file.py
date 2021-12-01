@@ -181,7 +181,6 @@ class InputFile:
 
                     out[k][field] = v
                     if v is not None:
-                        out[k]["visible"] = True
                         out[k]["enabled"] = True
                 else:
                     out[k] = v

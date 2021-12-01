@@ -79,7 +79,6 @@ def catch_invalid_generator(
         ui = json.load(f)
     if isinstance(ui[param], dict):
         ui[param]["value"] = invalid_value
-        ui[param]["visible"] = True
         ui[param]["enabled"] = True
         ui[param]["isValue"] = True
     else:
@@ -153,7 +152,6 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
             else:
                 ui[param]["isValue"] = True
         ui[param]["value"] = value
-        ui[param]["visible"] = True
         ui[param]["enabled"] = True
     else:
         ui[param] = value
@@ -807,7 +805,7 @@ def test_validate_workspace(tmp_path):
     param = "workspace"
     newval = "../assets/something.geoh5py"
     # param_test_generator(tmp_path, param, newval)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, 4, "type", workspace=workspace)
 
 
 def test_validate_out_group(tmp_path):
@@ -821,7 +819,7 @@ def test_validate_no_data_value(tmp_path):
     param = "no_data_value"
     newval = 5
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, "lskjdf", "type", workspace=workspace)
 
 
 def test_input_file_construction():

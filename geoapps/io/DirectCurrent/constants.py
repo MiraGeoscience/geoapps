@@ -222,24 +222,9 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
-    "resolution": {
-        "enabled": False,
-        "visible": False,
-        "label": "resolution",
-        "value": 0.0,
-    },
-    "detrend_order": {
-        "enabled": False,
-        "visible": False,
-        "label": "detrend order",
-        "value": 0.0,
-    },
-    "detrend_type": {
-        "enabled": False,
-        "visible": False,
-        "label": "detrend type",
-        "value": "all",
-    },
+    "resolution": None,
+    "detrend_order": None,
+    "detrend_type": None,
     "out_group": {"label": "Results group name", "value": "DirectCurrent"},
 }
 
