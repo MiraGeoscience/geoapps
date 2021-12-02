@@ -132,12 +132,12 @@ class InversionMesh:
         mesh_params_dict["Refinement B distance"] = params.max_distance
 
         if isinstance(self.inversion_data.entity, PotentialElectrode):
-            mesh_params_dict["Refinement C"] = {
-                "object": self.inversion_data.entity.current_electrodes.uid,
-                "levels": params.octree_levels_obs,
-                "type": "radial",
-                "distance": params.max_distance,
-            }
+            mesh_params_dict["Refinement C Object"] = (
+                self.inversion_data.entity.current_electrodes.uid,
+            )
+            mesh_params_dict["Refinement C levels"] = params.octree_levels_obs
+            mesh_params_dict["Refinement C type"] = "radial"
+            mesh_params_dict["Refinement C distance"] = params.max_distance
 
         mesh_params_dict["objects"] = self.inversion_data.entity.uid
         mesh_params_dict["geoh5"] = self.workspace

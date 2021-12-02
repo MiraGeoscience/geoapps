@@ -24,6 +24,7 @@ class InputValidator:
     validations : Validations dictionary with matching set of input parameter keys.
     workspace (optional) : Workspace instance needed to validate uuid types.
 
+
     Methods
     -------
     validate_chunk(chunk)
@@ -38,10 +39,12 @@ class InputValidator:
         requirements: list[str],
         validations: dict[str, Any],
         workspace: Workspace = None,
+        ignore_requirements: bool = False,
     ):
         self.requirements = requirements
         self.validations = validations
         self.workspace = workspace
+        self.ignore_requirements = ignore_requirements
 
     @property
     def requirements(self):
@@ -59,7 +62,9 @@ class InputValidator:
     def validations(self, val):
         self._validations = val
 
-    def validate_chunk(self, chunk, associations) -> None:
+    def validate_chunk(
+        self, chunk: dict[str, Any], associations: dict[str, Any]
+    ) -> None:
         """
         Validates chunk of params and contents/type/shape/requirements of values.
 
@@ -76,7 +81,8 @@ class InputValidator:
         it's value/type/shape/requirement validations.
         """
 
-        self._validate_requirements(chunk)
+        if not self.ignore_requirements:
+            self._validate_requirements(chunk)
 
         for k, v in chunk.items():
             if k not in self.validations.keys():
@@ -131,8 +137,12 @@ class InputValidator:
                 self.validate(k, v, pvalidations[k], workspace, chunk, associations)
 
         if value is None:
-            if param in self.requirements:
-                raise ValueError(f"{param} is a required parameter. Cannot be None.")
+            if chunk is None:
+                if not self.ignore_requirements:
+                    if param in self.requirements:
+                        raise ValueError(
+                            f"{param} is a required parameter. Cannot be None."
+                        )
             else:
                 return
 
@@ -143,7 +153,11 @@ class InputValidator:
             self._validate_parameter_type(param, value, pvalidations["types"])
         if "shapes" in pvalidations.keys():
             self._validate_parameter_shape(param, value, pvalidations["shapes"])
-        if ("reqs" in pvalidations.keys()) & (chunk is not None):
+        if (
+            ("reqs" in pvalidations.keys())
+            & (chunk is not None)
+            & (not self.ignore_requirements)
+        ):
             for req in pvalidations["reqs"]:
                 self._validate_parameter_req(param, value, req, chunk)
         if "uuid" in pvalidations.keys():
@@ -308,6 +322,8 @@ class InputValidator:
         missing = []
         for param in reqs:
             if param not in chunk.keys():
+                missing.append(param)
+            elif chunk[param] is None:
                 missing.append(param)
         if missing:
             raise ValueError(f"Missing required parameter(s): {*missing,}.")

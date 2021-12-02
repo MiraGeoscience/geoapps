@@ -577,7 +577,12 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations #################
 
-required_parameters = ["inversion_type"]
+required_parameters = [
+    "inversion_type",
+    "inducing_field_strength",
+    "inducing_field_inclination",
+    "inducing_field_declination",
+]
 required_parameters += base_required_parameters
 
 validations = {
@@ -678,3 +683,42 @@ validations = {
 }
 
 validations = dict(base_validations, **validations)
+
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "forward_only": False,
+    "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "tmi_channel_bool": True,
+    "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+    "tmi_uncertainty": 10,
+    "inducing_field_strength": 60000.0,
+    "inducing_field_inclination": 79.0,
+    "inducing_field_declination": 11.0,
+    "u_cell_size": 25.0,
+    "v_cell_size": 25.0,
+    "w_cell_size": 25.0,
+    "resolution": 50.0,
+    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_obs": [4, 4, 4, 4],
+    "depth_core": 500.0,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "window_center_x": 314600.0,
+    "window_center_y": 6072300.0,
+    "window_width": 1000.0,
+    "window_height": 1500.0,
+    "window_azimuth": 0.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+    "starting_model": 1e-4,
+    "max_iterations": 25,
+    "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
+    "z_from_topo": True,
+    "receivers_offset_x": 0,
+    "receivers_offset_y": 0,
+    "receivers_offset_z": 60,
+    "out_group": "ScalarInversion",
+}

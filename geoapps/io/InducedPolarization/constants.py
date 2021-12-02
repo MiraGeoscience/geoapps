@@ -272,7 +272,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations ##################
 
-required_parameters = ["inversion_type"]
+required_parameters = ["inversion_type", "conductivity_model"]
 required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
@@ -295,3 +295,39 @@ validations = {
 }
 
 validations = dict(base_validations, **validations)
+
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon_dcip.geoh5",
+    "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
+    "chargeability_channel_bool": True,
+    "chargeability_channel": UUID("{162320e6-2b80-4877-9ec1-a8f5b6a13673}"),
+    "chargeability_uncertainty": 0.001,
+    "starting_model": 1e-4,
+    "conductivity_model": 0.1,
+    "u_cell_size": 25.0,
+    "v_cell_size": 25.0,
+    "w_cell_size": 25.0,
+    "resolution": 25,
+    "window_center_x": None,
+    "window_center_y": None,
+    "window_width": None,
+    "window_height": None,
+    "window_azimuth": None,
+    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_obs": [4, 4, 4, 4],
+    "depth_core": 1200.0,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+    "max_iterations": 25,
+    "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
+    "z_from_topo": True,
+    "receivers_offset_x": 0,
+    "receivers_offset_y": 0,
+    "receivers_offset_z": 0,
+    "out_group": "InducedPolarizationInversion",
+}
