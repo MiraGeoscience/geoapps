@@ -141,7 +141,7 @@ default_ui_json = {
     "workspace": None,
 }
 
-required_parameters = []
+required_parameters = ["objects"]
 
 validations = {
     "title": {

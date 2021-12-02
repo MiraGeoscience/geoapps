@@ -25,7 +25,9 @@ class InversionParams(Params):
 
     _ga_group = None
 
-    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
+    def __init__(
+        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
+    ):
 
         self.forward_only: bool = None
         self.topography_object: UUID = None
@@ -110,7 +112,7 @@ class InversionParams(Params):
         self.conda_environment: str = None
         self.conda_environment_boolean: bool = None
         self.distributed_workers = None
-        super().__init__(input_file, default, validate, **kwargs)
+        super().__init__(input_file, default, validate, validator_opts, **kwargs)
 
         self._initialize(kwargs)
 
@@ -146,6 +148,7 @@ class InversionParams(Params):
                 self._required_parameters,
                 self._validations,
                 self.workspace,
+                **self.validator_opts,
             )
             self.validator.validate_chunk(params_dict, self.associations)
 
