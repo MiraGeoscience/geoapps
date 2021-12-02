@@ -694,7 +694,12 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations #################
 
-required_parameters = ["inversion_type"]
+required_parameters = [
+    "inversion_type",
+    "inducing_field_strength",
+    "inducing_field_inclination",
+    "inducing_field_declination",
+]
 required_parameters += base_required_parameters
 
 validations = {

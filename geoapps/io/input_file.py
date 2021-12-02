@@ -76,7 +76,7 @@ class InputFile:
                 self.load(data)
 
     @classmethod
-    def from_dict(cls, dict: dict[str, Any], validator: InputValidator = None):
+    def from_dict(cls, dict: dict[str, Any]):
         ifile = cls()
         ifile.load(dict)
         ifile.workpath = os.path.abspath(".")
