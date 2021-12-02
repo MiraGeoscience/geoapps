@@ -39,7 +39,9 @@ class DirectCurrentParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
+    def __init__(
+        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
+    ):
 
         self.validate = False
         self.default_ui_json = deepcopy(default_ui_json)
@@ -49,7 +51,7 @@ class DirectCurrentParams(InversionParams):
         self.potential_uncertainty = None
         self.out_group = None
 
-        super().__init__(input_file, default, validate, **kwargs)
+        super().__init__(input_file, default, validate, validator_opts, **kwargs)
 
     @property
     def inversion_type(self):
