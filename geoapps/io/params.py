@@ -320,7 +320,7 @@ class Params:
         if default:
             ifile = InputFile()
         else:
-            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json), self.validator)
+            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
 
         if path is not None:
             if not os.path.exists(path):

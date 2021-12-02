@@ -256,7 +256,7 @@ def test_default_input_file(tmp_path):
         # check that params constructed from_path is defaulted
         ifile = InputFile(filename)
         params2 = params_class(
-            ifile,
+            ifile, validate=True, validator_opts={"ignore_requirements": True}
         )
         check = []
         for k, v in params2.to_dict(ui_json_format=False).items():
@@ -266,7 +266,9 @@ def test_default_input_file(tmp_path):
         assert all(check)
 
         # check that params constructed from_input_file is defaulted
-        params3 = params_class(ifile)
+        params3 = params_class(
+            ifile, validate=True, validator_opts={"ignore_requirements": True}
+        )
         check = []
         for k, v in params3.to_dict(ui_json_format=False).items():
             if " " in k:
@@ -347,6 +349,16 @@ def test_chunk_validation():
     for a in ["Missing required", "data_object"]:
         assert a in str(excinfo.value)
 
+    from geoapps.io.MagneticScalar.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = MagneticScalarParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict["inducing_field_strength"] = None
+        params = MagneticScalarParams(**test_dict)
+    for a in ["Missing required", "inducing_field_strength"]:
+        assert a in str(excinfo.value)
+
     from geoapps.io.Gravity.constants import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": workspace})
@@ -367,17 +379,35 @@ def test_chunk_validation():
     for a in ["Missing required", "topography_object"]:
         assert a in str(excinfo.value)
 
+    from geoapps.io.InducedPolarization.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = InducedPolarizationParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("conductivity_model")
+        params = InducedPolarizationParams(**test_dict)
+    for a in ["Missing required", "conductivity_model"]:
+        assert a in str(excinfo.value)
+
     from geoapps.io.Octree.constants import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": workspace})
     params = OctreeParams(**test_dict)
-    # TODO - add requirements to Octree .constants
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("objects")
+        params = OctreeParams(**test_dict)
+    for a in ["Missing required", "objects"]:
+        assert a in str(excinfo.value)
 
     from geoapps.io.PeakFinder.constants import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": workspace})
     params = PeakFinderParams(**test_dict)
-    # TODO - add requirements to PeakFinder .constants
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("data")
+        params = PeakFinderParams(**test_dict)
+    for a in ["Missing required", "data"]:
+        assert a in str(excinfo.value)
 
 
 def test_active_set():
