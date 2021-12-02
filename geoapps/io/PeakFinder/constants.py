@@ -17,8 +17,6 @@ from geoh5py.workspace import Workspace
 
 from ...utils.geophysical_systems import parameters
 
-required_parameters = []
-
 defaults = {
     "title": "Peak Finder Parameters",
     "geoh5": None,
@@ -187,6 +185,8 @@ default_ui_json = {
     "monitoring_directory": None,
     "plot_result": True,
 }
+
+required_parameters = ["objects", "data"]
 
 validations = {
     "title": {

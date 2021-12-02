@@ -14,10 +14,14 @@ from geoapps.io.Gravity import GravityParams
 from .base_inversion import InversionDriver
 
 
-def start_inversion(filepath=None):
+def start_inversion(filepath=None, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
-    input_file = InputFile(filepath)
+    if filepath is None:
+        input_file = InputFile.from_dict(kwargs)
+    else:
+        input_file = InputFile(filepath)
+
     params = GravityParams(input_file)
     driver = GravityDriver(params)
     driver.run()
