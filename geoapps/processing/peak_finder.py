@@ -1404,7 +1404,7 @@ class PeakFinder(ObjectDataSelection):
             )
         else:
 
-            channel_groups = groups_from_params_dict(survey, params._free_params_dict)
+            channel_groups = groups_from_params_dict(survey, params._free_param_dict)
 
         active_channels = {}
         for group in channel_groups.values():
