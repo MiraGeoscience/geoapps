@@ -732,7 +732,9 @@ class InversionApp(PlotSelection2D):
             params["out_group"] = "ChargeabilityInversion"
             self.option_choices.options = list(self.inversion_options.keys())
 
-        self.params = self._param_class()
+        self.params = self._param_class(
+            validate=True, validator_opts={"ignore_requirements": True}
+        )
 
         if self.inversion_type.value in ["direct current"]:
             data_type_list = ["potential"]

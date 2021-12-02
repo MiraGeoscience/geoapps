@@ -64,12 +64,6 @@
         ],
         "value": ""
     },
-    "tmi_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use TMI",
-        "value": true
-    },
     "tmi_channel": {
         "association": [
             "Cell",
@@ -99,12 +93,6 @@
         "dependencyType": "enabled",
         "property": "",
         "value": 1.0
-    },
-    "bxx_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use Bxx",
-        "value": false
     },
     "bxx_channel": {
         "association": [
@@ -136,12 +124,6 @@
         "property": "",
         "value": 1.0
     },
-    "bxy_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use Bxy",
-        "value": false
-    },
     "bxy_channel": {
         "association": [
             "Cell",
@@ -171,12 +153,6 @@
         "dependencyType": "enabled",
         "property": "",
         "value": 1.0
-    },
-    "bxz_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use Bxz",
-        "value": false
     },
     "bxz_channel": {
         "association": [
@@ -208,12 +184,6 @@
         "property": "",
         "value": 1.0
     },
-    "byy_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use Byy",
-        "value": false
-    },
     "byy_channel": {
         "association": [
             "Cell",
@@ -243,12 +213,6 @@
         "dependencyType": "enabled",
         "property": "",
         "value": 1.0
-    },
-    "byz_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use Byz",
-        "value": false
     },
     "byz_channel": {
         "association": [
@@ -280,12 +244,6 @@
         "property": "",
         "value": 1.0
     },
-    "bzz_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use Bzz",
-        "value": false
-    },
     "bzz_channel": {
         "association": [
             "Cell",
@@ -315,12 +273,6 @@
         "dependencyType": "enabled",
         "property": "",
         "value": 1.0
-    },
-    "bx_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use Bx",
-        "value": false
     },
     "bx_channel": {
         "association": [
@@ -352,12 +304,6 @@
         "property": "",
         "value": 1.0
     },
-    "by_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use By",
-        "value": false
-    },
     "by_channel": {
         "association": [
             "Cell",
@@ -387,12 +333,6 @@
         "dependencyType": "enabled",
         "property": "",
         "value": 1.0
-    },
-    "bz_channel_bool": {
-        "group": "Data",
-        "main": true,
-        "label": "Use Bz",
-        "value": false
     },
     "bz_channel": {
         "association": [
@@ -506,8 +446,8 @@
     "gps_receivers_offset": "",
     "ignore_values": {
         "group": "Data pre-processing",
-        "enabled": false,
         "optional": true,
+        "enabled": false,
         "label": "Values to ignore",
         "value": ""
     },
@@ -558,11 +498,11 @@
         "group": "Mesh",
         "main": true,
         "optional": true,
-        "enabled": true,
+        "enabled": false,
         "dependency": "mesh_from_params",
         "dependencyType": "disable",
         "label": "Mesh",
-        "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
+        "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
         "value": ""
     },
     "u_cell_size": {
@@ -974,41 +914,15 @@
         "label": "Number of cpu",
         "value": 1
     },
-    "max_ram": {
-        "min": 0,
-        "group": "Compute",
-        "dependency": "parallelized",
-        "dependencyType": "enabled",
-        "optional": true,
-        "enabled": false,
-        "label": "Set RAM limit",
-        "value": "",
-        "visible": false
-    },
-    "workspace": {
-        "visible": false,
-        "enabled": false,
-        "label": "Path to workspace",
-        "value": ""
-    },
+    "max_ram": "",
+    "workspace": "",
     "out_group": {
         "label": "Results group name",
         "value": "SusceptibilityInversion"
     },
-    "no_data_value": {
-        "default": 0,
-        "group": "Data Options",
-        "optional": true,
-        "enabled": false,
-        "visible": false,
-        "label": "No data value",
-        "value": ""
-    },
-    "monitoring_directory": {
-        "default": "",
-        "enabled": false,
-        "value": ""
-    },
+    "no_data_value": "",
+    "monitoring_directory": "",
+    "workspace_geoh5": "",
     "run_command": "geoapps.drivers.magnetic_scalar_inversion",
     "run_command_boolean": {
         "value": false,
@@ -1017,5 +931,15 @@
         "main": true
     },
     "conda_environment": "geoapps",
-    "distributed_workers": ""
+    "distributed_workers": "",
+    "tmi_channel_bool": false,
+    "bxx_channel_bool": false,
+    "bxy_channel_bool": false,
+    "bxz_channel_bool": false,
+    "byy_channel_bool": false,
+    "byz_channel_bool": false,
+    "bzz_channel_bool": false,
+    "bx_channel_bool": false,
+    "by_channel_bool": false,
+    "bz_channel_bool": false
 }

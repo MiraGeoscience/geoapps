@@ -27,7 +27,9 @@ class PeakFinderParams(Params):
     _free_param_identifier: str = "group"
     _free_param_dict = {}
 
-    def __init__(self, input_file=None, default=True, validate=True, **kwargs):
+    def __init__(
+        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
+    ):
 
         self._title = None
         self.default_ui_json = deepcopy(default_ui_json)
@@ -53,7 +55,7 @@ class PeakFinderParams(Params):
         self._template_color = None
         self._plot_result = True
 
-        super().__init__(input_file, default, validate, **kwargs)
+        super().__init__(input_file, default, validate, validator_opts, **kwargs)
 
         self._initialize(kwargs)
 
