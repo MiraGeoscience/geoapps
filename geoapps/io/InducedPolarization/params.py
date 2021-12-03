@@ -75,7 +75,7 @@ class InducedPolarizationParams(InversionParams):
             return
         p = "chargeability_channel_bool"
         self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
+            p, val, self.validations[p], self.geoh5, self.associations
         )
         self._chargeability_channel_bool = val
 

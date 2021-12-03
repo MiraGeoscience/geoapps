@@ -12,7 +12,6 @@
 
 from uuid import UUID
 
-import numpy as np
 from geoh5py.workspace import Workspace
 
 from ...utils.geophysical_systems import parameters
@@ -46,7 +45,6 @@ defaults = {
     "conda_environment_boolean": None,
     "template_data": None,
     "template_color": None,
-    "workspace": None,
     "monitoring_directory": None,
 }
 
@@ -181,7 +179,6 @@ default_ui_json = {
     "conda_environment_boolean": None,
     "template_data": None,
     "template_color": None,
-    "workspace": None,
     "monitoring_directory": None,
     "plot_result": True,
 }
@@ -274,9 +271,6 @@ validations = {
     },
     "template_color": {
         "types": [str],
-    },
-    "workspace": {
-        "types": [str, Workspace],
     },
     "monitoring_directory": {
         "types": [str],
