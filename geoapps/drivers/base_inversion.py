@@ -42,7 +42,7 @@ class InversionDriver:
     def __init__(self, params: Params, warmstart=True):
         self.params = params
         self.warmstart = warmstart
-        self.workspace = params.workspace
+        self.workspace = params.geoh5
         self.inversion_type = params.inversion_type
         self.inversion_window = None
         self.inversion_data = None

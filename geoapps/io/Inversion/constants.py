@@ -586,7 +586,6 @@ default_ui_json = {
         "value": None,
     },
     "max_ram": None,
-    "workspace": None,
     "no_data_value": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -835,9 +834,6 @@ validations = {
     },
     "max_ram": {
         "types": [int, float],
-    },
-    "workspace": {
-        "types": [str, Workspace],
     },
     "no_data_value": {
         "types": [int, float],
