@@ -911,7 +911,7 @@ def test_validate_max_ram(tmp_path):
 
 def test_validate_geoh5(tmp_path):
     param = "geoh5"
-    newval = "../assets/something.geoh5py"
+    newval = os.path.join(tmp_path, "something.geoh5py")
     params = MagneticVectorParams(
         validate=True, validator_opts={"ignore_requirements": True}
     )
