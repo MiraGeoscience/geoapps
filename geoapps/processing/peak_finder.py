@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import sys
 import uuid
 from copy import deepcopy
 from os import path
@@ -13,7 +14,7 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 from dask import delayed
-from dask.distributed import Client, as_completed, get_client
+from dask.distributed import Client, get_client
 from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
@@ -735,9 +736,11 @@ class PeakFinder(ObjectDataSelection):
 
                 group_list = []
                 self.update_data_list(None)
+                self.pause_refresh = True
                 for pg, params in self._channel_groups.items():
                     group_list += [self.add_group_widget(pg, params)]
 
+                self.pause_refresh = False
                 self.groups_panel.children = group_list
 
                 self.set_data(None)
@@ -1444,9 +1447,6 @@ class PeakFinder(ObjectDataSelection):
                     )
                 )
             ]
-
-        # all_anomalies = client.gather(anomalies)
-
         (
             channel_group,
             tau,
@@ -1719,7 +1719,6 @@ def find_anomalies(
         locations=locations[line_indices], smoothing=smoothing, residual=use_residual
     )
     locs = profile.locations_resampled
-    # return line_indices
     if data_normalization == "ppm":
         data_normalization = [1e-6]
 
@@ -2027,7 +2026,6 @@ def groups_from_params_dict(entity: Entity, params_dict: dict):
 
 
 if __name__ == "__main__":
-    # file = sys.argv[1]
-    file = r"C:\Users\dominiquef\Documents\Workspace\BHP\BHP_Norwich_GDB\Temp\PeakFinder.ui.json"
+    file = sys.argv[1]
     params = PeakFinderParams(InputFile(file))
     PeakFinder.run(params)
