@@ -92,6 +92,12 @@ class InversionApp(PlotSelection2D):
             self.plot_result = kwargs["plot_result"]
             kwargs.pop("plot_result")
 
+        if "geoh5" in kwargs:
+            if isinstance(kwargs["geoh5"], str):
+                self.workspace = Workspace(kwargs["geoh5"])
+            else:
+                self.workspace = kwargs["geoh5"]
+
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class(InputFile(ui_json))

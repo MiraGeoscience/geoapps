@@ -51,7 +51,7 @@ def test_mag_inversion(tmp_path):
         "starting_model": 0.01,
     }
     side_effects = {"starting_inclination": 35}
-    app = MagInversionApp(h5file=project, plot_result=False)
+    app = MagInversionApp(geoh5=project, plot_result=False)
     app.geoh5 = new_geoh5
 
     assert (
@@ -109,7 +109,7 @@ def test_dc_inversion(tmp_path):
         "starting_model": 0.01,
     }
     side_effects = {}
-    app = DCInversionApp(h5file=project_dcip, plot_result=False)
+    app = DCInversionApp(geoh5=project_dcip, plot_result=False)
     app.geoh5 = new_geoh5
 
     for param, value in changes.items():
@@ -158,7 +158,7 @@ def test_ip_inversion(tmp_path):
         "conductivity_model": UUID("d8846bc7-4c2f-4ced-bbf6-e0ebafd76826"),
     }
     side_effects = {"starting_model": 1e-4}
-    app = DCInversionApp(h5file=project_dcip, plot_result=False)
+    app = DCInversionApp(geoh5=project_dcip, plot_result=False)
     app.geoh5 = new_geoh5
 
     for param, value in changes.items():

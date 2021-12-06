@@ -84,7 +84,6 @@ def catch_invalid_generator(
         ui[param]["isValue"] = True
     else:
         ui[param] = invalid_value
-    ui["geoh5"] = None
     if validation_type == "value":
         err = ValueError
         assertions = [
@@ -913,8 +912,16 @@ def test_validate_max_ram(tmp_path):
 def test_validate_geoh5(tmp_path):
     param = "geoh5"
     newval = "../assets/something.geoh5py"
-    # param_test_generator(tmp_path, param, newval)
-    catch_invalid_generator(tmp_path, param, 4, "type", geoh5=geoh5)
+    params = MagneticVectorParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.geoh5 = newval
+    with pytest.raises(TypeError) as excinfo:
+        params.geoh5 = 4
+
+    assert all(
+        [k in str(excinfo.value) for k in ["geoh5", "type", "int", "str", "Workspace"]]
+    )
 
 
 def test_validate_out_group(tmp_path):
