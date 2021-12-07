@@ -1,6 +1,8 @@
 # This workflow will comment the PR with the JIRA issue summary
 # if a JIRA issue number is detected in the branch name or title
 
+# fake change to test this pipeline on new PR
+
 name: Add JIRA issue summary
 
 on:
