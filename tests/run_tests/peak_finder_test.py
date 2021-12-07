@@ -9,11 +9,14 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
 from geoapps.processing.peak_finder import PeakFinder
+
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
 def test_peak_finder_app(tmp_path):

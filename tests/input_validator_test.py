@@ -16,7 +16,7 @@ from geoapps.io.validators import InputValidator
 ifile = InputFile()
 ifile.filpath = "test.ui.json"
 ifile.data = {"mesh_from_params": True, "u_cell_size": 2}
-validator = InputValidator(required_parameters, validations, input=ifile)
+validator = InputValidator(required_parameters, validations)
 
 input_dict = {"inversion_type": "mvi", "u_cell_size": 2}
 tmpfile = lambda path: os.path.join(path, "test.json")
@@ -92,26 +92,26 @@ def test_validate_parameter_req():
     param = "topography"
     value = "sdetselkj"
     validations = ("topography_object",)
-    vtype = "reqs"
+
     ifile.data["u_cell_size"] = None
     with pytest.raises(KeyError) as excinfo:
-        validator._validate_parameter_req(param, value, validations)
-    msg = f"Unsatisfied '{param}' requirement. Input file must contain "
-    msg += f"'{validations[0]}' if '{param}' is provided."
-    assert msg in str(excinfo.value)
+        validator._validate_parameter_req(param, value, validations, chunk=ifile.data)
+    assert all(
+        [
+            k in str(excinfo.value)
+            for k in ["topography", "requirement", "topography_object"]
+        ]
+    )
+
     param = "mesh_from_params"
     value = True
     validations = (
         True,
         "u_cell_size",
     )
-    vtype = "reqs"
-    input_keys = ["mesh_from_param", "topography"]
+
     with pytest.raises(KeyError) as excinfo:
-        validator._validate_parameter_req(param, value, validations)
-    msg = f"Unsatisfied '{param}' requirement. Input file must contain "
-    msg += f"'{validations[1]}' if '{param}' is '{str(value)}'."
-    assert msg in str(excinfo.value)
+        validator._validate_parameter_req(param, value, validations, chunk=ifile.data)
 
 
 def test_validate_parameter_uuid():

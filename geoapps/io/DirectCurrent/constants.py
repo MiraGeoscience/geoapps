@@ -8,6 +8,7 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.io.Inversion.constants import (
@@ -23,7 +24,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "potential_channel_bool": True,
     "potential_channel": None,
     "potential_uncertainty": 1.0,
     "starting_model_object": None,
@@ -99,10 +99,12 @@ inversion_defaults = {
     "out_group": "DirectCurrentInversion",
     "no_data_value": None,
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "potential_channel_bool": True,
 }
 forward_defaults = {
     "title": "SimPEG Direct Current Forward",
@@ -146,11 +148,38 @@ forward_defaults = {
     "workspace": None,
     "out_group": "DirectCurrentForward",
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
 }
+
+inversion_ui_json = {
+    "potential_channel_bool": True,
+}
+
+forward_ui_json = {
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+}
+
 default_ui_json = {
     "title": "SimPEG Direct Current Inversion",
     "inversion_type": "direct current",
@@ -193,42 +222,16 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
-    "resolution": {
-        "enabled": False,
-        "visible": False,
-        "label": "resolution",
-        "value": 0.0,
-    },
-    "detrend_order": {
-        "enabled": False,
-        "visible": False,
-        "label": "detrend order",
-        "value": 0.0,
-    },
-    "detrend_type": {
-        "enabled": False,
-        "visible": False,
-        "label": "detrend type",
-        "value": "all",
-    },
+    "resolution": None,
+    "detrend_order": None,
+    "detrend_type": None,
     "out_group": {"label": "Results group name", "value": "DirectCurrent"},
 }
 
-base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json.copy()
-for k, v in inversion_defaults.items():
-    if isinstance(default_ui_json[k], dict):
-        key = "value"
-        if "isValue" in default_ui_json[k].keys():
-            if default_ui_json[k]["isValue"] == False:
-                key = "property"
-        default_ui_json[k][key] = v
-        if "enabled" in default_ui_json[k].keys() and v is not None:
-            default_ui_json[k]["enabled"] = True
-    else:
-        default_ui_json[k] = v
+default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
-default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
+
+################ Validations #################
 
 required_parameters = ["inversion_type"]
 required_parameters += base_required_parameters
@@ -237,22 +240,23 @@ validations = {
         "types": [str],
         "values": ["direct current"],
     },
+    "data_object": {"types": [UUID, PotentialElectrode]},
     "potential_channel_bool": {"types": [bool]},
     "potential_channel": {
         "types": [str, UUID],
         "reqs": [("data_object")],
     },
-    "potential_uncertainty": {"types": [str, int, float]},
+    "potential_uncertainty": {"types": [str, int, float, UUID]},
 }
 
-validations.update(base_validations)
+validations = dict(base_validations, **validations)
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon_dcip.geoh5",
-    "data_object": "{6e14de2c-9c2f-4976-84c2-b330d869cb82}",
+    "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
     "potential_channel_bool": True,
-    "potential_channel": "{502e7256-aafa-4016-969f-5cc3a4f27315}",
-    "potential_uncertainty": "{62746129-3d82-427e-a84c-78cded00c0bc}",
+    "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
+    "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
     "reference_model": 1e-1,
     "starting_model": 1e-1,
     "u_cell_size": 25.0,
@@ -267,7 +271,6 @@ app_initializer = {
     "octree_levels_topo": [0, 0, 0, 2],
     "octree_levels_obs": [5, 5, 5, 5],
     "depth_core": 500.0,
-    "max_distance": np.inf,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
     "s_norm": 0.0,
@@ -277,8 +280,8 @@ app_initializer = {
     "upper_bound": 100.0,
     "lower_bound": 1e-5,
     "max_iterations": 25,
-    "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-    "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "receivers_offset_x": 0,
     "receivers_offset_y": 0,

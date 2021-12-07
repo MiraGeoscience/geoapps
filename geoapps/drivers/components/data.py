@@ -51,7 +51,7 @@ class InversionData(InversionLocations):
     detrend_order :
         Polynomial degree for detrending (0, 1, or 2).
     detrend_type :
-        Detrend type option. 'all': use all data, 'corners': use the convex
+        Detrend type option. 'all': use all data, 'perimeter': use the convex
         hull only.
     locations :
         Data locations.
@@ -316,22 +316,25 @@ class InversionData(InversionLocations):
 
     def parse_ignore_values(self) -> tuple[float, str]:
         """Returns an ignore value and type ('<', '>', or '=') from params data."""
-        ignore_values = self.params.ignore_values
-        if ignore_values is not None:
-            ignore_type = [k for k in ignore_values if k in ["<", ">"]]
-            ignore_type = "=" if not ignore_type else ignore_type[0]
-            if ignore_type in ["<", ">"]:
-                ignore_value = float(ignore_values.split(ignore_type)[1])
-            else:
-
-                try:
-                    ignore_value = float(ignore_values)
-                except ValueError:
-                    return None, None
-
-            return ignore_value, ignore_type
-        else:
+        if self.params.forward_only:
             return None, None
+        else:
+            ignore_values = self.params.ignore_values
+            if ignore_values is not None:
+                ignore_type = [k for k in ignore_values if k in ["<", ">"]]
+                ignore_type = "=" if not ignore_type else ignore_type[0]
+                if ignore_type in ["<", ">"]:
+                    ignore_value = float(ignore_values.split(ignore_type)[1])
+                else:
+
+                    try:
+                        ignore_value = float(ignore_values)
+                    except ValueError:
+                        return None, None
+
+                return ignore_value, ignore_type
+            else:
+                return None, None
 
     def set_infinity_uncertainties(
         self, uncertainties: np.ndarray, data: np.ndarray

@@ -24,7 +24,7 @@ from geoapps.io.validators import InputValidator
 
 ######################  Setup  ###########################
 
-d_u_j = deepcopy(default_ui_json)
+
 input_dict = inversion_defaults
 tmpfile = lambda path: os.path.join(path, "test.json")
 
@@ -52,9 +52,10 @@ def test_blank_construction():
 
 
 def test_default_construction(tmp_path):
+    d_u_j = deepcopy(default_ui_json)
     ifile = InputFile()
     ifile.filepath = os.path.join(tmp_path, "test.ui.json")
-    ifile.write_ui_json(default_ui_json)
+    ifile.write_ui_json(d_u_j)
     validator = InputValidator(required_parameters, validations)
     ifile = InputFile(ifile.filepath, validator)
     assert ifile.is_loaded
@@ -101,28 +102,6 @@ def test_numify():
     assert ndict["test_l2"] == [1]
 
 
-def test_ui_2_py():
-
-    tdict = {"run_command": "blah", "max_distance": "notgettinsaved"}
-    tdict.update({"inversion_type": {"value": "mvi"}})
-    tdict.update({"detrend_order": {"default": 0, "enabled": False, "value": "ohya"}})
-    tdict.update(
-        {"detrend_type": {"default": "all", "visible": False, "value": "ohno"}}
-    )
-    tdict.update({"topography": {"isValue": True, "property": "yep", "value": 2}})
-    tdict.update({"topography2": {"isValue": False, "property": "yep", "value": 2}})
-    tdict.update({"tmi_channel": {"value": "ldskfjsld"}})
-    ifile = InputFile()
-    data = ifile._ui_2_py(tdict)
-    assert data["run_command"] == "blah"
-    assert data["inversion_type"] == "mvi"
-    assert data["detrend_order"] is None
-    assert data["detrend_type"] is None
-    assert data["topography"] == 2
-    assert data["topography2"] == "yep"
-    assert data["tmi_channel"] == "ldskfjsld"
-
-
 def test_set_associations():
 
     o_uuid = "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"
@@ -145,7 +124,7 @@ def test_set_associations():
         }
     )
     ifile = InputFile()
-    ifile._set_associations(tdict)
+    ifile.associations = ifile.get_associations(tdict)
     assert ifile.associations[UUID(f_uuid)] == UUID(o_uuid)
     assert ifile.associations[UUID(f_uuid2)] == UUID(o_uuid2)
     assert ifile.associations["field"] == "obj"
@@ -153,30 +132,80 @@ def test_set_associations():
 
 
 def test_ui_json_io(tmp_path):
-
+    d_u_j = deepcopy(default_ui_json)
     ifile = InputFile()
     ifile.filepath = os.path.join(tmp_path, "test.ui.json")
-    ifile.write_ui_json(default_ui_json)
-    validator = InputValidator(required_parameters, validations)
-    ifile = InputFile(ifile.filepath, validator)
+    ifile.write_ui_json(d_u_j, default=True)
+    ifile = InputFile(ifile.filepath)
     for k, v in d_u_j.items():
         if isinstance(v, dict):
             check_default = True
-            for field in ["enabled", "visible"]:
-                if field in v.keys():
-                    if not v[field]:
-                        assert ifile.data[k] is None
-                        check_default = False
+            if "enabled" in v.keys():
+                if not v["enabled"]:
+                    assert ifile.data[k] is None
+                    check_default = False
             if check_default:
                 assert ifile.data[k] == inversion_defaults[k]
         else:
             assert ifile.data[k] == v
     ifile.data["inducing_field_strength"] = 99
-    ifile.write_ui_json(default_ui_json)
-    ifile = InputFile(ifile.filepath, validator)
+    ifile.write_ui_json(d_u_j)
+    ifile = InputFile(ifile.filepath)
     assert ifile.data["inducing_field_strength"] == 99
     assert ifile.data["inversion_type"] == "magnetic vector"
 
 
-def test_validations(tmp_path):
-    assert True
+def test_group():
+    d_u_j = deepcopy(default_ui_json)
+    window_group = InputFile.group(d_u_j, "Data window")
+    check = [
+        "window_center_x",
+        "window_center_y",
+        "window_width",
+        "window_height",
+        "window_azimuth",
+    ]
+    assert np.all(np.sort(check) == np.sort(list(window_group.keys())))
+
+
+def test_collect():
+    d_u_j = deepcopy(default_ui_json)
+    enabled_params = InputFile.collect(d_u_j, "enabled", value=True)
+    assert all(["enabled" in v for v in enabled_params.values()])
+    assert all([v["enabled"] for v in enabled_params.values()])
+
+
+def test_data():
+    d_u_j = deepcopy(default_ui_json)
+    data = InputFile.flatten(d_u_j)
+    assert data["starting_model"] is None
+    assert data["tile_spatial"] == 1
+    assert data["forward_only"] == False
+    assert data["resolution"] == None
+
+
+def test_group_enabled():
+    d_u_j = deepcopy(default_ui_json)
+    assert not InputFile.group_enabled(d_u_j, "Data window")
+
+
+def test_truth():
+    d_u_j = deepcopy(default_ui_json)
+    assert not InputFile.truth(d_u_j, "detrend_order", "enabled")
+    assert InputFile.truth(d_u_j, "max_chunk_size", "enabled")
+    assert InputFile.truth(d_u_j, "chunk_by_rows", "enabled")
+    assert not InputFile.truth(d_u_j, "chunk_by_rows", "optional")
+
+
+def test_is_uijson():
+    d_u_j = deepcopy(default_ui_json)
+    assert InputFile.is_uijson(d_u_j)
+    assert InputFile.is_uijson({"test": {"label": "me", "value": 2}})
+    assert not InputFile.is_uijson({"test": {"label": "me"}})
+
+
+def test_field():
+    d_u_j = deepcopy(default_ui_json)
+    assert InputFile.field(d_u_j["starting_model"]) == "property"
+    assert InputFile.field(d_u_j["tmi_uncertainty"]) == "value"
+    assert InputFile.field(d_u_j["resolution"]) == "value"

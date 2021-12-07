@@ -27,34 +27,24 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "gz_channel_bool": False,
     "gz_channel": None,
     "gz_uncertainty": 1.0,
-    "guv_channel_bool": False,
     "guv_channel": None,
     "guv_uncertainty": 1.0,
-    "gxy_channel_bool": False,
     "gxy_channel": None,
     "gxy_uncertainty": 1.0,
-    "gxx_channel_bool": False,
     "gxx_channel": None,
     "gxx_uncertainty": 1.0,
-    "gyy_channel_bool": False,
     "gyy_channel": None,
     "gyy_uncertainty": 1.0,
-    "gzz_channel_bool": False,
     "gzz_channel": None,
     "gzz_uncertainty": 1.0,
-    "gxz_channel_bool": False,
     "gxz_channel": None,
     "gxz_uncertainty": 1.0,
-    "gyz_channel_bool": False,
     "gyz_channel": None,
     "gyz_uncertainty": 1.0,
-    "gx_channel_bool": False,
     "gx_channel": None,
     "gx_uncertainty": 1.0,
-    "gy_channel_bool": False,
     "gy_channel": None,
     "gy_uncertainty": 1.0,
     "starting_model_object": None,
@@ -125,14 +115,26 @@ inversion_defaults = {
     "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
-    "max_ram": None,
     "workspace": None,
+    "max_ram": None,
     "out_group": "GravityInversion",
     "no_data_value": None,
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
+    "gz_channel_bool": False,
+    "guv_channel_bool": False,
+    "gxy_channel_bool": False,
+    "gxx_channel_bool": False,
+    "gyy_channel_bool": False,
+    "gzz_channel_bool": False,
+    "gxz_channel_bool": False,
+    "gyz_channel_bool": False,
+    "gx_channel_bool": False,
+    "gy_channel_bool": False,
 }
 forward_defaults = {
     "title": "SimPEG Gravity Forward",
@@ -185,9 +187,45 @@ forward_defaults = {
     "workspace": None,
     "out_group": "GravityForward",
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.grav_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
+    "distributed_workers": None,
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+}
+
+inversion_ui_json = {
+    "gz_channel_bool": False,
+    "guv_channel_bool": False,
+    "gxy_channel_bool": False,
+    "gxx_channel_bool": False,
+    "gyy_channel_bool": False,
+    "gzz_channel_bool": False,
+    "gxz_channel_bool": False,
+    "gyz_channel_bool": False,
+    "gx_channel_bool": False,
+    "gy_channel_bool": False,
+}
+
+forward_ui_json = {
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
 }
 
 default_ui_json = {
@@ -507,22 +545,7 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "Gravity"},
 }
 
-base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json.copy()
-for k, v in inversion_defaults.items():
-    if isinstance(default_ui_json[k], dict):
-        key = "value"
-        if "isValue" in default_ui_json[k].keys():
-            if default_ui_json[k]["isValue"] == False:
-                key = "property"
-        if "enabled" in default_ui_json[k].keys() and v is not None:
-            default_ui_json[k]["enabled"] = True
-        default_ui_json[k][key] = v
-    else:
-        default_ui_json[k] = v
-
-default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
-
+default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations #################
 
@@ -606,4 +629,40 @@ validations = {
     },
     "out_group": {"types": [str, ContainerGroup]},
 }
-validations.update(base_validations)
+
+validations = dict(base_validations, **validations)
+
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "forward_only": False,
+    "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "gz_channel_bool": True,
+    "gz_channel": UUID("{6de9177a-8277-4e17-b76c-2b8b05dcf23c}"),
+    "gz_uncertainty": 1e-4,
+    "reference_model": 0.0,
+    "u_cell_size": 25.0,
+    "v_cell_size": 25.0,
+    "w_cell_size": 25.0,
+    "resolution": 50.0,
+    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_obs": [4, 4, 4, 4],
+    "depth_core": 1200.0,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "window_center_x": 314155.0,
+    "window_center_y": 6071000.0,
+    "window_width": 1000.0,
+    "window_height": 1000.0,
+    "window_azimuth": 0.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+    "upper_bound": None,
+    "starting_model": 1e-4,
+    "max_iterations": 25,
+    "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
+    "z_from_topo": True,
+    "out_group": "GravityInversion",
+}

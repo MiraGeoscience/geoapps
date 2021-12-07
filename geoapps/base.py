@@ -19,7 +19,7 @@ from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
 
-from geoapps.io.params import Params
+from geoapps.io import InputFile, Params
 from geoapps.utils.formatters import string_name
 
 
@@ -139,8 +139,8 @@ class BaseApplication:
             _, extension = path.splitext(self.file_browser.selected)
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
-                self.params = getattr(self, "_param_class").from_path(
-                    self.file_browser.selected
+                self.params = getattr(self, "_param_class")(
+                    InputFile(self.file_browser.selected)
                 )
                 self.refresh.value = False
                 self.__populate__(**self.params.to_dict(ui_json_format=False))

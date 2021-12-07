@@ -70,6 +70,7 @@ def catch_invalid_generator(
         "reqs": "reqs",
         "uuid": "uuid",
     }
+    validator_opts = {"ignore_requirements": True}
     pvalidations = MVI_validations[param][key_map[validation_type]]
     filepath = tmpfile(tmp_path)
     ifile = InputFile()
@@ -79,7 +80,6 @@ def catch_invalid_generator(
         ui = json.load(f)
     if isinstance(ui[param], dict):
         ui[param]["value"] = invalid_value
-        ui[param]["visible"] = True
         ui[param]["enabled"] = True
         ui[param]["isValue"] = True
     else:
@@ -105,6 +105,7 @@ def catch_invalid_generator(
         assertions = ["Must be", param, "shape", *(str(s) for s in shapes)]
     elif validation_type == "reqs":
         err = KeyError
+        validator_opts = {}
         assertions = ["Unsatisfied", param]
         req = pvalidations[0]
         hasval = len(req) > 1
@@ -131,7 +132,10 @@ def catch_invalid_generator(
         json.dump(ui, f, indent=4)
 
     with pytest.raises(err) as excinfo:
-        MagneticVectorParams.from_path(filepath, workspace=workspace)
+        ifile = InputFile(filepath)
+        MagneticVectorParams(
+            ifile, geoh5=workspace, validate=True, validator_opts=validator_opts
+        )
 
     for a in assertions:
         assert a in str(excinfo.value)
@@ -152,14 +156,14 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
             else:
                 ui[param]["isValue"] = True
         ui[param]["value"] = value
-        ui[param]["visible"] = True
         ui[param]["enabled"] = True
     else:
         ui[param] = value
     ui["geoh5"] = None
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
-    params = MagneticVectorParams.from_path(filepath, workspace=workspace)
+    ifile = InputFile(filepath)
+    params = MagneticVectorParams(ifile, validate=False, geoh5=workspace)
 
     try:
         value = UUID(str(value))
@@ -173,13 +177,13 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
 
 def test_params_initialize():
     for params in [
-        MagneticScalarParams(),
-        MagneticVectorParams(),
-        GravityParams(),
-        DirectCurrentParams(),
-        InducedPolarizationParams(),
-        OctreeParams(),
-        PeakFinderParams(),
+        MagneticScalarParams(validate=False),
+        MagneticVectorParams(validate=False),
+        GravityParams(validate=False),
+        DirectCurrentParams(validate=False),
+        InducedPolarizationParams(validate=False),
+        OctreeParams(validate=False),
+        PeakFinderParams(validate=False),
     ]:
         check = []
         for k, v in params.defaults.items():
@@ -188,14 +192,43 @@ def test_params_initialize():
                 check.append(getattr(params, k) == v)
         assert all(check)
 
-    params = MagneticVectorParams(u_cell_size=9999, validate=True, workspace=workspace)
+    params = MagneticVectorParams(u_cell_size=9999, validate=False, geoh5=workspace)
     assert params.u_cell_size == 9999
-    params = GravityParams(u_cell_size=9999, validate=True, workspace=workspace)
+    params = GravityParams(u_cell_size=9999, validate=False, geoh5=workspace)
     assert params.u_cell_size == 9999
-    params = OctreeParams(vertical_padding=500, validate=True, workspace=workspace)
+    params = OctreeParams(vertical_padding=500, validate=False, geoh5=workspace)
     assert params.vertical_padding == 500
-    params = PeakFinderParams(center=1000, validate=True, workspace=workspace)
+    params = PeakFinderParams(center=1000, validate=False, geoh5=workspace)
     assert params.center == 1000
+
+
+def test_input_file_construction():
+
+    params_classes = [
+        GravityParams,
+        MagneticScalarParams,
+        MagneticVectorParams,
+        DirectCurrentParams,
+        InducedPolarizationParams,
+        OctreeParams,
+        PeakFinderParams,
+    ]
+
+    for params_class in params_classes:
+        filename = "test.ui.json"
+        for forward_only in [True, False]:
+            params = params_class(forward_only=forward_only, validate=False)
+            params.write_input_file(name=filename, default=True)
+            ifile = InputFile(filename)
+            params = params_class(ifile, validate=False)
+
+            check = []
+            for k, v in params.defaults.items():
+                if " " in k:
+                    continue
+                    check.append(getattr(params, k) == v)
+
+            assert all(check)
 
 
 def test_default_input_file(tmp_path):
@@ -208,7 +241,7 @@ def test_default_input_file(tmp_path):
         InducedPolarizationParams,
     ]:
         filename = os.path.join(tmp_path, "test.ui.json")
-        params = params_class()
+        params = params_class(validate=False)
         params.write_input_file(name=filename, default=True)
         ifile = InputFile(filename)
 
@@ -221,7 +254,10 @@ def test_default_input_file(tmp_path):
         assert all(check)
 
         # check that params constructed from_path is defaulted
-        params2 = params_class.from_path(filename)
+        ifile = InputFile(filename)
+        params2 = params_class(
+            ifile, validate=True, validator_opts={"ignore_requirements": True}
+        )
         check = []
         for k, v in params2.to_dict(ui_json_format=False).items():
             if " " in k:
@@ -230,7 +266,9 @@ def test_default_input_file(tmp_path):
         assert all(check)
 
         # check that params constructed from_input_file is defaulted
-        params3 = params_class.from_input_file(ifile)
+        params3 = params_class(
+            ifile, validate=True, validator_opts={"ignore_requirements": True}
+        )
         check = []
         for k, v in params3.to_dict(ui_json_format=False).items():
             if " " in k:
@@ -243,13 +281,12 @@ def test_update(tmp_path):
     new_params = {
         "u_cell_size": 5,
     }
-    params = MagneticVectorParams()
+    params = MagneticVectorParams(validate=False)
     params.update(new_params)
     assert params.u_cell_size == 5
 
     new_params = {
         "topography_object": {
-            "default": None,
             "main": True,
             "group": "Topography",
             "label": "Object",
@@ -270,7 +307,6 @@ def test_update(tmp_path):
         "topography": {
             "association": "Vertex",
             "dataType": "Float",
-            "default": None,
             "group": "Topography",
             "main": True,
             "dependency": "forward_only",
@@ -294,19 +330,97 @@ def test_params_constructors(tmp_path):
     ui = deepcopy(MVI_defaults)
     ui["geoh5"] = wrkstr
     ifile.write_ui_json(ui)
-    params1 = MagneticVectorParams.from_path(filepath, workspace=workspace)
-    params2 = MagneticVectorParams.from_input_file(ifile, workspace=workspace)
+
+    params1 = MagneticVectorParams(
+        input_file=InputFile(filepath), validate=False, geoh5=workspace
+    )
+    params2 = MagneticVectorParams(input_file=ifile, validate=False, geoh5=workspace)
 
 
-def test_param_names():
-    assert np.all(MagneticVectorParams().param_names == list(MVI_defaults.keys()))
+def test_chunk_validation():
+
+    from geoapps.io.MagneticVector.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = MagneticVectorParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("data_object")
+        params = MagneticVectorParams(**test_dict)
+    for a in ["Missing required", "data_object"]:
+        assert a in str(excinfo.value)
+
+    from geoapps.io.MagneticScalar.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = MagneticScalarParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict["inducing_field_strength"] = None
+        params = MagneticScalarParams(**test_dict)
+    for a in ["Missing required", "inducing_field_strength"]:
+        assert a in str(excinfo.value)
+
+    from geoapps.io.Gravity.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = GravityParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("starting_model")
+        params = GravityParams(**test_dict)
+    for a in ["Missing required", "starting_model"]:
+        assert a in str(excinfo.value)
+
+    from geoapps.io.DirectCurrent.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = DirectCurrentParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("topography_object")
+        params = DirectCurrentParams(**test_dict)
+    for a in ["Missing required", "topography_object"]:
+        assert a in str(excinfo.value)
+
+    from geoapps.io.InducedPolarization.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = InducedPolarizationParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("conductivity_model")
+        params = InducedPolarizationParams(**test_dict)
+    for a in ["Missing required", "conductivity_model"]:
+        assert a in str(excinfo.value)
+
+    from geoapps.io.Octree.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = OctreeParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("objects")
+        params = OctreeParams(**test_dict)
+    for a in ["Missing required", "objects"]:
+        assert a in str(excinfo.value)
+
+    from geoapps.io.PeakFinder.constants import app_initializer
+
+    test_dict = dict(app_initializer, **{"geoh5": workspace})
+    params = PeakFinderParams(**test_dict)
+    with pytest.raises(ValueError) as excinfo:
+        test_dict.pop("data")
+        params = PeakFinderParams(**test_dict)
+    for a in ["Missing required", "data"]:
+        assert a in str(excinfo.value)
 
 
 def test_active_set():
     params = MagneticVectorParams(
-        workspace=workspace, inversion_type="magnetic vector", u_cell_size=2
+        default=False,
+        validate=False,
+        forward_only=True,
+        geoh5=workspace,
+        inversion_type="magnetic vector",
+        u_cell_size=2,
     )
-    params.active_set()
+    assert "inversion_type" in params.active_set()
+    assert "u_cell_size" in params.active_set()
 
 
 def test_validate_inversion_type(tmp_path):
@@ -314,7 +428,6 @@ def test_validate_inversion_type(tmp_path):
     newval = "magnetic scalar"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "em", "value", workspace=workspace)
-    # catch_invalid_generator(tmp_path, param, "mvi", "reqs", workspace=workspace)
 
 
 def test_validate_inducing_field_strength(tmp_path):
@@ -352,24 +465,20 @@ def test_validate_topography(tmp_path):
     newval = "{79b719bc-d996-4f52-9af0-10aa9c7bb941}"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, True, "type", workspace=workspace)
-    catch_invalid_generator(tmp_path, param, "lsdkfj", "uuid", workspace=workspace)
-    catch_invalid_generator(
-        tmp_path, param, "", "uuid", workspace=workspace, parent="topography_object"
-    )
 
 
 def test_validate_data_object(tmp_path):
     param = "data_object"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, 2, "type", workspace=workspace)
 
 
 def test_validate_tmi_channel(tmp_path):
     param = "tmi_channel"
     newval = str(uuid4())
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, 4, "type", workspace=workspace)
 
 
 def test_validate_tmi_uncertainty(tmp_path):
@@ -458,14 +567,6 @@ def test_validate_receivers_offset_z(tmp_path):
     catch_invalid_generator(tmp_path, param, "test", "type", workspace=workspace)
 
 
-def test_validate_gps_receivers_offset(tmp_path):
-    param = "gps_receivers_offset"
-    newval = str(uuid4())
-    invalidval = {}
-    param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, invalidval, "type", workspace=workspace)
-
-
 def test_validate_ignore_values(tmp_path):
     param = "ignore_values"
     newval = "12345"
@@ -489,7 +590,7 @@ def test_validate_detrend_order(tmp_path):
 
 def test_validate_detrend_type(tmp_path):
     param = "detrend_type"
-    newval = "corners"
+    newval = "perimeter"
     param_test_generator(tmp_path, param, newval, workspace=workspace)
     catch_invalid_generator(tmp_path, param, "sdf", "value", workspace=workspace)
 
@@ -813,7 +914,7 @@ def test_validate_workspace(tmp_path):
     param = "workspace"
     newval = "../assets/something.geoh5py"
     # param_test_generator(tmp_path, param, newval)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, 4, "type", workspace=workspace)
 
 
 def test_validate_out_group(tmp_path):
@@ -827,7 +928,1386 @@ def test_validate_no_data_value(tmp_path):
     param = "no_data_value"
     newval = 5
     param_test_generator(tmp_path, param, newval, workspace=workspace)
-    catch_invalid_generator(tmp_path, param, {}, "type", workspace=workspace)
+    catch_invalid_generator(tmp_path, param, "lskjdf", "type", workspace=workspace)
+
+
+def test_gravity_inversion_type():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.inversion_type = "gravity"
+    with pytest.raises(ValueError) as excinfo:
+        params.inversion_type = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["inversion_type", "alskdj", "gravity"]]
+    )
+
+
+def test_gz_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gz_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gz_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_gz_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gz_channel = str(uuid4())
+    params.gz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gz_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gz_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_gz_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gz_uncertainty = str(uuid4())
+    params.gz_uncertainty = uuid4()
+    params.gz_uncertainty = 4
+    params.gz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gz_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "gz_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_guv_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.guv_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.guv_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["guv_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_guv_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.guv_channel = str(uuid4())
+    params.guv_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.guv_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["guv_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_guv_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.guv_uncertainty = str(uuid4())
+    params.guv_uncertainty = uuid4()
+    params.guv_uncertainty = 4
+    params.guv_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.guv_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "guv_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_gxy_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gxy_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gxy_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gxy_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_gxy_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gxy_channel = str(uuid4())
+    params.gxy_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gxy_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gxy_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_gxy_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gxy_uncertainty = str(uuid4())
+    params.gxy_uncertainty = uuid4()
+    params.gxy_uncertainty = 4
+    params.gxy_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gxy_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "gxy_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_gxx_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gxx_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gxx_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gxx_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_gxx_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gxx_channel = str(uuid4())
+    params.gxx_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gxx_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gxx_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_gxx_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gxx_uncertainty = str(uuid4())
+    params.gxx_uncertainty = uuid4()
+    params.gxx_uncertainty = 4
+    params.gxx_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gxx_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "gxx_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_gyy_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gyy_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gyy_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gyy_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_gyy_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gyy_channel = str(uuid4())
+    params.gyy_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gyy_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gyy_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_gyy_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gyy_uncertainty = str(uuid4())
+    params.gyy_uncertainty = uuid4()
+    params.gyy_uncertainty = 4
+    params.gyy_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gyy_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "gyy_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_gzz_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gzz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gzz_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gzz_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_gzz_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gzz_channel = str(uuid4())
+    params.gzz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gzz_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gzz_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_gzz_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gzz_uncertainty = str(uuid4())
+    params.gzz_uncertainty = uuid4()
+    params.gzz_uncertainty = 4
+    params.gzz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gzz_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "gzz_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_gxz_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gxz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gxz_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gxz_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_gxz_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gxz_channel = str(uuid4())
+    params.gxz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gxz_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gxz_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_gxz_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gxz_uncertainty = str(uuid4())
+    params.gxz_uncertainty = uuid4()
+    params.gxz_uncertainty = 4
+    params.gxz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gxz_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "gxz_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_gyz_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gyz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gyz_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gyz_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_gyz_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gyz_channel = str(uuid4())
+    params.gyz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gyz_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gyz_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_gyz_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gyz_uncertainty = str(uuid4())
+    params.gyz_uncertainty = uuid4()
+    params.gyz_uncertainty = 4
+    params.gyz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gyz_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "gyz_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_gx_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gx_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gx_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gx_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_gx_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gx_channel = str(uuid4())
+    params.gx_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gx_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gx_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_gx_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gx_uncertainty = str(uuid4())
+    params.gx_uncertainty = uuid4()
+    params.gx_uncertainty = 4
+    params.gx_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gx_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "gx_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_gy_channel_bool():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gy_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.gy_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gy_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_gy_channel():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gy_channel = str(uuid4())
+    params.gy_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.gy_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["gy_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_gy_uncertainty():
+    params = GravityParams(validate=True, validator_opts={"ignore_requirements": True})
+    params.gy_uncertainty = str(uuid4())
+    params.gy_uncertainty = uuid4()
+    params.gy_uncertainty = 4
+    params.gy_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.gy_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "gy_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_magnetic_scalar_inversion_type():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.inversion_type = "magnetic scalar"
+    with pytest.raises(ValueError) as excinfo:
+        params.inversion_type = "alskdj"
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["inversion_type", "alskdj", "magnetic scalar"]
+        ]
+    )
+
+
+def test_inducing_field_strength():
+    params = MagneticScalarParams(validate=False)
+    params.inducing_field_strength = 1.0
+    params.inducing_field_strength = 1
+
+    with pytest.raises(TypeError) as excinfo:
+        params.inducing_field_strength = "alskdj"
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["inducing_field_strength", "type", "str", "float"]
+        ]
+    )
+
+
+def test_inducing_field_inclination():
+    params = MagneticScalarParams(validate=False)
+    params.inducing_field_inclination = 1.0
+    params.inducing_field_inclination = 1
+
+    with pytest.raises(TypeError) as excinfo:
+        params.inducing_field_inclination = "alskdj"
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["inducing_field_inclination", "type", "str", "float"]
+        ]
+    )
+
+
+def test_inducing_field_declination():
+    params = MagneticScalarParams(validate=False)
+    params.inducing_field_declination = 1.0
+    params.inducing_field_declination = 1
+
+    with pytest.raises(TypeError) as excinfo:
+        params.inducing_field_declination = "alskdj"
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["inducing_field_declination", "type", "str", "float"]
+        ]
+    )
+
+
+def test_tmi_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.tmi_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.tmi_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["tmi_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_tmi_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.tmi_channel = str(uuid4())
+    params.tmi_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.tmi_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["tmi_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_tmi_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.tmi_uncertainty = str(uuid4())
+    params.tmi_uncertainty = uuid4()
+    params.tmi_uncertainty = 4
+    params.tmi_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.tmi_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "tmi_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_bxx_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bxx_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.bxx_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bxx_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_bxx_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bxx_channel = str(uuid4())
+    params.bxx_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.bxx_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bxx_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_bxx_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bxx_uncertainty = str(uuid4())
+    params.bxx_uncertainty = uuid4()
+    params.bxx_uncertainty = 4
+    params.bxx_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.bxx_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "bxx_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_bxy_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bxy_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.bxy_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bxy_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_bxy_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bxy_channel = str(uuid4())
+    params.bxy_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.bxy_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bxy_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_bxy_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bxy_uncertainty = str(uuid4())
+    params.bxy_uncertainty = uuid4()
+    params.bxy_uncertainty = 4
+    params.bxy_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.bxy_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "bxy_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_bxz_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bxz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.bxz_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bxz_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_bxz_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bxz_channel = str(uuid4())
+    params.bxz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.bxz_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bxz_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_bxz_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bxz_uncertainty = str(uuid4())
+    params.bxz_uncertainty = uuid4()
+    params.bxz_uncertainty = 4
+    params.bxz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.bxz_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "bxz_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_byy_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.byy_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.byy_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["byy_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_byy_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.byy_channel = str(uuid4())
+    params.byy_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.byy_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["byy_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_byy_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.byy_uncertainty = str(uuid4())
+    params.byy_uncertainty = uuid4()
+    params.byy_uncertainty = 4
+    params.byy_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.byy_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "byy_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_byz_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.byz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.byz_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["byz_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_byz_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.byz_channel = str(uuid4())
+    params.byz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.byz_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["byz_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_byz_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.byz_uncertainty = str(uuid4())
+    params.byz_uncertainty = uuid4()
+    params.byz_uncertainty = 4
+    params.byz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.byz_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "byz_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_bzz_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bzz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.bzz_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bzz_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_bzz_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bzz_channel = str(uuid4())
+    params.bzz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.bzz_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bzz_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_bzz_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bzz_uncertainty = str(uuid4())
+    params.bzz_uncertainty = uuid4()
+    params.bzz_uncertainty = 4
+    params.bzz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.bzz_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "bzz_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_bx_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bx_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.bx_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bx_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_bx_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bx_channel = str(uuid4())
+    params.bx_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.bx_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bx_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_bx_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bx_uncertainty = str(uuid4())
+    params.bx_uncertainty = uuid4()
+    params.bx_uncertainty = 4
+    params.bx_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.bx_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "bx_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_by_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.by_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.by_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["by_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_by_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.by_channel = str(uuid4())
+    params.by_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.by_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["by_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_by_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.by_uncertainty = str(uuid4())
+    params.by_uncertainty = uuid4()
+    params.by_uncertainty = 4
+    params.by_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.by_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "by_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_bz_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bz_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.bz_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bz_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_bz_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bz_channel = str(uuid4())
+    params.bz_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.bz_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["bz_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_bz_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.bz_uncertainty = str(uuid4())
+    params.bz_uncertainty = uuid4()
+    params.bz_uncertainty = 4
+    params.bz_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.bz_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "bz_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_tmi_channel_bool():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.tmi_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.tmi_channel_bool = "alskdj"
+
+    assert all(
+        [s in str(excinfo.value) for s in ["tmi_channel_bool", "type", "str", "bool"]]
+    )
+
+
+def test_tmi_channel():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.tmi_channel = str(uuid4())
+    params.tmi_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.tmi_channel = 4
+
+    assert all(
+        [s in str(excinfo.value) for s in ["tmi_channel", "type", "int", "str", "UUID"]]
+    )
+
+
+def test_tmi_uncertainty():
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.tmi_uncertainty = str(uuid4())
+    params.tmi_uncertainty = uuid4()
+    params.tmi_uncertainty = 4
+    params.tmi_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.tmi_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "tmi_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_direct_current_inversion_type():
+    params = DirectCurrentParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.inversion_type = "direct current"
+    with pytest.raises(ValueError) as excinfo:
+        params.inversion_type = "alskdj"
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["inversion_type", "alskdj", "direct current"]
+        ]
+    )
+
+
+def test_direct_current_data_object():
+    params = DirectCurrentParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.data_object = uuid4()
+
+    with pytest.raises(TypeError) as excinfo:
+        params.data_object = 4
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["data_object", "type", "int", "UUID", "PotentialElectrode"]
+        ]
+    )
+
+
+def test_potential_channel_bool():
+    params = DirectCurrentParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.potential_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.potential_channel_bool = "alskdj"
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["potential_channel_bool", "type", "str", "bool"]
+        ]
+    )
+
+
+def test_potential_channel():
+    params = DirectCurrentParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.potential_channel = str(uuid4())
+    params.potential_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.potential_channel = 4
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["potential_channel", "type", "int", "str", "UUID"]
+        ]
+    )
+
+
+def test_potential_uncertainty():
+    params = DirectCurrentParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.potential_uncertainty = str(uuid4())
+    params.potential_uncertainty = uuid4()
+    params.potential_uncertainty = 4
+    params.potential_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.potential_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "potential_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def test_induced_polarization_inversion_type():
+    params = InducedPolarizationParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.inversion_type = "induced polarization"
+    with pytest.raises(ValueError) as excinfo:
+        params.inversion_type = "alskdj"
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["inversion_type", "alskdj", "induced polarization"]
+        ]
+    )
+
+
+def test_direct_current_data_object():
+    params = InducedPolarizationParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.data_object = uuid4()
+
+    with pytest.raises(TypeError) as excinfo:
+        params.data_object = 4
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["data_object", "type", "int", "UUID", "PotentialElectrode"]
+        ]
+    )
+
+
+def test_chargeability_channel_bool():
+    params = InducedPolarizationParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.chargeability_channel_bool = True
+    with pytest.raises(TypeError) as excinfo:
+        params.chargeability_channel_bool = "alskdj"
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["chargeability_channel_bool", "type", "str", "bool"]
+        ]
+    )
+
+
+def test_chargeability_channel():
+    params = InducedPolarizationParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.chargeability_channel = str(uuid4())
+    params.chargeability_channel = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.chargeability_channel = 4
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["chargeability_channel", "type", "int", "str", "UUID"]
+        ]
+    )
+
+
+def test_chargeability_uncertainty():
+    params = InducedPolarizationParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.chargeability_uncertainty = str(uuid4())
+    params.chargeability_uncertainty = uuid4()
+    params.chargeability_uncertainty = 4
+    params.chargeability_uncertainty = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.chargeability_uncertainty = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "chargeability_uncertainty",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
+
+
+def conductivity_model_object():
+    params = InducedPolarizationParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.conductivity_model_object = str(uuid4())
+    params.conductivity_model_object = uuid4()
+    with pytest.raises(TypeError) as excinfo:
+        params.conductivity_model_object = 4
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in ["conductivity_model_object", "type", "int", "str", "UUID"]
+        ]
+    )
+
+
+def test_conductivity_model():
+    params = InducedPolarizationParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
+    params.conductivity_model = str(uuid4())
+    params.conductivity_model = uuid4()
+    params.conductivity_model = 4
+    params.conductivity_model = 4.0
+    with pytest.raises(TypeError) as excinfo:
+        params.conductivity_model = workspace
+
+    assert all(
+        [
+            s in str(excinfo.value)
+            for s in [
+                "conductivity_model",
+                "type",
+                "Workspace",
+                "str",
+                "int",
+                "float",
+                "UUID",
+            ]
+        ]
+    )
 
 
 def test_isValue(tmp_path):
@@ -838,7 +2318,7 @@ def test_isValue(tmp_path):
 
     mesh = workspace.get_entity("O2O_Interp_25m")[0]
 
-    params = MagneticVectorParams.from_input_file(ifile, workspace)
+    params = MagneticVectorParams(input_file=ifile, validate=False, workspace=workspace)
     params.starting_model_object = mesh.uid
     params.starting_model = 0.0
 
