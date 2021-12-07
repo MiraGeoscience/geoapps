@@ -39,12 +39,12 @@ jobs:
     - name: Add comment
       if: ${{ steps.find_jira_key.outputs.issue }}
       run: >
-        jq -nc '{
-        "body":
-        "**${{ steps.find_jira_key.outputs.issue }} - ${{ steps.get_jira_summary.outputs.summary }}** \n
-        ${{ github.event.pull_request.body }}"
-        }' |
-        curl -sS -X POST -d @-
+        jq
+        --arg ISSUE_ID "${{ steps.find_jira_key.outputs.issue }}"
+        --arg ISSUE_SUMMARY "${{ steps.get_jira_summary.outputs.summary }}"
+        --arg PR_BODY "${{ github.event.pull_request.body }}"
+        -nc '{"body": "**$ISSUE_ID - $ISSUE_SUMMARY**\n$PR_BODY"}'
+        | curl -sS -X POST -d @-
         -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}"
         -H "Content-Type: application/json"
         "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}"
