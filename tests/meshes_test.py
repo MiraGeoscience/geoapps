@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from copy import deepcopy
+
 import numpy as np
 import pytest
 from discretize import TreeMesh
@@ -25,7 +27,7 @@ workspace = Workspace("./FlinFlon.geoh5")
 
 def setup_params(tmp):
     geotest = Geoh5Tester(
-        workspace, tmp, "test.geoh5", default_ui_json, MagneticVectorParams
+        workspace, tmp, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
     )
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
@@ -58,7 +60,9 @@ def test_collect_mesh_params(tmp_path):
     inversion_topography = InversionTopography(ws, params, inversion_window.window)
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     octree_params = inversion_mesh.collect_mesh_params(params)
-    assert "Refinement A" in octree_params.free_params_dict.keys()
+    print(octree_params._free_param_dict)
+    assert "refinement a" in octree_params._free_param_dict.keys()
+    assert "refinement b" in octree_params._free_param_dict.keys()
     with pytest.raises(ValueError) as excinfo:
         params.u_cell_size = None
         octree_params = inversion_mesh.collect_mesh_params(params)

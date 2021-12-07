@@ -7,6 +7,7 @@
 
 import sys
 import uuid
+from copy import deepcopy
 from os import path
 from typing import Optional
 
@@ -46,6 +47,7 @@ from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
 from geoapps.utils.utils import LineDataDerivatives, hex_to_rgb, running_mean
 
+from ..io import InputFile
 from ..io.PeakFinder import PeakFinderParams
 from ..io.PeakFinder.constants import app_initializer, default_ui_json
 
@@ -115,7 +117,7 @@ class PeakFinder(ObjectDataSelection):
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
-            self.params = self._param_class.from_path(ui_json)
+            self.params = self._param_class(InputFile(ui_json))
         else:
             if "h5file" in app_initializer.keys():
                 app_initializer["geoh5"] = app_initializer.pop("h5file")
@@ -218,9 +220,9 @@ class PeakFinder(ObjectDataSelection):
 
         obj_list = self.workspace.get_entity(self.objects.value)
 
-        if any(obj_list) and any(self.params.free_params_dict):
+        if any(obj_list) and any(self.params._free_param_dict):
             self._channel_groups = groups_from_params_dict(
-                obj_list[0], self.params.free_params_dict
+                obj_list[0], self.params._free_param_dict
             )
 
         group_list = []
@@ -654,9 +656,6 @@ class PeakFinder(ObjectDataSelection):
     def workspace(self, workspace):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
-        self.params.input_file.filepath = path.join(
-            path.dirname(self._h5file), self.ga_group_name.value + ".ui.json"
-        )
         self.update_objects_list()
         self.lines.workspace = workspace
 
@@ -1345,22 +1344,14 @@ class PeakFinder(ObjectDataSelection):
 
         self.params.line_field = self.lines.data.value
 
-        self.params._free_params_dict = {}
-        ui_json = default_ui_json.copy()
+        self.params._free_param_dict = {}
+        ui_json = deepcopy(default_ui_json)
         for group, values in self.channel_groups.items():
-            self.params.free_params_dict[group] = {
+            self.params._free_param_dict[group] = {
                 "data": values["data"],
                 "color": values["color"],
             }
-            ui_json[f"Group {group} Data"] = default_ui_json[f"Template Data"].copy()
-            ui_json[f"Group {group} Data"]["group"] = group
-            ui_json[f"Group {group} Color"] = default_ui_json[f"Template Color"].copy()
-            ui_json[f"Group {group} Color"]["group"] = group
 
-        del ui_json[f"Template Data"]
-        del ui_json[f"Template Color"]
-
-        self.params.param_names = list(ui_json.keys())
         self.params.group_auto = False
         self.params.write_input_file(
             ui_json=ui_json,
@@ -1413,7 +1404,7 @@ class PeakFinder(ObjectDataSelection):
             )
         else:
 
-            channel_groups = groups_from_params_dict(survey, params.free_params_dict)
+            channel_groups = groups_from_params_dict(survey, params._free_param_dict)
 
         active_channels = {}
         for group in channel_groups.values():
@@ -2033,5 +2024,5 @@ def groups_from_params_dict(entity: Entity, params_dict: dict):
 
 
 if __name__ == "__main__":
-    params = PeakFinderParams.from_path(sys.argv[1])
+    params = PeakFinderParams(InputFile(sys.argv[1]))
     PeakFinder.run(params)

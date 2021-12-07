@@ -33,6 +33,7 @@ class ObjectDataSelection(BaseApplication):
     _select_multiple = False
     _object_types = ()
     _exclusion_types = ()
+    _add_xyz = True
     _find_label = []
 
     def __init__(self, **kwargs):
@@ -41,9 +42,9 @@ class ObjectDataSelection(BaseApplication):
         super().__init__(**kwargs)
 
     @property
-    def add_groups(self):
+    def add_groups(self) -> bool:
         """
-        bool: Add data groups to the list of data choices
+        Add data groups to the list of data choices
         """
         return self._add_groups
 
@@ -51,6 +52,18 @@ class ObjectDataSelection(BaseApplication):
     def add_groups(self, value):
         assert isinstance(value, (bool, str)), "add_groups must be of type bool"
         self._add_groups = value
+
+    @property
+    def add_xyz(self) -> bool:
+        """
+        Add cell or vertices XYZ coordinates in data list
+        """
+        return self._add_xyz
+
+    @add_xyz.setter
+    def add_xyz(self, value):
+        assert isinstance(value, (bool, str)), "add_xyz must be of type bool"
+        self._add_xyz = value
 
     @property
     def data(self) -> Dropdown | SelectMultiple:
@@ -290,7 +303,8 @@ class ObjectDataSelection(BaseApplication):
                     if "visual parameter" not in name.lower()
                 ]
 
-                options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
+                if self.add_xyz:
+                    options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
 
             value = self.data.value
             self.data.options = options
@@ -361,6 +375,7 @@ class LineOptions(ObjectDataSelection):
 
     defaults = {"find_label": "line"}
     _multiple_lines = None
+    _add_xyz = False
 
     def __init__(self, **kwargs):
 

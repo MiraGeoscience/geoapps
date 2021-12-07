@@ -16,6 +16,10 @@ from geoapps.drivers.induced_polarization_inversion import InducedPolarizationPa
 from geoapps.drivers.magnetic_vector_inversion import MagneticVectorParams
 from geoapps.inversion.dcip_inversion_app import InversionApp as DCInversionApp
 from geoapps.inversion.pf_inversion_app import InversionApp as MagInversionApp
+from geoapps.io import InputFile
+
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 project = "./FlinFlon.geoh5"
 
@@ -50,6 +54,14 @@ def test_mag_inversion(tmp_path):
     app = MagInversionApp(h5file=project, plot_result=False)
     app.geoh5 = new_workspace
 
+    assert (
+        len(app._lower_bound_group.objects.options) == 2
+    ), "Lower bound group did not reset properly on workspace change."
+
+    assert (
+        len(app._upper_bound_group.objects.options) == 2
+    ), "Upper bound group did not reset properly on workspace change."
+
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):
             getattr(app, param).value = value
@@ -57,7 +69,8 @@ def test_mag_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write.click()
-    params_reload = MagneticVectorParams.from_path(app.params.input_file.filepath)
+    ifile = InputFile(app.params.input_file.filepath)
+    params_reload = MagneticVectorParams(ifile)
     objs = params_reload.workspace.list_entities_name
     check_objs = [
         new_obj.uid,
@@ -106,7 +119,8 @@ def test_dc_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write.click()
-    params_reload = DirectCurrentParams.from_path(app.params.input_file.filepath)
+    ifile = InputFile(app.params.input_file.filepath)
+    params_reload = DirectCurrentParams(ifile)
 
     for param, value in changes.items():
         assert (
@@ -154,7 +168,8 @@ def test_ip_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write.click()
-    params_reload = InducedPolarizationParams.from_path(app.params.input_file.filepath)
+    ifile = InputFile(app.params.input_file.filepath)
+    params_reload = InducedPolarizationParams(ifile)
 
     for param, value in changes.items():
         if param not in side_effects.keys():

@@ -211,7 +211,6 @@ class InversionDriver:
         self.start_inversion_message()
         mrec = self.inversion.run(self.starting_model)
         dpred = self.collect_predicted_data(self.global_misfit, mrec)
-        self.save_residuals(self.inversion_data.entity, dpred)
         self.finish_inversion_message(dpred)
 
     def start_inversion_message(self):
@@ -242,25 +241,6 @@ class InversionDriver:
             dpred = dpred.reshape(-1, len(self.survey.components))
         sorting = np.argsort(np.hstack(self.sorting))
         return dpred[sorting].ravel()
-
-    def save_residuals(self, obj, dpred):
-        residuals = self.survey.dobs - dpred
-        residuals[self.survey.dobs == self.survey.dummy] = np.nan
-
-        for ii, component in enumerate(self.data.keys()):
-            obj.add_data(
-                {
-                    "Residuals_"
-                    + component: {"values": residuals[ii :: len(self.data.keys())]},
-                    "Normalized Residuals_"
-                    + component: {
-                        "values": (
-                            residuals[ii :: len(self.data.keys())]
-                            / self.survey.std[ii :: len(self.data.keys())]
-                        )
-                    },
-                }
-            )
 
     def finish_inversion_message(self, dpred):
         print(

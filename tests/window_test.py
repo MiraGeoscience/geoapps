@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from copy import deepcopy
+
 import numpy as np
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
@@ -23,7 +25,7 @@ def test_initialize(tmp_path):
         workspace,
         tmp_path,
         "test.geoh5",
-        ui=default_ui_json,
+        ui=deepcopy(default_ui_json),
         params_class=GravityParams,
     )
 

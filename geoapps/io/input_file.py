@@ -56,9 +56,11 @@ class InputFile:
         validator: InputValidator = None,
         workspace: Workspace = None,
     ):
+        self.workpath = os.path.abspath(".")
         self.filepath = filepath
         self.validator = validator
         self.workspace = workspace
+        self.ui: dict[str, Any] = {}
         self.data: dict[str, Any] = {}
         self.associations: dict[str | UUID, str | UUID] = {}
         self.is_loaded: bool = False
@@ -71,35 +73,22 @@ class InputFile:
         if self.filepath is not None:
             with open(self.filepath) as f:
                 data = json.load(f)
-                self.load(data, self.validator)
+                self.load(data)
 
     @classmethod
-    def from_dict(cls, dict: dict[str, Any], validator: InputValidator = None):
+    def from_dict(cls, dict: dict[str, Any]):
         ifile = cls()
-        ifile.load(dict, validator)
+        ifile.load(dict)
+        ifile.workpath = os.path.abspath(".")
         return ifile
 
-    def load(self, input_dict: dict[str, Any], validator: InputValidator = None):
+    def load(self, input_dict: dict[str, Any]):
         """Load data from dictionary and validate."""
 
         input_dict = self._numify(input_dict)
-        input_dict = self._demote(input_dict)
-        self._set_associations(input_dict)
-        self.input_dict = input_dict
-
-        self.data = self._ui_2_py(input_dict)
-
-        for p in ["geoh5", "workspace"]:
-            if p in self.data.keys() and self.workspace is None:
-                if self.data[p] is not None:
-                    if validator is not None:
-                        validator.validate(p, self.data[p], validator.validations[p])
-                    self.workspace = Workspace(self.data[p])
-
-        if validator is not None:
-            validator.workspace = self.workspace
-            validator.validate_input(self)
-
+        self.ui = input_dict
+        self.associations = InputFile.get_associations(input_dict)
+        self.data = InputFile.flatten(input_dict)
         self.is_formatted = True
         self.is_loaded = True
 
@@ -192,7 +181,6 @@ class InputFile:
 
                     out[k][field] = v
                     if v is not None:
-                        out[k]["visible"] = True
                         out[k]["enabled"] = True
                 else:
                     out[k] = v
@@ -209,37 +197,6 @@ class InputFile:
 
         with open(out_file, "w") as f:
             json.dump(self._stringify(self._demote(out), none_map), f, indent=4)
-
-    def _ui_2_py(self, ui_dict: dict[str, Any]) -> dict[str, Any]:
-        """
-        Flatten ui.json format to simple key/value structure.
-
-        Parameters
-        ----------
-
-        ui_dict :
-            dictionary containing all keys, values, fields of a ui.json formatted file
-        """
-
-        data = {}
-        for k, v in ui_dict.items():
-            if isinstance(v, dict):
-                field = "value"
-                if "isValue" in v.keys():
-                    field = "value" if v["isValue"] else "property"
-                if "enabled" in v.keys():
-                    if not v["enabled"]:
-                        data[k] = None
-                        continue
-                if "visible" in v.keys():
-                    if not v["visible"]:
-                        data[k] = None
-                        continue
-                data[k] = v[field]
-            else:
-                data[k] = v
-
-        return data
 
     def _stringify(
         self, d: dict[str, Any], none_map: dict[str, Any] = {}
@@ -280,8 +237,15 @@ class InputFile:
                 if v["value"] is None:
                     if k in none_map.keys():
                         v["value"] = none_map[k]
-                        v["optional"] = True
-                        v["enabled"] = False
+                        if "group" in v.keys():
+                            if InputFile.group_optional(d, v["group"]):
+                                v["enabled"] = False
+                            else:
+                                v["optional"] = True
+                                v["enabled"] = False
+                        else:
+                            v["optional"] = True
+                            v["enabled"] = False
                     elif "meshType" in v.keys():
                         v["value"] = ""
                     elif "isValue" in v.keys():
@@ -326,8 +290,12 @@ class InputFile:
         s2i = (
             lambda k, v: float(v) if v in ["inf", "-inf"] else v
         )  # map "inf" to np.inf
+
+        s2u = (
+            lambda k, v: UUID(str(v)) if InputFile.is_uuid(v) else v
+        )  # map '{...}' to UUID('...')
         for k, v in d.items():
-            mappers = [s2n, s2i] if k == "ignore_values" else [s2l, s2n, s2i]
+            mappers = [s2n, s2i, s2u] if k == "ignore_values" else [s2l, s2n, s2i, s2u]
             v = self._dict_mapper(k, v, mappers)
             d[k] = v
 
@@ -370,9 +338,10 @@ class InputFile:
                 val = f(key, val)
             return val
 
-    def _set_associations(self, d: dict[str, Any]) -> None:
+    @staticmethod
+    def get_associations(d: dict[str, Any]) -> None:
         """
-        Set parent/child associations for ui.json fields.
+        get parent/child associations for ui.json fields.
 
         Parameters
         ----------
@@ -380,24 +349,135 @@ class InputFile:
         d :
             Dictionary containing ui.json keys/values/fields.
         """
+        associations = {}
         for k, v in d.items():
             if isinstance(v, dict):
-                if "isValue" in v.keys():
-                    field = "value" if v["isValue"] else "property"
-                else:
-                    field = "value"
+                field = InputFile.field(v)
                 if "parent" in v.keys():
                     if v["parent"] is not None:
                         try:
-                            self.associations[k] = v["parent"]
+                            associations[k] = v["parent"]
                             try:
                                 child_key = UUID(v[field])
                             except (ValueError, TypeError):
                                 child_key = v[field]
                             parent_uuid = UUID(d[v["parent"]]["value"])
-                            self.associations[child_key] = parent_uuid
+                            associations[child_key] = parent_uuid
                         except:
                             continue
-
             else:
                 continue
+
+        return associations
+
+    @staticmethod
+    def flatten(d: dict[str, Any]) -> dict[str, Any]:
+        """Flattens ui.json format to simple key/value pair."""
+        data = {}
+        for k, v in d.items():
+            if isinstance(v, dict):
+                if InputFile.is_uijson({k: v}):
+                    field = "value" if InputFile.truth(d, k, "isValue") else "property"
+                    if not InputFile.truth(d, k, "enabled"):
+                        data[k] = None
+                    else:
+                        data[k] = v[field]
+            else:
+                data[k] = v
+
+        return data
+
+    @staticmethod
+    def collect(d: dict[str, Any], field: str, value: Any = None) -> dict[str, Any]:
+        """Collects ui parameters with common field and optional value."""
+        data = {}
+        for k, v in d.items():
+            if isinstance(v, dict):
+                if field in v.keys():
+                    if value is None:
+                        data[k] = v
+                    else:
+                        if v[field] == value:
+                            data[k] = v
+        return data if data else None
+
+    @staticmethod
+    def group(d: dict[str, Any], name: str) -> dict[str, Any]:
+        """Retrieves ui elements with common group name."""
+        return InputFile.collect(d, "group", name)
+
+    @staticmethod
+    def group_optional(d: dict[str, Any], name: str) -> bool:
+        """Returns groupOptional bool for group name."""
+        group = InputFile.group(d, name)
+        param = InputFile.collect(group, "groupOptional")
+        return list(param.values())[0]["groupOptional"] if param is not None else False
+
+    @staticmethod
+    def group_enabled(d: dict[str, Any], name: str) -> bool:
+        """Returns enabled status of member of group containing groupOptional:True field."""
+        group = InputFile.group(d, name)
+        if InputFile.group_optional(group, name):
+            param = InputFile.collect(group, "groupOptional")
+            return list(param.values())[0]["enabled"]
+        else:
+            return True
+
+    @staticmethod
+    def truth(d: dict[str, Any], name: str, field: str) -> bool:
+        default_states = {
+            "enabled": True,
+            "optional": False,
+            "groupOptional": False,
+            "main": False,
+            "isValue": True,
+        }
+        if field in d[name].keys():
+            return d[name][field]
+        elif field in default_states.keys():
+            return default_states[field]
+        else:
+            raise ValueError(
+                f"Field: {field} was not provided in ui.json and does not have a default state."
+            )
+
+    @staticmethod
+    def is_uijson(d):
+        uijson_keys = [
+            "title",
+            "monitoring_directory",
+            "run_command",
+            "conda_environment",
+            "geoh5",
+            "workspace_geoh5",
+        ]
+        is_uijson = True
+        if len(d.keys()) > 1:
+            for k in uijson_keys:
+                if k not in d.keys():
+                    is_uijson = False
+
+        for k, v in d.items():
+            if isinstance(v, dict):
+                for name in ["label", "value"]:
+                    if name not in v.keys():
+                        is_uijson = False
+
+        return is_uijson
+
+    @staticmethod
+    def is_uuid(s):
+        try:
+            UUID(str(s))
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def field(d: dict[str, Any]) -> str:
+        """Returns field in ui_json block that contains data ('value' or 'property')."""
+
+        if "isValue" in d.keys():
+            return "value" if d["isValue"] else "property"
+        else:
+            return "value"

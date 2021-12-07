@@ -30,34 +30,24 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "tmi_channel_bool": False,
     "tmi_channel": None,
     "tmi_uncertainty": 1.0,
-    "bxx_channel_bool": False,
     "bxx_channel": None,
     "bxx_uncertainty": 1.0,
-    "bxy_channel_bool": False,
     "bxy_channel": None,
     "bxy_uncertainty": 1.0,
-    "bxz_channel_bool": False,
     "bxz_channel": None,
     "bxz_uncertainty": 1.0,
-    "byy_channel_bool": False,
     "byy_channel": None,
     "byy_uncertainty": 1.0,
-    "byz_channel_bool": False,
     "byz_channel": None,
     "byz_uncertainty": 1.0,
-    "bzz_channel_bool": False,
     "bzz_channel": None,
     "bzz_uncertainty": 1.0,
-    "bx_channel_bool": False,
     "bx_channel": None,
     "bx_uncertainty": 1.0,
-    "by_channel_bool": False,
     "by_channel": None,
     "by_uncertainty": 1.0,
-    "bz_channel_bool": False,
     "bz_channel": None,
     "bz_uncertainty": 1.0,
     "starting_model_object": None,
@@ -141,10 +131,21 @@ inversion_defaults = {
     "out_group": "VectorInversion",
     "no_data_value": None,
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "tmi_channel_bool": False,
+    "bxx_channel_bool": False,
+    "bxy_channel_bool": False,
+    "bxz_channel_bool": False,
+    "byy_channel_bool": False,
+    "byz_channel_bool": False,
+    "bzz_channel_bool": False,
+    "bx_channel_bool": False,
+    "by_channel_bool": False,
+    "bz_channel_bool": False,
 }
 
 forward_defaults = {
@@ -205,11 +206,47 @@ forward_defaults = {
     "workspace": None,
     "out_group": "MVIForward",
     "monitoring_directory": None,
+    "workspace_geoh5": None,
     "run_command": "geoapps.drivers.magnetic_vector_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
 }
+
+inversion_ui_json = {
+    "tmi_channel_bool": False,
+    "bxx_channel_bool": False,
+    "bxy_channel_bool": False,
+    "bxz_channel_bool": False,
+    "byy_channel_bool": False,
+    "byz_channel_bool": False,
+    "bzz_channel_bool": False,
+    "bx_channel_bool": False,
+    "by_channel_bool": False,
+    "bz_channel_bool": False,
+}
+
+forward_ui_json = {
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+}
+
 default_ui_json = {
     "title": "SimPEG Magnetic Vector Inversion",
     "inversion_type": "magnetic vector",
@@ -652,26 +689,17 @@ default_ui_json = {
     "out_group": {"label": "Results group name", "value": "VectorInversion"},
 }
 
-base_default_ui_json.update(default_ui_json)
-default_ui_json = base_default_ui_json.copy()
-for k, v in inversion_defaults.items():
-    if isinstance(default_ui_json[k], dict):
-        key = "value"
-        if "isValue" in default_ui_json[k].keys():
-            if default_ui_json[k]["isValue"] == False:
-                key = "property"
-        default_ui_json[k][key] = v
-        if "enabled" in default_ui_json[k].keys() and v is not None:
-            default_ui_json[k]["enabled"] = True
-    else:
-        default_ui_json[k] = v
-
-default_ui_json = {k: default_ui_json[k] for k in inversion_defaults}
+default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
 
-required_parameters = ["inversion_type"]
+required_parameters = [
+    "inversion_type",
+    "inducing_field_strength",
+    "inducing_field_inclination",
+    "inducing_field_declination",
+]
 required_parameters += base_required_parameters
 
 validations = {
@@ -781,28 +809,30 @@ validations = {
         "types": [str, UUID, int, float],
     },
     "reference_inclination_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "reference_declination_object": {
-        "types": [str],
+        "types": [str, UUID],
     },
     "reference_inclination": {
-        "types": [str, int, float],
+        "types": [str, int, float, UUID],
         "reqs": [("reference_inclination_object")],
     },
     "reference_declination": {
-        "types": [str, int, float],
+        "types": [str, int, float, UUID],
         "reqs": [("reference_declination_object")],
     },
     "out_group": {"types": [str, ContainerGroup]},
 }
-validations.update(base_validations)
+
+validations = dict(base_validations, **validations)
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "data_object": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "forward_only": False,
+    "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "tmi_channel_bool": True,
-    "tmi_channel": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
     "tmi_uncertainty": 10,
     "inducing_field_strength": 60000.0,
     "inducing_field_inclination": 79.0,
@@ -815,7 +845,6 @@ app_initializer = {
     "octree_levels_topo": [0, 0, 0, 2],
     "octree_levels_obs": [5, 5, 5, 5],
     "depth_core": 500.0,
-    "max_distance": np.inf,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
     "window_center_x": 314600.0,
@@ -828,16 +857,17 @@ app_initializer = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "upper_bound": None,
+    "starting_model": 1e-4,
     "starting_inclination": 79.0,
     "starting_declination": 11.0,
     "reference_inclination": None,
     "reference_declination": None,
     "max_iterations": 25,
-    "topography_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-    "topography": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "detrend_order": 0,
-    "detrend_type": "",
+    "detrend_type": None,
     "receivers_offset_x": 0,
     "receivers_offset_y": 0,
     "receivers_offset_z": 60,

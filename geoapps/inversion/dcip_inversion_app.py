@@ -34,6 +34,7 @@ from ipywidgets.widgets import (
     Widget,
 )
 
+from geoapps.io import InputFile
 from geoapps.io.DirectCurrent.constants import app_initializer
 from geoapps.io.DirectCurrent.params import DirectCurrentParams
 from geoapps.io.InducedPolarization.params import InducedPolarizationParams
@@ -89,10 +90,11 @@ class InversionApp(PlotSelection2D):
     def __init__(self, ui_json=None, **kwargs):
         if "plot_result" in kwargs:
             self.plot_result = kwargs["plot_result"]
+            kwargs.pop("plot_result")
 
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
-            self.params = self._param_class.from_path(ui_json)
+            self.params = self._param_class(InputFile(ui_json))
         else:
             if "h5file" in app_initializer.keys():
                 app_initializer["geoh5"] = app_initializer.pop("h5file")
@@ -125,8 +127,12 @@ class InversionApp(PlotSelection2D):
         self._chi_factor = FloatText(
             value=1, description="Target misfit", disabled=False
         )
-        self._lower_bound_group = ModelOptions("lower_bound", **self.defaults)
-        self._upper_bound_group = ModelOptions("upper_bound", **self.defaults)
+        self._lower_bound_group = ModelOptions(
+            "lower_bound", add_xyz=False, **self.defaults
+        )
+        self._upper_bound_group = ModelOptions(
+            "upper_bound", add_xyz=False, **self.defaults
+        )
         self._ignore_values = widgets.Text(
             description="Value (i.e. '<0' for no negatives)",
         )
@@ -152,20 +158,25 @@ class InversionApp(PlotSelection2D):
                 self._tile_spatial,
             ]
         )
-        self._starting_model_group = ModelOptions("starting_model", **self.defaults)
+        self._starting_model_group = ModelOptions(
+            "starting_model", add_xyz=False, **self.defaults
+        )
         self._starting_model_group.options.options = ["Constant", "Model"]
         self._conductivity_model_group = ModelOptions(
-            "conductivity_model", **self.defaults
+            "conductivity_model", add_xyz=False, **self.defaults
         )
         self._conductivity_model_group.options.options = ["Model"]
-        self._reference_model_group = ModelOptions("reference_model", **self.defaults)
+        self._reference_model_group = ModelOptions(
+            "reference_model", add_xyz=False, **self.defaults
+        )
         self._reference_model_group.options.observe(self.update_ref)
-        self._topography_group = TopographyOptions(**self.defaults)
+        self._topography_group = TopographyOptions(add_xyz=False, **self.defaults)
         self._topography_group.identifier = "topography"
         self._sensor = SensorOptions(
             objects=self._objects,
             object_types=self._object_types,
             exclusion_types=self._exclusion_types,
+            add_xyz=False,
             **self.defaults,
         )
         self._alpha_s = widgets.FloatText(
@@ -721,7 +732,9 @@ class InversionApp(PlotSelection2D):
             params["out_group"] = "ChargeabilityInversion"
             self.option_choices.options = list(self.inversion_options.keys())
 
-        self.params = self._param_class(verbose=False)
+        self.params = self._param_class(
+            validate=True, validator_opts={"ignore_requirements": True}
+        )
 
         if self.inversion_type.value in ["direct current"]:
             data_type_list = ["potential"]
@@ -1066,8 +1079,8 @@ class InversionApp(PlotSelection2D):
                 elif data["inversion_type"] == "induced polarization":
                     self._param_class = InducedPolarizationParams
 
-                self.params = getattr(self, "_param_class").from_path(
-                    self.file_browser.selected
+                self.params = getattr(self, "_param_class")(
+                    InputFile(self.file_browser.selected)
                 )
                 self.refresh.value = False
                 self.__populate__(**self.params.to_dict(ui_json_format=False))
