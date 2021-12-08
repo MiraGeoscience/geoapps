@@ -34,11 +34,14 @@ jobs:
         | echo "::set-output name=summary::$(jq -r '.fields.summary')"
     - name: Add comment
       if: ${{ steps.find_jira_key.outputs.issue_key }}
+      env:
+        ISSUE_SUMMARY: ${{ steps.get_jira_summary.outputs.summary }}
+        PR_BODY: ${{ github.event.pull_request.body }}
       run: >
         jq
         --arg ISSUE_ID "${{ steps.find_jira_key.outputs.issue_key }}"
-        --arg ISSUE_SUMMARY "$(cat <<< ${{ steps.get_jira_summary.outputs.summary }})"
-        --arg PR_BODY "$(cat <<< ${{ github.event.pull_request.body }})"
+        --arg ISSUE_SUMMARY "$(cat <<< $ISSUE_SUMMARY)"
+        --arg PR_BODY "$(cat <<< $PR_BODY)"
         -c '."body"="**" + $ISSUE_ID + " - " + $ISSUE_SUMMARY + "**\n" + $PR_BODY' <<< {}
         | curl -sS -X POST -d @-
         -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}"
