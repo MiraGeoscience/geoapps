@@ -30,6 +30,7 @@ from geoh5py.objects import (
     PotentialElectrode,
     Surface,
 )
+from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from osgeo import gdal
 from scipy.interpolate import interp1d
@@ -38,6 +39,31 @@ from shapely.geometry import LineString, mapping
 from SimPEG.electromagnetics.static.resistivity import Survey
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
+
+
+def get_locations(workspace: Workspace, object: UUID | Entity):
+    """
+    Returns locations of data object centroids or vertices.
+
+    :param workspace: Geoh5py Workspace object.
+    :param object: Object or uuid of object containing centroid or
+        vertex location data.
+
+    :return: Array shape(*, 3) of x, y, z location data
+
+    """
+
+    if isinstance(object, UUID):
+        object = workspace.get_entity(object)[0]
+
+    if hasattr(object, "centroids"):
+        locs = object.centroids
+    elif hasattr(object, "vertices"):
+        locs = object.vertices
+    else:
+        locs = None
+
+    return locs
 
 
 def find_value(labels: list, keywords: list, default=None) -> list:
