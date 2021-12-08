@@ -23,7 +23,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils.utils import weighted_average
+from geoapps.utils.utils import get_locations, weighted_average
 
 
 class DataInterpolation(ObjectDataSelection):
@@ -366,52 +366,40 @@ class DataInterpolation(ObjectDataSelection):
         else:
             self.destination_panel.children = [self.out_mode, self.new_grid_panel]
 
+    def object_base(self, object):
+        for entity in self._workspace.get_entity(object):
+            if isinstance(entity, ObjectBase):
+                return entity
+        return None
+
     def trigger_click(self, _):
 
-        for entity in self._workspace.get_entity(self.objects.value):
-            if isinstance(entity, ObjectBase):
-                object_from = entity
-
-        if hasattr(object_from, "centroids"):
-            xyz = object_from.centroids.copy()
-        elif hasattr(object_from, "vertices"):
-            xyz = object_from.vertices.copy()
-        else:
+        object_from = self.object_base(self.objects.value)
+        xyz = get_locations(self.workspace, object_from)
+        if xyz is None:
             return
 
         if len(self.data.value) == 0:
             print("No data selected")
             return
+
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
         if self.out_mode.value == "To Object":
 
-            for entity in self._workspace.get_entity(self.out_object.value):
-                if isinstance(entity, ObjectBase):
-                    self.object_out = entity
-
-            if hasattr(self.object_out, "centroids"):
-                xyz_out = self.object_out.centroids.copy()
-            elif hasattr(self.object_out, "vertices"):
-                xyz_out = self.object_out.vertices.copy()
+            self.object_out = self.object_base(self.out_object.value)
+            xyz_out = get_locations(self._workspace, self.object_out)
 
         else:
 
-            ref_in = None
-            for entity in self._workspace.get_entity(self.xy_reference.value):
-                if isinstance(entity, ObjectBase):
-                    ref_in = entity
-
-            if hasattr(ref_in, "centroids"):
-                xyz_ref = ref_in.centroids
-            elif hasattr(ref_in, "vertices"):
-                xyz_ref = ref_in.vertices
-            else:
+            ref_in = self.object_base(self.xy_reference.value)
+            xyz_ref = get_locations(self._workspace, ref_in)
+            if xyz_ref is None:
                 print(
                     "No object selected for 'Lateral Extent'. Defaults to input object."
                 )
-                xyz_ref = xyz
+                xyz_ref = xyz.copy()
 
             # Find extent of grid
             h = np.asarray(self.core_cell_size.value.split(",")).astype(float).tolist()
@@ -432,6 +420,8 @@ class DataInterpolation(ObjectDataSelection):
                 - (xyz_ref[:, 2].max() - xyz_ref[:, 2].min())
                 + h[2]
             )
+            print("depth_core", depth_core)
+            print("h", h)
             mesh = mesh_utils.mesh_builder_xyz(
                 xyz_ref,
                 h,
@@ -443,6 +433,13 @@ class DataInterpolation(ObjectDataSelection):
                 depth_core=depth_core,
                 expansion_factor=self.expansion_fact.value,
             )
+            print("origin", mesh.x0)
+            print("sum(mesh.hz)", mesh.hz.sum())
+            print("cc", mesh.vectorNz)
+            print(
+                "z_cell_delimiters", -(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1])
+            )
+            print("xyz_ref[:, 2].max()", xyz_ref[:, 2].max())
             self.object_out = BlockModel.create(
                 self.workspace,
                 origin=[mesh.x0[0], mesh.x0[1], xyz_ref[:, 2].max()],
@@ -451,6 +448,7 @@ class DataInterpolation(ObjectDataSelection):
                 z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
                 name=self.new_grid.value,
             )
+            print("origin", self.object_out.origin)
 
             # Try to recenter on nearest
             # Find nearest cells
