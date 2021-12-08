@@ -91,7 +91,7 @@ class DataInterpolation(ObjectDataSelection):
         )
         self._out_object = Dropdown()
         self._padding_distance = Text(
-            description="Pad Distance (W, E, N, S, D, U)",
+            description="Pad Distance (W, E, S, N, D, U)",
         )
         self._skew_angle = FloatText(
             description="Azimuth (d.dd)",
