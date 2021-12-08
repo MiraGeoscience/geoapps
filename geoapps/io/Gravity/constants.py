@@ -9,7 +9,6 @@ from uuid import UUID
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
-from geoh5py.workspace import Workspace
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.io.Inversion.constants import (
@@ -115,7 +114,6 @@ inversion_defaults = {
     "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
-    "workspace": None,
     "max_ram": None,
     "out_group": "GravityInversion",
     "no_data_value": None,
@@ -184,7 +182,6 @@ forward_defaults = {
     "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
-    "workspace": None,
     "out_group": "GravityForward",
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -638,8 +635,7 @@ app_initializer = {
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "gz_channel_bool": True,
     "gz_channel": UUID("{6de9177a-8277-4e17-b76c-2b8b05dcf23c}"),
-    "gz_uncertainty": 1e-4,
-    "reference_model": 0.0,
+    "gz_uncertainty": 0.05,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
@@ -658,7 +654,6 @@ app_initializer = {
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
-    "upper_bound": None,
     "starting_model": 1e-4,
     "max_iterations": 25,
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
