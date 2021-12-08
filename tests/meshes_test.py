@@ -22,12 +22,12 @@ from geoapps.io.MagneticVector import MagneticVectorParams
 from geoapps.io.MagneticVector.constants import default_ui_json
 from geoapps.utils.testing import Geoh5Tester
 
-workspace = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon.geoh5")
 
 
 def setup_params(tmp):
     geotest = Geoh5Tester(
-        workspace, tmp, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
+        geoh5, tmp, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
     )
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")

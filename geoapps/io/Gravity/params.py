@@ -100,7 +100,7 @@ class GravityParams(InversionParams):
         p = "inversion_type"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._inversion_type = val
 
@@ -116,7 +116,7 @@ class GravityParams(InversionParams):
         p = "gz_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gz_channel_bool = val
 
@@ -132,7 +132,7 @@ class GravityParams(InversionParams):
         p = "gz_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gz_channel = UUID(val) if isinstance(val, str) else val
 
@@ -148,7 +148,7 @@ class GravityParams(InversionParams):
         p = "gz_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gz_uncertainty = UUID(val) if isinstance(val, str) else val
 
@@ -164,7 +164,7 @@ class GravityParams(InversionParams):
         p = "guv_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._guv_channel_bool = val
 
@@ -180,7 +180,7 @@ class GravityParams(InversionParams):
         p = "guv_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._guv_channel = UUID(val) if isinstance(val, str) else val
 
@@ -196,7 +196,7 @@ class GravityParams(InversionParams):
         p = "guv_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._guv_uncertainty = UUID(val) if isinstance(val, str) else val
 
@@ -212,7 +212,7 @@ class GravityParams(InversionParams):
         p = "gxy_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gxy_channel_bool = val
 
@@ -228,7 +228,7 @@ class GravityParams(InversionParams):
         p = "gxy_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gxy_channel = UUID(val) if isinstance(val, str) else val
 
@@ -244,7 +244,7 @@ class GravityParams(InversionParams):
         p = "gxy_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gxy_uncertainty = UUID(val) if isinstance(val, str) else val
 
@@ -260,7 +260,7 @@ class GravityParams(InversionParams):
         p = "gxx_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gxx_channel_bool = val
 
@@ -276,7 +276,7 @@ class GravityParams(InversionParams):
         p = "gxx_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gxx_channel = UUID(val) if isinstance(val, str) else val
 
@@ -292,7 +292,7 @@ class GravityParams(InversionParams):
         p = "gxx_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gxx_uncertainty = UUID(val) if isinstance(val, str) else val
 
@@ -308,7 +308,7 @@ class GravityParams(InversionParams):
         p = "gyy_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gyy_channel_bool = val
 
@@ -324,7 +324,7 @@ class GravityParams(InversionParams):
         p = "gyy_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gyy_channel = UUID(val) if isinstance(val, str) else val
 
@@ -340,7 +340,7 @@ class GravityParams(InversionParams):
         p = "gyy_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gyy_uncertainty = UUID(val) if isinstance(val, str) else val
 
@@ -356,7 +356,7 @@ class GravityParams(InversionParams):
         p = "gzz_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gzz_channel_bool = val
 
@@ -372,7 +372,7 @@ class GravityParams(InversionParams):
         p = "gzz_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gzz_channel = UUID(val) if isinstance(val, str) else val
 
@@ -388,7 +388,7 @@ class GravityParams(InversionParams):
         p = "gzz_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gzz_uncertainty = UUID(val) if isinstance(val, str) else val
 
@@ -404,7 +404,7 @@ class GravityParams(InversionParams):
         p = "gxz_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gxz_channel_bool = val
 
@@ -420,7 +420,7 @@ class GravityParams(InversionParams):
         p = "gxz_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gxz_channel = UUID(val) if isinstance(val, str) else val
 
@@ -436,7 +436,7 @@ class GravityParams(InversionParams):
         p = "gxz_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gxz_uncertainty = UUID(val) if isinstance(val, str) else val
 
@@ -452,7 +452,7 @@ class GravityParams(InversionParams):
         p = "gyz_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gyz_channel_bool = val
 
@@ -468,7 +468,7 @@ class GravityParams(InversionParams):
         p = "gyz_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gyz_channel = UUID(val) if isinstance(val, str) else val
 
@@ -484,7 +484,7 @@ class GravityParams(InversionParams):
         p = "gyz_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gyz_uncertainty = UUID(val) if isinstance(val, str) else val
 
@@ -500,7 +500,7 @@ class GravityParams(InversionParams):
         p = "gx_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gx_channel_bool = val
 
@@ -516,7 +516,7 @@ class GravityParams(InversionParams):
         p = "gx_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gx_channel = UUID(val) if isinstance(val, str) else val
 
@@ -532,7 +532,7 @@ class GravityParams(InversionParams):
         p = "gx_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gx_uncertainty = UUID(val) if isinstance(val, str) else val
 
@@ -548,7 +548,7 @@ class GravityParams(InversionParams):
         p = "gy_channel_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gy_channel_bool = val
 
@@ -564,7 +564,7 @@ class GravityParams(InversionParams):
         p = "gy_channel"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gy_channel = UUID(val) if isinstance(val, str) else val
 
@@ -580,6 +580,6 @@ class GravityParams(InversionParams):
         p = "gy_uncertainty"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gy_uncertainty = UUID(val) if isinstance(val, str) else val

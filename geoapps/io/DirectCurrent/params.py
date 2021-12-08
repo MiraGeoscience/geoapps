@@ -72,7 +72,7 @@ class DirectCurrentParams(InversionParams):
             return
         p = "potential_channel_bool"
         self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
+            p, val, self.validations[p], self.geoh5, self.associations
         )
         self._potential_channel_bool = val
 
