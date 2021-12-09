@@ -36,7 +36,6 @@
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": ""
     },
-    "potential_channel_bool": true,
     "potential_channel": {
         "association": [
             "Cell",
@@ -100,13 +99,7 @@
         "min": 1,
         "max": 1000
     },
-    "output_tile_files": {
-        "group": "Receivers location options",
-        "label": "Output tile files",
-        "visible": false,
-        "enabled": true,
-        "value": false
-    },
+    "output_tile_files": false,
     "z_from_topo": {
         "main": false,
         "group": "Receivers location options",
@@ -148,48 +141,17 @@
         "value": 0.0,
         "enabled": true
     },
-    "gps_receivers_offset": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Receivers location options",
-        "enabled": false,
-        "visible": false,
-        "isValue": false,
-        "label": "Set data offsets",
-        "parent": "data_object",
-        "property": "",
-        "value": 0.0
-    },
+    "gps_receivers_offset": "",
     "ignore_values": {
         "group": "Data pre-processing",
-        "enabled": false,
         "optional": true,
+        "enabled": false,
         "label": "Values to ignore",
         "value": ""
     },
-    "resolution": {
-        "enabled": true,
-        "visible": false,
-        "label": "resolution",
-        "value": 0.0
-    },
-    "detrend_order": {
-        "enabled": false,
-        "visible": false,
-        "label": "detrend order",
-        "value": 0,
-        "optional": true
-    },
-    "detrend_type": {
-        "enabled": false,
-        "visible": false,
-        "label": "detrend type",
-        "value": "all",
-        "optional": true
-    },
+    "resolution": "",
+    "detrend_order": "",
+    "detrend_type": "",
     "max_chunk_size": {
         "min": 0,
         "group": "Data pre-processing",
@@ -207,11 +169,11 @@
         "group": "Mesh",
         "main": true,
         "optional": true,
-        "enabled": true,
+        "enabled": false,
         "dependency": "mesh_from_params",
         "dependencyType": "disable",
         "label": "Mesh",
-        "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
+        "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
         "value": ""
     },
     "u_cell_size": {
@@ -307,31 +269,27 @@
         "enabled": false,
         "groupOptional": true,
         "label": "Window center easting",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_center_y": {
         "group": "Data window",
         "enabled": false,
         "label": "Window center northing",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_width": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window width",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_height": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window height",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_azimuth": {
         "min": -180,
@@ -339,8 +297,7 @@
         "group": "Data window",
         "enabled": false,
         "label": "Window azimuth",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "inversion_style": "voxel",
     "chi_factor": {
@@ -354,7 +311,7 @@
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
         "label": "Update sensitivity weight threshold",
-        "value": 0.0
+        "value": 30
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
@@ -400,6 +357,14 @@
         "group": "Update IRLS directive",
         "label": "Perform beta search",
         "value": false
+    },
+    "starting_chi_factor": {
+        "group": "Update IRLS directive",
+        "label": "IRLS start chi factor",
+        "optional": true,
+        "enabled": false,
+        "value": 1.0,
+        "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin."
     },
     "max_iterations": {
         "min": 0,
@@ -581,7 +546,6 @@
     },
     "upper_bound_object": {
         "group": "Regularization",
-        "visible": true,
         "label": "Upper bound object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -621,49 +585,23 @@
         "label": "Number of cpu",
         "value": 1
     },
-    "max_ram": {
-        "min": 0,
-        "group": "Compute",
-        "dependency": "parallelized",
-        "dependencyType": "enabled",
-        "optional": true,
-        "enabled": true,
-        "label": "Set RAM limit",
-        "value": 2,
-        "visible": false
-    },
-    "workspace": {
-        "visible": false,
-        "enabled": false,
-        "label": "Path to workspace",
-        "value": ""
-    },
+    "max_ram": "",
+    "workspace": "",
     "out_group": {
         "label": "Results group name",
         "value": "DirectCurrentInversion"
     },
-    "no_data_value": {
-        "default": 0,
-        "group": "Data Options",
-        "optional": true,
-        "enabled": false,
-        "visible": false,
-        "label": "No data value",
-        "value": ""
-    },
-    "monitoring_directory": {
-        "default": "",
-        "enabled": false,
-        "value": ""
-    },
+    "no_data_value": "",
+    "monitoring_directory": "",
+    "workspace_geoh5": "",
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": {
-        "default": false,
         "value": false,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",
         "main": true
     },
     "conda_environment": "geoapps",
-    "distributed_workers": ""
+    "distributed_workers": "",
+    "potential_channel_bool": true
 }
