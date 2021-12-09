@@ -313,7 +313,7 @@ class PeakFinderParams(Params):
     def width(self, val):
         self.setter_validator("width", val)
 
-    def update(self, params_dict: Dict[str, Any]):
+    def update(self, params_dict: dict[str, Any]):
         """Update parameters with dictionary contents."""
 
         # Pull out workspace data for validations and forward_only for defaults.
@@ -345,9 +345,9 @@ class PeakFinderParams(Params):
                             free_param_dict[group] = {}
 
                         free_param_dict[group][param] = value
-                        self.default_ui_json[key] = deepcopy(default_ui_json[f"Template {param.capitalize()}"])
-                            f"Template {param.capitalize()}"
-                        ]
+                        self.default_ui_json[key] = deepcopy(
+                            default_ui_json[f"Template {param.capitalize()}"]
+                        )
                         self.default_ui_json[key]["group"] = group.capitalize()
                         break
 
