@@ -40,16 +40,16 @@ from ipywidgets import (
     interactive_output,
 )
 from ipywidgets.widgets.widget_selection import TraitError
+from tqdm import tqdm
 
 from geoapps.base import BaseApplication
+from geoapps.io import InputFile
+from geoapps.io.PeakFinder import PeakFinderParams
+from geoapps.io.PeakFinder.constants import app_initializer, default_ui_json
 from geoapps.selection import LineOptions, ObjectDataSelection
 from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
 from geoapps.utils.utils import LineDataDerivatives, hex_to_rgb, running_mean
-
-from ..io import InputFile
-from ..io.PeakFinder import PeakFinderParams
-from ..io.PeakFinder.constants import app_initializer, default_ui_json
 
 _default_channel_groups = {
     "early": {"label": ["early"], "color": "#0000FF", "channels": []},
@@ -735,13 +735,16 @@ class PeakFinder(ObjectDataSelection):
                 #         ]
 
                 group_list = []
+                self.update_data_list(None)
+                self.pause_refresh = True
                 for pg, params in self._channel_groups.items():
                     group_list += [self.add_group_widget(pg, params)]
 
+                self.pause_refresh = False
                 self.groups_panel.children = group_list
 
-                self.update_data_list(None)
                 self.set_data(None)
+
         self.group_auto.value = False
         self._group_auto.button_style = "success"
 
@@ -1335,23 +1338,18 @@ class PeakFinder(ObjectDataSelection):
         self.params.geoh5 = new_workspace.h5file
         self.params.workspace = new_workspace
 
+        param_dict = {}
         for key, value in self.__dict__.items():
             try:
                 if isinstance(getattr(self, key), Widget):
-                    setattr(self.params, key, getattr(self, key).value)
+                    # setattr(self.params, key, getattr(self, key).value)
+                    param_dict[key] = getattr(self, key).value
             except AttributeError:
                 continue
 
+        self.params.update(param_dict)
         self.params.line_field = self.lines.data.value
-
-        self.params._free_param_dict = {}
-        ui_json = deepcopy(default_ui_json)
-        for group, values in self.channel_groups.items():
-            self.params._free_param_dict[group] = {
-                "data": values["data"],
-                "color": values["color"],
-            }
-
+        ui_json = deepcopy(self.params.default_ui_json)
         self.params.group_auto = False
         self.params.write_input_file(
             ui_json=ui_json,
@@ -1420,17 +1418,21 @@ class PeakFinder(ObjectDataSelection):
                     channel_params["time"] = system["channels"][channel[0]]
                 else:
                     continue
-            channel_params["values"] = obj.values.copy() * (-1.0) ** params.flip_sign
+            channel_params["values"] = client.scatter(
+                obj.values.copy() * (-1.0) ** params.flip_sign
+            )
 
-        print("Starting Parallel Process...")
+        print("Submitting parallel jobs:")
         anomalies = []
-        for line_id in list(lines):
-            line_indices = line_field.values == line_id
+        locations = client.scatter(survey.vertices.copy())
+
+        for line_id in tqdm(list(lines)):
+            line_indices = np.where(line_field.values == line_id)[0]
 
             anomalies += [
                 client.compute(
                     delayed(find_anomalies)(
-                        survey.vertices,
+                        locations,
                         line_indices,
                         active_channels,
                         channel_groups,
@@ -1445,8 +1447,6 @@ class PeakFinder(ObjectDataSelection):
                     )
                 )
             ]
-
-        all_anomalies = client.gather(anomalies)
         (
             channel_group,
             tau,
@@ -1462,7 +1462,9 @@ class PeakFinder(ObjectDataSelection):
             peaks,
         ) = ([], [], [], [], [], [], [], [], [], [], [], [])
 
-        for line in all_anomalies:
+        print("Processing and collecting results:")
+        for future_line in tqdm(anomalies):
+            line = future_line.result()
             for group in line:
                 if "channel_group" in group.keys() and len(group["cox"]) > 0:
                     channel_group += group["channel_group"]["label"]
@@ -1482,6 +1484,7 @@ class PeakFinder(ObjectDataSelection):
                     skew += [group["skew"]]
                     peaks += [group["peaks"]]
 
+        print("Exporting...")
         if cox:
             channel_group = np.hstack(channel_group)  # Start count at 1
 
@@ -1716,7 +1719,6 @@ def find_anomalies(
         locations=locations[line_indices], smoothing=smoothing, residual=use_residual
     )
     locs = profile.locations_resampled
-
     if data_normalization == "ppm":
         data_normalization = [1e-6]
 
@@ -2024,5 +2026,6 @@ def groups_from_params_dict(entity: Entity, params_dict: dict):
 
 
 if __name__ == "__main__":
-    params = PeakFinderParams(InputFile(sys.argv[1]))
+    file = sys.argv[1]
+    params = PeakFinderParams(InputFile(file))
     PeakFinder.run(params)
