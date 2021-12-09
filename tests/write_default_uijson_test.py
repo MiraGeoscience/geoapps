@@ -7,7 +7,7 @@
 
 import os
 
-from geoapps.io import write_default_uijson
+from geoapps.io.write_default_uijson import write_default_uijson
 
 
 def test_write_default_uijson(tmp_path):
