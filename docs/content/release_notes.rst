@@ -12,6 +12,7 @@ This release mostly addresses issues encountered since release of v0.6.0.
  - Fix crash at the end of multi-component inversions
  - Fix update upper/lower bound dropdowns on geoh5 change.
  - Remove 'Z' options from dropdown channels. Leave empty if vertices are to be used.
+ - Remove redundant checkboxes for data channel selection in inversion ui.json files
  - General API maintenance and unit tests
 
 
