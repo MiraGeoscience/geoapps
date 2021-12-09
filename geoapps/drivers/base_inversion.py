@@ -210,63 +210,26 @@ class InversionDriver:
         # Run the inversion
         self.start_inversion_message()
         mrec = self.inversion.run(self.starting_model)
-        dpred = self.collect_predicted_data(self.global_misfit, mrec)
-        self.save_residuals(self.inversion_data.entity, dpred)
-        self.finish_inversion_message(dpred)
 
     def start_inversion_message(self):
 
         # SimPEG reports half phi_d, so we scale to match
-        print(
-            "Start Inversion: "
-            + self.params.inversion_style
-            + "\nTarget Misfit: %.2e (%.0f data with chifact = %g) / 2"
-            % (
-                0.5 * self.params.chi_factor * len(self.survey.std),
-                len(self.survey.std),
-                self.params.chi_factor,
-            )
+        has_chi_start = self.params.starting_chi_factor is not None
+        chi_start = (
+            self.params.starting_chi_factor if has_chi_start else self.params.chi_factor
         )
-
-    def collect_predicted_data(self, global_misfit, mrec):
-
-        dpred = np.hstack(self.inverse_problem.dpred)
-        if getattr(self.survey, "component", None) is not None:
-            dpred = dpred.reshape(-1, len(self.survey.components))
-        sorting = np.argsort(np.hstack(self.sorting))
-        return dpred[sorting].ravel()
-
-    def save_residuals(self, obj, dpred):
-        residuals = self.survey.dobs - dpred
-        residuals[self.survey.dobs == self.survey.dummy] = np.nan
-
-        for ii, component in enumerate(self.data.keys()):
-            obj.add_data(
-                {
-                    "Residuals_"
-                    + component: {"values": residuals[ii :: len(self.data.keys())]},
-                    "Normalized Residuals_"
-                    + component: {
-                        "values": (
-                            residuals[ii :: len(self.data.keys())]
-                            / self.survey.std[ii :: len(self.data.keys())]
-                        )
-                    },
-                }
-            )
-
-    def finish_inversion_message(self, dpred):
+        print(f"Starting {self.params.inversion_style} inversion...")
         print(
-            "Target Misfit: %.3e (%.0f data with chifact = %g)"
-            % (
+            "Target Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
                 0.5 * self.params.chi_factor * len(self.survey.std),
                 len(self.survey.std),
                 self.params.chi_factor,
             )
         )
         print(
-            "Final Misfit:  %.3e"
-            % (0.5 * np.sum(((self.survey.dobs - dpred) / self.survey.std) ** 2.0))
+            "IRLS Start Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
+                0.5 * chi_start * len(self.survey.std), len(self.survey.std), chi_start
+            )
         )
 
     def get_regularization(self):

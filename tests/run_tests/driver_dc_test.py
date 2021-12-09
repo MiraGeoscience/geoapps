@@ -12,6 +12,9 @@ from SimPEG import utils
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
 
+# import pytest
+# pytest.skip("eliminating conflicting test.", allow_module_level=True)
+
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
@@ -52,15 +55,16 @@ def test_dc_run(
     model = workspace.get_entity("model")[0]
     params = DirectCurrentParams(
         forward_only=True,
-        workspace=workspace,
-        mesh=model.parent,
-        topography_object=workspace.get_entity("topography")[0],
+        geoh5=workspace,
+        mesh=model.parent.uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
         z_from_topo=True,
-        data_object=workspace.get_entity("survey")[0],
-        starting_model_object=model.parent,
-        starting_model=model,
+        data_object=workspace.get_entity("survey")[0].uid,
+        starting_model_object=model.parent.uid,
+        starting_model=model.uid,
     )
+    params.workpath = tmp_path
     fwr_driver = DirectCurrentDriver(params)
     fwr_driver.run()
     workspace = Workspace(workspace.h5file)
@@ -68,11 +72,11 @@ def test_dc_run(
     # Run the inverse
     np.random.seed(0)
     params = DirectCurrentParams(
-        workspace=workspace,
-        mesh=workspace.get_entity("mesh")[0],
-        topography_object=workspace.get_entity("topography")[0],
+        geoh5=workspace,
+        mesh=workspace.get_entity("mesh")[0].uid,
+        topography_object=workspace.get_entity("topography")[0].uid,
         resolution=0.0,
-        data_object=potential.parent,
+        data_object=potential.parent.uid,
         starting_model=1e-2,
         s_norm=0.0,
         x_norm=1.0,
@@ -81,7 +85,7 @@ def test_dc_run(
         gradient_type="components",
         potential_channel_bool=True,
         z_from_topo=True,
-        potential_channel=potential,
+        potential_channel=potential.uid,
         potential_uncertainty=1e-3,
         max_iterations=max_iterations,
         initial_beta=None,
@@ -90,6 +94,7 @@ def test_dc_run(
         upper_bound=10,
         tile_spatial=n_lines,
     )
+    params.workpath = tmp_path
     driver = DirectCurrentDriver(params)
     driver.run()
     output = get_inversion_output(

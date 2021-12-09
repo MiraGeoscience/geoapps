@@ -74,13 +74,7 @@
         "min": 1,
         "max": 1000
     },
-    "output_tile_files": {
-        "group": "Receivers location options",
-        "label": "Output tile files",
-        "visible": false,
-        "enabled": true,
-        "value": false
-    },
+    "output_tile_files": false,
     "z_from_topo": {
         "main": false,
         "group": "Receivers location options",
@@ -122,27 +116,8 @@
         "value": 0.0,
         "enabled": true
     },
-    "gps_receivers_offset": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Receivers location options",
-        "enabled": false,
-        "visible": false,
-        "isValue": false,
-        "label": "Set data offsets",
-        "parent": "data_object",
-        "property": "",
-        "value": 0.0
-    },
-    "resolution": {
-        "enabled": true,
-        "visible": false,
-        "label": "resolution",
-        "value": 0.0
-    },
+    "gps_receivers_offset": "",
+    "resolution": "",
     "max_chunk_size": {
         "min": 0,
         "group": "Data pre-processing",
@@ -160,11 +135,11 @@
         "group": "Mesh",
         "main": true,
         "optional": true,
-        "enabled": true,
+        "enabled": false,
         "dependency": "mesh_from_params",
         "dependencyType": "disable",
         "label": "Mesh",
-        "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
+        "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
         "value": ""
     },
     "u_cell_size": {
@@ -260,31 +235,27 @@
         "enabled": false,
         "groupOptional": true,
         "label": "Window center easting",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_center_y": {
         "group": "Data window",
         "enabled": false,
         "label": "Window center northing",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_width": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window width",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_height": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window height",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "window_azimuth": {
         "min": -180,
@@ -292,8 +263,7 @@
         "group": "Data window",
         "enabled": false,
         "label": "Window azimuth",
-        "value": 0.0,
-        "optional": true
+        "value": 0.0
     },
     "parallelized": {
         "group": "Compute",
@@ -310,29 +280,29 @@
         "label": "Number of cpu",
         "value": 1
     },
-    "workspace": {
-        "visible": false,
-        "enabled": false,
-        "label": "Path to workspace",
-        "value": ""
-    },
+    "workspace": "",
     "out_group": {
         "label": "Results group name",
         "value": "DirectCurrentForward"
     },
-    "monitoring_directory": {
-        "default": "",
-        "enabled": false,
-        "value": ""
-    },
+    "monitoring_directory": "",
+    "workspace_geoh5": "",
     "run_command": "geoapps.drivers.direct_current_inversion",
     "run_command_boolean": {
-        "default": false,
         "value": false,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",
         "main": true
     },
     "conda_environment": "geoapps",
-    "distributed_workers": ""
+    "distributed_workers": "",
+    "gradient_type": "total",
+    "alpha_s": 1.0,
+    "alpha_x": 1.0,
+    "alpha_y": 1.0,
+    "alpha_z": 1.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0
 }
