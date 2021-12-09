@@ -345,7 +345,7 @@ class PeakFinderParams(Params):
                             free_param_dict[group] = {}
 
                         free_param_dict[group][param] = value
-                        self.default_ui_json[key] = default_ui_json[
+                        self.default_ui_json[key] = deepcopy(default_ui_json[f"Template {param.capitalize()}"])
                             f"Template {param.capitalize()}"
                         ]
                         self.default_ui_json[key]["group"] = group.capitalize()
