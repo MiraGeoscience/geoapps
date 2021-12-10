@@ -84,14 +84,8 @@ def write_default_uijson(path, use_initializers=False):
     }
 
     for filename, params in filedict.items():
-
-        if use_initializers:
-            if type(params) in [OctreeParams, PeakFinderParams]:
-                params.write_input_file(name=filename, path=path)
-            elif getattr(params, "forward_only", None) is not None:
-                params.write_input_file(name=filename, path=path)
-        else:
-            params.write_input_file(name=filename, path=path, default=True)
+        default = False if use_initializers else True
+        params.write_input_file(name=filename, path=path, default=default)
 
 
 if __name__ == "__main__":
