@@ -22,7 +22,7 @@ CLASSIFIERS = [
 
 setup(
     name="geoapps",
-    version="0.6.0",
+    version="0.6.1",
     packages=find_packages(),
     install_requires=["numpy", "h5py", "scipy", "geoh5py", "requests"],
     author="Mira Geoscience",
