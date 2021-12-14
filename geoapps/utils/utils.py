@@ -20,7 +20,7 @@ import geoh5py
 import numpy as np
 import pandas as pd
 from dask.diagnostics import ProgressBar
-from geoh5py.data import FloatData
+from geoh5py.data import FloatData, IntegerData
 from geoh5py.groups import Group
 from geoh5py.objects import (
     BlockModel,
@@ -39,6 +39,38 @@ from shapely.geometry import LineString, mapping
 from SimPEG.electromagnetics.static.resistivity import Survey
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
+
+
+def sorted_children_dict(object: UUID | Entity):
+
+    if isinstance(object, UUID):
+        object = workspace.get_entity(object)[0]
+
+    children_dict = {}
+    iters = []
+    iteration_data = []
+    other_data = []
+    for c in object.children:
+        if not isinstance(c, (IntegerData, FloatData)):
+            continue
+        else:
+            children_dict[c.name] = c.uid
+            name = c.name
+            syllables = name.split("_")
+            if any([n.lower() == "iteration" for n in syllables]):
+                iteration_data.append(name)
+                for s in syllables:
+                    try:
+                        iters.append(int(s))
+                    except:
+                        continue
+            else:
+                other_data.append(c.name)
+
+    iteration_data = np.array(iteration_data)[np.argsort(iters)].tolist()
+    other_data = sorted(other_data)
+
+    return {k: children_dict[k] for k in iteration_data + other_data}
 
 
 def get_locations(workspace: Workspace, object: UUID | Entity):
