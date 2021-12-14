@@ -43,7 +43,10 @@ from sklearn.neighbors import KernelDensity
 
 def get_locations(workspace: Workspace, object: UUID | Entity):
     """
-    Returns locations of data object centroids or vertices.
+    Returns object's centroids or vertices.
+
+    If no location data is found on the provided object, the method will
+    attempt to call itself on it's parent.
 
     :param workspace: Geoh5py Workspace object.
     :param object: Object or uuid of object containing centroid or
@@ -61,7 +64,10 @@ def get_locations(workspace: Workspace, object: UUID | Entity):
     elif hasattr(object, "vertices"):
         locs = object.vertices
     else:
-        locs = None
+        if object.parent is not None:
+            locs = get_locations(workspace, object.parent)
+        else:
+            locs = None
 
     return locs
 
