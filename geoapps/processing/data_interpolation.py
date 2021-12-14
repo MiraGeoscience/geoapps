@@ -383,30 +383,27 @@ class DataInterpolation(ObjectDataSelection):
         return locs
 
     @staticmethod
-    def minimum_depth_core(locs, depth_core, z):
+    def minimum_depth_core(locs, depth_core, core_z_cell_size):
         zrange = locs[:, 2].max() - locs[:, 2].min()  # locs z range
-        if depth_core > zrange:
-            raise ValueError("'depth_core' must be greater than depth range of 'locs'.")
-        depth_core = depth_core - zrange + z  #
-        return depth_core
+        if depth_core >= zrange:
+            return depth_core - zrange + core_z_cell_size
+        else:
+            return depth_core
 
     @staticmethod
-    def do_something(locs, depth_core, z):
-        delta_z = locs[:, 2].max() - locs[:, 2]  # distance from top of locs
-        zdiff = (
-            locs[:, 2].max() - depth_core
-        )  # distance from top of locs to bottom of core
-        ind = delta_z > depth_core  # indexes location below core
-        locs[ind, 2] = zdiff  # sets locations below core to zdiff
-        zrange = locs[:, 2].max() - locs[:, 2].min()  # locs z range
-        depth_core = depth_core - zrange + z  #
-        return locs, depth_core
+    def find_top_padding(obj, core_z_cell_size):
+        pad_sum = 0
+        for h in np.abs(np.diff(obj.z_cell_delimiters)):
+            if h != core_z_cell_size:
+                pad_sum += h
+            else:
+                return pad_sum
 
     @staticmethod
     def get_block_model(workspace, name, locs, h, depth_core, pads, expansion_factor):
 
-        locs, depth_core = DataInterpolation.do_something(locs, depth_core, h[2])
-
+        locs = DataInterpolation.truncate_locs_depths(locs, depth_core)
+        depth_core = DataInterpolation.minimum_depth_core(locs, depth_core, h[2])
         mesh = mesh_utils.mesh_builder_xyz(
             locs,
             h,
@@ -420,13 +417,16 @@ class DataInterpolation(ObjectDataSelection):
         )
 
         object_out = BlockModel.create(
-            self.workspace,
+            workspace,
             origin=[mesh.x0[0], mesh.x0[1], locs[:, 2].max()],
             u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
             v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
             z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
             name=name,
         )
+
+        top_padding = DataInterpolation.find_top_padding(object_out, h[2])
+        object_out.origin["z"] += top_padding
 
         return object_out
 
@@ -475,55 +475,6 @@ class DataInterpolation(ObjectDataSelection):
                 self.depth_core.value,
                 pads,
                 self.expansion_fact.value,
-            )
-
-            ref_in = self.object_base(self.xy_reference.value)
-            xyz_ref = get_locations(self._workspace, ref_in)
-            if xyz_ref is None:
-                print(
-                    "No object selected for 'Lateral Extent'. Defaults to input object."
-                )
-                xyz_ref = xyz.copy()
-
-            # Find extent of grid
-            h = np.asarray(self.core_cell_size.value.split(",")).astype(float).tolist()
-
-            pads = (
-                np.asarray(self.padding_distance.value.split(","))
-                .astype(float)
-                .tolist()
-            )
-
-            # Use discretize to build a tensor mesh
-            delta_z = xyz_ref[:, 2].max() - xyz_ref[:, 2]
-            xyz_ref[delta_z > self.depth_core.value, 2] = (
-                xyz_ref[:, 2].max() - self.depth_core.value
-            )
-            depth_core = (
-                self.depth_core.value
-                - (xyz_ref[:, 2].max() - xyz_ref[:, 2].min())
-                + h[2]
-            )
-
-            mesh = mesh_utils.mesh_builder_xyz(
-                xyz_ref,
-                h,
-                padding_distance=[
-                    [pads[0], pads[1]],
-                    [pads[2], pads[3]],
-                    [pads[4], pads[5]],
-                ],
-                depth_core=depth_core,
-                expansion_factor=self.expansion_fact.value,
-            )
-
-            self.object_out = BlockModel.create(
-                self.workspace,
-                origin=[mesh.x0[0], mesh.x0[1], xyz_ref[:, 2].max()],
-                u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
-                v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-                z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
-                name=self.new_grid.value,
             )
 
             # Try to recenter on nearest
