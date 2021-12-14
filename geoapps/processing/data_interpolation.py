@@ -80,7 +80,7 @@ class DataInterpolation(ObjectDataSelection):
             description="Maximum depth (m)",
         )
         self._method = RadioButtons(
-            options=["Nearest", "Linear", "Inverse Distance"],
+            options=["Nearest", "Inverse Distance"],
         )
         self._new_grid = Text(
             description="Name",
