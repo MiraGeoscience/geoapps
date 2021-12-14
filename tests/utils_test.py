@@ -31,6 +31,7 @@ from geoapps.utils.utils import (
     octree_2_treemesh,
     rotate_xy,
     running_mean,
+    sorted_children_dict,
     tensor_2_block_model,
     treemesh_2_octree,
     weighted_average,
@@ -38,6 +39,41 @@ from geoapps.utils.utils import (
 )
 
 workspace = Workspace("./FlinFlon.geoh5")
+
+
+def test_sorted_children_dict(tmp_path):
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    n_x, n_y = 10, 15
+    grid = Grid2D.create(
+        ws,
+        origin=[0, 0, 0],
+        u_cell_size=20.0,
+        v_cell_size=30.0,
+        u_count=n_x,
+        v_count=n_y,
+        name="test_grid",
+        allow_move=False,
+    )
+
+    test_data = grid.add_data({"Iteration_10_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_1_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_5_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_3_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_2_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_4_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_9_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_8_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_11_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_6_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_7_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"topo": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"uncert": {"values": np.ones(10 * 15)}})
+
+    d = sorted_children_dict(grid)
+    assert d[0] == "Iteration_1_data"
+    assert d[1] == "Iteration_2_data"
+    assert d[-2] == "topo"
+    assert d[-1] == "uncert"
 
 
 def test_rotation_xy():
