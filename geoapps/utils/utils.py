@@ -54,18 +54,14 @@ def sorted_children_dict(object: UUID | Entity):
         if not isinstance(c, (IntegerData, FloatData)):
             continue
         else:
-            children_dict[c.name] = c.uid
             name = c.name
-            syllables = name.split("_")
-            if any([n.lower() == "iteration" for n in syllables]):
+            children_dict[name] = c.uid
+            iter = re.findall(r"[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?", name)
+            if iter:
+                iters.append(int(iter[0]))
                 iteration_data.append(name)
-                for s in syllables:
-                    try:
-                        iters.append(int(s))
-                    except:
-                        continue
             else:
-                other_data.append(c.name)
+                other_data.append(name)
 
     iteration_data = np.array(iteration_data)[np.argsort(iters)].tolist()
     other_data = sorted(other_data)
