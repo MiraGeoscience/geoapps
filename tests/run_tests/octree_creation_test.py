@@ -71,7 +71,7 @@ def test_create_octree_app(tmp_path):
         method="surface",
         octree_levels=refine_B,
         max_distance=max_distance,
-        finalize=True,
+        finalize=False,
     )
     treemesh = refine_tree_xyz(
         treemesh,
@@ -79,7 +79,7 @@ def test_create_octree_app(tmp_path):
         method="radial",
         octree_levels=refine_A,
         max_distance=max_distance,
-        finalize=False,
+        finalize=True,
     )
 
     octree = treemesh_2_octree(ws, treemesh, name="Octree_Mesh")
