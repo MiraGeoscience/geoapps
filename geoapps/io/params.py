@@ -320,6 +320,8 @@ class Params:
         if default:
             ifile = InputFile()
         else:
+            if self.validate:
+                self.validator.validate_chunk(self.to_dict())
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
 
         if path is not None:
