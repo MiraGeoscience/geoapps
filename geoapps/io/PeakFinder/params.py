@@ -338,10 +338,7 @@ class PeakFinderParams(Params):
                 continue
 
             # Update default_ui_json and store free_param_groups for app
-            if (
-                self._free_param_identifier in key.lower()
-                and key not in self.default_ui_json
-            ):
+            if self._free_param_identifier in key.lower():
                 for param in self._free_param_keys:
                     if param in key.lower():
                         group = key.lower().replace(param, "").rstrip()
