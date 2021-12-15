@@ -70,6 +70,7 @@ def test_sorted_children_dict(tmp_path):
     test_data = grid.add_data({"uncert": {"values": np.ones(10 * 15)}})
 
     d = sorted_children_dict(grid)
+    d = list(d.keys())
     assert d[0] == "Iteration_1_data"
     assert d[1] == "Iteration_2_data"
     assert d[-2] == "topo"
