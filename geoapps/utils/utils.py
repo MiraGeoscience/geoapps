@@ -58,7 +58,10 @@ def sorted_children_dict(object: UUID | Entity):
             children_dict[name] = c.uid
             iter = re.findall(r"[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?", name)
             if iter:
-                iters.append(int(iter[0]))
+                try:
+                    iters.append(int(iter[0]))
+                except:
+                    iters.append(float(iter[0]))
                 iteration_data.append(name)
             else:
                 other_data.append(name)
