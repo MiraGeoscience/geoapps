@@ -156,6 +156,18 @@ default_ui_json = {
     },
     "center": None,
     "width": None,
+    "run_command": ("geoapps.processing.peak_finder"),
+    "run_command_boolean": None,
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": None,
+    "template_data": None,
+    "template_color": None,
+    "workspace": None,
+    "monitoring_directory": None,
+    "plot_result": True,
+}
+
+free_format_dict = {
     "Template Data": {
         "association": "Vertex",
         "dataType": "Float",
@@ -175,15 +187,6 @@ default_ui_json = {
         "dependencyType": "disabled",
         "value": None,
     },
-    "run_command": ("geoapps.processing.peak_finder"),
-    "run_command_boolean": None,
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": None,
-    "template_data": None,
-    "template_color": None,
-    "workspace": None,
-    "monitoring_directory": None,
-    "plot_result": True,
 }
 
 required_parameters = ["objects", "data"]

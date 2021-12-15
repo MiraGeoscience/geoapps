@@ -98,6 +98,80 @@ default_ui_json = {
         "label": "Name:",
         "value": "Octree_Mesh",
     },
+    "Refinement A Object": {
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+        ],
+        "value": None,
+    },
+    "Refinement A levels": {
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Levels",
+        "value": [16, 8, 4, 2],
+    },
+    "Refinement A type": {
+        "choiceList": ["surface", "radial"],
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Type",
+        "value": "surface",
+    },
+    "Refinement A distance": {
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Distance",
+        "value": 5000.0,
+    },
+    "Refinement B Object": {
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+        ],
+        "value": None,
+    },
+    "Refinement B levels": {
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Levels",
+        "value": [16, 8, 4, 2],
+    },
+    "Refinement B type": {
+        "choiceList": ["surface", "radial"],
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Type",
+        "value": "surface",
+    },
+    "Refinement B distance": {
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Distance",
+        "value": 5000.0,
+    },
+    "run_command": ("geoapps.create.octree_mesh"),
+    "run_command_boolean": {
+        "value": False,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": True,
+    },
+    "monitoring_directory": None,
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": False,
+    "workspace": None,
+}
+
+free_format_dict = {
     "Template Object": {
         "enabled": True,
         "group": "Refinement A",
@@ -128,17 +202,6 @@ default_ui_json = {
         "label": "Distance",
         "value": 1000.0,
     },
-    "run_command": ("geoapps.create.octree_mesh"),
-    "run_command_boolean": {
-        "value": False,
-        "label": "Run python module ",
-        "tooltip": "Warning: launches process to run python model on save",
-        "main": True,
-    },
-    "monitoring_directory": None,
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": False,
-    "workspace": None,
 }
 
 required_parameters = ["objects"]
