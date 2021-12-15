@@ -38,8 +38,6 @@ defaults = {
     "group_auto": True,
     "center": None,
     "width": None,
-    "Template Data": None,
-    "Template Color": None,
     "run_command": ("geoapps.processing.peak_finder"),
     "run_command_boolean": None,
     "conda_environment": "geoapps",
@@ -156,6 +154,18 @@ default_ui_json = {
     },
     "center": None,
     "width": None,
+    "run_command": ("geoapps.processing.peak_finder"),
+    "run_command_boolean": None,
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": None,
+    "template_data": None,
+    "template_color": None,
+    "workspace": None,
+    "monitoring_directory": None,
+    "plot_result": True,
+}
+
+free_format_dict = {
     "Template Data": {
         "association": "Vertex",
         "dataType": "Float",
@@ -175,15 +185,6 @@ default_ui_json = {
         "dependencyType": "disabled",
         "value": None,
     },
-    "run_command": ("geoapps.processing.peak_finder"),
-    "run_command_boolean": None,
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": None,
-    "template_data": None,
-    "template_color": None,
-    "workspace": None,
-    "monitoring_directory": None,
-    "plot_result": True,
 }
 
 required_parameters = ["objects", "data"]
@@ -296,6 +297,9 @@ app_initializer = {
     "line_field": UUID("{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}"),
     "system": "VTEM (2007)",
     "line_id": 6073400.0,
-    "center": 4050,
+    "center": 4041.2,
     "width": 1000,
+    "tem_checkbox": True,
+    "min_value": -0.0004509940918069333,
+    "group_auto": True,
 }
