@@ -61,8 +61,8 @@ def test_sorted_children_dict(tmp_path):
     test_data = grid.add_data({"Iteration_3_data": {"values": np.ones(10 * 15)}})
     test_data = grid.add_data({"Iteration_2_data": {"values": np.ones(10 * 15)}})
     test_data = grid.add_data({"Iteration_4_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_9_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_8_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_9.0_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_8e0_data": {"values": np.ones(10 * 15)}})
     test_data = grid.add_data({"Iteration_11_data": {"values": np.ones(10 * 15)}})
     test_data = grid.add_data({"Iteration_6_data": {"values": np.ones(10 * 15)}})
     test_data = grid.add_data({"Iteration_7_data": {"values": np.ones(10 * 15)}})
@@ -73,6 +73,8 @@ def test_sorted_children_dict(tmp_path):
     d = list(d.keys())
     assert d[0] == "Iteration_1_data"
     assert d[1] == "Iteration_2_data"
+    assert d[7] == "Iteration_8e0_data"
+    assert d[8] == "Iteration_9.0_data"
     assert d[-2] == "topo"
     assert d[-1] == "uncert"
 
