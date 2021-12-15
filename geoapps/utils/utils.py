@@ -56,6 +56,8 @@ def get_locations(workspace: Workspace, object: UUID | Entity):
 
     """
 
+    locs = None
+
     if isinstance(object, UUID):
         object = workspace.get_entity(object)[0]
 
@@ -63,11 +65,9 @@ def get_locations(workspace: Workspace, object: UUID | Entity):
         locs = object.centroids
     elif hasattr(object, "vertices"):
         locs = object.vertices
-    else:
+    elif getattr(object, "parent", None) is not None:
         if object.parent is not None:
             locs = get_locations(workspace, object.parent)
-        else:
-            locs = None
 
     return locs
 
