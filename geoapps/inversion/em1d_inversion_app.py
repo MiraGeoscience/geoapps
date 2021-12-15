@@ -1024,14 +1024,18 @@ class InversionApp(PlotSelection2D):
             else:
                 offsets = tx_offsets[0]
 
-            channel_options = ChannelOptions(
-                key,
-                labels[ind],
-                uncertainties=", ".join(
-                    [str(uncert) for uncert in uncertainties[ind][:2]]
-                ),
-                offsets=", ".join([str(offset) for offset in offsets]),
-            )
+            try:
+                channel_options = ChannelOptions(
+                    key,
+                    labels[ind],
+                    uncertainties=", ".join(
+                        [str(uncert) for uncert in uncertainties[ind][:2]]
+                    ),
+                    offsets=", ".join([str(offset) for offset in offsets]),
+                )
+
+            except IndexError:
+                continue
             channel_options.channel_selection.observe(channel_setter, names="value")
             data_channel_options[key] = channel_options.main
             data_channel_options[key].children[1].value = channel
