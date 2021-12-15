@@ -203,11 +203,5 @@ class OctreeParams(Params):
                 else:
                     setattr(self, key, value)
 
-        # Clear Template
-
-        for key in list(self.default_ui_json.keys()):
-            if "Template" in key:
-                del self.default_ui_json[key]
-
         self._free_param_dict = free_param_dict
         self.param_names = list(self.default_ui_json.keys())

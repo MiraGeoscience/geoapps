@@ -728,11 +728,6 @@ class PeakFinder(ObjectDataSelection):
                 channel_groups = self.default_groups_from_property_group(group[0])
                 self._channel_groups = channel_groups
                 self.pause_refresh = True
-                # for name, group in self._channel_groups.items():
-                #     if hasattr(self, f"Template {name} Data"):
-                #         getattr(self, f"Template {name} Data").value = group[
-                #             "data"
-                #         ]
 
                 group_list = []
                 self.update_data_list(None)
