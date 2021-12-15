@@ -16,7 +16,13 @@ from geoh5py.shared import Entity
 from ..input_file import InputFile
 from ..params import Params
 from ..validators import InputFreeformValidator
-from . import default_ui_json, defaults, required_parameters, validations
+from . import (
+    default_ui_json,
+    defaults,
+    free_format_dict,
+    required_parameters,
+    validations,
+)
 
 
 class OctreeParams(Params):
@@ -173,10 +179,7 @@ class OctreeParams(Params):
                 continue
 
             # Update default_ui_json and store free_param_groups for app
-            if (
-                self._free_param_identifier in key.lower()
-                and key not in self.default_ui_json
-            ):
+            if self._free_param_identifier in key.lower():
                 for param in self._free_param_keys:
                     if param in key.lower():
                         group = key.lower().replace(param, "").rstrip()
@@ -185,9 +188,9 @@ class OctreeParams(Params):
                             free_param_dict[group] = {}
 
                         free_param_dict[group][param] = value
-                        self.default_ui_json[key] = self.default_ui_json[
-                            f"Template {param.capitalize()}"
-                        ]
+                        self.default_ui_json[key] = deepcopy(
+                            free_format_dict[f"Template {param.capitalize()}"]
+                        )
                         self.default_ui_json[key]["group"] = group
                         break
 

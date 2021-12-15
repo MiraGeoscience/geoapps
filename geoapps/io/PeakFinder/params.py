@@ -15,7 +15,13 @@ from geoh5py.shared import Entity
 
 from ..params import Params
 from ..validators import InputFreeformValidator
-from .constants import default_ui_json, defaults, required_parameters, validations
+from .constants import (
+    default_ui_json,
+    defaults,
+    free_format_dict,
+    required_parameters,
+    validations,
+)
 
 
 class PeakFinderParams(Params):
@@ -346,7 +352,7 @@ class PeakFinderParams(Params):
 
                         free_param_dict[group][param] = value
                         self.default_ui_json[key] = deepcopy(
-                            default_ui_json[f"Template {param.capitalize()}"]
+                            free_format_dict[f"Template {param.capitalize()}"]
                         )
                         self.default_ui_json[key]["group"] = group.capitalize()
                         break
