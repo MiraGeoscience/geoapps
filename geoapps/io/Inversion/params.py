@@ -140,16 +140,17 @@ class InversionParams(Params):
         if self.default:
             params_dict = dict(self.defaults, **params_dict)
 
+        self.workspace = params_dict["geoh5"]
+        self.validator: InputValidator = InputValidator(
+            self._required_parameters,
+            self._validations,
+            self.workspace,
+            **self.validator_opts,
+        )
+        self.associations = self.get_associations(params_dict)
+
         # Validate.
         if self.validate:
-            self.workspace = params_dict["geoh5"]
-            self.associations = self.get_associations(params_dict)
-            self.validator: InputValidator = InputValidator(
-                self._required_parameters,
-                self._validations,
-                self.workspace,
-                **self.validator_opts,
-            )
             self.validator.validate_chunk(params_dict, self.associations)
 
         # Set params attributes from validated input.
@@ -1496,7 +1497,10 @@ class InversionParams(Params):
             ifile = InputFile.from_dict(ui_json)
         else:
             if self.validate:
-                self.validator.validate_chunk(self.to_dict())
+                self.validator.validate_chunk(
+                    self.to_dict(ui_json=ui_json, ui_json_format=False),
+                    self.associations,
+                )
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
 
         if name is not None:
