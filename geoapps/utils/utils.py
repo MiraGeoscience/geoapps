@@ -30,6 +30,7 @@ from geoh5py.objects import (
     PotentialElectrode,
     Surface,
 )
+from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from osgeo import gdal
 from scipy.interpolate import interp1d
@@ -38,6 +39,35 @@ from shapely.geometry import LineString, mapping
 from SimPEG.electromagnetics.static.resistivity import Survey
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
+
+
+def get_locations(workspace: Workspace, entity: UUID | Entity):
+    """
+    Returns entity's centroids or vertices.
+
+    If no location data is found on the provided entity, the method will
+    attempt to call itself on it's parent.
+
+    :param workspace: Geoh5py Workspace entity.
+    :param entity: Object or uuid of entity containing centroid or
+        vertex location data.
+
+    :return: Array shape(*, 3) of x, y, z location data
+
+    """
+    locations = None
+
+    if isinstance(entity, UUID):
+        entity = workspace.get_entity(entity)[0]
+
+    if hasattr(entity, "centroids"):
+        locations = entity.centroids
+    elif hasattr(entity, "vertices"):
+        locations = entity.vertices
+    elif getattr(entity, "parent", None) is not None and entity.parent is not None:
+        locations = get_locations(workspace, entity.parent)
+
+    return locations
 
 
 def find_value(labels: list, keywords: list, default=None) -> list:
