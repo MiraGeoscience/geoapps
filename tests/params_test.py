@@ -312,7 +312,7 @@ def test_update(tmp_path):
             "value": "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
         }
     }
-    params.update(new_params)
+    params.update(new_params, validate=False)
     assert params.topography_object == UUID("{202C5DB1-A56D-4004-9CAD-BAAFD8899406}")
 
     new_params = {
@@ -331,7 +331,7 @@ def test_update(tmp_path):
         }
     }
 
-    params.update(new_params)
+    params.update(new_params, validate=False)
     assert params.topography == UUID("{202C5DB1-A56D-4004-9CAD-BAAFD8899406}")
 
 
@@ -1451,7 +1451,9 @@ def test_magnetic_scalar_inversion_type():
 
 
 def test_inducing_field_strength():
-    params = MagneticScalarParams(validate=False)
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
     params.inducing_field_strength = 1.0
     params.inducing_field_strength = 1
 
@@ -1467,7 +1469,9 @@ def test_inducing_field_strength():
 
 
 def test_inducing_field_inclination():
-    params = MagneticScalarParams(validate=False)
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
     params.inducing_field_inclination = 1.0
     params.inducing_field_inclination = 1
 
@@ -1483,7 +1487,9 @@ def test_inducing_field_inclination():
 
 
 def test_inducing_field_declination():
-    params = MagneticScalarParams(validate=False)
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
     params.inducing_field_declination = 1.0
     params.inducing_field_declination = 1
 
