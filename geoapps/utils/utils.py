@@ -41,35 +41,33 @@ from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
 
-def get_locations(workspace: Workspace, object: UUID | Entity):
+def get_locations(workspace: Workspace, entity: UUID | Entity):
     """
-    Returns object's centroids or vertices.
+    Returns entity's centroids or vertices.
 
-    If no location data is found on the provided object, the method will
+    If no location data is found on the provided entity, the method will
     attempt to call itself on it's parent.
 
-    :param workspace: Geoh5py Workspace object.
-    :param object: Object or uuid of object containing centroid or
+    :param workspace: Geoh5py Workspace entity.
+    :param entity: Object or uuid of entity containing centroid or
         vertex location data.
 
     :return: Array shape(*, 3) of x, y, z location data
 
     """
+    locations = None
 
-    locs = None
+    if isinstance(entity, UUID):
+        entity = workspace.get_entity(entity)[0]
 
-    if isinstance(object, UUID):
-        object = workspace.get_entity(object)[0]
+    if hasattr(entity, "centroids"):
+        locations = entity.centroids
+    elif hasattr(entity, "vertices"):
+        locations = entity.vertices
+    elif getattr(entity, "parent", None) is not None and entity.parent is not None:
+        locations = get_locations(workspace, entity.parent)
 
-    if hasattr(object, "centroids"):
-        locs = object.centroids
-    elif hasattr(object, "vertices"):
-        locs = object.vertices
-    elif getattr(object, "parent", None) is not None:
-        if object.parent is not None:
-            locs = get_locations(workspace, object.parent)
-
-    return locs
+    return locations
 
 
 def find_value(labels: list, keywords: list, default=None) -> list:
