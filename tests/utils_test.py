@@ -16,7 +16,7 @@ import os
 import numpy as np
 import pytest
 from discretize import TreeMesh
-from geoh5py.objects import BlockModel
+from geoh5py.objects import BlockModel, Grid2D
 from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 
@@ -27,6 +27,7 @@ from geoapps.utils.utils import (
     downsample_grid,
     downsample_xy,
     filter_xy,
+    get_locations,
     octree_2_treemesh,
     rotate_xy,
     running_mean,
@@ -473,3 +474,25 @@ def test_block_model_2_tensor_negative_z(tmp_path):
     )
     assert tensor_mesh.x0[2] == np.min(block_model.z_cell_delimiters)
     assert np.all(model[0][t2bm].flatten() == data.values)
+
+
+def test_get_locations(tmp_path):
+
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    n_x, n_y = 10, 15
+    grid = Grid2D.create(
+        ws,
+        origin=[0, 0, 0],
+        u_cell_size=20.0,
+        v_cell_size=30.0,
+        u_count=n_x,
+        v_count=n_y,
+        name="test_grid",
+        allow_move=False,
+    )
+    base_locs = get_locations(ws, grid)
+
+    test_data = grid.add_data({"test_data": {"values": np.ones(10 * 15)}})
+    data_locs = get_locations(ws, test_data)
+
+    np.testing.assert_array_equal(base_locs, data_locs)
