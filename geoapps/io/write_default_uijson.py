@@ -53,7 +53,7 @@ def write_default_uijson(path, use_initializers=False):
     peak_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
 
     filedict = {
-        "gravity_inversion.ui.json": GravityParams(validate=True, **grav_init),
+        "gravity_inversion.ui.json": GravityParams(validate=False, **grav_init),
         "gravity_forward.ui.json": GravityParams(forward_only=True, validate=False),
         "magnetic_scalar_inversion.ui.json": MagneticScalarParams(
             validate=False, **mag_init
