@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 from typing import Any
-from uuid import UUID
 
 from geoh5py.shared import Entity
 
@@ -100,9 +99,7 @@ class OctreeParams(Params):
 
     @objects.setter
     def objects(self, val):
-        self.setter_validator(
-            "objects", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
-        )
+        self.setter_validator("objects", val, fun=self._uuid_promoter)
 
     @property
     def u_cell_size(self):

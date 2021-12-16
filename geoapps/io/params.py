@@ -286,6 +286,9 @@ class Params:
         self.workpath = ifile.workpath
         self._input_file = ifile
 
+    def _uuid_promoter(self, x):
+        return UUID(x) if isinstance(x, str) else x
+
     def setter_validator(self, key: str, value, fun=lambda x: x):
 
         if value is None:
