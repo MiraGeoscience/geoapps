@@ -164,9 +164,10 @@ class MagneticVectorParams(InversionParams):
             self._inducing_field_declination = val
             return
         p = "inducing_field_declination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
+        if self.validate:
+            self.validator.validate(
+                p, val, self.validations[p], self.workspace, self.associations
+            )
         self._inducing_field_declination = UUID(val) if isinstance(val, str) else val
 
     @property
@@ -179,9 +180,10 @@ class MagneticVectorParams(InversionParams):
             self._tmi_channel_bool = val
             return
         p = "tmi_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
+        if self.validate:
+            self.validator.validate(
+                p, val, self.validations[p], self.workspace, self.associations
+            )
         self._tmi_channel_bool = val
 
     @property
