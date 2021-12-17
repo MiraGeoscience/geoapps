@@ -41,35 +41,51 @@ from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
 
+def string_2_numeric(text: str) -> int | float | str:
+    """Converts numeric string representation to int or string if possible."""
+    try:
+        text_as_float = float(text)
+        text_as_int = int(text_as_float)
+        return text_as_int if text_as_int == text_as_float else text_as_float
+    except ValueError:
+        return text
+
+
+def sorted_alphanumeric_list(l: list[str]) -> list[str]:
+    """
+    Sorts a list of string containing alphanumeric characters in readable way.
+
+    Sorting precedence is alphabetical for all string components followed by
+    numeric component found in string from left to right.
+    """
+
+    def sort_precedence(text):
+        numeric_regex = r"[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?"
+        non_numeric = re.split(numeric_regex, text)
+        numeric = [string_2_numeric(k) for k in re.findall(numeric_regex, text)]
+        order = non_numeric + numeric
+        return order
+
+    return sorted(l, key=sort_precedence)
+
+
 def sorted_children_dict(object: UUID | Entity):
 
     if isinstance(object, UUID):
         object = workspace.get_entity(object)[0]
+        if not object:
+            return None
 
     children_dict = {}
-    iters = []
-    iteration_data = []
-    other_data = []
     for c in object.children:
         if not isinstance(c, (IntegerData, FloatData)):
             continue
         else:
-            name = c.name
-            children_dict[name] = c.uid
-            iter = re.findall(r"[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?", name)
-            if iter:
-                try:
-                    iters.append(int(iter[0]))
-                except:
-                    iters.append(float(iter[0]))
-                iteration_data.append(name)
-            else:
-                other_data.append(name)
+            children_dict[c.name] = c.uid
 
-    iteration_data = np.array(iteration_data)[np.argsort(iters)].tolist()
-    other_data = sorted(other_data)
+    children_order = sorted_alphanumeric_list(list(children_dict.keys()))
 
-    return {k: children_dict[k] for k in iteration_data + other_data}
+    return {k: children_dict[k] for k in children_order}
 
 
 def get_locations(workspace: Workspace, object: UUID | Entity):

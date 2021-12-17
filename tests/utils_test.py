@@ -12,6 +12,7 @@
 
 import itertools
 import os
+import random
 
 import numpy as np
 import pytest
@@ -31,7 +32,9 @@ from geoapps.utils.utils import (
     octree_2_treemesh,
     rotate_xy,
     running_mean,
+    sorted_alphanumeric_list,
     sorted_children_dict,
+    string_2_numeric,
     tensor_2_block_model,
     treemesh_2_octree,
     weighted_average,
@@ -39,6 +42,43 @@ from geoapps.utils.utils import (
 )
 
 workspace = Workspace("./FlinFlon.geoh5")
+
+
+def test_string_2_numeric():
+    assert string_2_numeric("test") == "test"
+    assert string_2_numeric("2.1") == 2.1
+    assert string_2_numeric("34") == 34
+    assert string_2_numeric("1e-2") == 0.01
+    assert string_2_numeric("1.05e2") == 105
+
+
+def test_sorted_alphanumeric_list():
+    test = [
+        "Iteration_3.2e-1_data",
+        "Iteration_1_data",
+        "Iteration_2_data",
+        "Iteration_3_data",
+        "Iteration_5.11_data",
+        "Iteration_5.2_data",
+        "Iteration_6_data",
+        "Iteration_7_data",
+        "Iteration_8e0_data",
+        "Iteration_9.0_data",
+        "Iteration_10_data",
+        "Iteration_11_data",
+        "Iteration_2_model",
+        "Iteration_12_model",
+        "interp_01",
+        "interp_02",
+        "interp_11",
+        "iteration_2_model",
+        "iteration_12_model",
+        "topo",
+        "uncert",
+    ]
+
+    sorted_list = sorted_alphanumeric_list(random.sample(test, len(test)))
+    assert all([sorted_list[i] == test[i] for i in range(len(test))])
 
 
 def test_sorted_children_dict(tmp_path):
@@ -66,6 +106,13 @@ def test_sorted_children_dict(tmp_path):
     test_data = grid.add_data({"Iteration_11_data": {"values": np.ones(10 * 15)}})
     test_data = grid.add_data({"Iteration_6_data": {"values": np.ones(10 * 15)}})
     test_data = grid.add_data({"Iteration_7_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"interp_02": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"interp_01": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"interp_11": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"iteration_2_model": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"iteration_12_model": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_2_model": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_12_model": {"values": np.ones(10 * 15)}})
     test_data = grid.add_data({"topo": {"values": np.ones(10 * 15)}})
     test_data = grid.add_data({"uncert": {"values": np.ones(10 * 15)}})
 
