@@ -108,7 +108,7 @@ class InversionMesh:
             "depth_core",
             "horizontal_padding",
             "vertical_padding",
-            "workspace",
+            "geoh5",
         ]
 
         mesh_params_dict = params.to_dict(ui_json_format=False)
