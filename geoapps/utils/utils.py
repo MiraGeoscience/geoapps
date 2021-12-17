@@ -51,12 +51,16 @@ def string_2_numeric(text: str) -> int | float | str:
         return text
 
 
-def sorted_alphanumeric_list(l: list[str]) -> list[str]:
+def sorted_alphanumeric_list(alphanumerics: list[str]) -> list[str]:
     """
-    Sorts a list of string containing alphanumeric characters in readable way.
+    Sorts a list of stringd containing alphanumeric characters in readable way.
 
     Sorting precedence is alphabetical for all string components followed by
     numeric component found in string from left to right.
+
+    :param alphanumerics: list of alphanumeric strings.
+
+    :return : naturally sorted list of alphanumeric strings.
     """
 
     def sort_precedence(text):
@@ -66,10 +70,25 @@ def sorted_alphanumeric_list(l: list[str]) -> list[str]:
         order = non_numeric + numeric
         return order
 
-    return sorted(l, key=sort_precedence)
+    return sorted(alphanumerics, key=sort_precedence)
 
 
-def sorted_children_dict(object: UUID | Entity):
+def sorted_children_dict(
+    object: UUID | Entity, workspace: Workspace = None
+) -> dict[str, UUID]:
+    """
+    Uses natural sorting algorithm to order the keys of a dictionary containing
+    children name/uid key/value pairs.
+
+    If valid uuid entered calls get_entity.  Will return None if no object found
+    in workspace for provided object
+
+    :param object: geoh5py object containing children IntegerData, FloatData
+        entities
+
+    :return : sorted name/uid dictionary of children entities of object.
+
+    """
 
     if isinstance(object, UUID):
         object = workspace.get_entity(object)[0]
