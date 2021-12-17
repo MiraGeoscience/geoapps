@@ -41,7 +41,7 @@ from geoapps.utils.utils import (
     window_xy,
 )
 
-workspace = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon.geoh5")
 
 
 def test_string_2_numeric():
@@ -237,7 +237,7 @@ def test_weigted_average():
 
 def test_treemesh_2_octree(tmp_path):
 
-    geotest = Geoh5Tester(workspace, tmp_path, "test.geoh5")
+    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
     ws = geotest.make()
     mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
     mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
@@ -263,7 +263,7 @@ def test_treemesh_2_octree(tmp_path):
 
 def test_octree_2_treemesh(tmp_path):
 
-    geotest = Geoh5Tester(workspace, tmp_path, "test.geoh5")
+    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
     ws = geotest.make()
     mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
     mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
