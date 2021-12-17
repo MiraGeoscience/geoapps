@@ -9,7 +9,6 @@ from uuid import UUID
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
-from geoh5py.workspace import Workspace
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.io.Inversion.constants import (
@@ -115,7 +114,6 @@ inversion_defaults = {
     "upper_bound": None,
     "parallelized": True,
     "n_cpu": None,
-    "workspace": None,
     "max_ram": None,
     "out_group": "GravityInversion",
     "no_data_value": None,
@@ -184,7 +182,6 @@ forward_defaults = {
     "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
-    "workspace": None,
     "out_group": "GravityForward",
     "monitoring_directory": None,
     "workspace_geoh5": None,
