@@ -54,12 +54,12 @@ class InputFile:
         self,
         filepath: str = None,
         validator: InputValidator = None,
-        workspace: Workspace = None,
+        geoh5: Workspace = None,
     ):
         self.workpath = os.path.abspath(".")
         self.filepath = filepath
         self.validator = validator
-        self.workspace = workspace
+        self.geoh5 = geoh5
         self.ui: dict[str, Any] = {}
         self.data: dict[str, Any] = {}
         self.associations: dict[str | UUID, str | UUID] = {}
@@ -119,11 +119,11 @@ class InputFile:
             path = None
             if getattr(self, "_filepath", None) is not None:
                 path = self.filepath
-            elif getattr(self, "workspace", None) is not None:
-                if isinstance(self.workspace, str):
-                    path = self.workspace
+            elif getattr(self, "geoh5", None) is not None:
+                if isinstance(self.geoh5, str):
+                    path = self.geoh5
                 else:
-                    path = self.workspace.h5file
+                    path = self.geoh5.h5file
 
             if path is not None:
                 self._workpath: str = (
@@ -140,7 +140,7 @@ class InputFile:
         ui_dict: dict[str, Any],
         default: bool = False,
         name: str = None,
-        workspace: Workspace = None,
+        geoh5: Workspace = None,
         none_map: dict[str, Any] = {},
     ) -> None:
         """
@@ -153,7 +153,7 @@ class InputFile:
             Write default values. Ignoring contents of self.data.
         name: optional
             Name of the file
-        workspace : optional
+        geoh5 : optional
             Provide a geoh5 path to simulate auto-generated field in Geoscience ANALYST.
         none_map : optional
             Map parameter None values to non-null numeric types.  The parameters in the
@@ -162,8 +162,8 @@ class InputFile:
         """
         out = deepcopy(ui_dict)
 
-        if workspace is not None:
-            out["geoh5"] = workspace
+        if geoh5 is not None:
+            out["geoh5"] = geoh5
 
         if not default:
             for k, v in self.data.items():

@@ -44,14 +44,9 @@ class OctreeMesh(ObjectDataSelection):
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class(InputFile(ui_json))
         else:
-            if "h5file" in app_initializer.keys():
-                app_initializer["geoh5"] = app_initializer.pop("h5file")
-                app_initializer["workspace"] = app_initializer["geoh5"]
-
             self.params = self._param_class(**app_initializer)
 
         self.defaults.update(self.params.to_dict(ui_json_format=False))
-        self.defaults.pop("workspace", None)
         self.refinement_list = VBox([])
 
         super().__init__()
@@ -207,6 +202,7 @@ class OctreeMesh(ObjectDataSelection):
                     setattr(self.params, key, getattr(self, key).value)
             except AttributeError:
                 continue
+
         self.params._free_param_dict = {}
         ui_json = deepcopy(default_ui_json)
         for group, refinement in zip("ABCDFEGH", self.refinement_list.children):
@@ -226,11 +222,7 @@ class OctreeMesh(ObjectDataSelection):
         Create an octree mesh from input values
         """
 
-        print([(k, getattr(params, k)) for k in params.active_set()])
-        print("workspace", params.workspace)
-        print("objects", params.objects)
-        print("get", params.workspace.get_entity(params.objects))
-        obj = params.workspace.get_entity(params.objects)
+        obj = params.geoh5.get_entity(params.objects)
 
         if not any(obj):
             return
@@ -268,7 +260,7 @@ class OctreeMesh(ObjectDataSelection):
                     if isinstance(value["object"], str)
                     else value["object"]
                 )
-                entity = params.workspace.get_entity(uid)
+                entity = params.geoh5.get_entity(uid)
 
             except (ValueError, TypeError):
                 continue
@@ -288,9 +280,7 @@ class OctreeMesh(ObjectDataSelection):
         treemesh.finalize()
 
         print("Writing to file ")
-        octree = treemesh_2_octree(
-            params.workspace, treemesh, name=params.ga_group_name
-        )
+        octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
 
         if params.monitoring_directory is not None and path.exists(
             params.monitoring_directory
@@ -298,7 +288,7 @@ class OctreeMesh(ObjectDataSelection):
             BaseApplication.live_link_output(params.monitoring_directory, octree)
 
         print(
-            f"Octree mesh '{octree.name}' completed and exported to {path.abspath(params.workspace.h5file)}"
+            f"Octree mesh '{octree.name}' completed and exported to {path.abspath(params.geoh5.h5file)}"
         )
 
         assert octree.workspace is not None
