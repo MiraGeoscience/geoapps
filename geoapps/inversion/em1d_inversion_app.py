@@ -1342,6 +1342,7 @@ class InversionApp(PlotSelection2D):
             self.topography,
             self.inversion_parameters.starting_model,
             self.inversion_parameters.reference_model,
+            self.inversion_parameters.susceptibility_model,
         ]:
             obj, data = elem.get_selected_entities()
 
