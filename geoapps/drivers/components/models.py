@@ -278,6 +278,7 @@ class InversionModel:
                 )
 
                 if model is not None:
+                    model += 1e-8  # make sure the incl/decl don't zero out
                     model = (field_vecs.T * model).T
 
         else:
