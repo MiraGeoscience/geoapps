@@ -177,7 +177,7 @@ def param_test_generator(tmp_path, param, value, workspace=workspace):
 
 def test_write_input_file_validation(tmp_path):
 
-    grav_init["geoh5"] = "../assets/FlinFlon.geoh5"
+    grav_init["geoh5"] = "./FlinFlon.geoh5"
     params = GravityParams(validate=False, **grav_init)
     params.starting_model = None
     params.validate = True
