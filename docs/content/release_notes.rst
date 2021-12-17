@@ -1,6 +1,22 @@
 Release Notes
 =============
 
+Release 0.6.1 - 2021/12/09
+--------------------------
+
+**(Minor Release)**
+
+This release mostly addresses issues encountered since release of v0.6.0.
+
+ - Remove json warnings from jupyter-notebook apps.
+ - Optimization and bug fixes for Peak Finder
+ - Fix crash at the end of multi-component inversions
+ - Fix update upper/lower bound dropdowns on geoh5 change.
+ - Remove 'Z' options from dropdown channels. Leave empty if vertices are to be used.
+ - Remove redundant checkboxes for data channel selection in inversion ui.json files
+ - General API maintenance and unit tests
+
+
 Release 0.6.0 - 2021/11/08
 --------------------------
 
