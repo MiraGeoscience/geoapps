@@ -20,7 +20,7 @@ import geoh5py
 import numpy as np
 import pandas as pd
 from dask.diagnostics import ProgressBar
-from geoh5py.data import FloatData
+from geoh5py.data import FloatData, IntegerData
 from geoh5py.groups import Group
 from geoh5py.objects import (
     BlockModel,
@@ -39,6 +39,72 @@ from shapely.geometry import LineString, mapping
 from SimPEG.electromagnetics.static.resistivity import Survey
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
+
+
+def string_2_numeric(text: str) -> int | float | str:
+    """Converts numeric string representation to int or string if possible."""
+    try:
+        text_as_float = float(text)
+        text_as_int = int(text_as_float)
+        return text_as_int if text_as_int == text_as_float else text_as_float
+    except ValueError:
+        return text
+
+
+def sorted_alphanumeric_list(alphanumerics: list[str]) -> list[str]:
+    """
+    Sorts a list of stringd containing alphanumeric characters in readable way.
+
+    Sorting precedence is alphabetical for all string components followed by
+    numeric component found in string from left to right.
+
+    :param alphanumerics: list of alphanumeric strings.
+
+    :return : naturally sorted list of alphanumeric strings.
+    """
+
+    def sort_precedence(text):
+        numeric_regex = r"[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?"
+        non_numeric = re.split(numeric_regex, text)
+        numeric = [string_2_numeric(k) for k in re.findall(numeric_regex, text)]
+        order = non_numeric + numeric
+        return order
+
+    return sorted(alphanumerics, key=sort_precedence)
+
+
+def sorted_children_dict(
+    object: UUID | Entity, workspace: Workspace = None
+) -> dict[str, UUID]:
+    """
+    Uses natural sorting algorithm to order the keys of a dictionary containing
+    children name/uid key/value pairs.
+
+    If valid uuid entered calls get_entity.  Will return None if no object found
+    in workspace for provided object
+
+    :param object: geoh5py object containing children IntegerData, FloatData
+        entities
+
+    :return : sorted name/uid dictionary of children entities of object.
+
+    """
+
+    if isinstance(object, UUID):
+        object = workspace.get_entity(object)[0]
+        if not object:
+            return None
+
+    children_dict = {}
+    for c in object.children:
+        if not isinstance(c, (IntegerData, FloatData)):
+            continue
+        else:
+            children_dict[c.name] = c.uid
+
+    children_order = sorted_alphanumeric_list(list(children_dict.keys()))
+
+    return {k: children_dict[k] for k in children_order}
 
 
 def get_locations(workspace: Workspace, entity: UUID | Entity):
