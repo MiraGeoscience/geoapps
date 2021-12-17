@@ -184,6 +184,7 @@ class OctreeMesh(ObjectDataSelection):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_choices()
+        self.params.geoh5 = workspace
 
     def update_objects_choices(self):
         # Refresh the list of objects for all
