@@ -36,7 +36,6 @@ defaults = {
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
-    "workspace": None,
 }
 
 default_ui_json = {
@@ -172,7 +171,6 @@ default_ui_json = {
     "monitoring_directory": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
-    "workspace": None,
 }
 
 free_format_dict = {
@@ -273,9 +271,6 @@ validations = {
     },
     "conda_environment_boolean": {
         "types": [bool],
-    },
-    "workspace": {
-        "types": [str, Workspace],
     },
 }
 

@@ -96,15 +96,11 @@ class InversionApp(PlotSelection2D):
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class(InputFile(ui_json))
         else:
-            if "h5file" in app_initializer.keys():
-                app_initializer["geoh5"] = app_initializer.pop("h5file")
-                app_initializer["workspace"] = app_initializer["geoh5"]
-
             self.params = self._param_class(**app_initializer)
 
         self.data_object = self.objects
         self.defaults.update(self.params.to_dict(ui_json_format=False))
-        self.defaults.pop("workspace", None)
+
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
             value=False,
@@ -1013,8 +1009,7 @@ class InversionApp(PlotSelection2D):
                 parent=new_obj
             )
 
-        self.params.geoh5 = new_workspace.h5file
-        self.params.workspace = new_workspace
+        self.params.geoh5 = new_workspace
 
         for key in self.__dict__:
             try:
