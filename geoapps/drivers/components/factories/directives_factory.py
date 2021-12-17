@@ -199,7 +199,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 if transform is not None and is_dc:
                     property = "resistivity"
                     kwargs["channels"] = [f"apparent_{property}"]
-                    apparent_measurement_entity_type = self.params.workspace.get_entity(
+                    apparent_measurement_entity_type = self.params.geoh5.get_entity(
                         f"Observed_apparent_{property}"
                     )[0].entity_type
                     kwargs["data_type"] = {
