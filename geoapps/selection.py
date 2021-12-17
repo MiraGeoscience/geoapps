@@ -345,15 +345,7 @@ class ObjectDataSelection(BaseApplication):
                 [obj.parent.name + "/" + obj.name, obj.uid] for obj in obj_list
             ]
 
-            # if value in list(dict(options).values()):  # Silent update
-            #     self.objects.unobserve(self.update_data_list, names="value")
-            #     self.objects.options = options
-            #     self.objects.value = value
-            #     self._objects.observe(self.update_data_list, names="value")
-            # else:
             self.objects.options = options
-            # if value in list(dict(options).values()):
-            #     self.objects.value = value
 
     def update_uid_name_map(self):
         """
