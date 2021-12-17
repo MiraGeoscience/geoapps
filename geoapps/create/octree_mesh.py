@@ -207,7 +207,6 @@ class OctreeMesh(ObjectDataSelection):
                     setattr(self.params, key, getattr(self, key).value)
             except AttributeError:
                 continue
-
         self.params._free_param_dict = {}
         ui_json = deepcopy(default_ui_json)
         for group, refinement in zip("ABCDFEGH", self.refinement_list.children):
@@ -227,6 +226,10 @@ class OctreeMesh(ObjectDataSelection):
         Create an octree mesh from input values
         """
 
+        print([(k, getattr(params, k)) for k in params.active_set()])
+        print("workspace", params.workspace)
+        print("objects", params.objects)
+        print("get", params.workspace.get_entity(params.objects))
         obj = params.workspace.get_entity(params.objects)
 
         if not any(obj):
