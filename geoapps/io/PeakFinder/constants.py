@@ -44,7 +44,6 @@ defaults = {
     "conda_environment_boolean": None,
     "template_data": None,
     "template_color": None,
-    "workspace": None,
     "monitoring_directory": None,
 }
 
@@ -160,7 +159,6 @@ default_ui_json = {
     "conda_environment_boolean": None,
     "template_data": None,
     "template_color": None,
-    "workspace": None,
     "monitoring_directory": None,
     "plot_result": True,
 }
@@ -275,9 +273,6 @@ validations = {
     },
     "template_color": {
         "types": [str],
-    },
-    "workspace": {
-        "types": [str, Workspace],
     },
     "monitoring_directory": {
         "types": [str],

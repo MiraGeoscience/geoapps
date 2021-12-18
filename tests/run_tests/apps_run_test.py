@@ -25,7 +25,7 @@ from geoapps.processing import (
 
 project = "./FlinFlon.geoh5"
 
-workspace = Workspace(project)
+geoh5 = Workspace(project)
 
 project_dcip = "./FlinFlon_dcip.geoh5"
 

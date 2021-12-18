@@ -140,11 +140,11 @@ class InversionParams(Params):
         if self.default:
             params_dict = dict(self.defaults, **params_dict)
 
-        self.workspace = params_dict["geoh5"]
+        self.geoh5 = params_dict["geoh5"]
         self.validator: InputValidator = InputValidator(
             self._required_parameters,
             self._validations,
-            self.workspace,
+            self.geoh5,
             **self.validator_opts,
         )
         self.associations = self.get_associations(params_dict)
@@ -224,7 +224,7 @@ class InversionParams(Params):
         r = self.receivers_radar_drape
         if isinstance(r, (str, UUID)):
             r = UUID(r) if isinstance(r, str) else r
-            radar = self.workspace.get_entity(r)
+            radar = self.geoh5.get_entity(r)
             radar = radar[0].values if radar else None
         else:
             radar = None
@@ -843,10 +843,10 @@ class InversionParams(Params):
     def ga_group(self) -> ContainerGroup | None:
         if (
             getattr(self, "_ga_group", None) is None
-            and isinstance(self.workspace, Workspace)
+            and isinstance(self.geoh5, Workspace)
             and isinstance(self.out_group, str)
         ):
-            self._ga_group = ContainerGroup.create(self.workspace, name=self.out_group)
+            self._ga_group = ContainerGroup.create(self.geoh5, name=self.out_group)
 
         return self._ga_group
 
@@ -878,7 +878,7 @@ class InversionParams(Params):
         if ui_json is None:
             defaults = deepcopy(self.defaults)
             ui_json = deepcopy(self.default_ui_json)
-            ui_json["geoh5"] = self.workspace
+            ui_json["geoh5"] = self.geoh5
             self.title = defaults["title"]
             self.run_command = defaults["run_command"]
 
