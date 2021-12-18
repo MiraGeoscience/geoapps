@@ -79,12 +79,12 @@ class PeakFinderParams(Params):
 
         # Validate.
         if self.validate:
-            self.workspace = params_dict["geoh5"]
+            self.geoh5 = params_dict["geoh5"]
             self.associations = self.get_associations(params_dict)
             self.validator: InputFreeformValidator = InputFreeformValidator(
                 required_parameters,
                 validations,
-                self.workspace,
+                self.geoh5,
                 free_params_keys=self._free_param_keys,
             )
             self.validator.validate_chunk(params_dict, self.associations)
@@ -319,13 +319,10 @@ class PeakFinderParams(Params):
 
         if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
-                setattr(self, "workspace", params_dict["geoh5"])
+                setattr(self, "geoh5", params_dict["geoh5"])
 
         free_param_dict = {}
         for key, value in params_dict.items():
-
-            if key == "workspace":
-                continue  # ignores deprecated workspace name
 
             if "Template" in key:
                 continue
