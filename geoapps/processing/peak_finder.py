@@ -171,7 +171,7 @@ class PeakFinder(ObjectDataSelection):
         )
         self.group_display.observe(self.update_center, names="value")
         self.show_decay.observe(self.show_decay_trigger, names="value")
-        self.tem_checkbox.observe(self.objects_change, names="value")
+        self.tem_checkbox.observe(self.tem_change, names="value")
         self.groups_setter.observe(self.groups_trigger)
         self.scale_button.observe(self.scale_update)
         self.flip_sign.observe(self.set_data, names="value")
@@ -910,7 +910,7 @@ class PeakFinder(ObjectDataSelection):
         if self.workspace.get_entity(self.objects.value):
             self._survey = self.workspace.get_entity(self.objects.value)[0]
             self.update_data_list(None)
-            not_tem = True
+            is_tem = False
             self.active_channels = {}
             self.channel_groups = {}
             for child in self.groups_panel.children:
@@ -925,23 +925,20 @@ class PeakFinder(ObjectDataSelection):
                 ):
                     if aem_system in self.system.options:
                         self.system.value = aem_system
-                        not_tem = False
+                        is_tem = True
                         break
 
-            if not_tem:
-                self.tem_checkbox.value = False
-                self.min_channels.disabled = True
-                self.show_decay.value = False
-                self.system.disabled = True
-            else:
-                self.tem_checkbox.value = True
-                self.min_channels.disabled = False
-                self.system.disabled = False
+            self.tem_checkbox.value = is_tem
 
             if self.group_auto:
                 self.create_default_groups(None)
 
             self.set_data(None)
+
+    def tem_change(self, _):
+        self.min_channels.disabled = not self.tem_checkbox.value
+        self.show_decay.value = False
+        self.system.disabled = not self.tem_checkbox.value
 
     def plot_data_selection(
         self,
