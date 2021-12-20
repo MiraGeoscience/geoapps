@@ -197,15 +197,34 @@ class OctreeMesh(ObjectDataSelection):
         self.params.ga_group_name = self.ga_group_name.value
 
     def trigger_click(self, _):
+
+        new_workspace = Workspace(
+            path.join(
+                self.export_directory.selected_path,
+                self._ga_group_name.value + ".geoh5",
+            )
+        )
+
+        obj, data = self.get_selected_entities()
+
+        new_obj = new_workspace.get_entity(obj.uid)[0]
+        if new_obj is None:
+            obj.copy(parent=new_workspace, copy_children=True)
+
+        param_dict = {}
         for key, value in self.__dict__.items():
             try:
                 if isinstance(getattr(self, key), Widget):
-                    setattr(self.params, key, getattr(self, key).value)
+                    obj_uid = getattr(self, key).value
+                    param_dict[key] = obj_uid
+                    obj = self.params.geoh5.get_entity(obj_uid)
+                    if obj:
+                        if not new_workspace.get_entity(obj_uid):
+                            obj[0].copy(parent=new_workspace, copy_children=True)
             except AttributeError:
                 continue
 
         self.params._free_param_dict = {}
-        ui_json = deepcopy(default_ui_json)
         for group, refinement in zip("ABCDFEGH", self.refinement_list.children):
             self.params._free_param_dict[refinement.children[0].value] = {
                 "object": refinement.children[1].value,
@@ -214,6 +233,11 @@ class OctreeMesh(ObjectDataSelection):
                 "distance": refinement.children[4].value,
             }
 
+        self.params.update(param_dict)
+
+        self.params.geoh5 = new_workspace
+
+        ui_json = deepcopy(default_ui_json)
         self.params.write_input_file(ui_json=ui_json, name=self.params.ga_group_name)
         self.run(self.params)
 
