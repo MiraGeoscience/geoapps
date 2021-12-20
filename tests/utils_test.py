@@ -12,11 +12,12 @@
 
 import itertools
 import os
+import random
 
 import numpy as np
 import pytest
 from discretize import TreeMesh
-from geoh5py.objects import BlockModel
+from geoh5py.objects import BlockModel, Grid2D
 from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 
@@ -27,16 +28,102 @@ from geoapps.utils.utils import (
     downsample_grid,
     downsample_xy,
     filter_xy,
+    get_locations,
     octree_2_treemesh,
     rotate_xy,
     running_mean,
+    sorted_alphanumeric_list,
+    sorted_children_dict,
+    string_2_numeric,
     tensor_2_block_model,
     treemesh_2_octree,
     weighted_average,
     window_xy,
 )
 
-workspace = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon.geoh5")
+
+
+def test_string_2_numeric():
+    assert string_2_numeric("test") == "test"
+    assert string_2_numeric("2.1") == 2.1
+    assert string_2_numeric("34") == 34
+    assert string_2_numeric("1e-2") == 0.01
+    assert string_2_numeric("1.05e2") == 105
+
+
+def test_sorted_alphanumeric_list():
+    test = [
+        "Iteration_3.2e-1_data",
+        "Iteration_1_data",
+        "Iteration_2_data",
+        "Iteration_3_data",
+        "Iteration_5.11_data",
+        "Iteration_5.2_data",
+        "Iteration_6_data",
+        "Iteration_7_data",
+        "Iteration_8e0_data",
+        "Iteration_9.0_data",
+        "Iteration_10_data",
+        "Iteration_11_data",
+        "Iteration_2_model",
+        "Iteration_12_model",
+        "interp_01",
+        "interp_02",
+        "interp_11",
+        "iteration_2_model",
+        "iteration_12_model",
+        "topo",
+        "uncert",
+    ]
+
+    sorted_list = sorted_alphanumeric_list(random.sample(test, len(test)))
+    assert all([sorted_list[i] == test[i] for i in range(len(test))])
+
+
+def test_sorted_children_dict(tmp_path):
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    n_x, n_y = 10, 15
+    grid = Grid2D.create(
+        ws,
+        origin=[0, 0, 0],
+        u_cell_size=20.0,
+        v_cell_size=30.0,
+        u_count=n_x,
+        v_count=n_y,
+        name="test_grid",
+        allow_move=False,
+    )
+
+    test_data = grid.add_data({"Iteration_10_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_1_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_5_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_3_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_2_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_4_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_9.0_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_8e0_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_11_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_6_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_7_data": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"interp_02": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"interp_01": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"interp_11": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"iteration_2_model": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"iteration_12_model": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_2_model": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"Iteration_12_model": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"topo": {"values": np.ones(10 * 15)}})
+    test_data = grid.add_data({"uncert": {"values": np.ones(10 * 15)}})
+
+    d = sorted_children_dict(grid)
+    d = list(d.keys())
+    assert d[0] == "Iteration_1_data"
+    assert d[1] == "Iteration_2_data"
+    assert d[7] == "Iteration_8e0_data"
+    assert d[8] == "Iteration_9.0_data"
+    assert d[-2] == "topo"
+    assert d[-1] == "uncert"
 
 
 def test_rotation_xy():
@@ -150,7 +237,7 @@ def test_weigted_average():
 
 def test_treemesh_2_octree(tmp_path):
 
-    geotest = Geoh5Tester(workspace, tmp_path, "test.geoh5")
+    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
     ws = geotest.make()
     mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
     mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
@@ -176,7 +263,7 @@ def test_treemesh_2_octree(tmp_path):
 
 def test_octree_2_treemesh(tmp_path):
 
-    geotest = Geoh5Tester(workspace, tmp_path, "test.geoh5")
+    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
     ws = geotest.make()
     mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
     mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
@@ -473,3 +560,25 @@ def test_block_model_2_tensor_negative_z(tmp_path):
     )
     assert tensor_mesh.x0[2] == np.min(block_model.z_cell_delimiters)
     assert np.all(model[0][t2bm].flatten() == data.values)
+
+
+def test_get_locations(tmp_path):
+
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    n_x, n_y = 10, 15
+    grid = Grid2D.create(
+        ws,
+        origin=[0, 0, 0],
+        u_cell_size=20.0,
+        v_cell_size=30.0,
+        u_count=n_x,
+        v_count=n_y,
+        name="test_grid",
+        allow_move=False,
+    )
+    base_locs = get_locations(ws, grid)
+
+    test_data = grid.add_data({"test_data": {"values": np.ones(10 * 15)}})
+    data_locs = get_locations(ws, test_data)
+
+    np.testing.assert_array_equal(base_locs, data_locs)

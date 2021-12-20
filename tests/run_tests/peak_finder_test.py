@@ -21,7 +21,7 @@ from geoapps.processing.peak_finder import PeakFinder
 
 def test_peak_finder_app(tmp_path):
     project = "./FlinFlon.geoh5"
-    app = PeakFinder(h5file=project, plot_result=False)
+    app = PeakFinder(geoh5=project, plot_result=False)
 
     h5file_path = Path(tmp_path) / r"testPeakFinder.geoh5"
 
