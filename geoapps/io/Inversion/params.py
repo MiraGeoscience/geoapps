@@ -142,12 +142,12 @@ class InversionParams(Params):
 
         # Validate.
         if self.validate:
-            self.workspace = params_dict["geoh5"]
+            self.geoh5 = params_dict["geoh5"]
             self.associations = self.get_associations(params_dict)
             self.validator: InputValidator = InputValidator(
                 self._required_parameters,
                 self._validations,
-                self.workspace,
+                self.geoh5,
                 **self.validator_opts,
             )
             self.validator.validate_chunk(params_dict, self.associations)
@@ -223,7 +223,7 @@ class InversionParams(Params):
         r = self.receivers_radar_drape
         if isinstance(r, (str, UUID)):
             r = UUID(r) if isinstance(r, str) else r
-            radar = self.workspace.get_entity(r)
+            radar = self.geoh5.get_entity(r)
             radar = radar[0].values if radar else None
         else:
             radar = None
@@ -251,7 +251,7 @@ class InversionParams(Params):
         p = "forward_only"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._forward_only = val
 
@@ -267,7 +267,7 @@ class InversionParams(Params):
         p = "topography_object"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._topography_object = UUID(val) if isinstance(val, str) else val
 
@@ -283,7 +283,7 @@ class InversionParams(Params):
         p = "topography"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._topography = UUID(val) if isinstance(val, str) else val
 
@@ -299,7 +299,7 @@ class InversionParams(Params):
         p = "data_object"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._data_object = UUID(val) if isinstance(val, str) else val
 
@@ -315,7 +315,7 @@ class InversionParams(Params):
         p = "starting_model_object"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._starting_model_object = UUID(val) if isinstance(val, str) else val
 
@@ -331,7 +331,7 @@ class InversionParams(Params):
         p = "starting_model"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._starting_model = UUID(val) if isinstance(val, str) else val
 
@@ -347,7 +347,7 @@ class InversionParams(Params):
         p = "tile_spatial"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._tile_spatial = UUID(val) if isinstance(val, str) else val
 
@@ -363,7 +363,7 @@ class InversionParams(Params):
         p = "z_from_topo"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._z_from_topo = val
 
@@ -379,7 +379,7 @@ class InversionParams(Params):
         p = "receivers_radar_drape"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._receivers_radar_drape = UUID(val) if isinstance(val, str) else val
 
@@ -395,7 +395,7 @@ class InversionParams(Params):
         p = "receivers_offset_x"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._receivers_offset_x = val
 
@@ -411,7 +411,7 @@ class InversionParams(Params):
         p = "receivers_offset_y"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._receivers_offset_y = val
 
@@ -427,7 +427,7 @@ class InversionParams(Params):
         p = "receivers_offset_z"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._receivers_offset_z = val
 
@@ -443,7 +443,7 @@ class InversionParams(Params):
         p = "gps_receivers_offset"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gps_receivers_offset = UUID(val) if isinstance(val, str) else val
 
@@ -459,7 +459,7 @@ class InversionParams(Params):
         p = "ignore_values"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._ignore_values = val
 
@@ -475,7 +475,7 @@ class InversionParams(Params):
         p = "resolution"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._resolution = val
 
@@ -491,7 +491,7 @@ class InversionParams(Params):
         p = "detrend_order"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._detrend_order = val
 
@@ -507,7 +507,7 @@ class InversionParams(Params):
         p = "detrend_type"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._detrend_type = val
 
@@ -523,7 +523,7 @@ class InversionParams(Params):
         p = "max_chunk_size"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._max_chunk_size = val
 
@@ -539,7 +539,7 @@ class InversionParams(Params):
         p = "chunk_by_rows"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._chunk_by_rows = val
 
@@ -555,7 +555,7 @@ class InversionParams(Params):
         p = "output_tile_files"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._output_tile_files = val
 
@@ -571,7 +571,7 @@ class InversionParams(Params):
         p = "mesh"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._mesh = UUID(val) if isinstance(val, str) else val
 
@@ -587,7 +587,7 @@ class InversionParams(Params):
         p = "u_cell_size"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._u_cell_size = val
 
@@ -603,7 +603,7 @@ class InversionParams(Params):
         p = "v_cell_size"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._v_cell_size = val
 
@@ -619,7 +619,7 @@ class InversionParams(Params):
         p = "w_cell_size"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._w_cell_size = val
 
@@ -635,7 +635,7 @@ class InversionParams(Params):
         p = "octree_levels_topo"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._octree_levels_topo = val
 
@@ -651,7 +651,7 @@ class InversionParams(Params):
         p = "octree_levels_obs"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._octree_levels_obs = val
 
@@ -667,7 +667,7 @@ class InversionParams(Params):
         p = "depth_core"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._depth_core = val
 
@@ -683,7 +683,7 @@ class InversionParams(Params):
         p = "max_distance"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._max_distance = val
 
@@ -699,7 +699,7 @@ class InversionParams(Params):
         p = "horizontal_padding"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._horizontal_padding = val
 
@@ -715,7 +715,7 @@ class InversionParams(Params):
         p = "vertical_padding"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._vertical_padding = val
 
@@ -731,7 +731,7 @@ class InversionParams(Params):
         p = "window_center_x"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._window_center_x = val
 
@@ -747,7 +747,7 @@ class InversionParams(Params):
         p = "window_center_y"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._window_center_y = val
 
@@ -763,7 +763,7 @@ class InversionParams(Params):
         p = "window_width"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._window_width = val
 
@@ -779,7 +779,7 @@ class InversionParams(Params):
         p = "window_height"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._window_height = val
 
@@ -795,7 +795,7 @@ class InversionParams(Params):
         p = "window_azimuth"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._window_azimuth = val
 
@@ -811,7 +811,7 @@ class InversionParams(Params):
         p = "inversion_style"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._inversion_style = val
 
@@ -827,7 +827,7 @@ class InversionParams(Params):
         p = "chi_factor"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._chi_factor = val
 
@@ -843,7 +843,7 @@ class InversionParams(Params):
         p = "sens_wts_threshold"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._sens_wts_threshold = val
 
@@ -859,7 +859,7 @@ class InversionParams(Params):
         p = "every_iteration_bool"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._every_iteration_bool = val
 
@@ -875,7 +875,7 @@ class InversionParams(Params):
         p = "f_min_change"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._f_min_change = val
 
@@ -891,7 +891,7 @@ class InversionParams(Params):
         p = "minGNiter"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._minGNiter = val
 
@@ -907,7 +907,7 @@ class InversionParams(Params):
         p = "beta_tol"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._beta_tol = val
 
@@ -923,7 +923,7 @@ class InversionParams(Params):
         p = "prctile"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._prctile = val
 
@@ -939,7 +939,7 @@ class InversionParams(Params):
         p = "coolingRate"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._coolingRate = val
 
@@ -955,7 +955,7 @@ class InversionParams(Params):
         p = "coolEps_q"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._coolEps_q = val
 
@@ -971,7 +971,7 @@ class InversionParams(Params):
         p = "coolEpsFact"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._coolEpsFact = val
 
@@ -987,7 +987,7 @@ class InversionParams(Params):
         p = "beta_search"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._beta_search = val
 
@@ -1003,7 +1003,7 @@ class InversionParams(Params):
         p = "starting_chi_factor"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._starting_chi_factor = val
 
@@ -1019,7 +1019,7 @@ class InversionParams(Params):
         p = "max_iterations"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._max_iterations = val
 
@@ -1035,7 +1035,7 @@ class InversionParams(Params):
         p = "max_line_search_iterations"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._max_line_search_iterations = val
 
@@ -1051,7 +1051,7 @@ class InversionParams(Params):
         p = "max_cg_iterations"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._max_cg_iterations = val
 
@@ -1067,7 +1067,7 @@ class InversionParams(Params):
         p = "max_global_iterations"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._max_global_iterations = val
 
@@ -1083,7 +1083,7 @@ class InversionParams(Params):
         p = "initial_beta"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._initial_beta = val
 
@@ -1099,7 +1099,7 @@ class InversionParams(Params):
         p = "initial_beta_ratio"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._initial_beta_ratio = val
 
@@ -1115,7 +1115,7 @@ class InversionParams(Params):
         p = "tol_cg"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._tol_cg = val
 
@@ -1131,7 +1131,7 @@ class InversionParams(Params):
         p = "alpha_s"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._alpha_s = val
 
@@ -1147,7 +1147,7 @@ class InversionParams(Params):
         p = "alpha_x"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._alpha_x = val
 
@@ -1163,7 +1163,7 @@ class InversionParams(Params):
         p = "alpha_y"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._alpha_y = val
 
@@ -1179,7 +1179,7 @@ class InversionParams(Params):
         p = "alpha_z"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._alpha_z = val
 
@@ -1195,7 +1195,7 @@ class InversionParams(Params):
         p = "s_norm"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._s_norm = val
 
@@ -1211,7 +1211,7 @@ class InversionParams(Params):
         p = "x_norm"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._x_norm = val
 
@@ -1227,7 +1227,7 @@ class InversionParams(Params):
         p = "y_norm"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._y_norm = val
 
@@ -1243,7 +1243,7 @@ class InversionParams(Params):
         p = "z_norm"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._z_norm = val
 
@@ -1259,7 +1259,7 @@ class InversionParams(Params):
         p = "reference_model_object"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._reference_model_object = UUID(val) if isinstance(val, str) else val
 
@@ -1275,7 +1275,7 @@ class InversionParams(Params):
         p = "reference_model"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._reference_model = UUID(val) if isinstance(val, str) else val
 
@@ -1291,7 +1291,7 @@ class InversionParams(Params):
         p = "gradient_type"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._gradient_type = val
 
@@ -1307,7 +1307,7 @@ class InversionParams(Params):
         p = "lower_bound_object"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._lower_bound_object = UUID(val) if isinstance(val, str) else val
 
@@ -1323,7 +1323,7 @@ class InversionParams(Params):
         p = "lower_bound"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._lower_bound = UUID(val) if isinstance(val, str) else val
 
@@ -1339,7 +1339,7 @@ class InversionParams(Params):
         p = "upper_bound_object"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._upper_bound_object = UUID(val) if isinstance(val, str) else val
 
@@ -1355,7 +1355,7 @@ class InversionParams(Params):
         p = "upper_bound"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._upper_bound = UUID(val) if isinstance(val, str) else val
 
@@ -1371,7 +1371,7 @@ class InversionParams(Params):
         p = "parallelized"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._parallelized = val
 
@@ -1387,7 +1387,7 @@ class InversionParams(Params):
         p = "n_cpu"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._n_cpu = val
 
@@ -1403,7 +1403,7 @@ class InversionParams(Params):
         p = "max_ram"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._max_ram = val
 
@@ -1427,10 +1427,10 @@ class InversionParams(Params):
     def ga_group(self) -> ContainerGroup | None:
         if (
             getattr(self, "_ga_group", None) is None
-            and isinstance(self.workspace, Workspace)
+            and isinstance(self.geoh5, Workspace)
             and isinstance(self.out_group, str)
         ):
-            self._ga_group = ContainerGroup.create(self.workspace, name=self.out_group)
+            self._ga_group = ContainerGroup.create(self.geoh5, name=self.out_group)
 
         return self._ga_group
 
@@ -1446,7 +1446,7 @@ class InversionParams(Params):
         p = "no_data_value"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._no_data_value = val
 
@@ -1462,7 +1462,7 @@ class InversionParams(Params):
         p = "distributed_workers"
         if self.validate:
             self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
+                p, val, self.validations[p], self.geoh5, self.associations
             )
         self._distributed_workers = val
 
@@ -1478,7 +1478,7 @@ class InversionParams(Params):
         if ui_json is None:
             defaults = deepcopy(self.defaults)
             ui_json = deepcopy(self.default_ui_json)
-            ui_json["geoh5"] = self.workspace
+            ui_json["geoh5"] = self.geoh5
             self.title = defaults["title"]
             self.run_command = defaults["run_command"]
 
