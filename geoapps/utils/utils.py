@@ -41,6 +41,13 @@ from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
 
+def string_2_list(string):
+    """
+    Convert a list of numbers separated by comma to a list of floats
+    """
+    return [string_2_numeric(val) for val in string.split(",") if len(val) > 0]
+
+
 def string_2_numeric(text: str) -> int | float | str:
     """Converts numeric string representation to int or string if possible."""
     try:
