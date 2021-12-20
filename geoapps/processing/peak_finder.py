@@ -1337,7 +1337,6 @@ class PeakFinder(ObjectDataSelection):
         for key, value in self.__dict__.items():
             try:
                 if isinstance(getattr(self, key), Widget):
-                    # setattr(self.params, key, getattr(self, key).value)
                     param_dict[key] = getattr(self, key).value
             except AttributeError:
                 continue
