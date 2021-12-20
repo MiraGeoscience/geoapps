@@ -119,13 +119,9 @@ class PeakFinder(ObjectDataSelection):
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class(InputFile(ui_json))
         else:
-            if "h5file" in app_initializer.keys():
-                app_initializer["geoh5"] = app_initializer.pop("h5file")
-
             self.params = self._param_class(**app_initializer)
 
         self.defaults.update(self.params.to_dict(ui_json_format=False))
-        self.defaults.pop("workspace", None)
         self.groups_panel = VBox([])
         self.group_auto.observe(self.create_default_groups, names="value")
         self.objects.observe(self.objects_change, names="value")
@@ -728,11 +724,6 @@ class PeakFinder(ObjectDataSelection):
                 channel_groups = self.default_groups_from_property_group(group[0])
                 self._channel_groups = channel_groups
                 self.pause_refresh = True
-                # for name, group in self._channel_groups.items():
-                #     if hasattr(self, f"Template {name} Data"):
-                #         getattr(self, f"Template {name} Data").value = group[
-                #             "data"
-                #         ]
 
                 group_list = []
                 self.update_data_list(None)
@@ -1335,8 +1326,7 @@ class PeakFinder(ObjectDataSelection):
         if new_obj is None:
             obj.copy(parent=new_workspace, copy_children=True)
 
-        self.params.geoh5 = new_workspace.h5file
-        self.params.workspace = new_workspace
+        self.params.geoh5 = new_workspace
 
         param_dict = {}
         for key, value in self.__dict__.items():
@@ -1378,7 +1368,7 @@ class PeakFinder(ObjectDataSelection):
         except ValueError:
             client = Client()
 
-        workspace = params.workspace
+        workspace = params.geoh5
         survey = workspace.get_entity(params.objects)[0]
         prop_group = [pg for pg in survey.property_groups if pg.uid == params.data]
 
@@ -1498,7 +1488,7 @@ class PeakFinder(ObjectDataSelection):
                 np.vstack(color_map).T, names=["Value", "Red", "Green", "Blue", "Alpha"]
             )
             points = Points.create(
-                params.workspace,
+                params.geoh5,
                 name="PointMarkers",
                 vertices=np.vstack(cox),
                 parent=output_group,
@@ -1585,7 +1575,7 @@ class PeakFinder(ObjectDataSelection):
                         markers.append(marker.squeeze())
 
                     curves = Curve.create(
-                        params.workspace,
+                        params.geoh5,
                         name="TickMarkers",
                         vertices=np.vstack(markers),
                         cells=np.arange(len(markers) * 4, dtype="uint32").reshape(
@@ -1607,7 +1597,7 @@ class PeakFinder(ObjectDataSelection):
                         "values": color_map,
                     }
                 inflx_pts = Points.create(
-                    params.workspace,
+                    params.geoh5,
                     name="Inflections_Up",
                     vertices=np.vstack(inflx_up),
                     parent=output_group,
@@ -1629,7 +1619,7 @@ class PeakFinder(ObjectDataSelection):
                     "values": color_map,
                 }
                 inflx_pts = Points.create(
-                    params.workspace,
+                    params.geoh5,
                     name="Inflections_Down",
                     vertices=np.vstack(inflx_dwn),
                     parent=output_group,
@@ -1637,7 +1627,7 @@ class PeakFinder(ObjectDataSelection):
                 channel_group_data.copy(parent=inflx_pts)
 
                 start_pts = Points.create(
-                    params.workspace,
+                    params.geoh5,
                     name="Starts",
                     vertices=np.vstack(start),
                     parent=output_group,
@@ -1645,7 +1635,7 @@ class PeakFinder(ObjectDataSelection):
                 channel_group_data.copy(parent=start_pts)
 
                 end_pts = Points.create(
-                    params.workspace,
+                    params.geoh5,
                     name="Ends",
                     vertices=np.vstack(end),
                     parent=output_group,
@@ -1653,7 +1643,7 @@ class PeakFinder(ObjectDataSelection):
                 channel_group_data.copy(parent=end_pts)
 
                 Points.create(
-                    params.workspace,
+                    params.geoh5,
                     name="Peaks",
                     vertices=np.vstack(peaks),
                     parent=output_group,

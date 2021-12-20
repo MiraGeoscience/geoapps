@@ -6,5 +6,11 @@
 #  (see LICENSE file at the root of this source code package).
 
 from ..validators import InputFreeformValidator
-from .constants import default_ui_json, defaults, required_parameters, validations
+from .constants import (
+    default_ui_json,
+    defaults,
+    free_format_dict,
+    required_parameters,
+    validations,
+)
 from .params import OctreeParams
