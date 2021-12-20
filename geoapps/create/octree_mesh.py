@@ -21,7 +21,7 @@ from geoapps.io import InputFile
 from geoapps.io.Octree.constants import app_initializer, default_ui_json
 from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils.utils import string_2_list, treemesh_2_octree
+from geoapps.utils.utils import string_2_list, string_2_numeric, treemesh_2_octree
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -216,6 +216,10 @@ class OctreeMesh(ObjectDataSelection):
             try:
                 if isinstance(getattr(self, key), Widget):
                     obj_uid = getattr(self, key).value
+                    key_split = key.split()
+                    if key_split[0].lower() in self.params._free_param_identifier:
+                        key_split[-1] = key_split[-1].lower()
+                        key = " ".join(key_split)
                     param_dict[key] = obj_uid
                     obj = self.params.geoh5.get_entity(obj_uid)
                     if obj:
@@ -233,8 +237,8 @@ class OctreeMesh(ObjectDataSelection):
                 "distance": refinement.children[4].value,
             }
 
-        self.params.update(param_dict)
-
+        ifile = InputFile.from_dict(param_dict)
+        self.params.update(ifile.data)
         self.params.geoh5 = new_workspace
 
         ui_json = deepcopy(default_ui_json)
@@ -292,6 +296,7 @@ class OctreeMesh(ObjectDataSelection):
 
             if any(entity):
                 print(f"Applying {label} on: {entity[0].name}")
+
                 treemesh = refine_tree_xyz(
                     treemesh,
                     entity[0].vertices,
