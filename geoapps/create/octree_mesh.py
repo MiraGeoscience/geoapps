@@ -5,10 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
 import sys
 import uuid
 from copy import deepcopy
-from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, Octree, Points, Surface
@@ -41,7 +41,7 @@ class OctreeMesh(ObjectDataSelection):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and path.exists(ui_json):
+        if ui_json is not None and os.path.exists(ui_json):
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)
@@ -198,12 +198,20 @@ class OctreeMesh(ObjectDataSelection):
 
     def trigger_click(self, _):
 
-        new_workspace = Workspace(
-            path.join(
-                self.export_directory.selected_path,
-                self._ga_group_name.value + ".geoh5",
-            )
+        export_path = self.export_directory.selected_path
+        if self.params.monitoring_directory is not None and os.path.exists(
+            self.params.monitoring_directory
+        ):
+            export_path = os.path.join(export_path, ".working")
+            if not os.path.exists(export_path):
+                os.makedirs(export_path)
+
+        new_workspace_path = os.path.join(
+            export_path,
+            self._ga_group_name.value,
         )
+
+        new_workspace = Workspace(new_workspace_path + ".geoh5")
 
         obj, data = self.get_selected_entities()
 
@@ -242,7 +250,10 @@ class OctreeMesh(ObjectDataSelection):
         self.params.geoh5 = new_workspace
 
         ui_json = deepcopy(default_ui_json)
-        self.params.write_input_file(ui_json=ui_json, name=self.params.ga_group_name)
+        self.params.write_input_file(
+            ui_json=ui_json,
+            name=new_workspace_path + ".ui.json",
+        )
         self.run(self.params)
 
     @staticmethod
@@ -312,13 +323,13 @@ class OctreeMesh(ObjectDataSelection):
         print("Writing to file ")
         octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
 
-        if params.monitoring_directory is not None and path.exists(
+        if params.monitoring_directory is not None and os.path.exists(
             params.monitoring_directory
         ):
             BaseApplication.live_link_output(params.monitoring_directory, octree)
 
         print(
-            f"Octree mesh '{octree.name}' completed and exported to {path.abspath(params.geoh5.h5file)}"
+            f"Octree mesh '{octree.name}' completed and exported to {os.path.abspath(params.geoh5.h5file)}"
         )
 
         assert octree.workspace is not None
