@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 from typing import Any
-from uuid import UUID
 
 from geoh5py.shared import Entity
 
@@ -127,9 +126,7 @@ class PeakFinderParams(Params):
 
     @data.setter
     def data(self, val):
-        self.setter_validator(
-            "data", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
-        )
+        self.setter_validator("data", val, fun=self._uuid_promoter)
 
     @property
     def flip_sign(self):
@@ -161,9 +158,7 @@ class PeakFinderParams(Params):
 
     @line_field.setter
     def line_field(self, val):
-        self.setter_validator(
-            "line_field", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
-        )
+        self.setter_validator("line_field", val, fun=self._uuid_promoter)
 
     @property
     def line_id(self):
@@ -227,9 +222,7 @@ class PeakFinderParams(Params):
 
     @objects.setter
     def objects(self, val):
-        self.setter_validator(
-            "objects", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
-        )
+        self.setter_validator("objects", val, fun=self._uuid_promoter)
 
     @property
     def plot_result(self):
