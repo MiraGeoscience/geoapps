@@ -230,8 +230,9 @@ class OctreeMesh(ObjectDataSelection):
                         key = " ".join(key_split)
                     param_dict[key] = obj_uid
                     obj = self.params.geoh5.get_entity(obj_uid)
-                    if obj and not new_workspace.get_entity(obj_uid):
-                        obj[0].copy(parent=new_workspace, copy_children=True)
+                    if obj:
+                        if not new_workspace.get_entity(obj_uid):
+                            obj[0].copy(parent=new_workspace, copy_children=True)
             except AttributeError:
                 continue
 
