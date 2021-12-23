@@ -49,9 +49,12 @@ def test_find_value():
     labels = ["inversion_01_model", "inversion_01_data", "inversion_02_model"]
     assert find_value(labels, ["data"]) == "inversion_01_data"
     assert find_value(labels, ["inversion", "02"]) == "inversion_02_model"
+    assert find_value(labels, ["inversion"]) == "inversion_02_model"
+    assert find_value(labels, ["lskdfjsd"]) == None
     labels = [["inversion_01_model", 1], ["inversion_01_data", 2]]
     assert find_value(labels, ["model"]) == 1
     assert find_value(labels, ["data"]) == 2
+    assert find_value(labels, ["lskdjf"]) is None
 
 
 def test_string_2_numeric():
