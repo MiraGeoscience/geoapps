@@ -16,8 +16,8 @@ dependencies:
   - main::fsspec
   - main::xarray
   - main::dask
-  - main::gdal
-  - main::fiona
+  - conda-forge::gdal
+  - conda-forge::fiona
   - main::h5py
   - main::plotly
   - main::requests
