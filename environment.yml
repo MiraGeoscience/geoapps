@@ -1,32 +1,30 @@
 name: geoapps
 
-channels:
-  - conda-forge
 dependencies:
-  - python
-  - pip
-  - git
-  - discretize
-  - numpy
-  - scipy
-  - matplotlib
-  - ipywidgets
-  - ipykernel
-  - scikit-image
-  - scikit-learn
-  - zarr
-  - fsspec
-  - xarray
-  - dask
-  - gdal
-  - fiona
-  - h5py
-  - plotly
-  - requests
-  - empymod
-  - ipyfilechooser
-  - pydiso
-  - setuptools=58.4
+  - main::python
+  - main::pip
+  - main::git
+  - conda-forge::discretize
+  - main::numpy
+  - main::scipy
+  - main::matplotlib
+  - main::ipywidgets
+  - main::ipykernel
+  - main::scikit-image
+  - main::scikit-learn
+  - main::zarr
+  - main::fsspec
+  - main::xarray
+  - main::dask
+  - main::gdal
+  - main::fiona
+  - main::h5py
+  - main::plotly
+  - main::requests
+  - conda-forge::empymod
+  - conda-forge::ipyfilechooser
+  - conda-forge::pydiso
+  - main::setuptools
   - pip:
     - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.6.1
     - git+https://github.com/MiraGeoscience/simpeg.git@v0.9.1.dev1+geoapps.0.6.0
