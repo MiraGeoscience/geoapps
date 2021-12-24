@@ -15,10 +15,10 @@ dependencies:
   - main::zarr
   - main::fsspec
   - main::xarray
-  - main::dask
+  - conda-forge::dask
   - conda-forge::gdal
   - conda-forge::fiona
-  - main::h5py
+  - conda-forge::h5py
   - main::plotly
   - main::requests
   - conda-forge::empymod
