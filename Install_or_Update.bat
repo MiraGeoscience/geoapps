@@ -8,7 +8,7 @@ if !errorlevel! neq 0 (
 
 cd %~dp0
 call !MY_CONDA_EXE! remove --name geoapps --all --yes
-call !MY_CONDA_EXE! env update --file environment.yml --prune
+call !MY_CONDA_EXE! env create --file environment.yml --prune
 call !MY_CONDA_EXE! activate geoapps && python -m pip install -e . --no-deps
 pause
 cmd /k
