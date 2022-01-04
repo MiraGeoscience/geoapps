@@ -40,10 +40,11 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
       - name: Install dependencies
         run: |
-          conda create --name geoapps --yes
-          conda activate geoapps && conda install --yes --quiet numpy scipy matplotlib ipython h5py
-          conda activate geoapps && conda env update --file environment.yml --prune
-          conda activate geoapps && python -m pip install -e . --no-deps
+          $CONDA/bin/conda create --name geoapps --yes
+          $CONDA/bin/conda activate geoapps &&
+          $CONDA/bin/conda install --yes --quiet numpy scipy matplotlib ipython h5py
+          $CONDA/bin/conda env update --file environment.yml --prune
+          python -m pip install -e . --no-deps
       - name: pytest
         run: |
           conda install pytest pytest-cov
