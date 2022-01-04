@@ -2,15 +2,11 @@ name: geoapps
 
 channels:
   - conda-forge
-  - main
 dependencies:
   - python
   - pip
   - git
   - discretize
-  - numpy
-  - scipy
-  - matplotlib
   - ipywidgets
   - ipykernel
   - scikit-image
@@ -21,7 +17,6 @@ dependencies:
   - dask
   - gdal
   - fiona
-  - h5py
   - plotly
   - requests
   - empymod
