@@ -47,7 +47,8 @@ jobs:
           python -m pip install -e . --no-deps
       - name: pytest
         run: |
-          conda install pytest pytest-cov
+          C:\Miniconda\condabin\conda.bat activate geoapps
+          C:\Miniconda\condabin\conda.bat install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
       - name: Codecov
         if: ${{ success() && matrix.python_ver == '3.7' }}
