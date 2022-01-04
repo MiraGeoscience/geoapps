@@ -40,9 +40,9 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
       - name: Install main dependencies
         run: |
-          C:\Miniconda\condabin\conda.bat create --name geoapps --yes
-          C:\Miniconda\condabin\conda.bat activate geoapps
-          C:\Miniconda\condabin\conda.bat install --yes --quiet numpy scipy matplotlib ipython h5py
+          conda create --name geoapps --yes
+          conda activate geoapps
+          conda install --yes --quiet numpy scipy matplotlib ipython h5py
       - name: Setup conda env
         uses: conda-incubator/setup-miniconda@v2
         with:
@@ -53,8 +53,7 @@ jobs:
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: pytest
         run: |
-          C:\Miniconda\condabin\conda.bat activate geoapps
-          C:\Miniconda\condabin\conda.bat install pytest pytest-cov
+          conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
       - name: Codecov
         if: ${{ success() && matrix.python_ver == '3.7' }}
