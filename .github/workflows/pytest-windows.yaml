@@ -38,13 +38,19 @@ jobs:
           path: ~/conda_pkgs_dir
           key:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
-      - name: Install dependencies
+      - name: Install main dependencies
         run: |
           C:\Miniconda\condabin\conda.bat create --name geoapps --yes
           C:\Miniconda\condabin\conda.bat activate geoapps
           C:\Miniconda\condabin\conda.bat install --yes --quiet numpy scipy matplotlib ipython h5py
-          C:\Miniconda\condabin\conda.bat env update --file environment.yml --prune
-          python -m pip install -e . --no-deps
+      - name: Setup conda env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: geoapps
+          python-version: ${{ matrix.python_ver }}
+          channel-priority: strict
+          environment-file: environment.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: pytest
         run: |
           C:\Miniconda\condabin\conda.bat activate geoapps
