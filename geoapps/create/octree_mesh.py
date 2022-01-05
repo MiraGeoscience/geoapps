@@ -11,7 +11,7 @@ import uuid
 from copy import deepcopy
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import Curve, Octree, Points, Surface
+from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
@@ -229,9 +229,16 @@ class OctreeMesh(ObjectDataSelection):
                         key_split[-1] = key_split[-1].lower()
                         key = " ".join(key_split)
                     param_dict[key] = obj_uid
-                    obj = self.params.geoh5.get_entity(obj_uid)
-                    if obj and not new_workspace.get_entity(obj_uid):
-                        obj[0].copy(parent=new_workspace, copy_children=True)
+
+                    if not isinstance(obj_uid, uuid.UUID):
+                        continue
+
+                    obj = self.params.geoh5.get_entity(obj_uid)[0]
+                    if (
+                        isinstance(obj, ObjectBase)
+                        and new_workspace.get_entity(obj_uid) is None
+                    ):
+                        obj.copy(parent=new_workspace, copy_children=True)
             except AttributeError:
                 continue
 
@@ -243,6 +250,16 @@ class OctreeMesh(ObjectDataSelection):
                 "type": refinement.children[3].value,
                 "distance": refinement.children[4].value,
             }
+
+            if not isinstance(refinement.children[1].value, uuid.UUID):
+                continue
+
+            obj = self.params.geoh5.get_entity(refinement.children[1].value)[0]
+            if (
+                isinstance(obj, ObjectBase)
+                and new_workspace.get_entity(refinement.children[1].value)[0] is None
+            ):
+                obj.copy(parent=new_workspace, copy_children=True)
 
         ifile = InputFile.from_dict(param_dict)
         self.params.update(ifile.data)
