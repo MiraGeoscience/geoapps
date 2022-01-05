@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+Release 0.6.2 - 2022/01/05
+--------------------------
+
+**(Hot fixes)**
+
+ - Fix Block Model origin issue in Data Transfer App
+ - Fix optional tem checkbox in PeakFinder App
+ - Fix issue with sorting of data in dropdowns
+ - Fix issue with reference MVI model
+ - Fix FEM-1D crash when using susceptibility model
+ - Fix crash on geoh5 change for Octree Mesh App
+ - Docs maintenance
+
+
 Release 0.6.1 - 2021/12/09
 --------------------------
 
