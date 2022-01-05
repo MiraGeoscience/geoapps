@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -1329,7 +1329,6 @@ class PeakFinder(ObjectDataSelection):
         for key, value in self.__dict__.items():
             try:
                 if isinstance(getattr(self, key), Widget):
-                    # setattr(self.params, key, getattr(self, key).value)
                     param_dict[key] = getattr(self, key).value
             except AttributeError:
                 continue
