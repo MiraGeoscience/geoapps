@@ -744,27 +744,27 @@ class InversionApp(PlotSelection2D):
 
     @property
     def topography(self):
-        if self._topography_group.options.value == "Object":
-            return self._topography_group.data.value
-        elif self._topography_group.options.value == "Constant":
-            return self._topography_group.constant.value
+        if self.topography_group.options.value == "Object":
+            return self.topography_group.data.value
+        elif self.topography_group.options.value == "Constant":
+            return self.topography_group.constant.value
         else:
             return None
 
     @topography.setter
     def topography(self, value):
         if isinstance(value, float):
-            self._topography_group.constant.value = value
-            self._topography_group.options.value = "Constant"
+            self.topography_group.constant.value = value
+            self.topography_group.options.value = "Constant"
         elif value is None:
-            self._topography_group.options.value = "None"
+            self.topography_group.options.value = "None"
         else:
-            self._topography_group.options.value = "Object"
-            self._topography_group.data.value = value
+            self.topography_group.options.value = "Object"
+            self.topography_group.data.value = value
 
     @property
     def topography_object(self):
-        return self._topography_group.objects
+        return self.topography_group.objects
 
     @property
     def topography_group(self):
