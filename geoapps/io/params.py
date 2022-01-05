@@ -203,6 +203,8 @@ class Params:
             "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
         )
 
+        self.validator.geoh5 = self.geoh5
+
     @property
     def run_command(self):
         return self._run_command
