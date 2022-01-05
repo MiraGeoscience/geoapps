@@ -8,9 +8,9 @@ dependencies:
   - pip
   - git
   - discretize
-  - main::numpy
-  - main::scipy
-  - main::matplotlib
+  - numpy
+  - scipy
+  - matplotlib
   - ipywidgets
   - ipykernel
   - scikit-image
@@ -21,7 +21,7 @@ dependencies:
   - dask
   - gdal
   - fiona
-  - main::h5py
+  - h5py=3.6
   - plotly
   - requests
   - empymod
