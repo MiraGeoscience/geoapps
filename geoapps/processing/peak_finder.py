@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -171,7 +171,7 @@ class PeakFinder(ObjectDataSelection):
         )
         self.group_display.observe(self.update_center, names="value")
         self.show_decay.observe(self.show_decay_trigger, names="value")
-        self.tem_checkbox.observe(self.objects_change, names="value")
+        self.tem_checkbox.observe(self.tem_change, names="value")
         self.groups_setter.observe(self.groups_trigger)
         self.scale_button.observe(self.scale_update)
         self.flip_sign.observe(self.set_data, names="value")
@@ -724,11 +724,6 @@ class PeakFinder(ObjectDataSelection):
                 channel_groups = self.default_groups_from_property_group(group[0])
                 self._channel_groups = channel_groups
                 self.pause_refresh = True
-                # for name, group in self._channel_groups.items():
-                #     if hasattr(self, f"Template {name} Data"):
-                #         getattr(self, f"Template {name} Data").value = group[
-                #             "data"
-                #         ]
 
                 group_list = []
                 self.update_data_list(None)
@@ -915,7 +910,7 @@ class PeakFinder(ObjectDataSelection):
         if self.workspace.get_entity(self.objects.value):
             self._survey = self.workspace.get_entity(self.objects.value)[0]
             self.update_data_list(None)
-            not_tem = True
+            is_tem = False
             self.active_channels = {}
             self.channel_groups = {}
             for child in self.groups_panel.children:
@@ -930,23 +925,20 @@ class PeakFinder(ObjectDataSelection):
                 ):
                     if aem_system in self.system.options:
                         self.system.value = aem_system
-                        not_tem = False
+                        is_tem = True
                         break
 
-            if not_tem:
-                self.tem_checkbox.value = False
-                self.min_channels.disabled = True
-                self.show_decay.value = False
-                self.system.disabled = True
-            else:
-                self.tem_checkbox.value = True
-                self.min_channels.disabled = False
-                self.system.disabled = False
+            self.tem_checkbox.value = is_tem
 
             if self.group_auto:
                 self.create_default_groups(None)
 
             self.set_data(None)
+
+    def tem_change(self, _):
+        self.min_channels.disabled = not self.tem_checkbox.value
+        self.show_decay.value = False
+        self.system.disabled = not self.tem_checkbox.value
 
     def plot_data_selection(
         self,
@@ -1337,7 +1329,6 @@ class PeakFinder(ObjectDataSelection):
         for key, value in self.__dict__.items():
             try:
                 if isinstance(getattr(self, key), Widget):
-                    # setattr(self.params, key, getattr(self, key).value)
                     param_dict[key] = getattr(self, key).value
             except AttributeError:
                 continue

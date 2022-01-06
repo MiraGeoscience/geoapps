@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -22,10 +22,14 @@ defaults = {
     "vertical_padding": 1000.0,
     "depth_core": 500.0,
     "ga_group_name": "Octree_Mesh",
-    "Template A Object": None,
-    "Template A Levels": [4, 4, 4],
-    "Template A Type": "radial",
-    "Template A Distance": 1000.0,
+    "Refinement A object": None,
+    "Refinement A levels": [16, 8, 4, 2],
+    "Refinement A type": "surface",
+    "Refinement A distance": 5000.0,
+    "Refinement B object": None,
+    "Refinement B levels": [16, 8, 4, 2],
+    "Refinement B type": "surface",
+    "Refinement B distance": 5000.0,
     "run_command": ("geoapps.create.octree_mesh"),
     "run_command_boolean": False,
     "monitoring_directory": None,
@@ -97,6 +101,79 @@ default_ui_json = {
         "label": "Name:",
         "value": "Octree_Mesh",
     },
+    "Refinement A object": {
+        "enabled": True,
+        "group": "refinement a",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+        ],
+        "value": None,
+    },
+    "Refinement A levels": {
+        "enabled": True,
+        "group": "refinement a",
+        "label": "Levels",
+        "value": [16, 8, 4, 2],
+    },
+    "Refinement A type": {
+        "choiceList": ["surface", "radial"],
+        "enabled": True,
+        "group": "refinement a",
+        "label": "Type",
+        "value": "surface",
+    },
+    "Refinement A distance": {
+        "enabled": True,
+        "group": "refinement a",
+        "label": "Distance",
+        "value": 5000.0,
+    },
+    "Refinement B object": {
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+        ],
+        "value": None,
+    },
+    "Refinement B levels": {
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Levels",
+        "value": [16, 8, 4, 2],
+    },
+    "Refinement B type": {
+        "choiceList": ["surface", "radial"],
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Type",
+        "value": "surface",
+    },
+    "Refinement B distance": {
+        "enabled": True,
+        "group": "refinement b",
+        "label": "Distance",
+        "value": 5000.0,
+    },
+    "run_command": ("geoapps.create.octree_mesh"),
+    "run_command_boolean": {
+        "value": False,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": True,
+    },
+    "monitoring_directory": None,
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": False,
+}
+
+free_format_dict = {
     "Template Object": {
         "enabled": True,
         "group": "Refinement A",
@@ -127,16 +204,6 @@ default_ui_json = {
         "label": "Distance",
         "value": 1000.0,
     },
-    "run_command": ("geoapps.create.octree_mesh"),
-    "run_command_boolean": {
-        "value": False,
-        "label": "Run python module ",
-        "tooltip": "Warning: launches process to run python model on save",
-        "main": True,
-    },
-    "monitoring_directory": None,
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": False,
 }
 
 required_parameters = ["objects"]
@@ -214,8 +281,8 @@ app_initializer = {
     "Refinement A levels": [4.0, 4.0, 4.0],
     "Refinement A type": "radial",
     "Refinement A distance": 1000,
-    "Refinement B object": None,
-    "Refinement B levels": [0.0, 0.0, 2.0],
+    "Refinement B object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "Refinement B levels": [16.0, 8.0, 4.0],
     "Refinement B type": "surface",
-    "Refinement B distance": 1000,
+    "Refinement B distance": 1200,
 }

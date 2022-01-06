@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -114,7 +114,7 @@ class DirectivesFactory:
                 sorting=sorting,
                 transform=lambda x: np.column_stack(
                     list(inversion_data.observed.values())
-                ).ravel()
+                ).ravel()[np.argsort(sorting)]
                 - x,
             )
             self.save_iteration_residual_directive.label = "Residual"

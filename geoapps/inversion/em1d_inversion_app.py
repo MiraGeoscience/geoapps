@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -1024,14 +1024,18 @@ class InversionApp(PlotSelection2D):
             else:
                 offsets = tx_offsets[0]
 
-            channel_options = ChannelOptions(
-                key,
-                labels[ind],
-                uncertainties=", ".join(
-                    [str(uncert) for uncert in uncertainties[ind][:2]]
-                ),
-                offsets=", ".join([str(offset) for offset in offsets]),
-            )
+            try:
+                channel_options = ChannelOptions(
+                    key,
+                    labels[ind],
+                    uncertainties=", ".join(
+                        [str(uncert) for uncert in uncertainties[ind][:2]]
+                    ),
+                    offsets=", ".join([str(offset) for offset in offsets]),
+                )
+
+            except IndexError:
+                continue
             channel_options.channel_selection.observe(channel_setter, names="value")
             data_channel_options[key] = channel_options.main
             data_channel_options[key].children[1].value = channel
@@ -1338,6 +1342,7 @@ class InversionApp(PlotSelection2D):
             self.topography,
             self.inversion_parameters.starting_model,
             self.inversion_parameters.reference_model,
+            self.inversion_parameters.susceptibility_model,
         ]:
             obj, data = elem.get_selected_entities()
 

@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from uuid import UUID
 
 from geoapps.io.Inversion import InversionParams
 
@@ -70,14 +69,7 @@ class InducedPolarizationParams(InversionParams):
 
     @chargeability_channel_bool.setter
     def chargeability_channel_bool(self, val):
-        if val is None:
-            self._chargeability_channel_bool = val
-            return
-        p = "chargeability_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.geoh5, self.associations
-        )
-        self._chargeability_channel_bool = val
+        self.setter_validator("chargeability_channel_bool", val)
 
     @property
     def chargeability_channel(self):
@@ -85,11 +77,7 @@ class InducedPolarizationParams(InversionParams):
 
     @chargeability_channel.setter
     def chargeability_channel(self, val):
-        self.setter_validator(
-            "chargeability_channel",
-            val,
-            fun=lambda x: UUID(x) if isinstance(x, str) else x,
-        )
+        self.setter_validator("chargeability_channel", val, fun=self._uuid_promoter)
 
     @property
     def chargeability_uncertainty(self):
@@ -97,11 +85,7 @@ class InducedPolarizationParams(InversionParams):
 
     @chargeability_uncertainty.setter
     def chargeability_uncertainty(self, val):
-        self.setter_validator(
-            "chargeability_uncertainty",
-            val,
-            fun=lambda x: UUID(x) if isinstance(x, str) else x,
-        )
+        self.setter_validator("chargeability_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def conductivity_model_object(self):
@@ -109,11 +93,7 @@ class InducedPolarizationParams(InversionParams):
 
     @conductivity_model_object.setter
     def conductivity_model_object(self, val):
-        self.setter_validator(
-            "conductivity_model_object",
-            val,
-            fun=lambda x: UUID(x) if isinstance(x, str) else x,
-        )
+        self.setter_validator("conductivity_model_object", val, fun=self._uuid_promoter)
 
     @property
     def conductivity_model(self):
@@ -121,8 +101,4 @@ class InducedPolarizationParams(InversionParams):
 
     @conductivity_model.setter
     def conductivity_model(self, val):
-        self.setter_validator(
-            "conductivity_model",
-            val,
-            fun=lambda x: UUID(x) if isinstance(x, str) else x,
-        )
+        self.setter_validator("conductivity_model", val, fun=self._uuid_promoter)
