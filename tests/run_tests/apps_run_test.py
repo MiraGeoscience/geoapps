@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -25,7 +25,7 @@ from geoapps.processing import (
 
 project = "./FlinFlon.geoh5"
 
-workspace = Workspace(project)
+geoh5 = Workspace(project)
 
 project_dcip = "./FlinFlon_dcip.geoh5"
 

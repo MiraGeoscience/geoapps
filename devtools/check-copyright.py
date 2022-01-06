@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 # This file is part of geoapps.
 #

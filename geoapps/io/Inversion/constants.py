@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -586,7 +586,6 @@ default_ui_json = {
         "value": None,
     },
     "max_ram": None,
-    "workspace": None,
     "no_data_value": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -636,7 +635,7 @@ validations = {
         "types": [str, int, float, FloatData],
     },
     "z_from_topo": {"types": [bool]},
-    "receivers_radar_drape": {"types": [str], "reqs": [("data_object")]},
+    "receivers_radar_drape": {"types": [str, UUID], "reqs": [("data_object")]},
     "receivers_offset_x": {
         "types": [int, float],
     },
@@ -835,9 +834,6 @@ validations = {
     },
     "max_ram": {
         "types": [int, float],
-    },
-    "workspace": {
-        "types": [str, Workspace],
     },
     "no_data_value": {
         "types": [int, float],

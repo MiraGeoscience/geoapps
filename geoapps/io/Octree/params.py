@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,14 +9,19 @@ from __future__ import annotations
 
 from copy import deepcopy
 from typing import Any
-from uuid import UUID
 
 from geoh5py.shared import Entity
 
 from ..input_file import InputFile
 from ..params import Params
 from ..validators import InputFreeformValidator
-from . import default_ui_json, defaults, required_parameters, validations
+from . import (
+    default_ui_json,
+    defaults,
+    free_format_dict,
+    required_parameters,
+    validations,
+)
 
 
 class OctreeParams(Params):
@@ -63,12 +68,12 @@ class OctreeParams(Params):
 
         # Validate.
         if self.validate:
-            self.workspace = params_dict["geoh5"]
+            self.geoh5 = params_dict["geoh5"]
             self.associations = self.get_associations(params_dict)
             self.validator: InputFreeformValidator = InputFreeformValidator(
                 required_parameters,
                 validations,
-                self.workspace,
+                self.geoh5,
                 free_params_keys=self._free_param_keys,
             )
             self.validator.validate_chunk(params_dict, self.associations)
@@ -94,9 +99,7 @@ class OctreeParams(Params):
 
     @objects.setter
     def objects(self, val):
-        self.setter_validator(
-            "objects", val, fun=lambda x: UUID(x) if isinstance(val, str) else x
-        )
+        self.setter_validator("objects", val, fun=self._uuid_promoter)
 
     @property
     def u_cell_size(self):
@@ -161,22 +164,16 @@ class OctreeParams(Params):
 
         if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
-                setattr(self, "workspace", params_dict["geoh5"])
+                setattr(self, "geoh5", params_dict["geoh5"])
 
         free_param_dict = {}
         for key, value in params_dict.items():
-
-            if key == "workspace":
-                continue  # ignores deprecated workspace name
 
             if "Template" in key:
                 continue
 
             # Update default_ui_json and store free_param_groups for app
-            if (
-                self._free_param_identifier in key.lower()
-                and key not in self.default_ui_json
-            ):
+            if self._free_param_identifier in key.lower():
                 for param in self._free_param_keys:
                     if param in key.lower():
                         group = key.lower().replace(param, "").rstrip()
@@ -185,9 +182,9 @@ class OctreeParams(Params):
                             free_param_dict[group] = {}
 
                         free_param_dict[group][param] = value
-                        self.default_ui_json[key] = self.default_ui_json[
-                            f"Template {param.capitalize()}"
-                        ]
+                        self.default_ui_json[key] = deepcopy(
+                            free_format_dict[f"Template {param.capitalize()}"]
+                        )
                         self.default_ui_json[key]["group"] = group
                         break
 
@@ -202,12 +199,6 @@ class OctreeParams(Params):
                     setattr(self, key, value.uid)
                 else:
                     setattr(self, key, value)
-
-        # Clear Template
-
-        for key in list(self.default_ui_json.keys()):
-            if "Template" in key:
-                del self.default_ui_json[key]
 
         self._free_param_dict = free_param_dict
         self.param_names = list(self.default_ui_json.keys())

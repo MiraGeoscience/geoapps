@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -38,7 +38,7 @@ def test_susceptibility_run(
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    workspace = setup_inversion_workspace(
+    geoh5 = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.05,
@@ -47,18 +47,18 @@ def test_susceptibility_run(
         n_lines=n_grid_points,
         flatten=False,
     )
-    model = workspace.get_entity("model")[0]
+    model = geoh5.get_entity("model")[0]
     params = MagneticScalarParams(
         forward_only=True,
-        geoh5=workspace,
+        geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=workspace.get_entity("topography")[0].uid,
+        topography_object=geoh5.get_entity("topography")[0].uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
-        data_object=workspace.get_entity("survey")[0].uid,
+        data_object=geoh5.get_entity("survey")[0].uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
@@ -66,14 +66,14 @@ def test_susceptibility_run(
 
     fwr_driver = MagneticScalarDriver(params)
     fwr_driver.run()
-    workspace = Workspace(workspace.h5file)
-    tmi = workspace.get_entity("Predicted_tmi")[0]
+    geoh5 = Workspace(geoh5.h5file)
+    tmi = geoh5.get_entity("Predicted_tmi")[0]
     # Run the inverse
     np.random.seed(0)
     params = MagneticScalarParams(
-        geoh5=workspace,
-        mesh=workspace.get_entity("mesh")[0].uid,
-        topography_object=workspace.get_entity("topography")[0].uid,
+        geoh5=geoh5,
+        mesh=geoh5.get_entity("mesh")[0].uid,
+        topography_object=geoh5.get_entity("topography")[0].uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
@@ -97,9 +97,9 @@ def test_susceptibility_run(
 
     driver = MagneticScalarDriver(params)
     driver.run()
-    run_ws = Workspace(driver.params.workspace.h5file)
+    run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
     if pytest:
         np.testing.assert_almost_equal(
@@ -141,7 +141,7 @@ def test_magnetic_vector_run(
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    workspace = setup_inversion_workspace(
+    geoh5 = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.05,
@@ -149,18 +149,18 @@ def test_magnetic_vector_run(
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
     )
-    model = workspace.get_entity("model")[0]
+    model = geoh5.get_entity("model")[0]
     params = MagneticVectorParams(
         forward_only=True,
-        geoh5=workspace,
+        geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=workspace.get_entity("topography")[0].uid,
+        topography_object=geoh5.get_entity("topography")[0].uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
-        data_object=workspace.get_entity("survey")[0].uid,
+        data_object=geoh5.get_entity("survey")[0].uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
         starting_inclination=45,
@@ -168,13 +168,13 @@ def test_magnetic_vector_run(
     )
     fwr_driver = MagneticVectorDriver(params)
     fwr_driver.run()
-    workspace = Workspace(workspace.h5file)
-    tmi = workspace.get_entity("Predicted_tmi")[0]
+    geoh5 = Workspace(geoh5.h5file)
+    tmi = geoh5.get_entity("Predicted_tmi")[0]
     # Run the inverse
     params = MagneticVectorParams(
-        geoh5=workspace,
-        mesh=workspace.get_entity("mesh")[0].uid,
-        topography_object=workspace.get_entity("topography")[0].uid,
+        geoh5=geoh5,
+        mesh=geoh5.get_entity("mesh")[0].uid,
+        topography_object=geoh5.get_entity("topography")[0].uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
@@ -196,10 +196,10 @@ def test_magnetic_vector_run(
     )
     driver = MagneticVectorDriver(params)
     driver.run()
-    run_ws = Workspace(driver.params.workspace.h5file)
+    run_ws = Workspace(driver.params.geoh5.h5file)
     # Re-open the workspace and get iterations
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
     if pytest:
         np.testing.assert_almost_equal(

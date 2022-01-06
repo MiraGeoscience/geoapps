@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -23,7 +23,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils.utils import weighted_average
+from geoapps.utils.utils import get_locations, weighted_average
 
 
 class DataInterpolation(ObjectDataSelection):
@@ -80,7 +80,7 @@ class DataInterpolation(ObjectDataSelection):
             description="Maximum depth (m)",
         )
         self._method = RadioButtons(
-            options=["Nearest", "Linear", "Inverse Distance"],
+            options=["Nearest", "Inverse Distance"],
         )
         self._new_grid = Text(
             description="Name",
@@ -91,7 +91,7 @@ class DataInterpolation(ObjectDataSelection):
         )
         self._out_object = Dropdown()
         self._padding_distance = Text(
-            description="Pad Distance (W, E, N, S, D, U)",
+            description="Pad Distance (W, E, S, N, D, U)",
         )
         self._skew_angle = FloatText(
             description="Azimuth (d.dd)",
@@ -366,52 +366,97 @@ class DataInterpolation(ObjectDataSelection):
         else:
             self.destination_panel.children = [self.out_mode, self.new_grid_panel]
 
+    def object_base(self, object):
+        for entity in self._workspace.get_entity(object):
+            if isinstance(entity, ObjectBase):
+                return entity
+        return None
+
+    @staticmethod
+    def truncate_locs_depths(locs, depth_core):
+        zmax = locs[:, 2].max()  # top of locs
+        below_core_ind = (zmax - locs[:, 2]) > depth_core
+        core_bottom_elev = zmax - depth_core
+        locs[
+            below_core_ind, 2
+        ] = core_bottom_elev  # sets locations below core to core bottom
+        return locs
+
+    @staticmethod
+    def minimum_depth_core(locs, depth_core, core_z_cell_size):
+        zrange = locs[:, 2].max() - locs[:, 2].min()  # locs z range
+        if depth_core >= zrange:
+            return depth_core - zrange + core_z_cell_size
+        else:
+            return depth_core
+
+    @staticmethod
+    def find_top_padding(obj, core_z_cell_size):
+        pad_sum = 0
+        for h in np.abs(np.diff(obj.z_cell_delimiters)):
+            if h != core_z_cell_size:
+                pad_sum += h
+            else:
+                return pad_sum
+
+    @staticmethod
+    def get_block_model(workspace, name, locs, h, depth_core, pads, expansion_factor):
+
+        locs = DataInterpolation.truncate_locs_depths(locs, depth_core)
+        depth_core = DataInterpolation.minimum_depth_core(locs, depth_core, h[2])
+        mesh = mesh_utils.mesh_builder_xyz(
+            locs,
+            h,
+            padding_distance=[
+                [pads[0], pads[1]],
+                [pads[2], pads[3]],
+                [pads[4], pads[5]],
+            ],
+            depth_core=depth_core,
+            expansion_factor=expansion_factor,
+        )
+
+        object_out = BlockModel.create(
+            workspace,
+            origin=[mesh.x0[0], mesh.x0[1], locs[:, 2].max()],
+            u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
+            v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
+            z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
+            name=name,
+        )
+
+        top_padding = DataInterpolation.find_top_padding(object_out, h[2])
+        object_out.origin["z"] += top_padding
+
+        return object_out
+
     def trigger_click(self, _):
 
-        for entity in self._workspace.get_entity(self.objects.value):
-            if isinstance(entity, ObjectBase):
-                object_from = entity
-
-        if hasattr(object_from, "centroids"):
-            xyz = object_from.centroids.copy()
-        elif hasattr(object_from, "vertices"):
-            xyz = object_from.vertices.copy()
-        else:
+        object_from = self.object_base(self.objects.value)
+        xyz = get_locations(self.workspace, object_from)
+        if xyz is None:
             return
 
         if len(self.data.value) == 0:
             print("No data selected")
             return
+
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
         if self.out_mode.value == "To Object":
 
-            for entity in self._workspace.get_entity(self.out_object.value):
-                if isinstance(entity, ObjectBase):
-                    self.object_out = entity
-
-            if hasattr(self.object_out, "centroids"):
-                xyz_out = self.object_out.centroids.copy()
-            elif hasattr(self.object_out, "vertices"):
-                xyz_out = self.object_out.vertices.copy()
+            self.object_out = self.object_base(self.out_object.value)
+            xyz_out = get_locations(self._workspace, self.object_out)
 
         else:
 
-            ref_in = None
-            for entity in self._workspace.get_entity(self.xy_reference.value):
-                if isinstance(entity, ObjectBase):
-                    ref_in = entity
-
-            if hasattr(ref_in, "centroids"):
-                xyz_ref = ref_in.centroids
-            elif hasattr(ref_in, "vertices"):
-                xyz_ref = ref_in.vertices
-            else:
+            xyz_ref = get_locations(self._workspace, self.xy_reference.value)
+            if xyz_ref is None:
                 print(
                     "No object selected for 'Lateral Extent'. Defaults to input object."
                 )
-                xyz_ref = xyz
+                xyz_ref = xyz.copy()
 
             # Find extent of grid
             h = np.asarray(self.core_cell_size.value.split(",")).astype(float).tolist()
@@ -422,34 +467,14 @@ class DataInterpolation(ObjectDataSelection):
                 .tolist()
             )
 
-            # Use discretize to build a tensor mesh
-            delta_z = xyz_ref[:, 2].max() - xyz_ref[:, 2]
-            xyz_ref[delta_z > self.depth_core.value, 2] = (
-                xyz_ref[:, 2].max() - self.depth_core.value
-            )
-            depth_core = (
-                self.depth_core.value
-                - (xyz_ref[:, 2].max() - xyz_ref[:, 2].min())
-                + h[2]
-            )
-            mesh = mesh_utils.mesh_builder_xyz(
+            self.object_out = DataInterpolation.get_block_model(
+                self._workspace,
+                self.new_grid.value,
                 xyz_ref,
                 h,
-                padding_distance=[
-                    [pads[0], pads[1]],
-                    [pads[2], pads[3]],
-                    [pads[4], pads[5]],
-                ],
-                depth_core=depth_core,
-                expansion_factor=self.expansion_fact.value,
-            )
-            self.object_out = BlockModel.create(
-                self.workspace,
-                origin=[mesh.x0[0], mesh.x0[1], xyz_ref[:, 2].max()],
-                u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
-                v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-                z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
-                name=self.new_grid.value,
+                self.depth_core.value,
+                pads,
+                self.expansion_fact.value,
             )
 
             # Try to recenter on nearest

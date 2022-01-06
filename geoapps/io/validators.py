@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -22,7 +22,7 @@ class InputValidator:
     ----------
     requirements : List of required parameters.
     validations : Validations dictionary with matching set of input parameter keys.
-    workspace (optional) : Workspace instance needed to validate uuid types.
+    geoh5 (optional) : Workspace instance needed to validate uuid types.
 
 
     Methods
@@ -38,12 +38,12 @@ class InputValidator:
         self,
         requirements: list[str],
         validations: dict[str, Any],
-        workspace: Workspace = None,
+        geoh5: Workspace = None,
         ignore_requirements: bool = False,
     ):
         self.requirements = requirements
         self.validations = validations
-        self.workspace = workspace
+        self.geoh5 = geoh5
         self.ignore_requirements = ignore_requirements
 
     @property
@@ -89,7 +89,7 @@ class InputValidator:
                 raise KeyError(f"{k} is not a valid parameter name.")
             else:
                 self.validate(
-                    k, v, self.validations[k], self.workspace, chunk, associations
+                    k, v, self.validations[k], self.geoh5, chunk, associations
                 )
 
     def validate(
@@ -97,7 +97,7 @@ class InputValidator:
         param: str,
         value: Any,
         pvalidations: dict[str, list[Any]],
-        workspace: Workspace = None,
+        geoh5: Workspace = None,
         chunk: dict[str, Any] = None,
         associations: dict[str | UUID, str | UUID] = None,
     ) -> None:
@@ -134,7 +134,7 @@ class InputValidator:
                     msg = self._iterable_validation_msg(param, "keys", k, vkeys)
                     if vkeys:
                         raise KeyError(msg)
-                self.validate(k, v, pvalidations[k], workspace, chunk, associations)
+                self.validate(k, v, pvalidations[k], geoh5, chunk, associations)
 
         if value is None:
             if chunk is None:
@@ -146,7 +146,7 @@ class InputValidator:
             else:
                 return
 
-        ws = self.workspace if workspace is None else workspace
+        ws = self.geoh5 if geoh5 is None else geoh5
         if "values" in pvalidations.keys():
             self._validate_parameter_val(param, value, pvalidations["values"])
         if "types" in pvalidations.keys():
@@ -246,7 +246,7 @@ class InputValidator:
         return msg
 
     def _validate_parameter_uuid(
-        self, param: str, value: str, workspace: Workspace = None, parent: UUID = None
+        self, param: str, value: str, geoh5: Workspace = None, parent: UUID = None
     ) -> None:
         """Check whether a string is a valid uuid and addresses an object in the workspace."""
         msg = self._general_validation_msg(param, "uuid", value)
@@ -259,25 +259,25 @@ class InputValidator:
                 msg += " Must be a valid uuid string."
                 raise ValueError(msg)
 
-        if workspace is not None:
-            obj = workspace.get_entity(obj_uuid)
+        if geoh5 is not None:
+            obj = geoh5.get_entity(obj_uuid)
             if obj[0] is None:
-                msg += f" Address does not exist in workspace: {workspace}."
+                msg += f" Address does not exist in workspace: {geoh5}."
                 raise IndexError(msg)
 
         if parent is not None:
-            parent_obj = workspace.get_entity(parent)[0]
+            parent_obj = geoh5.get_entity(parent)[0]
             if obj_uuid not in [c.uid for c in parent_obj.children]:
                 msg += f" Object must be a child of {parent}."
                 raise IndexError(msg)
 
     def _validate_parameter_property_groups(
-        self, param: str, value: str, workspace: Workspace = None, parent: UUID = None
+        self, param: str, value: str, geoh5: Workspace = None, parent: UUID = None
     ) -> None:
         msg = self._general_validation_msg(param, "property_groups", value)
 
         if parent is not None:
-            parent_obj = workspace.get_entity(parent)[0]
+            parent_obj = geoh5.get_entity(parent)[0]
             if value not in [pg.uid for pg in parent_obj.property_groups]:
                 msg += f" Property Group must exist for {parent}."
 
@@ -359,10 +359,10 @@ class InputFreeformValidator(InputValidator):
         self,
         requirements: list[str],
         validations: dict[str, Any],
-        workspace: Workspace = None,
+        geoh5: Workspace = None,
         free_params_keys: list = [],
     ):
-        super().__init__(requirements, validations, workspace=workspace)
+        super().__init__(requirements, validations, geoh5=geoh5)
         self._free_params_keys = free_params_keys
 
     def validate_chunk(self, chunk, associations) -> None:
@@ -389,7 +389,7 @@ class InputFreeformValidator(InputValidator):
                 raise KeyError(f"{k} is not a valid parameter name.")
             else:
                 validator = self.validations[k]
-            self.validate(k, v, validator, self.workspace, chunk, associations)
+            self.validate(k, v, validator, self.geoh5, chunk, associations)
 
         # TODO This check should be handled by a group validator
         if any(free_params_dict):

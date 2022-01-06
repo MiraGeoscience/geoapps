@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,7 +10,7 @@ from geoh5py.workspace import Workspace
 from geoapps.inversion.em1d_inversion_app import InversionApp
 
 project = "FlinFlon.geoh5"
-workspace = Workspace(project)
+geoh5 = Workspace(project)
 
 
 def test_em1d_inversion(tmp_path):

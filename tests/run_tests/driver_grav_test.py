@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -38,7 +38,7 @@ def test_gravity_run(
 
     np.random.seed(0)
     # Run the forward
-    workspace = setup_inversion_workspace(
+    geoh5 = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.75,
@@ -47,36 +47,36 @@ def test_gravity_run(
         refinement=refinement,
         flatten=False,
     )
-    model = workspace.get_entity("model")[0]
+    model = geoh5.get_entity("model")[0]
     params = GravityParams(
         forward_only=True,
-        geoh5=workspace,
+        geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=workspace.get_entity("topography")[0].uid,
+        topography_object=geoh5.get_entity("topography")[0].uid,
         resolution=0.0,
         z_from_topo=False,
-        data_object=workspace.get_entity("survey")[0].uid,
+        data_object=geoh5.get_entity("survey")[0].uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
     params.workpath = tmp_path
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
-    workspace = Workspace(workspace.h5file)
+    geoh5 = Workspace(geoh5.h5file)
 
-    gz = workspace.get_entity("Predicted_gz")[0]
+    gz = geoh5.get_entity("Predicted_gz")[0]
     orig_gz = gz.values.copy()
 
     # Turn some values to nan
     gz.values[0] = np.nan
-    workspace.finalize()
+    geoh5.finalize()
 
     # Run the inverse
     np.random.seed(0)
     params = GravityParams(
-        geoh5=workspace,
-        mesh=workspace.get_entity("mesh")[0].uid,
-        topography_object=workspace.get_entity("topography")[0].uid,
+        geoh5=geoh5,
+        mesh=geoh5.get_entity("mesh")[0].uid,
+        topography_object=geoh5.get_entity("topography")[0].uid,
         resolution=0.0,
         data_object=gz.parent.uid,
         starting_model=1e-4,
@@ -97,9 +97,9 @@ def test_gravity_run(
     params.workpath = tmp_path
     driver = GravityDriver(params)
     driver.run()
-    run_ws = Workspace(driver.params.workspace.h5file)
+    run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
-        driver.params.workspace.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
 
     residual = run_ws.get_entity("Iteration_1_grav_gz_Residual")[0]

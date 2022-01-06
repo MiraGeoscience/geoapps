@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,4 +8,3 @@
 from .input_file import InputFile
 from .params import Params
 from .validators import InputFreeformValidator, InputValidator
-from .write_default_uijson import write_default_uijson

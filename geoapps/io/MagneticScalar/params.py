@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.workspace import Workspace
@@ -110,14 +109,7 @@ class MagneticScalarParams(InversionParams):
 
     @inversion_type.setter
     def inversion_type(self, val):
-        if val is None:
-            self._inversion_type = val
-            return
-        p = "inversion_type"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inversion_type = val
+        self.setter_validator("inversion_type", val)
 
     @property
     def inducing_field_strength(self):
@@ -125,16 +117,7 @@ class MagneticScalarParams(InversionParams):
 
     @inducing_field_strength.setter
     def inducing_field_strength(self, val):
-        if val is None:
-            self._inducing_field_strength = val
-            return
-        p = "inducing_field_strength"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        if val <= 0:
-            raise ValueError("inducing_field_strength must be greater than 0.")
-        self._inducing_field_strength = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("inducing_field_strength", val)
 
     @property
     def inducing_field_inclination(self):
@@ -142,14 +125,7 @@ class MagneticScalarParams(InversionParams):
 
     @inducing_field_inclination.setter
     def inducing_field_inclination(self, val):
-        if val is None:
-            self._inducing_field_inclination = val
-            return
-        p = "inducing_field_inclination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inducing_field_inclination = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("inducing_field_inclination", val)
 
     @property
     def inducing_field_declination(self):
@@ -157,14 +133,7 @@ class MagneticScalarParams(InversionParams):
 
     @inducing_field_declination.setter
     def inducing_field_declination(self, val):
-        if val is None:
-            self._inducing_field_declination = val
-            return
-        p = "inducing_field_declination"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._inducing_field_declination = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("inducing_field_declination", val)
 
     @property
     def tmi_channel_bool(self):
@@ -172,14 +141,7 @@ class MagneticScalarParams(InversionParams):
 
     @tmi_channel_bool.setter
     def tmi_channel_bool(self, val):
-        if val is None:
-            self._tmi_channel_bool = val
-            return
-        p = "tmi_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._tmi_channel_bool = val
+        self.setter_validator("tmi_channel_bool", val)
 
     @property
     def tmi_channel(self):
@@ -187,14 +149,7 @@ class MagneticScalarParams(InversionParams):
 
     @tmi_channel.setter
     def tmi_channel(self, val):
-        if val is None:
-            self._tmi_channel = val
-            return
-        p = "tmi_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._tmi_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("tmi_channel", val, fun=self._uuid_promoter)
 
     @property
     def tmi_uncertainty(self):
@@ -202,14 +157,7 @@ class MagneticScalarParams(InversionParams):
 
     @tmi_uncertainty.setter
     def tmi_uncertainty(self, val):
-        if val is None:
-            self._tmi_uncertainty = val
-            return
-        p = "tmi_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._tmi_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("tmi_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def bxx_channel_bool(self):
@@ -217,14 +165,7 @@ class MagneticScalarParams(InversionParams):
 
     @bxx_channel_bool.setter
     def bxx_channel_bool(self, val):
-        if val is None:
-            self._bxx_channel_bool = val
-            return
-        p = "bxx_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bxx_channel_bool = val
+        self.setter_validator("bxx_channel_bool", val)
 
     @property
     def bxx_channel(self):
@@ -232,14 +173,7 @@ class MagneticScalarParams(InversionParams):
 
     @bxx_channel.setter
     def bxx_channel(self, val):
-        if val is None:
-            self._bxx_channel = val
-            return
-        p = "bxx_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bxx_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bxx_channel", val, fun=self._uuid_promoter)
 
     @property
     def bxx_uncertainty(self):
@@ -247,14 +181,7 @@ class MagneticScalarParams(InversionParams):
 
     @bxx_uncertainty.setter
     def bxx_uncertainty(self, val):
-        if val is None:
-            self._bxx_uncertainty = val
-            return
-        p = "bxx_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bxx_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bxx_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def bxy_channel_bool(self):
@@ -262,14 +189,7 @@ class MagneticScalarParams(InversionParams):
 
     @bxy_channel_bool.setter
     def bxy_channel_bool(self, val):
-        if val is None:
-            self._bxy_channel_bool = val
-            return
-        p = "bxy_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bxy_channel_bool = val
+        self.setter_validator("bxy_channel_bool", val)
 
     @property
     def bxy_channel(self):
@@ -277,14 +197,7 @@ class MagneticScalarParams(InversionParams):
 
     @bxy_channel.setter
     def bxy_channel(self, val):
-        if val is None:
-            self._bxy_channel = val
-            return
-        p = "bxy_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bxy_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bxy_channel", val, fun=self._uuid_promoter)
 
     @property
     def bxy_uncertainty(self):
@@ -292,14 +205,7 @@ class MagneticScalarParams(InversionParams):
 
     @bxy_uncertainty.setter
     def bxy_uncertainty(self, val):
-        if val is None:
-            self._bxy_uncertainty = val
-            return
-        p = "bxy_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bxy_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bxy_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def bxz_channel_bool(self):
@@ -307,14 +213,7 @@ class MagneticScalarParams(InversionParams):
 
     @bxz_channel_bool.setter
     def bxz_channel_bool(self, val):
-        if val is None:
-            self._bxz_channel_bool = val
-            return
-        p = "bxz_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bxz_channel_bool = val
+        self.setter_validator("bxz_channel_bool", val)
 
     @property
     def bxz_channel(self):
@@ -322,14 +221,7 @@ class MagneticScalarParams(InversionParams):
 
     @bxz_channel.setter
     def bxz_channel(self, val):
-        if val is None:
-            self._bxz_channel = val
-            return
-        p = "bxz_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bxz_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bxz_channel", val, fun=self._uuid_promoter)
 
     @property
     def bxz_uncertainty(self):
@@ -337,14 +229,7 @@ class MagneticScalarParams(InversionParams):
 
     @bxz_uncertainty.setter
     def bxz_uncertainty(self, val):
-        if val is None:
-            self._bxz_uncertainty = val
-            return
-        p = "bxz_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bxz_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bxz_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def byy_channel_bool(self):
@@ -352,14 +237,7 @@ class MagneticScalarParams(InversionParams):
 
     @byy_channel_bool.setter
     def byy_channel_bool(self, val):
-        if val is None:
-            self._byy_channel_bool = val
-            return
-        p = "byy_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._byy_channel_bool = val
+        self.setter_validator("byy_channel_bool", val)
 
     @property
     def byy_channel(self):
@@ -367,14 +245,7 @@ class MagneticScalarParams(InversionParams):
 
     @byy_channel.setter
     def byy_channel(self, val):
-        if val is None:
-            self._byy_channel = val
-            return
-        p = "byy_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._byy_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("byy_channel", val, fun=self._uuid_promoter)
 
     @property
     def byy_uncertainty(self):
@@ -382,14 +253,7 @@ class MagneticScalarParams(InversionParams):
 
     @byy_uncertainty.setter
     def byy_uncertainty(self, val):
-        if val is None:
-            self._byy_uncertainty = val
-            return
-        p = "byy_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._byy_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("byy_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def byz_channel_bool(self):
@@ -397,14 +261,7 @@ class MagneticScalarParams(InversionParams):
 
     @byz_channel_bool.setter
     def byz_channel_bool(self, val):
-        if val is None:
-            self._byz_channel_bool = val
-            return
-        p = "byz_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._byz_channel_bool = val
+        self.setter_validator("byz_channel_bool", val)
 
     @property
     def byz_channel(self):
@@ -412,14 +269,7 @@ class MagneticScalarParams(InversionParams):
 
     @byz_channel.setter
     def byz_channel(self, val):
-        if val is None:
-            self._byz_channel = val
-            return
-        p = "byz_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._byz_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("byz_channel", val, fun=self._uuid_promoter)
 
     @property
     def byz_uncertainty(self):
@@ -427,14 +277,7 @@ class MagneticScalarParams(InversionParams):
 
     @byz_uncertainty.setter
     def byz_uncertainty(self, val):
-        if val is None:
-            self._byz_uncertainty = val
-            return
-        p = "byz_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._byz_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("byz_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def bzz_channel_bool(self):
@@ -442,14 +285,7 @@ class MagneticScalarParams(InversionParams):
 
     @bzz_channel_bool.setter
     def bzz_channel_bool(self, val):
-        if val is None:
-            self._bzz_channel_bool = val
-            return
-        p = "bzz_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bzz_channel_bool = val
+        self.setter_validator("bzz_channel_bool", val)
 
     @property
     def bzz_channel(self):
@@ -457,14 +293,7 @@ class MagneticScalarParams(InversionParams):
 
     @bzz_channel.setter
     def bzz_channel(self, val):
-        if val is None:
-            self._bzz_channel = val
-            return
-        p = "bzz_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bzz_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bzz_channel", val, fun=self._uuid_promoter)
 
     @property
     def bzz_uncertainty(self):
@@ -472,14 +301,7 @@ class MagneticScalarParams(InversionParams):
 
     @bzz_uncertainty.setter
     def bzz_uncertainty(self, val):
-        if val is None:
-            self._bzz_uncertainty = val
-            return
-        p = "bzz_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bzz_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bzz_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def bx_channel_bool(self):
@@ -487,14 +309,7 @@ class MagneticScalarParams(InversionParams):
 
     @bx_channel_bool.setter
     def bx_channel_bool(self, val):
-        if val is None:
-            self._bx_channel_bool = val
-            return
-        p = "bx_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bx_channel_bool = val
+        self.setter_validator("bx_channel_bool", val)
 
     @property
     def bx_channel(self):
@@ -502,14 +317,7 @@ class MagneticScalarParams(InversionParams):
 
     @bx_channel.setter
     def bx_channel(self, val):
-        if val is None:
-            self._bx_channel = val
-            return
-        p = "bx_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bx_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bx_channel", val, fun=self._uuid_promoter)
 
     @property
     def bx_uncertainty(self):
@@ -517,14 +325,7 @@ class MagneticScalarParams(InversionParams):
 
     @bx_uncertainty.setter
     def bx_uncertainty(self, val):
-        if val is None:
-            self._bx_uncertainty = val
-            return
-        p = "bx_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bx_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bx_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def by_channel_bool(self):
@@ -532,14 +333,7 @@ class MagneticScalarParams(InversionParams):
 
     @by_channel_bool.setter
     def by_channel_bool(self, val):
-        if val is None:
-            self._by_channel_bool = val
-            return
-        p = "by_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._by_channel_bool = val
+        self.setter_validator("by_channel_bool", val)
 
     @property
     def by_channel(self):
@@ -547,14 +341,7 @@ class MagneticScalarParams(InversionParams):
 
     @by_channel.setter
     def by_channel(self, val):
-        if val is None:
-            self._by_channel = val
-            return
-        p = "by_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._by_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("by_channel", val, fun=self._uuid_promoter)
 
     @property
     def by_uncertainty(self):
@@ -562,14 +349,7 @@ class MagneticScalarParams(InversionParams):
 
     @by_uncertainty.setter
     def by_uncertainty(self, val):
-        if val is None:
-            self._by_uncertainty = val
-            return
-        p = "by_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._by_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("by_uncertainty", val, fun=self._uuid_promoter)
 
     @property
     def bz_channel_bool(self):
@@ -577,14 +357,7 @@ class MagneticScalarParams(InversionParams):
 
     @bz_channel_bool.setter
     def bz_channel_bool(self, val):
-        if val is None:
-            self._bz_channel_bool = val
-            return
-        p = "bz_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bz_channel_bool = val
+        self.setter_validator("bz_channel_bool", val)
 
     @property
     def bz_channel(self):
@@ -592,14 +365,7 @@ class MagneticScalarParams(InversionParams):
 
     @bz_channel.setter
     def bz_channel(self, val):
-        if val is None:
-            self._bz_channel = val
-            return
-        p = "bz_channel"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bz_channel = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bz_channel", val, fun=self._uuid_promoter)
 
     @property
     def bz_uncertainty(self):
@@ -607,11 +373,4 @@ class MagneticScalarParams(InversionParams):
 
     @bz_uncertainty.setter
     def bz_uncertainty(self, val):
-        if val is None:
-            self._bz_uncertainty = val
-            return
-        p = "bz_uncertainty"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._bz_uncertainty = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("bz_uncertainty", val, fun=self._uuid_promoter)
