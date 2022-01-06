@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -82,7 +82,6 @@ class InversionApp(PlotSelection2D):
     _select_multiple = True
     _add_groups = False
     _sensor = None
-    _lines = None
     _topography = None
     inversion_parameters = None
     defaults = {}
@@ -94,7 +93,7 @@ class InversionApp(PlotSelection2D):
 
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
-            ifile = Inputfile(ui_json)
+            ifile = InputFile(ui_json)
             self.params = self._param_class(ifile, **kwargs)
         else:
             self.params = self._param_class(**app_initializer)
@@ -155,7 +154,6 @@ class InversionApp(PlotSelection2D):
             value=int(multiprocessing.cpu_count() / 2), description="Max CPUs"
         )
         self._tile_spatial = IntText(value=1, description="Number of tiles")
-        # self._initial_beta = FloatText(value=1e2, description="Value:")
         self._initial_beta_ratio = FloatText(
             value=1e2, description="Beta ratio (phi_d/phi_m):"
         )
@@ -354,10 +352,6 @@ class InversionApp(PlotSelection2D):
     def alpha_z(self):
         return self._alpha_z
 
-    # @property
-    # def initial_beta(self):
-    #     return self._initial_beta
-
     @property
     def initial_beta(self):
         return self._initial_beta_ratio
@@ -392,16 +386,10 @@ class InversionApp(PlotSelection2D):
 
     @property
     def n_cpu(self):
-        """
-        ipywidgets.IntText()
-        """
         return self._n_cpu
 
     @property
     def tile_spatial(self):
-        """
-        ipywidgets.IntText()
-        """
         return self._tile_spatial
 
     @property
@@ -652,13 +640,6 @@ class InversionApp(PlotSelection2D):
         return self._inducing_field_declination
 
     @property
-    def lines(self):
-        if getattr(self, "_lines", None) is None:
-            self._lines = LineOptions(workspace=self._workspace, objects=self._objects)
-            self.lines.lines.observe(self.update_selection, names="value")
-        return self._lines
-
-    @property
     def main(self):
         if getattr(self, "_main", None) is None:
             self._main = VBox(
@@ -763,27 +744,27 @@ class InversionApp(PlotSelection2D):
 
     @property
     def topography(self):
-        if self._topography_group.options.value == "Object":
-            return self._topography_group.data.value
-        elif self._topography_group.options.value == "Constant":
-            return self._topography_group.constant.value
+        if self.topography_group.options.value == "Object":
+            return self.topography_group.data.value
+        elif self.topography_group.options.value == "Constant":
+            return self.topography_group.constant.value
         else:
             return None
 
     @topography.setter
     def topography(self, value):
         if isinstance(value, float):
-            self._topography_group.constant.value = value
-            self._topography_group.options.value = "Constant"
+            self.topography_group.constant.value = value
+            self.topography_group.options.value = "Constant"
         elif value is None:
-            self._topography_group.options.value = "None"
+            self.topography_group.options.value = "None"
         else:
-            self._topography_group.options.value = "Object"
-            self._topography_group.data.value = value
+            self.topography_group.options.value = "Object"
+            self.topography_group.data.value = value
 
     @property
     def topography_object(self):
-        return self._topography_group.objects
+        return self.topography_group.objects
 
     @property
     def topography_group(self):
@@ -806,7 +787,6 @@ class InversionApp(PlotSelection2D):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
-        # self.lines.workspace = workspace
         self.sensor.workspace = workspace
         self._topography_group.workspace = workspace
         self._reference_model_group.workspace = workspace
@@ -1168,11 +1148,6 @@ class InversionApp(PlotSelection2D):
         self.resolution.indices = None
         self.write.button_style = "warning"
         self.trigger.button_style = "danger"
-
-    def update_selection(self, _):
-        self.highlight_selection = {self.lines.data.value: self.lines.lines.value}
-        self.refresh.value = False
-        self.refresh.value = True
 
     def write_trigger(self, _):
         # Copy object to work geoh5

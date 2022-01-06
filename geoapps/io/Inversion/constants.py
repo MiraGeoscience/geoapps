@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -635,7 +635,7 @@ validations = {
         "types": [str, int, float, FloatData],
     },
     "z_from_topo": {"types": [bool]},
-    "receivers_radar_drape": {"types": [str], "reqs": [("data_object")]},
+    "receivers_radar_drape": {"types": [str, UUID], "reqs": [("data_object")]},
     "receivers_offset_x": {
         "types": [int, float],
     },

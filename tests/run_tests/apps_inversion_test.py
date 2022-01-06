@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -91,6 +91,41 @@ def test_mag_inversion(tmp_path):
             getattr(params_reload, param) == value
         ), f"Side effect parameter {param} not saved and loaded correctly."
 
+    # Test the groups
+    groups = [
+        "topography",
+        "reference_model",
+        "starting_model",
+        "starting_inclination",
+        "starting_declination",
+        "reference_inclination",
+        "reference_declination",
+        "upper_bound",
+        "lower_bound",
+    ]
+
+    for group in groups:
+        if "Constant" in getattr(app, "_" + group + "_group").options.options:
+            setattr(app, group, 1.0)
+            assert (
+                getattr(app, "_" + group + "_group").options.value == "Constant"
+            ), f"Property group {group} did not reset to 'Constant'"
+
+        if "None" in getattr(app, "_" + group + "_group").options.options:
+            setattr(app, group, None)
+            assert (
+                getattr(app, "_" + group + "_group").options.value == "None"
+            ), f"Property group {group} did not reset to 'None'"
+
+        if "Model" in getattr(app, "_" + group + "_group").options.options:
+            getattr(app, "_" + group + "_group").objects.value = new_topo.uid
+            setattr(app, group, new_topo.children[1].uid)
+            assert (
+                getattr(app, "_" + group + "_group").options.value == "Model"
+            ), f"Property group {group} did not reset to 'Model'"
+        #
+        # setattr(app, group, 1.)
+
 
 def test_dc_inversion(tmp_path):
     """Tests the jupyter application for dc inversion"""
@@ -131,6 +166,35 @@ def test_dc_inversion(tmp_path):
         assert (
             getattr(params_reload, param) == value
         ), f"Side effect parameter {param} not saved and loaded correctly."
+
+    # Test the groups
+    groups = [
+        "topography",
+        "reference_model",
+        "starting_model",
+        "upper_bound",
+        "lower_bound",
+    ]
+
+    for group in groups:
+        if "Constant" in getattr(app, "_" + group + "_group").options.options:
+            setattr(app, group, 1.0)
+            assert (
+                getattr(app, "_" + group + "_group").options.value == "Constant"
+            ), f"Property group {group} did not reset to 'Constant'"
+
+        if "None" in getattr(app, "_" + group + "_group").options.options:
+            setattr(app, group, None)
+            assert (
+                getattr(app, "_" + group + "_group").options.value == "None"
+            ), f"Property group {group} did not reset to 'None'"
+
+        if "Model" in getattr(app, "_" + group + "_group").options.options:
+            getattr(app, "_" + group + "_group").objects.value = new_topo.uid
+            setattr(app, group, new_topo.children[1].uid)
+            assert (
+                getattr(app, "_" + group + "_group").options.value == "Model"
+            ), f"Property group {group} did not reset to 'Model'"
 
 
 def test_ip_inversion(tmp_path):
@@ -181,3 +245,32 @@ def test_ip_inversion(tmp_path):
         assert (
             getattr(params_reload, param) == value
         ), f"Side effect parameter {param} not saved and loaded correctly."
+
+    groups = [
+        "topography",
+        "reference_model",
+        "starting_model",
+        "conductivity_model",
+        "upper_bound",
+        "lower_bound",
+    ]
+
+    for group in groups:
+        if "Constant" in getattr(app, "_" + group + "_group").options.options:
+            setattr(app, group, 1.0)
+            assert (
+                getattr(app, "_" + group + "_group").options.value == "Constant"
+            ), f"Property group {group} did not reset to 'Constant'"
+
+        if "None" in getattr(app, "_" + group + "_group").options.options:
+            setattr(app, group, None)
+            assert (
+                getattr(app, "_" + group + "_group").options.value == "None"
+            ), f"Property group {group} did not reset to 'None'"
+
+        if "Model" in getattr(app, "_" + group + "_group").options.options:
+            getattr(app, "_" + group + "_group").objects.value = new_topo.uid
+            setattr(app, group, new_topo.children[1].uid)
+            assert (
+                getattr(app, "_" + group + "_group").options.value == "Model"
+            ), f"Property group {group} did not reset to 'Model'"

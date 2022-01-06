@@ -41,4 +41,4 @@ License
 **geoapps** is distributed under the terms and conditions of the [MIT License](LICENSE).
 
 
-*Copyright (c) 2021 Mira Geoscience Ltd.*
+*Copyright (c) 2022 Mira Geoscience Ltd.*

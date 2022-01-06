@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from uuid import UUID
 
 import ipywidgets as widgets
@@ -291,16 +290,11 @@ class ObjectDataSelection(BaseApplication):
 
             if self.add_groups != "only":
                 options += [["--- Channels ---", None]]
-                children_list = {
-                    child.uid: child.name
-                    for child in obj.children
-                    if isinstance(child, (IntegerData, FloatData))
-                }
-                ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
+
+                children = utils.sorted_children_dict(obj)
+                excl = ["visual parameter"]
                 options += [
-                    [name, uid]
-                    for uid, name in ordered.items()
-                    if "visual parameter" not in name.lower()
+                    [k, v] for k, v in children.items() if k.lower() not in excl
                 ]
 
                 if self.add_xyz:
@@ -345,15 +339,7 @@ class ObjectDataSelection(BaseApplication):
                 [obj.parent.name + "/" + obj.name, obj.uid] for obj in obj_list
             ]
 
-            # if value in list(dict(options).values()):  # Silent update
-            #     self.objects.unobserve(self.update_data_list, names="value")
-            #     self.objects.options = options
-            #     self.objects.value = value
-            #     self._objects.observe(self.update_data_list, names="value")
-            # else:
             self.objects.options = options
-            # if value in list(dict(options).values()):
-            #     self.objects.value = value
 
     def update_uid_name_map(self):
         """
