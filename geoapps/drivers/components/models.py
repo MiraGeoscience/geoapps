@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -278,6 +278,7 @@ class InversionModel:
                 )
 
                 if model is not None:
+                    model += 1e-8  # make sure the incl/decl don't zero out
                     model = (field_vecs.T * model).T
 
         else:

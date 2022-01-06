@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -84,12 +84,7 @@ def write_default_uijson(path, use_initializers=False):
     }
 
     for filename, params in filedict.items():
-
-        if use_initializers:
-            if getattr(params, "forward_only", None) is not None:
-                params.write_input_file(name=filename, path=path)
-        else:
-            params.write_input_file(name=filename, path=path, default=True)
+        params.write_input_file(name=filename, path=path, default=not use_initializers)
 
 
 if __name__ == "__main__":
@@ -98,6 +93,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "path", help="Path to folder where default ui.json files will be written."
     )
+    parser.add_argument(
+        "--use_initializers",
+        help="Write files initialized with FlinFlon values.",
+        action="store_true",
+    )
     args = parser.parse_args()
-    path = args.path
-    write_default_uijson(path)
+    write_default_uijson(args.path, args.use_initializers)

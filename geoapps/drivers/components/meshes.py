@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -108,7 +108,7 @@ class InversionMesh:
             "depth_core",
             "horizontal_padding",
             "vertical_padding",
-            "workspace",
+            "geoh5",
         ]
 
         mesh_params_dict = params.to_dict(ui_json_format=False)

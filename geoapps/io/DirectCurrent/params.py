@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from uuid import UUID
 
 from geoapps.io.Inversion import InversionParams
 
@@ -67,14 +66,7 @@ class DirectCurrentParams(InversionParams):
 
     @potential_channel_bool.setter
     def potential_channel_bool(self, val):
-        if val is None:
-            self._potential_channel_bool = val
-            return
-        p = "potential_channel_bool"
-        self.validator.validate(
-            p, val, self.validations[p], self.workspace, self.associations
-        )
-        self._potential_channel_bool = val
+        self.setter_validator("potential_channel_bool", val)
 
     @property
     def potential_channel(self):
@@ -82,9 +74,7 @@ class DirectCurrentParams(InversionParams):
 
     @potential_channel.setter
     def potential_channel(self, val):
-        self.setter_validator(
-            "potential_channel", val, fun=lambda x: UUID(x) if isinstance(x, str) else x
-        )
+        self.setter_validator("potential_channel", val, fun=self._uuid_promoter)
 
     @property
     def potential_uncertainty(self):
@@ -92,8 +82,4 @@ class DirectCurrentParams(InversionParams):
 
     @potential_uncertainty.setter
     def potential_uncertainty(self, val):
-        self.setter_validator(
-            "potential_uncertainty",
-            val,
-            fun=lambda x: UUID(x) if isinstance(x, str) else x,
-        )
+        self.setter_validator("potential_uncertainty", val, fun=self._uuid_promoter)

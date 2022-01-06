@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -17,12 +17,12 @@ from geoapps.drivers.components.locations import InversionLocations
 from geoapps.io.MagneticVector import MagneticVectorParams, default_ui_json
 from geoapps.utils.testing import Geoh5Tester
 
-workspace = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon.geoh5")
 
 
 def setup_params(tmp):
     geotest = Geoh5Tester(
-        workspace, tmp, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
+        geoh5, tmp, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
     )
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")

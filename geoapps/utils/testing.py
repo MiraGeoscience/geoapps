@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -27,9 +27,9 @@ from geoapps.utils import treemesh_2_octree
 class Geoh5Tester:
     """Create temp workspace, copy entities, and setup params class."""
 
-    def __init__(self, workspace, path, name, ui=None, params_class=None):
+    def __init__(self, geoh5, path, name, ui=None, params_class=None):
 
-        self.workspace = workspace
+        self.geoh5 = geoh5
         self.tmp_path = os.path.join(path, name)
 
         if params_class is not None:
@@ -42,7 +42,7 @@ class Geoh5Tester:
             self.has_params = False
 
     def copy_entity(self, uid):
-        self.workspace.get_entity(uid)[0].copy(parent=self.ws)
+        self.geoh5.get_entity(uid)[0].copy(parent=self.ws)
 
     def set_param(self, param, value):
         if self.has_params:
@@ -77,7 +77,7 @@ def setup_inversion_workspace(
     flatten=False,
 ):
     project = os.path.join(work_dir, "inversion_test.geoh5")
-    workspace = Workspace(project)
+    geoh5 = Workspace(project)
     # Topography
     xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
     b = 100
@@ -89,7 +89,7 @@ def setup_inversion_workspace(
     topo = np.c_[utils.mkvc(xx), utils.mkvc(yy), utils.mkvc(zz)]
     triang = Delaunay(topo[:, :2])
     surf = Surface.create(
-        workspace, vertices=topo, cells=triang.simplices, name="topography"
+        geoh5, vertices=topo, cells=triang.simplices, name="topography"
     )
     # Observation points
     n_electrodes = 4 if dcip & (n_electrodes < 4) else n_electrodes
@@ -107,12 +107,10 @@ def setup_inversion_workspace(
 
         parts = np.repeat(np.arange(n_lines), n_electrodes).astype("int32")
         currents = CurrentElectrode.create(
-            workspace, name="survey (currents)", vertices=vertices, parts=parts
+            geoh5, name="survey (currents)", vertices=vertices, parts=parts
         )
         currents.add_default_ab_cell_id()
-        potentials = PotentialElectrode.create(
-            workspace, name="survey", vertices=vertices
-        )
+        potentials = PotentialElectrode.create(geoh5, name="survey", vertices=vertices)
         potentials.current_electrodes = currents
         currents.potential_electrodes = potentials
 
@@ -143,7 +141,7 @@ def setup_inversion_workspace(
     else:
 
         points = Points.create(
-            workspace,
+            geoh5,
             vertices=vertices,
             name="survey",
         )
@@ -166,7 +164,7 @@ def setup_inversion_workspace(
         octree_levels_padding=refinement,
         finalize=True,
     )
-    octree = treemesh_2_octree(workspace, mesh, name="mesh")
+    octree = treemesh_2_octree(geoh5, mesh, name="mesh")
     active = active_from_xyz(mesh, surf.vertices, grid_reference="N")
     # Model
     if flatten:
@@ -188,4 +186,4 @@ def setup_inversion_workspace(
     model[~active] = np.nan
     octree.add_data({"model": {"values": model[mesh._ubc_order]}})
     octree.copy()  # Keep a copy around for ref
-    return workspace
+    return geoh5

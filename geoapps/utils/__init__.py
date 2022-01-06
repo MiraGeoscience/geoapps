@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -12,6 +12,7 @@ from .utils import (
     downsample_xy,
     filter_xy,
     get_inversion_output,
+    get_locations,
     octree_2_treemesh,
     rotate_xy,
     treemesh_2_octree,

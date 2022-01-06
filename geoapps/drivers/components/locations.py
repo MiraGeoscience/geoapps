@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -21,6 +21,7 @@ from geoh5py.objects import Grid2D, Points, PotentialElectrode
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
+from geoapps.utils import get_locations as get_locs
 from geoapps.utils import rotate_xy
 
 
@@ -123,15 +124,7 @@ class InversionLocations:
 
         """
 
-        if isinstance(obj, UUID):
-            data_object = self.workspace.get_entity(obj)[0]
-        else:
-            data_object = obj
-
-        if isinstance(data_object, Grid2D):
-            locs = data_object.centroids
-        else:
-            locs = data_object.vertices
+        locs = get_locs(self.workspace, obj)
 
         if locs is None:
             msg = f"Workspace object {data_object} 'vertices' attribute is None."

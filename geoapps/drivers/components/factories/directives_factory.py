@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -114,7 +114,7 @@ class DirectivesFactory:
                 sorting=sorting,
                 transform=lambda x: np.column_stack(
                     list(inversion_data.observed.values())
-                ).ravel()
+                ).ravel()[np.argsort(sorting)]
                 - x,
             )
             self.save_iteration_residual_directive.label = "Residual"
@@ -199,7 +199,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 if transform is not None and is_dc:
                     property = "resistivity"
                     kwargs["channels"] = [f"apparent_{property}"]
-                    apparent_measurement_entity_type = self.params.workspace.get_entity(
+                    apparent_measurement_entity_type = self.params.geoh5.get_entity(
                         f"Observed_apparent_{property}"
                     )[0].entity_type
                     kwargs["data_type"] = {

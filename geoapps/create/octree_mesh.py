@@ -1,17 +1,17 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
 import sys
 import uuid
 from copy import deepcopy
-from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import Curve, Octree, Points, Surface
+from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
@@ -21,7 +21,7 @@ from geoapps.io import InputFile
 from geoapps.io.Octree.constants import app_initializer, default_ui_json
 from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils.utils import string_2_list, treemesh_2_octree
+from geoapps.utils.utils import string_2_list, string_2_numeric, treemesh_2_octree
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -41,17 +41,12 @@ class OctreeMesh(ObjectDataSelection):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and path.exists(ui_json):
+        if ui_json is not None and os.path.exists(ui_json):
             self.params = self._param_class(InputFile(ui_json))
         else:
-            if "h5file" in app_initializer.keys():
-                app_initializer["geoh5"] = app_initializer.pop("h5file")
-                app_initializer["workspace"] = app_initializer["geoh5"]
-
             self.params = self._param_class(**app_initializer)
 
         self.defaults.update(self.params.to_dict(ui_json_format=False))
-        self.defaults.pop("workspace", None)
         self.refinement_list = VBox([])
 
         super().__init__()
@@ -189,6 +184,7 @@ class OctreeMesh(ObjectDataSelection):
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_choices()
+        self.params.geoh5 = workspace
 
     def update_objects_choices(self):
         # Refresh the list of objects for all
@@ -201,15 +197,52 @@ class OctreeMesh(ObjectDataSelection):
         self.params.ga_group_name = self.ga_group_name.value
 
     def trigger_click(self, _):
+
+        export_path = self.export_directory.selected_path
+        if self.params.monitoring_directory is not None and os.path.exists(
+            self.params.monitoring_directory
+        ):
+            export_path = os.path.join(export_path, ".working")
+            if not os.path.exists(export_path):
+                os.makedirs(export_path)
+
+        new_workspace_path = os.path.join(
+            export_path,
+            self._ga_group_name.value,
+        )
+
+        new_workspace = Workspace(new_workspace_path + ".geoh5")
+
+        obj, data = self.get_selected_entities()
+
+        new_obj = new_workspace.get_entity(obj.uid)[0]
+        if new_obj is None:
+            obj.copy(parent=new_workspace, copy_children=True)
+
+        param_dict = {}
         for key, value in self.__dict__.items():
             try:
                 if isinstance(getattr(self, key), Widget):
-                    setattr(self.params, key, getattr(self, key).value)
+                    obj_uid = getattr(self, key).value
+                    key_split = key.split()
+                    if key_split[0].lower() in self.params._free_param_identifier:
+                        key_split[-1] = key_split[-1].lower()
+                        key = " ".join(key_split)
+                    param_dict[key] = obj_uid
+
+                    if not isinstance(obj_uid, uuid.UUID):
+                        continue
+
+                    obj = self.params.geoh5.get_entity(obj_uid)[0]
+                    if (
+                        isinstance(obj, ObjectBase)
+                        and new_workspace.get_entity(obj_uid) is None
+                    ):
+                        obj.copy(parent=new_workspace, copy_children=True)
             except AttributeError:
                 continue
 
         self.params._free_param_dict = {}
-        ui_json = deepcopy(default_ui_json)
         for group, refinement in zip("ABCDFEGH", self.refinement_list.children):
             self.params._free_param_dict[refinement.children[0].value] = {
                 "object": refinement.children[1].value,
@@ -218,7 +251,25 @@ class OctreeMesh(ObjectDataSelection):
                 "distance": refinement.children[4].value,
             }
 
-        self.params.write_input_file(ui_json=ui_json, name=self.params.ga_group_name)
+            if not isinstance(refinement.children[1].value, uuid.UUID):
+                continue
+
+            obj = self.params.geoh5.get_entity(refinement.children[1].value)[0]
+            if (
+                isinstance(obj, ObjectBase)
+                and new_workspace.get_entity(refinement.children[1].value)[0] is None
+            ):
+                obj.copy(parent=new_workspace, copy_children=True)
+
+        ifile = InputFile.from_dict(param_dict)
+        self.params.update(ifile.data)
+        self.params.geoh5 = new_workspace
+
+        ui_json = deepcopy(default_ui_json)
+        self.params.write_input_file(
+            ui_json=ui_json,
+            name=new_workspace_path + ".ui.json",
+        )
         self.run(self.params)
 
     @staticmethod
@@ -227,7 +278,7 @@ class OctreeMesh(ObjectDataSelection):
         Create an octree mesh from input values
         """
 
-        obj = params.workspace.get_entity(params.objects)
+        obj = params.geoh5.get_entity(params.objects)
 
         if not any(obj):
             return
@@ -265,13 +316,14 @@ class OctreeMesh(ObjectDataSelection):
                     if isinstance(value["object"], str)
                     else value["object"]
                 )
-                entity = params.workspace.get_entity(uid)
+                entity = params.geoh5.get_entity(uid)
 
             except (ValueError, TypeError):
                 continue
 
             if any(entity):
                 print(f"Applying {label} on: {entity[0].name}")
+
                 treemesh = refine_tree_xyz(
                     treemesh,
                     entity[0].vertices,
@@ -285,17 +337,15 @@ class OctreeMesh(ObjectDataSelection):
         treemesh.finalize()
 
         print("Writing to file ")
-        octree = treemesh_2_octree(
-            params.workspace, treemesh, name=params.ga_group_name
-        )
+        octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
 
-        if params.monitoring_directory is not None and path.exists(
+        if params.monitoring_directory is not None and os.path.exists(
             params.monitoring_directory
         ):
             BaseApplication.live_link_output(params.monitoring_directory, octree)
 
         print(
-            f"Octree mesh '{octree.name}' completed and exported to {path.abspath(params.workspace.h5file)}"
+            f"Octree mesh '{octree.name}' completed and exported to {os.path.abspath(params.geoh5.h5file)}"
         )
 
         assert octree.workspace is not None

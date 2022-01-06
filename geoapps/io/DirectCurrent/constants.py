@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -95,7 +95,6 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "max_ram": None,
-    "workspace": None,
     "out_group": "DirectCurrentInversion",
     "no_data_value": None,
     "monitoring_directory": None,
@@ -145,7 +144,6 @@ forward_defaults = {
     "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
-    "workspace": None,
     "out_group": "DirectCurrentForward",
     "monitoring_directory": None,
     "workspace_geoh5": None,

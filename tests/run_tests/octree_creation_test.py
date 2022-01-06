@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -28,6 +28,7 @@ def test_create_octree_app(tmp_path):
     n_data = 12
     xyz = np.random.randn(n_data, 3) * 100
     points = Points.create(ws, vertices=xyz)
+    remote = Points.create(ws, vertices=np.array([[800, 800, np.mean(xyz[:, 2])]]))
     x, y = np.meshgrid(np.arange(-10, 10), np.arange(-10, 10))
     x, y = x.ravel() * 100, y.ravel() * 100
     z = np.random.randn(x.shape[0]) * 10
@@ -47,6 +48,7 @@ def test_create_octree_app(tmp_path):
     max_distance = 200
     refine_A = [4, 4, 4]
     refine_B = [0, 0, 4]
+
     # Create a tree mesh from discretize
     treemesh = mesh_builder_xyz(
         points.vertices,
@@ -69,6 +71,14 @@ def test_create_octree_app(tmp_path):
         method="surface",
         octree_levels=refine_B,
         max_distance=max_distance,
+        finalize=False,
+    )
+    treemesh = refine_tree_xyz(
+        treemesh,
+        remote.vertices,
+        method="radial",
+        octree_levels=refine_A,
+        max_distance=max_distance,
         finalize=True,
     )
 
@@ -84,6 +94,10 @@ def test_create_octree_app(tmp_path):
         "Refinement B levels": refine_B,
         "Refinement B type": "surface",
         "Refinement B distance": max_distance,
+        "Refinement C object": remote.uid,
+        "Refinement C levels": refine_A,
+        "Refinement C type": "radial",
+        "Refinement C distance": max_distance,
     }
     app = OctreeMesh(
         geoh5=str(ws.h5file),

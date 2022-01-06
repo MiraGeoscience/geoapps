@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -18,11 +18,8 @@ from geoh5py.workspace import Workspace
 from .input_file import InputFile
 from .validators import InputValidator
 
-required_parameters = ["workspace", "geoh5"]
+required_parameters = ["geoh5"]
 validations = {
-    "workspace": {
-        "types": [str, Workspace],
-    },
     "geoh5": {
         "types": [str, Workspace],
     },
@@ -35,8 +32,6 @@ class Params:
 
     Attributes
     ----------
-    workspace :
-        Path to geoh5 file workspace object.
     geoh5 :
         Path to geoh5 file results workspace object.
     workpath :
@@ -60,7 +55,6 @@ class Params:
     """
 
     associations: dict[str | UUID, str | UUID] = None
-    _workspace: Workspace = None
     _geoh5: Workspace = None
     _validator: InputValidator = None
     _ifile: InputFile = None
@@ -81,7 +75,7 @@ class Params:
         self.default = default
         self.validate = validate
         self.validator_opts = validator_opts
-        self.workspace = None
+        self.geoh5 = None
 
     def update(self, params_dict: Dict[str, Any], validate=True):
         """Update parameters with dictionary contents."""
@@ -93,12 +87,9 @@ class Params:
 
         if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
-                setattr(self, "workspace", params_dict["geoh5"])
+                setattr(self, "geoh5", params_dict["geoh5"])
 
         for key, value in params_dict.items():
-
-            if key == "workspace":
-                continue  # ignores deprecated workspace name
 
             if " " in key:
                 continue  # ignores grouped parameter names
@@ -200,19 +191,6 @@ class Params:
         self._validator = validator
 
     @property
-    def workspace(self):
-        return self._workspace
-
-    @workspace.setter
-    def workspace(self, val):
-        if val is None:
-            self._workspace = val
-            return
-        self.setter_validator(
-            "workspace", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
-        )
-
-    @property
     def geoh5(self):
         return self._geoh5
 
@@ -224,6 +202,8 @@ class Params:
         self.setter_validator(
             "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
         )
+
+        self.validator.geoh5 = self.geoh5
 
     @property
     def run_command(self):
@@ -286,6 +266,9 @@ class Params:
         self.workpath = ifile.workpath
         self._input_file = ifile
 
+    def _uuid_promoter(self, x):
+        return UUID(x) if isinstance(x, str) else x
+
     def setter_validator(self, key: str, value, fun=lambda x: x):
 
         if value is None:
@@ -294,7 +277,7 @@ class Params:
 
         if self.validate:
             self.validator.validate(
-                key, value, self.validations[key], self.workspace, self.associations
+                key, value, self.validations[key], self.geoh5, self.associations
             )
         value = fun(value)
         setattr(self, f"_{key}", value)
@@ -320,6 +303,10 @@ class Params:
         if default:
             ifile = InputFile()
         else:
+            if self.validate:
+                self.validator.validate_chunk(
+                    self.to_dict(ui_json, ui_json_format=False), self.associations
+                )
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
 
         if path is not None:

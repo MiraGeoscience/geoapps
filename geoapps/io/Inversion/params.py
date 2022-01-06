@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -140,16 +140,17 @@ class InversionParams(Params):
         if self.default:
             params_dict = dict(self.defaults, **params_dict)
 
+        self.geoh5 = params_dict["geoh5"]
+        self.validator: InputValidator = InputValidator(
+            self._required_parameters,
+            self._validations,
+            self.geoh5,
+            **self.validator_opts,
+        )
+        self.associations = self.get_associations(params_dict)
+
         # Validate.
         if self.validate:
-            self.workspace = params_dict["geoh5"]
-            self.associations = self.get_associations(params_dict)
-            self.validator: InputValidator = InputValidator(
-                self._required_parameters,
-                self._validations,
-                self.workspace,
-                **self.validator_opts,
-            )
             self.validator.validate_chunk(params_dict, self.associations)
 
         # Set params attributes from validated input.
@@ -223,7 +224,7 @@ class InversionParams(Params):
         r = self.receivers_radar_drape
         if isinstance(r, (str, UUID)):
             r = UUID(r) if isinstance(r, str) else r
-            radar = self.workspace.get_entity(r)
+            radar = self.geoh5.get_entity(r)
             radar = radar[0].values if radar else None
         else:
             radar = None
@@ -244,16 +245,7 @@ class InversionParams(Params):
 
     @forward_only.setter
     def forward_only(self, val):
-        if val is None:
-            self._forward_only = val
-            return
-
-        p = "forward_only"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._forward_only = val
+        self.setter_validator("forward_only", val)
 
     @property
     def topography_object(self):
@@ -261,15 +253,7 @@ class InversionParams(Params):
 
     @topography_object.setter
     def topography_object(self, val):
-        if val is None:
-            self._topography_object = val
-            return
-        p = "topography_object"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._topography_object = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("topography_object", val, fun=self._uuid_promoter)
 
     @property
     def topography(self):
@@ -277,15 +261,7 @@ class InversionParams(Params):
 
     @topography.setter
     def topography(self, val):
-        if val is None:
-            self._topography = val
-            return
-        p = "topography"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._topography = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("topography", val, fun=self._uuid_promoter)
 
     @property
     def data_object(self):
@@ -293,15 +269,7 @@ class InversionParams(Params):
 
     @data_object.setter
     def data_object(self, val):
-        if val is None:
-            self._data_object = val
-            return
-        p = "data_object"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._data_object = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("data_object", val, fun=self._uuid_promoter)
 
     @property
     def starting_model_object(self):
@@ -309,15 +277,7 @@ class InversionParams(Params):
 
     @starting_model_object.setter
     def starting_model_object(self, val):
-        if val is None:
-            self._starting_model_object = val
-            return
-        p = "starting_model_object"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._starting_model_object = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("starting_model_object", val, fun=self._uuid_promoter)
 
     @property
     def starting_model(self):
@@ -325,15 +285,7 @@ class InversionParams(Params):
 
     @starting_model.setter
     def starting_model(self, val):
-        if val is None:
-            self._starting_model = val
-            return
-        p = "starting_model"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._starting_model = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("starting_model", val, fun=self._uuid_promoter)
 
     @property
     def tile_spatial(self):
@@ -341,15 +293,7 @@ class InversionParams(Params):
 
     @tile_spatial.setter
     def tile_spatial(self, val):
-        if val is None:
-            self._tile_spatial = val
-            return
-        p = "tile_spatial"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._tile_spatial = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("tile_spatial", val, fun=self._uuid_promoter)
 
     @property
     def z_from_topo(self):
@@ -357,15 +301,7 @@ class InversionParams(Params):
 
     @z_from_topo.setter
     def z_from_topo(self, val):
-        if val is None:
-            self._z_from_topo = val
-            return
-        p = "z_from_topo"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._z_from_topo = val
+        self.setter_validator("z_from_topo", val)
 
     @property
     def receivers_radar_drape(self):
@@ -373,15 +309,7 @@ class InversionParams(Params):
 
     @receivers_radar_drape.setter
     def receivers_radar_drape(self, val):
-        if val is None:
-            self._receivers_radar_drape = val
-            return
-        p = "receivers_radar_drape"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._receivers_radar_drape = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("receivers_radar_drape", val, fun=self._uuid_promoter)
 
     @property
     def receivers_offset_x(self):
@@ -389,15 +317,7 @@ class InversionParams(Params):
 
     @receivers_offset_x.setter
     def receivers_offset_x(self, val):
-        if val is None:
-            self._receivers_offset_x = val
-            return
-        p = "receivers_offset_x"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._receivers_offset_x = val
+        self.setter_validator("receivers_offset_x", val)
 
     @property
     def receivers_offset_y(self):
@@ -405,15 +325,7 @@ class InversionParams(Params):
 
     @receivers_offset_y.setter
     def receivers_offset_y(self, val):
-        if val is None:
-            self._receivers_offset_y = val
-            return
-        p = "receivers_offset_y"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._receivers_offset_y = val
+        self.setter_validator("receivers_offset_y", val)
 
     @property
     def receivers_offset_z(self):
@@ -421,15 +333,7 @@ class InversionParams(Params):
 
     @receivers_offset_z.setter
     def receivers_offset_z(self, val):
-        if val is None:
-            self._receivers_offset_z = val
-            return
-        p = "receivers_offset_z"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._receivers_offset_z = val
+        self.setter_validator("receivers_offset_z", val)
 
     @property
     def gps_receivers_offset(self):
@@ -437,15 +341,7 @@ class InversionParams(Params):
 
     @gps_receivers_offset.setter
     def gps_receivers_offset(self, val):
-        if val is None:
-            self._gps_receivers_offset = val
-            return
-        p = "gps_receivers_offset"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._gps_receivers_offset = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("gps_receivers_offset", val, fun=self._uuid_promoter)
 
     @property
     def ignore_values(self):
@@ -453,15 +349,7 @@ class InversionParams(Params):
 
     @ignore_values.setter
     def ignore_values(self, val):
-        if val is None:
-            self._ignore_values = val
-            return
-        p = "ignore_values"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._ignore_values = val
+        self.setter_validator("ignore_values", val)
 
     @property
     def resolution(self):
@@ -469,15 +357,7 @@ class InversionParams(Params):
 
     @resolution.setter
     def resolution(self, val):
-        if val is None:
-            self._resolution = val
-            return
-        p = "resolution"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._resolution = val
+        self.setter_validator("resolution", val)
 
     @property
     def detrend_order(self):
@@ -485,15 +365,7 @@ class InversionParams(Params):
 
     @detrend_order.setter
     def detrend_order(self, val):
-        if val is None:
-            self._detrend_order = val
-            return
-        p = "detrend_order"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._detrend_order = val
+        self.setter_validator("detrend_order", val)
 
     @property
     def detrend_type(self):
@@ -501,15 +373,7 @@ class InversionParams(Params):
 
     @detrend_type.setter
     def detrend_type(self, val):
-        if val is None:
-            self._detrend_type = val
-            return
-        p = "detrend_type"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._detrend_type = val
+        self.setter_validator("detrend_type", val)
 
     @property
     def max_chunk_size(self):
@@ -517,15 +381,7 @@ class InversionParams(Params):
 
     @max_chunk_size.setter
     def max_chunk_size(self, val):
-        if val is None:
-            self._max_chunk_size = val
-            return
-        p = "max_chunk_size"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._max_chunk_size = val
+        self.setter_validator("max_chunk_size", val)
 
     @property
     def chunk_by_rows(self):
@@ -533,15 +389,7 @@ class InversionParams(Params):
 
     @chunk_by_rows.setter
     def chunk_by_rows(self, val):
-        if val is None:
-            self._chunk_by_rows = val
-            return
-        p = "chunk_by_rows"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._chunk_by_rows = val
+        self.setter_validator("chunk_by_rows", val)
 
     @property
     def output_tile_files(self):
@@ -549,15 +397,7 @@ class InversionParams(Params):
 
     @output_tile_files.setter
     def output_tile_files(self, val):
-        if val is None:
-            self._output_tile_files = val
-            return
-        p = "output_tile_files"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._output_tile_files = val
+        self.setter_validator("output_tile_files", val)
 
     @property
     def mesh(self):
@@ -565,15 +405,7 @@ class InversionParams(Params):
 
     @mesh.setter
     def mesh(self, val):
-        if val is None:
-            self._mesh = val
-            return
-        p = "mesh"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._mesh = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("mesh", val, fun=self._uuid_promoter)
 
     @property
     def u_cell_size(self):
@@ -581,15 +413,7 @@ class InversionParams(Params):
 
     @u_cell_size.setter
     def u_cell_size(self, val):
-        if val is None:
-            self._u_cell_size = val
-            return
-        p = "u_cell_size"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._u_cell_size = val
+        self.setter_validator("u_cell_size", val)
 
     @property
     def v_cell_size(self):
@@ -597,15 +421,7 @@ class InversionParams(Params):
 
     @v_cell_size.setter
     def v_cell_size(self, val):
-        if val is None:
-            self._v_cell_size = val
-            return
-        p = "v_cell_size"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._v_cell_size = val
+        self.setter_validator("v_cell_size", val)
 
     @property
     def w_cell_size(self):
@@ -613,15 +429,7 @@ class InversionParams(Params):
 
     @w_cell_size.setter
     def w_cell_size(self, val):
-        if val is None:
-            self._w_cell_size = val
-            return
-        p = "w_cell_size"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._w_cell_size = val
+        self.setter_validator("w_cell_size", val)
 
     @property
     def octree_levels_topo(self):
@@ -629,15 +437,7 @@ class InversionParams(Params):
 
     @octree_levels_topo.setter
     def octree_levels_topo(self, val):
-        if val is None:
-            self._octree_levels_topo = val
-            return
-        p = "octree_levels_topo"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._octree_levels_topo = val
+        self.setter_validator("octree_levels_topo", val)
 
     @property
     def octree_levels_obs(self):
@@ -645,15 +445,7 @@ class InversionParams(Params):
 
     @octree_levels_obs.setter
     def octree_levels_obs(self, val):
-        if val is None:
-            self._octree_levels_obs = val
-            return
-        p = "octree_levels_obs"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._octree_levels_obs = val
+        self.setter_validator("octree_levels_obs", val)
 
     @property
     def depth_core(self):
@@ -661,15 +453,7 @@ class InversionParams(Params):
 
     @depth_core.setter
     def depth_core(self, val):
-        if val is None:
-            self._depth_core = val
-            return
-        p = "depth_core"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._depth_core = val
+        self.setter_validator("depth_core", val)
 
     @property
     def max_distance(self):
@@ -677,15 +461,7 @@ class InversionParams(Params):
 
     @max_distance.setter
     def max_distance(self, val):
-        if val is None:
-            self._max_distance = val
-            return
-        p = "max_distance"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._max_distance = val
+        self.setter_validator("max_distance", val)
 
     @property
     def horizontal_padding(self):
@@ -693,15 +469,7 @@ class InversionParams(Params):
 
     @horizontal_padding.setter
     def horizontal_padding(self, val):
-        if val is None:
-            self._horizontal_padding = val
-            return
-        p = "horizontal_padding"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._horizontal_padding = val
+        self.setter_validator("horizontal_padding", val)
 
     @property
     def vertical_padding(self):
@@ -709,15 +477,7 @@ class InversionParams(Params):
 
     @vertical_padding.setter
     def vertical_padding(self, val):
-        if val is None:
-            self._vertical_padding = val
-            return
-        p = "vertical_padding"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._vertical_padding = val
+        self.setter_validator("vertical_padding", val)
 
     @property
     def window_center_x(self):
@@ -725,15 +485,7 @@ class InversionParams(Params):
 
     @window_center_x.setter
     def window_center_x(self, val):
-        if val is None:
-            self._window_center_x = val
-            return
-        p = "window_center_x"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._window_center_x = val
+        self.setter_validator("window_center_x", val)
 
     @property
     def window_center_y(self):
@@ -741,15 +493,7 @@ class InversionParams(Params):
 
     @window_center_y.setter
     def window_center_y(self, val):
-        if val is None:
-            self._window_center_y = val
-            return
-        p = "window_center_y"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._window_center_y = val
+        self.setter_validator("window_center_y", val)
 
     @property
     def window_width(self):
@@ -757,15 +501,7 @@ class InversionParams(Params):
 
     @window_width.setter
     def window_width(self, val):
-        if val is None:
-            self._window_width = val
-            return
-        p = "window_width"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._window_width = val
+        self.setter_validator("window_width", val)
 
     @property
     def window_height(self):
@@ -773,15 +509,7 @@ class InversionParams(Params):
 
     @window_height.setter
     def window_height(self, val):
-        if val is None:
-            self._window_height = val
-            return
-        p = "window_height"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._window_height = val
+        self.setter_validator("window_height", val)
 
     @property
     def window_azimuth(self):
@@ -789,15 +517,7 @@ class InversionParams(Params):
 
     @window_azimuth.setter
     def window_azimuth(self, val):
-        if val is None:
-            self._window_azimuth = val
-            return
-        p = "window_azimuth"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._window_azimuth = val
+        self.setter_validator("window_azimuth", val)
 
     @property
     def inversion_style(self):
@@ -805,15 +525,7 @@ class InversionParams(Params):
 
     @inversion_style.setter
     def inversion_style(self, val):
-        if val is None:
-            self._inversion_style = val
-            return
-        p = "inversion_style"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._inversion_style = val
+        self.setter_validator("inversion_style", val)
 
     @property
     def chi_factor(self):
@@ -821,15 +533,7 @@ class InversionParams(Params):
 
     @chi_factor.setter
     def chi_factor(self, val):
-        if val is None:
-            self._chi_factor = val
-            return
-        p = "chi_factor"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._chi_factor = val
+        self.setter_validator("chi_factor", val)
 
     @property
     def sens_wts_threshold(self):
@@ -837,15 +541,7 @@ class InversionParams(Params):
 
     @sens_wts_threshold.setter
     def sens_wts_threshold(self, val):
-        if val is None:
-            self._sens_wts_threshold = val
-            return
-        p = "sens_wts_threshold"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._sens_wts_threshold = val
+        self.setter_validator("sens_wts_threshold", val)
 
     @property
     def every_iteration_bool(self):
@@ -853,15 +549,7 @@ class InversionParams(Params):
 
     @every_iteration_bool.setter
     def every_iteration_bool(self, val):
-        if val is None:
-            self._every_iteration_bool = val
-            return
-        p = "every_iteration_bool"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._every_iteration_bool = val
+        self.setter_validator("every_iteration_bool", val)
 
     @property
     def f_min_change(self):
@@ -869,15 +557,7 @@ class InversionParams(Params):
 
     @f_min_change.setter
     def f_min_change(self, val):
-        if val is None:
-            self._f_min_change = val
-            return
-        p = "f_min_change"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._f_min_change = val
+        self.setter_validator("f_min_change", val)
 
     @property
     def minGNiter(self):
@@ -885,15 +565,7 @@ class InversionParams(Params):
 
     @minGNiter.setter
     def minGNiter(self, val):
-        if val is None:
-            self._minGNiter = val
-            return
-        p = "minGNiter"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._minGNiter = val
+        self.setter_validator("minGNiter", val)
 
     @property
     def beta_tol(self):
@@ -901,15 +573,7 @@ class InversionParams(Params):
 
     @beta_tol.setter
     def beta_tol(self, val):
-        if val is None:
-            self._beta_tol = val
-            return
-        p = "beta_tol"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._beta_tol = val
+        self.setter_validator("beta_tol", val)
 
     @property
     def prctile(self):
@@ -917,15 +581,7 @@ class InversionParams(Params):
 
     @prctile.setter
     def prctile(self, val):
-        if val is None:
-            self._prctile = val
-            return
-        p = "prctile"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._prctile = val
+        self.setter_validator("prctile", val)
 
     @property
     def coolingRate(self):
@@ -933,15 +589,7 @@ class InversionParams(Params):
 
     @coolingRate.setter
     def coolingRate(self, val):
-        if val is None:
-            self._coolingRate = val
-            return
-        p = "coolingRate"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._coolingRate = val
+        self.setter_validator("coolingRate", val)
 
     @property
     def coolEps_q(self):
@@ -949,15 +597,7 @@ class InversionParams(Params):
 
     @coolEps_q.setter
     def coolEps_q(self, val):
-        if val is None:
-            self._coolEps_q = val
-            return
-        p = "coolEps_q"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._coolEps_q = val
+        self.setter_validator("coolEps_q", val)
 
     @property
     def coolEpsFact(self):
@@ -965,15 +605,7 @@ class InversionParams(Params):
 
     @coolEpsFact.setter
     def coolEpsFact(self, val):
-        if val is None:
-            self._coolEpsFact = val
-            return
-        p = "coolEpsFact"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._coolEpsFact = val
+        self.setter_validator("coolEpsFact", val)
 
     @property
     def beta_search(self):
@@ -981,15 +613,7 @@ class InversionParams(Params):
 
     @beta_search.setter
     def beta_search(self, val):
-        if val is None:
-            self._beta_search = val
-            return
-        p = "beta_search"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._beta_search = val
+        self.setter_validator("beta_search", val)
 
     @property
     def starting_chi_factor(self):
@@ -997,15 +621,7 @@ class InversionParams(Params):
 
     @starting_chi_factor.setter
     def starting_chi_factor(self, val):
-        if val is None:
-            self._starting_chi_factor = val
-            return
-        p = "starting_chi_factor"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._starting_chi_factor = val
+        self.setter_validator("starting_chi_factor", val)
 
     @property
     def max_iterations(self):
@@ -1013,15 +629,7 @@ class InversionParams(Params):
 
     @max_iterations.setter
     def max_iterations(self, val):
-        if val is None:
-            self._max_iterations = val
-            return
-        p = "max_iterations"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._max_iterations = val
+        self.setter_validator("max_iterations", val)
 
     @property
     def max_line_search_iterations(self):
@@ -1029,15 +637,7 @@ class InversionParams(Params):
 
     @max_line_search_iterations.setter
     def max_line_search_iterations(self, val):
-        if val is None:
-            self._max_line_search_iterations = val
-            return
-        p = "max_line_search_iterations"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._max_line_search_iterations = val
+        self.setter_validator("max_line_search_iterations", val)
 
     @property
     def max_cg_iterations(self):
@@ -1045,15 +645,7 @@ class InversionParams(Params):
 
     @max_cg_iterations.setter
     def max_cg_iterations(self, val):
-        if val is None:
-            self._max_cg_iterations = val
-            return
-        p = "max_cg_iterations"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._max_cg_iterations = val
+        self.setter_validator("max_cg_iterations", val)
 
     @property
     def max_global_iterations(self):
@@ -1061,15 +653,7 @@ class InversionParams(Params):
 
     @max_global_iterations.setter
     def max_global_iterations(self, val):
-        if val is None:
-            self._max_global_iterations = val
-            return
-        p = "max_global_iterations"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._max_global_iterations = val
+        self.setter_validator("max_global_iterations", val)
 
     @property
     def initial_beta(self):
@@ -1077,15 +661,7 @@ class InversionParams(Params):
 
     @initial_beta.setter
     def initial_beta(self, val):
-        if val is None:
-            self._initial_beta = val
-            return
-        p = "initial_beta"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._initial_beta = val
+        self.setter_validator("initial_beta", val)
 
     @property
     def initial_beta_ratio(self):
@@ -1093,15 +669,7 @@ class InversionParams(Params):
 
     @initial_beta_ratio.setter
     def initial_beta_ratio(self, val):
-        if val is None:
-            self._initial_beta_ratio = val
-            return
-        p = "initial_beta_ratio"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._initial_beta_ratio = val
+        self.setter_validator("initial_beta_ratio", val)
 
     @property
     def tol_cg(self):
@@ -1109,15 +677,7 @@ class InversionParams(Params):
 
     @tol_cg.setter
     def tol_cg(self, val):
-        if val is None:
-            self._tol_cg = val
-            return
-        p = "tol_cg"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._tol_cg = val
+        self.setter_validator("tol_cg", val)
 
     @property
     def alpha_s(self):
@@ -1125,15 +685,7 @@ class InversionParams(Params):
 
     @alpha_s.setter
     def alpha_s(self, val):
-        if val is None:
-            self._alpha_s = val
-            return
-        p = "alpha_s"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._alpha_s = val
+        self.setter_validator("alpha_s", val)
 
     @property
     def alpha_x(self):
@@ -1141,15 +693,7 @@ class InversionParams(Params):
 
     @alpha_x.setter
     def alpha_x(self, val):
-        if val is None:
-            self._alpha_x = val
-            return
-        p = "alpha_x"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._alpha_x = val
+        self.setter_validator("alpha_x", val)
 
     @property
     def alpha_y(self):
@@ -1157,15 +701,7 @@ class InversionParams(Params):
 
     @alpha_y.setter
     def alpha_y(self, val):
-        if val is None:
-            self._alpha_y = val
-            return
-        p = "alpha_y"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._alpha_y = val
+        self.setter_validator("alpha_y", val)
 
     @property
     def alpha_z(self):
@@ -1173,15 +709,7 @@ class InversionParams(Params):
 
     @alpha_z.setter
     def alpha_z(self, val):
-        if val is None:
-            self._alpha_z = val
-            return
-        p = "alpha_z"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._alpha_z = val
+        self.setter_validator("alpha_z", val)
 
     @property
     def s_norm(self):
@@ -1189,15 +717,7 @@ class InversionParams(Params):
 
     @s_norm.setter
     def s_norm(self, val):
-        if val is None:
-            self._s_norm = val
-            return
-        p = "s_norm"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._s_norm = val
+        self.setter_validator("s_norm", val)
 
     @property
     def x_norm(self):
@@ -1205,15 +725,7 @@ class InversionParams(Params):
 
     @x_norm.setter
     def x_norm(self, val):
-        if val is None:
-            self._x_norm = val
-            return
-        p = "x_norm"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._x_norm = val
+        self.setter_validator("x_norm", val)
 
     @property
     def y_norm(self):
@@ -1221,15 +733,7 @@ class InversionParams(Params):
 
     @y_norm.setter
     def y_norm(self, val):
-        if val is None:
-            self._y_norm = val
-            return
-        p = "y_norm"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._y_norm = val
+        self.setter_validator("y_norm", val)
 
     @property
     def z_norm(self):
@@ -1237,15 +741,7 @@ class InversionParams(Params):
 
     @z_norm.setter
     def z_norm(self, val):
-        if val is None:
-            self._z_norm = val
-            return
-        p = "z_norm"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._z_norm = val
+        self.setter_validator("z_norm", val)
 
     @property
     def reference_model_object(self):
@@ -1253,15 +749,7 @@ class InversionParams(Params):
 
     @reference_model_object.setter
     def reference_model_object(self, val):
-        if val is None:
-            self._reference_model_object = val
-            return
-        p = "reference_model_object"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._reference_model_object = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("reference_model_object", val, fun=self._uuid_promoter)
 
     @property
     def reference_model(self):
@@ -1269,15 +757,7 @@ class InversionParams(Params):
 
     @reference_model.setter
     def reference_model(self, val):
-        if val is None:
-            self._reference_model = val
-            return
-        p = "reference_model"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._reference_model = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("reference_model", val, fun=self._uuid_promoter)
 
     @property
     def gradient_type(self):
@@ -1285,15 +765,7 @@ class InversionParams(Params):
 
     @gradient_type.setter
     def gradient_type(self, val):
-        if val is None:
-            self._gradient_type = val
-            return
-        p = "gradient_type"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._gradient_type = val
+        self.setter_validator("gradient_type", val)
 
     @property
     def lower_bound_object(self):
@@ -1301,15 +773,7 @@ class InversionParams(Params):
 
     @lower_bound_object.setter
     def lower_bound_object(self, val):
-        if val is None:
-            self._lower_bound_object = val
-            return
-        p = "lower_bound_object"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._lower_bound_object = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("lower_bound_object", val, fun=self._uuid_promoter)
 
     @property
     def lower_bound(self):
@@ -1317,15 +781,7 @@ class InversionParams(Params):
 
     @lower_bound.setter
     def lower_bound(self, val):
-        if val is None:
-            self._lower_bound = val
-            return
-        p = "lower_bound"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._lower_bound = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("lower_bound", val, fun=self._uuid_promoter)
 
     @property
     def upper_bound_object(self):
@@ -1333,15 +789,7 @@ class InversionParams(Params):
 
     @upper_bound_object.setter
     def upper_bound_object(self, val):
-        if val is None:
-            self._upper_bound_object = val
-            return
-        p = "upper_bound_object"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._upper_bound_object = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("upper_bound_object", val, fun=self._uuid_promoter)
 
     @property
     def upper_bound(self):
@@ -1349,15 +797,7 @@ class InversionParams(Params):
 
     @upper_bound.setter
     def upper_bound(self, val):
-        if val is None:
-            self._upper_bound = val
-            return
-        p = "upper_bound"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._upper_bound = UUID(val) if isinstance(val, str) else val
+        self.setter_validator("upper_bound", val, fun=self._uuid_promoter)
 
     @property
     def parallelized(self):
@@ -1365,15 +805,7 @@ class InversionParams(Params):
 
     @parallelized.setter
     def parallelized(self, val):
-        if val is None:
-            self._parallelized = val
-            return
-        p = "parallelized"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._parallelized = val
+        self.setter_validator("parallelized", val)
 
     @property
     def n_cpu(self):
@@ -1381,15 +813,7 @@ class InversionParams(Params):
 
     @n_cpu.setter
     def n_cpu(self, val):
-        if val is None:
-            self._n_cpu = val
-            return
-        p = "n_cpu"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._n_cpu = val
+        self.setter_validator("n_cpu", val)
 
     @property
     def max_ram(self):
@@ -1397,15 +821,7 @@ class InversionParams(Params):
 
     @max_ram.setter
     def max_ram(self, val):
-        if val is None:
-            self._max_ram = val
-            return
-        p = "max_ram"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._max_ram = val
+        self.setter_validator("max_ram", val)
 
     @property
     def out_group(self):
@@ -1427,10 +843,10 @@ class InversionParams(Params):
     def ga_group(self) -> ContainerGroup | None:
         if (
             getattr(self, "_ga_group", None) is None
-            and isinstance(self.workspace, Workspace)
+            and isinstance(self.geoh5, Workspace)
             and isinstance(self.out_group, str)
         ):
-            self._ga_group = ContainerGroup.create(self.workspace, name=self.out_group)
+            self._ga_group = ContainerGroup.create(self.geoh5, name=self.out_group)
 
         return self._ga_group
 
@@ -1440,15 +856,7 @@ class InversionParams(Params):
 
     @no_data_value.setter
     def no_data_value(self, val):
-        if val is None:
-            self._no_data_value = val
-            return
-        p = "no_data_value"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._no_data_value = val
+        self.setter_validator("no_data_value", val)
 
     @property
     def distributed_workers(self):
@@ -1456,15 +864,7 @@ class InversionParams(Params):
 
     @distributed_workers.setter
     def distributed_workers(self, val):
-        if val is None:
-            self._distributed_workers = val
-            return
-        p = "distributed_workers"
-        if self.validate:
-            self.validator.validate(
-                p, val, self.validations[p], self.workspace, self.associations
-            )
-        self._distributed_workers = val
+        self.setter_validator("distributed_workers", val)
 
     def write_input_file(
         self,
@@ -1478,7 +878,7 @@ class InversionParams(Params):
         if ui_json is None:
             defaults = deepcopy(self.defaults)
             ui_json = deepcopy(self.default_ui_json)
-            ui_json["geoh5"] = self.workspace
+            ui_json["geoh5"] = self.geoh5
             self.title = defaults["title"]
             self.run_command = defaults["run_command"]
 
@@ -1495,8 +895,11 @@ class InversionParams(Params):
 
             ifile = InputFile.from_dict(ui_json)
         else:
-            idict = self.to_dict(ui_json=ui_json)
-            # TODO insert validate_chunk call here
+            if self.validate:
+                self.validator.validate_chunk(
+                    self.to_dict(ui_json=ui_json, ui_json_format=False),
+                    self.associations,
+                )
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
 
         if name is not None:
