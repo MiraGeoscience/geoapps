@@ -1486,10 +1486,12 @@ class RectangularBlock:
     """
     Define a rotated rectangular block in 3D space
 
-    :param
-        - length, width, depth: width, length and height of prism
-        - center : center of prism in horizontal plane
-        - dip, azimuth : dip and azimuth of prism
+    :param length: U-size of the block
+    :param width:  V-size of the block
+    :param depth:  W-size of the block
+    :param center: Position of the prism center
+    :param dip: Orientation of the u-axis in degree from horizontal
+    :param azimuth: Orientation of the u axis in degree from north
     """
 
     def __init__(self, **kwargs):
