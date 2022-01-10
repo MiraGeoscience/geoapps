@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,6 +7,7 @@
 
 from ..validators import InputFreeformValidator
 from .constants import (
+    app_initializer,
     default_ui_json,
     defaults,
     free_format_dict,

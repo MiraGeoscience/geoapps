@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -16,14 +16,21 @@ from geoh5py.workspace import Workspace
 
 from geoapps.io import InputFile, Params
 from geoapps.io.DirectCurrent import DirectCurrentParams
+from geoapps.io.DirectCurrent import app_initializer as dc_init
 from geoapps.io.Gravity import GravityParams
+from geoapps.io.Gravity import app_initializer as grav_init
 from geoapps.io.InducedPolarization import InducedPolarizationParams
+from geoapps.io.InducedPolarization import app_initializer as ip_init
 from geoapps.io.MagneticScalar import MagneticScalarParams
+from geoapps.io.MagneticScalar import app_initializer as mag_init
 from geoapps.io.MagneticVector import MagneticVectorParams
+from geoapps.io.MagneticVector import app_initializer as mvi_init
 from geoapps.io.MagneticVector.constants import default_ui_json as MVI_defaults
 from geoapps.io.MagneticVector.constants import validations as MVI_validations
 from geoapps.io.Octree import OctreeParams
+from geoapps.io.Octree import app_initializer as octree_init
 from geoapps.io.PeakFinder import PeakFinderParams
+from geoapps.io.PeakFinder import app_initializer as peak_init
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")
@@ -38,13 +45,6 @@ def setup_params(tmp, ui, params_class):
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     return geotest
-
-
-# def test_inversion_type(tmp_path):
-#     geotest = setup_params(tmp_path, MVI_defaults, MagneticVectorParams)
-#     geotest.set_param("inversion_type", "nogood")
-#     ws, params = geotest.make()
-#     assert True
 
 
 ######################  Setup  ###########################
@@ -174,6 +174,18 @@ def param_test_generator(tmp_path, param, value, geoh5=geoh5):
     assert pval == value
 
 
+def test_write_input_file_validation(tmp_path):
+
+    grav_init["geoh5"] = "./FlinFlon.geoh5"
+    params = GravityParams(validate=False, **grav_init)
+    params.starting_model = None
+    params.validate = True
+    with pytest.raises(ValueError) as excinfo:
+        params.write_input_file(name="test.ui.json", path=tmp_path)
+
+    assert "starting_model" in str(excinfo.value)
+
+
 def test_params_initialize():
     for params in [
         MagneticScalarParams(validate=False),
@@ -299,7 +311,7 @@ def test_update(tmp_path):
             "value": "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
         }
     }
-    params.update(new_params)
+    params.update(new_params, validate=False)
     assert params.topography_object == UUID("{202C5DB1-A56D-4004-9CAD-BAAFD8899406}")
 
     new_params = {
@@ -318,7 +330,7 @@ def test_update(tmp_path):
         }
     }
 
-    params.update(new_params)
+    params.update(new_params, validate=False)
     assert params.topography == UUID("{202C5DB1-A56D-4004-9CAD-BAAFD8899406}")
 
 
@@ -1446,7 +1458,9 @@ def test_magnetic_scalar_inversion_type():
 
 
 def test_inducing_field_strength():
-    params = MagneticScalarParams(validate=False)
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
     params.inducing_field_strength = 1.0
     params.inducing_field_strength = 1
 
@@ -1462,7 +1476,9 @@ def test_inducing_field_strength():
 
 
 def test_inducing_field_inclination():
-    params = MagneticScalarParams(validate=False)
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
     params.inducing_field_inclination = 1.0
     params.inducing_field_inclination = 1
 
@@ -1478,7 +1494,9 @@ def test_inducing_field_inclination():
 
 
 def test_inducing_field_declination():
-    params = MagneticScalarParams(validate=False)
+    params = MagneticScalarParams(
+        validate=True, validator_opts={"ignore_requirements": True}
+    )
     params.inducing_field_declination = 1.0
     params.inducing_field_declination = 1
 
