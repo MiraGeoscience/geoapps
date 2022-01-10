@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -47,8 +47,26 @@ def setup_params(path):
     geotest.set_param("starting_model", 1e-04)
     geotest.set_param("inducing_field_inclination", 79.0)
     geotest.set_param("inducing_field_declination", 11.0)
+    geotest.set_param("reference_model", 0.0)
+    geotest.set_param("reference_inclination", 79.0)
+    geotest.set_param("reference_declination", 11.0)
 
     return geotest.make()
+
+
+def test_zero_reference_model(tmp_path):
+    ws, params = setup_params(tmp_path)
+    inversion_window = InversionWindow(ws, params)
+    inversion_data = InversionData(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
+    model = InversionModel(ws, params, inversion_mesh, "reference")
+    incl = np.unique(ws.get_entity("reference_inclination")[0].values)
+    decl = np.unique(ws.get_entity("reference_declination")[0].values)
+    assert len(incl) == 1
+    assert len(decl) == 1
+    assert np.isclose(incl[0], 79.0)
+    assert np.isclose(decl[0], 11.0)
 
 
 def test_collection(tmp_path):

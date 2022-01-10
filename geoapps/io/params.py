@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -203,6 +203,8 @@ class Params:
             "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
         )
 
+        self.validator.geoh5 = self.geoh5
+
     @property
     def run_command(self):
         return self._run_command
@@ -264,6 +266,9 @@ class Params:
         self.workpath = ifile.workpath
         self._input_file = ifile
 
+    def _uuid_promoter(self, x):
+        return UUID(x) if isinstance(x, str) else x
+
     def setter_validator(self, key: str, value, fun=lambda x: x):
 
         if value is None:
@@ -298,6 +303,10 @@ class Params:
         if default:
             ifile = InputFile()
         else:
+            if self.validate:
+                self.validator.validate_chunk(
+                    self.to_dict(ui_json, ui_json_format=False), self.associations
+                )
             ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
 
         if path is not None:
