@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -39,6 +39,13 @@ from shapely.geometry import LineString, mapping
 from SimPEG.electromagnetics.static.resistivity import Survey
 from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
+
+
+def string_2_list(string):
+    """
+    Convert a list of numbers separated by comma to a list of floats
+    """
+    return [string_2_numeric(val) for val in string.split(",") if len(val) > 0]
 
 
 def string_2_numeric(text: str) -> int | float | str:

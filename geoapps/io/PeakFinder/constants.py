@@ -1,4 +1,4 @@
-#  Copyright (c) 2021 Mira Geoscience Ltd.
+#  Copyright (c) 2022 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -12,6 +12,7 @@
 
 from uuid import UUID
 
+import numpy as np
 from geoh5py.workspace import Workspace
 
 from ...utils.geophysical_systems import parameters
@@ -158,7 +159,6 @@ default_ui_json = {
     "conda_environment_boolean": None,
     "template_data": None,
     "template_color": None,
-    "workspace": None,
     "monitoring_directory": None,
     "plot_result": True,
 }
