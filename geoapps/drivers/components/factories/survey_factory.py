@@ -85,6 +85,11 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Dipole
 
+        elif self.factory_type == "magnetotellurics":
+            from SimPEG.electromagnetics.natural_source import receivers
+
+            return receivers.Point3DImpedance
+
     def assemble_arguments(self, locations=None, data=None, local_index=None):
         """Provides implementations to assemble arguments for receivers object."""
 
@@ -107,6 +112,9 @@ class ReceiversFactory(SimPEGFactory):
                 args.append(locations_n)
         else:
             args.append(locations[local_index])
+
+        if self.factory_type == "magnetotellurics":
+            args.append(component, part)
 
         return args
 
@@ -154,6 +162,11 @@ class SourcesFactory(SimPEGFactory):
             from SimPEG.electromagnetics.static.induced_polarization import sources
 
             return sources.Dipole
+
+        elif self.factory_type == "magnetotellurics":
+            from SimPEG.electromagnetics.natural_source.sources import (
+                Planewave_xy_1Dprimary,
+            )
 
     def assemble_arguments(self, receivers=None, locations=None, local_index=None):
         """Provides implementations to assemble arguments for sources object."""
