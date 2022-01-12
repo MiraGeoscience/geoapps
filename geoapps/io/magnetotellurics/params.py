@@ -46,113 +46,221 @@ class MagnetotelluricsParams(InversionParams):
         self.validate = False
         self.default_ui_json = deepcopy(default_ui_json)
         self.inversion_type: str = "magnetotellurics"
-        self._zxx_channel_bool = None
-        self._zxx_channel = None
-        self._zxx_uncertainty = None
-        self._zxy_channel_bool = None
-        self._zxy_channel = None
-        self._zxy_uncertainty = None
-        self._zyx_channel_bool = None
-        self._zyx_channel = None
-        self._zyx_uncertainty = None
-        self._zyy_channel_bool = None
-        self._zyy_channel = None
-        self._zyy_uncertainty = None
+        self._zxx_real_channel_bool = None
+        self._zxx_real_channel = None
+        self._zxx_real_uncertainty = None
+        self._zxx_imag_channel_bool = None
+        self._zxx_imag_channel = None
+        self._zxx_imag_uncertainty = None
+        self._zxy_real_channel_bool = None
+        self._zxy_real_channel = None
+        self._zxy_real_uncertainty = None
+        self._zxy_imag_channel_bool = None
+        self._zxy_imag_channel = None
+        self._zxy_imag_uncertainty = None
+        self._zyx_real_channel_bool = None
+        self._zyx_real_channel = None
+        self._zyx_real_uncertainty = None
+        self._zyx_imag_channel_bool = None
+        self._zyx_imag_channel = None
+        self._zyx_imag_uncertainty = None
+        self._zyy_real_channel_bool = None
+        self._zyy_real_channel = None
+        self._zyy_real_uncertainty = None
+        self._zyy_imag_channel_bool = None
+        self._zyy_imag_channel = None
+        self._zyy_imag_uncertainty = None
 
         super().__init__(input_file, default, validate, validator_opts, **kwargs)
 
     @property
-    def zxx_channel_bool(self):
-        return self._zxx_channel_bool
+    def zxx_real_channel_bool(self):
+        return self._zxx_real_channel_bool
 
-    @zxx_channel_bool.setter
-    def zxx_channel_bool(self, val):
-        self.setter_validator("zxx_channel_bool", val)
-
-    @property
-    def zxx_channel(self):
-        return self._zxx_channel
-
-    @zxx_channel.setter
-    def zxx_channel(self, val):
-        self.setter_validator("zxx_channel", val, fun=self._uuid_promoter)
+    @zxx_real_channel_bool.setter
+    def zxx_real_channel_bool(self, val):
+        self.setter_validator("zxx_real_channel_bool", val)
 
     @property
-    def zxx_uncertainty(self):
-        return self._zxx_uncertainty
+    def zxx_real_channel(self):
+        return self._zxx_real_channel
 
-    @zxx_uncertainty.setter
-    def zxx_uncertainty(self, val):
-        self.setter_validator("zxx_uncertainty", val, fun=self._uuid_promoter)
-
-    @property
-    def zxy_channel_bool(self):
-        return self._zxy_channel_bool
-
-    @zxy_channel_bool.setter
-    def zxy_channel_bool(self, val):
-        self.setter_validator("zxy_channel_bool", val)
+    @zxx_real_channel.setter
+    def zxx_real_channel(self, val):
+        self.setter_validator("zxx_real_channel", val, fun=self._uuid_promoter)
 
     @property
-    def zxy_channel(self):
-        return self._zxy_channel
+    def zxx_real_uncertainty(self):
+        return self._zxx_real_uncertainty
 
-    @zxy_channel.setter
-    def zxy_channel(self, val):
-        self.setter_validator("zxy_channel", val, fun=self._uuid_promoter)
-
-    @property
-    def zxy_uncertainty(self):
-        return self._zxy_uncertainty
-
-    @zxy_uncertainty.setter
-    def zxy_uncertainty(self, val):
-        self.setter_validator("zxy_uncertainty", val, fun=self._uuid_promoter)
+    @zxx_real_uncertainty.setter
+    def zxx_real_uncertainty(self, val):
+        self.setter_validator("zxx_real_uncertainty", val, fun=self._uuid_promoter)
 
     @property
-    def zyx_channel_bool(self):
-        return self._zyx_channel_bool
+    def zxx_imag_channel_bool(self):
+        return self._zxx_imag_channel_bool
 
-    @zyx_channel_bool.setter
-    def zyx_channel_bool(self, val):
-        self.setter_validator("zyx_channel_bool", val)
-
-    @property
-    def zyx_channel(self):
-        return self._zyx_channel
-
-    @zyx_channel.setter
-    def zyx_channel(self, val):
-        self.setter_validator("zyx_channel", val, fun=self._uuid_promoter)
+    @zxx_imag_channel_bool.setter
+    def zxx_imag_channel_bool(self, val):
+        self.setter_validator("zxx_imag_channel_bool", val)
 
     @property
-    def zyx_uncertainty(self):
-        return self._zyx_uncertainty
+    def zxx_imag_channel(self):
+        return self._zxx_imag_channel
 
-    @zyx_uncertainty.setter
-    def zyx_uncertainty(self, val):
-        self.setter_validator("zyx_uncertainty", val, fun=self._uuid_promoter)
-
-    @property
-    def zyy_channel_bool(self):
-        return self._zyy_channel_bool
-
-    @zyy_channel_bool.setter
-    def zyy_channel_bool(self, val):
-        self.setter_validator("zyy_channel_bool", val)
+    @zxx_imag_channel.setter
+    def zxx_imag_channel(self, val):
+        self.setter_validator("zxx_imag_channel", val, fun=self._uuid_promoter)
 
     @property
-    def zyy_channel(self):
-        return self._zyy_channel
+    def zxx_imag_uncertainty(self):
+        return self._zxx_imag_uncertainty
 
-    @zyy_channel.setter
-    def zyy_channel(self, val):
-        self.setter_validator("zyy_channel", val, fun=self._uuid_promoter)
+    @zxx_imag_uncertainty.setter
+    def zxx_imag_uncertainty(self, val):
+        self.setter_validator("zxx_imag_uncertainty", val, fun=self._uuid_promoter)
 
     @property
-    def zyy_uncertainty(self):
-        return self._zyy_uncertainty
+    def zxy_real_channel_bool(self):
+        return self._zxy_real_channel_bool
 
-    @zyy_uncertainty.setter
-    def zyy_uncertainty(self, val):
-        self.setter_validator("zyy_uncertainty", val, fun=self._uuid_promoter)
+    @zxy_real_channel_bool.setter
+    def zxy_real_channel_bool(self, val):
+        self.setter_validator("zxy_real_channel_bool", val)
+
+    @property
+    def zxy_real_channel(self):
+        return self._zxy_real_channel
+
+    @zxy_real_channel.setter
+    def zxy_real_channel(self, val):
+        self.setter_validator("zxy_real_channel", val, fun=self._uuid_promoter)
+
+    @property
+    def zxy_real_uncertainty(self):
+        return self._zxy_real_uncertainty
+
+    @zxy_real_uncertainty.setter
+    def zxy_real_uncertainty(self, val):
+        self.setter_validator("zxy_real_uncertainty", val, fun=self._uuid_promoter)
+
+    @property
+    def zxy_imag_channel_bool(self):
+        return self._zxy_imag_channel_bool
+
+    @zxy_imag_channel_bool.setter
+    def zxy_imag_channel_bool(self, val):
+        self.setter_validator("zxy_imag_channel_bool", val)
+
+    @property
+    def zxy_imag_channel(self):
+        return self._zxy_imag_channel
+
+    @zxy_imag_channel.setter
+    def zxy_imag_channel(self, val):
+        self.setter_validator("zxy_imag_channel", val, fun=self._uuid_promoter)
+
+    @property
+    def zxy_imag_uncertainty(self):
+        return self._zxy_imag_uncertainty
+
+    @zxy_imag_uncertainty.setter
+    def zxy_imag_uncertainty(self, val):
+        self.setter_validator("zxy_imag_uncertainty", val, fun=self._uuid_promoter)
+
+    @property
+    def zyx_real_channel_bool(self):
+        return self._zyx_real_channel_bool
+
+    @zyx_real_channel_bool.setter
+    def zyx_real_channel_bool(self, val):
+        self.setter_validator("zyx_real_channel_bool", val)
+
+    @property
+    def zyx_real_channel(self):
+        return self._zyx_real_channel
+
+    @zyx_real_channel.setter
+    def zyx_real_channel(self, val):
+        self.setter_validator("zyx_real_channel", val, fun=self._uuid_promoter)
+
+    @property
+    def zyx_real_uncertainty(self):
+        return self._zyx_real_uncertainty
+
+    @zyx_real_uncertainty.setter
+    def zyx_real_uncertainty(self, val):
+        self.setter_validator("zyx_real_uncertainty", val, fun=self._uuid_promoter)
+
+    @property
+    def zyx_imag_channel_bool(self):
+        return self._zyx_imag_channel_bool
+
+    @zyx_imag_channel_bool.setter
+    def zyx_imag_channel_bool(self, val):
+        self.setter_validator("zyx_imag_channel_bool", val)
+
+    @property
+    def zyx_imag_channel(self):
+        return self._zyx_imag_channel
+
+    @zyx_imag_channel.setter
+    def zyx_imag_channel(self, val):
+        self.setter_validator("zyx_imag_channel", val, fun=self._uuid_promoter)
+
+    @property
+    def zyx_imag_uncertainty(self):
+        return self._zyx_imag_uncertainty
+
+    @zyx_imag_uncertainty.setter
+    def zyx_imag_uncertainty(self, val):
+        self.setter_validator("zyx_imag_uncertainty", val, fun=self._uuid_promoter)
+
+    @property
+    def zyy_real_channel_bool(self):
+        return self._zyy_real_channel_bool
+
+    @zyy_real_channel_bool.setter
+    def zyy_real_channel_bool(self, val):
+        self.setter_validator("zyy_real_channel_bool", val)
+
+    @property
+    def zyy_real_channel(self):
+        return self._zyy_real_channel
+
+    @zyy_real_channel.setter
+    def zyy_real_channel(self, val):
+        self.setter_validator("zyy_real_channel", val, fun=self._uuid_promoter)
+
+    @property
+    def zyy_real_uncertainty(self):
+        return self._zyy_real_uncertainty
+
+    @zyy_real_uncertainty.setter
+    def zyy_real_uncertainty(self, val):
+        self.setter_validator("zyy_real_uncertainty", val, fun=self._uuid_promoter)
+
+    @property
+    def zyy_imag_channel_bool(self):
+        return self._zyy_imag_channel_bool
+
+    @zyy_imag_channel_bool.setter
+    def zyy_imag_channel_bool(self, val):
+        self.setter_validator("zyy_imag_channel_bool", val)
+
+    @property
+    def zyy_imag_channel(self):
+        return self._zyy_imag_channel
+
+    @zyy_imag_channel.setter
+    def zyy_imag_channel(self, val):
+        self.setter_validator("zyy_imag_channel", val, fun=self._uuid_promoter)
+
+    @property
+    def zyy_imag_uncertainty(self):
+        return self._zyy_imag_uncertainty
+
+    @zyy_imag_uncertainty.setter
+    def zyy_imag_uncertainty(self, val):
+        self.setter_validator("zyy_imag_uncertainty", val, fun=self._uuid_promoter)
