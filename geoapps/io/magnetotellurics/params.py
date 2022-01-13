@@ -46,6 +46,7 @@ class MagnetotelluricsParams(InversionParams):
         self.validate = False
         self.default_ui_json = deepcopy(default_ui_json)
         self.inversion_type: str = "magnetotellurics"
+        self._frequencies = None
         self._zxx_real_channel_bool = None
         self._zxx_real_channel = None
         self._zxx_real_uncertainty = None
@@ -72,6 +73,14 @@ class MagnetotelluricsParams(InversionParams):
         self._zyy_imag_uncertainty = None
 
         super().__init__(input_file, default, validate, validator_opts, **kwargs)
+
+    @property
+    def frequencies(self):
+        return self._frequencies
+
+    @frequencies.setter
+    def frequencies(self, val):
+        self.setter_validator("frequencies", val)
 
     @property
     def zxx_real_channel_bool(self):

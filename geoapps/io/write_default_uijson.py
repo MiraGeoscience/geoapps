@@ -13,6 +13,7 @@ from geoapps.io.Gravity import GravityParams
 from geoapps.io.InducedPolarization import InducedPolarizationParams
 from geoapps.io.MagneticScalar import MagneticScalarParams
 from geoapps.io.MagneticVector import MagneticVectorParams
+from geoapps.io.magnetotellurics import MagnetotelluricsParams
 from geoapps.io.Octree import OctreeParams
 from geoapps.io.PeakFinder import PeakFinderParams
 
@@ -47,7 +48,6 @@ def write_default_uijson(path, use_initializers=False):
     from geoapps.io.magnetotellurics.constants import app_initializer
 
     mt_init = app_initializer if use_initializers else {}
-    mt_init["geoh5"] = path_to_flinflon("FlinFlon_mt.geoh5")
 
     from geoapps.io.Octree.constants import app_initializer
 
