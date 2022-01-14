@@ -110,11 +110,11 @@ class ReceiversFactory(SimPEGFactory):
                 self.simpeg_object = receivers.Pole
             else:
                 args.append(locations_n)
+
+        elif self.factory_type in ["magnetotellurics"]:
+            pass
         else:
             args.append(locations[local_index])
-
-        if self.factory_type == "magnetotellurics":
-            args.append(component, part)
 
         return args
 
@@ -239,6 +239,9 @@ class SurveyFactory(SimPEGFactory):
         elif self.factory_type == "induced polarization":
             from SimPEG.electromagnetics.static.induced_polarization import survey
 
+        elif self.factory_type == "magnetotellurics":
+            from SimPEG.electromagnetics.natural_source import survey
+
         return survey.Survey
 
     def assemble_arguments(
@@ -291,6 +294,9 @@ class SurveyFactory(SimPEGFactory):
             self.local_index = np.hstack(self.local_index)
 
             return [sources]
+
+        elif self.factory_type in ["magnetotellurics"]:
+            pass
 
         else:
 

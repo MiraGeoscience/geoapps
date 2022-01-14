@@ -18,8 +18,8 @@ from geoapps.io.Inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Magnetic Vector Inversion",
-    "inversion_type": "magnetic vector",
+    "title": "SimPEG Magnetotellurics Inversion",
+    "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -110,11 +110,11 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "max_ram": None,
-    "out_group": "VectorInversion",
+    "out_group": "MagnetotelluricsInversion",
     "no_data_value": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
-    "run_command": "geoapps.drivers.magnetic_vector_inversion",
+    "run_command": "geoapps.drivers.magnetotellurics_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
@@ -129,8 +129,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "SimPEG Magnetic Vector Forward",
-    "inversion_type": "magnetic vector",
+    "title": "SimPEG Magnetotellurics Forward",
+    "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -177,7 +177,7 @@ forward_defaults = {
     "out_group": "MVIForward",
     "monitoring_directory": None,
     "workspace_geoh5": None,
-    "run_command": "geoapps.drivers.magnetic_vector_inversion",
+    "run_command": "geoapps.drivers.magnetotellurics_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
@@ -216,8 +216,8 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Magnetic Vector Inversion",
-    "inversion_type": "magnetic vector",
+    "title": "SimPEG Magnetotellurics Inversion",
+    "inversion_type": "magnetotellurics",
     "data_object": {
         "main": True,
         "group": "Data",
@@ -476,7 +476,7 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
-    "out_group": {"label": "Results group name", "value": "VectorInversion"},
+    "out_group": {"label": "Results group name", "value": "MagnetotelluricsInversion"},
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -492,7 +492,7 @@ required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
         "types": [str],
-        "values": ["gravity", "magnetic scalar", "magnetic vector"],
+        "values": ["magnetotellurics"],
     },
     "zxx_real_channel_bool": {"types": [bool]},
     "zxx_real_channel": {

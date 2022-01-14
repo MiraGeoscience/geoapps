@@ -156,13 +156,23 @@ class InversionParams(Params):
         # Set params attributes from validated input.
         self.update(params_dict, validate=False)
 
+    def data_channel(self, component: str):
+        """Return uuid of data channel."""
+        return getattr(self, "_".join([component, "channel"]), None)
+
+    def uncertainty_channel(self, component: str):
+        """Return uuid of uncertainty channel."""
+        return getattr(self, "_".join([component, "channel"]), None)
+
+    def data(self, component: str):
+        """Returns array of data for chosen data component."""
+        uid = self.data_channel(component)
+        return self.geoh5.get_entity(uid)[0].values
+
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""
-        return getattr(self, "_".join([component, "uncertainty"]), None)
-
-    def channel(self, component: str) -> UUID:
-        """Returns channel uuid for chosen data component."""
-        return getattr(self, "_".join([component, "channel"]), None)
+        uid = self.uncertainty_channel(component)
+        return self.geoh5.get_entity(uid)[0].values
 
     def cell_size(self):
         """Returns core cell size in all 3 dimensions."""
@@ -179,13 +189,12 @@ class InversionParams(Params):
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
-        channels = np.unique(
-            [
-                k.lstrip("_").split("_")[0]
-                for k in self.__dict__.keys()
-                if "channel" in k
-            ]
-        )
+        channels = [
+            k.lstrip("_").split("_channel_bool")[0]
+            for k in self.__dict__.keys()
+            if "channel_bool" in k
+        ]
+
         for c in channels:
             use_ch = False
             if getattr(self, f"{c}_channel", None) is not None:

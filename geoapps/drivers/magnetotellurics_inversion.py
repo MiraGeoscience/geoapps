@@ -8,7 +8,7 @@
 import sys
 
 from geoapps.io import InputFile
-from geoapps.io.Magnetotellurics import MagnetotelluricsParams
+from geoapps.io.magnetotellurics import MagnetotelluricsParams
 
 from .base_inversion import InversionDriver
 
