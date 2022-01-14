@@ -203,13 +203,35 @@ class InversionData(InversionLocations):
         data = {}
         uncertainties = {}
         for comp in components:
-            data[comp] = self.get_data_component(comp)
-            uncertainties[comp] = self.get_uncertainty_component(comp)
-            uncertainties[comp] = self.set_infinity_uncertainties(
-                uncertainties[comp], data[comp]
-            )
+            data.update({comp: self.params.data(comp)})
+            uncertainties.update({comp: self.params.uncertainty(comp)})
+            # uncertainties[comp] = self.set_infinity_uncertainties(
+            #     uncertainties[comp], data[comp]
+            # )
 
         return list(data.keys()), data, uncertainties
+
+    def get_data_component(self, component: str) -> np.ndarray:
+        """Get data component (channel) from params data."""
+        channel = self.params.channel(component)
+        return None if channel is None else self.workspace.get_entity(channel)[0].values
+
+    def get_uncertainty_component(self, component: str) -> np.ndarray:
+        """Get uncertainty component (channel) from params data."""
+        unc = self.params.uncertainty(component)
+        if unc is None:
+            return None
+        elif isinstance(unc, (int, float)):
+            d = self.get_data_component(component)
+            if d is None:
+                return None
+            else:
+                return np.array([float(unc)] * len(d))
+        elif unc is None:
+            d = self.get_data_component(component)
+            return d * 0.0 + 1.0  # Default
+        else:
+            return self.workspace.get_entity(unc)[0].values.astype(float)
 
     def write_entity(self):
         """Write out the survey to geoh5"""
@@ -291,28 +313,6 @@ class InversionData(InversionLocations):
                 uncerts = self.uncertainties[comp].copy()
                 uncerts[np.isinf(uncerts)] = np.nan
                 self.entity.add_data({f"Uncertainties_{comp}": {"values": uncerts}})
-
-    def get_data_component(self, component: str) -> np.ndarray:
-        """Get data component (channel) from params data."""
-        channel = self.params.channel(component)
-        return None if channel is None else self.workspace.get_entity(channel)[0].values
-
-    def get_uncertainty_component(self, component: str) -> np.ndarray:
-        """Get uncertainty component (channel) from params data."""
-        unc = self.params.uncertainty(component)
-        if unc is None:
-            return None
-        elif isinstance(unc, (int, float)):
-            d = self.get_data_component(component)
-            if d is None:
-                return None
-            else:
-                return np.array([float(unc)] * len(d))
-        elif unc is None:
-            d = self.get_data_component(component)
-            return d * 0.0 + 1.0  # Default
-        else:
-            return self.workspace.get_entity(unc)[0].values.astype(float)
 
     def parse_ignore_values(self) -> tuple[float, str]:
         """Returns an ignore value and type ('<', '>', or '=') from params data."""

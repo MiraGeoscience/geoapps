@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import numpy as np
+
 from geoapps.io.Inversion import InversionParams
 
 from .constants import (
@@ -46,7 +48,6 @@ class MagnetotelluricsParams(InversionParams):
         self.validate = False
         self.default_ui_json = deepcopy(default_ui_json)
         self.inversion_type: str = "magnetotellurics"
-        self._frequencies = None
         self._zxx_real_channel_bool = None
         self._zxx_real_channel = None
         self._zxx_real_uncertainty = None
@@ -74,13 +75,36 @@ class MagnetotelluricsParams(InversionParams):
 
         super().__init__(input_file, default, validate, validator_opts, **kwargs)
 
-    @property
-    def frequencies(self):
-        return self._frequencies
+    def data_channel(self, component: str):
+        """Return uuid of data channel."""
+        return getattr(self, "_".join([component, "channel"]), None)
 
-    @frequencies.setter
-    def frequencies(self, val):
-        self.setter_validator("frequencies", val)
+    def uncertainty_channel(self, component: str):
+        """Return uuid of uncertainty channel."""
+        return getattr(self, "_".join([component, "channel"]), None)
+
+    def property_group_data(self, uid: UUID):
+        data = {}
+        data_obj = self.geoh5.get_entity(self.data_object)[0]
+        frequencies = data_obj.channels
+        group = [k for k in data_obj.property_groups if k.uid == uid][0]
+        property_names = [self.geoh5.get_entity(p)[0].name for p in group.properties]
+        properties = [self.geoh5.get_entity(p)[0].values for p in group.properties]
+        for f in frequencies:
+            f_ind = property_names.index([k for k in property_names if str(f) in k][0])
+            data[f] = properties[f_ind]
+
+        return data
+
+    def data(self, component: str):
+        """Returns array of data for chosen data component."""
+        uid = self.data_channel(component)
+        return self.property_group_data(uid)
+
+    def uncertainty(self, component: str) -> float:
+        """Returns uncertainty for chosen data component."""
+        uid = self.uncertainty_channel(component)
+        return self.property_group_data(uid)
 
     @property
     def zxx_real_channel_bool(self):
