@@ -47,7 +47,7 @@ class MagnetotelluricsParams(InversionParams):
 
         self.validate = False
         self.default_ui_json = deepcopy(default_ui_json)
-        self.inversion_type: str = "magnetotellurics"
+        self._inversion_type: str = "magnetotellurics"
         self._zxx_real_channel_bool = None
         self._zxx_real_channel = None
         self._zxx_real_uncertainty = None
@@ -72,6 +72,7 @@ class MagnetotelluricsParams(InversionParams):
         self._zyy_imag_channel_bool = None
         self._zyy_imag_channel = None
         self._zyy_imag_uncertainty = None
+        self._background_conductivity = None
 
         super().__init__(input_file, default, validate, validator_opts, **kwargs)
 
@@ -297,3 +298,11 @@ class MagnetotelluricsParams(InversionParams):
     @zyy_imag_uncertainty.setter
     def zyy_imag_uncertainty(self, val):
         self.setter_validator("zyy_imag_uncertainty", val, fun=self._uuid_promoter)
+
+    @property
+    def background_conductivity(self):
+        return self._background_conductivity
+
+    @background_conductivity.setter
+    def background_conductivity(self, val):
+        self.setter_validator("background_conductivity", val, fun=self._uuid_promoter)

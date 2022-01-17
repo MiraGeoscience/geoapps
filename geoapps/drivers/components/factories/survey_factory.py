@@ -111,8 +111,6 @@ class ReceiversFactory(SimPEGFactory):
             else:
                 args.append(locations_n)
 
-        elif self.factory_type in ["magnetotellurics"]:
-            pass
         else:
             args.append(locations[local_index])
 
@@ -123,6 +121,9 @@ class ReceiversFactory(SimPEGFactory):
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
             kwargs["components"] = list(data.keys())
+        if self.factory_type in ["magnetotellurics"]:
+            kwargs["orientation"] = list(data.keys())[0].split("_")[0][1:]
+            kwargs["component"] = list(data.keys())[0].split("_")[1]
 
         return kwargs
 
@@ -164,11 +165,17 @@ class SourcesFactory(SimPEGFactory):
             return sources.Dipole
 
         elif self.factory_type == "magnetotellurics":
-            from SimPEG.electromagnetics.natural_source.sources import (
-                Planewave_xy_1Dprimary,
-            )
+            from SimPEG.electromagnetics.natural_source import sources
 
-    def assemble_arguments(self, receivers=None, locations=None, local_index=None):
+            return sources.Planewave_xy_1Dprimary
+
+    def assemble_arguments(
+        self,
+        receivers=None,
+        locations=None,
+        local_index=None,
+        frequency=None,
+    ):
         """Provides implementations to assemble arguments for sources object."""
 
         args = []
@@ -189,24 +196,33 @@ class SourcesFactory(SimPEGFactory):
             else:
                 args.append(locations_b)
 
+        elif self.factory_type in ["magnetotellurics"]:
+            args.append(receivers)
+            args.append(frequency)
+
         else:
             args.append([receivers])
 
         return args
 
     def assemble_keyword_arguments(
-        self, receivers=None, locations=None, local_index=None
+        self, receivers=None, locations=None, local_index=None, frequency=None
     ):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
         if self.factory_type in ["magnetic scalar", "magnetic vector"]:
             kwargs["parameters"] = self.params.inducing_field_aid()
+        if self.factory_type in ["magnetotellurics"]:
+            kwargs["sigma_primary"] = [self.params.background_conductivity]
 
         return kwargs
 
-    def build(self, receivers=None, locations=None, local_index=None):
+    def build(self, receivers=None, locations=None, local_index=None, frequency=None):
         return super().build(
-            receivers=receivers, locations=locations, local_index=local_index
+            receivers=receivers,
+            locations=locations,
+            local_index=local_index,
+            frequency=frequency,
         )
 
 
@@ -296,7 +312,22 @@ class SurveyFactory(SimPEGFactory):
             return [sources]
 
         elif self.factory_type in ["magnetotellurics"]:
-            pass
+            receivers = []
+            sources = []
+            for k, v in data.observed.items():
+                receivers.append(
+                    ReceiversFactory(self.params).build(
+                        locations=data.locations,
+                        local_index=self.local_index,
+                        data={k: v},
+                    )
+                )
+            frequencies = np.unique([list(v.keys()) for k, v in data.observed.items()])
+            for f in frequencies:
+                sources.append(
+                    SourcesFactory(self.params).build(receivers, frequency=f)
+                )
+            return [sources]
 
         else:
 
@@ -326,17 +357,7 @@ class SurveyFactory(SimPEGFactory):
 
         local_index = self.local_index if local_index is None else local_index
         if not self.params.forward_only:
-            local_data = {k: v[local_index] for k, v in data.observed.items()}
-            local_uncertainties = {
-                k: v[local_index] for k, v in data.uncertainties.items()
-            }
-            data_vec = self._stack_channels(local_data)
-            uncertainty_vec = self._stack_channels(local_uncertainties)
-            data_vec[
-                np.isnan(data_vec)
-            ] = self.dummy  # Nan's handled by inf uncertainties
-            survey.dobs = data_vec
-            survey.std = uncertainty_vec
+            self.add_data(survey, data, local_index)
 
         if self.factory_type in ["direct current", "induced polarization"]:
             if (
@@ -349,6 +370,36 @@ class SurveyFactory(SimPEGFactory):
         survey.dummy = self.dummy
 
         return survey, self.local_index
+
+    def add_data(self, survey, data, local_index):
+
+        if self.factory_type in ["magnetotellurics"]:
+
+            local_data = {}
+            local_uncertainties = {}
+            frequencies = np.unique([list(v.keys()) for k, v in data.observed.items()])
+            components = list(data.observed.keys())
+            for f in frequencies:
+                for c in components:
+                    local_data["_".join([str(f), str(c)])] = data.observed[c][f][
+                        local_index
+                    ]
+                    local_uncertainties[
+                        "_".join([str(f), str(c)])
+                    ] = data.uncertainties[c][f][local_index]
+
+        else:
+
+            local_data = {k: v[local_index] for k, v in data.observed.items()}
+            local_uncertainties = {
+                k: v[local_index] for k, v in data.uncertainties.items()
+            }
+
+        data_vec = self._stack_channels(local_data)
+        uncertainty_vec = self._stack_channels(local_uncertainties)
+        data_vec[np.isnan(data_vec)] = self.dummy  # Nan's handled by inf uncertainties
+        survey.dobs = data_vec
+        survey.std = uncertainty_vec
 
     def _stack_channels(self, channel_data: dict[str, np.ndarray]):
         """Convert dictionary of data/uncertainties to stacked array."""
