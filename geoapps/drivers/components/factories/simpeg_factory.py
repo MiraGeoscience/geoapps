@@ -52,7 +52,7 @@ class SimPEGFactory:
 
         """
         self.params = params
-        self.factory_type: str = params.inversion_type
+        self._factory_type: str = params.inversion_type
         self.simpeg_object = None
 
     @property

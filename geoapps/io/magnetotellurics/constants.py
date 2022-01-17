@@ -43,6 +43,8 @@ inversion_defaults = {
     "zyy_imag_uncertainty": None,
     "starting_model_object": None,
     "starting_model": None,
+    "background_conductivity": None,
+    "background_conductivity": 1e-5,
     "tile_spatial": 1,
     "output_tile_files": False,
     "z_from_topo": False,
@@ -146,6 +148,8 @@ forward_defaults = {
     "zyy_imag_channel_bool": False,
     "starting_model_object": None,
     "starting_model": None,
+    "background_conductivity": None,
+    "background_conductivity": 1e-5,
     "tile_spatial": 1,
     "output_tile_files": False,
     "z_from_topo": False,
@@ -476,6 +480,17 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
+    "background_conductivity": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Starting Model",
+        "main": True,
+        "isValue": True,
+        "parent": "starting_model_object",
+        "label": "Background conductivity (Siemens/m)",
+        "property": None,
+        "value": 0.0,
+    },
     "out_group": {"label": "Results group name", "value": "MagnetotelluricsInversion"},
 }
 
@@ -557,6 +572,10 @@ validations = {
     },
     "zyy_imag_uncertainty": {
         "types": [str, int, float, UUID],
+    },
+    "background_conductivity": {
+        "types": [str, int, float, UUID],
+        "reqs": [("starting_model_object")],
     },
     "out_group": {"types": [str, ContainerGroup]},
 }
