@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import numpy
 from geoh5py.objects import Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import FloatText, HBox, Label, Text, VBox
@@ -87,6 +88,14 @@ class IsoSurface(ObjectDataSelection):
                         parent=self.ga_group,
                     )
                 ]
+                result[-1].add_data(
+                    {
+                        "value": {
+                            "values": numpy.ones(surface[0].shape[0]) * level,
+                            "entity_type": data_list[0].entity_type,
+                        }
+                    }
+                )
         self.result = result
         if self.live_link.value:
             self.live_link_output(self.export_directory.selected_path, self.ga_group)
