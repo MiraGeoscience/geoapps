@@ -303,16 +303,36 @@ class InversionData(InversionLocations):
                     }
                 }
             )
-        for comp in self.components:
-            dnorm = self.normalizations[comp] * data[comp]
-            self.data_entity[comp] = self.entity.add_data(
-                {f"{basename}_{comp}": {"values": dnorm}}
-            )
-            if not self.params.forward_only:
-                self._observed_data_types[comp] = self.data_entity[comp].entity_type
-                uncerts = self.uncertainties[comp].copy()
-                uncerts[np.isinf(uncerts)] = np.nan
-                self.entity.add_data({f"Uncertainties_{comp}": {"values": uncerts}})
+
+        if self.params.inversion_type == "magnetotellurics":
+            frequencies = np.unique([list(v.keys()) for k, v in data.items()])
+            for c in data.keys():
+                self.data_entity[c] = {}
+                self._observed_data_types[c] = {}
+                for f in frequencies:
+                    dnorm = self.normalizations[c] * data[c][f]
+                    self.data_entity[c][f] = self.entity.add_data(
+                        {f"{basename}_{c}_{f}": {"values": dnorm}}
+                    )
+                if not self.params.forward_only:
+                    self._observed_data_types[c][f] = self.data_entity[c][f].entity_type
+                    uncerts = self.uncertainties[c][f].copy()
+                    uncerts[np.isinf(uncerts)] = np.nan
+                    self.entity.add_data(
+                        {f"Uncertainties_{c}_{f}": {"values": uncerts}}
+                    )
+
+        else:
+            for comp in self.components:
+                dnorm = self.normalizations[comp] * data[comp]
+                self.data_entity[comp] = self.entity.add_data(
+                    {f"{basename}_{comp}": {"values": dnorm}}
+                )
+                if not self.params.forward_only:
+                    self._observed_data_types[comp] = self.data_entity[comp].entity_type
+                    uncerts = self.uncertainties[comp].copy()
+                    uncerts[np.isinf(uncerts)] = np.nan
+                    self.entity.add_data({f"Uncertainties_{comp}": {"values": uncerts}})
 
     def parse_ignore_values(self) -> tuple[float, str]:
         """Returns an ignore value and type ('<', '>', or '=') from params data."""
