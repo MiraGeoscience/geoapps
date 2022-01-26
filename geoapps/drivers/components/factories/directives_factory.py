@@ -48,12 +48,13 @@ class DirectivesFactory:
         inversion_mesh,
         active_cells,
         sorting,
-        local_misfits,
+        global_misfit,
         regularizer,
+        n_tiles,
     ):
 
         self.vector_inversion_directive = directives.VectorInversion(
-            [local.simulation for local in local_misfits],
+            [local.simulation for local in global_misfit.objfcts],
             regularizer,
             chifact_target=self.params.chi_factor * 2,
         )
@@ -104,7 +105,26 @@ class DirectivesFactory:
                 active_cells=active_cells,
                 sorting=sorting,
                 save_objective_function=True,
+                global_misfit=global_misfit,
+                n_tiles=n_tiles,
             )
+
+            if self.factory_type in ["magnetotellurics"]:
+                frequencies = np.unique(
+                    [list(v.keys()) for k, v in inversion_data.observed.items()]
+                )
+                components = list(inversion_data.observed.keys())
+                data = {}
+                for f in frequencies:
+                    for c in components:
+                        data["_".join([str(f), str(c)])] = inversion_data.observed[c][f]
+            else:
+                data = inversion_data.observed
+
+            def transform(x):
+                data_stack = np.column_stack(list(data.values())).ravel()
+                sorting_stack = np.tile(np.argsort(sorting), len(data))
+                return data_stack[sorting_stack] - x
 
             self.save_iteration_residual_directive = SaveIterationGeoh5Factory(
                 self.params
@@ -112,10 +132,7 @@ class DirectivesFactory:
                 inversion_object=inversion_data,
                 active_cells=active_cells,
                 sorting=sorting,
-                transform=lambda x: np.column_stack(
-                    list(inversion_data.observed.values())
-                ).ravel()[np.argsort(sorting)]
-                - x,
+                transform=transform,
             )
             self.save_iteration_residual_directive.label = "Residual"
 
@@ -155,6 +172,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         sorting=None,
         transform=None,
         save_objective_function=False,
+        global_misfit=None,
+        n_tiles=None,
     ):
         return [inversion_object.entity]
 
@@ -165,6 +184,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         sorting=None,
         transform=None,
         save_objective_function=False,
+        global_misfit=None,
+        n_tiles=None,
     ):
 
         object_type = "mesh" if hasattr(inversion_object, "mesh") else "data"
@@ -174,15 +195,41 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         if object_type == "data":
 
-            channels = list(inversion_object.observed.keys())
+            if self.factory_type in ["magnetotellurics"]:
+                components = list(inversion_object.observed.keys())
+
+                channels = np.unique(
+                    [list(v.keys()) for k, v in inversion_object.observed.items()]
+                )
+                kwargs["components"] = components
+            else:
+                channels = list(inversion_object.observed.keys())
+
             kwargs["channels"] = channels
             kwargs["attribute_type"] = "predicted"
-            kwargs["transforms"] = [
-                np.tile(
-                    [inversion_object.normalizations[c] for c in channels],
-                    inversion_object.observed[channels[0]].shape[0],
-                )
-            ]
+
+            if self.factory_type in ["magnetotellurics"]:
+                kwargs["association"] = "VERTEX"
+                kwargs["sorting"] = sorting
+                kwargs["transforms"] = [
+                    np.tile(
+                        np.repeat(
+                            [inversion_object.normalizations[c] for c in components],
+                            len(inversion_object.observed[components[0]][channels[0]]),
+                        ),
+                        len(channels),
+                    )
+                ]
+                # kwargs["reshape"] = lambda x: x.reshape((-1, len(components), n_tiles, len(channels)), order='F').transpose((3, 1, 0, 2)).reshape((len(channels), len(components), -1), order='F')
+
+            else:
+
+                kwargs["transforms"] = [
+                    np.tile(
+                        [inversion_object.normalizations[c] for c in channels],
+                        inversion_object.observed[channels[0]].shape[0],
+                    )
+                ]
 
             if self.factory_type in ["direct current", "induced polarization"]:
                 is_dc = True if self.factory_type == "direct current" else False
@@ -250,6 +297,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         sorting=None,
         transform=None,
         save_objective_function=False,
+        global_misfit=None,
+        n_tiles=None,
     ):
         return super().build(
             inversion_object=inversion_object,
@@ -257,4 +306,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             sorting=sorting,
             transform=transform,
             save_objective_function=save_objective_function,
+            global_misfit=global_misfit,
+            n_tiles=n_tiles,
         )

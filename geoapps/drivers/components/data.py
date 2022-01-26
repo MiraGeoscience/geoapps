@@ -440,14 +440,21 @@ class InversionData(InversionLocations):
         d = deepcopy(data)
         normalizations = {}
         for comp in self.components:
+            normalizations[comp] = 1.0
             if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
                 normalizations[comp] = -1.0
                 if d[comp] is not None:
                     d[comp] *= -1.0
                 print(f"Sign flip for {comp} component")
-            else:
-                normalizations[comp] = 1.0
+
+            elif self.params.inversion_type in ["magnetotellurics"]:
+                if "imag" in comp:
+                    normalizations[comp] = -1.0
+                    if d[comp] is not None:
+                        d[comp] = {k: d[comp][k] * -1 for k in d[comp].keys()}
+
         self.normalizations = normalizations
+
         return d
 
     def survey(
@@ -455,6 +462,7 @@ class InversionData(InversionLocations):
         mesh: TreeMesh = None,
         active_cells: np.ndarray = None,
         local_index: np.ndarray = None,
+        channel=None,
     ):
         """
         Generates SimPEG survey object.
@@ -473,6 +481,7 @@ class InversionData(InversionLocations):
             mesh=mesh,
             active_cells=active_cells,
             local_index=local_index,
+            channel=channel,
         )
         return survey
 

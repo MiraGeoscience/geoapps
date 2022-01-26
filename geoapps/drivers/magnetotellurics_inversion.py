@@ -13,7 +13,7 @@ from geoapps.io.magnetotellurics import MagnetotelluricsParams
 from .base_inversion import InversionDriver
 
 
-def start_inversion(filepath=None, **kwargs):
+def start_inversion(filepath=None, warmstart=True, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
     if filepath is None:
@@ -22,13 +22,13 @@ def start_inversion(filepath=None, **kwargs):
         input_file = InputFile(filepath)
 
     params = MagnetotelluricsParams(input_file)
-    driver = MagnetotelluricsDriver(params)
+    driver = MagnetotelluricsDriver(params, warmstart=warmstart)
     driver.run()
 
 
 class MagnetotelluricsDriver(InversionDriver):
-    def __init__(self, params: MagnetotelluricsParams):
-        super().__init__(params)
+    def __init__(self, params: MagnetotelluricsParams, warmstart=True):
+        super().__init__(params, warmstart=warmstart)
 
     def run(self):
         super().run()

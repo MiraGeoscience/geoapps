@@ -42,6 +42,7 @@ class SimPEGFactory:
         "magnetic vector",
         "direct current",
         "induced polarization",
+        "magnetotellurics",
     ]
 
     def __init__(self, params: Params):
@@ -52,7 +53,7 @@ class SimPEGFactory:
 
         """
         self.params = params
-        self._factory_type: str = params.inversion_type
+        self.factory_type: str = params.inversion_type
         self.simpeg_object = None
 
     @property

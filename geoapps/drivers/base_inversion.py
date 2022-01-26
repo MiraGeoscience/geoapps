@@ -35,7 +35,7 @@ from .components import (
     InversionTopography,
     InversionWindow,
 )
-from .components.factories import DirectivesFactory
+from .components.factories import DirectivesFactory, MisfitFactory
 
 
 class InversionDriver:
@@ -140,14 +140,15 @@ class InversionDriver:
         # Tile locations
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
 
-        self.nTiles = len(self.tiles)
-        print(f"Setting up {self.nTiles} tiles ...")
+        self.n_tiles = len(self.tiles)
+        print(f"Setting up {self.n_tiles} tiles ...")
         # Build tiled misfits and combine to form global misfit
-        self.local_misfits = self.get_tile_misfits(self.tiles)
-        self.global_misfit = objective_function.ComboObjectiveFunction(
-            self.local_misfits
+
+        self.global_misfit, self.sorting = MisfitFactory(self.params).build(
+            self.tiles, self.inversion_data, self.mesh, self.active_cells
         )
         print(f"Done.")
+
         # Create regularization
         self.regularization = self.get_regularization()
 
@@ -192,8 +193,9 @@ class InversionDriver:
             self.inversion_mesh,
             self.active_cells,
             np.argsort(np.hstack(self.sorting)),
-            self.local_misfits,
+            self.global_misfit,
             self.regularization,
+            self.n_tiles,
         )
 
         # Put all the parts together
@@ -341,34 +343,35 @@ class InversionDriver:
             [],
         )
         for tile_id, local_index in enumerate(tiles):
-            lsurvey, local_index = self.inversion_data.survey(
+            lsurveys, local_index = self.inversion_data.survey(
                 self.mesh, self.active_cells, local_index
             )
-            lsim, lmap = self.inversion_data.simulation(
-                self.mesh, self.active_cells, lsurvey, tile_id
-            )
-
-            # TODO Parse workers to simulations
-            lsim.workers = self.params.distributed_workers
-            if self.inversion_type == "induced polarization":
-                lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
-
-            if self.params.forward_only:
-                lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
-            else:
-                ldat = (
-                    data.Data(
-                        lsurvey, dobs=lsurvey.dobs, standard_deviation=lsurvey.std
-                    ),
+            for i, survey in enumerate(lsurveys):
+                lsim, lmap = self.inversion_data.simulation(
+                    self.mesh, self.active_cells, survey, (tile_id * len(lsurveys)) + i
                 )
-                lmisfit = data_misfit.L2DataMisfit(
-                    data=ldat[0],
-                    simulation=lsim,
-                    model_map=lmap,
-                )
-                lmisfit.W = 1 / lsurvey.std
 
-            local_misfits.append(lmisfit)
+                # TODO Parse workers to simulations
+                lsim.workers = self.params.distributed_workers
+                if self.inversion_type == "induced polarization":
+                    lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
+
+                if self.params.forward_only:
+                    lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
+                else:
+                    ldat = (
+                        data.Data(
+                            survey, dobs=survey.dobs, standard_deviation=survey.std
+                        ),
+                    )
+                    lmisfit = data_misfit.L2DataMisfit(
+                        data=ldat[0],
+                        simulation=lsim,
+                        model_map=lmap,
+                    )
+                    lmisfit.W = 1 / survey.std
+
+                local_misfits.append(lmisfit)
             self.sorting.append(local_index)
 
         return local_misfits
