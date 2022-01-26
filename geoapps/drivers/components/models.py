@@ -117,7 +117,9 @@ class InversionModelCollection:
     def _initialize(self):
 
         self.is_sigma = (
-            True if self.params.inversion_type in ["direct current"] else False
+            True
+            if self.params.inversion_type in ["direct current", "magnetotellurics"]
+            else False
         )
         self.is_vector = (
             True if self.params.inversion_type == "magnetic vector" else False
