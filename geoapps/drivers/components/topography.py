@@ -64,7 +64,8 @@ class InversionTopography(InversionLocations):
         self.mask = np.ones(len(self.locations), dtype=bool)
 
         topo_window = deepcopy(self.window)
-        topo_window["size"] = [2 * s for s in topo_window["size"]]
+        if topo_window is not None:
+            topo_window["size"] = [2 * s for s in topo_window["size"]]
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
