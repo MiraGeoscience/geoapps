@@ -187,7 +187,7 @@ class InversionLocations:
             if isinstance(self.params.topography, UUID):
                 z = self.workspace.get_entity(self.params.topography)[0].values
             else:
-                z = np.ones_like(locs) * self.params.topography
+                z = np.ones_like(topo[:, 2]) * self.params.topography
 
             topo[:, 2] = z
 

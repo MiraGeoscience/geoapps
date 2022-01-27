@@ -13,8 +13,11 @@ if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.io import Params
     from . import InversionMesh
+    from typing import Any
+
 
 from copy import deepcopy
+from uuid import UUID
 
 import numpy as np
 from discretize.utils import active_from_xyz
@@ -110,7 +113,13 @@ class InversionTopography(InversionLocations):
         locs = super().get_locations(uid)
 
         if self.params.topography is not None:
-            elev = self.workspace.get_entity(self.params.topography)[0].values
+            if isinstance(self.params.topography, UUID):
+                elev = self.workspace.get_entity(self.params.topography)[0].values
+            elif isinstance(self.params.topography, (int, float)):
+                elev = np.ones_like(locs[:, 2]) * self.params.topography
+            else:
+                elev = self.params.topography.values  # Must be FloatData at this point
+
             if not np.all(locs[:, 2] == elev):
                 locs[:, 2] = elev
 
