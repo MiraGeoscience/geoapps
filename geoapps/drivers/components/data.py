@@ -146,6 +146,7 @@ class InversionData(InversionLocations):
             self.detrend_type = self.params.detrend_type
             self.observed, self.trend = self.detrend(self.observed)
 
+        self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
@@ -418,17 +419,21 @@ class InversionData(InversionLocations):
         :return: d: Normalized data.
         """
         d = deepcopy(data)
+        for comp in self.components:
+            if d[comp] is not None:
+                d[comp] *= self.normalizations[comp]
+        return d
+
+    def get_normalizations(self):
+        """Create normalizations dictionary."""
         normalizations = {}
         for comp in self.components:
             if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
-                normalizations[comp] = -1.0
-                if d[comp] is not None:
-                    d[comp] *= -1.0
-                print(f"Sign flip for {comp} component")
+                normalizations[comp] = -1
+                print(f"Sign flip for component {comp}.")
             else:
-                normalizations[comp] = 1.0
-        self.normalizations = normalizations
-        return d
+                normalizations[comp] = 1
+        return normalizations
 
     def survey(
         self,
