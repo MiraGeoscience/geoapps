@@ -127,7 +127,7 @@ class InversionLocations:
         locs = get_locs(self.workspace, obj)
 
         if locs is None:
-            msg = f"Workspace object {data_object} 'vertices' attribute is None."
+            msg = f"Workspace object {obj} 'vertices' attribute is None."
             msg += " Object type should be Grid2D or point-like."
             raise (ValueError(msg))
 
