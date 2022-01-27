@@ -16,7 +16,9 @@ import numpy as np
 from geoh5py.objects import (
     BlockModel,
     CurrentElectrode,
+    Curve,
     Octree,
+    Points,
     PotentialElectrode,
     Surface,
 )
@@ -1302,7 +1304,7 @@ class ModelOptions(ObjectDataSelection):
     def __init__(self, identifier: str = None, **kwargs):
         self._units = "Units"
         self._identifier = identifier
-        self._object_types = (BlockModel, Octree, Surface)
+        self._object_types = (BlockModel, Octree, Surface, Curve, Points)
         self._options = widgets.RadioButtons(
             options=["Model", "Constant", "None"],
             value="Constant",
