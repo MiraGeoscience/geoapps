@@ -113,7 +113,7 @@ class DirectivesFactory:
                 active_cells=active_cells,
                 sorting=sorting,
                 transform=lambda x: np.column_stack(
-                    list(inversion_data.observed.values())
+                    list(inversion_data.normalize(inversion_data.observed).values())
                 ).ravel()[np.argsort(sorting)]
                 - x,
             )

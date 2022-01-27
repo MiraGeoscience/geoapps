@@ -235,11 +235,12 @@ def test_normalize(tmp_path):
     locs = ws.get_entity(params.data_object)[0].centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
-    data.data = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
-    data.components = list(data.data.keys())
-    test_data = data.normalize(data.data)
+    data.observed = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
+    data.components = list(data.observed.keys())
+    data.normalizations = data.get_normalizations()
+    test_data = data.normalize(data.observed)
     assert list(data.normalizations.values()) == [1, -1]
-    assert all(test_data["gz"] == (-1 * data.data["gz"]))
+    assert all(test_data["gz"] == (-1 * data.observed["gz"]))
 
 
 def test_get_survey(tmp_path):
