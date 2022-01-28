@@ -302,13 +302,15 @@ class InversionData(InversionLocations):
                     self.data_entity[c][f] = self.entity.add_data(
                         {f"{basename}_{c}_{f}": {"values": dnorm}}
                     )
-                if not self.params.forward_only:
-                    self._observed_data_types[c][f] = self.data_entity[c][f].entity_type
-                    uncerts = self.uncertainties[c][f].copy()
-                    uncerts[np.isinf(uncerts)] = np.nan
-                    self.entity.add_data(
-                        {f"Uncertainties_{c}_{f}": {"values": uncerts}}
-                    )
+                    if not self.params.forward_only:
+                        self._observed_data_types[c][f] = self.data_entity[c][
+                            f
+                        ].entity_type
+                        uncerts = self.uncertainties[c][f].copy()
+                        uncerts[np.isinf(uncerts)] = np.nan
+                        self.entity.add_data(
+                            {f"Uncertainties_{c}_{f}": {"values": uncerts}}
+                        )
 
         else:
             for comp in self.components:
