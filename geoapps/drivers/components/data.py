@@ -219,19 +219,7 @@ class InversionData(InversionLocations):
     def get_uncertainty_component(self, component: str) -> np.ndarray:
         """Get uncertainty component (channel) from params data."""
         unc = self.params.uncertainty(component)
-        if unc is None:
-            return None
-        elif isinstance(unc, (int, float)):
-            d = self.get_data_component(component)
-            if d is None:
-                return None
-            else:
-                return np.array([float(unc)] * len(d))
-        elif unc is None:
-            d = self.get_data_component(component)
-            return d * 0.0 + 1.0  # Default
-        else:
-            return self.workspace.get_entity(unc)[0].values.astype(float)
+        return unc
 
     def write_entity(self):
         """Write out the survey to geoh5"""
@@ -449,9 +437,9 @@ class InversionData(InversionLocations):
 
             elif self.params.inversion_type in ["magnetotellurics"]:
                 if "imag" in comp:
-                    normalizations[comp] = -1.0
+                    normalizations[comp] = 1.0
                     if d[comp] is not None:
-                        d[comp] = {k: d[comp][k] * -1 for k in d[comp].keys()}
+                        d[comp] = {k: d[comp][k] * 1.0 for k in d[comp].keys()}
 
         self.normalizations = normalizations
 

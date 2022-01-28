@@ -162,7 +162,7 @@ class InversionParams(Params):
 
     def uncertainty_channel(self, component: str):
         """Return uuid of uncertainty channel."""
-        return getattr(self, "_".join([component, "channel"]), None)
+        return getattr(self, "_".join([component, "uncertainty"]), None)
 
     def data(self, component: str):
         """Returns array of data for chosen data component."""
@@ -171,8 +171,18 @@ class InversionParams(Params):
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""
-        uid = self.uncertainty_channel(component)
-        return self.geoh5.get_entity(uid)[0].values
+        val = self.uncertainty_channel(component)
+
+        if isinstance(val, UUID):
+            return self.geoh5.get_entity(val)[0].values.astype(float)
+        elif self.data(component) is not None:
+            d = self.data(component)
+            if isinstance(val, (int, float)):
+                return np.array([float(val)] * len(d))
+            else:
+                return d * 0.0 + 1.0  # Default
+        else:
+            return None
 
     def cell_size(self):
         """Returns core cell size in all 3 dimensions."""

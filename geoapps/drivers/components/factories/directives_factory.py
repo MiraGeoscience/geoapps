@@ -122,7 +122,7 @@ class DirectivesFactory:
                 data = inversion_data.observed
 
             def transform(x):
-                data_stack = np.column_stack(list(data.values())).ravel()
+                data_stack = np.row_stack(list(data.values())).ravel()
                 sorting_stack = np.tile(np.argsort(sorting), len(data))
                 return data_stack[sorting_stack] - x
 
@@ -195,41 +195,46 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         if object_type == "data":
 
+            kwargs["attribute_type"] = "predicted"
+
+            if sorting is not None:
+                kwargs["sorting"] = np.hstack(sorting)
+
             if self.factory_type in ["magnetotellurics"]:
                 components = list(inversion_object.observed.keys())
-
                 channels = np.unique(
                     [list(v.keys()) for k, v in inversion_object.observed.items()]
                 )
-                kwargs["components"] = components
-            else:
-                channels = list(inversion_object.observed.keys())
 
+            else:
+                components = list(inversion_object.observed.keys())
+                channels = [""]
+                kwargs["data_type"] = {
+                    comp: {channel: dtype for channel in channels}
+                    for comp, dtype in inversion_object._observed_data_types.items()
+                }
+
+            kwargs["transforms"] = [
+                np.tile(
+                    np.repeat(
+                        [inversion_object.normalizations[c] for c in components],
+                        inversion_object.locations.shape[0],
+                    ),
+                    len(channels),
+                )
+            ]
             kwargs["channels"] = channels
-            kwargs["attribute_type"] = "predicted"
+            kwargs["components"] = components
 
             if self.factory_type in ["magnetotellurics"]:
-                kwargs["association"] = "VERTEX"
-                kwargs["sorting"] = sorting
-                kwargs["transforms"] = [
-                    np.tile(
-                        np.repeat(
-                            [inversion_object.normalizations[c] for c in components],
-                            len(inversion_object.observed[components[0]][channels[0]]),
-                        ),
-                        len(channels),
-                    )
-                ]
-                # kwargs["reshape"] = lambda x: x.reshape((-1, len(components), n_tiles, len(channels)), order='F').transpose((3, 1, 0, 2)).reshape((len(channels), len(components), -1), order='F')
+                kwargs["reshape"] = lambda x: x.reshape(
+                    (len(channels), len(components), -1)
+                )
 
             else:
-
-                kwargs["transforms"] = [
-                    np.tile(
-                        [inversion_object.normalizations[c] for c in channels],
-                        inversion_object.observed[channels[0]].shape[0],
-                    )
-                ]
+                kwargs["reshape"] = lambda x: x.reshape(
+                    (len(channels), len(components), -1), order="F"
+                )
 
             if self.factory_type in ["direct current", "induced polarization"]:
                 is_dc = True if self.factory_type == "direct current" else False
@@ -238,7 +243,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 kwargs["components"] = [component]
                 kwargs["data_type"] = {
                     component: {
-                        c: inversion_object.data_entity[c].entity_type for c in channels
+                        c: inversion_object.data_entity[c].entity_type
+                        for c in components
                     }
                 }
 
@@ -257,15 +263,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             if transform is not None:
                 kwargs["transforms"].append(transform)
 
-            if self.factory_type in ["magnetic scalar", "magnetic vector"]:
-                kwargs["components"] = ["mag"]
-                kwargs["data_type"] = {"mag": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.hstack(sorting)
-
-            if self.factory_type == "gravity":
-                kwargs["components"] = ["grav"]
-                kwargs["data_type"] = {"grav": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.hstack(sorting)
+            # if self.factory_type in ["magnetic scalar", "magnetic vector"]:
+            #     kwargs["channels"] = ["mag"]
+            #     kwargs["data_type"] = {"mag": inversion_object._observed_data_types}
+            #
+            # if self.factory_type == "gravity":
+            #     kwargs["channels"] = ["grav"]
 
         elif object_type == "mesh":
 
