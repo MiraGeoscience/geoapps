@@ -141,6 +141,14 @@ class InversionLocations:
                 a.update({k: v[mask]})
         return a
 
+    def _none_dict(self, a):
+        is_none = []
+        for v in a.values():
+            if isinstance(v, dict):
+                v = None if self._none_dict(v) else 1
+            is_none.append(v is None)
+        return all(is_none)
+
     def filter(self, a: dict[str, np.ndarray] | np.ndarray, mask=None):
         """
         Apply accumulated self.mask to array, or dict of arrays.
@@ -157,7 +165,7 @@ class InversionLocations:
 
         if isinstance(a, dict):
 
-            if all([v is None for v in a.values()]):
+            if self._none_dict(a):
                 return a
             else:
                 return self._filter(a, mask)
