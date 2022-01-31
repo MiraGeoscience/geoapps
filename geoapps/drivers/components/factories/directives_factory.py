@@ -122,7 +122,9 @@ class DirectivesFactory:
                 data = inversion_data.observed
 
             def transform(x):
-                data_stack = np.row_stack(list(data.values())).ravel()
+                data_stack = np.row_stack(
+                    list(inversion_data.normalize(data).values())
+                ).ravel()
                 sorting_stack = np.tile(np.argsort(sorting), len(data))
                 return data_stack[sorting_stack] - x
 
@@ -196,7 +198,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         if object_type == "data":
 
             kwargs["attribute_type"] = "predicted"
-
             if sorting is not None:
                 kwargs["sorting"] = np.hstack(sorting)
 
@@ -213,7 +214,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     comp: {channel: dtype for channel in channels}
                     for comp, dtype in inversion_object._observed_data_types.items()
                 }
-
             kwargs["transforms"] = [
                 np.tile(
                     np.repeat(
