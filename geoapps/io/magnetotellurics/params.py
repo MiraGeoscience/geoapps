@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from uuid import UUID
 
 import numpy as np
 
@@ -82,20 +83,28 @@ class MagnetotelluricsParams(InversionParams):
 
     def uncertainty_channel(self, component: str):
         """Return uuid of uncertainty channel."""
-        return getattr(self, "_".join([component, "channel"]), None)
+        return getattr(self, "_".join([component, "uncertainty"]), None)
 
     def property_group_data(self, uid: UUID):
+
         data = {}
         data_obj = self.geoh5.get_entity(self.data_object)[0]
         frequencies = data_obj.channels
-        group = [k for k in data_obj.property_groups if k.uid == uid][0]
-        property_names = [self.geoh5.get_entity(p)[0].name for p in group.properties]
-        properties = [self.geoh5.get_entity(p)[0].values for p in group.properties]
-        for f in frequencies:
-            f_ind = property_names.index([k for k in property_names if str(f) in k][0])
-            data[f] = properties[f_ind]
+        if self.forward_only:
+            return {k: None for k in frequencies}
+        else:
+            group = [k for k in data_obj.property_groups if k.uid == uid][0]
+            property_names = [
+                self.geoh5.get_entity(p)[0].name for p in group.properties
+            ]
+            properties = [self.geoh5.get_entity(p)[0].values for p in group.properties]
+            for f in frequencies:
+                f_ind = property_names.index(
+                    [k for k in property_names if str(f) in k][0]
+                )
+                data[f] = properties[f_ind]
 
-        return data
+            return data
 
     def data(self, component: str):
         """Returns array of data for chosen data component."""
