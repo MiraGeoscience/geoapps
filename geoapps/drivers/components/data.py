@@ -420,7 +420,14 @@ class InversionData(InversionLocations):
         """
         d = deepcopy(data)
         for comp in self.components:
-            if d[comp] is not None:
+            if isinstance(d[comp], dict):
+                new_dict = {}
+                for k, v in d[comp].items():
+                    new_dict[k] = (
+                        v * self.normalizations[comp] if v is not None else None
+                    )
+                d[comp] = new_dict
+            elif d[comp] is not None:
                 d[comp] *= self.normalizations[comp]
         return d
 
