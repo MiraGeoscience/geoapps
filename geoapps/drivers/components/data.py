@@ -146,6 +146,7 @@ class InversionData(InversionLocations):
             self.detrend_type = self.params.detrend_type
             self.observed, self.trend = self.detrend(self.observed)
 
+        self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
@@ -210,16 +211,6 @@ class InversionData(InversionLocations):
             # )
 
         return list(data.keys()), data, uncertainties
-
-    def get_data_component(self, component: str) -> np.ndarray:
-        """Get data component (channel) from params data."""
-        channel = self.params.channel(component)
-        return None if channel is None else self.workspace.get_entity(channel)[0].values
-
-    def get_uncertainty_component(self, component: str) -> np.ndarray:
-        """Get uncertainty component (channel) from params data."""
-        unc = self.params.uncertainty(component)
-        return unc
 
     def write_entity(self):
         """Write out the survey to geoh5"""
@@ -428,24 +419,25 @@ class InversionData(InversionLocations):
         :return: d: Normalized data.
         """
         d = deepcopy(data)
+        for comp in self.components:
+            if d[comp] is not None:
+                d[comp] *= self.normalizations[comp]
+        return d
+
+    def get_normalizations(self):
+        """Create normalizations dictionary."""
         normalizations = {}
         for comp in self.components:
             normalizations[comp] = 1.0
             if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
                 normalizations[comp] = -1.0
-                if d[comp] is not None:
-                    d[comp] *= -1.0
-                print(f"Sign flip for {comp} component")
-
             elif self.params.inversion_type in ["magnetotellurics"]:
                 if "imag" in comp:
-                    normalizations[comp] = 1.0
-                    if d[comp] is not None:
-                        d[comp] = {k: d[comp][k] * 1.0 for k in d[comp].keys()}
+                    normalizations[comp] = -1.0
+            if normalizations[comp] == -1.0:
+                print(f"Sign flip for component {comp}.")
 
-        self.normalizations = normalizations
-
-        return d
+        return normalizations
 
     def survey(
         self,
