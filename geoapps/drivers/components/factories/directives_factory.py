@@ -114,17 +114,16 @@ class DirectivesFactory:
                     [list(v.keys()) for k, v in inversion_data.observed.items()]
                 )
                 components = list(inversion_data.observed.keys())
+                obs = inversion_data.normalize(inversion_data.observed)
                 data = {}
                 for f in frequencies:
                     for c in components:
-                        data["_".join([str(f), str(c)])] = inversion_data.observed[c][f]
+                        data["_".join([str(f), str(c)])] = obs[c][f]
             else:
-                data = inversion_data.observed
+                data = inversion_data.normalize(inversion_data.observed)
 
             def transform(x):
-                data_stack = np.row_stack(
-                    list(inversion_data.normalize(data).values())
-                ).ravel()
+                data_stack = np.row_stack(list(data.values())).ravel()
                 sorting_stack = np.tile(np.argsort(sorting), len(data))
                 return data_stack[sorting_stack] - x
 
@@ -202,7 +201,19 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 kwargs["sorting"] = np.hstack(sorting)
 
             if self.factory_type in ["magnetotellurics"]:
-                components = list(inversion_object.observed.keys())
+                component_map = {
+                    "zxx_real": "zyy_real",
+                    "zxx_imag": "zyy_imag",
+                    "zxy_real": "zyx_real",
+                    "zxy_imag": "zyx_imag",
+                    "zyx_real": "zxy_real",
+                    "zyx_imag": "zxy_imag",
+                    "zyy_real": "zxx_real",
+                    "zyy_imag": "zxx_imag",
+                }
+                components = [
+                    component_map[k] for k in inversion_object.observed.keys()
+                ]
                 channels = np.unique(
                     [list(v.keys()) for k, v in inversion_object.observed.items()]
                 )

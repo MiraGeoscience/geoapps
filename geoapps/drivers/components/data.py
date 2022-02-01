@@ -27,7 +27,7 @@ from SimPEG.utils.io_utils.io_utils_electromagnetics import read_dcip_xyz
 
 from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
-from .factories import SimulationFactory, SurveyFactory
+from .factories import SaveIterationGeoh5Factory, SimulationFactory, SurveyFactory
 from .locations import InversionLocations
 
 
@@ -531,10 +531,22 @@ class InversionData(InversionLocations):
         dpred = inverse_problem.get_dpred(
             model, compute_J=False if self.params.forward_only else True
         )
-
-        dpred = np.hstack(dpred).reshape(-1, len(self.components))
+        save_data = SaveIterationGeoh5Factory(self.params).build(
+            inversion_object=self,
+            sorting=np.argsort(np.hstack(sorting)),
+        )
+        save_data.save_components(0, dpred)
+        n_tiles = len(sorting)
+        sorting_stacked = np.hstack(sorting)
+        if self.params.inversion_type in ["magnetotellurics"]:
+            channels = np.unique([list(v.keys()) for k, v in self.observed.items()])
+            dpred_reshaped = np.hstack(dpred).reshape(
+                -1, len(self.components), len(channels)
+            )
+        else:
+            dpred_reshaped = np.hstack(dpred).reshape(-1, len(self.components))
         sorting = np.argsort(np.hstack(sorting))
-        self.predicted = dict(zip(self.components, dpred[sorting].T))
+        self.predicted = dict(zip(self.components, dpred_reshaped[sorting].T))
 
         # TODO Should rotate the x,y (and/or tensor) components of the fields if used.
 
