@@ -206,9 +206,6 @@ class InversionData(InversionLocations):
         for comp in components:
             data.update({comp: self.params.data(comp)})
             uncertainties.update({comp: self.params.uncertainty(comp)})
-            # uncertainties[comp] = self.set_infinity_uncertainties(
-            #     uncertainties[comp], data[comp]
-            # )
 
         return list(data.keys()), data, uncertainties
 
@@ -536,18 +533,3 @@ class InversionData(InversionLocations):
             sorting=np.argsort(np.hstack(sorting)),
         )
         save_data.save_components(0, dpred)
-        n_tiles = len(sorting)
-        sorting_stacked = np.hstack(sorting)
-        if self.params.inversion_type in ["magnetotellurics"]:
-            channels = np.unique([list(v.keys()) for k, v in self.observed.items()])
-            dpred_reshaped = np.hstack(dpred).reshape(
-                -1, len(self.components), len(channels)
-            )
-        else:
-            dpred_reshaped = np.hstack(dpred).reshape(-1, len(self.components))
-        sorting = np.argsort(np.hstack(sorting))
-        self.predicted = dict(zip(self.components, dpred_reshaped[sorting].T))
-
-        # TODO Should rotate the x,y (and/or tensor) components of the fields if used.
-
-        self.save_data()
