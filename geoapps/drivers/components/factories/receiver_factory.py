@@ -102,8 +102,8 @@ class ReceiversFactory(SimPEGFactory):
             locations=locations,
             data=data,
             local_index=local_index,
-            mesh=None,
-            active_cells=None,
+            mesh=mesh,
+            active_cells=active_cells,
         )
 
     def _dcip_arguments(self, locations=None, local_index=None):
