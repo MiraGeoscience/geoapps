@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 import ipywidgets as widgets
 import numpy as np
-from geoh5py.objects import BlockModel, Octree, Surface
+from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
     Button,
@@ -1525,7 +1525,7 @@ class ModelOptions(ObjectDataSelection):
     def __init__(self, identifier: str = None, **kwargs):
         self._units = "Units"
         self._identifier = identifier
-        self._object_types = (BlockModel, Octree, Surface)
+        self._object_types = (BlockModel, Octree, Surface, Curve, Points)
         self._options = widgets.RadioButtons(
             options=["Model", "Constant", "None"],
             value="Constant",

@@ -328,7 +328,7 @@ class ModelOptions(ObjectDataSelection):
 
     def __init__(self, **kwargs):
         self._units = "Units"
-        self._object_types = (BlockModel, Octree, Surface)
+        self._object_types = (BlockModel, Octree, Surface, Curve, Points)
         self._options = widgets.RadioButtons(
             options=["Model", "Value"],
             value="Value",
