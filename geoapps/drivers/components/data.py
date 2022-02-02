@@ -528,8 +528,9 @@ class InversionData(InversionLocations):
         dpred = inverse_problem.get_dpred(
             model, compute_J=False if self.params.forward_only else True
         )
-        save_data = SaveIterationGeoh5Factory(self.params).build(
-            inversion_object=self,
-            sorting=np.argsort(np.hstack(sorting)),
-        )
-        save_data.save_components(0, dpred)
+        if self.params.forward_only:
+            save_directive = SaveIterationGeoh5Factory(self.params).build(
+                inversion_object=self,
+                sorting=np.argsort(np.hstack(sorting)),
+            )
+            save_directive.save_components(0, dpred)
