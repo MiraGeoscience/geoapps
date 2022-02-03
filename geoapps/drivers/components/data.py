@@ -262,6 +262,7 @@ class InversionData(InversionLocations):
                         entity.add_data({f"Uncertainties_{c}_{f}": {"values": uncerts}})
 
         else:
+            data_entity = {}
             for comp in self.components:
                 dnorm = self.normalizations[comp] * data[comp]
                 data_entity[comp] = entity.add_data(
