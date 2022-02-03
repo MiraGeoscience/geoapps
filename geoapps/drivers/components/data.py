@@ -27,7 +27,12 @@ from SimPEG.utils.io_utils.io_utils_electromagnetics import read_dcip_xyz
 
 from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
-from .factories import SaveIterationGeoh5Factory, SimulationFactory, SurveyFactory
+from .factories import (
+    EntityFactory,
+    SaveIterationGeoh5Factory,
+    SimulationFactory,
+    SurveyFactory,
+)
 from .locations import InversionLocations
 
 
@@ -111,7 +116,7 @@ class InversionData(InversionLocations):
         self.normalizations: dict[str, Any] = {}
         self.transformations: dict[str, Any] = {}
         self.entity = None
-        self.data_entity = {}
+        self.data_entity = None
         self._observed_data_types = {}
         self._survey = None
         self._initialize()
@@ -149,7 +154,7 @@ class InversionData(InversionLocations):
         self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
         self.locations = self.apply_transformations(self.locations)
-        self.entity = self.write_entity()
+        self.entity, self.data_entity = self.write_entity()
         self.locations = self.get_locations(self.entity.uid)
         self._survey, _ = self.survey()
 
@@ -211,67 +216,23 @@ class InversionData(InversionLocations):
 
     def write_entity(self):
         """Write out the survey to geoh5"""
+        entity_factory = EntityFactory(self.params)
+        entity = entity_factory.build(self)
+        data_entity = self.save_data(entity)
+        return entity, data_entity
 
-        if self.params.inversion_type in ["direct current", "induced polarization"]:
-
-            def prune_from_indices(curve: Curve, cell_indices: np.ndarray):
-                cells = curve.cells[cell_indices]
-                uni_ids, ids = np.unique(cells, return_inverse=True)
-                locations = curve.vertices[uni_ids, :]
-                cells = np.arange(uni_ids.shape[0], dtype="uint32")[ids].reshape(
-                    (-1, 2)
-                )
-                return locations, cells
-
-            # Trim down receivers
-            rx_obj = self.workspace.get_entity(self.params.data_object)[0]
-            rcv_ind = np.where(np.any(self.mask[rx_obj.cells], axis=1))[0]
-            rcv_locations, rcv_cells = prune_from_indices(rx_obj, rcv_ind)
-            uni_src_ids, src_ids = np.unique(
-                rx_obj.ab_cell_id.values[rcv_ind], return_inverse=True
-            )
-            ab_cell_id = np.arange(1, uni_src_ids.shape[0] + 1)[src_ids]
-            entity = PotentialElectrode.create(
-                self.workspace,
-                name="Data",
-                parent=self.params.ga_group,
-                vertices=self.apply_transformations(rcv_locations),
-                cells=rcv_cells,
-            )
-            entity.ab_cell_id = ab_cell_id
-            # Trim down sources
-            tx_obj = rx_obj.current_electrodes
-            src_ind = np.hstack(
-                [np.where(tx_obj.ab_cell_id.values == ind)[0] for ind in uni_src_ids]
-            )
-            src_locations, src_cells = prune_from_indices(tx_obj, src_ind)
-            new_currents = CurrentElectrode.create(
-                self.workspace,
-                name="Data (currents)",
-                parent=self.params.ga_group,
-                vertices=self.apply_transformations(src_locations),
-                cells=src_cells,
-            )
-            new_currents.add_default_ab_cell_id()
-            entity.current_electrodes = new_currents
-            entity.workspace.finalize()
-
-        else:
-            entity = super().create_entity("Data", self.locations)
-
-        return entity
-
-    def save_data(self):
+    def save_data(self, entity):
         """Write out the data to geoh5"""
         data = self.predicted if self.params.forward_only else self.observed
         basename = "Predicted" if self.params.forward_only else "Observed"
 
         if self.params.inversion_type == "direct current":
+            data_entity = {}
             self.transformations["potential"] = 1 / (
                 geometric_factor(self._survey) + 1e-10
             )
             apparent_property = data["potential"] * self.transformations["potential"]
-            self.data_entity[f"apparent_resistivity"] = self.entity.add_data(
+            data_entity["apparent_resistivity"] = entity.add_data(
                 {
                     f"{basename}_apparent_resistivity": {
                         "values": apparent_property,
@@ -281,36 +242,38 @@ class InversionData(InversionLocations):
             )
 
         if self.params.inversion_type == "magnetotellurics":
+
             frequencies = np.unique([list(v.keys()) for k, v in data.items()])
+            freq_str = lambda x: f"{x:.2e}"
+            self._observed_data_types = {c: {} for c in data.keys()}
+            data_entity = {c: {} for c in data.keys()}
             for c in data.keys():
-                self.data_entity[c] = {}
-                self._observed_data_types[c] = {}
                 for f in frequencies:
                     dnorm = self.normalizations[c] * data[c][f]
-                    self.data_entity[c][f] = self.entity.add_data(
+                    data_entity[c][f] = entity.add_data(
                         {f"{basename}_{c}_{f}": {"values": dnorm}}
                     )
                     if not self.params.forward_only:
-                        self._observed_data_types[c][f] = self.data_entity[c][
+                        self._observed_data_types[c][freq_str(f)] = data_entity[c][
                             f
                         ].entity_type
                         uncerts = self.uncertainties[c][f].copy()
                         uncerts[np.isinf(uncerts)] = np.nan
-                        self.entity.add_data(
-                            {f"Uncertainties_{c}_{f}": {"values": uncerts}}
-                        )
+                        entity.add_data({f"Uncertainties_{c}_{f}": {"values": uncerts}})
 
         else:
             for comp in self.components:
                 dnorm = self.normalizations[comp] * data[comp]
-                self.data_entity[comp] = self.entity.add_data(
+                data_entity[comp] = entity.add_data(
                     {f"{basename}_{comp}": {"values": dnorm}}
                 )
                 if not self.params.forward_only:
-                    self._observed_data_types[comp] = self.data_entity[comp].entity_type
+                    self._observed_data_types[comp] = data_entity[comp].entity_type
                     uncerts = self.uncertainties[comp].copy()
                     uncerts[np.isinf(uncerts)] = np.nan
-                    self.entity.add_data({f"Uncertainties_{comp}": {"values": uncerts}})
+                    entity.add_data({f"Uncertainties_{comp}": {"values": uncerts}})
+
+        return data_entity
 
     def parse_ignore_values(self) -> tuple[float, str]:
         """Returns an ignore value and type ('<', '>', or '=') from params data."""

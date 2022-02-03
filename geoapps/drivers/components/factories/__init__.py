@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 from .directives_factory import DirectivesFactory, SaveIterationGeoh5Factory
+from .entity_factory import EntityFactory
 from .misfit_factory import MisfitFactory
 from .simulation_factory import SimulationFactory
 from .survey_factory import SurveyFactory, receiver_group

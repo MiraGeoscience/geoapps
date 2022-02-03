@@ -217,6 +217,18 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 channels = np.unique(
                     [list(v.keys()) for k, v in inversion_object.observed.items()]
                 )
+                kwargs["data_type"] = {
+                    component_map[k]: v
+                    for k, v in inversion_object._observed_data_types.items()
+                }
+                for component, v in kwargs["data_type"].items():
+                    for channel, data_type in v.items():
+                        data_type.name = data_type.name.replace(
+                            component_map[component], component
+                        )
+                        data_type.description = data_type.description.replace(
+                            component_map[component], component
+                        )
 
             else:
                 components = list(inversion_object.observed.keys())
@@ -298,7 +310,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     active_cells_map,
                 ]
 
-            if self.factory_type == "direct current":
+            if self.factory_type in ["direct current", "magnetotellurics"]:
                 expmap = maps.ExpMap(inversion_object.mesh)
                 kwargs["transforms"] = [expmap * active_cells_map]
 
