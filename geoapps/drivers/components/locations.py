@@ -94,7 +94,7 @@ class InversionLocations:
             raise (ValueError(msg))
         self._mask = v
 
-    def create_entity(self, name, locs: np.ndarray):
+    def create_entity(self, name, locs: np.ndarray, geoh5_object=Points):
         """Create Data group and Points object with observed data."""
 
         if self.is_rotated:
@@ -104,7 +104,7 @@ class InversionLocations:
                 -self.angle,
             )
 
-        entity = Points.create(
+        entity = geoh5_object.create(
             self.workspace,
             name=name,
             vertices=locs,
