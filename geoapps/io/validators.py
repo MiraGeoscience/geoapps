@@ -86,7 +86,7 @@ class InputValidator:
 
         for k, v in chunk.items():
             if k not in self.validations.keys():
-                raise KeyError(f"{k} is not a valid parameter name.")
+                continue
             else:
                 self.validate(
                     k, v, self.validations[k], self.geoh5, chunk, associations
