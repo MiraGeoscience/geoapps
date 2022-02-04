@@ -386,7 +386,7 @@ class InputFreeformValidator(InputValidator):
                         break
 
             elif k not in self.validations.keys():
-                raise KeyError(f"{k} is not a valid parameter name.")
+                continue
             else:
                 validator = self.validations[k]
             self.validate(k, v, validator, self.geoh5, chunk, associations)
