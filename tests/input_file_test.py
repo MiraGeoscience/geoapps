@@ -178,7 +178,7 @@ def test_collect():
 def test_data():
     d_u_j = deepcopy(default_ui_json)
     data = InputFile.flatten(d_u_j)
-    assert data["starting_model"] is None
+    assert data["starting_model"] == 1e-4
     assert data["tile_spatial"] == 1
     assert data["forward_only"] == False
     assert data["resolution"] == None
@@ -206,6 +206,6 @@ def test_is_uijson():
 
 def test_field():
     d_u_j = deepcopy(default_ui_json)
-    assert InputFile.field(d_u_j["starting_model"]) == "property"
+    assert InputFile.field(d_u_j["starting_model"]) == "value"
     assert InputFile.field(d_u_j["tmi_uncertainty"]) == "value"
     assert InputFile.field(d_u_j["resolution"]) == "value"
