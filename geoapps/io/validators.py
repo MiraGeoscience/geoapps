@@ -85,9 +85,7 @@ class InputValidator:
             self._validate_requirements(chunk)
 
         for k, v in chunk.items():
-            if k not in self.validations.keys():
-                raise KeyError(f"{k} is not a valid parameter name.")
-            else:
+            if k in self.validations.keys():
                 self.validate(
                     k, v, self.validations[k], self.geoh5, chunk, associations
                 )
@@ -385,10 +383,10 @@ class InputFreeformValidator(InputValidator):
 
                         break
 
-            elif k not in self.validations.keys():
-                raise KeyError(f"{k} is not a valid parameter name.")
-            else:
+            elif k in self.validations.keys():
                 validator = self.validations[k]
+            else:
+                continue
             self.validate(k, v, validator, self.geoh5, chunk, associations)
 
         # TODO This check should be handled by a group validator
