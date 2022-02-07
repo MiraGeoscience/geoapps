@@ -533,7 +533,7 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Starting Model",
         "main": True,
-        "isValue": False,
+        "isValue": True,
         "parent": "starting_model_object",
         "label": "Density (g/cc)",
         "property": None,
