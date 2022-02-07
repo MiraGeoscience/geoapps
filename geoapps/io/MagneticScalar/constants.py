@@ -559,11 +559,11 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Starting Model",
         "main": True,
-        "isValue": False,
+        "isValue": True,
         "parent": "starting_model_object",
         "label": "Susceptibility (SI)",
         "property": None,
-        "value": 0.0,
+        "value": 1e-4,
     },
     "out_group": {"label": "Results group name", "value": "SusceptibilityInversion"},
 }
