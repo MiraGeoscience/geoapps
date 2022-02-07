@@ -512,7 +512,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
         "group": "Regularization",
-        "isValue": True,
+        "isValue": False,
         "parent": "reference_model_object",
         "label": "Reference model value",
         "property": None,
