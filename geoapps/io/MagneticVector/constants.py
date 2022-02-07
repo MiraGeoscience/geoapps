@@ -254,14 +254,14 @@ default_ui_json = {
         "value": 50000.0,
     },
     "inducing_field_inclination": {
-        "min": 0.0,
+        "min": -90.0,
+        "max": 90.0,
         "main": True,
         "group": "Inducing Field",
         "label": "Inclination",
         "value": 90.0,
     },
     "inducing_field_declination": {
-        "min": 0.0,
         "main": True,
         "group": "Inducing Field",
         "label": "Declination",
