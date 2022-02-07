@@ -586,7 +586,6 @@
         "value": 1
     },
     "max_ram": "",
-    "workspace": "",
     "out_group": {
         "label": "Results group name",
         "value": "DirectCurrentInversion"
