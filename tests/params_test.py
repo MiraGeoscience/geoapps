@@ -14,23 +14,18 @@ import numpy as np
 import pytest
 from geoh5py.workspace import Workspace
 
-from geoapps.io import InputFile, Params
+from geoapps.io import InputFile
 from geoapps.io.DirectCurrent import DirectCurrentParams
-from geoapps.io.DirectCurrent import app_initializer as dc_init
 from geoapps.io.Gravity import GravityParams
 from geoapps.io.Gravity import app_initializer as grav_init
 from geoapps.io.InducedPolarization import InducedPolarizationParams
-from geoapps.io.InducedPolarization import app_initializer as ip_init
 from geoapps.io.MagneticScalar import MagneticScalarParams
-from geoapps.io.MagneticScalar import app_initializer as mag_init
 from geoapps.io.MagneticVector import MagneticVectorParams
-from geoapps.io.MagneticVector import app_initializer as mvi_init
 from geoapps.io.MagneticVector.constants import default_ui_json as MVI_defaults
 from geoapps.io.MagneticVector.constants import validations as MVI_validations
 from geoapps.io.Octree import OctreeParams
-from geoapps.io.Octree import app_initializer as octree_init
+from geoapps.io.Octree.constants import default_ui_json as octree_defaults
 from geoapps.io.PeakFinder import PeakFinderParams
-from geoapps.io.PeakFinder import app_initializer as peak_init
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")
@@ -2361,3 +2356,25 @@ def test_isValue(tmp_path):
         ui = json.load(f)
 
     assert ui["starting_model"]["isValue"] is False, "isValue should be False"
+
+
+def test_unknown_key(tmp_path):
+
+    filepath = tmpfile(tmp_path)
+    input_file = InputFile()
+    input_file.filepath = filepath
+    input_file.write_ui_json(octree_defaults, geoh5=geoh5.h5file)
+    with open(filepath) as f:
+        ui = json.load(f)
+
+    ui["something"] = "new"
+    ui["objects"]["value"] = str(geoh5.objects[0].uid)
+    with open(filepath, "w") as f:
+        json.dump(ui, f, indent=4)
+
+    ifile = InputFile(filepath)
+    params = OctreeParams(ifile, geoh5=geoh5)
+
+    assert (
+        getattr(params, "something") == "new"
+    ), "Unknown parameter not registered to params."
