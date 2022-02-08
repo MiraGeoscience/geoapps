@@ -370,7 +370,7 @@ def test_chunk_validation():
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     params = GravityParams(**test_dict)
     with pytest.raises(ValueError) as excinfo:
-        test_dict.pop("starting_model")
+        test_dict["starting_model"] = None
         params = GravityParams(**test_dict)
     for a in ["Missing required", "starting_model"]:
         assert a in str(excinfo.value)
