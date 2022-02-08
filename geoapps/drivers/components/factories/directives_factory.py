@@ -228,7 +228,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             )
             kwargs["association"] = "CELL"
             kwargs["sorting"] = inversion_object.mesh._ubc_order
-            kwargs["channels"] = ["model"]
             kwargs["transforms"] = [active_cells_map]
 
             if self.factory_type == "magnetic vector":
