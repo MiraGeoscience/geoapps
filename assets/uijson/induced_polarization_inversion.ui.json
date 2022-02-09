@@ -268,7 +268,7 @@
         "dependency": "mesh",
         "dependencyType": "disabled",
         "label": "Octree levels topography",
-        "value": "16, 8, 4, 2"
+        "value": "0, 0, 4, 4"
     },
     "octree_levels_obs": {
         "group": "Mesh",
@@ -641,7 +641,6 @@
         "value": 1
     },
     "max_ram": "",
-    "workspace": "",
     "out_group": {
         "label": "Results group name",
         "value": "InducedPolarizationInversion"

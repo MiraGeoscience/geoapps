@@ -21,28 +21,40 @@ path_to_flinflon = lambda file: "\\".join(
 )
 
 
+def remove_channel_bool(initializer):
+    for k, v in initializer.items():
+        if "channel_bool" in k:
+            initializer[k] = None
+    return initializer
+
+
 def write_default_uijson(path, use_initializers=False):
 
     from geoapps.io.Gravity.constants import app_initializer
 
     grav_init = app_initializer if use_initializers else {}
     grav_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    grav_init = remove_channel_bool(grav_init)
     from geoapps.io.MagneticScalar.constants import app_initializer
 
     mag_init = app_initializer if use_initializers else {}
     mag_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    mag_init = remove_channel_bool(mag_init)
     from geoapps.io.MagneticVector.constants import app_initializer
 
     mvi_init = app_initializer if use_initializers else {}
     mvi_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    mvi_init = remove_channel_bool(mvi_init)
     from geoapps.io.DirectCurrent.constants import app_initializer
 
     dc_init = app_initializer if use_initializers else {}
     dc_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    dc_init = remove_channel_bool(dc_init)
     from geoapps.io.InducedPolarization.constants import app_initializer
 
     ip_init = app_initializer if use_initializers else {}
     ip_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    ip_init = remove_channel_bool(ip_init)
     from geoapps.io.Octree.constants import app_initializer
 
     oct_init = app_initializer if use_initializers else {}
