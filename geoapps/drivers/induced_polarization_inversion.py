@@ -8,10 +8,9 @@
 
 import sys
 
+from geoapps.drivers.base_inversion import InversionDriver
 from geoapps.io import InputFile
 from geoapps.io.InducedPolarization import InducedPolarizationParams
-
-from .base_inversion import InversionDriver
 
 
 def start_inversion(filepath=None, **kwargs):
