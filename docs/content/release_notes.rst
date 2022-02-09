@@ -7,12 +7,12 @@ Release 0.6.3 - 2022/02/09
 
 **(Hot fixes)**
 
- - Fix limitations for unrecognized ui.json keys.
- - Fix min/max values for inducing field angles.
- - Fix for Mag/grav inversion crash for:
+ - Fix limitations for unrecognized ui.json keys
+ - Fix Mag/grav inversion crash for:
     - Selection of multi-components grav/mag data
     - Constant topography value option
- - Update ui.json for bool index
+    - Min/max values for inducing field angles
+    - Update ui.json for default bool index
 
 
 Release 0.6.2 - 2022/01/05
