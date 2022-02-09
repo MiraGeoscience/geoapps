@@ -61,6 +61,72 @@
         "label": "Name:",
         "value": "Octree_Mesh"
     },
+    "Refinement A object": {
+        "enabled": true,
+        "group": "refinement a",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": ""
+    },
+    "Refinement A levels": {
+        "enabled": true,
+        "group": "refinement a",
+        "label": "Levels",
+        "value": "4,4,4"
+    },
+    "Refinement A type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "refinement a",
+        "label": "Type",
+        "value": "radial"
+    },
+    "Refinement A distance": {
+        "enabled": true,
+        "group": "refinement a",
+        "label": "Distance",
+        "value": 1000.0
+    },
+    "Refinement B object": {
+        "enabled": true,
+        "group": "refinement b",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": ""
+    },
+    "Refinement B levels": {
+        "enabled": true,
+        "group": "refinement b",
+        "label": "Levels",
+        "value": "4,4,4"
+    },
+    "Refinement B type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "refinement b",
+        "label": "Type",
+        "value": "radial"
+    },
+    "Refinement B distance": {
+        "enabled": true,
+        "group": "refinement b",
+        "label": "Distance",
+        "value": 1000.0
+    },
     "run_command": "geoapps.create.octree_mesh",
     "run_command_boolean": {
         "value": false,
@@ -70,6 +136,5 @@
     },
     "monitoring_directory": "",
     "conda_environment": "geoapps",
-    "conda_environment_boolean": false,
-    "workspace": ""
+    "conda_environment_boolean": false
 }

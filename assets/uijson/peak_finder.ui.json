@@ -65,6 +65,7 @@
             "Spectrem (2000)",
             "Spectrem Plus",
             "Spectrem (2003)",
+            "TEMPEST (2006)",
             "VTEM (2007)",
             "VTEM Plus",
             "VTEM Max",
@@ -139,7 +140,6 @@
     "conda_environment_boolean": "",
     "template_data": "",
     "template_color": "",
-    "workspace": "",
     "monitoring_directory": "",
     "plot_result": true
 }

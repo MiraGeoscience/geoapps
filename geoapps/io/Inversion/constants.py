@@ -75,11 +75,11 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Starting Model",
         "main": True,
-        "isValue": False,
+        "isValue": True,
         "parent": "starting_model_object",
         "label": "Value",
         "property": None,
-        "value": 0.0,
+        "value": 1e-4,
     },
     "tile_spatial": {
         "group": "Receivers location options",
@@ -224,7 +224,7 @@ default_ui_json = {
         "dependency": "mesh",
         "dependencyType": "disabled",
         "label": "Octree levels topography",
-        "value": [16, 8, 4, 2],
+        "value": [0, 0, 4, 4],
     },
     "octree_levels_obs": {
         "group": "Mesh",
