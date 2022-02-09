@@ -7,10 +7,9 @@
 
 import sys
 
+from geoapps.drivers.base_inversion import InversionDriver
 from geoapps.io import InputFile
 from geoapps.io.magnetotellurics import MagnetotelluricsParams
-
-from .base_inversion import InversionDriver
 
 
 def start_inversion(filepath=None, warmstart=True, **kwargs):
@@ -35,6 +34,6 @@ class MagnetotelluricsDriver(InversionDriver):
 
 
 if __name__ == "__main__":
-
     filepath = sys.argv[1]
+    # filepath = r"C:\Users\dominiquef\Desktop\lblock_inversion_v7.ui.json"
     start_inversion(filepath)
