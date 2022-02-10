@@ -90,36 +90,31 @@ class SurveyFactory(SimPEGFactory):
         self, data=None, mesh=None, active_cells=None, local_index=None, channel=None
     ):
         """Provides implementations to assemble arguments for receivers object."""
-
-        args = []
         receiver_entity = data.entity
 
         if local_index is None:
-            if getattr(receiver_entity, "n_cells", None) is not None:
+            if self.factory_type in ["direct current", "induced polarization"]:
                 n_data = receiver_entity.n_cells
             else:
                 n_data = receiver_entity.n_vertices
+
             self.local_index = np.arange(n_data)
         else:
             self.local_index = local_index
 
         if self.factory_type in ["direct current", "induced polarization"]:
             return self._dcip_arguments(data=data)
-
         elif self.factory_type in ["magnetotellurics"]:
             return self._magnetotellurics_arguments(
                 data=data, mesh=mesh, active_cells=active_cells, frequency=channel
             )
-
         else:
-
             receivers = ReceiversFactory(self.params).build(
                 locations=data.locations,
                 data=data.observed,
                 local_index=self.local_index,
             )
             sources = SourcesFactory(self.params).build(receivers)
-
             return [sources]
 
     def build(
