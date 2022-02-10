@@ -50,7 +50,6 @@ class DirectivesFactory:
         sorting,
         global_misfit,
         regularizer,
-        n_tiles,
     ):
 
         self.vector_inversion_directive = directives.VectorInversion(
@@ -107,7 +106,6 @@ class DirectivesFactory:
                 sorting=sorting,
                 save_objective_function=True,
                 global_misfit=global_misfit,
-                n_tiles=n_tiles,
                 name="Data",
             )
 
@@ -157,7 +155,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         transform=None,
         save_objective_function=False,
         global_misfit=None,
-        n_tiles=None,
         name=None,
     ):
         return [inversion_object.entity]
@@ -170,7 +167,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         transform=None,
         save_objective_function=False,
         global_misfit=None,
-        n_tiles=None,
         name=None,
     ):
 
@@ -186,7 +182,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     transform=transform,
                     save_objective_function=save_objective_function,
                     global_misfit=global_misfit,
-                    n_tiles=n_tiles,
                     name=name,
                 )
 
@@ -198,7 +193,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     transform=transform,
                     save_objective_function=save_objective_function,
                     global_misfit=global_misfit,
-                    n_tiles=n_tiles,
                     name=name,
                 )
 
@@ -210,7 +204,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     transform=transform,
                     save_objective_function=save_objective_function,
                     global_misfit=global_misfit,
-                    n_tiles=n_tiles,
                     name=name,
                 )
 
@@ -251,14 +244,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         transform=None,
         save_objective_function=False,
         global_misfit=None,
-        n_tiles=None,
         name=None,
     ):
         kwargs = {}
         kwargs["label"] = name
         kwargs["save_objective_function"] = save_objective_function
         kwargs["attribute_type"] = "predicted"
-        kwargs["n_tiles"] = self.params.tile_spatial
         if sorting is not None:
             kwargs["sorting"] = np.hstack(sorting)
 
@@ -305,14 +296,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         transform=None,
         save_objective_function=False,
         global_misfit=None,
-        n_tiles=None,
         name=None,
     ):
         kwargs = {}
         kwargs["label"] = name
         kwargs["save_objective_function"] = save_objective_function
         kwargs["attribute_type"] = "predicted"
-        kwargs["n_tiles"] = self.params.tile_spatial
         if sorting is not None:
             kwargs["sorting"] = np.hstack(sorting)
 
@@ -380,7 +369,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         transform=None,
         save_objective_function=False,
         global_misfit=None,
-        n_tiles=None,
         name=None,
     ):
 
@@ -388,7 +376,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         kwargs["label"] = name
         kwargs["save_objective_function"] = save_objective_function
         kwargs["attribute_type"] = "predicted"
-        kwargs["n_tiles"] = self.params.tile_spatial
         if sorting is not None:
             kwargs["sorting"] = np.hstack(sorting)
 
@@ -402,22 +389,24 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "zyy_real": "zxx_real",
             "zyy_imag": "zxx_imag",
         }
-        components = [component_map[k] for k in inversion_object.observed.keys()]
+        components = list(
+            inversion_object.observed.keys()
+        )  # [component_map[k] for k in inversion_object.observed.keys()]
         channels = np.unique(
             [list(v.keys()) for k, v in inversion_object.observed.items()]
         )
-        kwargs["data_type"] = {
-            component_map[k]: v
-            for k, v in inversion_object._observed_data_types.items()
-        }
-        for component, v in kwargs["data_type"].items():
-            for channel, data_type in v.items():
-                data_type.name = data_type.name.replace(
-                    component_map[component], component
-                )
-                data_type.description = data_type.description.replace(
-                    component_map[component], component
-                )
+        kwargs["data_type"] = inversion_object._observed_data_types  # {
+        #     component_map[k]: v
+        #     for k, v in inversion_object._observed_data_types.items()
+        # }
+        # for component, v in kwargs["data_type"].items():
+        #     for channel, data_type in v.items():
+        #         data_type.name = data_type.name.replace(
+        #             component_map[component], component
+        #         )
+        #         data_type.description = data_type.description.replace(
+        #             component_map[component], component
+        #         )
 
         kwargs["transforms"] = [
             np.tile(

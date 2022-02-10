@@ -195,7 +195,6 @@ class InversionDriver:
             np.argsort(np.hstack(self.sorting)),
             self.global_misfit,
             self.regularization,
-            self.n_tiles,
         )
 
         # Put all the parts together
