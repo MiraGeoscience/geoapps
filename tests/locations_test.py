@@ -98,3 +98,8 @@ def test_z_from_topo(tmp_path):
     locations = InversionLocations(ws, params, window)
     locs = locations.set_z_from_topo(np.array([[315674, 6070832, 0]]))
     assert locs[0, 2] == 326
+
+    params.topography = 320.0
+    locations = InversionLocations(ws, params, window)
+    locs = locations.set_z_from_topo(np.array([[315674, 6070832, 0]]))
+    assert locs[0, 2] == 320.0

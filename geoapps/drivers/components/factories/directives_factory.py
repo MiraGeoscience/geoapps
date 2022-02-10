@@ -106,16 +106,18 @@ class DirectivesFactory:
                 save_objective_function=True,
             )
 
+            def transform(x):
+                data = list(inversion_data.observed.values())
+                data_stack = np.column_stack(data)
+                return data_stack[np.argsort(sorting), :].ravel() - x
+
             self.save_iteration_residual_directive = SaveIterationGeoh5Factory(
                 self.params
             ).build(
                 inversion_object=inversion_data,
                 active_cells=active_cells,
                 sorting=sorting,
-                transform=lambda x: np.column_stack(
-                    list(inversion_data.observed.values())
-                ).ravel()[np.argsort(sorting)]
-                - x,
+                transform=transform,
             )
             self.save_iteration_residual_directive.label = "Residual"
 
