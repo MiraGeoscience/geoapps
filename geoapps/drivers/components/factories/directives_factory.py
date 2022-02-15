@@ -279,9 +279,9 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             data = inversion_object.normalize(inversion_object.observed)
 
             def transform(x):
-                data_stack = np.row_stack(list(data.values())).ravel()
-                sorting_stack = np.tile(np.argsort(sorting), len(data))
-                return data_stack[sorting_stack] - x
+                data_stack = np.row_stack(list(data.values()))
+                data_stack = data_stack[:, np.argsort(sorting)]
+                return data_stack.ravel() - x
 
             kwargs["transforms"].append(transform)
 
@@ -417,9 +417,9 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     data["_".join([str(f), str(c)])] = obs[c][f]
 
             def transform(x):
-                data_stack = np.row_stack(list(data.values())).ravel()
-                sorting_stack = np.tile(np.argsort(sorting), len(data))
-                return data_stack[sorting_stack] - x
+                data_stack = np.row_stack(list(data.values()))
+                data_stack = data_stack[:, np.argsort(sorting)]
+                return data_stack.ravel() - x
 
             kwargs["transforms"].append(transform)
 
