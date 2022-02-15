@@ -124,7 +124,6 @@ class DirectivesFactory:
                         inversion_object=inversion_data,
                         active_cells=active_cells,
                         sorting=sorting,
-                        transform=transform,
                         name="Apparent Resistivity",
                     )
                 )
@@ -271,7 +270,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         kwargs["channels"] = channels
         kwargs["components"] = components
-
+        kwargs["association"] = "VERTEX"
         kwargs["reshape"] = lambda x: x.reshape(
             (len(channels), len(components), -1), order="F"
         )
@@ -320,13 +319,11 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 len(channels),
             )
         ]
-
         kwargs["channels"] = channels
         kwargs["components"] = components
         kwargs["reshape"] = lambda x: x.reshape(
             (len(channels), len(components), -1), order="F"
         )
-
         is_dc = True if self.factory_type == "direct current" else False
         component = "dc" if is_dc else "ip"
         kwargs["association"] = "CELL"
@@ -389,25 +386,16 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "zyy_real": "zxx_real",
             "zyy_imag": "zxx_imag",
         }
-        components = list(
-            inversion_object.observed.keys()
-        )  # [component_map[k] for k in inversion_object.observed.keys()]
+
+        components = [component_map[k] for k in inversion_object.observed.keys()]  #
+        # list(
+        #     inversion_object.observed.keys()
+        # )  #
         channels = np.unique(
             [list(v.keys()) for k, v in inversion_object.observed.items()]
         )
         kwargs["data_type"] = inversion_object._observed_data_types  # {
-        #     component_map[k]: v
-        #     for k, v in inversion_object._observed_data_types.items()
-        # }
-        # for component, v in kwargs["data_type"].items():
-        #     for channel, data_type in v.items():
-        #         data_type.name = data_type.name.replace(
-        #             component_map[component], component
-        #         )
-        #         data_type.description = data_type.description.replace(
-        #             component_map[component], component
-        #         )
-
+        kwargs["association"] = "VERTEX"
         kwargs["transforms"] = [
             np.tile(
                 np.repeat(
@@ -417,7 +405,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 len(channels),
             )
         ]
-
         kwargs["channels"] = channels
         kwargs["components"] = components
         kwargs["reshape"] = lambda x: x.reshape((len(channels), len(components), -1))
