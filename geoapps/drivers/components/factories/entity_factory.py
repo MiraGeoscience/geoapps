@@ -47,7 +47,7 @@ class EntityFactory(AbstractFactory):
 
             return Curve
 
-        elif self.factory_type in ["direct_current", "induced_polarization"]:
+        elif self.factory_type in ["direct current", "induced polarization"]:
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
 
             return (PotentialElectrode, CurrentElectrode)
@@ -60,7 +60,7 @@ class EntityFactory(AbstractFactory):
     def build(self, inversion_data: InversionData):
         """Constructs geoh5py object for provided inversion type."""
 
-        if self.factory_type in ["direct_current", "induced_polarization"]:
+        if self.factory_type in ["direct current", "induced polarization"]:
             return self._build_dcip(inversion_data)
         else:
             return self._build(inversion_data)
@@ -73,7 +73,7 @@ class EntityFactory(AbstractFactory):
         # Trim down receivers
         rx_obj = workspace.get_entity(self.params.data_object)[0]
         rcv_ind = np.where(np.any(inversion_data.mask[rx_obj.cells], axis=1))[0]
-        rcv_locations, rcv_cells = EntityFactory.prune_from_indices(rx_obj, rcv_ind)
+        rcv_locations, rcv_cells = EntityFactory._prune_from_indices(rx_obj, rcv_ind)
         uni_src_ids, src_ids = np.unique(
             rx_obj.ab_cell_id.values[rcv_ind], return_inverse=True
         )
@@ -91,7 +91,7 @@ class EntityFactory(AbstractFactory):
         src_ind = np.hstack(
             [np.where(tx_obj.ab_cell_id.values == ind)[0] for ind in uni_src_ids]
         )
-        src_locations, src_cells = EntityFactory.prune_from_indices(tx_obj, src_ind)
+        src_locations, src_cells = EntityFactory._prune_from_indices(tx_obj, src_ind)
         new_currents = CurrentElectrode.create(
             workspace,
             name="Data (currents)",

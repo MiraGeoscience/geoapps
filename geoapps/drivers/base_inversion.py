@@ -144,9 +144,9 @@ class InversionDriver:
         print(f"Setting up {self.n_tiles} tiles ...")
         # Build tiled misfits and combine to form global misfit
 
-        self.global_misfit, self.sorting = MisfitFactory(self.params).build(
-            self.tiles, self.inversion_data, self.mesh, self.active_cells
-        )
+        self.global_misfit, self.sorting = MisfitFactory(
+            self.params, models=self.models
+        ).build(self.tiles, self.inversion_data, self.mesh, self.active_cells)
         print(f"Done.")
 
         # Create regularization

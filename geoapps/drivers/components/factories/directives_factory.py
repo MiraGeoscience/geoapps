@@ -311,12 +311,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             for comp, dtype in inversion_object._observed_data_types.items()
         }
         kwargs["transforms"] = [
-            np.tile(
-                np.repeat(
-                    [inversion_object.normalizations[c] for c in components],
-                    inversion_object.locations.shape[0],
-                ),
-                len(channels),
+            np.hstack(
+                [
+                    inversion_object.normalizations[c]
+                    * np.ones_like(inversion_object.observed[c])
+                    for c in components
+                ]
             )
         ]
         kwargs["channels"] = channels
@@ -328,11 +328,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         component = "dc" if is_dc else "ip"
         kwargs["association"] = "CELL"
         kwargs["components"] = [component]
-        kwargs["data_type"] = {
-            component: {
-                c: inversion_object.data_entity[c].entity_type for c in components
-            }
-        }
 
         # Include an apparent resistivity mapper
         if is_dc and name == "Apparent Resistivity":

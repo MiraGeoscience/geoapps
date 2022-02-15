@@ -18,8 +18,6 @@ from .receiver_factory import ReceiversFactory
 from .simpeg_factory import SimPEGFactory
 from .source_factory import SourcesFactory
 
-########## Shared utilities #############
-
 
 def receiver_group(txi, potential_electrodes):
     """
@@ -146,7 +144,7 @@ class SurveyFactory(SimPEGFactory):
                 and (active_cells is not None)
                 and self.params.z_from_topo
             ):
-                survey[0].drape_electrodes_on_topography(mesh, active_cells)
+                survey.drape_electrodes_on_topography(mesh, active_cells)
 
         survey.dummy = self.dummy
 
@@ -232,7 +230,10 @@ class SurveyFactory(SimPEGFactory):
             return np.row_stack(list(channel_data.values())).ravel()
 
     def _dcip_arguments(self, data=None):
+        if getattr(data, "entity", None) is None:
+            return None
 
+        receiver_entity = data.entity
         source_ids, order = np.unique(
             receiver_entity.ab_cell_id.values[self.local_index], return_index=True
         )
