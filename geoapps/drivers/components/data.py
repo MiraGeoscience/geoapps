@@ -154,9 +154,10 @@ class InversionData(InversionLocations):
         self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
         self.locations = self.apply_transformations(self.locations)
-        self.entity, self.data_entity = self.write_entity()
+        self.entity = self.write_entity()
         self.locations = self.get_locations(self.entity.uid)
         self._survey, _ = self.survey()
+        self.save_data(self.entity)
 
     def filter(self, a):
         """Remove vertices based on mask property."""
@@ -218,8 +219,8 @@ class InversionData(InversionLocations):
         """Write out the survey to geoh5"""
         entity_factory = EntityFactory(self.params)
         entity = entity_factory.build(self)
-        data_entity = self.save_data(entity)
-        return entity, data_entity
+
+        return entity
 
     def save_data(self, entity):
         """Write out the data to geoh5"""

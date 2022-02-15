@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from geoapps.io.params import Params
 
 import numpy as np
-from SimPEG import data, data_misfit
+from SimPEG import data, data_misfit, objective_function
 
 from .simpeg_factory import SimPEGFactory
 
@@ -21,17 +21,16 @@ from .simpeg_factory import SimPEGFactory
 class MisfitFactory(SimPEGFactory):
     """Build SimPEG global misfit function."""
 
-    def __init__(self, params: Params):
+    def __init__(self, params: Params, models=None):
         """
         :param params: Params object containing SimPEG object parameters.
         """
         super().__init__(params)
         self.simpeg_object = self.concrete_object()
         self.factory_type = self.params.inversion_type
+        self.models = models
 
     def concrete_object(self):
-        from SimPEG import objective_function
-
         return objective_function.ComboObjectiveFunction
 
     def build(self, tiles, inversion_data, mesh, active_cells):
