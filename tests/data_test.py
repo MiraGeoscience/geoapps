@@ -102,15 +102,15 @@ def test_survey_data(tmp_path):
     expected_dobs = np.column_stack(
         [bxx_data.values, byy_data.values, bzz_data.values]
     )[sorting].ravel()
-    survey_dobs = np.hstack([local_survey_a.dobs, local_survey_b.dobs])
-    np.testing.assert_array_equal(expected_dobs, survey_dobs)
+    survey_dobs = [local_survey_a.dobs, local_survey_b.dobs]
+    np.testing.assert_array_equal(expected_dobs, np.hstack(survey_dobs))
 
     # test savegeoh5iteration data
 
     driver.directiveList[-2].save_components(99, survey_dobs)
-    bxx_test = ws.get_entity("Iteration_99_mag_bxx")[0].values
-    byy_test = ws.get_entity("Iteration_99_mag_byy")[0].values
-    bzz_test = ws.get_entity("Iteration_99_mag_bzz")[0].values
+    bxx_test = ws.get_entity("Iteration_99_bxx")[0].values
+    byy_test = ws.get_entity("Iteration_99_byy")[0].values
+    bzz_test = ws.get_entity("Iteration_99_bzz")[0].values
 
     np.testing.assert_array_equal(bxx_test, bxx_data.values)
     np.testing.assert_array_equal(byy_test, byy_data.values)
