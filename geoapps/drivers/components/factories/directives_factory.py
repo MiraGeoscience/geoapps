@@ -172,9 +172,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         object_type = "mesh" if hasattr(inversion_object, "mesh") else "data"
 
         if object_type == "data":
-
             if self.factory_type in ["magnetotellurics"]:
-                kwargs = self.assemble_data_keywords_magnetotelluics(
+                kwargs = self.assemble_data_keywords_magnetotellurics(
                     inversion_object=inversion_object,
                     active_cells=active_cells,
                     sorting=sorting,
@@ -205,22 +204,23 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     global_misfit=global_misfit,
                     name=name,
                 )
+            else:
+                return None
 
             if transform is not None:
                 kwargs["transforms"].append(transform)
 
-        elif object_type == "mesh":
-
-            kwargs = {}
-            kwargs["label"] = name
-            kwargs["save_objective_function"] = save_objective_function
-
+        else:
             active_cells_map = maps.InjectActiveCells(
                 inversion_object.mesh, active_cells, np.nan
             )
-            kwargs["association"] = "CELL"
-            kwargs["sorting"] = inversion_object.mesh._ubc_order
-            kwargs["transforms"] = [active_cells_map]
+            kwargs = {
+                "save_objective_function": save_objective_function,
+                "label": "model",
+                "association": "CEll",
+                "sorting": inversion_object.mesh._ubc_order,
+                "transforms": [active_cells_map],
+            }
 
             if self.factory_type == "magnetic vector":
                 kwargs["channels"] = ["amplitude", "inclination", "declination"]
@@ -235,8 +235,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         return kwargs
 
+    @staticmethod
     def assemble_data_keywords_potential_fields(
-        self,
         inversion_object=None,
         active_cells=None,
         sorting=None,
@@ -245,37 +245,36 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-        kwargs = {}
-        kwargs["label"] = name
-        kwargs["save_objective_function"] = save_objective_function
-        kwargs["attribute_type"] = "predicted"
+        components = list(inversion_object.observed.keys())
+        channels = [""]
+        kwargs = {
+            "save_objective_function": save_objective_function,
+            "attribute_type": "predicted",
+            "data_type": {
+                comp: {channel: dtype for channel in channels}
+                for comp, dtype in inversion_object._observed_data_types.items()
+            },
+            "transforms": [
+                np.tile(
+                    np.repeat(
+                        [inversion_object.normalizations[c] for c in components],
+                        inversion_object.locations.shape[0],
+                    ),
+                    len(channels),
+                )
+            ],
+            "channels": channels,
+            "components": components,
+            "association": "VERTEX",
+            "reshape": lambda x: x.reshape(
+                (len(channels), len(components), -1), order="F"
+            ),
+        }
         if sorting is not None:
             kwargs["sorting"] = np.hstack(sorting)
 
-        components = list(inversion_object.observed.keys())
-        channels = [""]
-        kwargs["data_type"] = {
-            comp: {channel: dtype for channel in channels}
-            for comp, dtype in inversion_object._observed_data_types.items()
-        }
-        kwargs["transforms"] = [
-            np.tile(
-                np.repeat(
-                    [inversion_object.normalizations[c] for c in components],
-                    inversion_object.locations.shape[0],
-                ),
-                len(channels),
-            )
-        ]
-
-        kwargs["channels"] = channels
-        kwargs["components"] = components
-        kwargs["association"] = "VERTEX"
-        kwargs["reshape"] = lambda x: x.reshape(
-            (len(channels), len(components), -1), order="F"
-        )
-
         if name == "Residual":
+            kwargs["label"] = name
             data = inversion_object.normalize(inversion_object.observed)
 
             def transform(x):
@@ -297,10 +296,10 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-        kwargs = {}
-        kwargs["label"] = name
-        kwargs["save_objective_function"] = save_objective_function
-        kwargs["attribute_type"] = "predicted"
+        kwargs = {
+            "save_objective_function": save_objective_function,
+            "attribute_type": "predicted",
+        }
         if sorting is not None:
             kwargs["sorting"] = np.hstack(sorting)
 
@@ -342,6 +341,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             }
 
         if name == "Residual":
+            kwargs["label"] = name
             data = inversion_object.normalize(inversion_object.observed)
 
             def transform(x):
@@ -353,8 +353,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         return kwargs
 
-    def assemble_data_keywords_magnetotelluics(
-        self,
+    @staticmethod
+    def assemble_data_keywords_magnetotellurics(
         inversion_object=None,
         active_cells=None,
         sorting=None,
@@ -363,14 +363,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-
-        kwargs = {}
-        kwargs["label"] = name
-        kwargs["save_objective_function"] = save_objective_function
-        kwargs["attribute_type"] = "predicted"
-        if sorting is not None:
-            kwargs["sorting"] = np.hstack(sorting)
-
         component_map = {
             "zxx_real": "zyy_real",
             "zxx_imag": "zyy_imag",
@@ -381,30 +373,34 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "zyy_real": "zxx_real",
             "zyy_imag": "zxx_imag",
         }
-
         components = [component_map[k] for k in inversion_object.observed.keys()]  #
-        # list(
-        #     inversion_object.observed.keys()
-        # )  #
         channels = np.unique(
             [list(v.keys()) for k, v in inversion_object.observed.items()]
         )
-        kwargs["data_type"] = inversion_object._observed_data_types  # {
-        kwargs["association"] = "VERTEX"
-        kwargs["transforms"] = [
-            np.tile(
-                np.repeat(
-                    [inversion_object.normalizations[c] for c in components],
-                    inversion_object.locations.shape[0],
-                ),
-                len(channels),
-            )
-        ]
-        kwargs["channels"] = channels
-        kwargs["components"] = components
-        kwargs["reshape"] = lambda x: x.reshape((len(channels), len(components), -1))
+        kwargs = {
+            "save_objective_function": save_objective_function,
+            "attribute_type": "predicted",
+            "data_type": inversion_object._observed_data_types,
+            "association": "VERTEX",
+            "transforms": [
+                np.tile(
+                    np.repeat(
+                        [inversion_object.normalizations[c] for c in components],
+                        inversion_object.locations.shape[0],
+                    ),
+                    len(channels),
+                )
+            ],
+            "channels": channels,
+            "components": components,
+            "reshape": lambda x: x.reshape((len(channels), len(components), -1)),
+        }
+
+        if sorting is not None:
+            kwargs["sorting"] = np.hstack(sorting)
 
         if name == "Residual":
+            kwargs["label"] = name
             obs = inversion_object.normalize(inversion_object.observed)
             data = {}
             for f in channels:
