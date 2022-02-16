@@ -226,59 +226,65 @@ class InversionData(InversionLocations):
         """Write out the data to geoh5"""
         data = self.predicted if self.params.forward_only else self.observed
         basename = "Predicted" if self.params.forward_only else "Observed"
-
-        if self.params.inversion_type == "direct current":
-            data_entity = {}
-            self.transformations["potential"] = 1 / (
-                geometric_factor(self._survey) + 1e-10
-            )
-            apparent_property = data["potential"] * self.transformations["potential"]
-            data_entity["apparent_resistivity"] = entity.add_data(
-                {
-                    f"{basename}_apparent_resistivity": {
-                        "values": apparent_property,
-                        "association": "CELL",
-                    }
-                }
-            )
+        self._observed_data_types = {c: {} for c in data.keys()}
+        data_entity = {c: {} for c in data.keys()}
 
         if self.params.inversion_type == "magnetotellurics":
-
-            frequencies = np.unique([list(v.keys()) for k, v in data.items()])
-            freq_str = lambda x: f"{x:.2e}"
-            self._observed_data_types = {c: {} for c in data.keys()}
-            data_entity = {c: {} for c in data.keys()}
-            for c in data.keys():
-                for f in frequencies:
-                    dnorm = self.normalizations[c] * data[c][f]
-                    data_entity[c][f] = entity.add_data(
-                        {f"{basename}_{c}_{f}": {"values": dnorm}}
+            for component in data.keys():
+                for channel in component.keys():
+                    dnorm = self.normalizations[component] * data[component][channel]
+                    data_entity[component][channel] = entity.add_data(
+                        {f"{basename}_{component}_{channel}": {"values": dnorm}}
                     )
-                    entity.add_data_to_group(data_entity[c][f], f"{basename}_{c}")
+                    entity.add_data_to_group(
+                        data_entity[component][channel], f"{basename}_{component}"
+                    )
                     if not self.params.forward_only:
-                        self._observed_data_types[c][freq_str(f)] = data_entity[c][
-                            f
-                        ].entity_type
-                        uncerts = self.uncertainties[c][f].copy()
+                        self._observed_data_types[component][
+                            f"{channel:.2e}"
+                        ] = data_entity[component][channel].entity_type
+                        uncerts = self.uncertainties[component][channel].copy()
                         uncerts[np.isinf(uncerts)] = np.nan
                         uncert_entity = entity.add_data(
-                            {f"Uncertainties_{c}_{f}": {"values": uncerts}}
+                            {
+                                f"Uncertainties_{component}_{channel}": {
+                                    "values": uncerts
+                                }
+                            }
                         )
-                        entity.add_data_to_group(uncert_entity, f"Uncertainties_{c}")
+                        entity.add_data_to_group(
+                            uncert_entity, f"Uncertainties_{component}"
+                        )
 
         else:
-            data_entity = {}
-            for comp in self.components:
-                dnorm = self.normalizations[comp] * data[comp]
-                data_entity[comp] = entity.add_data(
-                    {f"{basename}_{comp}": {"values": dnorm}}
+            for component in data.keys():
+                dnorm = self.normalizations[component] * data[component]
+                data_entity[component] = entity.add_data(
+                    {f"{basename}_{component}": {"values": dnorm}}
                 )
                 if not self.params.forward_only:
-                    self._observed_data_types[comp] = data_entity[comp].entity_type
-                    uncerts = self.uncertainties[comp].copy()
+                    self._observed_data_types[component] = data_entity[
+                        component
+                    ].entity_type
+                    uncerts = self.uncertainties[component].copy()
                     uncerts[np.isinf(uncerts)] = np.nan
-                    entity.add_data({f"Uncertainties_{comp}": {"values": uncerts}})
+                    entity.add_data({f"Uncertainties_{component}": {"values": uncerts}})
 
+                if self.params.inversion_type == "direct current":
+                    self.transformations[component] = 1 / (
+                        geometric_factor(self._survey) + 1e-10
+                    )
+                    apparent_property = (
+                        data[component] * self.transformations[component]
+                    )
+                    data_entity["apparent_resistivity"] = entity.add_data(
+                        {
+                            f"{basename}_apparent_resistivity": {
+                                "values": apparent_property,
+                                "association": "CELL",
+                            }
+                        }
+                    )
         return data_entity
 
     def parse_ignore_values(self) -> tuple[float, str]:
