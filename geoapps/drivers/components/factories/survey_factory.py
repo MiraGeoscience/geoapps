@@ -201,6 +201,7 @@ class SurveyFactory(SimPEGFactory):
             uncertainty_vec = self._stack_channels(
                 local_uncertainties, "cluster_components"
             )
+            uncertainty_vec[np.isnan(data_vec)] = np.inf
             data_vec[
                 np.isnan(data_vec)
             ] = self.dummy  # Nan's handled by inf uncertainties
@@ -216,6 +217,7 @@ class SurveyFactory(SimPEGFactory):
 
             data_vec = self._stack_channels(local_data, "cluster_locs")
             uncertainty_vec = self._stack_channels(local_uncertainties, "cluster_locs")
+            uncertainty_vec[np.isnan(data_vec)] = np.inf
             data_vec[
                 np.isnan(data_vec)
             ] = self.dummy  # Nan's handled by inf uncertainties
