@@ -297,39 +297,37 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
+        components = list(inversion_object.observed.keys())
+        channels = [""]
+        is_dc = True if self.factory_type == "direct current" else False
+        component = "dc" if is_dc else "ip"
         kwargs = {
             "save_objective_function": save_objective_function,
             "attribute_type": "predicted",
+            "data_type": {
+                comp: {channel: dtype for channel in channels}
+                for comp, dtype in inversion_object._observed_data_types.items()
+            },
+            "transforms": [
+                np.hstack(
+                    [
+                        inversion_object.normalizations[c]
+                        * np.ones_like(inversion_object.observed[c])
+                        for c in components
+                    ]
+                )
+            ],
+            "channels": channels,
+            "components": [component],
+            "reshape": lambda x: x.reshape(
+                (len(channels), len(components), -1), order="F"
+            ),
+            "association": "CELL",
         }
+
         if sorting is not None:
             kwargs["sorting"] = np.hstack(sorting)
 
-        components = list(inversion_object.observed.keys())
-        channels = [""]
-        kwargs["data_type"] = {
-            comp: {channel: dtype for channel in channels}
-            for comp, dtype in inversion_object._observed_data_types.items()
-        }
-        kwargs["transforms"] = [
-            np.hstack(
-                [
-                    inversion_object.normalizations[c]
-                    * np.ones_like(inversion_object.observed[c])
-                    for c in components
-                ]
-            )
-        ]
-        kwargs["channels"] = channels
-        kwargs["components"] = components
-        kwargs["reshape"] = lambda x: x.reshape(
-            (len(channels), len(components), -1), order="F"
-        )
-        is_dc = True if self.factory_type == "direct current" else False
-        component = "dc" if is_dc else "ip"
-        kwargs["association"] = "CELL"
-        kwargs["components"] = [component]
-
-        # Include an apparent resistivity mapper
         if is_dc and name == "Apparent Resistivity":
             kwargs["transforms"].append(inversion_object.transformations["potential"])
             property = "resistivity"

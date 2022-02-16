@@ -19,9 +19,9 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_dc_run = {
-    "data_norm": 0.154134,
-    "phi_d": 15.55,
-    "phi_m": 145.1,
+    "data_norm": 0.152097,
+    "phi_d": 9.904,
+    "phi_m": 79.84,
 }
 
 
@@ -68,7 +68,7 @@ def test_dc_run(
     fwr_driver = DirectCurrentDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
-    potential = geoh5.get_entity("Predicted_potential")[0]
+    potential = geoh5.get_entity("Iteration_0_dc")[0]
     # Run the inverse
     np.random.seed(0)
     params = DirectCurrentParams(
