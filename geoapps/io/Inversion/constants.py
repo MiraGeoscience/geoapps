@@ -609,33 +609,29 @@ validations = {
     },
     "forward_only": {
         "types": [bool],
-        "reqs": [
-            (True, "starting_model"),
-        ],
     },
     "topography_object": {
         "types": [str, UUID, Surface],
-        "uuid": [],
+        "uuid": None,
+        "required": True,
     },
     "topography": {
         "types": [str, UUID, int, float, FloatData],
-        "reqs": [("topography_object",)],
-        "uuid": [],
+        "uuid": None,
     },
     "data_object": {
         "types": [str, UUID, Points],
+        "required": True,
     },
     "starting_model_object": {
         "types": [str, UUID, Octree],
     },
-    "starting_model": {
-        "types": [str, UUID, int, float, FloatData],
-    },
+    "starting_model": {"types": [str, UUID, int, float, FloatData], "required": True},
     "tile_spatial": {
         "types": [str, int, float, FloatData],
     },
     "z_from_topo": {"types": [bool]},
-    "receivers_radar_drape": {"types": [str, UUID], "reqs": [("data_object")]},
+    "receivers_radar_drape": {"types": [str, UUID]},
     "receivers_offset_x": {
         "types": [int, float],
     },
@@ -658,7 +654,6 @@ validations = {
         "types": [int],
     },
     "detrend_type": {
-        "types": [str],
         "values": ["all", "perimeter"],
     },
     "max_chunk_size": {"types": [int, float]},
@@ -669,7 +664,7 @@ validations = {
         "types": [bool],
     },
     "mesh": {
-        "uuid": [],
+        "uuid": None,
         "types": [str, UUID, Octree],
     },
     "u_cell_size": {
@@ -808,7 +803,6 @@ validations = {
     },
     "reference_model": {
         "types": [str, int, float, UUID, FloatData],
-        "reqs": [("reference_model_object")],
     },
     "gradient_type": {
         "types": [str],

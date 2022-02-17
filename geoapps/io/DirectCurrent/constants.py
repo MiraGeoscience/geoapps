@@ -235,14 +235,12 @@ required_parameters = ["inversion_type"]
 required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
-        "types": [str],
         "values": ["direct current"],
     },
     "data_object": {"types": [UUID, PotentialElectrode]},
     "potential_channel_bool": {"types": [bool]},
     "potential_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "potential_uncertainty": {"types": [str, int, float, UUID]},
 }

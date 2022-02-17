@@ -27,6 +27,7 @@ class PeakFinderParams(Params):
 
     _required_parameters = required_parameters
     _validations = validations
+    _validators = None
     param_names = list(default_ui_json.keys())
     _free_param_keys: list = ["data", "color"]
     _free_param_identifier: str = "group"

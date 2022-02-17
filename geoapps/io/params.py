@@ -13,10 +13,8 @@ from typing import Any
 from uuid import UUID
 
 from geoh5py.shared import Entity
+from geoh5py.ui_json import InputFile, InputValidation
 from geoh5py.workspace import Workspace
-
-from .input_file import InputFile
-from .validators import InputValidator
 
 required_parameters = ["geoh5"]
 validations = {
@@ -56,7 +54,7 @@ class Params:
 
     associations: dict[str | UUID, str | UUID] = None
     _geoh5: Workspace = None
-    _validator: InputValidator = None
+    _validator: InputValidation = None
     _ifile: InputFile = None
     _run_command = None
     _run_command_boolean = None
@@ -77,7 +75,7 @@ class Params:
         self.validator_opts = validator_opts
         self.geoh5 = None
 
-    def update(self, params_dict: Dict[str, Any], validate=True):
+    def update(self, params_dict: dict[str, Any], validate=True):
         """Update parameters with dictionary contents."""
 
         original_validate_state = self.validate
@@ -178,16 +176,17 @@ class Params:
 
     @property
     def validator(self) -> InputValidator:
-
         if getattr(self, "_validator", None) is None:
-            self._validator = InputValidator(required_parameters, validations)
+            self._validator = InputValidation(
+                ui_json=self.default_ui_json, validations=validations
+            )
         return self._validator
 
     @validator.setter
-    def validator(self, validator: InputValidator):
+    def validator(self, validator: InputValidation):
         assert isinstance(
-            validator, InputValidator
-        ), f"Input value must be of class {InputValidator}"
+            validator, InputValidation
+        ), f"Input value must be of class {InputValidation}"
         self._validator = validator
 
     @property
@@ -276,9 +275,7 @@ class Params:
             return
 
         if self.validate:
-            self.validator.validate(
-                key, value, self.validations[key], self.geoh5, self.associations
-            )
+            self.validator.validate(key, value, self.validations[key])
         value = fun(value)
         setattr(self, f"_{key}", value)
 

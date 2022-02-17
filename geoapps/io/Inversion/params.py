@@ -13,11 +13,11 @@ from uuid import UUID
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
+from geoh5py.ui_json import InputValidation
 from geoh5py.workspace import Workspace
 
 from ..input_file import InputFile
 from ..params import Params
-from ..validators import InputValidator
 from .constants import required_parameters, validations
 
 
@@ -141,17 +141,16 @@ class InversionParams(Params):
             params_dict = dict(self.defaults, **params_dict)
 
         self.geoh5 = params_dict["geoh5"]
-        self.validator: InputValidator = InputValidator(
-            self._required_parameters,
-            self._validations,
-            self.geoh5,
-            **self.validator_opts,
+        self.validator: InputValidation = InputValidation(
+            validators=self._validators,
+            validations=self._validations,
+            workspace=self.geoh5,
+            ui_json=self.default_ui_json,
         )
-        self.associations = self.get_associations(params_dict)
 
         # Validate.
         if self.validate:
-            self.validator.validate_chunk(params_dict, self.associations)
+            self.validator.validate_data(params_dict)
 
         # Set params attributes from validated input.
         self.update(params_dict, validate=False)
