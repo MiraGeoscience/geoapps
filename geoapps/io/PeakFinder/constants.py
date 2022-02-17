@@ -199,7 +199,7 @@ validations = {
     },
     "objects": {
         "types": [str, UUID],
-        "uuid": [],
+        "uuid": None,
     },
     "data": {
         "types": [str, UUID],

@@ -27,6 +27,7 @@ class InducedPolarizationParams(InversionParams):
 
     _required_parameters = required_parameters
     _validations = validations
+    _validators = None
     _forward_defaults = forward_defaults
     _inversion_defaults = inversion_defaults
     forward_ui_json = forward_ui_json

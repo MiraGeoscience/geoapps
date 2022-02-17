@@ -220,7 +220,7 @@ validations = {
     },
     "objects": {
         "types": [str, UUID],
-        "uuid": [],
+        "uuid": None,
     },
     "u_cell_size": {
         "types": [int, float],
@@ -242,7 +242,7 @@ validations = {
     },
     "template_object": {
         "types": [str, UUID],
-        "uuid": [],
+        "uuid": None,
     },
     "template_levels": {
         "types": [int, float],

@@ -715,7 +715,6 @@ validations = {
     "tmi_channel_bool": {"types": [bool]},
     "tmi_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "tmi_uncertainty": {
         "types": [str, int, float, UUID],
@@ -723,7 +722,6 @@ validations = {
     "bxx_channel_bool": {"types": [bool]},
     "bxx_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "bxx_uncertainty": {
         "types": [str, int, float, UUID],
@@ -731,7 +729,6 @@ validations = {
     "bxy_channel_bool": {"types": [bool]},
     "bxy_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "bxy_uncertainty": {
         "types": [str, int, float, UUID],
@@ -739,7 +736,6 @@ validations = {
     "bxz_channel_bool": {"types": [bool]},
     "bxz_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "bxz_uncertainty": {
         "types": [str, int, float, UUID],
@@ -747,7 +743,6 @@ validations = {
     "byy_channel_bool": {"types": [bool]},
     "byy_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "byy_uncertainty": {
         "types": [str, int, float, UUID],
@@ -755,7 +750,6 @@ validations = {
     "byz_channel_bool": {"types": [bool]},
     "byz_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "byz_uncertainty": {
         "types": [str, int, float, UUID],
@@ -763,7 +757,6 @@ validations = {
     "bzz_channel_bool": {"types": [bool]},
     "bzz_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "bzz_uncertainty": {
         "types": [str, int, float, UUID],
@@ -771,7 +764,6 @@ validations = {
     "bx_channel_bool": {"types": [bool]},
     "bx_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "bx_uncertainty": {
         "types": [str, int, float, UUID],
@@ -779,7 +771,6 @@ validations = {
     "by_channel_bool": {"types": [bool]},
     "by_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "by_uncertainty": {
         "types": [str, int, float, UUID],
@@ -787,7 +778,6 @@ validations = {
     "bz_channel_bool": {"types": [bool]},
     "bz_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "bz_uncertainty": {
         "types": [str, int, float, UUID],
@@ -812,11 +802,9 @@ validations = {
     },
     "reference_inclination": {
         "types": [str, int, float, UUID],
-        "reqs": [("reference_inclination_object")],
     },
     "reference_declination": {
         "types": [str, int, float, UUID],
-        "reqs": [("reference_declination_object")],
     },
     "out_group": {"types": [str, ContainerGroup]},
 }

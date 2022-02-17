@@ -281,7 +281,6 @@ validations = {
     "chargeability_channel_bool": {"types": [bool]},
     "chargeability_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "chargeability_uncertainty": {"types": [str, int, float, UUID]},
     "conductivity_model_object": {

@@ -598,7 +598,6 @@ validations = {
     "tmi_channel_bool": {"types": [bool]},
     "tmi_channel": {
         "types": [str, UUID],
-        "reqs": [("data_object")],
     },
     "tmi_uncertainty": {
         "types": [str, int, float, UUID],
