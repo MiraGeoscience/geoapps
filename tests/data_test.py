@@ -132,7 +132,7 @@ def test_get_uncertainty_component(tmp_path):
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     params.tmi_uncertainty = 1
     data = InversionData(ws, params, window)
-    unc = data.get_uncertainty_component("tmi")
+    unc = data.get_data()[2]["tmi"]
     assert len(np.unique(unc)) == 1
     assert np.unique(unc)[0] == 1
     assert len(unc) == len(data.mask)

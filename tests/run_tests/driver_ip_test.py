@@ -19,9 +19,9 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_ip_run = {
-    "data_norm": 0.00796,
-    "phi_d": 8.086,
-    "phi_m": 0.1146,
+    "data_norm": 0.007242,
+    "phi_d": 4.985,
+    "phi_m": 0.06141,
 }
 
 
@@ -69,7 +69,7 @@ def test_ip_run(
     fwr_driver = InducedPolarizationDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
-    potential = geoh5.get_entity("Predicted_chargeability")[0]
+    potential = geoh5.get_entity("Iteration_0_ip")[0]
     # Run the inverse
     np.random.seed(0)
     params = InducedPolarizationParams(
