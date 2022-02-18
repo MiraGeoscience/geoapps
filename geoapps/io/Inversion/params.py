@@ -29,89 +29,89 @@ class InversionParams(Params):
         self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
     ):
 
-        self.forward_only: bool = None
-        self.topography_object: UUID = None
-        self.topography: UUID | float = None
-        self.data_object: UUID = None
-        self.starting_model_object: UUID = None
-        self.starting_model: UUID | float = None
-        self.tile_spatial = None
-        self.z_from_topo: bool = None
-        self.receivers_radar_drape = None
-        self.receivers_offset_x: float = None
-        self.receivers_offset_y: float = None
-        self.receivers_offset_z: float = None
-        self.gps_receivers_offset = None
-        self.ignore_values: str = None
-        self.resolution: float = None
-        self.detrend_order: int = None
-        self.detrend_type: str = None
-        self.max_chunk_size: int = None
-        self.chunk_by_rows: bool = None
-        self.output_tile_files: bool = None
-        self.mesh = None
-        self.u_cell_size: float = None
-        self.v_cell_size: float = None
-        self.w_cell_size: float = None
-        self.octree_levels_topo: list[int] = None
-        self.octree_levels_obs: list[int] = None
-        self.depth_core: float = None
-        self.max_distance: float = None
-        self.horizontal_padding: float = None
-        self.vertical_padding: float = None
-        self.window_azimuth: float = None
-        self.window_center_x: float = None
-        self.window_center_y: float = None
-        self.window_height: float = None
-        self.window_width: float = None
-        self.inversion_style: str = None
-        self.chi_factor: float = None
-        self.sens_wts_threshold: float = None
-        self.every_iteration_bool: bool = None
-        self.f_min_change: float = None
-        self.minGNiter: float = None
-        self.beta_tol: float = None
-        self.prctile: float = None
-        self.coolingRate: float = None
-        self.coolEps_q: bool = None
-        self.coolEpsFact: float = None
-        self.beta_search: bool = None
-        self.starting_chi_factor: float = None
-        self.max_iterations: int = None
-        self.max_line_search_iterations: int = None
-        self.max_cg_iterations: int = None
-        self.max_global_iterations: int = None
-        self.initial_beta: float = None
-        self.initial_beta_ratio: float = None
-        self.tol_cg: float = None
-        self.alpha_s: float = None
-        self.alpha_x: float = None
-        self.alpha_y: float = None
-        self.alpha_z: float = None
-        self.s_norm: float = None
-        self.x_norm: float = None
-        self.y_norm: float = None
-        self.z_norm: float = None
-        self.reference_model_object: UUID = None
-        self.reference_model = None
-        self.gradient_type: str = None
-        self.lower_bound_object: UUID = None
-        self.lower_bound = None
-        self.upper_bound_object: UUID = None
-        self.upper_bound = None
-        self.parallelized: bool = None
-        self.n_cpu: int = None
-        self.max_ram: float = None
-        self.out_group = None
-        self.no_data_value: float = None
-        self.monitoring_directory: str = None
-        self.workspace_geoh5: str = None
-        self.geoh5 = None
-        self.run_command: str = None
-        self.run_command_boolean: bool = None
-        self.conda_environment: str = None
-        self.conda_environment_boolean: bool = None
-        self.distributed_workers = None
+        self._forward_only: bool | None = None
+        self._topography_object: UUID | None = None
+        self._topography: UUID | float | None = None
+        self._data_object: UUID | None = None
+        self._starting_model_object: UUID | None = None
+        self._starting_model: UUID | float | None = None
+        self._tile_spatial = None
+        self._z_from_topo: bool | None = None
+        self._receivers_radar_drape = None
+        self._receivers_offset_x: float | None = None
+        self._receivers_offset_y: float | None = None
+        self._receivers_offset_z: float | None = None
+        self._gps_receivers_offset = None
+        self._ignore_values: str | None = None
+        self._resolution: float | None = None
+        self._detrend_order: int | None = None
+        self._detrend_type: str | None = None
+        self._max_chunk_size: int | None = None
+        self._chunk_by_rows: bool | None = None
+        self._output_tile_files: bool | None = None
+        self._mesh = None
+        self._u_cell_size: float | None = None
+        self._v_cell_size: float | None = None
+        self._w_cell_size: float | None = None
+        self._octree_levels_topo: list[int] | None = None
+        self._octree_levels_obs: list[int] | None = None
+        self._depth_core: float | None = None
+        self._max_distance: float | None = None
+        self._horizontal_padding: float | None = None
+        self._vertical_padding: float | None = None
+        self._window_azimuth: float | None = None
+        self._window_center_x: float | None = None
+        self._window_center_y: float | None = None
+        self._window_height: float | None = None
+        self._window_width: float | None = None
+        self._inversion_style: str | None = None
+        self._chi_factor: float | None = None
+        self._sens_wts_threshold: float | None = None
+        self._every_iteration_bool: bool | None = None
+        self._f_min_change: float | None = None
+        self._minGNiter: float | None = None
+        self._beta_tol: float | None = None
+        self._prctile: float | None = None
+        self._coolingRate: float | None = None
+        self._coolEps_q: bool | None = None
+        self._coolEpsFact: float | None = None
+        self._beta_search: bool | None = None
+        self._starting_chi_factor: float | None = None
+        self._max_iterations: int | None = None
+        self._max_line_search_iterations: int | None = None
+        self._max_cg_iterations: int | None = None
+        self._max_global_iterations: int | None = None
+        self._initial_beta: float | None = None
+        self._initial_beta_ratio: float | None = None
+        self._tol_cg: float | None = None
+        self._alpha_s: float | None = None
+        self._alpha_x: float | None = None
+        self._alpha_y: float | None = None
+        self._alpha_z: float | None = None
+        self._s_norm: float | None = None
+        self._x_norm: float | None = None
+        self._y_norm: float | None = None
+        self._z_norm: float | None = None
+        self._reference_model_object: UUID | None = None
+        self._reference_model = None
+        self._gradient_type: str | None = None
+        self._lower_bound_object: UUID | None = None
+        self._lower_bound = None
+        self._upper_bound_object: UUID | None = None
+        self._upper_bound = None
+        self._parallelized: bool | None = None
+        self._n_cpu: int | None = None
+        self._max_ram: float | None = None
+        self._out_group = None
+        self._no_data_value: float | None = None
+        self._monitoring_directory: str | None = None
+        self._workspace_geoh5: str | None = None
+        self._geoh5 = None
+        self._run_command: str | None = None
+        self._run_command_boolean: bool | None = None
+        self._conda_environment: str | None = None
+        self._conda_environment_boolean: bool | None = None
+        self._distributed_workers = None
         super().__init__(input_file, default, validate, validator_opts, **kwargs)
 
         self._initialize(kwargs)
@@ -156,36 +156,49 @@ class InversionParams(Params):
         # Set params attributes from validated input.
         self.update(params_dict, validate=False)
 
-    def uncertainty(self, component: str) -> float:
-        """Returns uncertainty for chosen data component."""
+    def data_channel(self, component: str):
+        """Return uuid of data channel."""
+        return getattr(self, "_".join([component, "channel"]), None)
+
+    def uncertainty_channel(self, component: str):
+        """Return uuid of uncertainty channel."""
         return getattr(self, "_".join([component, "uncertainty"]), None)
 
-    def channel(self, component: str) -> UUID:
-        """Returns channel uuid for chosen data component."""
-        return getattr(self, "_".join([component, "channel"]), None)
+    def data(self, component: str):
+        """Returns array of data for chosen data component."""
+        uid = self.data_channel(component)
+        if uid is None:
+            return None
+        return self.geoh5.get_entity(uid)[0].values
+
+    def uncertainty(self, component: str) -> np.ndarray | None:
+        """Returns uncertainty for chosen data component."""
+        val = self.uncertainty_channel(component)
+
+        if isinstance(val, UUID):
+            return self.geoh5.get_entity(val)[0].values.astype(float)
+        elif self.data(component) is not None:
+            d = self.data(component)
+            if isinstance(val, (int, float)):
+                return np.array([float(val)] * len(d))
+            else:
+                return d * 0.0 + 1.0  # Default
+        else:
+            return None
 
     def cell_size(self):
         """Returns core cell size in all 3 dimensions."""
         return [self.u_cell_size, self.v_cell_size, self.w_cell_size]
 
-    def padding_distance(self):
-        """Returns padding distance in all 3 dimensions."""
-        return [
-            self.padding_distance_x,
-            self.padding_distance_y,
-            self.padding_distance_z,
-        ]
-
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
-        channels = np.unique(
-            [
-                k.lstrip("_").split("_")[0]
-                for k in self.__dict__.keys()
-                if "channel" in k
-            ]
-        )
+        channels = [
+            k.lstrip("_").split("_channel_bool")[0]
+            for k in self.__dict__.keys()
+            if "channel_bool" in k
+        ]
+
         for c in channels:
             use_ch = False
             if getattr(self, f"{c}_channel", None) is not None:

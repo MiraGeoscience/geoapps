@@ -13,6 +13,7 @@ from geoapps.io.Gravity import GravityParams
 from geoapps.io.InducedPolarization import InducedPolarizationParams
 from geoapps.io.MagneticScalar import MagneticScalarParams
 from geoapps.io.MagneticVector import MagneticVectorParams
+from geoapps.io.magnetotellurics import MagnetotelluricsParams
 from geoapps.io.Octree import OctreeParams
 from geoapps.io.PeakFinder import PeakFinderParams
 
@@ -43,6 +44,11 @@ def write_default_uijson(path, use_initializers=False):
 
     ip_init = app_initializer if use_initializers else {}
     ip_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+
+    from geoapps.io.magnetotellurics.constants import app_initializer
+
+    mt_init = app_initializer if use_initializers else {}
+
     from geoapps.io.Octree.constants import app_initializer
 
     oct_init = app_initializer if use_initializers else {}
@@ -77,6 +83,12 @@ def write_default_uijson(path, use_initializers=False):
             validate=False, **ip_init
         ),
         "induced_polarization_forward.ui.json": InducedPolarizationParams(
+            forward_only=True, validate=False
+        ),
+        "magnetotellurics_inversion.ui.json": MagnetotelluricsParams(
+            forward_only=False, validate=False
+        ),
+        "magnetotellurics_forward.ui.json": MagnetotelluricsParams(
             forward_only=True, validate=False
         ),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),

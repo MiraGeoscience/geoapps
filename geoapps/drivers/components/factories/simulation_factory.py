@@ -32,7 +32,11 @@ class SimulationFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
         from SimPEG import dask
 
-        if self.factory_type in ["direct current", "induced polarization"]:
+        if self.factory_type in [
+            "direct current",
+            "induced polarization",
+            "magnetotellurics",
+        ]:
             import pymatsolver.direct as solver_module
 
             self.solver = solver_module.Pardiso
@@ -57,6 +61,11 @@ class SimulationFactory(SimPEGFactory):
             from SimPEG.electromagnetics.static.induced_polarization import simulation
 
             return simulation.Simulation3DNodal
+
+        if self.factory_type == "magnetotellurics":
+            from SimPEG.electromagnetics.natural_source import simulation
+
+            return simulation.Simulation3DPrimarySecondary
 
     def assemble_arguments(
         self,
@@ -103,6 +112,10 @@ class SimulationFactory(SimPEGFactory):
                 kwargs,
                 mesh,
                 active_cells=active_cells,
+            )
+        if self.factory_type == "magnetotellurics":
+            return self._magnetotellurics_keywords(
+                kwargs, mesh, active_cells=active_cells
             )
 
     def _magnetic_vector_keywords(self, kwargs, active_cells=None):
@@ -161,6 +174,15 @@ class SimulationFactory(SimPEGFactory):
         kwargs["solver"] = self.solver
         kwargs["store_sensitivities"] = False if self.params.forward_only else True
         kwargs["max_ram"] = 1
+
+        return kwargs
+
+    def _magnetotellurics_keywords(self, kwargs, mesh, active_cells=None):
+
+        actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
+        kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
+        kwargs["solver"] = self.solver
+        kwargs["store_sensitivities"] = False if self.params.forward_only else True
 
         return kwargs
 

@@ -94,7 +94,7 @@ class InversionLocations:
             raise (ValueError(msg))
         self._mask = v
 
-    def create_entity(self, name, locs: np.ndarray):
+    def create_entity(self, name, locs: np.ndarray, geoh5_object=Points):
         """Create Data group and Points object with observed data."""
 
         if self.is_rotated:
@@ -104,7 +104,7 @@ class InversionLocations:
                 -self.angle,
             )
 
-        entity = Points.create(
+        entity = geoh5_object.create(
             self.workspace,
             name=name,
             vertices=locs,
@@ -133,6 +133,22 @@ class InversionLocations:
 
         return locs
 
+    def _filter(self, a, mask):
+        for k, v in a.items():
+            if not isinstance(v, np.ndarray):
+                a.update({k: self._filter(v, mask)})
+            else:
+                a.update({k: v[mask]})
+        return a
+
+    def _none_dict(self, a):
+        is_none = []
+        for v in a.values():
+            if isinstance(v, dict):
+                v = None if self._none_dict(v) else 1
+            is_none.append(v is None)
+        return all(is_none)
+
     def filter(self, a: dict[str, np.ndarray] | np.ndarray, mask=None):
         """
         Apply accumulated self.mask to array, or dict of arrays.
@@ -149,10 +165,10 @@ class InversionLocations:
 
         if isinstance(a, dict):
 
-            if all([v is None for v in a.values()]):
+            if self._none_dict(a):
                 return a
             else:
-                return {k: v[mask] for k, v in a.items()}
+                return self._filter(a, mask)
         else:
 
             if a is None:
