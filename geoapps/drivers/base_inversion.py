@@ -335,46 +335,6 @@ class InversionDriver:
 
         return tiles
 
-    def get_tile_misfits(self, tiles):
-
-        local_misfits, self.sorting, = (
-            [],
-            [],
-        )
-        for tile_id, local_index in enumerate(tiles):
-            lsurveys, local_index = self.inversion_data.survey(
-                self.mesh, self.active_cells, local_index
-            )
-            for i, survey in enumerate(lsurveys):
-                lsim, lmap = self.inversion_data.simulation(
-                    self.mesh, self.active_cells, survey, (tile_id * len(lsurveys)) + i
-                )
-
-                # TODO Parse workers to simulations
-                lsim.workers = self.params.distributed_workers
-                if self.inversion_type == "induced polarization":
-                    lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
-
-                if self.params.forward_only:
-                    lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
-                else:
-                    ldat = (
-                        data.Data(
-                            survey, dobs=survey.dobs, standard_deviation=survey.std
-                        ),
-                    )
-                    lmisfit = data_misfit.L2DataMisfit(
-                        data=ldat[0],
-                        simulation=lsim,
-                        model_map=lmap,
-                    )
-                    lmisfit.W = 1 / survey.std
-
-                local_misfits.append(lmisfit)
-            self.sorting.append(local_index)
-
-        return local_misfits
-
     def fetch(self, p: str | UUID):
         """Fetch the object addressed by uuid from the workspace."""
 
