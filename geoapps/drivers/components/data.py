@@ -230,9 +230,9 @@ class InversionData(InversionLocations):
         data_entity = {c: {} for c in data.keys()}
 
         if self.params.inversion_type == "magnetotellurics":
-            for component in data.keys():
-                for channel in component.keys():
-                    dnorm = self.normalizations[component] * data[component][channel]
+            for component, channels in data.items():
+                for channel, values in channels.items():
+                    dnorm = self.normalizations[component] * values
                     data_entity[component][channel] = entity.add_data(
                         {f"{basename}_{component}_{channel}": {"values": dnorm}}
                     )
