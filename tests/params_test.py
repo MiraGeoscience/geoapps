@@ -27,6 +27,7 @@ from geoapps.io.MagneticVector import MagneticVectorParams
 from geoapps.io.MagneticVector import app_initializer as mvi_init
 from geoapps.io.MagneticVector.constants import default_ui_json as MVI_defaults
 from geoapps.io.MagneticVector.constants import validations as MVI_validations
+from geoapps.io.magnetotellurics import MagnetotelluricsParams
 from geoapps.io.Octree import OctreeParams
 from geoapps.io.Octree import app_initializer as octree_init
 from geoapps.io.PeakFinder import PeakFinderParams

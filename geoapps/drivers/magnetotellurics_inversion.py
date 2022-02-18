@@ -5,15 +5,14 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
 import sys
 
 from geoapps.drivers.base_inversion import InversionDriver
 from geoapps.io import InputFile
-from geoapps.io.InducedPolarization import InducedPolarizationParams
+from geoapps.io.magnetotellurics import MagnetotelluricsParams
 
 
-def start_inversion(filepath=None, **kwargs):
+def start_inversion(filepath=None, warmstart=True, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
     if filepath is None:
@@ -21,20 +20,20 @@ def start_inversion(filepath=None, **kwargs):
     else:
         input_file = InputFile(filepath)
 
-    params = InducedPolarizationParams(input_file)
-    driver = InducedPolarizationDriver(params)
+    params = MagnetotelluricsParams(input_file)
+    driver = MagnetotelluricsDriver(params, warmstart=warmstart)
     driver.run()
 
 
-class InducedPolarizationDriver(InversionDriver):
-    def __init__(self, params: InducedPolarizationParams):
-        super().__init__(params)
+class MagnetotelluricsDriver(InversionDriver):
+    def __init__(self, params: MagnetotelluricsParams, warmstart=True):
+        super().__init__(params, warmstart=warmstart)
 
     def run(self):
         super().run()
 
 
 if __name__ == "__main__":
-
     filepath = sys.argv[1]
+    # filepath = r"C:\Users\dominiquef\Desktop\lblock_inversion_v7.ui.json"
     start_inversion(filepath)

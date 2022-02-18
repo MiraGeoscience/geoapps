@@ -27,7 +27,12 @@ from SimPEG.utils.io_utils.io_utils_electromagnetics import read_dcip_xyz
 
 from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
 
-from .factories import SimulationFactory, SurveyFactory
+from .factories import (
+    EntityFactory,
+    SaveIterationGeoh5Factory,
+    SimulationFactory,
+    SurveyFactory,
+)
 from .locations import InversionLocations
 
 
@@ -111,7 +116,7 @@ class InversionData(InversionLocations):
         self.normalizations: dict[str, Any] = {}
         self.transformations: dict[str, Any] = {}
         self.entity = None
-        self.data_entity = {}
+        self.data_entity = None
         self._observed_data_types = {}
         self._survey = None
         self._initialize()
@@ -146,11 +151,13 @@ class InversionData(InversionLocations):
             self.detrend_type = self.params.detrend_type
             self.observed, self.trend = self.detrend(self.observed)
 
+        self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = self.get_locations(self.entity.uid)
         self._survey, _ = self.survey()
+        self.save_data(self.entity)
 
     def filter(self, a):
         """Remove vertices based on mask property."""
@@ -203,116 +210,82 @@ class InversionData(InversionLocations):
         data = {}
         uncertainties = {}
         for comp in components:
-            data[comp] = self.get_data_component(comp)
-            uncertainties[comp] = self.get_uncertainty_component(comp)
-            uncertainties[comp] = self.set_infinity_uncertainties(
-                uncertainties[comp], data[comp]
-            )
+            data.update({comp: self.params.data(comp)})
+            uncertainties.update({comp: self.params.uncertainty(comp)})
 
         return list(data.keys()), data, uncertainties
 
     def write_entity(self):
         """Write out the survey to geoh5"""
-
-        if self.params.inversion_type in ["direct current", "induced polarization"]:
-
-            def prune_from_indices(curve: Curve, cell_indices: np.ndarray):
-                cells = curve.cells[cell_indices]
-                uni_ids, ids = np.unique(cells, return_inverse=True)
-                locations = curve.vertices[uni_ids, :]
-                cells = np.arange(uni_ids.shape[0], dtype="uint32")[ids].reshape(
-                    (-1, 2)
-                )
-                return locations, cells
-
-            # Trim down receivers
-            rx_obj = self.workspace.get_entity(self.params.data_object)[0]
-            rcv_ind = np.where(np.any(self.mask[rx_obj.cells], axis=1))[0]
-            rcv_locations, rcv_cells = prune_from_indices(rx_obj, rcv_ind)
-            uni_src_ids, src_ids = np.unique(
-                rx_obj.ab_cell_id.values[rcv_ind], return_inverse=True
-            )
-            ab_cell_id = np.arange(1, uni_src_ids.shape[0] + 1)[src_ids]
-            entity = PotentialElectrode.create(
-                self.workspace,
-                name="Data",
-                parent=self.params.ga_group,
-                vertices=self.apply_transformations(rcv_locations),
-                cells=rcv_cells,
-            )
-            entity.ab_cell_id = ab_cell_id
-            # Trim down sources
-            tx_obj = rx_obj.current_electrodes
-            src_ind = np.hstack(
-                [np.where(tx_obj.ab_cell_id.values == ind)[0] for ind in uni_src_ids]
-            )
-            src_locations, src_cells = prune_from_indices(tx_obj, src_ind)
-            new_currents = CurrentElectrode.create(
-                self.workspace,
-                name="Data (currents)",
-                parent=self.params.ga_group,
-                vertices=self.apply_transformations(src_locations),
-                cells=src_cells,
-            )
-            new_currents.add_default_ab_cell_id()
-            entity.current_electrodes = new_currents
-            entity.workspace.finalize()
-
-        else:
-            entity = super().create_entity("Data", self.locations)
+        entity_factory = EntityFactory(self.params)
+        entity = entity_factory.build(self)
 
         return entity
 
-    def save_data(self):
+    def save_data(self, entity):
         """Write out the data to geoh5"""
         data = self.predicted if self.params.forward_only else self.observed
         basename = "Predicted" if self.params.forward_only else "Observed"
+        self._observed_data_types = {c: {} for c in data.keys()}
+        data_entity = {c: {} for c in data.keys()}
 
-        if self.params.inversion_type == "direct current":
-            self.transformations["potential"] = 1 / (
-                geometric_factor(self._survey) + 1e-10
-            )
-            apparent_property = data["potential"] * self.transformations["potential"]
-            self.data_entity[f"apparent_resistivity"] = self.entity.add_data(
-                {
-                    f"{basename}_apparent_resistivity": {
-                        "values": apparent_property,
-                        "association": "CELL",
-                    }
-                }
-            )
-        for comp in self.components:
-            dnorm = self.normalizations[comp] * data[comp]
-            self.data_entity[comp] = self.entity.add_data(
-                {f"{basename}_{comp}": {"values": dnorm}}
-            )
-            if not self.params.forward_only:
-                self._observed_data_types[comp] = self.data_entity[comp].entity_type
-                uncerts = self.uncertainties[comp].copy()
-                uncerts[np.isinf(uncerts)] = np.nan
-                self.entity.add_data({f"Uncertainties_{comp}": {"values": uncerts}})
+        if self.params.inversion_type == "magnetotellurics":
+            for component, channels in data.items():
+                for channel, values in channels.items():
+                    dnorm = self.normalizations[component] * values
+                    data_entity[component][channel] = entity.add_data(
+                        {f"{basename}_{component}_{channel}": {"values": dnorm}}
+                    )
+                    entity.add_data_to_group(
+                        data_entity[component][channel], f"{basename}_{component}"
+                    )
+                    if not self.params.forward_only:
+                        self._observed_data_types[component][
+                            f"{channel:.2e}"
+                        ] = data_entity[component][channel].entity_type
+                        uncerts = self.uncertainties[component][channel].copy()
+                        uncerts[np.isinf(uncerts)] = np.nan
+                        uncert_entity = entity.add_data(
+                            {
+                                f"Uncertainties_{component}_{channel}": {
+                                    "values": uncerts
+                                }
+                            }
+                        )
+                        entity.add_data_to_group(
+                            uncert_entity, f"Uncertainties_{component}"
+                        )
 
-    def get_data_component(self, component: str) -> np.ndarray:
-        """Get data component (channel) from params data."""
-        channel = self.params.channel(component)
-        return None if channel is None else self.workspace.get_entity(channel)[0].values
-
-    def get_uncertainty_component(self, component: str) -> np.ndarray:
-        """Get uncertainty component (channel) from params data."""
-        unc = self.params.uncertainty(component)
-        if unc is None:
-            return None
-        elif isinstance(unc, (int, float)):
-            d = self.get_data_component(component)
-            if d is None:
-                return None
-            else:
-                return np.array([float(unc)] * len(d))
-        elif unc is None:
-            d = self.get_data_component(component)
-            return d * 0.0 + 1.0  # Default
         else:
-            return self.workspace.get_entity(unc)[0].values.astype(float)
+            for component in data.keys():
+                dnorm = self.normalizations[component] * data[component]
+                data_entity[component] = entity.add_data(
+                    {f"{basename}_{component}": {"values": dnorm}}
+                )
+                if not self.params.forward_only:
+                    self._observed_data_types[component] = data_entity[
+                        component
+                    ].entity_type
+                    uncerts = self.uncertainties[component].copy()
+                    uncerts[np.isinf(uncerts)] = np.nan
+                    entity.add_data({f"Uncertainties_{component}": {"values": uncerts}})
+
+                if self.params.inversion_type == "direct current":
+                    self.transformations[component] = 1 / (
+                        geometric_factor(self._survey) + 1e-10
+                    )
+                    apparent_property = (
+                        data[component] * self.transformations[component]
+                    )
+                    data_entity["apparent_resistivity"] = entity.add_data(
+                        {
+                            f"{basename}_apparent_resistivity": {
+                                "values": apparent_property,
+                                "association": "CELL",
+                            }
+                        }
+                    )
+        return data_entity
 
     def parse_ignore_values(self) -> tuple[float, str]:
         """Returns an ignore value and type ('<', '>', or '=') from params data."""
@@ -418,23 +391,39 @@ class InversionData(InversionLocations):
         :return: d: Normalized data.
         """
         d = deepcopy(data)
+        for comp in self.components:
+            if isinstance(d[comp], dict):
+                new_dict = {}
+                for k, v in d[comp].items():
+                    new_dict[k] = (
+                        v * self.normalizations[comp] if v is not None else None
+                    )
+                d[comp] = new_dict
+            elif d[comp] is not None:
+                d[comp] *= self.normalizations[comp]
+        return d
+
+    def get_normalizations(self):
+        """Create normalizations dictionary."""
         normalizations = {}
         for comp in self.components:
+            normalizations[comp] = 1.0
             if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
                 normalizations[comp] = -1.0
-                if d[comp] is not None:
-                    d[comp] *= -1.0
-                print(f"Sign flip for {comp} component")
-            else:
-                normalizations[comp] = 1.0
-        self.normalizations = normalizations
-        return d
+            elif self.params.inversion_type in ["magnetotellurics"]:
+                if "imag" in comp:
+                    normalizations[comp] = -1.0
+            if normalizations[comp] == -1.0:
+                print(f"Sign flip for component {comp}.")
+
+        return normalizations
 
     def survey(
         self,
         mesh: TreeMesh = None,
         active_cells: np.ndarray = None,
         local_index: np.ndarray = None,
+        channel=None,
     ):
         """
         Generates SimPEG survey object.
@@ -453,6 +442,7 @@ class InversionData(InversionLocations):
             mesh=mesh,
             active_cells=active_cells,
             local_index=local_index,
+            channel=channel,
         )
         return survey
 
@@ -513,11 +503,9 @@ class InversionData(InversionLocations):
         dpred = inverse_problem.get_dpred(
             model, compute_J=False if self.params.forward_only else True
         )
-
-        dpred = np.hstack(dpred).reshape(-1, len(self.components))
-        sorting = np.argsort(np.hstack(sorting))
-        self.predicted = dict(zip(self.components, dpred[sorting].T))
-
-        # TODO Should rotate the x,y (and/or tensor) components of the fields if used.
-
-        self.save_data()
+        if self.params.forward_only:
+            save_directive = SaveIterationGeoh5Factory(self.params).build(
+                inversion_object=self,
+                sorting=np.argsort(np.hstack(sorting)),
+            )
+            save_directive.save_components(0, dpred)

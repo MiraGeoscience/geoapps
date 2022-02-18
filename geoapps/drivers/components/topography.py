@@ -60,12 +60,12 @@ class InversionTopography(InversionLocations):
     def _initialize(self):
 
         self.locations = self.get_locations(self.params.topography_object)
-
         self.mask = np.ones(len(self.locations), dtype=bool)
-
         topo_window = deepcopy(self.window)
+
         if topo_window is not None:
             topo_window["size"] = [2 * s for s in topo_window["size"]]
+
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
@@ -89,7 +89,7 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
-        active_cells = active_from_xyz(mesh.mesh, self.locations, grid_reference="N")
+        active_cells = active_from_xyz(mesh.mesh, self.locations, grid_reference="CC")
         mesh.entity.add_data(
             {
                 "active_cells": {
