@@ -612,12 +612,10 @@ validations = {
     },
     "topography_object": {
         "types": [str, UUID, Surface],
-        "uuid": None,
         "required": True,
     },
     "topography": {
         "types": [str, UUID, int, float, FloatData],
-        "uuid": None,
     },
     "data_object": {
         "types": [str, UUID, Points],
@@ -664,7 +662,6 @@ validations = {
         "types": [bool],
     },
     "mesh": {
-        "uuid": None,
         "types": [str, UUID, Octree],
     },
     "u_cell_size": {
