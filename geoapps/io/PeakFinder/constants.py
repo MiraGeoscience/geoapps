@@ -203,7 +203,6 @@ validations = {
     },
     "data": {
         "types": [str, UUID],
-        "reqs": [("objects")],
         "property_groups": ["objects"],
     },
     "flip_sign": {
@@ -211,7 +210,6 @@ validations = {
     },
     "line_field": {
         "types": [str, UUID, int, float],
-        "reqs": [("objects")],
         "uuid": ["objects"],
     },
     "system": {
@@ -268,7 +266,6 @@ validations = {
     },
     "template_data": {
         "types": [str, UUID],
-        "reqs": [("objects")],
         "property_groups": ["objects"],
     },
     "template_color": {
