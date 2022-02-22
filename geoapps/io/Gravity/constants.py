@@ -8,7 +8,9 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Grid2D, Points, Surface
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.io.Inversion.constants import (
@@ -554,75 +556,76 @@ validations = {
         "types": [str],
         "values": ["gravity"],
     },
+    "data_object": {"types": [str, UUID, Points, Surface, Grid2D]},
     "gz_channel_bool": {"types": [bool]},
     "gz_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "gz_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "guv_channel_bool": {"types": [bool]},
     "guv_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "guv_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "gxy_channel_bool": {"types": [bool]},
     "gxy_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "gxy_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "gxx_channel_bool": {"types": [bool]},
     "gxx_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "gxx_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "gyy_channel_bool": {"types": [bool]},
     "gyy_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "gyy_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "gzz_channel_bool": {"types": [bool]},
     "gzz_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "gzz_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "gxz_channel_bool": {"types": [bool]},
     "gxz_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "gxz_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "gyz_channel_bool": {"types": [bool]},
     "gyz_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "gyz_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "gx_channel_bool": {"types": [bool]},
     "gx_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "gx_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "gy_channel_bool": {"types": [bool]},
     "gy_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData],
     },
     "gy_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData],
     },
     "out_group": {"types": [str, ContainerGroup]},
 }

@@ -150,10 +150,22 @@ class InversionParams(Params):
 
         # Validate.
         if self.validate:
-            self.validator.validate_data(params_dict)
+            self.validator.validate_data(self.promote(params_dict))
 
         # Set params attributes from validated input.
         self.update(params_dict, validate=False)
+
+    def promote(self, params_dict):
+
+        for key, val in params_dict.items():
+            if key == "geoh5":
+                params_dict[key] = Workspace(val)
+            elif isinstance(val, UUID):
+                params_dict[key] = self.geoh5.get_entity(val)[0]
+            else:
+                params_dict[key] = val
+
+        return params_dict
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""
