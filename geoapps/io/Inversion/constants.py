@@ -698,9 +698,6 @@ validations = {
     "window_center_y": {
         "types": [int, float],
     },
-    "window_center_z": {
-        "types": [int, float],
-    },
     "window_width": {
         "types": [int, float],
     },
