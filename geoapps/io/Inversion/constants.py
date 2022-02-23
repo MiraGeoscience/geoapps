@@ -12,8 +12,6 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Octree, Points, Surface
 from geoh5py.workspace import Workspace
 
-required_parameters = ["data_object", "topography_object", "starting_model"]
-
 default_ui_json = {
     "forward_only": False,
     "topography_object": {
@@ -622,9 +620,7 @@ validations = {
         "types": [str, UUID, Points],
         "required": True,
     },
-    "starting_model_object": {
-        "types": [str, UUID, Octree],
-    },
+    "starting_model_object": {"types": [str, UUID, Octree], "required": True},
     "starting_model": {"types": [str, UUID, int, float, FloatData], "required": True},
     "tile_spatial": {
         "types": [str, int, float, FloatData],
