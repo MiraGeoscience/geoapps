@@ -7,12 +7,10 @@
 
 from uuid import UUID
 
+from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
-from geoapps.io.Inversion.constants import (
-    required_parameters as base_required_parameters,
-)
 from geoapps.io.Inversion.constants import validations as base_validations
 
 ################# defaults ##################
@@ -690,123 +688,119 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations #################
 
-required_parameters = [
-    "inversion_type",
-    "inducing_field_strength",
-    "inducing_field_inclination",
-    "inducing_field_declination",
-]
-required_parameters += base_required_parameters
 
 validations = {
     "inversion_type": {
-        "types": [str],
+        "required": True,
         "values": ["gravity", "magnetic scalar", "magnetic vector"],
     },
     "inducing_field_strength": {
+        "required": True,
         "types": [int, float],
     },
     "inducing_field_inclination": {
+        "required": True,
         "types": [int, float],
     },
     "inducing_field_declination": {
+        "required": True,
         "types": [int, float],
     },
     "tmi_channel_bool": {"types": [bool]},
     "tmi_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "tmi_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "bxx_channel_bool": {"types": [bool]},
     "bxx_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "bxx_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "bxy_channel_bool": {"types": [bool]},
     "bxy_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "bxy_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "bxz_channel_bool": {"types": [bool]},
     "bxz_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "bxz_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "byy_channel_bool": {"types": [bool]},
     "byy_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "byy_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "byz_channel_bool": {"types": [bool]},
     "byz_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "byz_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "bzz_channel_bool": {"types": [bool]},
     "bzz_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "bzz_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "bx_channel_bool": {"types": [bool]},
     "bx_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "bx_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "by_channel_bool": {"types": [bool]},
     "by_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "by_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "bz_channel_bool": {"types": [bool]},
     "bz_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "bz_uncertainty": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "starting_inclination_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "starting_declination_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "starting_inclination": {
-        "types": [str, UUID, int, float],
+        "types": [str, UUID, FloatData, int, float, type(None)],
     },
     "starting_declination": {
-        "types": [str, UUID, int, float],
+        "types": [str, UUID, FloatData, int, float, type(None)],
     },
     "reference_inclination_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "reference_declination_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
     "reference_inclination": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "reference_declination": {
-        "types": [str, int, float, UUID],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
-    "out_group": {"types": [str, ContainerGroup]},
+    "out_group": {"types": [str, ContainerGroup, type(None)]},
 }
 
 validations = dict(base_validations, **validations)

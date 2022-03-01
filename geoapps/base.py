@@ -15,11 +15,12 @@ from shutil import copyfile, move
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.shared import Entity
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
 
-from geoapps.io import InputFile, Params
+from geoapps.io import Params
 from geoapps.utils.formatters import string_name
 
 

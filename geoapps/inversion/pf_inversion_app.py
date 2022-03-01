@@ -15,6 +15,7 @@ from collections import OrderedDict
 import ipywidgets as widgets
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
     Button,
@@ -29,7 +30,6 @@ from ipywidgets.widgets import (
     Widget,
 )
 
-from geoapps.io import InputFile
 from geoapps.io.Gravity.params import GravityParams
 from geoapps.io.MagneticScalar.params import MagneticScalarParams
 from geoapps.io.MagneticVector.constants import app_initializer

@@ -16,11 +16,11 @@ from uuid import UUID
 import numpy as np
 from discretize.utils import active_from_xyz, mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import CurrentElectrode, Points, PotentialElectrode, Surface
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 from SimPEG import utils
 
-from geoapps.io import InputFile
 from geoapps.utils import treemesh_2_octree
 
 
@@ -58,9 +58,6 @@ class Geoh5Tester:
 
     def make(self):
         if self.has_params:
-            self.params.associations = self.params.get_associations(
-                self.params.to_dict(ui_json_format=False)
-            )
             return self.ws, self.params
         else:
             return self.ws

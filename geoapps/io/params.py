@@ -16,9 +16,9 @@ from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile, InputValidation
 from geoh5py.workspace import Workspace
 
-required_parameters = ["geoh5"]
 validations = {
     "geoh5": {
+        "required": True,
         "types": [str, Workspace],
     },
 }
@@ -36,8 +36,6 @@ class Params:
         Path to working directory.
     validator :
         Parameter validation class instance.
-    associations :
-        Stores parent/child relationships.
 
     Methods
     -------
@@ -52,7 +50,6 @@ class Params:
 
     """
 
-    associations: dict[str | UUID, str | UUID] = None
     _geoh5: Workspace = None
     _validator: InputValidation = None
     _ifile: InputFile = None
@@ -118,11 +115,6 @@ class Params:
         self._workpath = val
 
     @property
-    def required_parameters(self):
-        """Parameters required on initialization."""
-        return self._required_parameters
-
-    @property
     def validations(self):
         """Encoded parameter validator type and associated validations."""
         return self._validations
@@ -169,10 +161,6 @@ class Params:
             return True if isinstance(private_attr, UUID) else False
         else:
             pass
-
-    def parent(self, child_id: str | UUID) -> str | UUID:
-        """Returns parent id of provided child id."""
-        return self.associations[child_id]
 
     @property
     def validator(self) -> InputValidator:
@@ -261,8 +249,6 @@ class Params:
         if ifile is None:
             self._input_file = None
             return
-        self.associations = ifile.associations
-        self.workpath = ifile.workpath
         self._input_file = ifile
 
     def _uuid_promoter(self, x):
@@ -298,31 +284,12 @@ class Params:
             ui_json = self.default_ui_json
 
         if default:
-            ifile = InputFile()
+            ifile = InputFile(ui_json=ui_json, validation_options={"disabled": True})
         else:
-            if self.validate:
-                self.validator.validate_chunk(
-                    self.to_dict(ui_json, ui_json_format=False), self.associations
-                )
-            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
+            ifile = InputFile(ui_json=self.to_dict(ui_json=ui_json))
 
         if path is not None:
             if not os.path.exists(path):
                 raise ValueError(f"Provided path {path} does not exist.")
-            ifile.workpath = path
 
-        ifile.write_ui_json(ui_json, name=name, default=default)
-
-    def get_associations(self, params_dict: dict[str, Any]):
-        associations = InputFile.get_associations(self.default_ui_json)
-        uuid_associations = {}
-        for k, v in associations.items():
-            if all([p in params_dict.keys() for p in [k, v]]):
-                child = params_dict[k]
-                parent = params_dict[v]
-                child = child.uid if isinstance(child, Entity) else child
-                parent = parent.uid if isinstance(parent, Entity) else parent
-                if all([InputFile.is_uuid(p) for p in [child, parent]]):
-                    uuid_associations[child] = parent
-        associations.update(uuid_associations)
-        return associations
+        ifile.write_ui_json(name=name, path=path)

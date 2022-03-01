@@ -8,12 +8,10 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import FloatData
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
-from geoapps.io.Inversion.constants import (
-    required_parameters as base_required_parameters,
-)
 from geoapps.io.Inversion.constants import validations as base_validations
 
 inversion_defaults = {
@@ -231,18 +229,17 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations #################
 
-required_parameters = ["inversion_type"]
-required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
+        "required": True,
         "values": ["direct current"],
     },
     "data_object": {"types": [UUID, PotentialElectrode]},
     "potential_channel_bool": {"types": [bool]},
     "potential_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
-    "potential_uncertainty": {"types": [str, int, float, UUID]},
+    "potential_uncertainty": {"types": [str, int, float, UUID, FloatData, type(None)]},
 }
 
 validations = dict(base_validations, **validations)

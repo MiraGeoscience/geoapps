@@ -17,7 +17,6 @@ from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
-from geoapps.io import InputFile
 from geoapps.io.Octree.constants import app_initializer, default_ui_json
 from geoapps.io.Octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection

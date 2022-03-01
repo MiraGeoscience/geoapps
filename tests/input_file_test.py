@@ -17,10 +17,9 @@ from geoapps.io import InputFile
 from geoapps.io.MagneticVector.constants import (
     default_ui_json,
     inversion_defaults,
-    required_parameters,
     validations,
 )
-from geoapps.io.validators import InputValidator
+from geoapps.io.validation import InputValidator
 
 ######################  Setup  ###########################
 

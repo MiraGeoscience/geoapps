@@ -185,8 +185,6 @@ free_format_dict = {
     },
 }
 
-required_parameters = ["objects", "data"]
-
 validations = {
     "title": {
         "types": [str],
@@ -198,10 +196,12 @@ validations = {
         "types": [bool],
     },
     "objects": {
+        "required": True,
         "types": [str, UUID],
         "uuid": None,
     },
     "data": {
+        "required": True,
         "types": [str, UUID],
         "property_groups": ["objects"],
     },

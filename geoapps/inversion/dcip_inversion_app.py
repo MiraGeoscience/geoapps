@@ -22,6 +22,7 @@ from geoh5py.objects import (
     PotentialElectrode,
     Surface,
 )
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
     Button,
@@ -36,7 +37,6 @@ from ipywidgets.widgets import (
     Widget,
 )
 
-from geoapps.io import InputFile
 from geoapps.io.DirectCurrent.constants import app_initializer
 from geoapps.io.DirectCurrent.params import DirectCurrentParams
 from geoapps.io.InducedPolarization.params import InducedPolarizationParams

@@ -12,6 +12,12 @@ from uuid import UUID, uuid4
 
 import numpy as np
 import pytest
+from geoh5py.shared.exceptions import (
+    RequiredValidationError,
+    ShapeValidationError,
+    TypeValidationError,
+    ValueValidationError,
+)
 from geoh5py.workspace import Workspace
 
 from geoapps.io import InputFile, Params
@@ -85,59 +91,38 @@ def catch_invalid_generator(
     else:
         ui[param] = invalid_value
     if validation_type == "value":
-        err = ValueError
-        assertions = [
-            "Must be",
-            param,
-            "value",
-            str(invalid_value),
-            *(str(v) for v in pvalidations),
-        ]
+        err = ValueValidationError
 
     elif validation_type == "type":
-        err = TypeError
-        types = set(pvalidations + [type(invalid_value)])
-        assertions = ["Must be", param, "type", *(t.__name__ for t in types)]
+        err = TypeValidationError
     elif validation_type == "shape":
-        err = ValueError
-        shapes = set(pvalidations + [np.array(invalid_value).shape])
-        assertions = ["Must be", param, "shape", *(str(s) for s in shapes)]
+        err = ShapeValidationError
     elif validation_type == "reqs":
-        err = KeyError
+        err = RequiredValidationError
         validator_opts = {}
-        assertions = ["Unsatisfied", param]
         req = pvalidations[0]
         hasval = len(req) > 1
         preq = req[1] if hasval else req[0]
         ui[preq]["value"] = None
         ui[preq]["enabled"] = False
-        assertions += [str(k) for k in req]
     elif validation_type == "uuid":
         err = (ValueError, IndexError)
-        if geoh5 is None:
-            assertions = [param, "uuid", invalid_value, "valid uuid"]
         if geoh5 is not None and parent is None:
             uuid_str = str(uuid4())
             ui[param]["value"] = uuid_str
-            assertions = [param, "uuid", uuid_str, "Address does"]
         if geoh5 is not None and parent is not None:
             ui[param]["value"] = "{c02e0470-0c3e-4119-8ac1-0aacba5334af}"
             ui[param]["parent"] = parent
             ui[parent]["value"] = "{79b719bc-d996-4f52-9af0-10aa9c7bb941}"
 
-            assertions = [param, "uuid", invalid_value, "child of"]
-
     with open(filepath, "w") as f:
         json.dump(ui, f, indent=4)
 
-    with pytest.raises(err) as excinfo:
+    with pytest.raises(err):
         ifile = InputFile(filepath)
         MagneticVectorParams(
             ifile, geoh5=geoh5, validate=True, validator_opts=validator_opts
         )
-
-    for a in assertions:
-        assert a in str(excinfo.value)
 
 
 def param_test_generator(tmp_path, param, value, geoh5=geoh5):

@@ -13,12 +13,10 @@ from uuid import UUID
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
-from geoh5py.ui_json import InputValidation
+from geoh5py.ui_json import InputFile, InputValidation
 from geoh5py.workspace import Workspace
 
-from ..input_file import InputFile
 from ..params import Params
-from .constants import required_parameters, validations
 
 
 class InversionParams(Params):
@@ -159,7 +157,7 @@ class InversionParams(Params):
 
         for key, val in params_dict.items():
             if key == "geoh5":
-                params_dict[key] = Workspace(val)
+                params_dict[key] = Workspace(val) if isinstance(val, str) else val
             elif isinstance(val, UUID):
                 params_dict[key] = self.geoh5.get_entity(val)[0]
             else:
@@ -904,14 +902,9 @@ class InversionParams(Params):
                 else:
                     ui_json[k] = v
 
-            ifile = InputFile.from_dict(ui_json)
+            ifile = InputFile(ui_json=ui_json, validation_options={"disabled": True})
         else:
-            if self.validate:
-                self.validator.validate_chunk(
-                    self.to_dict(ui_json=ui_json, ui_json_format=False),
-                    self.associations,
-                )
-            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
+            ifile = InputFile(ui_json=self.to_dict(ui_json=ui_json))
 
         if name is not None:
             if ".ui.json" not in name:
@@ -922,7 +915,6 @@ class InversionParams(Params):
         if path is not None:
             if not os.path.exists(path):
                 raise ValueError(f"Provided path {path} does not exist.")
-            ifile.workpath = path
 
         none_map = {
             "starting_chi_factor": 1.0,
@@ -938,9 +930,5 @@ class InversionParams(Params):
             "n_cpu": 1,
         }
 
-        ifile.write_ui_json(ui_json, name=name, default=default, none_map=none_map)
-        if ifile.workpath is not None:
-            ifile.filepath = os.path.join(ifile.workpath, name)
-        else:
-            ifile.filepath = os.path.abspath(name)
+        ifile.write_ui_json(name=name, path=path, none_map=none_map)
         self._input_file = ifile
