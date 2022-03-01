@@ -12,6 +12,7 @@ from copy import deepcopy
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
@@ -403,5 +404,5 @@ class OctreeMesh(ObjectDataSelection):
 
 
 if __name__ == "__main__":
-    params = OctreeParams(InputFile(sys.argv[1]))
+    params = OctreeParams(InputFile.read_ui_json(sys.argv[1]))
     OctreeMesh.run(params)

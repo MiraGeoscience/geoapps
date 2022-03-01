@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 import numpy as np
@@ -39,7 +40,6 @@ class InputFreeformValidation(InputValidation):
 
         free_params_dict = {}
         for name, validations in self.validations.items():
-
             if name not in data.keys():
 
                 if "required" in validations and not self.ignore_requirements:
@@ -55,8 +55,8 @@ class InputFreeformValidation(InputValidation):
                 temp_validate = deepcopy(validations)
                 temp_validate["association"] = data[validations["association"]]
                 self.validate(name, data[name], temp_validate)
-
-            self.validate(name, data[name], validation)
+            else:
+                self.validate(name, data[name], validations)
 
         # TODO This check should be handled by a group validator
         # if any(free_params_dict):

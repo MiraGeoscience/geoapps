@@ -7,6 +7,7 @@
 
 from uuid import UUID
 
+from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 
 defaults = {
@@ -216,7 +217,7 @@ validations = {
     },
     "objects": {
         "required": True,
-        "types": [str, UUID],
+        "types": [str, UUID, Curve],
         "uuid": None,
     },
     "u_cell_size": {
