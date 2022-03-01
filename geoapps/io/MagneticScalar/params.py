@@ -14,22 +14,18 @@ from geoh5py.workspace import Workspace
 
 from geoapps.io.Inversion import InversionParams
 
-from ..input_file import InputFile
-from ..validators import InputValidator
 from .constants import (
     default_ui_json,
     forward_defaults,
     forward_ui_json,
     inversion_defaults,
     inversion_ui_json,
-    required_parameters,
     validations,
 )
 
 
 class MagneticScalarParams(InversionParams):
 
-    _required_parameters = required_parameters
     _validations = validations
     _validators = None
     _forward_defaults = forward_defaults

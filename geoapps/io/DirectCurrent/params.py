@@ -17,14 +17,12 @@ from .constants import (
     forward_ui_json,
     inversion_defaults,
     inversion_ui_json,
-    required_parameters,
     validations,
 )
 
 
 class DirectCurrentParams(InversionParams):
 
-    _required_parameters = required_parameters
     _validations = validations
     _validators = None
     _forward_defaults = forward_defaults

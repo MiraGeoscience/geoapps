@@ -18,8 +18,6 @@ default_ui_json = {
         "main": True,
         "group": "Topography",
         "label": "Object",
-        "optional": True,
-        "enabled": False,
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
@@ -34,6 +32,8 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Topography",
         "main": True,
+        "optional": True,
+        "enabled": False,
         "isValue": False,
         "label": "Elevation",
         "parent": "topography_object",
@@ -65,6 +65,8 @@ default_ui_json = {
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
             "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
+        "optional": True,
+        "enabled": False,
         "label": "Object",
         "value": None,
     },
@@ -74,6 +76,8 @@ default_ui_json = {
         "group": "Starting Model",
         "main": True,
         "isValue": False,
+        "optional": True,
+        "enabled": True,
         "parent": "starting_model_object",
         "label": "Value",
         "property": None,
@@ -504,8 +508,9 @@ default_ui_json = {
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
             "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
+        "optional": True,
+        "enabled": False,
         "value": None,
-        "enabled": True,
     },
     "reference_model": {
         "association": ["Cell", "Vertex"],
@@ -513,6 +518,8 @@ default_ui_json = {
         "group": "Regularization",
         "isValue": False,
         "parent": "reference_model_object",
+        "dependency": "reference_model_object",
+        "dependencyType": "enabled",
         "label": "Reference model value",
         "property": None,
         "value": 0.0,
@@ -534,6 +541,8 @@ default_ui_json = {
             "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
         "label": "Lower bound object",
+        "optional": True,
+        "enabled": False,
         "value": None,
     },
     "lower_bound": {
@@ -542,6 +551,8 @@ default_ui_json = {
         "group": "Regularization",
         "isValue": False,
         "parent": "lower_bound_object",
+        "dependency": "lower_bound_object",
+        "dependencyType": "enabled",
         "label": "Lower bound",
         "property": None,
         "value": 0.0,
@@ -557,6 +568,8 @@ default_ui_json = {
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
             "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
+        "optional": True,
+        "enabled": False,
         "value": None,
     },
     "upper_bound": {
@@ -565,6 +578,8 @@ default_ui_json = {
         "group": "Regularization",
         "isValue": False,
         "parent": "upper_bound_object",
+        "parent": "upper_bound_object",
+        "dependency": "lower_bound_object",
         "label": "Upper bound",
         "property": None,
         "value": 0.0,
@@ -604,246 +619,248 @@ default_ui_json = {
 
 validations = {
     "title": {
-        "types": [str],
+        "types": [str, type(None)],
     },
     "forward_only": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
     "topography_object": {
-        "types": [str, UUID, Surface],
         "required": True,
+        "types": [str, UUID, Surface, Points, type(None)],
     },
     "topography": {
-        "types": [str, UUID, int, float, FloatData],
+        "types": [str, UUID, int, float, FloatData, type(None)],
     },
     "data_object": {
-        "types": [str, UUID, Points],
         "required": True,
+        "types": [str, UUID, Points, type(None)],
     },
-    "starting_model_object": {"types": [str, UUID, Octree], "required": True},
-    "starting_model": {"types": [str, UUID, int, float, FloatData], "required": True},
+    "starting_model_object": {"types": [str, UUID, Octree, type(None)]},
+    "starting_model": {
+        "required": True,
+        "types": [str, int, float, UUID, FloatData, type(None)],
+    },
     "tile_spatial": {
-        "types": [str, int, float, FloatData],
+        "types": [str, int, float, FloatData, type(None)],
     },
-    "z_from_topo": {"types": [bool]},
-    "receivers_radar_drape": {"types": [str, UUID]},
+    "z_from_topo": {"types": [bool, type(None)]},
+    "receivers_radar_drape": {"types": [str, UUID, type(None)]},
     "receivers_offset_x": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "receivers_offset_y": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "receivers_offset_z": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "gps_receivers_offset": {
-        "types": [int, float, str],
+        "types": [int, float, str, type(None)],
     },
     "ignore_values": {
-        "types": [str],
+        "types": [str, type(None)],
     },
     "resolution": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "detrend_order": {
-        "types": [int],
+        "types": [int, type(None)],
     },
     "detrend_type": {
+        "types": [str, type(None)],
         "values": ["all", "perimeter"],
     },
-    "max_chunk_size": {"types": [int, float]},
+    "max_chunk_size": {"types": [int, float, type(None)]},
     "chunk_by_rows": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
     "output_tile_files": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
     "mesh": {
-        "types": [str, UUID, Octree],
+        "types": [str, UUID, Octree, type(None)],
     },
     "u_cell_size": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "v_cell_size": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "w_cell_size": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "octree_levels_topo": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "octree_levels_obs": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "depth_core": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "max_distance": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "horizontal_padding": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "vertical_padding": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "window_center_x": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "window_center_y": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "window_width": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "window_height": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "window_azimuth": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "inversion_style": {
-        "types": [str],
         "values": ["voxel"],
     },
     "chi_factor": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "sens_wts_threshold": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "every_iteration_bool": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
     "f_min_change": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "minGNiter": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "beta_tol": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "prctile": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "coolingRate": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "coolEps_q": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
     "coolEpsFact": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "beta_search": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
     "starting_chi_factor": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "max_iterations": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "max_line_search_iterations": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "max_cg_iterations": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "max_global_iterations": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "initial_beta_ratio": {
-        "types": [float],
+        "types": [float, type(None)],
     },
     "provide_beta": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
     "initial_beta": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
-    "tol_cg": {"types": [int, float]},
+    "tol_cg": {"types": [int, float, type(None)]},
     "alpha_s": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "alpha_x": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "alpha_y": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "alpha_z": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "s_norm": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "x_norm": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "y_norm": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "z_norm": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "reference_model_object": {
-        "types": [str, UUID, Octree],
+        "types": [str, UUID, Octree, type(None)],
     },
     "reference_model": {
-        "types": [str, int, float, UUID, FloatData],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "gradient_type": {
-        "types": [str],
         "values": ["total", "components"],
     },
     "lower_bound_object": {
-        "types": [str, UUID, Octree],
+        "types": [str, UUID, Octree, type(None)],
     },
     "lower_bound": {
-        "types": [str, int, float, UUID, FloatData],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "upper_bound_object": {
-        "types": [str, UUID, Octree],
+        "types": [str, UUID, Octree, type(None)],
     },
     "upper_bound": {
-        "types": [str, int, float, UUID, FloatData],
+        "types": [str, int, float, UUID, FloatData, type(None)],
     },
     "parallelized": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
     "n_cpu": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "max_ram": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "no_data_value": {
-        "types": [int, float],
+        "types": [int, float, type(None)],
     },
     "monitoring_directory": {
-        "types": [str],
+        "types": [str, type(None)],
     },
     "workspace_geoh5": {
-        "types": [str],
+        "types": [str, Workspace, type(None)],
     },
     "geoh5": {
-        "types": [str, Workspace],
+        "types": [str, Workspace, type(None)],
     },
     "run_command": {
-        "types": [str],
+        "types": [str, type(None)],
     },
     "run_command_boolean": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
     "conda_environment": {
-        "types": [str],
+        "types": [str, type(None)],
     },
     "conda_environment_boolean": {
-        "types": [bool],
+        "types": [bool, type(None)],
     },
-    "out_group": {"types": [str, ContainerGroup]},
-    "distributed_workers": {"types": [str, bool]},
+    "out_group": {"types": [str, ContainerGroup, type(None)]},
+    "distributed_workers": {"types": [str, bool, type(None)]},
 }

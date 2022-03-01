@@ -13,19 +13,12 @@ from typing import Any
 from geoh5py.shared import Entity
 
 from ..params import Params
-from ..validators import InputFreeformValidator
-from .constants import (
-    default_ui_json,
-    defaults,
-    free_format_dict,
-    required_parameters,
-    validations,
-)
+from ..validation import InputFreeformValidation
+from .constants import default_ui_json, defaults, free_format_dict, validations
 
 
 class PeakFinderParams(Params):
 
-    _required_parameters = required_parameters
     _validations = validations
     _validators = None
     param_names = list(default_ui_json.keys())
@@ -81,14 +74,12 @@ class PeakFinderParams(Params):
         # Validate.
         if self.validate:
             self.geoh5 = params_dict["geoh5"]
-            self.associations = self.get_associations(params_dict)
-            self.validator: InputFreeformValidator = InputFreeformValidator(
-                required_parameters,
+            self.validator: InputFreeformValidation = InputFreeformValidation(
                 validations,
                 self.geoh5,
                 free_params_keys=self._free_param_keys,
             )
-            self.validator.validate_chunk(params_dict, self.associations)
+            self.validator.validate_data(params_dict)
 
         # Set params attributes from validated input.
         self.update(params_dict)

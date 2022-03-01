@@ -9,8 +9,6 @@ from uuid import UUID
 
 from geoh5py.workspace import Workspace
 
-required_parameters = []
-
 defaults = {
     "title": "Octree Mesh Creator",
     "geoh5": None,
@@ -206,8 +204,6 @@ free_format_dict = {
     },
 }
 
-required_parameters = ["objects"]
-
 validations = {
     "title": {
         "types": [str],
@@ -219,6 +215,7 @@ validations = {
         "types": [str, Workspace],
     },
     "objects": {
+        "required": True,
         "types": [str, UUID],
         "uuid": None,
     },

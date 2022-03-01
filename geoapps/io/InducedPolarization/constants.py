@@ -8,12 +8,11 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import FloatData
+from geoh5py.objects import Octree
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
-from geoapps.io.Inversion.constants import (
-    required_parameters as base_required_parameters,
-)
 from geoapps.io.Inversion.constants import validations as base_validations
 
 inversion_defaults = {
@@ -270,24 +269,25 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations ##################
 
-required_parameters = ["inversion_type", "conductivity_model"]
-required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
-        "types": [str],
+        "required": True,
         "values": ["induced polarization"],
     },
     "data_object": {"types": [UUID, PotentialElectrode]},
     "chargeability_channel_bool": {"types": [bool]},
     "chargeability_channel": {
-        "types": [str, UUID],
+        "types": [str, UUID, FloatData, type(None)],
     },
-    "chargeability_uncertainty": {"types": [str, int, float, UUID]},
+    "chargeability_uncertainty": {
+        "types": [str, int, float, UUID, FloatData, type(None)]
+    },
     "conductivity_model_object": {
-        "types": [str, UUID],
+        "types": [str, UUID, Octree],
     },
     "conductivity_model": {
-        "types": [str, UUID, int, float],
+        "required": True,
+        "types": [str, UUID, FloatData, int, float],
     },
 }
 

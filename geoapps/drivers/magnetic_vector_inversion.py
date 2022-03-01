@@ -7,7 +7,8 @@
 
 import sys
 
-from geoapps.io import InputFile
+from geoh5py.ui_json import InputFile
+
 from geoapps.io.MagneticVector import MagneticVectorParams
 
 from .base_inversion import InversionDriver
@@ -17,9 +18,9 @@ def start_inversion(filepath=None, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
     if filepath is None:
-        input_file = InputFile.from_dict(kwargs)
+        input_file = InputFile(data=kwargs)
     else:
-        input_file = InputFile(filepath)
+        input_file = InputFile.read_ui_json(filepath)
 
     params = MagneticVectorParams(input_file)
     driver = MagneticVectorDriver(params)

@@ -12,21 +12,18 @@ from uuid import UUID
 
 from geoapps.io.Inversion import InversionParams
 
-from ..validators import InputValidator
 from .constants import (
     default_ui_json,
     forward_defaults,
     forward_ui_json,
     inversion_defaults,
     inversion_ui_json,
-    required_parameters,
     validations,
 )
 
 
 class MagneticVectorParams(InversionParams):
 
-    _required_parameters = required_parameters
     _validations = validations
     _validators = None
     _forward_defaults = forward_defaults

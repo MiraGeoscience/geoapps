@@ -19,6 +19,7 @@ from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
 from geoh5py.shared import Entity
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import (
     Box,
@@ -43,7 +44,6 @@ from ipywidgets.widgets.widget_selection import TraitError
 from tqdm import tqdm
 
 from geoapps.base import BaseApplication
-from geoapps.io import InputFile
 from geoapps.io.PeakFinder import PeakFinderParams
 from geoapps.io.PeakFinder.constants import app_initializer, default_ui_json
 from geoapps.selection import LineOptions, ObjectDataSelection
