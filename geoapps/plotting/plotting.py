@@ -127,7 +127,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
         and getattr(data, "entity_type", None) is not None
         and getattr(data.entity_type, "color_map", None) is not None
     ):
-        new_cmap = data.entity_type.color_map.values
+        new_cmap = data.entity_type.color_map._values
         map_vals = new_cmap["Value"].copy()
         cmap = colors.ListedColormap(
             np.c_[
