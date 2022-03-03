@@ -356,7 +356,7 @@ class InversionModel:
                 values[~model] = np.nan
                 data_obj[0].values = values
 
-        self.workspace.finalize
+        self.workspace.finalize()
 
     def _get(self, name: str):
         """

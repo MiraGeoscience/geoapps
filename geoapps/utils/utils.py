@@ -244,7 +244,7 @@ def export_grid_2_geotiff(
         encode_type = gdal.GDT_Byte
         num_bands = 3
         if data.entity_type.color_map is not None:
-            cmap = data.entity_type.color_map.values
+            cmap = data.entity_type.color_map._values
             red = interp1d(
                 cmap["Value"], cmap["Red"], bounds_error=False, fill_value="extrapolate"
             )(values)
