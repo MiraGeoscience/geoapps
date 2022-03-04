@@ -93,7 +93,7 @@ class InversionApp(PlotSelection2D):
 
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
-            ifile = InputFile(ui_json)
+            ifile = InputFile.read_ui_json(ui_json)
             self.params = self._param_class(ifile, **kwargs)
         else:
             self.params = self._param_class(**app_initializer)
@@ -1096,6 +1096,8 @@ class InversionApp(PlotSelection2D):
                 self._reference_model_group.main,
             ]
 
+        self.params.validate = True
+
     def object_observer(self, _):
         """ """
         self.resolution.indices = None
@@ -1227,7 +1229,10 @@ class InversionApp(PlotSelection2D):
             try:
                 attr = getattr(self, key)
                 if isinstance(attr, Widget):
-                    setattr(self.params, key, attr.value)
+                    value = attr.value
+                    if isinstance(value, uuid.UUID):
+                        value = new_workspace.get_entity(value)[0]
+                    setattr(self.params, key, value)
                 else:
                     sub_keys = []
                     if isinstance(attr, (ModelOptions, TopographyOptions)):
@@ -1240,7 +1245,7 @@ class InversionApp(PlotSelection2D):
                         if isinstance(value, Widget):
                             value = value.value
                         if isinstance(value, uuid.UUID):
-                            value = str(value)
+                            value = new_workspace.get_entity(value)[0]
                         setattr(self.params, sub_key, value)
 
             except AttributeError:
@@ -1272,7 +1277,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m geoapps.drivers.{inversion_routine} "
-            + f'"{params.input_file.filepath}"'
+            + f'"{params.input_file.path_name}"'
         )
 
     def file_browser_change(self, _):

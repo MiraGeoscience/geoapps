@@ -9,7 +9,7 @@ from uuid import UUID
 
 from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Octree, Points, Surface
+from geoh5py.objects import Curve, Grid2D, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 
 default_ui_json = {
@@ -163,6 +163,7 @@ default_ui_json = {
         "dependency": "detrend_order",
         "dependencyType": "enabled",
         "enabled": False,
+        "optional": True,
         "label": "Detrend type",
         "value": "all",
     },
@@ -227,7 +228,7 @@ default_ui_json = {
         "dependency": "mesh",
         "dependencyType": "disabled",
         "label": "Octree levels topography",
-        "value": [16, 8, 4, 2],
+        "value": [0, 0, 4, 4],
     },
     "octree_levels_obs": {
         "group": "Mesh",
@@ -555,6 +556,7 @@ default_ui_json = {
         "dependencyType": "enabled",
         "label": "Lower bound",
         "property": None,
+        "optional": True,
         "value": 0.0,
     },
     "upper_bound_object": {
@@ -582,6 +584,7 @@ default_ui_json = {
         "dependency": "lower_bound_object",
         "label": "Upper bound",
         "property": None,
+        "optional": True,
         "value": 0.0,
     },
     "parallelized": {
@@ -597,7 +600,7 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "label": "Number of cpu",
-        "value": None,
+        "value": 1,
     },
     "max_ram": None,
     "no_data_value": None,
@@ -618,249 +621,9 @@ default_ui_json = {
 ######################## Validations ###########################
 
 validations = {
-    "title": {
-        "types": [str, type(None)],
-    },
-    "forward_only": {
-        "types": [bool, type(None)],
-    },
     "topography_object": {
         "required": True,
-        "types": [str, UUID, Surface, Points, type(None)],
+        "types": [str, UUID, Surface, Points, Grid2D, Curve],
     },
-    "topography": {
-        "types": [str, UUID, int, float, FloatData, type(None)],
-    },
-    "data_object": {
-        "required": True,
-        "types": [str, UUID, Points, type(None)],
-    },
-    "starting_model_object": {"types": [str, UUID, Octree, type(None)]},
-    "starting_model": {
-        "required": True,
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "tile_spatial": {
-        "types": [str, int, float, FloatData, type(None)],
-    },
-    "z_from_topo": {"types": [bool, type(None)]},
-    "receivers_radar_drape": {"types": [str, UUID, type(None)]},
-    "receivers_offset_x": {
-        "types": [int, float, type(None)],
-    },
-    "receivers_offset_y": {
-        "types": [int, float, type(None)],
-    },
-    "receivers_offset_z": {
-        "types": [int, float, type(None)],
-    },
-    "gps_receivers_offset": {
-        "types": [int, float, str, type(None)],
-    },
-    "ignore_values": {
-        "types": [str, type(None)],
-    },
-    "resolution": {
-        "types": [int, float, type(None)],
-    },
-    "detrend_order": {
-        "types": [int, type(None)],
-    },
-    "detrend_type": {
-        "types": [str, type(None)],
-        "values": ["all", "perimeter"],
-    },
-    "max_chunk_size": {"types": [int, float, type(None)]},
-    "chunk_by_rows": {
-        "types": [bool, type(None)],
-    },
-    "output_tile_files": {
-        "types": [bool, type(None)],
-    },
-    "mesh": {
-        "types": [str, UUID, Octree, type(None)],
-    },
-    "u_cell_size": {
-        "types": [int, float, type(None)],
-    },
-    "v_cell_size": {
-        "types": [int, float, type(None)],
-    },
-    "w_cell_size": {
-        "types": [int, float, type(None)],
-    },
-    "octree_levels_topo": {
-        "types": [int, float, type(None)],
-    },
-    "octree_levels_obs": {
-        "types": [int, float, type(None)],
-    },
-    "depth_core": {
-        "types": [int, float, type(None)],
-    },
-    "max_distance": {
-        "types": [int, float, type(None)],
-    },
-    "horizontal_padding": {
-        "types": [int, float, type(None)],
-    },
-    "vertical_padding": {
-        "types": [int, float, type(None)],
-    },
-    "window_center_x": {
-        "types": [int, float, type(None)],
-    },
-    "window_center_y": {
-        "types": [int, float, type(None)],
-    },
-    "window_width": {
-        "types": [int, float, type(None)],
-    },
-    "window_height": {
-        "types": [int, float, type(None)],
-    },
-    "window_azimuth": {
-        "types": [int, float, type(None)],
-    },
-    "inversion_style": {
-        "values": ["voxel"],
-    },
-    "chi_factor": {
-        "types": [int, float, type(None)],
-    },
-    "sens_wts_threshold": {
-        "types": [int, float, type(None)],
-    },
-    "every_iteration_bool": {
-        "types": [bool, type(None)],
-    },
-    "f_min_change": {
-        "types": [int, float, type(None)],
-    },
-    "minGNiter": {
-        "types": [int, float, type(None)],
-    },
-    "beta_tol": {
-        "types": [int, float, type(None)],
-    },
-    "prctile": {
-        "types": [int, float, type(None)],
-    },
-    "coolingRate": {
-        "types": [int, float, type(None)],
-    },
-    "coolEps_q": {
-        "types": [bool, type(None)],
-    },
-    "coolEpsFact": {
-        "types": [int, float, type(None)],
-    },
-    "beta_search": {
-        "types": [bool, type(None)],
-    },
-    "starting_chi_factor": {
-        "types": [int, float, type(None)],
-    },
-    "max_iterations": {
-        "types": [int, float, type(None)],
-    },
-    "max_line_search_iterations": {
-        "types": [int, float, type(None)],
-    },
-    "max_cg_iterations": {
-        "types": [int, float, type(None)],
-    },
-    "max_global_iterations": {
-        "types": [int, float, type(None)],
-    },
-    "initial_beta_ratio": {
-        "types": [float, type(None)],
-    },
-    "provide_beta": {
-        "types": [bool, type(None)],
-    },
-    "initial_beta": {
-        "types": [int, float, type(None)],
-    },
-    "tol_cg": {"types": [int, float, type(None)]},
-    "alpha_s": {
-        "types": [int, float, type(None)],
-    },
-    "alpha_x": {
-        "types": [int, float, type(None)],
-    },
-    "alpha_y": {
-        "types": [int, float, type(None)],
-    },
-    "alpha_z": {
-        "types": [int, float, type(None)],
-    },
-    "s_norm": {
-        "types": [int, float, type(None)],
-    },
-    "x_norm": {
-        "types": [int, float, type(None)],
-    },
-    "y_norm": {
-        "types": [int, float, type(None)],
-    },
-    "z_norm": {
-        "types": [int, float, type(None)],
-    },
-    "reference_model_object": {
-        "types": [str, UUID, Octree, type(None)],
-    },
-    "reference_model": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "gradient_type": {
-        "values": ["total", "components"],
-    },
-    "lower_bound_object": {
-        "types": [str, UUID, Octree, type(None)],
-    },
-    "lower_bound": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "upper_bound_object": {
-        "types": [str, UUID, Octree, type(None)],
-    },
-    "upper_bound": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "parallelized": {
-        "types": [bool, type(None)],
-    },
-    "n_cpu": {
-        "types": [int, float, type(None)],
-    },
-    "max_ram": {
-        "types": [int, float, type(None)],
-    },
-    "no_data_value": {
-        "types": [int, float, type(None)],
-    },
-    "monitoring_directory": {
-        "types": [str, type(None)],
-    },
-    "workspace_geoh5": {
-        "types": [str, Workspace, type(None)],
-    },
-    "geoh5": {
-        "types": [str, Workspace, type(None)],
-    },
-    "run_command": {
-        "types": [str, type(None)],
-    },
-    "run_command_boolean": {
-        "types": [bool, type(None)],
-    },
-    "conda_environment": {
-        "types": [str, type(None)],
-    },
-    "conda_environment_boolean": {
-        "types": [bool, type(None)],
-    },
-    "out_group": {"types": [str, ContainerGroup, type(None)]},
-    "distributed_workers": {"types": [str, bool, type(None)]},
+    "out_group": {"required": True, "types": [str, ContainerGroup]},
 }

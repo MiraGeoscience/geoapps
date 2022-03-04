@@ -47,7 +47,7 @@ inversion_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -135,7 +135,7 @@ forward_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -274,21 +274,7 @@ validations = {
         "required": True,
         "values": ["induced polarization"],
     },
-    "data_object": {"types": [UUID, PotentialElectrode]},
-    "chargeability_channel_bool": {"types": [bool]},
-    "chargeability_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "chargeability_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)]
-    },
-    "conductivity_model_object": {
-        "types": [str, UUID, Octree],
-    },
-    "conductivity_model": {
-        "required": True,
-        "types": [str, UUID, FloatData, int, float],
-    },
+    "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }
 
 validations = dict(base_validations, **validations)
@@ -304,13 +290,13 @@ app_initializer = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "resolution": 25,
+    "resolution": None,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
     "window_height": None,
     "window_azimuth": None,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 1200.0,
     "horizontal_padding": 1000.0,
@@ -323,8 +309,8 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0,
-    "receivers_offset_y": 0,
-    "receivers_offset_z": 0,
+    "receivers_offset_x": 0.0,
+    "receivers_offset_y": 0.0,
+    "receivers_offset_z": 0.0,
     "out_group": "InducedPolarizationInversion",
 }

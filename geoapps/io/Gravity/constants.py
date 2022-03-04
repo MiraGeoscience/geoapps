@@ -65,7 +65,7 @@ inversion_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -168,7 +168,7 @@ forward_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -551,78 +551,7 @@ validations = {
         "required": True,
         "values": ["gravity"],
     },
-    "data_object": {"types": [str, UUID, Points, Surface, Grid2D, type(None)]},
-    "gz_channel_bool": {"types": [bool, type(None)]},
-    "gz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "gz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "guv_channel_bool": {"types": [bool, type(None)]},
-    "guv_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "guv_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "gxy_channel_bool": {"types": [bool, type(None)]},
-    "gxy_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "gxy_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "gxx_channel_bool": {"types": [bool, type(None)]},
-    "gxx_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "gxx_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "gyy_channel_bool": {"types": [bool, type(None)]},
-    "gyy_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "gyy_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "gzz_channel_bool": {"types": [bool, type(None)]},
-    "gzz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "gzz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "gxz_channel_bool": {"types": [bool, type(None)]},
-    "gxz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "gxz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "gyz_channel_bool": {"types": [bool, type(None)]},
-    "gyz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "gyz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "gx_channel_bool": {"types": [bool, type(None)]},
-    "gx_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "gx_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "gy_channel_bool": {"types": [bool, type(None)]},
-    "gy_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "gy_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "out_group": {"types": [str, ContainerGroup, type(None)]},
+    "data_object": {"types": [str, UUID, Points, Surface, Grid2D]},
 }
 
 validations = dict(base_validations, **validations)
@@ -638,7 +567,7 @@ app_initializer = {
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
     "resolution": 50.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 1200.0,
     "horizontal_padding": 1000.0,

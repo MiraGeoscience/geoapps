@@ -12,6 +12,7 @@ from copy import deepcopy
 from typing import Any
 from uuid import UUID
 
+from geoh5py.groups import PropertyGroup
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile, InputValidation
 from geoh5py.workspace import Workspace
@@ -61,9 +62,7 @@ class Params:
     _monitoring_directory = None
     _free_param_keys: list = None
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
+    def __init__(self, input_file, default=True, validate=True, validator_opts={}):
 
         self.workpath = "."
         self.input_file = input_file
@@ -92,17 +91,10 @@ class Params:
             if key not in self.default_ui_json.keys():
                 continue  # ignores keys not in default_ui_json
 
-            if isinstance(value, dict):
-                field = "value"
-                if "isValue" in value.keys():
-                    if not value["isValue"]:
-                        field = "property"
-                setattr(self, key, value[field])
+            if isinstance(value, (Entity, PropertyGroup)):
+                setattr(self, key, value.uid)
             else:
-                if isinstance(value, Entity):
-                    setattr(self, key, value.uid)
-                else:
-                    setattr(self, key, value)
+                setattr(self, key, value)
 
         self.validate = original_validate_state
 
@@ -119,36 +111,16 @@ class Params:
         """Encoded parameter validator type and associated validations."""
         return self._validations
 
-    def to_dict(self, ui_json: dict = None, ui_json_format=True):
+    def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
+        params_dict = {
+            k: getattr(self, k) for k in self.param_names if hasattr(self, k)
+        }
         if ui_json_format:
-            if ui_json is None:
-                ui_json = deepcopy(self.default_ui_json)
+            self.input_file.data = params_dict
+            return self.input_file.ui_json
 
-            for k in self.param_names:
-                if k not in ui_json.keys() or not hasattr(self, k):
-                    continue
-                new_val = getattr(self, k)
-                if isinstance(ui_json[k], dict):
-                    field = "value"
-                    if "isValue" in ui_json[k].keys():
-                        if isinstance(new_val, UUID) or new_val is None:
-                            ui_json[k]["isValue"] = False
-                            field = "property"
-                        else:
-                            ui_json[k]["isValue"] = True
-
-                    if ui_json[k][field] != new_val:
-                        ui_json[k]["enabled"] = True
-                        ui_json[k][field] = new_val
-
-                else:
-                    ui_json[k] = new_val
-
-            return ui_json
-
-        else:
-            return {k: getattr(self, k) for k in self.param_names if hasattr(self, k)}
+        return params_dict
 
     def active_set(self):
         """Return list of parameters with non-null entries."""
@@ -261,7 +233,15 @@ class Params:
             return
 
         if self.validate:
-            self.validator.validate(key, value, self.validations[key])
+            if "association" in self.validations[key]:
+                validations = deepcopy(self.validations[key])
+                validations["association"] = getattr(
+                    self, self.validations[key]["association"]
+                )
+            else:
+                validations = self.validations[key]
+
+            self.validator.validate(key, value, validations)
         value = fun(value)
         setattr(self, f"_{key}", value)
 
@@ -273,23 +253,10 @@ class Params:
         path: str = None,
     ):
         """Write out a ui.json with the current state of parameters"""
-
-        if name is not None:
-            if ".ui.json" not in name:
-                name += ".ui.json"
-        else:
-            name = f"{self.__class__.__name__}.ui.json"
-
-        if ui_json is None:
-            ui_json = self.default_ui_json
-
         if default:
-            ifile = InputFile(ui_json=ui_json, validation_options={"disabled": True})
+            self.input_file.validation_options["disabled"] = True
+            self.input_file.data = self.defaults
         else:
-            ifile = InputFile(ui_json=self.to_dict(ui_json=ui_json))
+            self.input_file.data = self.to_dict()
 
-        if path is not None:
-            if not os.path.exists(path):
-                raise ValueError(f"Provided path {path} does not exist.")
-
-        ifile.write_ui_json(name=name, path=path)
+        self.input_file.write_ui_json(name=name, path=path)

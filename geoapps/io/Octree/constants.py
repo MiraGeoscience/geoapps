@@ -115,7 +115,7 @@ default_ui_json = {
         "enabled": True,
         "group": "refinement a",
         "label": "Levels",
-        "value": [16, 8, 4, 2],
+        "value": [0, 0, 4, 4],
     },
     "Refinement A type": {
         "choiceList": ["surface", "radial"],
@@ -145,7 +145,7 @@ default_ui_json = {
         "enabled": True,
         "group": "refinement b",
         "label": "Levels",
-        "value": [16, 8, 4, 2],
+        "value": [0, 0, 4, 4],
     },
     "Refinement B type": {
         "choiceList": ["surface", "radial"],
