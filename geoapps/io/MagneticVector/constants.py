@@ -9,6 +9,7 @@ from uuid import UUID
 
 from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Grid2D, Points, Surface
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.io.Inversion.constants import validations as base_validations
@@ -70,7 +71,7 @@ inversion_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -185,7 +186,7 @@ forward_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -565,6 +566,17 @@ default_ui_json = {
         "property": None,
         "value": 1.0,
     },
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Starting Model",
+        "main": True,
+        "isValue": False,
+        "parent": "starting_model_object",
+        "label": "Susceptibility (SI)",
+        "property": None,
+        "value": 0.0,
+    },
     "starting_inclination_object": {
         "group": "Starting Model",
         "main": True,
@@ -577,32 +589,8 @@ default_ui_json = {
             "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
         "label": "Starting inclination object",
+        "optional": True,
         "value": None,
-    },
-    "starting_declination_object": {
-        "group": "Starting Model",
-        "main": True,
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
-        ],
-        "label": "Starting declination object",
-        "value": None,
-    },
-    "starting_model": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Starting Model",
-        "main": True,
-        "isValue": False,
-        "parent": "starting_model_object",
-        "label": "Susceptibility (SI)",
-        "property": None,
-        "value": 0.0,
     },
     "starting_inclination": {
         "association": ["Cell", "Vertex"],
@@ -616,6 +604,21 @@ default_ui_json = {
         "label": "Inclination (degree from North)",
         "property": None,
         "value": 0.0,
+    },
+    "starting_declination_object": {
+        "group": "Starting Model",
+        "main": True,
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        ],
+        "label": "Starting declination object",
+        "optional": True,
+        "value": None,
     },
     "starting_declination": {
         "association": ["Cell", "Vertex"],
@@ -641,19 +644,7 @@ default_ui_json = {
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
             "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
-        "value": None,
-    },
-    "reference_declination_object": {
-        "group": "Regularization",
-        "label": "Reference declination object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
-        ],
+        "optional": True,
         "value": None,
     },
     "reference_inclination": {
@@ -667,6 +658,20 @@ default_ui_json = {
         "parent": "reference_inclination_object",
         "property": None,
         "value": 0.0,
+    },
+    "reference_declination_object": {
+        "group": "Regularization",
+        "label": "Reference declination object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        ],
+        "optional": True,
+        "value": None,
     },
     "reference_declination": {
         "association": ["Cell", "Vertex"],
@@ -692,115 +697,9 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["gravity", "magnetic scalar", "magnetic vector"],
+        "values": ["magnetic vector"],
     },
-    "inducing_field_strength": {
-        "required": True,
-        "types": [int, float],
-    },
-    "inducing_field_inclination": {
-        "required": True,
-        "types": [int, float],
-    },
-    "inducing_field_declination": {
-        "required": True,
-        "types": [int, float],
-    },
-    "tmi_channel_bool": {"types": [bool]},
-    "tmi_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "tmi_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bxx_channel_bool": {"types": [bool]},
-    "bxx_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bxx_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bxy_channel_bool": {"types": [bool]},
-    "bxy_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bxy_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bxz_channel_bool": {"types": [bool]},
-    "bxz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bxz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "byy_channel_bool": {"types": [bool]},
-    "byy_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "byy_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "byz_channel_bool": {"types": [bool]},
-    "byz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "byz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bzz_channel_bool": {"types": [bool]},
-    "bzz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bzz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bx_channel_bool": {"types": [bool]},
-    "bx_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bx_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "by_channel_bool": {"types": [bool]},
-    "by_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "by_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bz_channel_bool": {"types": [bool]},
-    "bz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "starting_inclination_object": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "starting_declination_object": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "starting_inclination": {
-        "types": [str, UUID, FloatData, int, float, type(None)],
-    },
-    "starting_declination": {
-        "types": [str, UUID, FloatData, int, float, type(None)],
-    },
-    "reference_inclination_object": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "reference_declination_object": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "reference_inclination": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "reference_declination": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "out_group": {"types": [str, ContainerGroup, type(None)]},
+    "data_object": {"required": True, "types": [str, UUID, Points, Surface, Grid2D]},
 }
 
 validations = dict(base_validations, **validations)
@@ -846,8 +745,8 @@ app_initializer = {
     "z_from_topo": True,
     "detrend_order": 0,
     "detrend_type": None,
-    "receivers_offset_x": 0,
-    "receivers_offset_y": 0,
-    "receivers_offset_z": 60,
+    "receivers_offset_x": 0.0,
+    "receivers_offset_y": 0.0,
+    "receivers_offset_z": 60.0,
     "out_group": "VectorInversion",
 }

@@ -7,8 +7,6 @@
 
 from __future__ import annotations
 
-import os
-from copy import deepcopy
 from uuid import UUID
 
 import numpy as np
@@ -26,7 +24,6 @@ class InversionParams(Params):
     def __init__(
         self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
     ):
-
         self.forward_only: bool = None
         self.topography_object: UUID = None
         self.topography: UUID | float = None
@@ -110,11 +107,11 @@ class InversionParams(Params):
         self.conda_environment: str = None
         self.conda_environment_boolean: bool = None
         self.distributed_workers = None
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
+        super().__init__(input_file, default, validate, validator_opts)
 
-        self._initialize(kwargs)
+        self._initialize(kwargs, validate)
 
-    def _initialize(self, params_dict):
+    def _initialize(self, params_dict, validate):
 
         # Collect params_dict from superposition of kwargs onto input_file.data
         # and determine forward_only state.
@@ -138,20 +135,25 @@ class InversionParams(Params):
         if self.default:
             params_dict = dict(self.defaults, **params_dict)
 
-        self.geoh5 = params_dict["geoh5"]
-        self.validator: InputValidation = InputValidation(
-            validators=self._validators,
-            validations=self._validations,
-            workspace=self.geoh5,
-            ui_json=self.default_ui_json,
-        )
+        params_dict = InputFile._numify(params_dict)
 
-        # Validate.
-        if self.validate:
-            self.validator.validate_data(self.promote(params_dict))
+        # Set data on inputfile
+        if self.input_file is None:
+            self.input_file = InputFile(
+                ui_json=self.default_ui_json,
+                data=params_dict,
+                validations=self.validations,
+                validation_options={"disabled": True},
+            )
+        else:
+            self.input_file.data = params_dict
 
-        # Set params attributes from validated input.
-        self.update(params_dict, validate=False)
+        self.validator = self.input_file.validators
+        self._validations = self.input_file.validations
+        self.update(self.input_file.data, validate=False)
+        # Turn validation back on
+        self.input_file.validation_options["disabled"] = False
+        self.validate = validate
 
     def promote(self, params_dict):
 
@@ -874,61 +876,3 @@ class InversionParams(Params):
     @distributed_workers.setter
     def distributed_workers(self, val):
         self.setter_validator("distributed_workers", val)
-
-    def write_input_file(
-        self,
-        ui_json: dict = None,
-        default: bool = False,
-        name: str = None,
-        path: str = None,
-    ):
-        """Write out a ui.json with the current state of parameters"""
-
-        if ui_json is None:
-            defaults = deepcopy(self.defaults)
-            ui_json = deepcopy(self.default_ui_json)
-            ui_json["geoh5"] = self.geoh5
-            self.title = defaults["title"]
-            self.run_command = defaults["run_command"]
-
-        if default:
-            for k, v in defaults.items():
-                if isinstance(ui_json[k], dict):
-                    key = "value"
-                    if "isValue" in ui_json[k].keys():
-                        if ui_json[k]["isValue"] == False:
-                            key = "property"
-                    ui_json[k][key] = v
-                else:
-                    ui_json[k] = v
-
-            ifile = InputFile(ui_json=ui_json, validation_options={"disabled": True})
-        else:
-            ifile = InputFile(ui_json=self.to_dict(ui_json=ui_json))
-
-        if name is not None:
-            if ".ui.json" not in name:
-                name += ".ui.json"
-        else:
-            name = f"{self.out_group}.ui.json"
-
-        if path is not None:
-            if not os.path.exists(path):
-                raise ValueError(f"Provided path {path} does not exist.")
-
-        none_map = {
-            "starting_chi_factor": 1.0,
-            "resolution": 0.0,
-            "detrend_order": 0,
-            "detrend_type": "all",
-            "initial_beta": 1.0,
-            "window_center_x": 0.0,
-            "window_center_y": 0.0,
-            "window_width": 0.0,
-            "window_height": 0.0,
-            "window_azimuth": 0.0,
-            "n_cpu": 1,
-        }
-
-        ifile.write_ui_json(name=name, path=path, none_map=none_map)
-        self._input_file = ifile

@@ -731,7 +731,7 @@ class InversionApp(PlotSelection2D):
             self.option_choices.options = list(self.inversion_options.keys())
 
         self.params = self._param_class(
-            validate=True, validator_opts={"ignore_requirements": True}
+            # validator_opts={"ignore_requirements": True}
         )
 
         if self.inversion_type.value in ["direct current"]:
@@ -1014,10 +1014,15 @@ class InversionApp(PlotSelection2D):
         self.params.geoh5 = new_workspace
 
         for key in self.__dict__:
+            if key == "resolution":
+                continue
             try:
                 attr = getattr(self, key)
                 if isinstance(attr, Widget):
-                    setattr(self.params, key, attr.value)
+                    value = attr.value
+                    if isinstance(value, uuid.UUID):
+                        value = new_workspace.get_entity(value)[0]
+                    setattr(self.params, key, value)
                 else:
                     sub_keys = []
                     if isinstance(attr, (ModelOptions, TopographyOptions)):
@@ -1030,7 +1035,7 @@ class InversionApp(PlotSelection2D):
                         if isinstance(value, Widget):
                             value = value.value
                         if isinstance(value, uuid.UUID):
-                            value = str(value)
+                            value = new_workspace.get_entity(value)[0]
                         setattr(self.params, sub_key, value)
 
             except AttributeError:
@@ -1054,7 +1059,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m geoapps.drivers.{inversion_routine} "
-            + f'"{params.input_file.filepath}"'
+            + f'"{params.input_file.path_name}"'
         )
 
     def file_browser_change(self, _):

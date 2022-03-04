@@ -9,6 +9,7 @@ from uuid import UUID
 
 from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Grid2D, Points, Surface
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.io.Inversion.constants import validations as base_validations
@@ -66,7 +67,7 @@ inversion_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -172,7 +173,7 @@ forward_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -576,89 +577,7 @@ validations = {
         "required": True,
         "values": ["magnetic scalar"],
     },
-    "inducing_field_strength": {
-        "required": True,
-        "types": [int, float],
-    },
-    "inducing_field_inclination": {
-        "required": True,
-        "types": [int, float],
-    },
-    "inducing_field_declination": {
-        "required": True,
-        "types": [int, float],
-    },
-    "tmi_channel_bool": {"types": [bool]},
-    "tmi_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "tmi_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bxx_channel_bool": {"types": [bool]},
-    "bxx_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bxx_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bxy_channel_bool": {"types": [bool]},
-    "bxy_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bxy_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bxz_channel_bool": {"types": [bool]},
-    "bxz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bxz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "byy_channel_bool": {"types": [bool]},
-    "byy_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "byy_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "byz_channel_bool": {"types": [bool]},
-    "byz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "byz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bzz_channel_bool": {"types": [bool]},
-    "bzz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bzz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bx_channel_bool": {"types": [bool]},
-    "bx_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bx_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "by_channel_bool": {"types": [bool]},
-    "by_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "by_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "bz_channel_bool": {"types": [bool]},
-    "bz_channel": {
-        "types": [str, UUID, FloatData, type(None)],
-    },
-    "bz_uncertainty": {
-        "types": [str, int, float, UUID, FloatData, type(None)],
-    },
-    "out_group": {"types": [str, ContainerGroup]},
+    "data_object": {"types": [str, UUID, Points, Surface, Grid2D]},
 }
 
 validations = dict(base_validations, **validations)
@@ -677,7 +596,7 @@ app_initializer = {
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
     "resolution": 50.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "horizontal_padding": 1000.0,
@@ -696,8 +615,8 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0,
-    "receivers_offset_y": 0,
-    "receivers_offset_z": 60,
+    "receivers_offset_x": 0.0,
+    "receivers_offset_y": 0.0,
+    "receivers_offset_z": 60.0,
     "out_group": "ScalarInversion",
 }

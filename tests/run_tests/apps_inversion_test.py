@@ -8,6 +8,7 @@
 from os import path
 from uuid import UUID
 
+from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
@@ -16,7 +17,6 @@ from geoapps.drivers.induced_polarization_inversion import InducedPolarizationPa
 from geoapps.drivers.magnetic_vector_inversion import MagneticVectorParams
 from geoapps.inversion.dcip_inversion_app import InversionApp as DCInversionApp
 from geoapps.inversion.pf_inversion_app import InversionApp as MagInversionApp
-from geoapps.io import InputFile
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -68,8 +68,8 @@ def test_mag_inversion(tmp_path):
         else:
             setattr(app, param, value)
 
-    app.write.click()
-    ifile = InputFile(app.params.input_file.filepath)
+    app.write_trigger(None)
+    ifile = InputFile.read_ui_json(app.params.input_file.path_name)
     params_reload = MagneticVectorParams(ifile)
     objs = params_reload.geoh5.list_entities_name
     check_objs = [
@@ -153,8 +153,8 @@ def test_dc_inversion(tmp_path):
         else:
             setattr(app, param, value)
 
-    app.write.click()
-    ifile = InputFile(app.params.input_file.filepath)
+    app.write_trigger(None)
+    ifile = InputFile.read_ui_json(app.params.input_file.path_name)
     params_reload = DirectCurrentParams(ifile)
 
     for param, value in changes.items():
@@ -232,7 +232,7 @@ def test_ip_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write.click()
-    ifile = InputFile(app.params.input_file.filepath)
+    ifile = InputFile.read_ui_json(app.params.input_file.path_name)
     params_reload = InducedPolarizationParams(ifile)
 
     for param, value in changes.items():
