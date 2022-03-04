@@ -15,14 +15,8 @@ from uuid import UUID
 from geoh5py.groups import PropertyGroup
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile, InputValidation
+from geoh5py.ui_json.constants import base_validations, default_ui_json, ui_validations
 from geoh5py.workspace import Workspace
-
-validations = {
-    "geoh5": {
-        "required": True,
-        "types": [str, Workspace],
-    },
-}
 
 
 class Params:
@@ -51,33 +45,106 @@ class Params:
 
     """
 
-    _geoh5: Workspace = None
     _validator: InputValidation = None
-    _ifile: InputFile = None
-    _run_command = None
-    _run_command_boolean = None
-    _conda_environment = None
-    _conda_environment_boolean = None
-    _title = None
+    _validations = base_validations
+    _input_file: InputFile = None
     _monitoring_directory = None
     _free_param_keys: list = None
+    _defaults = None
+    _ui_json = None
+    validate = True
 
-    def __init__(self, input_file, default=True, validate=True, validator_opts={}):
+    def __init__(
+        self,
+        input_file=None,
+        defaults=None,
+        ui_json=None,
+        validate=True,
+        validator_options={},
+        workpath=".",
+        **kwargs,
+    ):
+        self._monitoring_directory: str = None
+        self._workspace_geoh5: str = None
+        self._geoh5 = None
+        self._run_command: str = None
+        self._run_command_boolean: bool = None
+        self._conda_environment: str = None
+        self._conda_environment_boolean: bool = None
 
-        self.workpath = "."
+        self.workpath = workpath
         self.input_file = input_file
-        self.default = default
+        self.ui_json = ui_json
+        self.defaults = defaults
         self.validate = validate
-        self.validator_opts = validator_opts
-        self.geoh5 = None
+        self.validator_options = validator_options
+
+        self._initialize(kwargs)
+
+    def _initialize(self, **kwargs):
+        """Custom actions to initialize the class and deal with input values."""
+        # Set data on inputfile
+        if self.input_file is None:
+            self.input_file = InputFile(
+                ui_json=self.ui_json,
+                data=self.defaults,
+                validations=self.validations,
+                validation_options={"disabled": True},
+            )
+        self.update(self.input_file.data, validate=False)
+        self.param_names = list(self.input_file.data.keys())
+        self.input_file.validation_options["disabled"] = False
+
+        # Apply user input
+        if any(kwargs):
+            kwargs = InputFile.numify(kwargs)
+            self.update(kwargs)
+
+    @property
+    def defaults(self):
+        """
+        Dictionary of default parameters and values. Also used to reset the
+        order or the ui_json structure.
+        """
+        return self._defaults
+
+    @defaults.setter
+    def defaults(self, values: dict[str, Any] | None):
+        if not isinstance(values, (type(None), dict)):
+            raise ValueError("Input 'defaults' must be of type dict or None.")
+
+        if self._ui_json is not None:
+            for key in values:
+                if key not in self.default_ui_json:
+                    raise ValueError(
+                        f"Input 'defaults' contains unrecognized '{key}'  parameter "
+                        "that is not present in the default_ui_json."
+                    )
+
+        self._defaults = values
+
+    @property
+    def default_ui_json(self):
+        """The default ui_json structure"""
+        if getattr(self, "_default_ui_json", None) is None:
+            self.default_ui_json = deepcopy(default_ui_json)
+
+        return self._default_ui_json
+
+    @default_ui_json.setter
+    def default_ui_json(self, ui_json: dict[str, Any] | None):
+        if not isinstance(ui_json, (dict, type(None))):
+            raise ValueError("Input 'ui_json' must be of type dict.")
+
+        if self.defaults is not None:
+            ui_json = {k: ui_json[k] for k in self.defaults}
+
+        self._default_ui_json = InputFile.numify(params_dict)
 
     def update(self, params_dict: dict[str, Any], validate=True):
         """Update parameters with dictionary contents."""
-
         original_validate_state = self.validate
         self.validate = validate
-
-        # Pull out workspace data for validations and forward_only for defaults.
 
         if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
@@ -135,11 +202,22 @@ class Params:
             pass
 
     @property
+    def validations(self) -> dict[str, Any]:
+        if getattr(self, "_validations", None) is None:
+            self._validations = self.input_file.validations
+        return self._validations
+
+    @validations.setter
+    def validations(self, validations: dict[str, Any]):
+        assert isinstance(
+            validations, dict
+        ), f"Input value must be a dictionary of validations."
+        self._validations = validations
+
+    @property
     def validator(self) -> InputValidator:
         if getattr(self, "_validator", None) is None:
-            self._validator = InputValidation(
-                ui_json=self.default_ui_json, validations=validations
-            )
+            self._validator = self.input_file.validators
         return self._validator
 
     @validator.setter
@@ -214,6 +292,12 @@ class Params:
 
     @property
     def input_file(self):
+        if getattr(self, "_input_file", None) is None:
+            self.input_file = InputFile(
+                ui_json=self.default_ui_json,
+                validations=self.validations,
+                validator_options=self.validator_options,
+            )
         return self._input_file
 
     @input_file.setter
@@ -221,6 +305,8 @@ class Params:
         if ifile is None:
             self._input_file = None
             return
+        self.validator = self.input_file.validators
+        self.validations = self.input_file.validations
         self._input_file = ifile
 
     def _uuid_promoter(self, x):

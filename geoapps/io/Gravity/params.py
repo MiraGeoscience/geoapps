@@ -7,8 +7,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-
 from geoapps.io.Inversion import InversionParams
 
 from .constants import (
@@ -37,46 +35,41 @@ class GravityParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
+    def __init__(self, **kwargs):
+        self._inversion_type = "gravity"
+        self._gz_channel_bool = None
+        self._gz_channel = None
+        self._gz_uncertainty = None
+        self._guv_channel_bool = None
+        self._guv_channel = None
+        self._guv_uncertainty = None
+        self._gxy_channel_bool = None
+        self._gxy_channel = None
+        self._gxy_uncertainty = None
+        self._gxx_channel_bool = None
+        self._gxx_channel = None
+        self._gxx_uncertainty = None
+        self._gyy_channel_bool = None
+        self._gyy_channel = None
+        self._gyy_uncertainty = None
+        self._gzz_channel_bool = None
+        self._gzz_channel = None
+        self._gzz_uncertainty = None
+        self._gxz_channel_bool = None
+        self._gxz_channel = None
+        self._gxz_uncertainty = None
+        self._gyz_channel_bool = None
+        self._gyz_channel = None
+        self._gyz_uncertainty = None
+        self._gx_channel_bool = None
+        self._gx_channel = None
+        self._gx_uncertainty = None
+        self._gy_channel_bool = None
+        self._gy_channel = None
+        self._gy_uncertainty = None
+        self._out_group = None
 
-        self.validate = False
-        self.default_ui_json = deepcopy(default_ui_json)
-        self.inversion_type = "gravity"
-        self.gz_channel_bool = None
-        self.gz_channel = None
-        self.gz_uncertainty = None
-        self.guv_channel_bool = None
-        self.guv_channel = None
-        self.guv_uncertainty = None
-        self.gxy_channel_bool = None
-        self.gxy_channel = None
-        self.gxy_uncertainty = None
-        self.gxx_channel_bool = None
-        self.gxx_channel = None
-        self.gxx_uncertainty = None
-        self.gyy_channel_bool = None
-        self.gyy_channel = None
-        self.gyy_uncertainty = None
-        self.gzz_channel_bool = None
-        self.gzz_channel = None
-        self.gzz_uncertainty = None
-        self.gxz_channel_bool = None
-        self.gxz_channel = None
-        self.gxz_uncertainty = None
-        self.gyz_channel_bool = None
-        self.gyz_channel = None
-        self.gyz_uncertainty = None
-        self.gx_channel_bool = None
-        self.gx_channel = None
-        self.gx_uncertainty = None
-        self.gy_channel_bool = None
-        self.gy_channel = None
-        self.gy_uncertainty = None
-        self.out_group = None
-
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
+        super().__init__(**kwargs)
 
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
