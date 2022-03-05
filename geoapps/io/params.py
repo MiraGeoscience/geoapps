@@ -57,10 +57,10 @@ class Params:
     def __init__(
         self,
         input_file=None,
-        defaults=None,
+        data=None,
         ui_json=None,
         validate=True,
-        validator_options={},
+        validation_options={},
         workpath=".",
         **kwargs,
     ):
@@ -75,19 +75,19 @@ class Params:
         self.workpath = workpath
         self.input_file = input_file
         self.ui_json = ui_json
-        self.defaults = defaults
+        self.data = data
         self.validate = validate
-        self.validator_options = validator_options
+        self.validation_options = validation_options
 
-        self._initialize(kwargs)
+        self._initialize(**kwargs)
 
     def _initialize(self, **kwargs):
         """Custom actions to initialize the class and deal with input values."""
         # Set data on inputfile
-        if self.input_file is None:
+        if self._input_file is None:
             self.input_file = InputFile(
                 ui_json=self.ui_json,
-                data=self.defaults,
+                data=self.data,
                 validations=self.validations,
                 validation_options={"disabled": True},
             )
@@ -101,45 +101,42 @@ class Params:
             self.update(kwargs)
 
     @property
-    def defaults(self):
+    def data(self):
         """
         Dictionary of default parameters and values. Also used to reset the
         order or the ui_json structure.
         """
-        return self._defaults
+        return self._data
 
-    @defaults.setter
-    def defaults(self, values: dict[str, Any] | None):
+    @data.setter
+    def data(self, values: dict[str, Any] | None):
         if not isinstance(values, (type(None), dict)):
-            raise ValueError("Input 'defaults' must be of type dict or None.")
+            raise ValueError("Input 'data' must be of type dict or None.")
 
         if self._ui_json is not None:
             for key in values:
-                if key not in self.default_ui_json:
+                if key not in self._ui_json:
                     raise ValueError(
-                        f"Input 'defaults' contains unrecognized '{key}'  parameter "
+                        f"Input 'data' contains unrecognized '{key}'  parameter "
                         "that is not present in the default_ui_json."
                     )
 
-        self._defaults = values
+        self._data = values
 
     @property
-    def default_ui_json(self):
+    def ui_json(self):
         """The default ui_json structure"""
-        if getattr(self, "_default_ui_json", None) is None:
-            self.default_ui_json = deepcopy(default_ui_json)
+        if getattr(self, "_ui_json", None) is None:
+            self.ui_json = deepcopy(ui_json)
 
-        return self._default_ui_json
+        return self._ui_json
 
-    @default_ui_json.setter
-    def default_ui_json(self, ui_json: dict[str, Any] | None):
+    @ui_json.setter
+    def ui_json(self, ui_json: dict[str, Any] | None):
         if not isinstance(ui_json, (dict, type(None))):
             raise ValueError("Input 'ui_json' must be of type dict.")
 
-        if self.defaults is not None:
-            ui_json = {k: ui_json[k] for k in self.defaults}
-
-        self._default_ui_json = InputFile.numify(params_dict)
+        self._ui_json = InputFile.numify(ui_json)
 
     def update(self, params_dict: dict[str, Any], validate=True):
         """Update parameters with dictionary contents."""
@@ -155,7 +152,7 @@ class Params:
             if " " in key:
                 continue  # ignores grouped parameter names
 
-            if key not in self.default_ui_json.keys():
+            if key not in self.ui_json.keys():
                 continue  # ignores keys not in default_ui_json
 
             if isinstance(value, (Entity, PropertyGroup)):
@@ -291,22 +288,24 @@ class Params:
         self.setter_validator("title", val)
 
     @property
-    def input_file(self):
-        if getattr(self, "_input_file", None) is None:
-            self.input_file = InputFile(
-                ui_json=self.default_ui_json,
-                validations=self.validations,
-                validator_options=self.validator_options,
-            )
+    def input_file(self) -> InputFile | None:
+        """
+        An InputFile class holding the associated ui_json and validations.
+        """
         return self._input_file
 
     @input_file.setter
-    def input_file(self, ifile):
-        if ifile is None:
-            self._input_file = None
-            return
-        self.validator = self.input_file.validators
-        self.validations = self.input_file.validations
+    def input_file(self, ifile: InputFile | None):
+        if not isinstance(ifile, (type(None), InputFile)):
+            raise ValueError(
+                f"Value for 'input_file' must be {InputFile} or None. "
+                f"Provided {ifile} of type{type(ifile)}"
+            )
+
+        if ifile is not None:
+            self.validator = ifile.validators
+            self.validations = ifile.validations
+
         self._input_file = ifile
 
     def _uuid_promoter(self, x):
@@ -341,7 +340,7 @@ class Params:
         """Write out a ui.json with the current state of parameters"""
         if default:
             self.input_file.validation_options["disabled"] = True
-            self.input_file.data = self.defaults
+            self.input_file.data = self.data
         else:
             self.input_file.data = self.to_dict()
 

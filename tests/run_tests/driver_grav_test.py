@@ -49,7 +49,7 @@ def test_gravity_run(
     )
     model = geoh5.get_entity("model")[0]
     params = GravityParams(
-        forward_only=True,
+        forward_only=False,
         geoh5=geoh5,
         mesh=model.parent.uid,
         topography_object=geoh5.get_entity("topography")[0].uid,
