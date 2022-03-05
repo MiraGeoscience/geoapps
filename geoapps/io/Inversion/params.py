@@ -13,10 +13,10 @@ from uuid import UUID
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.ui_json import InputFile, InputValidation
-from geoh5py.ui_json.constants import default_ui_json
 from geoh5py.workspace import Workspace
 
 from ..params import Params
+from .constants import default_ui_json
 
 
 class InversionParams(Params):
@@ -102,14 +102,16 @@ class InversionParams(Params):
         self._out_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
-
         defaults = (
             self.forward_defaults if self.forward_only else self.inversion_defaults
         )
-        ui_json = deepcopy(default_ui_json).update(
+        ui_json = deepcopy(default_ui_json)
+        ui_json.update(
             self.forward_ui_json if self.forward_only else self.inversion_ui_json
         )
-        super().__init__(defaults=defaults, ui_json=ui_json, **kwargs)
+        ui_json = {k: ui_json[k] for k in defaults}  # Re-order using defaults
+
+        super().__init__(data=defaults, ui_json=ui_json, **kwargs)
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""

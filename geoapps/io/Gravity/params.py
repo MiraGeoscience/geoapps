@@ -25,8 +25,8 @@ class GravityParams(InversionParams):
     _validators = None
     _forward_defaults = forward_defaults
     _inversion_defaults = inversion_defaults
-    forward_ui_json = forward_ui_json
-    inversion_ui_json = inversion_ui_json
+    forward_ui_json = {**default_ui_json, **forward_ui_json}
+    inversion_ui_json = {**default_ui_json, **inversion_ui_json}
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
