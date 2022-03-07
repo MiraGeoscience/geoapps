@@ -16,16 +16,19 @@ from geoh5py.ui_json import InputFile, InputValidation
 from geoh5py.workspace import Workspace
 
 from ..params import Params
-from .constants import default_ui_json
 
 
 class InversionParams(Params):
-
-    _ga_group = None
-    _inversion_defaults = None
+    _directive_list = None
+    _default_ui_json = None
     _forward_defaults = None
+    _forward_ui_json = None
+    _inversion_defaults = None
+    _inversion_ui_json = None
+    _inversion_type = None
+    _ga_group = None
 
-    def __init__(self, forward_only=False, **kwargs):
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._forward_only: bool = forward_only
         self._topography_object: UUID = None
         self._topography: UUID | float = None
@@ -102,16 +105,24 @@ class InversionParams(Params):
         self._out_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
-        defaults = (
-            self.forward_defaults if self.forward_only else self.inversion_defaults
-        )
-        ui_json = deepcopy(default_ui_json)
-        ui_json.update(
-            self.forward_ui_json if self.forward_only else self.inversion_ui_json
-        )
-        ui_json = {k: ui_json[k] for k in defaults}  # Re-order using defaults
 
-        super().__init__(data=defaults, ui_json=ui_json, **kwargs)
+        if input_file is None:
+            defaults = (
+                self.forward_defaults if self.forward_only else self.inversion_defaults
+            )
+            ui_json = deepcopy(self._default_ui_json)
+            ui_json.update(
+                self._forward_ui_json if self.forward_only else self._inversion_ui_json
+            )
+            ui_json = {k: ui_json[k] for k in defaults}  # Re-order using defaults
+            input_file = InputFile(
+                ui_json=ui_json,
+                data=defaults,
+                validations=self.validations,
+                validation_options={"disabled": True},
+            )
+
+        super().__init__(input_file=input_file, **kwargs)
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""
@@ -325,6 +336,14 @@ class InversionParams(Params):
     @ignore_values.setter
     def ignore_values(self, val):
         self.setter_validator("ignore_values", val)
+
+    @property
+    def inversion_type(self):
+        return self._inversion_type
+
+    @inversion_type.setter
+    def inversion_type(self, val):
+        self.setter_validator("inversion_type", val)
 
     @property
     def resolution(self):

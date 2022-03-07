@@ -22,13 +22,6 @@ from .constants import (
 
 
 class DirectCurrentParams(InversionParams):
-
-    _validations = validations
-    _validators = None
-    _forward_defaults = forward_defaults
-    _inversion_defaults = inversion_defaults
-    forward_ui_json = forward_ui_json
-    inversion_ui_json = inversion_ui_json
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -36,20 +29,20 @@ class DirectCurrentParams(InversionParams):
         "UpdatePreconditioner",
         "SaveIterationsGeoH5",
     ]
+    _default_ui_json = deepcopy(default_ui_json)
+    _forward_defaults = forward_defaults
+    _forward_ui_json = forward_ui_json
+    _inversion_defaults = inversion_defaults
+    _inversion_ui_json = inversion_ui_json
+    _inversion_type = "direct current"
+    _validations = validations
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
-
-        self.validate = False
-        self.default_ui_json = deepcopy(default_ui_json)
-        self.inversion_type = "direct current"
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
         self.potential_channel_bool = None
         self.potential_channel = None
         self.potential_uncertainty = None
-        self.out_group = None
 
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
+        super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     @property
     def inversion_type(self):

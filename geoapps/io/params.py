@@ -21,16 +21,7 @@ from geoh5py.workspace import Workspace
 
 class Params:
     """
-    Stores input parameters to drive an inversion.
-
-    Attributes
-    ----------
-    geoh5 :
-        Path to geoh5 file results workspace object.
-    workpath :
-        Path to working directory.
-    validator :
-        Parameter validation class instance.
+    Stores input parameters to drive a ui.json application.
 
     Methods
     -------
@@ -45,20 +36,19 @@ class Params:
 
     """
 
-    _validator: InputValidation = None
-    _validations = base_validations
+    _defaults = None
+    _free_param_keys: list = None
     _input_file: InputFile = None
     _monitoring_directory = None
-    _free_param_keys: list = None
-    _defaults = None
     _ui_json = None
+    _input_file = None
+    _validations = None
+    _validator: InputValidation = None
     validate = True
 
     def __init__(
         self,
         input_file=None,
-        data=None,
-        ui_json=None,
         validate=True,
         validation_options={},
         workpath=".",
@@ -74,8 +64,6 @@ class Params:
 
         self.workpath = workpath
         self.input_file = input_file
-        self.ui_json = ui_json
-        self.data = data
         self.validate = validate
         self.validation_options = validation_options
 
@@ -86,8 +74,6 @@ class Params:
         # Set data on inputfile
         if self._input_file is None:
             self.input_file = InputFile(
-                ui_json=self.ui_json,
-                data=self.data,
                 validations=self.validations,
                 validation_options={"disabled": True},
             )
@@ -97,46 +83,29 @@ class Params:
 
         # Apply user input
         if any(kwargs):
-            kwargs = InputFile.numify(kwargs)
             self.update(kwargs)
 
     @property
     def data(self):
         """
-        Dictionary of default parameters and values. Also used to reset the
-        order or the ui_json structure.
+        Flat dictionary of parameters and values as stored on InputFile.
         """
-        return self._data
+        if getattr(self, "_input_file", None) is not None:
+            return self.input_file.data
+        return None
 
     @data.setter
     def data(self, values: dict[str, Any] | None):
-        if not isinstance(values, (type(None), dict)):
-            raise ValueError("Input 'data' must be of type dict or None.")
-
-        if self._ui_json is not None:
-            for key in values:
-                if key not in self._ui_json:
-                    raise ValueError(
-                        f"Input 'data' contains unrecognized '{key}'  parameter "
-                        "that is not present in the default_ui_json."
-                    )
-
-        self._data = values
+        if getattr(self, "_input_file", None) is not None:
+            self.input_file.data = values
 
     @property
     def ui_json(self):
-        """The default ui_json structure"""
-        if getattr(self, "_ui_json", None) is None:
-            self.ui_json = deepcopy(ui_json)
+        """The default ui_json structure stored on InputFile."""
+        if getattr(self, "_ui_json", None) is None and self.input_file is not None:
+            self._ui_json = self.input_file.ui_json
 
         return self._ui_json
-
-    @ui_json.setter
-    def ui_json(self, ui_json: dict[str, Any] | None):
-        if not isinstance(ui_json, (dict, type(None))):
-            raise ValueError("Input 'ui_json' must be of type dict.")
-
-        self._ui_json = InputFile.numify(ui_json)
 
     def update(self, params_dict: dict[str, Any], validate=True):
         """Update parameters with dictionary contents."""
@@ -146,7 +115,9 @@ class Params:
         if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
                 setattr(self, "geoh5", params_dict["geoh5"])
+                del params_dict["geoh5"]
 
+        params_dict = self.input_file._promote(self.input_file.numify(params_dict))
         for key, value in params_dict.items():
 
             if " " in key:
@@ -155,10 +126,7 @@ class Params:
             if key not in self.ui_json.keys():
                 continue  # ignores keys not in default_ui_json
 
-            if isinstance(value, (Entity, PropertyGroup)):
-                setattr(self, key, value.uid)
-            else:
-                setattr(self, key, value)
+            setattr(self, key, value)
 
         self.validate = original_validate_state
 
@@ -236,8 +204,7 @@ class Params:
         self.setter_validator(
             "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
         )
-
-        self.validator.geoh5 = self.geoh5
+        self.input_file.workspace = self.geoh5
 
     @property
     def run_command(self):

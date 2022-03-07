@@ -22,18 +22,13 @@ class OctreeParams(Params):
 
     _validations = validations
     _validators = None
+    _default_ui_json = deepcopy(default_ui_json)
     param_names = list(default_ui_json.keys())
     _free_param_keys = ["object", "levels", "type", "distance"]
     _free_param_identifier = "refinement"
     _free_param_dict = {}
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
-
-        self.validate = False
-        self.default_ui_json = deepcopy(default_ui_json)
-        self.title = None
+    def __init__(self, input_file=None, **kwargs):
         self.objects = None
         self.u_cell_size = None
         self.v_cell_size = None
@@ -43,7 +38,7 @@ class OctreeParams(Params):
         self.depth_core = None
         self.ga_group_name = None
 
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
+        super().__init__(input_file=input_file, **kwargs)
 
         self._initialize(kwargs)
 

@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 from geoapps.io.Inversion import InversionParams
 
 from .constants import (
@@ -20,13 +22,6 @@ from .constants import (
 
 
 class GravityParams(InversionParams):
-
-    _validations = validations
-    _validators = None
-    _forward_defaults = forward_defaults
-    _inversion_defaults = inversion_defaults
-    forward_ui_json = {**default_ui_json, **forward_ui_json}
-    inversion_ui_json = {**default_ui_json, **inversion_ui_json}
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -34,9 +29,15 @@ class GravityParams(InversionParams):
         "UpdatePreconditioner",
         "SaveIterationsGeoH5",
     ]
+    _default_ui_json = deepcopy(default_ui_json)
+    _forward_defaults = forward_defaults
+    _forward_ui_json = forward_ui_json
+    _inversion_defaults = inversion_defaults
+    _inversion_ui_json = inversion_ui_json
+    _inversion_type = "gravity"
+    _validations = validations
 
-    def __init__(self, **kwargs):
-        self._inversion_type = "gravity"
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._gz_channel_bool = None
         self._gz_channel = None
         self._gz_uncertainty = None
@@ -69,7 +70,7 @@ class GravityParams(InversionParams):
         self._gy_uncertainty = None
         self._out_group = None
 
-        super().__init__(**kwargs)
+        super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
@@ -78,14 +79,6 @@ class GravityParams(InversionParams):
             if len(comps) == 0:
                 comps = ["gz"]
         return comps
-
-    @property
-    def inversion_type(self):
-        return self._inversion_type
-
-    @inversion_type.setter
-    def inversion_type(self, val):
-        self.setter_validator("inversion_type", val)
 
     @property
     def gz_channel_bool(self):

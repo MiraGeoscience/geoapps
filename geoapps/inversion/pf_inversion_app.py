@@ -868,7 +868,7 @@ class InversionApp(PlotSelection2D):
             self._param_class = GravityParams
 
         self.params = self._param_class(validate=False, verbose=False)
-        self.ga_group_name.value = self.params.defaults["out_group"]
+        self.ga_group_name.value = self.params.data["out_group"]
 
         if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
             data_type_list = [
