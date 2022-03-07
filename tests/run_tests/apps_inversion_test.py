@@ -8,6 +8,7 @@
 from os import path
 from uuid import UUID
 
+from geoh5py.shared import Entity
 from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
@@ -82,13 +83,15 @@ def test_mag_inversion(tmp_path):
         assert o in objs.keys()
 
     for param, value in changes.items():
-        assert (
-            getattr(params_reload, param) == value
-        ), f"Parameter {param} not saved and loaded correctly."
+        p_value = getattr(params_reload, param)
+        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
+        assert p_value == value, f"Parameter {param} not saved and loaded correctly."
 
     for param, value in side_effects.items():
+        p_value = getattr(params_reload, param)
+        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
         assert (
-            getattr(params_reload, param) == value
+            p_value == value
         ), f"Side effect parameter {param} not saved and loaded correctly."
 
     # Test the groups
