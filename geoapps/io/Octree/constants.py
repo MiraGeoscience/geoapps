@@ -14,21 +14,13 @@ defaults = {
     "title": "Octree Mesh Creator",
     "geoh5": None,
     "objects": None,
-    "u_cell_size": 25,
-    "v_cell_size": 25,
-    "w_cell_size": 25,
+    "u_cell_size": 25.0,
+    "v_cell_size": 25.0,
+    "w_cell_size": 25.0,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
     "depth_core": 500.0,
     "ga_group_name": "Octree_Mesh",
-    "Refinement A object": None,
-    "Refinement A levels": [16, 8, 4, 2],
-    "Refinement A type": "surface",
-    "Refinement A distance": 5000.0,
-    "Refinement B object": None,
-    "Refinement B levels": [16, 8, 4, 2],
-    "Refinement B type": "surface",
-    "Refinement B distance": 5000.0,
     "run_command": ("geoapps.create.octree_mesh"),
     "run_command_boolean": False,
     "monitoring_directory": None,
@@ -36,7 +28,7 @@ defaults = {
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
 }
-
+validations = {}
 default_ui_json = {
     "title": "Octree Mesh Creator",
     "geoh5": None,
@@ -57,21 +49,21 @@ default_ui_json = {
         "group": "2- Core cell size",
         "label": "Easting (m)",
         "main": True,
-        "value": 25,
+        "value": 25.0,
     },
     "v_cell_size": {
         "enabled": True,
         "group": "2- Core cell size",
         "label": "Northing (m)",
         "main": True,
-        "value": 25,
+        "value": 25.0,
     },
     "w_cell_size": {
         "enabled": True,
         "group": "2- Core cell size",
         "label": "Vertical (m)",
         "main": True,
-        "value": 25,
+        "value": 25.0,
     },
     "horizontal_padding": {
         "enabled": True,
@@ -100,66 +92,6 @@ default_ui_json = {
         "label": "Name:",
         "value": "Octree_Mesh",
     },
-    "Refinement A object": {
-        "enabled": True,
-        "group": "refinement a",
-        "label": "Object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-        ],
-        "value": None,
-    },
-    "Refinement A levels": {
-        "enabled": True,
-        "group": "refinement a",
-        "label": "Levels",
-        "value": [0, 0, 4, 4],
-    },
-    "Refinement A type": {
-        "choiceList": ["surface", "radial"],
-        "enabled": True,
-        "group": "refinement a",
-        "label": "Type",
-        "value": "surface",
-    },
-    "Refinement A distance": {
-        "enabled": True,
-        "group": "refinement a",
-        "label": "Distance",
-        "value": 5000.0,
-    },
-    "Refinement B object": {
-        "enabled": True,
-        "group": "refinement b",
-        "label": "Object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-        ],
-        "value": None,
-    },
-    "Refinement B levels": {
-        "enabled": True,
-        "group": "refinement b",
-        "label": "Levels",
-        "value": [0, 0, 4, 4],
-    },
-    "Refinement B type": {
-        "choiceList": ["surface", "radial"],
-        "enabled": True,
-        "group": "refinement b",
-        "label": "Type",
-        "value": "surface",
-    },
-    "Refinement B distance": {
-        "enabled": True,
-        "group": "refinement b",
-        "label": "Distance",
-        "value": 5000.0,
-    },
     "run_command": ("geoapps.create.octree_mesh"),
     "run_command_boolean": {
         "value": False,
@@ -172,8 +104,9 @@ default_ui_json = {
     "conda_environment_boolean": False,
 }
 
-free_format_dict = {
-    "Template Object": {
+template_dict = {
+    "object": {
+        "groupOptional": True,
         "enabled": True,
         "group": "Refinement A",
         "label": "Object",
@@ -184,91 +117,24 @@ free_format_dict = {
         ],
         "value": None,
     },
-    "Template Levels": {
+    "levels": {
         "enabled": True,
         "group": "Refinement A",
         "label": "Levels",
         "value": "4,4,4",
     },
-    "Template Type": {
+    "type": {
         "choiceList": ["surface", "radial"],
         "enabled": True,
         "group": "Refinement A",
         "label": "Type",
         "value": "radial",
     },
-    "Template Distance": {
+    "distance": {
         "enabled": True,
         "group": "Refinement A",
         "label": "Distance",
         "value": 1000.0,
-    },
-}
-
-validations = {
-    "title": {
-        "types": [str],
-    },
-    "workspace_geoh5": {
-        "types": [str],
-    },
-    "geoh5": {
-        "types": [str, Workspace],
-    },
-    "objects": {
-        "required": True,
-        "types": [str, UUID, Curve],
-        "uuid": None,
-    },
-    "u_cell_size": {
-        "types": [int, float],
-    },
-    "v_cell_size": {
-        "types": [int, float],
-    },
-    "w_cell_size": {
-        "types": [int, float],
-    },
-    "horizontal_padding": {
-        "types": [int, float],
-    },
-    "vertical_padding": {
-        "types": [int, float],
-    },
-    "depth_core": {
-        "types": [int, float],
-    },
-    "template_object": {
-        "types": [str, UUID],
-        "uuid": None,
-    },
-    "template_levels": {
-        "types": [int, float],
-    },
-    "template_type": {
-        "types": [str],
-        "values": ["surface", "radial"],
-    },
-    "template_distance": {
-        "types": [int, float],
-    },
-    "ga_group_name": {
-        "types": [str],
-    },
-    "run_command": {
-        "types": [str],
-    },
-    "run_command_boolean": {
-        "types": [bool],
-    },
-    "monitoring_directory": {
-        "types": [str],
-    },
-    "conda_environment": {
-        "types": [str],
-    },
-    "conda_environment_boolean": {
-        "types": [bool],
     },
 }
 
@@ -278,9 +144,9 @@ app_initializer = {
     "Refinement A object": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A levels": [4.0, 4.0, 4.0],
     "Refinement A type": "radial",
-    "Refinement A distance": 1000,
+    "Refinement A distance": 1000.0,
     "Refinement B object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "Refinement B levels": [16.0, 8.0, 4.0],
     "Refinement B type": "surface",
-    "Refinement B distance": 1200,
+    "Refinement B distance": 1200.0,
 }

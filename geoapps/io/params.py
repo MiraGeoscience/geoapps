@@ -37,6 +37,7 @@ class Params:
     """
 
     _defaults = None
+    _default_ui_json = None
     _free_param_keys: list = None
     _input_file: InputFile = None
     _monitoring_directory = None
@@ -74,6 +75,8 @@ class Params:
         # Set data on inputfile
         if self._input_file is None:
             self.input_file = InputFile(
+                ui_json=self._default_ui_json,
+                data=self._defaults,
                 validations=self.validations,
                 validation_options={"disabled": True},
             )
@@ -117,12 +120,8 @@ class Params:
                 setattr(self, "geoh5", params_dict["geoh5"])
                 del params_dict["geoh5"]
 
-        params_dict = self.input_file._promote(self.input_file.numify(params_dict))
+        params_dict = self.input_file.numify(params_dict)
         for key, value in params_dict.items():
-
-            if " " in key:
-                continue  # ignores grouped parameter names
-
             if key not in self.ui_json.keys():
                 continue  # ignores keys not in default_ui_json
 
@@ -287,9 +286,10 @@ class Params:
         if self.validate:
             if "association" in self.validations[key]:
                 validations = deepcopy(self.validations[key])
-                validations["association"] = getattr(
-                    self, self.validations[key]["association"]
-                )
+                parent = getattr(self, self.validations[key]["association"])
+                if isinstance(parent, UUID):
+                    parent = self.geoh5.get_entity(parent)[0]
+                validations["association"] = parent
             else:
                 validations = self.validations[key]
 

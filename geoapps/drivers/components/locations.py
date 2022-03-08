@@ -14,10 +14,10 @@ if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.io.params import Params
 
-from uuid import UUID
 
 import numpy as np
 from geoh5py.objects import Grid2D, Points, PotentialElectrode
+from geoh5py.shared import Entity
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
@@ -184,8 +184,8 @@ class InversionLocations:
 
         topo = self.get_locations(self.params.topography_object)
         if self.params.topography is not None:
-            if isinstance(self.params.topography, UUID):
-                z = self.workspace.get_entity(self.params.topography)[0].values
+            if isinstance(self.params.topography, Entity):
+                z = self.params.topography.values
             else:
                 z = np.ones_like(topo[:, 2]) * self.params.topography
 

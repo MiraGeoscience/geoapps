@@ -370,12 +370,9 @@ class InversionModel:
 
         if hasattr(self.params, name):
             model = getattr(self.params, name)
-            if isinstance(model, UUID):
-                model = self._get_object(model)
-            else:
-                if "reference" in name:
-                    if model is None:
-                        model = self._get_value(0)
+            if not isinstance(model, Entity):
+                if "reference" in name and model is None:
+                    model = self._get_value(0)
                 model = self._get_value(model)
         else:
             model = None
