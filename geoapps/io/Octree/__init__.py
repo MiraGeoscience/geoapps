@@ -10,7 +10,7 @@ from .constants import (
     app_initializer,
     default_ui_json,
     defaults,
-    free_format_dict,
+    template_dict,
     validations,
 )
 from .params import OctreeParams

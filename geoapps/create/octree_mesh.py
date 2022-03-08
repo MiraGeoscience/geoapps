@@ -8,7 +8,6 @@
 import os
 import sys
 import uuid
-from copy import deepcopy
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
@@ -86,8 +85,8 @@ class OctreeMesh(ObjectDataSelection):
         super().__populate__(**kwargs)
 
         refinement_list = []
-        for label, params in self.params._free_param_dict.items():
-            refinement_list += [self.add_refinement_widget(label, params)]
+        for label in self.params._free_param_dict:
+            refinement_list += [self.add_refinement_widget(label)]
 
         self.refinement_list.children = refinement_list
 
@@ -220,56 +219,61 @@ class OctreeMesh(ObjectDataSelection):
             obj.copy(parent=new_workspace, copy_children=True)
 
         param_dict = {}
+
         for key, value in self.__dict__.items():
             try:
-                if isinstance(getattr(self, key), Widget):
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
                     obj_uid = getattr(self, key).value
-                    key_split = key.split()
-                    if key_split[0].lower() in self.params._free_param_identifier:
-                        key_split[-1] = key_split[-1].lower()
-                        key = " ".join(key_split)
+                    # key_split = key.split()
+                    # if key_split[0].lower() in self.params._free_param_identifier:
+                    #     key_split[-1] = key_split[-1].lower()
+                    #     key = " ".join(key_split)
+                    if key[0] == "_":
+                        key = key[1:]
+
                     param_dict[key] = obj_uid
 
                     if not isinstance(obj_uid, uuid.UUID):
                         continue
 
-                    obj = self.params.geoh5.get_entity(obj_uid)[0]
-                    if (
-                        isinstance(obj, ObjectBase)
-                        and new_workspace.get_entity(obj_uid) is None
-                    ):
+                    obj = self.params.input_file.workspace.get_entity(obj_uid)[0]
+                    new_obj = new_workspace.get_entity(obj_uid)
+                    if isinstance(obj, ObjectBase) and (None in new_obj or not new_obj):
                         obj.copy(parent=new_workspace, copy_children=True)
+
             except AttributeError:
                 continue
 
-        self.params._free_param_dict = {}
-        for group, refinement in zip("ABCDFEGH", self.refinement_list.children):
-            self.params._free_param_dict[refinement.children[0].value] = {
-                "object": refinement.children[1].value,
-                "levels": string_2_list(refinement.children[2].value),
-                "type": refinement.children[3].value,
-                "distance": refinement.children[4].value,
-            }
+        # self.params._free_param_dict = {}
+        # for group, refinement in zip("ABCDFEGH", self.refinement_list.children):
+        #     self.params._free_param_dict[refinement.children[0].value] = {
+        #         "object": refinement.children[1].value,
+        #         "levels": string_2_list(refinement.children[2].value),
+        #         "type": refinement.children[3].value,
+        #         "distance": refinement.children[4].value,
+        #     }
+        #
+        #     if not isinstance(refinement.children[1].value, uuid.UUID):
+        #         continue
+        #
+        #     obj = self.params.geoh5.get_entity(refinement.children[1].value)[0]
+        #     if (
+        #         isinstance(obj, ObjectBase)
+        #         and new_workspace.get_entity(refinement.children[1].value)[0] is None
+        #     ):
+        #         obj.copy(parent=new_workspace, copy_children=True)
 
-            if not isinstance(refinement.children[1].value, uuid.UUID):
-                continue
+        # ifile = InputFile.from_dict(param_dict)
+        param_dict["geoh5"] = new_workspace
+        self.params.update(param_dict)
+        self.params.write_input_file()
+        # self.params.update(ifile.data)
 
-            obj = self.params.geoh5.get_entity(refinement.children[1].value)[0]
-            if (
-                isinstance(obj, ObjectBase)
-                and new_workspace.get_entity(refinement.children[1].value)[0] is None
-            ):
-                obj.copy(parent=new_workspace, copy_children=True)
-
-        ifile = InputFile.from_dict(param_dict)
-        self.params.update(ifile.data)
-        self.params.geoh5 = new_workspace
-
-        ui_json = deepcopy(default_ui_json)
-        self.params.write_input_file(
-            ui_json=ui_json,
-            name=new_workspace_path + ".ui.json",
-        )
+        # ui_json = deepcopy(default_ui_json)
+        # self.params.write_input_file(
+        #     ui_json=ui_json,
+        #     name=new_workspace_path + ".ui.json",
+        # )
         self.run(self.params)
 
     @staticmethod
@@ -351,14 +355,14 @@ class OctreeMesh(ObjectDataSelection):
         assert octree.workspace is not None
         return octree
 
-    def add_refinement_widget(self, label: str, params: dict):
+    def add_refinement_widget(self, label: str):
         """
         Add a refinement from dictionary
         """
-        widget_list = [Label(label.title())]
-        for key, value in params.items():
-            attr_name = (label + f" {key}").title()
-
+        widget_list = [Label(label)]
+        for key in self.params._free_param_keys:
+            attr_name = label + f" {key}"
+            value = getattr(self.params, attr_name)
             if "object" in key:
                 setattr(
                     self,
