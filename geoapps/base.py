@@ -10,7 +10,7 @@ from __future__ import annotations
 import time
 import types
 import uuid
-from os import mkdir, path
+from os import makedirs, mkdir, path
 from shutil import copyfile, move
 
 from geoh5py.groups import ContainerGroup
@@ -302,6 +302,35 @@ class BaseApplication:
             self.h5file = value
         else:
             raise ValueError
+
+    def get_output_workspace(self, workpath: str = "./", name: str = "Temp.geoh5"):
+        """
+        Create an active workspace with check for GA monitoring directory
+        """
+        if not name.endswith(".geoh5"):
+            name += ".geoh5"
+
+        workspace = Workspace(path.join(workpath, name))
+        live_link = False
+        time.sleep(1)
+        # Check if GA digested the file already
+        if not path.exists(workspace.h5file):
+            workpath = path.join(workpath, ".working")
+            if not path.exists(workpath):
+                makedirs(workpath)
+            workspace = Workspace(path.join(workpath, name))
+            live_link = True
+            if not self.live_link.value:
+                print(
+                    "ANALYST Pro active live link found. Switching to monitoring directory..."
+                )
+        elif self.live_link.value:
+            print(
+                "ANALYST Pro 'monitoring directory' inactive. Reverting to standalone mode..."
+            )
+
+        self.live_link.value = live_link
+        return workspace
 
     @property
     def h5file(self):
