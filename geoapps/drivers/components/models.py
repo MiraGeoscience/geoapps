@@ -10,6 +10,7 @@ from uuid import UUID
 
 import numpy as np
 from geoh5py.data import Data
+from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from SimPEG.utils.mat_utils import (
     cartesian2amplitude_dip_azimuth,

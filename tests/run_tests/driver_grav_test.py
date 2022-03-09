@@ -49,7 +49,7 @@ def test_gravity_run(
     )
     model = geoh5.get_entity("model")[0]
     params = GravityParams(
-        forward_only=False,
+        forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
         topography_object=geoh5.get_entity("topography")[0].uid,
@@ -59,7 +59,6 @@ def test_gravity_run(
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
-    params.workpath = tmp_path
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
