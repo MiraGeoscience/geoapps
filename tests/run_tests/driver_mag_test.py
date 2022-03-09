@@ -20,8 +20,8 @@ from geoapps.utils.testing import setup_inversion_workspace
 
 target_susceptibility_run = {
     "data_norm": 11.707134,
-    "phi_d": 1.769,
-    "phi_m": 6.514e-5,
+    "phi_d": 1.556,
+    "phi_m": 8.932e-6,
 }
 
 
@@ -67,7 +67,7 @@ def test_susceptibility_run(
     fwr_driver = MagneticScalarDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
-    tmi = geoh5.get_entity("Predicted_tmi")[0]
+    tmi = geoh5.get_entity("Iteration_0_tmi")[0]
     # Run the inverse
     np.random.seed(0)
     params = MagneticScalarParams(
@@ -123,8 +123,8 @@ def test_susceptibility_run(
 
 target_magnetic_vector_run = {
     "data_norm": 8.943476,
-    "phi_d": 0.02071,
-    "phi_m": 3.527e-5,
+    "phi_d": 0.006804,
+    "phi_m": 4.679e-6,
 }
 
 
@@ -169,7 +169,7 @@ def test_magnetic_vector_run(
     fwr_driver = MagneticVectorDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
-    tmi = geoh5.get_entity("Predicted_tmi")[0]
+    tmi = geoh5.get_entity("Iteration_0_tmi")[0]
     # Run the inverse
     params = MagneticVectorParams(
         geoh5=geoh5,
@@ -214,7 +214,7 @@ def test_magnetic_vector_run(
             decimal=3,
         )
 
-        nan_ind = np.isnan(run_ws.get_entity("Iteration_0_amplitude")[0].values)
+        nan_ind = np.isnan(run_ws.get_entity("Iteration_0_amplitude_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
     else:

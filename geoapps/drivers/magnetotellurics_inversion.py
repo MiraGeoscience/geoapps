@@ -10,24 +10,24 @@ import sys
 from geoh5py.ui_json import InputFile
 
 from geoapps.drivers.base_inversion import InversionDriver
-from geoapps.io.MagneticVector import MagneticVectorParams
+from geoapps.io.magnetotellurics import MagnetotelluricsParams
 
 
-def start_inversion(filepath=None, **kwargs):
+def start_inversion(filepath=None, warmstart=True, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
     input_file = None
     if filepath is not None:
         input_file = InputFile.read_ui_json(filepath)
 
-    params = MagneticVectorParams(input_file=input_file, **kwargs)
-    driver = MagneticVectorDriver(params)
+    params = MagnetotelluricsParams(input_file=input_file, **kwargs)
+    driver = MagnetotelluricsDriver(params, warmstart=warmstart)
     driver.run()
 
 
-class MagneticVectorDriver(InversionDriver):
-    def __init__(self, params: MagneticVectorParams):
-        super().__init__(params)
+class MagnetotelluricsDriver(InversionDriver):
+    def __init__(self, params: MagnetotelluricsParams, warmstart=True):
+        super().__init__(params, warmstart=warmstart)
 
     def run(self):
         super().run()
@@ -35,4 +35,5 @@ class MagneticVectorDriver(InversionDriver):
 
 if __name__ == "__main__":
     filepath = sys.argv[1]
+    # filepath = r"C:\Users\dominiquef\Desktop\lblock_inversion_v7.ui.json"
     start_inversion(filepath)
