@@ -18,15 +18,11 @@ from . import default_ui_json, defaults, template_dict, validations
 
 
 class OctreeParams(Params):
-
-    _validations = validations
-    _validators = None
     _default_ui_json = deepcopy(default_ui_json)
     _defaults = deepcopy(defaults)
-    param_names = list(default_ui_json.keys())
-    _free_param_keys = ["object", "levels", "type", "distance"]
-    _free_param_identifier = "refinement"
-    _free_param_dict = {}
+    _free_parameter_keys = ["object", "levels", "type", "distance"]
+    _free_parameter_identifier = "refinement"
+    _validations = validations
 
     def __init__(self, input_file=None, **kwargs):
         self._objects = None
@@ -39,23 +35,21 @@ class OctreeParams(Params):
         self._ga_group_name = None
 
         if input_file is None:
-            ui_json = deepcopy(self._default_ui_json)
-            self._free_param_dict = {}
+            free_param_dict = {}
             for key, value in kwargs.items():
                 if (
-                    self._free_param_identifier in key.lower()
+                    self._free_parameter_identifier in key.lower()
                     and "object" in key.lower()
                 ):
                     group = key.replace("object", "").rstrip()
-                    self._free_param_dict[group] = deepcopy(template_dict)
-            # At least add two refinements
-            if len(self._free_param_dict) == 0:
-                for key in ["A", "B"]:
-                    self._free_param_dict["Refinenement " + key] = deepcopy(
-                        template_dict
-                    )
+                    free_param_dict[group] = deepcopy(template_dict)
 
-            for group, forms in self._free_param_dict.items():
+            # Add at least one refinements
+            if len(free_param_dict) == 0:
+                free_param_dict["Refinenement A"] = deepcopy(template_dict)
+
+            ui_json = deepcopy(self._default_ui_json)
+            for group, forms in free_param_dict.items():
                 for key, form in forms.items():
                     form["group"] = group
                     ui_json[f"{group} {key}"] = form
@@ -141,48 +135,3 @@ class OctreeParams(Params):
     @ga_group_name.setter
     def ga_group_name(self, val):
         self.setter_validator("ga_group_name", val)
-
-    # def update(self, params_dict: Dict[str, Any]):
-    #     """Update parameters with dictionary contents."""
-    #
-    #     # Pull out workspace data for validations and forward_only for defaults.
-    #     if "geoh5" in params_dict.keys():
-    #         if params_dict["geoh5"] is not None:
-    #             setattr(self, "geoh5", params_dict["geoh5"])
-    #
-    #     free_param_dict = {}
-    #     for key, value in params_dict.items():
-    #
-    #         if "Template" in key:
-    #             continue
-    #
-    #         # Update default_ui_json and store free_param_groups for app
-    #         if self._free_param_identifier in key.lower():
-    #             for param in self._free_param_keys:
-    #                 if param in key.lower():
-    #                     group = key.lower().replace(param, "").rstrip()
-    #
-    #                     if group not in free_param_dict:
-    #                         free_param_dict[group] = {}
-    #
-    #                     free_param_dict[group][param] = value
-    #                     self.default_ui_json[key] = deepcopy(
-    #                         free_format_dict[f"Template {param.capitalize()}"]
-    #                     )
-    #                     self.default_ui_json[key]["group"] = group
-    #                     break
-    #
-    #         if isinstance(value, dict):
-    #             field = "value"
-    #             if "isValue" in value.keys():
-    #                 if not value["isValue"]:
-    #                     field = "property"
-    #             setattr(self, key, value[field])
-    #         else:
-    #             if isinstance(value, Entity):
-    #                 setattr(self, key, value.uid)
-    #             else:
-    #                 setattr(self, key, value)
-    #
-    #     self._free_param_dict = free_param_dict
-    #     self.param_names = list(self.default_ui_json.keys())
