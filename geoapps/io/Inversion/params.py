@@ -124,36 +124,49 @@ class InversionParams(Params):
 
         super().__init__(input_file=input_file, **kwargs)
 
-    def uncertainty(self, component: str) -> float:
-        """Returns uncertainty for chosen data component."""
+    def data_channel(self, component: str):
+        """Return uuid of data channel."""
+        return getattr(self, "_".join([component, "channel"]), None)
+
+    def uncertainty_channel(self, component: str):
+        """Return uuid of uncertainty channel."""
         return getattr(self, "_".join([component, "uncertainty"]), None)
 
-    def channel(self, component: str) -> UUID:
-        """Returns channel uuid for chosen data component."""
-        return getattr(self, "_".join([component, "channel"]), None)
+    def data(self, component: str):
+        """Returns array of data for chosen data component."""
+        uid = self.data_channel(component)
+        if uid is None:
+            return None
+        return self.geoh5.get_entity(uid)[0].values
+
+    def uncertainty(self, component: str) -> np.ndarray | None:
+        """Returns uncertainty for chosen data component."""
+        val = self.uncertainty_channel(component)
+
+        if isinstance(val, UUID):
+            return self.geoh5.get_entity(val)[0].values.astype(float)
+        elif self.data(component) is not None:
+            d = self.data(component)
+            if isinstance(val, (int, float)):
+                return np.array([float(val)] * len(d))
+            else:
+                return d * 0.0 + 1.0  # Default
+        else:
+            return None
 
     def cell_size(self):
         """Returns core cell size in all 3 dimensions."""
         return [self.u_cell_size, self.v_cell_size, self.w_cell_size]
 
-    def padding_distance(self):
-        """Returns padding distance in all 3 dimensions."""
-        return [
-            self.padding_distance_x,
-            self.padding_distance_y,
-            self.padding_distance_z,
-        ]
-
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
-        channels = np.unique(
-            [
-                k.lstrip("_").split("_")[0]
-                for k in self.__dict__.keys()
-                if "channel" in k
-            ]
-        )
+        channels = [
+            k.lstrip("_").split("_channel_bool")[0]
+            for k in self.__dict__.keys()
+            if "channel_bool" in k
+        ]
+
         for c in channels:
             use_ch = False
             if getattr(self, f"{c}_channel", None) is not None:

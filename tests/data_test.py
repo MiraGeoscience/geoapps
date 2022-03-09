@@ -102,15 +102,15 @@ def test_survey_data(tmp_path):
     expected_dobs = np.column_stack(
         [bxx_data.values, byy_data.values, bzz_data.values]
     )[sorting].ravel()
-    survey_dobs = np.hstack([local_survey_a.dobs, local_survey_b.dobs])
-    np.testing.assert_array_equal(expected_dobs, survey_dobs)
+    survey_dobs = [local_survey_a.dobs, local_survey_b.dobs]
+    np.testing.assert_array_equal(expected_dobs, np.hstack(survey_dobs))
 
     # test savegeoh5iteration data
 
     driver.directiveList[-2].save_components(99, survey_dobs)
-    bxx_test = ws.get_entity("Iteration_99_mag_bxx")[0].values
-    byy_test = ws.get_entity("Iteration_99_mag_byy")[0].values
-    bzz_test = ws.get_entity("Iteration_99_mag_bzz")[0].values
+    bxx_test = ws.get_entity("Iteration_99_bxx")[0].values
+    byy_test = ws.get_entity("Iteration_99_byy")[0].values
+    bzz_test = ws.get_entity("Iteration_99_bzz")[0].values
 
     np.testing.assert_array_equal(bxx_test, bxx_data.values)
     np.testing.assert_array_equal(byy_test, byy_data.values)
@@ -132,7 +132,7 @@ def test_get_uncertainty_component(tmp_path):
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     params.tmi_uncertainty = 1
     data = InversionData(ws, params, window)
-    unc = data.get_uncertainty_component("tmi")
+    unc = data.get_data()[2]["tmi"]
     assert len(np.unique(unc)) == 1
     assert np.unique(unc)[0] == 1
     assert len(unc) == len(data.mask)
@@ -235,11 +235,12 @@ def test_normalize(tmp_path):
     locs = ws.get_entity(params.data_object)[0].centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
-    data.data = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
-    data.components = list(data.data.keys())
-    test_data = data.normalize(data.data)
+    data.observed = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
+    data.components = list(data.observed.keys())
+    data.normalizations = data.get_normalizations()
+    test_data = data.normalize(data.observed)
     assert list(data.normalizations.values()) == [1, -1]
-    assert all(test_data["gz"] == (-1 * data.data["gz"]))
+    assert all(test_data["gz"] == (-1 * data.observed["gz"]))
 
 
 def test_get_survey(tmp_path):

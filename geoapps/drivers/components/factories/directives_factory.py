@@ -48,12 +48,12 @@ class DirectivesFactory:
         inversion_mesh,
         active_cells,
         sorting,
-        local_misfits,
+        global_misfit,
         regularizer,
     ):
 
         self.vector_inversion_directive = directives.VectorInversion(
-            [local.simulation for local in local_misfits],
+            [local.simulation for local in global_misfit.objfcts],
             regularizer,
             chifact_target=self.params.chi_factor * 2,
         )
@@ -95,6 +95,7 @@ class DirectivesFactory:
             ).build(
                 inversion_object=inversion_mesh,
                 active_cells=active_cells,
+                name="Model",
             )
 
             self.save_iteration_data_directive = SaveIterationGeoh5Factory(
@@ -104,6 +105,8 @@ class DirectivesFactory:
                 active_cells=active_cells,
                 sorting=sorting,
                 save_objective_function=True,
+                global_misfit=global_misfit,
+                name="Data",
             )
 
             self.save_iteration_residual_directive = SaveIterationGeoh5Factory(
@@ -112,21 +115,16 @@ class DirectivesFactory:
                 inversion_object=inversion_data,
                 active_cells=active_cells,
                 sorting=sorting,
-                transform=lambda x: np.column_stack(
-                    list(inversion_data.observed.values())
-                ).ravel()[np.argsort(sorting)]
-                - x,
+                name="Residual",
             )
-            self.save_iteration_residual_directive.label = "Residual"
 
             if self.factory_type in ["direct current"]:
-                transform = inversion_data.transformations["potential"]
                 self.save_iteration_apparent_resistivity_directive = (
                     SaveIterationGeoh5Factory(self.params).build(
                         inversion_object=inversion_data,
                         active_cells=active_cells,
                         sorting=sorting,
-                        transform=transform,
+                        name="Apparent Resistivity",
                     )
                 )
 
@@ -155,6 +153,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         sorting=None,
         transform=None,
         save_objective_function=False,
+        global_misfit=None,
+        name=None,
     ):
         return [inversion_object.entity]
 
@@ -165,96 +165,252 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         sorting=None,
         transform=None,
         save_objective_function=False,
+        global_misfit=None,
+        name=None,
     ):
 
         object_type = "mesh" if hasattr(inversion_object, "mesh") else "data"
 
-        kwargs = {}
-        kwargs["save_objective_function"] = save_objective_function
-
         if object_type == "data":
-
-            channels = list(inversion_object.observed.keys())
-            kwargs["channels"] = channels
-            kwargs["attribute_type"] = "predicted"
-            kwargs["transforms"] = [
-                np.tile(
-                    [inversion_object.normalizations[c] for c in channels],
-                    inversion_object.observed[channels[0]].shape[0],
+            if self.factory_type in ["magnetotellurics"]:
+                kwargs = self.assemble_data_keywords_magnetotellurics(
+                    inversion_object=inversion_object,
+                    active_cells=active_cells,
+                    sorting=sorting,
+                    transform=transform,
+                    save_objective_function=save_objective_function,
+                    global_misfit=global_misfit,
+                    name=name,
                 )
-            ]
 
-            if self.factory_type in ["direct current", "induced polarization"]:
-                is_dc = True if self.factory_type == "direct current" else False
-                component = "dc" if is_dc else "ip"
-                kwargs["association"] = "CELL"
-                kwargs["components"] = [component]
-                kwargs["data_type"] = {
-                    component: {
-                        c: inversion_object.data_entity[c].entity_type for c in channels
-                    }
-                }
+            elif self.factory_type in ["direct current", "induced polarization"]:
+                kwargs = self.assemble_data_keywords_dcip(
+                    inversion_object=inversion_object,
+                    active_cells=active_cells,
+                    sorting=sorting,
+                    transform=transform,
+                    save_objective_function=save_objective_function,
+                    global_misfit=global_misfit,
+                    name=name,
+                )
 
-                # Include an apparent resistivity mapper
-                if transform is not None and is_dc:
-                    property = "resistivity"
-                    kwargs["channels"] = [f"apparent_{property}"]
-                    apparent_measurement_entity_type = self.params.geoh5.get_entity(
-                        f"Observed_apparent_{property}"
-                    )[0].entity_type
-                    kwargs["data_type"] = {
-                        component: {
-                            f"apparent_{property}": apparent_measurement_entity_type
-                        }
-                    }
+            elif self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
+                kwargs = self.assemble_data_keywords_potential_fields(
+                    inversion_object=inversion_object,
+                    active_cells=active_cells,
+                    sorting=sorting,
+                    transform=transform,
+                    save_objective_function=save_objective_function,
+                    global_misfit=global_misfit,
+                    name=name,
+                )
+            else:
+                return None
+
             if transform is not None:
                 kwargs["transforms"].append(transform)
 
-            if self.factory_type in ["magnetic scalar", "magnetic vector"]:
-                kwargs["components"] = ["mag"]
-                kwargs["data_type"] = {"mag": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.hstack(sorting)
-
-            if self.factory_type == "gravity":
-                kwargs["components"] = ["grav"]
-                kwargs["data_type"] = {"grav": inversion_object._observed_data_types}
-                kwargs["sorting"] = np.hstack(sorting)
-
-        elif object_type == "mesh":
-
+        else:
             active_cells_map = maps.InjectActiveCells(
                 inversion_object.mesh, active_cells, np.nan
             )
-            kwargs["association"] = "CELL"
-            kwargs["sorting"] = inversion_object.mesh._ubc_order
-            kwargs["channels"] = ["model"]
-            kwargs["transforms"] = [active_cells_map]
+            kwargs = {
+                "save_objective_function": save_objective_function,
+                "label": "model",
+                "association": "CEll",
+                "sorting": inversion_object.mesh._ubc_order,
+                "transforms": [active_cells_map],
+            }
 
             if self.factory_type == "magnetic vector":
                 kwargs["channels"] = ["amplitude", "inclination", "declination"]
+                kwargs["reshape"] = lambda x: x.reshape((3, -1))
                 kwargs["transforms"] = [
                     cartesian2amplitude_dip_azimuth,
                     active_cells_map,
                 ]
 
-            if self.factory_type == "direct current":
+            if self.factory_type in ["direct current", "magnetotellurics"]:
                 expmap = maps.ExpMap(inversion_object.mesh)
                 kwargs["transforms"] = [expmap * active_cells_map]
 
         return kwargs
 
-    def build(
+    @staticmethod
+    def assemble_data_keywords_potential_fields(
+        inversion_object=None,
+        active_cells=None,
+        sorting=None,
+        transform=None,
+        save_objective_function=False,
+        global_misfit=None,
+        name=None,
+    ):
+        components = list(inversion_object.observed.keys())
+        channels = [""]
+        kwargs = {
+            "save_objective_function": save_objective_function,
+            "attribute_type": "predicted",
+            "data_type": {
+                comp: {channel: dtype for channel in channels}
+                for comp, dtype in inversion_object._observed_data_types.items()
+            },
+            "transforms": [
+                np.tile(
+                    np.repeat(
+                        [inversion_object.normalizations[c] for c in components],
+                        inversion_object.locations.shape[0],
+                    ),
+                    len(channels),
+                )
+            ],
+            "channels": channels,
+            "components": components,
+            "association": "VERTEX",
+            "reshape": lambda x: x.reshape(
+                (len(channels), len(components), -1), order="F"
+            ),
+        }
+        if sorting is not None:
+            kwargs["sorting"] = np.hstack(sorting)
+
+        if name == "Residual":
+            kwargs["label"] = name
+            data = inversion_object.normalize(inversion_object.observed)
+
+            def transform(x):
+                data_stack = np.row_stack(list(data.values()))
+                data_stack = data_stack[:, np.argsort(sorting)]
+                return data_stack.ravel() - x
+
+            kwargs["transforms"].append(transform)
+
+        return kwargs
+
+    def assemble_data_keywords_dcip(
         self,
         inversion_object=None,
         active_cells=None,
         sorting=None,
         transform=None,
         save_objective_function=False,
+        global_misfit=None,
+        name=None,
     ):
-        return super().build(
-            inversion_object=inversion_object,
-            active_cells=active_cells,
-            sorting=sorting,
-            transform=transform,
-            save_objective_function=save_objective_function,
+        components = list(inversion_object.observed.keys())
+        channels = [""]
+        is_dc = True if self.factory_type == "direct current" else False
+        component = "dc" if is_dc else "ip"
+        kwargs = {
+            "save_objective_function": save_objective_function,
+            "attribute_type": "predicted",
+            "data_type": {
+                comp: {channel: dtype for channel in channels}
+                for comp, dtype in inversion_object._observed_data_types.items()
+            },
+            "transforms": [
+                np.hstack(
+                    [
+                        inversion_object.normalizations[c]
+                        * np.ones_like(inversion_object.observed[c])
+                        for c in components
+                    ]
+                )
+            ],
+            "channels": channels,
+            "components": [component],
+            "reshape": lambda x: x.reshape(
+                (len(channels), len(components), -1), order="F"
+            ),
+            "association": "CELL",
+        }
+
+        if sorting is not None:
+            kwargs["sorting"] = np.hstack(sorting)
+
+        if is_dc and name == "Apparent Resistivity":
+            kwargs["transforms"].append(inversion_object.transformations["potential"])
+            property = "resistivity"
+            kwargs["channels"] = [f"apparent_{property}"]
+            apparent_measurement_entity_type = self.params.geoh5.get_entity(
+                f"Observed_apparent_{property}"
+            )[0].entity_type
+            kwargs["data_type"] = {
+                component: {f"apparent_{property}": apparent_measurement_entity_type}
+            }
+
+        if name == "Residual":
+            kwargs["label"] = name
+            data = inversion_object.normalize(inversion_object.observed)
+
+            def transform(x):
+                data_stack = np.row_stack(list(data.values())).ravel()
+                sorting_stack = np.tile(np.argsort(sorting), len(data))
+                return data_stack[sorting_stack] - x
+
+            kwargs["transforms"].append(transform)
+
+        return kwargs
+
+    @staticmethod
+    def assemble_data_keywords_magnetotellurics(
+        inversion_object=None,
+        active_cells=None,
+        sorting=None,
+        transform=None,
+        save_objective_function=False,
+        global_misfit=None,
+        name=None,
+    ):
+        component_map = {
+            "zxx_real": "zyy_real",
+            "zxx_imag": "zyy_imag",
+            "zxy_real": "zyx_real",
+            "zxy_imag": "zyx_imag",
+            "zyx_real": "zxy_real",
+            "zyx_imag": "zxy_imag",
+            "zyy_real": "zxx_real",
+            "zyy_imag": "zxx_imag",
+        }
+        components = [component_map[k] for k in inversion_object.observed.keys()]  #
+        channels = np.unique(
+            [list(v.keys()) for k, v in inversion_object.observed.items()]
         )
+        kwargs = {
+            "save_objective_function": save_objective_function,
+            "attribute_type": "predicted",
+            "data_type": inversion_object._observed_data_types,
+            "association": "VERTEX",
+            "transforms": [
+                np.tile(
+                    np.repeat(
+                        [inversion_object.normalizations[c] for c in components],
+                        inversion_object.locations.shape[0],
+                    ),
+                    len(channels),
+                )
+            ],
+            "channels": channels,
+            "components": components,
+            "reshape": lambda x: x.reshape((len(channels), len(components), -1)),
+        }
+
+        if sorting is not None:
+            kwargs["sorting"] = np.hstack(sorting)
+
+        if name == "Residual":
+            kwargs["label"] = name
+            obs = inversion_object.normalize(inversion_object.observed)
+            data = {}
+            for f in channels:
+                for c in components:
+                    data["_".join([str(f), str(c)])] = obs[c][f]
+
+            def transform(x):
+                data_stack = np.row_stack(list(data.values()))
+                data_stack = data_stack[:, np.argsort(sorting)]
+                return data_stack.ravel() - x
+
+            kwargs["transforms"].append(transform)
+
+        return kwargs

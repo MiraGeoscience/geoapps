@@ -10,20 +10,18 @@ import sys
 
 from geoh5py.ui_json import InputFile
 
+from geoapps.drivers.base_inversion import InversionDriver
 from geoapps.io.Gravity import GravityParams
-
-from .base_inversion import InversionDriver
 
 
 def start_inversion(filepath=None, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
-    if filepath is None:
-        input_file = InputFile(data=kwargs)
-    else:
+    input_file = None
+    if filepath is not None:
         input_file = InputFile.read_ui_json(filepath)
 
-    params = GravityParams(input_file)
+    params = GravityParams(input_file=input_file, **kwargs)
     driver = GravityDriver(params)
     driver.run()
 
@@ -37,6 +35,5 @@ class GravityDriver(InversionDriver):
 
 
 if __name__ == "__main__":
-
     filepath = sys.argv[1]
     start_inversion(filepath)
