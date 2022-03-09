@@ -14,7 +14,7 @@ from uuid import UUID
 
 from geoh5py.groups import PropertyGroup
 from geoh5py.shared import Entity
-from geoh5py.ui_json import InputFile, InputValidation
+from geoh5py.ui_json import InputFile, InputValidation, utils
 from geoh5py.ui_json.constants import base_validations, default_ui_json, ui_validations
 from geoh5py.workspace import Workspace
 
@@ -38,7 +38,8 @@ class Params:
 
     _defaults = None
     _default_ui_json = None
-    _free_param_keys: list = None
+    _free_parameter_keys: list[str] | None = None
+    _free_parameter_identifier: str | None = None
     _input_file: InputFile = None
     _monitoring_directory = None
     _ui_json = None
@@ -62,7 +63,6 @@ class Params:
         self._run_command_boolean: bool = None
         self._conda_environment: str = None
         self._conda_environment_boolean: bool = None
-
         self.workpath = workpath
         self.input_file = input_file
         self.validate = validate
@@ -118,11 +118,10 @@ class Params:
         if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
                 setattr(self, "geoh5", params_dict["geoh5"])
-                del params_dict["geoh5"]
 
         params_dict = self.input_file.numify(params_dict)
         for key, value in params_dict.items():
-            if key not in self.ui_json.keys():
+            if key not in self.ui_json.keys() or key == "geoh5":
                 continue  # ignores keys not in default_ui_json
 
             setattr(self, key, value)
@@ -164,6 +163,41 @@ class Params:
             return True if isinstance(private_attr, UUID) else False
         else:
             pass
+
+    @property
+    def free_parameter_dict(self):
+        """
+        Extract groups of free parameters from the ui_json dictionary that match
+        the 'free_parameter_identifier' and 'free_parameter_keys'.
+        """
+        free_parameter_dict = {}
+        if (
+            getattr(self, "_free_parameter_keys", None) is not None
+            and getattr(self, "_free_parameter_identifier", None) is not None
+            and getattr(self, "_ui_json", None) is not None
+        ):
+            ui_groups = list(
+                {
+                    form["group"]
+                    for form in utils.collect(self.ui_json, "group").values()
+                    if form["group"] is not None
+                }
+            )
+            ui_groups.sort()
+            for group in ui_groups:
+                if self._free_parameter_identifier in group.lower():
+                    # TODO Create a geoh5py validation for "allof" -> ["object", "levels", "type", "distance"]
+                    free_parameter_dict[group] = {}
+                    forms = utils.collect(self.ui_json, "group", group)
+                    for label, key in zip(forms, self._free_parameter_keys):
+                        if key not in label.lower():
+                            raise ValueError(
+                                f"Malformed input refinement group {group}. "
+                                f"Must contain forms for all of {self._free_parameter_keys} in this order."
+                            )
+                        free_parameter_dict[group][key] = label
+
+        return free_parameter_dict
 
     @property
     def validations(self) -> dict[str, Any]:
@@ -303,7 +337,7 @@ class Params:
         default: bool = False,
         name: str = None,
         path: str = None,
-    ):
+    ) -> str:
         """Write out a ui.json with the current state of parameters"""
         if default:
             self.input_file.validation_options["disabled"] = True
@@ -311,4 +345,4 @@ class Params:
         else:
             self.input_file.data = self.to_dict()
 
-        self.input_file.write_ui_json(name=name, path=path)
+        return self.input_file.write_ui_json(name=name, path=path)

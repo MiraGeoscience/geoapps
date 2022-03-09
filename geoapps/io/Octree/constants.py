@@ -121,7 +121,7 @@ template_dict = {
         "enabled": True,
         "group": "Refinement A",
         "label": "Levels",
-        "value": "4,4,4",
+        "value": "4, 4, 4",
     },
     "type": {
         "choiceList": ["surface", "radial"],
@@ -142,11 +142,11 @@ app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
     "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A object": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
-    "Refinement A levels": [4.0, 4.0, 4.0],
+    "Refinement A levels": [4, 4, 4],
     "Refinement A type": "radial",
     "Refinement A distance": 1000.0,
     "Refinement B object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
-    "Refinement B levels": [16.0, 8.0, 4.0],
+    "Refinement B levels": [0, 0, 4],
     "Refinement B type": "surface",
     "Refinement B distance": 1200.0,
 }
