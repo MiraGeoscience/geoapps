@@ -115,11 +115,13 @@ class Params:
         original_validate_state = self.validate
         self.validate = validate
 
+        params_dict = self.input_file.numify(params_dict)
         if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
                 setattr(self, "geoh5", params_dict["geoh5"])
+                self.input_file.workspace = params_dict["geoh5"]
 
-        params_dict = self.input_file.numify(params_dict)
+        params_dict = self.input_file._promote(params_dict)
         for key, value in params_dict.items():
             if key not in self.ui_json.keys() or key == "geoh5":
                 continue  # ignores keys not in default_ui_json

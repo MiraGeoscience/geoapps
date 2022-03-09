@@ -15,6 +15,7 @@ from collections import OrderedDict
 import ipywidgets as widgets
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
+from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
@@ -98,7 +99,12 @@ class InversionApp(PlotSelection2D):
         else:
             self.params = self._param_class(**app_initializer)
         self.data_object = self.objects
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+
+        for key, value in self.params.to_dict().items():
+            if isinstance(value, Entity):
+                self.defaults[key] = value.uid
+            else:
+                self.defaults[key] = value
 
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
@@ -131,7 +137,6 @@ class InversionApp(PlotSelection2D):
             button_style="warning",
             icon="check",
         )
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
         self._ga_group_name = widgets.Text(
             value="Inversion_", description="Save as:", disabled=False
         )
