@@ -40,9 +40,6 @@ class InversionMesh:
         Permutation vector to restore cell centers or model values to
         origin Octree mesh order.
 
-
-
-
     """
 
     def __init__(

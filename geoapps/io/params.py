@@ -53,7 +53,7 @@ class Params:
         input_file=None,
         validate=True,
         validation_options={},
-        workpath=".",
+        workpath=None,
         **kwargs,
     ):
         self._monitoring_directory: str = None
@@ -118,10 +118,23 @@ class Params:
 
     @property
     def workpath(self):
-        return os.path.abspath(self._workpath)
+        """
+        Working directory.
+        """
+        if (
+            getattr(self, "_workpath", None) is None
+            and getattr(self, "_geoh5", None) is not None
+        ):
+            self._workpath = os.path.dirname(self.geoh5.h5file)
+        return self._workpath
 
     @workpath.setter
-    def workpath(self, val):
+    def workpath(self, val: str | None):
+        if val is not None:
+            if not os.path.exists(val):
+                raise ValueError("Provided 'workpath' is not a valid path.")
+            val = os.path.abspath(val)
+
         self._workpath = val
 
     @property
