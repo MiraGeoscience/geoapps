@@ -164,8 +164,9 @@ class InversionData(InversionLocations):
             self.params.inversion_type in ["direct current", "induced polarization"]
             and self.indices is None
         ):
-            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
-            ab_ind = np.where(np.any(self.mask[potential_electrodes.cells], axis=1))[0]
+            ab_ind = np.where(np.any(self.mask[self.params.data_object.cells], axis=1))[
+                0
+            ]
             self.indices = ab_ind
 
         if self.indices is None:

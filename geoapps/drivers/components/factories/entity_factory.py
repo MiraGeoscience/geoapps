@@ -71,7 +71,7 @@ class EntityFactory(AbstractFactory):
         workspace = inversion_data.workspace
 
         # Trim down receivers
-        rx_obj = workspace.get_entity(self.params.data_object)[0]
+        rx_obj = self.params.data_object
         rcv_ind = np.where(np.any(inversion_data.mask[rx_obj.cells], axis=1))[0]
         rcv_locations, rcv_cells = EntityFactory._prune_from_indices(rx_obj, rcv_ind)
         uni_src_ids, src_ids = np.unique(

@@ -204,8 +204,11 @@ class OctreeMesh(ObjectDataSelection):
                     if key[0] == "_":
                         key = key[1:]
 
-                    if isinstance(value, uuid.UUID):
-                        value = self.params.input_file.workspace.get_entity(value)[0]
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
 
                     param_dict[key] = value
 
@@ -314,7 +317,7 @@ class OctreeMesh(ObjectDataSelection):
                 )
 
                 try:
-                    getattr(self, attr_name).value = value
+                    getattr(self, attr_name).value = value.uid
                 except TraitError:
                     pass
 
