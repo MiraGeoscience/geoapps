@@ -11,6 +11,7 @@ from copy import deepcopy
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import NumericData
 from geoh5py.groups import ContainerGroup
 from geoh5py.ui_json import InputFile, InputValidation
 from geoh5py.workspace import Workspace
@@ -134,17 +135,17 @@ class InversionParams(Params):
 
     def data(self, component: str):
         """Returns array of data for chosen data component."""
-        uid = self.data_channel(component)
-        if uid is None:
-            return None
-        return self.geoh5.get_entity(uid)[0].values
+        data_entity = self.data_channel(component)
+        if isinstance(data_entity, NumericData):
+            return data_entity.values.astype(float)
+        return None
 
     def uncertainty(self, component: str) -> np.ndarray | None:
         """Returns uncertainty for chosen data component."""
         val = self.uncertainty_channel(component)
 
-        if isinstance(val, UUID):
-            return self.geoh5.get_entity(val)[0].values.astype(float)
+        if isinstance(val, NumericData):
+            return val.values.astype(float)
         elif self.data(component) is not None:
             d = self.data(component)
             if isinstance(val, (int, float)):
@@ -168,12 +169,10 @@ class InversionParams(Params):
         ]
 
         for c in channels:
-            use_ch = False
-            if getattr(self, f"{c}_channel", None) is not None:
-                use_ch = True
-            if getattr(self, f"{c}_channel_bool", None) is True:
-                use_ch = True
-            if use_ch:
+            if (
+                getattr(self, f"{c}_channel", None) is not None
+                or getattr(self, f"{c}_channel_bool", None) is True
+            ):
                 comps.append(c)
 
         return comps
