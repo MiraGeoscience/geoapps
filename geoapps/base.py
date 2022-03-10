@@ -9,16 +9,28 @@ from __future__ import annotations
 
 import time
 import types
-import uuid
 from os import makedirs, mkdir, path
 from shutil import copyfile, move
 
 from geoh5py.groups import ContainerGroup
+from geoh5py.io.utils import entity2uuid, str2uuid
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
+from geoh5py.ui_json.utils import dict_mapper
 from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
-from ipywidgets import Button, Checkbox, HBox, Label, Text, ToggleButton, VBox, Widget
+from ipywidgets import (
+    Button,
+    Checkbox,
+    Dropdown,
+    HBox,
+    Label,
+    SelectMultiple,
+    Text,
+    ToggleButton,
+    VBox,
+    Widget,
+)
 
 from geoapps.io import Params
 from geoapps.utils.formatters import string_name
@@ -100,6 +112,8 @@ class BaseApplication:
         return self.main
 
     def __populate__(self, **kwargs):
+        mappers = [entity2uuid, str2uuid]
+
         for key, value in kwargs.items():
             if key[0] == "_":
                 key = key[1:]
@@ -108,15 +122,17 @@ class BaseApplication:
                     if isinstance(getattr(self, key, None), Widget) and not isinstance(
                         value, Widget
                     ):
-                        try:
-                            if isinstance(value, list):
-                                value = [uuid.UUID(val) for val in value]
-                            else:
-                                value = uuid.UUID(value)
-                        except (ValueError, AttributeError, TypeError):
-                            pass
-
                         widget = getattr(self, key)
+
+                        if isinstance(widget, (Dropdown, SelectMultiple)):
+                            try:
+                                if isinstance(value, list):
+                                    value = [dict_mapper(val, mappers) for val in value]
+                                else:
+                                    value = dict_mapper(value, mappers)
+                            except (ValueError, AttributeError, TypeError):
+                                pass
+
                         setattr(widget, "value", value)
                         if hasattr(widget, "style"):
                             widget.style = {"description_width": "initial"}

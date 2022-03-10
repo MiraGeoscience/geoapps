@@ -17,7 +17,7 @@ from dask import delayed
 from dask.distributed import Client, get_client
 from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, Points
+from geoh5py.objects import Curve, ObjectBase, Points
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -45,7 +45,11 @@ from tqdm import tqdm
 
 from geoapps.base import BaseApplication
 from geoapps.io.PeakFinder import PeakFinderParams
-from geoapps.io.PeakFinder.constants import app_initializer, default_ui_json
+from geoapps.io.PeakFinder.constants import (
+    app_initializer,
+    default_ui_json,
+    template_dict,
+)
 from geoapps.selection import LineOptions, ObjectDataSelection
 from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
@@ -136,6 +140,7 @@ class PeakFinder(ObjectDataSelection):
         )
         self.data.observe(self.set_data, names="value")
         self.system.observe(self.set_data, names="value")
+        self.previous_line = None
         super().__init__()
         self.pause_refresh = False
         self.refresh.value = True
@@ -216,16 +221,19 @@ class PeakFinder(ObjectDataSelection):
 
         obj_list = self.workspace.get_entity(self.objects.value)
 
-        if any(obj_list) and any(self.params._free_param_dict):
-            self._channel_groups = groups_from_params_dict(
-                obj_list[0], self.params._free_param_dict
-            )
+        if any(obj_list) and any(self.params.free_parameter_dict):
+            self._channel_groups = groups_from_free_params(self.params)
 
-        group_list = []
-        for pg, params in self._channel_groups.items():
-            group_list += [self.add_group_widget(pg, params)]
+            group_list = []
+            for pg, params in self._channel_groups.items():
+                group_list += [self.add_group_widget(pg, params)]
+            self.groups_panel.children = group_list
 
-        self.groups_panel.children = group_list
+        else:
+            if not self.group_auto.value:
+                self.group_auto.value = True
+            else:
+                self.create_default_groups(None)
 
     @property
     def main(self) -> VBox:
@@ -1310,41 +1318,50 @@ class PeakFinder(ObjectDataSelection):
             self.line_update(None)
 
     def trigger_click(self, _):
-
-        new_workspace = Workspace(
-            path.join(
-                self.export_directory.selected_path,
-                self._ga_group_name.value + ".geoh5",
-            )
-        )
-        obj, data = self.get_selected_entities()
-
-        new_obj = new_workspace.get_entity(obj.uid)[0]
-        if new_obj is None:
-            obj.copy(parent=new_workspace, copy_children=True)
-
-        self.params.geoh5 = new_workspace
-
         param_dict = {}
-        for key, value in self.__dict__.items():
+        ui_json = deepcopy(default_ui_json)
+        for key in ui_json:
             try:
-                if isinstance(getattr(self, key), Widget):
-                    param_dict[key] = getattr(self, key).value
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
+
+                    param_dict[key] = value
+
             except AttributeError:
                 continue
 
-        self.params.update(param_dict)
-        self.params.line_field = self.lines.data.value
-        ui_json = deepcopy(self.params.default_ui_json)
-        self.params.group_auto = False
-        self.params.write_input_file(
-            ui_json=ui_json,
-            name=path.join(
-                self.export_directory.selected_path,
-                self._ga_group_name.value + ".ui.json",
-            ),
+        for label, group in self._channel_groups.items():
+            for member in ["data", "color"]:
+                name = f"{label} {member}"
+                ui_json[name] = deepcopy(template_dict[member])
+                ui_json[name]["group"] = f"Group {label}"
+                param_dict[name] = group[member]
+
+        new_workspace = self.get_output_workspace(
+            self.export_directory.selected_path, self.ga_group_name.value
         )
-        self.run(self.params)
+        for key, value in param_dict.items():
+            if isinstance(value, ObjectBase):
+                param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
+
+        param_dict["geoh5"] = new_workspace
+        ifile = InputFile(
+            ui_json=ui_json,
+            validations=self.params.validations,
+            validation_options={"disabled": True},
+        )
+        new_params = PeakFinderParams(input_file=ifile, **param_dict)
+        new_params.write_input_file()
+        self.run(new_params)
+
+        if self.live_link.value:
+            print("Live link active. Check your ANALYST session for new mesh.")
 
     def update_center(self, _):
         """
@@ -1365,7 +1382,7 @@ class PeakFinder(ObjectDataSelection):
             client = Client()
 
         workspace = params.geoh5
-        survey = workspace.get_entity(params.objects)[0]
+        survey = params.objects
         prop_group = [pg for pg in survey.property_groups if pg.uid == params.data]
 
         if params.tem_checkbox:
@@ -1379,7 +1396,7 @@ class PeakFinder(ObjectDataSelection):
                 workspace, name=string_name(params.ga_group_name)
             )
 
-        line_field = workspace.get_entity(params.line_field)[0]
+        line_field = params.line_field
         lines = np.unique(line_field.values)
 
         if params.group_auto and any(prop_group):
@@ -1387,8 +1404,7 @@ class PeakFinder(ObjectDataSelection):
                 prop_group[0]
             )
         else:
-
-            channel_groups = groups_from_params_dict(survey, params._free_param_dict)
+            channel_groups = groups_from_free_params(params)
 
         active_channels = {}
         for group in channel_groups.values():
@@ -1981,31 +1997,23 @@ def find_anomalies(
         return groups
 
 
-def groups_from_params_dict(entity: Entity, params_dict: dict):
+def groups_from_free_params(params: PeakFinderParams):
     """
     Generate a dictionary of groups with associate properties from params.
     """
     count = 0
     channel_groups = {}
-    for label, group_params in params_dict.items():
+    for label, group_params in params.free_parameter_dict.items():
         if group_params["data"] is not None:
+            prop_group = getattr(params, group_params["data"], None)
 
-            try:
-                group_id = group_params["data"]
-                if not isinstance(group_id, uuid.UUID):
-                    group_id = uuid.UUID(group_id)
-
-            except ValueError:
-                group_id = None
-
-            prop_group = [pg for pg in entity.property_groups if pg.uid == group_id]
-            if any(prop_group):
+            if prop_group is not None:
                 count += 1
-                channel_groups[prop_group[0].name] = {
-                    "data": prop_group[0].uid,
-                    "color": group_params["color"],
+                channel_groups[prop_group.name] = {
+                    "data": prop_group.uid,
+                    "color": getattr(params, group_params["color"], None),
                     "label": [count],
-                    "properties": prop_group[0].properties,
+                    "properties": prop_group.properties,
                 }
 
     return channel_groups
