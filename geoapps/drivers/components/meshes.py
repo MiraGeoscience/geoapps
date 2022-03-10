@@ -76,9 +76,7 @@ class InversionMesh:
         """
 
         if self.params.mesh is not None:
-            orig_octree = self.workspace.get_entity(self.params.mesh)[0]
-
-            self.entity = orig_octree.copy(
+            self.entity = self.params.mesh.copy(
                 parent=self.params.ga_group, copy_children=False
             )
         else:

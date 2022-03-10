@@ -4,9 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
-
-from uuid import UUID
+from __future__ import annotations
 
 import numpy as np
 from geoh5py.data import Data
@@ -359,30 +357,27 @@ class InversionModel:
 
         self.workspace.finalize()
 
-    def _get(self, name: str):
+    def _get(self, name: str) -> np.ndarray | None:
         """
         Return model vector from value stored in params class.
 
-        Wraps _get_object and _get_value methods depending on type of
-        data attached to the model name stored in self.params
-
         :param name: model name as stored in self.params
         :return: vector with appropriate size for problem.
-
         """
 
         if hasattr(self.params, name):
             model = getattr(self.params, name)
-            if not isinstance(model, Entity):
-                if "reference" in name and model is None:
-                    model = self._get_value(0)
-                model = self._get_value(model)
-        else:
-            model = None
 
-        return model
+            if "reference" in name and model is None:
+                model = 0
 
-    def _get_value(self, model):
+            model_values = self._get_value(model)
+
+            return model_values
+
+        return None
+
+    def _get_value(self, model: float | Data):
         """
         Fills vector with model value to match size of inversion mesh.
 
@@ -390,31 +385,14 @@ class InversionModel:
         :return: Vector of model float repeated nC times, where nC is
             the number of cells in the inversion mesh.
         """
+        if isinstance(model, Data):
+            model = self._obj_2_mesh(model.values, model.parent)
 
-        nc = self.mesh.nC
-        if isinstance(model, (int, float)):
-            model *= np.ones(nc)
+        else:
+            nc = self.mesh.nC
+            if isinstance(model, (int, float)):
+                model *= np.ones(nc)
 
-        return model
-
-    def _get_object(self, model):
-        """
-        Fetches model from workspace, and interpolates as needed.
-
-        If the parent of the workspace object addressed by 'model' parameter
-        is not the inversion mesh, then a nearest_neighbor interpolation will
-        be performed on the incoming data to get model values on the cell
-        centers of the inversion mesh.
-
-        :param model: UUID type that addresses object in workspace containing
-            model data.
-        :return: Model vector with data interpolated into cell centers of
-            the inversion mesh.
-        """
-        parent_uuid = self.params.parent(model)
-        parent = self.fetch(parent_uuid)
-        model = self.fetch(model)
-        model = self._obj_2_mesh(model, parent)
         return model
 
     def _obj_2_mesh(self, obj, parent):
@@ -452,17 +430,3 @@ class InversionModel:
             msg = f"Invalid 'model_type'. Must be one of {*self.model_types,}."
             raise ValueError(msg)
         self._model_type = v
-
-    def fetch(self, p):
-        """Fetch the object addressed by uuid from the workspace."""
-
-        if isinstance(p, str):
-            try:
-                p = UUID(p)
-            except:
-                p = self.params.__getattribute__(p)
-
-        try:
-            return self.workspace.get_entity(p)[0].values
-        except AttributeError:
-            return self.workspace.get_entity(p)[0]
