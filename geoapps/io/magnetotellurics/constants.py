@@ -5,7 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
 
@@ -508,79 +507,7 @@ validations = {
     "inversion_type": {
         "types": [str],
         "values": ["magnetotellurics"],
-    },
-    "zxx_real_channel_bool": {"types": [bool]},
-    "zxx_real_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zxx_real_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zxx_imag_channel_bool": {"types": [bool]},
-    "zxx_imag_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zxx_imag_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zxy_real_channel_bool": {"types": [bool]},
-    "zxy_real_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zxy_real_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zxy_imag_channel_bool": {"types": [bool]},
-    "zxy_imag_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zxy_imag_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zyx_real_channel_bool": {"types": [bool]},
-    "zyx_real_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zyx_real_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zyx_imag_channel_bool": {"types": [bool]},
-    "zyx_imag_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zyx_imag_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zyy_real_channel_bool": {"types": [bool]},
-    "zyy_real_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zyy_real_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zyy_imag_channel_bool": {"types": [bool]},
-    "zyy_imag_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zyy_imag_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "background_conductivity": {
-        "types": [str, int, float, UUID],
-        "reqs": [("starting_model_object")],
-    },
-    "out_group": {"types": [str, ContainerGroup]},
+    }
 }
-
-validations = dict(base_validations, **validations)
-
 
 app_initializer = {}
