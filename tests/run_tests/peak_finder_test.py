@@ -46,11 +46,11 @@ def test_peak_finder_app(tmp_path):
         "data": curve.find_or_create_property_group(name="obs").uid,
         "line_field": line.uid,
         "line_id": 1.0,
-        "width": 10,
-        "center": 1,
+        "width": 10.0,
+        "center": 1.0,
         "min_amplitude": 1e-2,
         "min_width": 1e-2,
-        "max_migration": 1,
+        "max_migration": 1.0,
         "plot_result": False,
         "group_auto": True,
     }
@@ -62,7 +62,7 @@ def test_peak_finder_app(tmp_path):
         else:
             setattr(app, param, value)
 
-    app.trigger.click()
+    app.trigger_click(None)
 
     anomalies = app.lines.anomalies
     assert len(anomalies) == 3, f"Expected 3 groups. Found {len(anomalies)}"
