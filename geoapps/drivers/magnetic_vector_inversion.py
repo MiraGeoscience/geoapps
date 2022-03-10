@@ -5,7 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import sys
 
 from geoh5py.ui_json import InputFile
 
@@ -34,5 +33,6 @@ class MagneticVectorDriver(InversionDriver):
 
 
 if __name__ == "__main__":
-    filepath = sys.argv[1]
+    # filepath = sys.argv[1]
+    filepath = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\VectorInversion.ui.json"
     start_inversion(filepath)

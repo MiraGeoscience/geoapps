@@ -851,29 +851,22 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        params = self.params.to_dict(ui_json_format=False)
         if self.inversion_type.value == "magnetic vector" and not isinstance(
             self.params, MagneticVectorParams
         ):
             self._param_class = MagneticVectorParams
-            params["inversion_type"] = "magnetic vector"
-            params["out_group"] = "VectorInversion"
 
         elif self.inversion_type.value == "magnetic scalar" and not isinstance(
             self.params, MagneticScalarParams
         ):
-            params["inversion_type"] = "magnetic scalar"
-            params["out_group"] = "SusceptibilityInversion"
             self._param_class = MagneticScalarParams
         elif self.inversion_type.value == "gravity" and not isinstance(
             self.params, GravityParams
         ):
-            params["inversion_type"] = "gravity"
-            params["out_group"] = "GravityInversion"
             self._param_class = GravityParams
 
         self.params = self._param_class(validate=False, verbose=False)
-        self.ga_group_name.value = self.params.data["out_group"]
+        self.ga_group_name.value = self.params.out_group
 
         if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
             data_type_list = [

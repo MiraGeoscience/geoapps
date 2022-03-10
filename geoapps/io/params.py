@@ -89,20 +89,6 @@ class Params:
             self.update(kwargs)
 
     @property
-    def data(self):
-        """
-        Flat dictionary of parameters and values as stored on InputFile.
-        """
-        if getattr(self, "_input_file", None) is not None:
-            return self.input_file.data
-        return None
-
-    @data.setter
-    def data(self, values: dict[str, Any] | None):
-        if getattr(self, "_input_file", None) is not None:
-            self.input_file.data = values
-
-    @property
     def ui_json(self):
         """The default ui_json structure stored on InputFile."""
         if getattr(self, "_ui_json", None) is None and self.input_file is not None:
@@ -343,8 +329,7 @@ class Params:
         """Write out a ui.json with the current state of parameters"""
         if default:
             self.input_file.validation_options["disabled"] = True
-            self.input_file.data = self.data
-        else:
-            self.input_file.data = self.to_dict()
+
+        self.input_file.data = self.to_dict()
 
         return self.input_file.write_ui_json(name=name, path=path)
