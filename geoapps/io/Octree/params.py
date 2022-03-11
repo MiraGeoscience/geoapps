@@ -18,6 +18,9 @@ from . import default_ui_json, defaults, template_dict, validations
 
 
 class OctreeParams(Params):
+    """
+        Parameter class for octree mesh creation application.
+    """
     _default_ui_json = deepcopy(default_ui_json)
     _defaults = deepcopy(defaults)
     _free_parameter_keys = ["object", "levels", "type", "distance"]

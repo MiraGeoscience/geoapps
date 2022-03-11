@@ -25,6 +25,10 @@ from .constants import (
 
 
 class MagneticScalarParams(InversionParams):
+    """
+    Parameter class for magnetics->susceptibility inversion.
+    """
+
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",

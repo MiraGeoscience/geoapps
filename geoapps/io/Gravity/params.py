@@ -22,6 +22,10 @@ from .constants import (
 
 
 class GravityParams(InversionParams):
+    """
+    Parameter class for gravity->density inversion.
+    """
+
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",

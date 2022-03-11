@@ -18,6 +18,10 @@ from .constants import default_ui_json, defaults, template_dict, validations
 
 
 class PeakFinderParams(Params):
+    """
+    Parameter class for peak finder application.
+    """
+
     _default_ui_json = deepcopy(default_ui_json)
     _defaults = deepcopy(defaults)
     _free_parameter_keys: list = ["data", "color"]
