@@ -20,19 +20,14 @@ from .constants import (
     forward_ui_json,
     inversion_defaults,
     inversion_ui_json,
-    required_parameters,
     validations,
 )
 
 
 class MagnetotelluricsParams(InversionParams):
-
-    _required_parameters = required_parameters
-    _validations = validations
-    _forward_defaults = forward_defaults
-    _inversion_defaults = inversion_defaults
-    forward_ui_json = forward_ui_json
-    inversion_ui_json = inversion_ui_json
+    """
+    Parameter class for magnetotelluric->conductivity inversion.
+    """
     _directive_list = [
         "VectorInversion",
         "Update_IRLS",
@@ -41,6 +36,13 @@ class MagnetotelluricsParams(InversionParams):
         "UpdatePreconditioner",
         "SaveIterationsGeoH5",
     ]
+    _default_ui_json = deepcopy(default_ui_json)
+    _forward_defaults = forward_defaults
+    _forward_ui_json = forward_ui_json
+    _inversion_defaults = inversion_defaults
+    _inversion_ui_json = inversion_ui_json
+    _inversion_type = "magnetic vector"
+    _validations = validations
 
     def __init__(
         self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs

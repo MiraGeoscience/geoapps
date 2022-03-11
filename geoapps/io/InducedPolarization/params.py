@@ -22,6 +22,10 @@ from .constants import (
 
 
 class InducedPolarizationParams(InversionParams):
+    """
+    Parameter class for electrical-induced polarization (IP) inversion.
+    """
+
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",

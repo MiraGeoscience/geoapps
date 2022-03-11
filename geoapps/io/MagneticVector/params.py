@@ -23,6 +23,10 @@ from .constants import (
 
 
 class MagneticVectorParams(InversionParams):
+    """
+    Parameter class for magnetics->vector magnetization inversion.
+    """
+
     _directive_list = [
         "VectorInversion",
         "Update_IRLS",

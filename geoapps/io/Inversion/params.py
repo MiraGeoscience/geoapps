@@ -20,6 +20,10 @@ from ..params import Params
 
 
 class InversionParams(Params):
+    """
+    Base parameter class for geophysical->property inversions.
+    """
+
     _directive_list = None
     _default_ui_json = None
     _forward_defaults = None

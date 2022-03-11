@@ -22,6 +22,10 @@ from .constants import (
 
 
 class DirectCurrentParams(InversionParams):
+    """
+    Parameter class for electrical->conductivity inversion.
+    """
+
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
