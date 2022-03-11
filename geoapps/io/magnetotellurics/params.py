@@ -28,6 +28,7 @@ class MagnetotelluricsParams(InversionParams):
     """
     Parameter class for magnetotelluric->conductivity inversion.
     """
+
     _directive_list = [
         "VectorInversion",
         "Update_IRLS",

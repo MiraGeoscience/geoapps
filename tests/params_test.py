@@ -166,7 +166,7 @@ def test_write_input_file_validation(tmp_path):
     params = GravityParams(validate=False, **grav_init)
     params.starting_model = None
     params.validate = True
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(TypeValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
 
     assert "starting_model" in str(excinfo.value)

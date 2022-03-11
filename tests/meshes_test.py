@@ -52,7 +52,7 @@ def test_initialize(tmp_path):
 
 def test_collect_mesh_params(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
+    locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     inversion_window = InversionWindow(ws, params)
@@ -60,9 +60,8 @@ def test_collect_mesh_params(tmp_path):
     inversion_topography = InversionTopography(ws, params, inversion_window.window)
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     octree_params = inversion_mesh.collect_mesh_params(params)
-    print(octree_params._free_param_dict)
-    assert "refinement a" in octree_params._free_param_dict.keys()
-    assert "refinement b" in octree_params._free_param_dict.keys()
+    assert "Refinement A" in octree_params.free_parameter_dict.keys()
+    assert "Refinement B" in octree_params.free_parameter_dict.keys()
     with pytest.raises(ValueError) as excinfo:
         params.u_cell_size = None
         octree_params = inversion_mesh.collect_mesh_params(params)
@@ -71,12 +70,14 @@ def test_collect_mesh_params(tmp_path):
 
 def test_mesh_from_params(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
-    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
-
+    locs = params.data_object.centroids
+    window = {
+        "center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])],
+        "size": [100.0, 100.0],
+    }
     params.mesh_from_params = True
     params.mesh = None
-    params.u_cell_size, params.v_cell_size, params.w_cell_size = 19, 25, 25
+    params.u_cell_size, params.v_cell_size, params.w_cell_size = 19.0, 25.0, 25.0
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, window)
     inversion_topography = InversionTopography(ws, params, window)
