@@ -13,6 +13,7 @@ from typing import Any
 from uuid import UUID
 
 from geoh5py.groups import PropertyGroup
+from geoh5py.io.utils import str2uuid, uuid2entity
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile, InputValidation, utils
 from geoh5py.ui_json.constants import base_validations, default_ui_json, ui_validations
@@ -310,13 +311,15 @@ class Params:
         self._input_file = ifile
 
     def _uuid_promoter(self, x):
-        return UUID(x) if isinstance(x, str) else x
+        return uuid2entity(str2uuid(x), self.geoh5)
 
     def setter_validator(self, key: str, value, fun=lambda x: x):
 
         if value is None:
             setattr(self, f"_{key}", value)
             return
+
+        value = fun(value)
 
         if self.validate:
             if "association" in self.validations[key]:
@@ -329,7 +332,7 @@ class Params:
                 validations = self.validations[key]
 
             self.validator.validate(key, value, validations)
-        value = fun(value)
+
         setattr(self, f"_{key}", value)
 
     def write_input_file(

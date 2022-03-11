@@ -42,14 +42,17 @@ class Geoh5Tester:
             self.has_params = False
 
     def copy_entity(self, uid):
-        self.geoh5.get_entity(uid)[0].copy(parent=self.ws)
+        entity = self.ws.get_entity(uid)
+        if not entity or entity[0] is None:
+            return self.geoh5.get_entity(uid)[0].copy(parent=self.ws)
+        return entity[0]
 
     def set_param(self, param, value):
         if self.has_params:
             try:
                 uid = UUID(value)
-                self.copy_entity(uid)
-                setattr(self.params, param, value)
+                entity = self.copy_entity(uid)
+                setattr(self.params, param, entity)
             except:
                 setattr(self.params, param, value)
         else:
