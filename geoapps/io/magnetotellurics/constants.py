@@ -5,13 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
+from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
-from geoapps.io.Inversion.constants import (
-    required_parameters as base_required_parameters,
-)
 from geoapps.io.Inversion.constants import validations as base_validations
 
 ################# defaults ##################
@@ -497,17 +496,13 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
-
-required_parameters = [
-    "inversion_type",
-]
-required_parameters += base_required_parameters
-
 validations = {
     "inversion_type": {
         "types": [str],
+        "required": True,
         "values": ["magnetotellurics"],
-    }
+    },
+    "data_object": {"types": [str, UUID, MTReceivers]},
 }
 
 app_initializer = {}
