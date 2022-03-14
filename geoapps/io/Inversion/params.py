@@ -110,19 +110,19 @@ class InversionParams(Params):
         self._out_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
+        self._defaults = (
+            self.forward_defaults if self.forward_only else self.inversion_defaults
+        )
 
         if input_file is None:
-            defaults = (
-                self.forward_defaults if self.forward_only else self.inversion_defaults
-            )
             ui_json = deepcopy(self._default_ui_json)
             ui_json.update(
                 self._forward_ui_json if self.forward_only else self._inversion_ui_json
             )
-            ui_json = {k: ui_json[k] for k in defaults}  # Re-order using defaults
+            ui_json = {k: ui_json[k] for k in self.defaults}  # Re-order using defaults
             input_file = InputFile(
                 ui_json=ui_json,
-                data=defaults,
+                data=self.defaults,
                 validations=self.validations,
                 validation_options={"disabled": True},
             )

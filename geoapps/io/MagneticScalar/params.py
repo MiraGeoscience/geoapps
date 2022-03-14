@@ -36,15 +36,15 @@ class MagneticScalarParams(InversionParams):
         "UpdatePreconditioner",
         "SaveIterationsGeoH5",
     ]
-    _default_ui_json = deepcopy(default_ui_json)
-    _forward_defaults = forward_defaults
-    _forward_ui_json = forward_ui_json
-    _inversion_defaults = inversion_defaults
-    _inversion_ui_json = inversion_ui_json
-    _inversion_type = "magnetic scalar"
-    _validations = validations
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
+        self._default_ui_json = deepcopy(default_ui_json)
+        self._forward_defaults = deepcopy(forward_defaults)
+        self._forward_ui_json = deepcopy(forward_ui_json)
+        self._inversion_defaults = deepcopy(inversion_defaults)
+        self._inversion_ui_json = deepcopy(inversion_ui_json)
+        self._inversion_type = "magnetic scalar"
+        self._validations = validations
         self._inducing_field_strength: float = None
         self._inducing_field_inclination: float = None
         self._inducing_field_declination: float = None

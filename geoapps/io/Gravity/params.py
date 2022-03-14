@@ -33,15 +33,15 @@ class GravityParams(InversionParams):
         "UpdatePreconditioner",
         "SaveIterationsGeoH5",
     ]
-    _default_ui_json = deepcopy(default_ui_json)
-    _forward_defaults = forward_defaults
-    _forward_ui_json = forward_ui_json
-    _inversion_defaults = inversion_defaults
-    _inversion_ui_json = inversion_ui_json
-    _inversion_type = "gravity"
-    _validations = validations
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
+        self._default_ui_json = deepcopy(default_ui_json)
+        self._forward_defaults = deepcopy(forward_defaults)
+        self._forward_ui_json = deepcopy(forward_ui_json)
+        self._inversion_defaults = deepcopy(inversion_defaults)
+        self._inversion_ui_json = deepcopy(inversion_ui_json)
+        self._inversion_type = "gravity"
+        self._validations = validations
         self._gz_channel_bool = None
         self._gz_channel = None
         self._gz_uncertainty = None

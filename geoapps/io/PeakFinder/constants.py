@@ -39,13 +39,6 @@ defaults = {
     "group_auto": True,
     "center": None,
     "width": None,
-    "run_command": ("geoapps.processing.peak_finder"),
-    "run_command_boolean": None,
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": None,
-    "template_data": None,
-    "template_color": None,
-    "monitoring_directory": None,
 }
 
 default_ui_json = deepcopy(base_ui_json)

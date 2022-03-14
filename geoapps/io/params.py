@@ -90,6 +90,13 @@ class Params:
             self.update(kwargs)
 
     @property
+    def defaults(self):
+        """
+        Dictionary of default values.
+        """
+        return self._defaults
+
+    @property
     def ui_json(self):
         """The default ui_json structure stored on InputFile."""
         if getattr(self, "_ui_json", None) is None and self.input_file is not None:
@@ -310,8 +317,12 @@ class Params:
 
         self._input_file = ifile
 
-    def _uuid_promoter(self, x):
-        return uuid2entity(str2uuid(x), self.geoh5)
+    def _uuid_promoter(self, uid):
+        uid = str2uuid(uid)
+        entity = uuid2entity(uid, self.geoh5)
+        if entity is not None:
+            return entity
+        return uid
 
     def setter_validator(self, key: str, value, fun=lambda x: x):
 
@@ -334,16 +345,17 @@ class Params:
             self.validator.validate(key, value, validations)
 
         setattr(self, f"_{key}", value)
+        self.input_file.data[key] = value
 
     def write_input_file(
         self,
         ui_json: dict = None,
-        default: bool = False,
         name: str = None,
         path: str = None,
+        validate: bool = True,
     ) -> str:
         """Write out a ui.json with the current state of parameters"""
-        if default:
+        if not validate:
             self.input_file.validation_options["disabled"] = True
 
         self.input_file.data = self.to_dict()
