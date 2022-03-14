@@ -22,13 +22,12 @@ class PeakFinderParams(Params):
     Parameter class for peak finder application.
     """
 
-    _default_ui_json = deepcopy(default_ui_json)
-    _defaults = deepcopy(defaults)
-    _free_parameter_keys: list = ["data", "color"]
-    _free_parameter_identifier: str = "group"
-    _validations = validations
-
     def __init__(self, input_file=None, **kwargs):
+        self._default_ui_json = deepcopy(default_ui_json)
+        self._defaults = deepcopy(defaults)
+        self._free_parameter_keys: list = ["data", "color"]
+        self._free_parameter_identifier: str = "group"
+        self._validations = validations
         self._objects = None
         self._data = None
         self._flip_sign = None
@@ -70,7 +69,6 @@ class PeakFinderParams(Params):
 
             input_file = InputFile(
                 ui_json=ui_json,
-                data=self._defaults,
                 validations=self.validations,
                 validation_options={"disabled": True},
             )

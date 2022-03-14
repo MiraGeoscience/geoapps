@@ -96,7 +96,7 @@ def write_default_uijson(path, use_initializers=False):
     }
 
     for filename, params in filedict.items():
-        params.write_input_file(name=filename, path=path, default=not use_initializers)
+        params.write_input_file(name=filename, path=path, validate=use_initializers)
 
 
 if __name__ == "__main__":
