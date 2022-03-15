@@ -369,7 +369,7 @@ class InversionModel:
             model = getattr(self.params, name)
 
             if "reference" in name and model is None:
-                model = 0
+                model = self._get("starting")
 
             model_values = self._get_value(model)
 

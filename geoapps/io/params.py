@@ -318,6 +318,9 @@ class Params:
         self._input_file = ifile
 
     def _uuid_promoter(self, uid):
+        if self.geoh5 is None:
+            return uid
+
         uid = str2uuid(uid)
         entity = uuid2entity(uid, self.geoh5)
         if entity is not None:

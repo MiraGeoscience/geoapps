@@ -861,14 +861,6 @@ class InversionParams(Params):
         return self._ga_group
 
     @property
-    def no_data_value(self):
-        return self._no_data_value
-
-    @no_data_value.setter
-    def no_data_value(self, val):
-        self.setter_validator("no_data_value", val)
-
-    @property
     def distributed_workers(self):
         return self._distributed_workers
 

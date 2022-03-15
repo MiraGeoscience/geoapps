@@ -148,7 +148,6 @@ default_ui_json.update(
         },
         "center": None,
         "width": None,
-        "plot_result": True,
     }
 )
 
