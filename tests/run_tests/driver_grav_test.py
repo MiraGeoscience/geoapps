@@ -8,7 +8,6 @@
 
 import numpy as np
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
@@ -33,8 +32,8 @@ def test_gravity_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.drivers.grav_inversion import GravityDriver
-    from geoapps.io.Gravity.params import GravityParams
+    from geoapps.drivers.gravity import GravityParams
+    from geoapps.drivers.gravity.grav_inversion import GravityDriver
 
     np.random.seed(0)
     # Run the forward

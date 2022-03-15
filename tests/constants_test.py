@@ -6,11 +6,13 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-from geoapps.io.DirectCurrent import constants as direct_current_constants
-from geoapps.io.Gravity import constants as gravity_constants
-from geoapps.io.InducedPolarization import constants as induced_polarization_constants
-from geoapps.io.MagneticScalar import constants as magnetic_scalar_constants
-from geoapps.io.MagneticVector import constants as magnetic_vector_constants
+from geoapps.drivers.direct_current import constants as direct_current_constants
+from geoapps.drivers.gravity import constants as gravity_constants
+from geoapps.drivers.induced_polarization import (
+    constants as induced_polarization_constants,
+)
+from geoapps.drivers.magnetic_scalar import constants as magnetic_scalar_constants
+from geoapps.drivers.magnetic_vector import constants as magnetic_vector_constants
 
 constants = [
     gravity_constants,

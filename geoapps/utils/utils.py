@@ -1229,7 +1229,7 @@ def treemesh_2_octree(workspace, treemesh, **kwargs):
 
 def octree_2_treemesh(mesh):
     """
-    Convert a geoh5 Octree mesh to discretize.TreeMesh
+    Convert a geoh5 octree mesh to discretize.TreeMesh
     Modified code from module discretize.TreeMesh.readUBC function.
     """
 
@@ -1968,7 +1968,7 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
             return out
     except IndexError:
         raise IndexError(
-            f"Inversion group {inversion_group} could not be found in the target geoh5 {h5file}"
+            f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
         )
 
 

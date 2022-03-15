@@ -31,12 +31,12 @@ from ipywidgets.widgets import (
     Widget,
 )
 
-from geoapps.io.Gravity.params import GravityParams
-from geoapps.io.MagneticScalar.params import MagneticScalarParams
-from geoapps.io.MagneticVector.constants import app_initializer
-from geoapps.io.MagneticVector.params import MagneticVectorParams
+from geoapps.drivers.gravity import GravityParams
+from geoapps.drivers.magnetic_scalar.params import MagneticScalarParams
+from geoapps.drivers.magnetic_vector import app_initializer
+from geoapps.drivers.magnetic_vector.params import MagneticVectorParams
 from geoapps.plotting import PlotSelection2D
-from geoapps.selection import LineOptions, ObjectDataSelection, TopographyOptions
+from geoapps.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils import geophysical_systems
 from geoapps.utils.utils import find_value, string_2_list
 
@@ -129,7 +129,7 @@ class InversionApp(PlotSelection2D):
         )
         self._inversion_type = Dropdown(
             options=["magnetic vector", "magnetic scalar", "gravity"],
-            description="Inversion Type:",
+            description="base_inversion Type:",
         )
         self._write = Button(
             value=False,
@@ -688,7 +688,7 @@ class InversionApp(PlotSelection2D):
                     ),
                     VBox(
                         [
-                            Label("Inversion Parameters"),
+                            Label("base_inversion Parameters"),
                             self.forward_only,
                             HBox(
                                 [

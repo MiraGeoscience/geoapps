@@ -9,7 +9,6 @@ import json
 import os
 from uuid import UUID, uuid4
 
-import numpy as np
 import pytest
 from geoh5py.shared.exceptions import (
     AssociationValidationError,
@@ -23,19 +22,15 @@ from geoh5py.shared.exceptions import (
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
-from geoapps.io import Params
-from geoapps.io.DirectCurrent import DirectCurrentParams
-from geoapps.io.Gravity import GravityParams
-from geoapps.io.Gravity import app_initializer as grav_init
-from geoapps.io.InducedPolarization import InducedPolarizationParams
-from geoapps.io.MagneticScalar import MagneticScalarParams
-from geoapps.io.MagneticVector import MagneticVectorParams
-from geoapps.io.MagneticVector import app_initializer as mvi_init
-from geoapps.io.magnetotellurics import MagnetotelluricsParams
-from geoapps.io.Octree import OctreeParams
-from geoapps.io.Octree import app_initializer as octree_init
-from geoapps.io.PeakFinder import PeakFinderParams
-from geoapps.io.PeakFinder import app_initializer as peak_init
+from geoapps.drivers.direct_current import DirectCurrentParams
+from geoapps.drivers.gravity import GravityParams
+from geoapps.drivers.gravity import app_initializer as grav_init
+from geoapps.drivers.induced_polarization import InducedPolarizationParams
+from geoapps.drivers.magnetic_scalar import MagneticScalarParams
+from geoapps.drivers.magnetic_vector import MagneticVectorParams
+from geoapps.drivers.magnetic_vector import app_initializer as mvi_init
+from geoapps.drivers.octree import OctreeParams
+from geoapps.drivers.peak_finder import PeakFinderParams
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")
@@ -223,7 +218,7 @@ def test_update(tmp_path):
 
 def test_chunk_validation(tmp_path):
 
-    from geoapps.io.MagneticVector.constants import app_initializer
+    from geoapps.drivers.magnetic_vector import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict.pop("data_object")
@@ -233,7 +228,7 @@ def test_chunk_validation(tmp_path):
     for a in ["Missing required parameter", "data_object"]:
         assert a in str(excinfo.value)
 
-    from geoapps.io.MagneticScalar.constants import app_initializer
+    from geoapps.drivers.magnetic_scalar import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict["inducing_field_strength"] = None
@@ -243,7 +238,7 @@ def test_chunk_validation(tmp_path):
     for a in ["Cannot set a None", "inducing_field_strength"]:
         assert a in str(excinfo.value)
 
-    from geoapps.io.Gravity.constants import app_initializer
+    from geoapps.drivers.gravity import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict.pop("starting_model")
@@ -254,7 +249,7 @@ def test_chunk_validation(tmp_path):
     for a in ["Cannot set a None", "starting_model"]:
         assert a in str(excinfo.value)
 
-    from geoapps.io.DirectCurrent.constants import app_initializer
+    from geoapps.drivers.direct_current.constants import app_initializer
 
     dc_geoh5 = Workspace("FlinFlon_dcip.geoh5")
     test_dict = dict(app_initializer, **{"geoh5": dc_geoh5})
@@ -266,7 +261,7 @@ def test_chunk_validation(tmp_path):
     for a in ["Missing required parameter", "topography_object"]:
         assert a in str(excinfo.value)
 
-    from geoapps.io.InducedPolarization.constants import app_initializer
+    from geoapps.drivers.induced_polarization.constants import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": dc_geoh5})
     test_dict.pop("conductivity_model")
@@ -277,7 +272,7 @@ def test_chunk_validation(tmp_path):
     for a in ["Cannot set a None", "conductivity_model"]:
         assert a in str(excinfo.value)
 
-    from geoapps.io.Octree.constants import app_initializer
+    from geoapps.drivers.octree.constants import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict.pop("objects")
@@ -288,7 +283,7 @@ def test_chunk_validation(tmp_path):
     for a in ["objects"]:
         assert a in str(excinfo.value)
 
-    from geoapps.io.PeakFinder.constants import app_initializer
+    from geoapps.drivers.peak_finder.constants import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict.pop("data")
@@ -301,7 +296,7 @@ def test_chunk_validation(tmp_path):
 
 
 def test_active_set():
-    from geoapps.io.MagneticVector.constants import app_initializer
+    from geoapps.drivers.magnetic_vector import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     params = MagneticVectorParams(**test_dict)

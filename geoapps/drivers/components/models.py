@@ -16,7 +16,7 @@ from SimPEG.utils.mat_utils import (
     mkvc,
 )
 
-from geoapps.io import Params
+from geoapps.drivers import BaseParams
 from geoapps.utils import rotate_xy, weighted_average
 
 from . import InversionMesh
@@ -30,8 +30,8 @@ class InversionModelCollection:
     -------
     remove_air: Use active cells vector to remove air cells from model.
     permute_2_octree: Reorder model values stored in cell centers of a TreeMesh to
-        their original Octree mesh sorting.
-    permute_2_treemesh: Reorder model values stored in cell centers of an Octree mesh to
+        their original octree mesh sorting.
+    permute_2_treemesh: Reorder model values stored in cell centers of an octree mesh to
         TreeMesh sorting.
 
     """
@@ -48,16 +48,16 @@ class InversionModelCollection:
         """
         :param: workspace: Geoh5py workspace object containing window data.
         :param: params: Params object containing window parameters.
-        :param: mesh: Inversion mesh on which the models are defined as cell
+        :param: mesh: base_inversion mesh on which the models are defined as cell
             centered properties.
         :param: is_sigma: True if models are in units of conductivity. When true,
             models will be converted to log(conductivity) for inversion purposes.
         :param: is_vector: True if models are vector valued.
         :param: n_blocks: Number of blocks (components) if vector.
-        :param: starting: Inversion starting model.
-        :param: reference: Inversion reference model.
-        :param: lower_bound: Inversion lower bound model.
-        :param: upper_bound: Inversion upper bound model.
+        :param: starting: base_inversion starting model.
+        :param: reference: base_inversion reference model.
+        :param: lower_bound: base_inversion lower bound model.
+        :param: upper_bound: base_inversion upper bound model.
         """
         self.workspace = workspace
         self.params = params
@@ -159,21 +159,21 @@ class InversionModelCollection:
     def permute_2_octree(self, name):
         """
         Reorder model values stored in cell centers of a TreeMesh to
-        their original Octree mesh sorting.
+        their original octree mesh sorting.
 
         :param: name: model type name ("starting", "reference",
             "lower_bound", or "upper_bound").
 
-        :return: Vector of model values reordered for Octree mesh.
+        :return: Vector of model values reordered for octree mesh.
         """
         return self._model_method_wrapper("permute_2_octree", name=name)
 
     def permute_2_treemesh(self, model, name):
         """
-        Reorder model values stored in cell centers of an Octree mesh to
+        Reorder model values stored in cell centers of an octree mesh to
         TreeMesh sorting.
 
-        :param model: Octree sorted model.
+        :param model: octree sorted model.
         :param name: model type name ("starting", "reference",
             "lower_bound", or "upper_bound").
 
@@ -199,8 +199,8 @@ class InversionModel:
     -------
     remove_air: Use active cells vector to remove air cells from model.
     permute_2_octree: Reorder model values stored in cell centers of a TreeMesh to
-        their original Octree mesh sorting.
-    permute_2_treemesh: Reorder model values stored in cell centers of an Octree mesh to
+        their original octree mesh sorting.
+    permute_2_treemesh: Reorder model values stored in cell centers of an octree mesh to
         TreeMesh sorting.
     """
 
@@ -222,7 +222,7 @@ class InversionModel:
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
-        :param mesh: Inversion mesh object
+        :param mesh: base_inversion mesh object
         :param model_type: Type of inversion model, can be any of "starting", "reference",
             "lower_bound", "upper_bound".
         """
@@ -305,9 +305,9 @@ class InversionModel:
     def permute_2_octree(self):
         """
         Reorder self.model values stored in cell centers of a TreeMesh to
-        it's original Octree mesh order.
+        it's original octree mesh order.
 
-        :return: Vector of model values reordered for Octree mesh.
+        :return: Vector of model values reordered for octree mesh.
         """
         if self.is_vector:
             return mkvc(
@@ -317,16 +317,16 @@ class InversionModel:
 
     def permute_2_treemesh(self, model):
         """
-        Reorder model values stored in cell centers of an Octree mesh to
+        Reorder model values stored in cell centers of an octree mesh to
         TreeMesh order in self.mesh.
 
-        :param model: Octree sorted model
+        :param model: octree sorted model
         :return: Vector of model values reordered for TreeMesh.
         """
         return model[np.argsort(self.mesh.octree_permutation)]
 
     def save_model(self):
-        """Resort model to the Octree object's ordering and save to workspace."""
+        """Resort model to the octree object's ordering and save to workspace."""
         remapped_model = self.permute_2_octree()
         if self.is_vector:
             if self.model_type in ["starting", "reference"]:

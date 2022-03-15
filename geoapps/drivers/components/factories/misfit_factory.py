@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.io.params import Params
+    from geoapps.drivers.base_params import BaseParams
 
 import numpy as np
 from SimPEG import data, data_misfit, objective_function
@@ -21,7 +21,7 @@ from .simpeg_factory import SimPEGFactory
 class MisfitFactory(SimPEGFactory):
     """Build SimPEG global misfit function."""
 
-    def __init__(self, params: Params, models=None):
+    def __init__(self, params: BaseParams, models=None):
         """
         :param params: Params object containing SimPEG object parameters.
         """

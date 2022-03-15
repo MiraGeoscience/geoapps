@@ -198,7 +198,7 @@ class MeshOctreeOptions:
         )
         self._main = widgets.VBox(
             [
-                Label("Octree Mesh"),
+                Label("octree Mesh"),
                 self._core_cell_size,
                 self._octree_levels_topo,
                 self._octree_levels_obs,
@@ -485,7 +485,7 @@ class InversionOptions(BaseApplication):
         self.option_choices.observe(self.inversion_option_change, names="value")
         self._main = widgets.VBox(
             [
-                HBox([widgets.Label("Inversion Options")]),
+                HBox([widgets.Label("base_inversion Options")]),
                 HBox(
                     [
                         self.option_choices,
@@ -643,7 +643,7 @@ def plot_convergence_curve(h5file):
     objects = widgets.Dropdown(
         options=names,
         value=names[0],
-        description="Inversion Group:",
+        description="base_inversion Group:",
     )
 
     def plot_curve(objects):
@@ -843,7 +843,7 @@ class InversionApp(PlotSelection2D):
                     ),
                     VBox(
                         [
-                            Label("Inversion Parameters"),
+                            Label("base_inversion Parameters"),
                             self.forward_only,
                             self.inversion_parameters.main,
                         ],
@@ -927,7 +927,7 @@ class InversionApp(PlotSelection2D):
         """"""
         os.system(
             "start cmd.exe @cmd /k "
-            + 'python -m geoapps.drivers.em1d_inversion "'
+            + 'python -m geoapps.drivers.airborne_electromagnetics.em1d_inversion "'
             + f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
         )
         self.trigger.button_style = ""

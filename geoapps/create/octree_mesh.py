@@ -17,10 +17,10 @@ from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
-from geoapps.io.Octree.constants import app_initializer, default_ui_json
-from geoapps.io.Octree.params import OctreeParams
+from geoapps.drivers.octree import OctreeParams
+from geoapps.drivers.octree.constants import app_initializer
 from geoapps.selection import ObjectDataSelection
-from geoapps.utils.utils import string_2_list, string_2_numeric, treemesh_2_octree
+from geoapps.utils.utils import treemesh_2_octree
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -352,6 +352,6 @@ class OctreeMesh(ObjectDataSelection):
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    # file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\Octree Mesh Creator.ui.json"
+    # file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\octree Mesh Creator.ui.json"
     params = OctreeParams(InputFile.read_ui_json(file))
     OctreeMesh.run(params)
