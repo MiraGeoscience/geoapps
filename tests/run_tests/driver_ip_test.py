@@ -7,7 +7,6 @@
 
 import numpy as np
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
@@ -33,8 +32,10 @@ def test_ip_run(
     pytest=True,
     refinement=(4, 6),
 ):
-    from geoapps.drivers.induced_polarization_inversion import InducedPolarizationDriver
-    from geoapps.io.InducedPolarization.params import InducedPolarizationParams
+    from geoapps.drivers.induced_polarization import InducedPolarizationParams
+    from geoapps.drivers.induced_polarization.induced_polarization_inversion import (
+        InducedPolarizationDriver,
+    )
 
     np.random.seed(0)
     # Run the forward

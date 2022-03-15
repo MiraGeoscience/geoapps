@@ -23,7 +23,6 @@ from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import (
     Box,
-    Button,
     Checkbox,
     ColorPicker,
     Dropdown,
@@ -44,8 +43,8 @@ from ipywidgets.widgets.widget_selection import TraitError
 from tqdm import tqdm
 
 from geoapps.base import BaseApplication
-from geoapps.io.PeakFinder import PeakFinderParams
-from geoapps.io.PeakFinder.constants import (
+from geoapps.drivers.peak_finder import PeakFinderParams
+from geoapps.drivers.peak_finder.constants import (
     app_initializer,
     default_ui_json,
     template_dict,
@@ -785,7 +784,7 @@ class PeakFinder(ObjectDataSelection):
 
     def edit_group(self, caller):
         """
-        Observer of :obj:`geoapps.processing.PeakFinder.`: Change channels associated with groups
+        Observer of :obj:`geoapps.processing.peak_finder.`: Change channels associated with groups
         """
         widget = caller["owner"]
         if not self.pause_refresh:
@@ -831,7 +830,7 @@ class PeakFinder(ObjectDataSelection):
 
     def groups_trigger(self, _):
         """
-        Observer of :obj:`geoapps.processing.PeakFinder.`:
+        Observer of :obj:`geoapps.processing.peak_finder.`:
         """
         if self.groups_setter.value:
             self.groups_widget.children = [
@@ -914,7 +913,7 @@ class PeakFinder(ObjectDataSelection):
 
     def objects_change(self, _):
         """
-        Observer of :obj:`geoapps.processing.PeakFinder.objects`: Reset data and auto-detect AEM system
+        Observer of :obj:`geoapps.processing.peak_finder.objects`: Reset data and auto-detect AEM system
         """
         if self.workspace.get_entity(self.objects.value):
             self._survey = self.workspace.get_entity(self.objects.value)[0]
@@ -962,7 +961,7 @@ class PeakFinder(ObjectDataSelection):
         x_label,
     ):
         """
-        Observer of :obj:`geoapps.processing.PeakFinder.`:
+        Observer of :obj:`geoapps.processing.peak_finder.`:
         """
 
         if (
@@ -1167,7 +1166,7 @@ class PeakFinder(ObjectDataSelection):
 
     def plot_decay_curve(self, center, plot_trigger):
         """
-        Observer of :obj:`geoapps.processing.PeakFinder.`:
+        Observer of :obj:`geoapps.processing.peak_finder.`:
         """
         if self.pause_refresh or not self.plot_result:
             return
@@ -1245,7 +1244,7 @@ class PeakFinder(ObjectDataSelection):
 
     def scale_update(self, _):
         """
-        Observer of :obj:`geoapps.processing.PeakFinder.`:
+        Observer of :obj:`geoapps.processing.peak_finder.`:
         """
         if self.scale_button.value == "symlog":
             self.scale_panel.children = [
@@ -1257,7 +1256,7 @@ class PeakFinder(ObjectDataSelection):
 
     def set_data(self, _):
         """
-        Observer of :obj:`geoapps.processing.PeakFinder.data`
+        Observer of :obj:`geoapps.processing.peak_finder.data`
         Populate the list of available channels and refresh groups
         """
         self._group_auto.button_style = "warning"
@@ -1677,7 +1676,7 @@ class PeakFinder(ObjectDataSelection):
 
     def show_decay_trigger(self, _):
         """
-        Observer of :obj:`geoapps.processing.PeakFinder.`: Add the decay curve plot
+        Observer of :obj:`geoapps.processing.peak_finder.`: Add the decay curve plot
         """
         if self.show_decay.value:
             self.decay_panel.children = [self.show_decay, self.decay]

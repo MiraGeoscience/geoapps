@@ -280,7 +280,7 @@ class Export(ObjectDataSelection):
 
             assert isinstance(
                 entity, (Octree, BlockModel)
-            ), "Export available for BlockModel or Octree only"
+            ), "Export available for BlockModel or octree only"
             if isinstance(entity, Octree):
                 mesh = octree_2_treemesh(entity)
 

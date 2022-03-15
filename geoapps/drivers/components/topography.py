@@ -13,7 +13,7 @@ from geoh5py.shared import Entity
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.io import Params
+    from geoapps.drivers import BaseParams
     from . import InversionMesh
     from typing import Any
 
@@ -86,7 +86,7 @@ class InversionTopography(InversionLocations):
         """
         Return mask that restricts models to set of earth cells.
 
-        :param: mesh: Inversion mesh.
+        :param: mesh: base_inversion mesh.
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """

@@ -7,7 +7,6 @@
 
 import numpy as np
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
@@ -33,8 +32,10 @@ def test_dc_run(
     pytest=True,
     refinement=(4, 6),
 ):
-    from geoapps.drivers.direct_current_inversion import DirectCurrentDriver
-    from geoapps.io.DirectCurrent.params import DirectCurrentParams
+    from geoapps.drivers.direct_current.direct_current_inversion import (
+        DirectCurrentDriver,
+    )
+    from geoapps.drivers.direct_current.params import DirectCurrentParams
 
     np.random.seed(0)
     # Run the forward

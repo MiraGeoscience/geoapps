@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.io import Params
+    from geoapps.drivers import BaseParams
 
 import numpy as np
 from geoh5py.objects import Grid2D, PotentialElectrode

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoh5py.objects import Octree
-    from geoapps.io.params import Params
+    from geoapps.drivers.base_params import BaseParams
     from discretize import TreeMesh
     from . import InversionData, InversionTopography
 
@@ -20,14 +20,14 @@ import numpy as np
 from geoh5py.objects import PotentialElectrode
 from geoh5py.workspace import Workspace
 
-from geoapps.io import Params
-from geoapps.io.Octree import OctreeParams
-from geoapps.utils import octree_2_treemesh, rotate_xy
+from geoapps.drivers import BaseParams
+from geoapps.drivers.octree import OctreeParams
+from geoapps.utils import octree_2_treemesh
 
 
 class InversionMesh:
     """
-    Retrieve Octree mesh data from workspace and convert to Treemesh.
+    Retrieve octree mesh data from workspace and convert to Treemesh.
 
     Attributes
     ----------
@@ -35,17 +35,17 @@ class InversionMesh:
     nC:
         Number of cells in the mesh.
     rotation :
-        Rotation of original Octree mesh.
+        Rotation of original octree mesh.
     octree_permutation:
         Permutation vector to restore cell centers or model values to
-        origin Octree mesh order.
+        origin octree mesh order.
 
     """
 
     def __init__(
         self,
         workspace: Workspace,
-        params: Params,
+        params: BaseParams,
         inversion_data: InversionData,
         inversion_topography: InversionTopography,
     ) -> None:
@@ -70,9 +70,9 @@ class InversionMesh:
         """
         Collects mesh data stored in geoh5 workspace into TreeMesh object.
 
-        Handles conversion from geoh5's native Octree mesh type to TreeMesh
+        Handles conversion from geoh5's native octree mesh type to TreeMesh
         type required for SimPEG inversion and stores data needed to restore
-        original the Octree mesh type.
+        original the octree mesh type.
         """
 
         if self.params.mesh is not None:
@@ -93,8 +93,8 @@ class InversionMesh:
         self.mesh = octree_2_treemesh(self.entity)
         self.octree_permutation = self.mesh._ubc_order
 
-    def collect_mesh_params(self, params: Params) -> OctreeParams:
-        """Collect mesh params from inversion params set and return Octree Params object."""
+    def collect_mesh_params(self, params: BaseParams) -> OctreeParams:
+        """Collect mesh params from inversion params set and return octree Params object."""
 
         mesh_param_names = [
             "u_cell_size",

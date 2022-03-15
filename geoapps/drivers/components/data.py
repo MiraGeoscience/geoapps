@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.io import Params
+    from geoapps.drivers import BaseParams
 
 from copy import deepcopy
 
@@ -456,7 +456,7 @@ class InversionData(InversionLocations):
         """
         Generates SimPEG simulation object.
 
-        :param: mesh: Inversion mesh.
+        :param: mesh: base_inversion mesh.
         :param: active_cells: Mask that reduces model to active (earth) cells.
         :param: survey: SimPEG survey object.
         :param: tile_id (Optional): Id associated with the tile covered by

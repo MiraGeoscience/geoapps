@@ -12,11 +12,11 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.io.params import Params
+    from geoapps.drivers.base_params import BaseParams
 
 
 import numpy as np
-from geoh5py.objects import Grid2D, Points, PotentialElectrode
+from geoh5py.objects import Points
 from geoh5py.shared import Entity
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
@@ -53,7 +53,9 @@ class InversionLocations:
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
+    def __init__(
+        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
+    ):
         """
         :param workspace: Geoh5py workspace object containing location based data.
         :param params: Params object containing location based data parameters.

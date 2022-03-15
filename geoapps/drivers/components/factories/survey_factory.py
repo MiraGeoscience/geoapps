@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.io.params import Params
+    from geoapps.drivers.base_params import BaseParams
 
 import numpy as np
 
@@ -57,7 +57,7 @@ class SurveyFactory(SimPEGFactory):
 
     dummy = -999.0
 
-    def __init__(self, params: Params):
+    def __init__(self, params: BaseParams):
         """
         :param params: Params object containing SimPEG object parameters.
         """

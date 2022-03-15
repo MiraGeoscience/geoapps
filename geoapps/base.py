@@ -32,7 +32,7 @@ from ipywidgets import (
     Widget,
 )
 
-from geoapps.io import Params
+from geoapps.drivers import BaseParams
 from geoapps.utils.formatters import string_name
 
 
@@ -56,7 +56,7 @@ class BaseApplication:
     _trigger = None
     _figure = None
     _refresh = None
-    _params: Params | None = None
+    _params: BaseParams | None = None
     plot_result = False
 
     def __init__(self, **kwargs):
@@ -386,16 +386,16 @@ class BaseApplication:
         return self._export_directory
 
     @property
-    def params(self) -> Params:
+    def params(self) -> BaseParams:
         """
         Application parameters
         """
         return self._params
 
     @params.setter
-    def params(self, params: Params):
+    def params(self, params: BaseParams):
         assert isinstance(
-            params, Params
+            params, BaseParams
         ), f"Input parameters must be an instance of {Params}"
 
         self._params = params

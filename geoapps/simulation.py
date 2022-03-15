@@ -485,7 +485,7 @@ def block_model_widget(h5file, inducing_field="50000, 90, 0"):
         update_data_options("")
 
     survey_type = widgets.Dropdown(
-        options=["Magnetics", "Gravity"],
+        options=["Magnetics", "gravity"],
         value="Magnetics",
         description="Survey Type:",
     )

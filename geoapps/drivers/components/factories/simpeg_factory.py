@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.io.params import Params
+    from geoapps.drivers.base_params import BaseParams
 
 
 class SimPEGFactory:
@@ -45,7 +45,7 @@ class SimPEGFactory:
         "magnetotellurics",
     ]
 
-    def __init__(self, params: Params):
+    def __init__(self, params: BaseParams):
         """
         :param params: Driver parameters object.
         :param factory_type: Concrete factory type.
