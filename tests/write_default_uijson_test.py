@@ -17,7 +17,7 @@ def test_write_default_uijson(tmp_path):
     write_default_uijson(tmp_path)
     filepath = os.path.join(tmp_path, "gravity_inversion.ui.json")
     assert os.path.exists(filepath)
-    ifile = InputFile.read_ui_json(filepath)
+    ifile = InputFile.read_ui_json(filepath, validation_options={"disabled": True})
     params = GravityParams(input_file=ifile, validate=False)
     assert params.gz_uncertainty == 1.0
 
@@ -29,3 +29,4 @@ def test_write_default_uijson_initializers(tmp_path):
     ifile = InputFile.read_ui_json(filepath)
     params = GravityParams(input_file=ifile, validate=False)
     assert params.gz_uncertainty == 0.05
+    assert params.reference_model is None

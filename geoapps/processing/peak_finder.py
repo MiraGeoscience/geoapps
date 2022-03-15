@@ -120,7 +120,6 @@ class PeakFinder(ObjectDataSelection):
 
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
         self.plot_result = plot_result
-
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
             self.params = self._param_class(InputFile(ui_json))

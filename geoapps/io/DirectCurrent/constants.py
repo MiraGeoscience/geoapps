@@ -94,7 +94,6 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": None,
     "out_group": "DirectCurrentInversion",
-    "no_data_value": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.drivers.direct_current_inversion",

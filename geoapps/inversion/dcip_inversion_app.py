@@ -1014,7 +1014,7 @@ class InversionApp(PlotSelection2D):
         self.params.geoh5 = new_workspace
 
         for key in self.__dict__:
-            if key == "resolution":
+            if "resolution" in key:
                 continue
             try:
                 attr = getattr(self, key)
