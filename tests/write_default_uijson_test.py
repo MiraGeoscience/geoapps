@@ -29,4 +29,4 @@ def test_write_default_uijson_initializers(tmp_path):
     ifile = InputFile.read_ui_json(filepath)
     params = GravityParams(input_file=ifile, validate=False)
     assert params.gz_uncertainty == 0.05
-    assert params.reference_model is None
+    assert params.reference_model == 0.0
