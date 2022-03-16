@@ -5,11 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import sys
 
 from geoh5py.ui_json import InputFile
 
-from ..base_inversion.base_inversion import InversionDriver
-from .params import MagneticVectorParams
+from ..base_inversion.inversion import InversionDriver
+from .params import MagneticScalarParams
 
 
 def start_inversion(filepath=None, **kwargs):
@@ -19,13 +20,13 @@ def start_inversion(filepath=None, **kwargs):
     if filepath is not None:
         input_file = InputFile.read_ui_json(filepath)
 
-    params = MagneticVectorParams(input_file=input_file, **kwargs)
-    driver = MagneticVectorDriver(params)
+    params = MagneticScalarParams(input_file=input_file, **kwargs)
+    driver = MagneticScalarDriver(params)
     driver.run()
 
 
-class MagneticVectorDriver(InversionDriver):
-    def __init__(self, params: MagneticVectorParams):
+class MagneticScalarDriver(InversionDriver):
+    def __init__(self, params: MagneticScalarParams):
         super().__init__(params)
 
     def run(self):
@@ -33,6 +34,5 @@ class MagneticVectorDriver(InversionDriver):
 
 
 if __name__ == "__main__":
-    # filepath = sys.argv[1]
-    filepath = r"/assets/Temp/VectorInversion.ui.json"
+    filepath = sys.argv[1]
     start_inversion(filepath)

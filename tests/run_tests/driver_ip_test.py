@@ -32,9 +32,7 @@ def test_ip_run(
     pytest=True,
     refinement=(4, 6),
 ):
-    from geoapps.drivers.induced_polarization.induced_polarization_inversion import (
-        InducedPolarizationDriver,
-    )
+    from geoapps.drivers.induced_polarization.inversion import InducedPolarizationDriver
     from geoapps.drivers.induced_polarization.params import InducedPolarizationParams
 
     np.random.seed(0)
