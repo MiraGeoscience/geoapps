@@ -116,7 +116,7 @@ inversion_defaults = {
     "out_group": "GravityInversion",
     "monitoring_directory": None,
     "workspace_geoh5": None,
-    "run_command": "geoapps.drivers.grav_inversion",
+    "run_command": "geoapps.drivers.gravity.gravity_inversion",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,

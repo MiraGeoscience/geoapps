@@ -32,9 +32,7 @@ def test_dc_run(
     pytest=True,
     refinement=(4, 6),
 ):
-    from geoapps.drivers.direct_current.direct_current_inversion import (
-        DirectCurrentDriver,
-    )
+    from geoapps.drivers.direct_current.inversion import DirectCurrentDriver
     from geoapps.drivers.direct_current.params import DirectCurrentParams
 
     np.random.seed(0)

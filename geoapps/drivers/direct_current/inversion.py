@@ -9,8 +9,8 @@ import sys
 
 from geoh5py.ui_json import InputFile
 
-from ..base_inversion.base_inversion import InversionDriver
-from .params import MagneticScalarParams
+from ..base_inversion.inversion import InversionDriver
+from .params import DirectCurrentParams
 
 
 def start_inversion(filepath=None, **kwargs):
@@ -20,13 +20,13 @@ def start_inversion(filepath=None, **kwargs):
     if filepath is not None:
         input_file = InputFile.read_ui_json(filepath)
 
-    params = MagneticScalarParams(input_file=input_file, **kwargs)
-    driver = MagneticScalarDriver(params)
+    params = DirectCurrentParams(input_file=input_file, **kwargs)
+    driver = DirectCurrentDriver(params)
     driver.run()
 
 
-class MagneticScalarDriver(InversionDriver):
-    def __init__(self, params: MagneticScalarParams):
+class DirectCurrentDriver(InversionDriver):
+    def __init__(self, params: DirectCurrentParams):
         super().__init__(params)
 
     def run(self):

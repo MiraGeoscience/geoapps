@@ -5,5 +5,5 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from .base_inversion import InversionDriver
+from .inversion import InversionDriver
 from .params import InversionBaseParams

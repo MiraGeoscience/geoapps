@@ -5,4 +5,4 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from .magnetic_vector_inversion import MagneticVectorDriver
+from .inversion import MagneticVectorDriver
