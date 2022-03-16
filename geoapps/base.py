@@ -32,7 +32,7 @@ from ipywidgets import (
     Widget,
 )
 
-from geoapps.drivers import BaseParams
+from geoapps.drivers.base_params import BaseParams
 from geoapps.utils.formatters import string_name
 
 

@@ -20,8 +20,7 @@ import numpy as np
 from geoh5py.objects import PotentialElectrode
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers import BaseParams
-from geoapps.drivers.octree import OctreeParams
+from geoapps.drivers.octree.params import OctreeParams
 from geoapps.utils import octree_2_treemesh
 
 
@@ -45,7 +44,7 @@ class InversionMesh:
     def __init__(
         self,
         workspace: Workspace,
-        params: BaseParams,
+        params: OctreeParams,
         inversion_data: InversionData,
         inversion_topography: InversionTopography,
     ) -> None:

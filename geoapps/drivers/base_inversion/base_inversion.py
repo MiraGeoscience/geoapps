@@ -26,7 +26,6 @@ from SimPEG import (
 )
 from SimPEG.utils import tile_locations
 
-from geoapps.drivers import BaseParams
 from geoapps.drivers.components import (
     InversionData,
     InversionMesh,
@@ -36,9 +35,11 @@ from geoapps.drivers.components import (
 )
 from geoapps.drivers.components.factories import DirectivesFactory, MisfitFactory
 
+from .params import InversionBaseParams
+
 
 class InversionDriver:
-    def __init__(self, params: Params, warmstart=True):
+    def __init__(self, params: InversionBaseParams, warmstart=True):
         self.params = params
         self.warmstart = warmstart
         self.workspace = params.geoh5

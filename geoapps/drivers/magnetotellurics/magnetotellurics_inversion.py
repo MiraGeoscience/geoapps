@@ -9,8 +9,8 @@ import sys
 
 from geoh5py.ui_json import InputFile
 
-from geoapps.drivers.base_inversion.base_inversion import InversionDriver
-from geoapps.drivers.magnetotellurics import MagnetotelluricsParams
+from ..base_inversion import InversionDriver
+from .params import MagnetotelluricsParams
 
 
 def start_inversion(filepath=None, warmstart=True, **kwargs):

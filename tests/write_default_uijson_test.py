@@ -9,7 +9,7 @@ import os
 
 from geoh5py.ui_json import InputFile
 
-from geoapps.drivers.gravity import GravityParams
+from geoapps.drivers.gravity.params import GravityParams
 from geoapps.utils.write_default_uijson import write_default_uijson
 
 

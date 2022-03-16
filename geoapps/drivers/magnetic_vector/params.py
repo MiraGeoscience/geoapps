@@ -10,8 +10,7 @@ from __future__ import annotations
 from copy import deepcopy
 from uuid import UUID
 
-from geoapps.drivers.base_inversion import InversionBaseParams
-
+from ..base_inversion import InversionBaseParams
 from .constants import (
     default_ui_json,
     forward_defaults,
