@@ -34,7 +34,6 @@ class MagnetotelluricsParams(InversionParams):
     forward_ui_json = forward_ui_json
     inversion_ui_json = inversion_ui_json
     _directive_list = [
-        "VectorInversion",
         "Update_IRLS",
         "UpdateSensitivityWeights",
         "BetaEstimate_ByEig",
@@ -98,11 +97,14 @@ class MagnetotelluricsParams(InversionParams):
                 self.geoh5.get_entity(p)[0].name for p in group.properties
             ]
             properties = [self.geoh5.get_entity(p)[0].values for p in group.properties]
-            for f in frequencies:
-                f_ind = property_names.index(
-                    [k for k in property_names if str(f) in k][0]
-                )
-                data[f] = properties[f_ind]
+            for i, f in enumerate(frequencies):
+                try:
+                    f_ind = property_names.index(
+                        [k for k in property_names if f"{f:.2e}" in k][0]
+                    ) # Safer if data was saved with geoapps naming convention
+                    data[f] = properties[f_ind]
+                except IndexError:
+                    data[f] = properties[i] # in case of other naming conventions
 
             return data
 
