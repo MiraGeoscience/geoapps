@@ -10,8 +10,8 @@ import sys
 
 from geoh5py.ui_json import InputFile
 
-from geoapps.drivers.base_inversion.base_inversion import InversionDriver
-from geoapps.drivers.gravity import GravityParams
+from ..base_inversion import InversionDriver
+from .params import GravityParams
 
 
 def start_inversion(filepath=None, **kwargs):

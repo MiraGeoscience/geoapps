@@ -18,7 +18,7 @@ from geoapps.drivers.components import (
     InversionTopography,
     InversionWindow,
 )
-from geoapps.drivers.magnetic_vector import MagneticVectorParams, default_ui_json
+from geoapps.drivers.magnetic_vector.params import MagneticVectorParams, default_ui_json
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")

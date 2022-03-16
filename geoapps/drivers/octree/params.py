@@ -13,7 +13,7 @@ from geoh5py.ui_json import InputFile
 
 from geoapps.drivers.base_params import BaseParams
 
-from . import default_ui_json, defaults, template_dict, validations
+from .constants import default_ui_json, defaults, template_dict, validations
 
 
 class OctreeParams(BaseParams):

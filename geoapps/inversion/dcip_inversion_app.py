@@ -39,7 +39,7 @@ from ipywidgets.widgets import (
 
 from geoapps.drivers.direct_current.constants import app_initializer
 from geoapps.drivers.direct_current.params import DirectCurrentParams
-from geoapps.drivers.induced_polarization import InducedPolarizationParams
+from geoapps.drivers.induced_polarization.params import InducedPolarizationParams
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils.utils import find_value, string_2_list

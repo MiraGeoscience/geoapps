@@ -31,9 +31,9 @@ from ipywidgets.widgets import (
     Widget,
 )
 
-from geoapps.drivers.gravity import GravityParams
+from geoapps.drivers.gravity.params import GravityParams
 from geoapps.drivers.magnetic_scalar.params import MagneticScalarParams
-from geoapps.drivers.magnetic_vector import app_initializer
+from geoapps.drivers.magnetic_vector.constants import app_initializer
 from geoapps.drivers.magnetic_vector.params import MagneticVectorParams
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import ObjectDataSelection, TopographyOptions

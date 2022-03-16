@@ -12,7 +12,7 @@ from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
 from geoapps.drivers.components import InversionWindow
-from geoapps.drivers.gravity import GravityParams, default_ui_json
+from geoapps.drivers.gravity.params import GravityParams, default_ui_json
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")

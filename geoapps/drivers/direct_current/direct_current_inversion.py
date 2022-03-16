@@ -9,8 +9,8 @@ import sys
 
 from geoh5py.ui_json import InputFile
 
-from geoapps.drivers.base_inversion.base_inversion import InversionDriver
-from geoapps.drivers.direct_current import DirectCurrentParams
+from ..base_inversion.base_inversion import InversionDriver
+from .params import DirectCurrentParams
 
 
 def start_inversion(filepath=None, **kwargs):

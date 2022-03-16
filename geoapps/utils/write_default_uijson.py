@@ -8,14 +8,14 @@
 import argparse
 
 import geoapps
-from geoapps.drivers.direct_current import DirectCurrentParams
-from geoapps.drivers.gravity import GravityParams
-from geoapps.drivers.induced_polarization import InducedPolarizationParams
-from geoapps.drivers.magnetic_scalar import MagneticScalarParams
-from geoapps.drivers.magnetic_vector import MagneticVectorParams
-from geoapps.drivers.magnetotellurics import MagnetotelluricsParams
-from geoapps.drivers.octree import OctreeParams
-from geoapps.drivers.peak_finder import PeakFinderParams
+from geoapps.drivers.direct_current.params import DirectCurrentParams
+from geoapps.drivers.gravity.params import GravityParams
+from geoapps.drivers.induced_polarization.params import InducedPolarizationParams
+from geoapps.drivers.magnetic_scalar.params import MagneticScalarParams
+from geoapps.drivers.magnetic_vector.params import MagneticVectorParams
+from geoapps.drivers.magnetotellurics.params import MagnetotelluricsParams
+from geoapps.drivers.octree.params import OctreeParams
+from geoapps.drivers.peak_finder.params import PeakFinderParams
 
 path_to_flinflon = lambda file: "\\".join(
     geoapps.__file__.split("\\")[:-2] + ["assets", file]

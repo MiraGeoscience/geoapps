@@ -16,7 +16,7 @@ from SimPEG.utils.mat_utils import (
     mkvc,
 )
 
-from geoapps.drivers import BaseParams
+from geoapps.drivers.base_params import BaseParams
 from geoapps.utils import rotate_xy, weighted_average
 
 from . import InversionMesh
@@ -215,7 +215,7 @@ class InversionModel:
     def __init__(
         self,
         workspace: Workspace,
-        params: Params,
+        params: BaseParams,
         mesh: InversionMesh,
         model_type: str,
     ):

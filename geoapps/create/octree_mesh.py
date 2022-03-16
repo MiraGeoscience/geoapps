@@ -17,8 +17,8 @@ from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base import BaseApplication
-from geoapps.drivers.octree import OctreeParams
 from geoapps.drivers.octree.constants import app_initializer
+from geoapps.drivers.octree.params import OctreeParams
 from geoapps.selection import ObjectDataSelection
 from geoapps.utils.utils import treemesh_2_octree
 
