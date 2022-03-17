@@ -10,7 +10,7 @@ import sys
 
 from geoh5py.ui_json import InputFile
 
-from ..base_inversion import InversionDriver
+from ..base_inversion.inversion import InversionDriver
 from .params import InducedPolarizationParams
 
 

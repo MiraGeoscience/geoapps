@@ -13,7 +13,7 @@ import SimPEG
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers.base_inversion import InversionDriver
+from geoapps.drivers.base_inversion.inversion import InversionDriver
 from geoapps.drivers.components import InversionData
 from geoapps.drivers.magnetic_vector.params import MagneticVectorParams, default_ui_json
 from geoapps.utils.testing import Geoh5Tester
