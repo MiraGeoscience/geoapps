@@ -125,13 +125,10 @@ class BaseApplication:
                         widget = getattr(self, key)
 
                         if isinstance(widget, (Dropdown, SelectMultiple)):
-                            try:
-                                if isinstance(value, list):
-                                    value = [dict_mapper(val, mappers) for val in value]
-                                else:
-                                    value = dict_mapper(value, mappers)
-                            except (ValueError, AttributeError, TypeError):
-                                pass
+                            if isinstance(value, list):
+                                value = [dict_mapper(val, mappers) for val in value]
+                            else:
+                                value = dict_mapper(value, mappers)
 
                         setattr(widget, "value", value)
                         if hasattr(widget, "style"):

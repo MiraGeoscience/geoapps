@@ -1224,30 +1224,27 @@ class InversionApp(PlotSelection2D):
         self.params.geoh5 = new_workspace
 
         for key in self.__dict__:
-            try:
-                attr = getattr(self, key)
-                if isinstance(attr, Widget):
-                    value = attr.value
+
+            attr = getattr(self, key)
+            if isinstance(attr, Widget) and hasattr(attr, "value"):
+                value = attr.value
+                if isinstance(value, uuid.UUID):
+                    value = new_workspace.get_entity(value)[0]
+                setattr(self.params, key, value)
+            else:
+                sub_keys = []
+                if isinstance(attr, (ModelOptions, TopographyOptions)):
+                    sub_keys = [attr.identifier, attr.identifier + "_object"]
+                    attr = self
+                elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                    sub_keys = attr.params_keys
+                for sub_key in sub_keys:
+                    value = getattr(attr, sub_key)
+                    if isinstance(value, Widget) and hasattr(value, "value"):
+                        value = value.value
                     if isinstance(value, uuid.UUID):
                         value = new_workspace.get_entity(value)[0]
-                    setattr(self.params, key, value)
-                else:
-                    sub_keys = []
-                    if isinstance(attr, (ModelOptions, TopographyOptions)):
-                        sub_keys = [attr.identifier, attr.identifier + "_object"]
-                        attr = self
-                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                        sub_keys = attr.params_keys
-                    for sub_key in sub_keys:
-                        value = getattr(attr, sub_key)
-                        if isinstance(value, Widget):
-                            value = value.value
-                        if isinstance(value, uuid.UUID):
-                            value = new_workspace.get_entity(value)[0]
-                        setattr(self.params, sub_key, value)
-
-            except AttributeError:
-                continue
+                    setattr(self.params, sub_key, value)
 
         self.params.write_input_file(
             name=self._ga_group_name.value + ".ui.json",
