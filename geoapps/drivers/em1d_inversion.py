@@ -1036,5 +1036,4 @@ def inversion(input_file):
 if __name__ == "__main__":
 
     input_file = sys.argv[1]
-    # input_file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\EM1DInversion_Inv.json"
     inversion(input_file)

@@ -35,5 +35,4 @@ class MagnetotelluricsDriver(InversionDriver):
 
 if __name__ == "__main__":
     filepath = sys.argv[1]
-    # filepath = r"C:\Users\dominiquef\Desktop\lblock_inversion_v7.ui.json"
     start_inversion(filepath)
