@@ -13,7 +13,6 @@ from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 
 from ..params import Params
-from ..validation import InputFreeformValidation
 from . import default_ui_json, defaults, template_dict, validations
 
 
