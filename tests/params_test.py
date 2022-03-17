@@ -20,6 +20,7 @@ from geoh5py.shared.exceptions import (
     ValueValidationError,
 )
 from geoh5py.ui_json import InputFile
+from geoh5py.ui_json.utils import optional_type
 from geoh5py.workspace import Workspace
 
 from geoapps.drivers.direct_current.params import DirectCurrentParams
@@ -182,26 +183,16 @@ def test_default_input_file(tmp_path):
         # check that reads back into input file with defaults
         check = []
         for k, v in ifile.data.items():
-            if " " in k:
+            if " " in k or not optional_type(ifile.ui_json, k):
                 continue
             check.append(v == params.defaults[k])
         assert all(check)
 
         # check that params constructed from_path is defaulted
-        ifile = InputFile.read_ui_json(filename, validation_options={"disabled": True})
-        params2 = params_class(input_file=ifile)
+        params2 = params_class()
         check = []
         for k, v in params2.to_dict(ui_json_format=False).items():
-            if " " in k:
-                continue
-            check.append(v == ifile.data[k])
-        assert all(check)
-
-        # check that params constructed from_input_file is defaulted
-        params3 = params_class(input_file=ifile)
-        check = []
-        for k, v in params3.to_dict(ui_json_format=False).items():
-            if " " in k:
+            if " " in k or not optional_type(ifile.ui_json, k):
                 continue
             check.append(v == ifile.data[k])
         assert all(check)
