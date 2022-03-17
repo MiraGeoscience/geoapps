@@ -43,12 +43,12 @@ from ipywidgets.widgets.widget_selection import TraitError
 from tqdm import tqdm
 
 from geoapps.base import BaseApplication
-from geoapps.drivers.peak_finder import PeakFinderParams
 from geoapps.drivers.peak_finder.constants import (
     app_initializer,
     default_ui_json,
     template_dict,
 )
+from geoapps.drivers.peak_finder.params import PeakFinderParams
 from geoapps.selection import LineOptions, ObjectDataSelection
 from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name

@@ -1051,14 +1051,15 @@ class InversionApp(PlotSelection2D):
     @staticmethod
     def run(params):
 
-        if isinstance(params, DirectCurrentParams):
-            inversion_routine = "direct_current_inversion"
-        else:
-            inversion_routine = "induced_polarization_inversion"
+        if not isinstance(params, (DirectCurrentParams, InducedPolarizationParams)):
+            raise ValueError(
+                "Parameter 'inversion_type' must be one of "
+                "'direct current' or 'induced polarization'"
+            )
 
         os.system(
             "start cmd.exe @cmd /k "
-            + f"python -m geoapps.drivers.{inversion_routine} "
+            + f"python -m {params.run_command} "
             + f'"{params.input_file.path_name}"'
         )
 

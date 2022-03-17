@@ -1258,15 +1258,12 @@ class InversionApp(PlotSelection2D):
 
     @staticmethod
     def run(params):
-
-        if isinstance(params, MagneticVectorParams):
-            inversion_routine = "magnetic_vector_inversion"
-        elif isinstance(params, MagneticScalarParams):
-            inversion_routine = "magnetic_scalar_inversion"
-        elif isinstance(params, GravityParams):
-            inversion_routine = "grav_inversion"
-
-        else:
+        """
+        Trigger the inversion.
+        """
+        if not isinstance(
+            params, (MagneticVectorParams, MagneticScalarParams, GravityParams)
+        ):
             raise ValueError(
                 "Parameter 'inversion_type' must be one of "
                 "'magnetic vector', 'magnetic scalar' or 'gravity'"
@@ -1274,7 +1271,7 @@ class InversionApp(PlotSelection2D):
 
         os.system(
             "start cmd.exe @cmd /k "
-            + f"python -m geoapps.drivers.{inversion_routine} "
+            + f"python -m {params.run_command} "
             + f'"{params.input_file.path_name}"'
         )
 
