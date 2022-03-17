@@ -5,7 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
 import sys
 
 from geoh5py.ui_json import InputFile
@@ -35,6 +34,5 @@ class InducedPolarizationDriver(InversionDriver):
 
 
 if __name__ == "__main__":
-
     filepath = sys.argv[1]
     start_inversion(filepath)
