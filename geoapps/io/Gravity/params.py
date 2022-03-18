@@ -17,19 +17,15 @@ from .constants import (
     forward_ui_json,
     inversion_defaults,
     inversion_ui_json,
-    required_parameters,
     validations,
 )
 
 
 class GravityParams(InversionParams):
+    """
+    Parameter class for gravity->density inversion.
+    """
 
-    _required_parameters = required_parameters
-    _validations = validations
-    _forward_defaults = forward_defaults
-    _inversion_defaults = inversion_defaults
-    forward_ui_json = forward_ui_json
-    inversion_ui_json = inversion_ui_json
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -38,46 +34,47 @@ class GravityParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
+        self._default_ui_json = deepcopy(default_ui_json)
+        self._forward_defaults = deepcopy(forward_defaults)
+        self._forward_ui_json = deepcopy(forward_ui_json)
+        self._inversion_defaults = deepcopy(inversion_defaults)
+        self._inversion_ui_json = deepcopy(inversion_ui_json)
+        self._inversion_type = "gravity"
+        self._validations = validations
+        self._gz_channel_bool = None
+        self._gz_channel = None
+        self._gz_uncertainty = None
+        self._guv_channel_bool = None
+        self._guv_channel = None
+        self._guv_uncertainty = None
+        self._gxy_channel_bool = None
+        self._gxy_channel = None
+        self._gxy_uncertainty = None
+        self._gxx_channel_bool = None
+        self._gxx_channel = None
+        self._gxx_uncertainty = None
+        self._gyy_channel_bool = None
+        self._gyy_channel = None
+        self._gyy_uncertainty = None
+        self._gzz_channel_bool = None
+        self._gzz_channel = None
+        self._gzz_uncertainty = None
+        self._gxz_channel_bool = None
+        self._gxz_channel = None
+        self._gxz_uncertainty = None
+        self._gyz_channel_bool = None
+        self._gyz_channel = None
+        self._gyz_uncertainty = None
+        self._gx_channel_bool = None
+        self._gx_channel = None
+        self._gx_uncertainty = None
+        self._gy_channel_bool = None
+        self._gy_channel = None
+        self._gy_uncertainty = None
+        self._out_group = None
 
-        self.validate = False
-        self.default_ui_json = deepcopy(default_ui_json)
-        self.inversion_type = "gravity"
-        self.gz_channel_bool = None
-        self.gz_channel = None
-        self.gz_uncertainty = None
-        self.guv_channel_bool = None
-        self.guv_channel = None
-        self.guv_uncertainty = None
-        self.gxy_channel_bool = None
-        self.gxy_channel = None
-        self.gxy_uncertainty = None
-        self.gxx_channel_bool = None
-        self.gxx_channel = None
-        self.gxx_uncertainty = None
-        self.gyy_channel_bool = None
-        self.gyy_channel = None
-        self.gyy_uncertainty = None
-        self.gzz_channel_bool = None
-        self.gzz_channel = None
-        self.gzz_uncertainty = None
-        self.gxz_channel_bool = None
-        self.gxz_channel = None
-        self.gxz_uncertainty = None
-        self.gyz_channel_bool = None
-        self.gyz_channel = None
-        self.gyz_uncertainty = None
-        self.gx_channel_bool = None
-        self.gx_channel = None
-        self.gx_uncertainty = None
-        self.gy_channel_bool = None
-        self.gy_channel = None
-        self.gy_uncertainty = None
-        self.out_group = None
-
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
+        super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
@@ -86,14 +83,6 @@ class GravityParams(InversionParams):
             if len(comps) == 0:
                 comps = ["gz"]
         return comps
-
-    @property
-    def inversion_type(self):
-        return self._inversion_type
-
-    @inversion_type.setter
-    def inversion_type(self, val):
-        self.setter_validator("inversion_type", val)
 
     @property
     def gz_channel_bool(self):

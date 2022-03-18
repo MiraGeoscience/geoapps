@@ -7,20 +7,20 @@
 
 import sys
 
+from geoh5py.ui_json import InputFile
+
 from geoapps.drivers.base_inversion import InversionDriver
-from geoapps.io import InputFile
 from geoapps.io.MagneticScalar import MagneticScalarParams
 
 
 def start_inversion(filepath=None, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
-    if filepath is None:
-        input_file = InputFile.from_dict(kwargs)
-    else:
-        input_file = InputFile(filepath)
+    input_file = None
+    if filepath is not None:
+        input_file = InputFile.read_ui_json(filepath)
 
-    params = MagneticScalarParams(input_file)
+    params = MagneticScalarParams(input_file=input_file, **kwargs)
     driver = MagneticScalarDriver(params)
     driver.run()
 

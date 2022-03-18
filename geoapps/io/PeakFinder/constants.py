@@ -9,10 +9,11 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
+from copy import deepcopy
 from uuid import UUID
 
 import numpy as np
+from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 from geoh5py.workspace import Workspace
 
 from ...utils.geophysical_systems import parameters
@@ -29,8 +30,8 @@ defaults = {
     "smoothing": 6,
     "min_amplitude": 1,
     "min_value": None,
-    "min_width": 100,
-    "max_migration": 25,
+    "min_width": 100.0,
+    "max_migration": 25.0,
     "min_channels": 1,
     "ga_group_name": "PeakFinder",
     "structural_markers": False,
@@ -38,136 +39,122 @@ defaults = {
     "group_auto": True,
     "center": None,
     "width": None,
-    "run_command": ("geoapps.processing.peak_finder"),
-    "run_command_boolean": None,
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": None,
-    "template_data": None,
-    "template_color": None,
-    "monitoring_directory": None,
 }
 
-default_ui_json = {
-    "title": "Peak Finder Parameters",
-    "geoh5": None,
-    "tem_checkbox": {
-        "main": True,
-        "label": "TEM type",
-        "value": False,
-    },
-    "objects": {
-        "main": True,
-        "group": "Data",
-        "label": "Object",
-        "meshType": [
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-        ],
-        "value": None,
-    },
+default_ui_json = deepcopy(base_ui_json)
+default_ui_json.update(
+    {
+        "title": "Peak Finder Parameters",
+        "tem_checkbox": {
+            "main": True,
+            "label": "TEM type",
+            "value": False,
+        },
+        "objects": {
+            "main": True,
+            "group": "Data",
+            "label": "Object",
+            "meshType": [
+                "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            ],
+            "value": None,
+        },
+        "data": {
+            "association": "Vertex",
+            "dataType": "Float",
+            "group": "Data",
+            "main": True,
+            "dataGroupType": "Multi-element",
+            "label": "Channels",
+            "parent": "objects",
+            "value": None,
+        },
+        "flip_sign": {
+            "main": True,
+            "group": "Data",
+            "label": "Flip sign",
+            "value": False,
+        },
+        "line_field": {
+            "association": "Vertex",
+            "dataType": "Float",
+            "group": "Data",
+            "main": True,
+            "label": "Line Field",
+            "parent": "objects",
+            "value": None,
+        },
+        "system": {
+            "choiceList": list(parameters().keys()),
+            "main": True,
+            "label": "TEM system",
+            "dependency": "tem_checkbox",
+            "dependencyType": "enabled",
+            "value": None,
+        },
+        "smoothing": {
+            "group": "Detection Parameters",
+            "label": "Smoothing window",
+            "main": True,
+            "value": 6,
+        },
+        "min_amplitude": {
+            "group": "Detection Parameters",
+            "label": "Minimum Amplitude (%)",
+            "value": 1,
+            "main": True,
+        },
+        "min_value": {
+            "group": "Detection Parameters",
+            "label": "Minimum Value",
+            "value": 0.0,
+            "main": True,
+        },
+        "min_width": {
+            "group": "Detection Parameters",
+            "label": "Minimum Width (m)",
+            "value": 100.0,
+            "main": True,
+        },
+        "max_migration": {
+            "group": "Detection Parameters",
+            "label": "Maximum Peak Migration (m)",
+            "value": 25.0,
+            "main": True,
+        },
+        "min_channels": {
+            "group": "Detection Parameters",
+            "label": "Minimum # Channels",
+            "value": 1,
+            "main": True,
+        },
+        "ga_group_name": {
+            "enabled": True,
+            "main": True,
+            "group": "Python run preferences",
+            "label": "Save As",
+            "value": "PeakFinder",
+        },
+        "structural_markers": {
+            "main": True,
+            "group": "Python run preferences",
+            "label": "Export all markers",
+            "value": False,
+        },
+        "line_id": None,
+        "group_auto": {
+            "label": "Auto-group",
+            "value": True,
+        },
+        "center": None,
+        "width": None,
+    }
+)
+
+template_dict = {
     "data": {
         "association": "Vertex",
-        "dataType": "Float",
-        "group": "Data",
-        "main": True,
-        "dataGroupType": "Multi-element",
-        "label": "Channels",
-        "parent": "objects",
-        "value": None,
-    },
-    "flip_sign": {
-        "main": True,
-        "group": "Data",
-        "label": "Flip sign",
-        "value": False,
-    },
-    "line_field": {
-        "association": "Vertex",
-        "dataType": "Float",
-        "group": "Data",
-        "main": True,
-        "label": "Line Field",
-        "parent": "objects",
-        "value": None,
-    },
-    "system": {
-        "choiceList": list(parameters().keys()),
-        "main": True,
-        "label": "TEM system",
-        "dependency": "tem_checkbox",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "smoothing": {
-        "group": "Detection Parameters",
-        "label": "Smoothing window",
-        "main": True,
-        "value": 6,
-    },
-    "min_amplitude": {
-        "group": "Detection Parameters",
-        "label": "Minimum Amplitude (%)",
-        "value": 1,
-        "main": True,
-    },
-    "min_value": {
-        "group": "Detection Parameters",
-        "label": "Minimum Value",
-        "value": None,
-        "main": True,
-    },
-    "min_width": {
-        "group": "Detection Parameters",
-        "label": "Minimum Width (m)",
-        "value": 100,
-        "main": True,
-    },
-    "max_migration": {
-        "group": "Detection Parameters",
-        "label": "Maximum Peak Migration (m)",
-        "value": 25,
-        "main": True,
-    },
-    "min_channels": {
-        "group": "Detection Parameters",
-        "label": "Minimum # Channels",
-        "value": 1,
-        "main": True,
-    },
-    "ga_group_name": {
-        "enabled": True,
-        "main": True,
-        "group": "Python run preferences",
-        "label": "Save As",
-        "value": "PeakFinder",
-    },
-    "structural_markers": {
-        "main": True,
-        "group": "Python run preferences",
-        "label": "Export all markers",
-        "value": False,
-    },
-    "line_id": None,
-    "group_auto": {
-        "label": "Auto-group",
-        "value": True,
-    },
-    "center": None,
-    "width": None,
-    "run_command": ("geoapps.processing.peak_finder"),
-    "run_command_boolean": None,
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": None,
-    "template_data": None,
-    "template_color": None,
-    "monitoring_directory": None,
-    "plot_result": True,
-}
-
-free_format_dict = {
-    "Template Data": {
-        "association": "Vertex",
-        "dataType": "Float",
-        "group": "Property Group",
+        "group": "Group A",
         "dataGroupType": "Multi-element",
         "label": "Property Group",
         "parent": "objects",
@@ -175,9 +162,9 @@ free_format_dict = {
         "dependencyType": "disabled",
         "value": None,
     },
-    "Template Color": {
+    "color": {
         "dataType": "Text",
-        "group": "Property Group",
+        "group": "Group A",
         "label": "Color",
         "dependency": "group_auto",
         "dependencyType": "disabled",
@@ -185,104 +172,11 @@ free_format_dict = {
     },
 }
 
-required_parameters = ["objects", "data"]
-
+# Over-write validations for jupyter app parameters
 validations = {
-    "title": {
-        "types": [str],
-    },
-    "geoh5": {
-        "types": [str, Workspace],
-    },
-    "tem_checkbox": {
-        "types": [bool],
-    },
-    "objects": {
-        "types": [str, UUID],
-        "uuid": [],
-    },
-    "data": {
-        "types": [str, UUID],
-        "reqs": [("objects")],
-        "property_groups": ["objects"],
-    },
-    "flip_sign": {
-        "types": [bool],
-    },
-    "line_field": {
-        "types": [str, UUID, int, float],
-        "reqs": [("objects")],
-        "uuid": ["objects"],
-    },
-    "system": {
-        "types": [str],
-        "values": list(parameters().keys()) + [None],
-    },
-    "smoothing": {
-        "types": [int, float],
-    },
-    "min_amplitude": {
-        "types": [int, float],
-    },
-    "min_value": {
-        "types": [int, float],
-    },
-    "min_width": {
-        "types": [int, float],
-    },
-    "max_migration": {
-        "types": [int, float],
-    },
-    "min_channels": {
-        "types": [int, float],
-    },
-    "ga_group_name": {
-        "types": [str],
-    },
-    "structural_markers": {
-        "types": [bool],
-    },
-    "line_id": {
-        "types": [int, float, str],
-    },
-    "group_auto": {
-        "types": [bool],
-    },
-    "center": {
-        "types": [int, float],
-    },
-    "width": {
-        "types": [int, float],
-    },
-    "run_command": {
-        "types": [str],
-    },
-    "run_command_boolean": {
-        "types": [bool],
-    },
-    "conda_environment": {
-        "types": [str],
-    },
-    "conda_environment_boolean": {
-        "types": [bool],
-    },
-    "template_data": {
-        "types": [str, UUID],
-        "reqs": [("objects")],
-        "property_groups": ["objects"],
-    },
-    "template_color": {
-        "types": [str],
-    },
-    "monitoring_directory": {
-        "types": [str],
-    },
-    "plot_result": {
-        "types": [bool],
-    },
-    "workspace_geoh5": {
-        "types": [str],
-    },
+    "line_id": {"types": [float, type(None)]},
+    "center": {"types": [float, type(None)]},
+    "width": {"types": [float, type(None)]},
 }
 
 app_initializer = {
@@ -293,7 +187,7 @@ app_initializer = {
     "system": "VTEM (2007)",
     "line_id": 6073400.0,
     "center": 4041.2,
-    "width": 1000,
+    "width": 1000.0,
     "tem_checkbox": True,
     "min_value": -0.0004509940918069333,
     "group_auto": True,

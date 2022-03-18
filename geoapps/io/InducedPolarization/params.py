@@ -11,26 +11,21 @@ from copy import deepcopy
 
 from geoapps.io.Inversion import InversionParams
 
-from ..validators import InputValidator
 from .constants import (
     default_ui_json,
     forward_defaults,
     forward_ui_json,
     inversion_defaults,
     inversion_ui_json,
-    required_parameters,
     validations,
 )
 
 
 class InducedPolarizationParams(InversionParams):
+    """
+    Parameter class for electrical-induced polarization (IP) inversion.
+    """
 
-    _required_parameters = required_parameters
-    _validations = validations
-    _forward_defaults = forward_defaults
-    _inversion_defaults = inversion_defaults
-    forward_ui_json = forward_ui_json
-    inversion_ui_json = inversion_ui_json
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -39,21 +34,21 @@ class InducedPolarizationParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
-
-        self.validate = False
-        self.default_ui_json = deepcopy(default_ui_json)
-        self.inversion_type = "induced polarization"
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
+        self._default_ui_json = deepcopy(default_ui_json)
+        self._forward_defaults = deepcopy(forward_defaults)
+        self._forward_ui_json = deepcopy(forward_ui_json)
+        self._inversion_defaults = deepcopy(inversion_defaults)
+        self._inversion_ui_json = deepcopy(inversion_ui_json)
+        self._inversion_type = "induced polarization"
+        self._validations = validations
         self.chargeability_channel_bool = None
         self.chargeability_channel = None
         self.chargeability_uncertainty = None
         self.conductivity_model_object = None
         self.conductivity_model = None
-        self.out_group = None
 
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
+        super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     @property
     def inversion_type(self):

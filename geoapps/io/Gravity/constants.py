@@ -8,12 +8,11 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Grid2D, Points, Surface
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
-from geoapps.io.Inversion.constants import (
-    required_parameters as base_required_parameters,
-)
 from geoapps.io.Inversion.constants import validations as base_validations
 
 ################# defaults ##################
@@ -66,7 +65,7 @@ inversion_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -106,7 +105,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": None,
+    "reference_model": 0.0,
     "gradient_type": "total",
     "lower_bound_object": None,
     "lower_bound": None,
@@ -116,7 +115,6 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": None,
     "out_group": "GravityInversion",
-    "no_data_value": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.drivers.grav_inversion",
@@ -169,7 +167,7 @@ forward_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -546,85 +544,13 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations #################
 
-required_parameters = ["inversion_type"]
-required_parameters += base_required_parameters
 
 validations = {
     "inversion_type": {
-        "types": [str],
+        "required": True,
         "values": ["gravity"],
     },
-    "gz_channel_bool": {"types": [bool]},
-    "gz_channel": {
-        "types": [str, UUID],
-    },
-    "gz_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "guv_channel_bool": {"types": [bool]},
-    "guv_channel": {
-        "types": [str, UUID],
-    },
-    "guv_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "gxy_channel_bool": {"types": [bool]},
-    "gxy_channel": {
-        "types": [str, UUID],
-    },
-    "gxy_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "gxx_channel_bool": {"types": [bool]},
-    "gxx_channel": {
-        "types": [str, UUID],
-    },
-    "gxx_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "gyy_channel_bool": {"types": [bool]},
-    "gyy_channel": {
-        "types": [str, UUID],
-    },
-    "gyy_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "gzz_channel_bool": {"types": [bool]},
-    "gzz_channel": {
-        "types": [str, UUID],
-    },
-    "gzz_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "gxz_channel_bool": {"types": [bool]},
-    "gxz_channel": {
-        "types": [str, UUID],
-    },
-    "gxz_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "gyz_channel_bool": {"types": [bool]},
-    "gyz_channel": {
-        "types": [str, UUID],
-    },
-    "gyz_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "gx_channel_bool": {"types": [bool]},
-    "gx_channel": {
-        "types": [str, UUID],
-    },
-    "gx_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "gy_channel_bool": {"types": [bool]},
-    "gy_channel": {
-        "types": [str, UUID],
-    },
-    "gy_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "out_group": {"types": [str, ContainerGroup]},
+    "data_object": {"types": [str, UUID, Points, Surface, Grid2D]},
 }
 
 validations = dict(base_validations, **validations)
@@ -640,7 +566,7 @@ app_initializer = {
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
     "resolution": 50.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 1200.0,
     "horizontal_padding": 1000.0,

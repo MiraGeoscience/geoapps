@@ -22,6 +22,7 @@ from geoh5py.objects import (
     PotentialElectrode,
     Surface,
 )
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
     Button,
@@ -36,7 +37,6 @@ from ipywidgets.widgets import (
     Widget,
 )
 
-from geoapps.io import InputFile
 from geoapps.io.DirectCurrent.constants import app_initializer
 from geoapps.io.DirectCurrent.params import DirectCurrentParams
 from geoapps.io.InducedPolarization.params import InducedPolarizationParams
@@ -595,6 +595,7 @@ class InversionApp(PlotSelection2D):
                     ),
                 ]
             )
+            self.resolution.disabled = True
         return self._main
 
     @property
@@ -731,7 +732,7 @@ class InversionApp(PlotSelection2D):
             self.option_choices.options = list(self.inversion_options.keys())
 
         self.params = self._param_class(
-            validate=True, validator_opts={"ignore_requirements": True}
+            # validator_opts={"ignore_requirements": True}
         )
 
         if self.inversion_type.value in ["direct current"]:
@@ -1014,27 +1015,29 @@ class InversionApp(PlotSelection2D):
         self.params.geoh5 = new_workspace
 
         for key in self.__dict__:
-            try:
-                attr = getattr(self, key)
-                if isinstance(attr, Widget):
-                    setattr(self.params, key, attr.value)
-                else:
-                    sub_keys = []
-                    if isinstance(attr, (ModelOptions, TopographyOptions)):
-                        sub_keys = [attr.identifier, attr.identifier + "_object"]
-                        attr = self
-                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                        sub_keys = attr.params_keys
-                    for sub_key in sub_keys:
-                        value = getattr(attr, sub_key)
-                        if isinstance(value, Widget):
-                            value = value.value
-                        if isinstance(value, uuid.UUID):
-                            value = str(value)
-                        setattr(self.params, sub_key, value)
-
-            except AttributeError:
+            if "resolution" in key:
                 continue
+
+            attr = getattr(self, key)
+            if isinstance(attr, Widget) and hasattr(attr, "value"):
+                value = attr.value
+                if isinstance(value, uuid.UUID):
+                    value = new_workspace.get_entity(value)[0]
+                setattr(self.params, key, value)
+            else:
+                sub_keys = []
+                if isinstance(attr, (ModelOptions, TopographyOptions)):
+                    sub_keys = [attr.identifier, attr.identifier + "_object"]
+                    attr = self
+                elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                    sub_keys = attr.params_keys
+                for sub_key in sub_keys:
+                    value = getattr(attr, sub_key)
+                    if isinstance(value, Widget) and hasattr(value, "value"):
+                        value = value.value
+                    if isinstance(value, uuid.UUID):
+                        value = new_workspace.get_entity(value)[0]
+                    setattr(self.params, sub_key, value)
 
         self.params.write_input_file(
             name=self._ga_group_name.value + ".ui.json",
@@ -1054,7 +1057,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m geoapps.drivers.{inversion_routine} "
-            + f'"{params.input_file.filepath}"'
+            + f'"{params.input_file.path_name}"'
         )
 
     def file_browser_change(self, _):

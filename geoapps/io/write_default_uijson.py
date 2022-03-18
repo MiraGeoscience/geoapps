@@ -26,37 +26,43 @@ def write_default_uijson(path, use_initializers=False):
 
     from geoapps.io.Gravity.constants import app_initializer
 
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     grav_init = app_initializer if use_initializers else {}
-    grav_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+
     from geoapps.io.MagneticScalar.constants import app_initializer
 
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mag_init = app_initializer if use_initializers else {}
-    mag_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+
     from geoapps.io.MagneticVector.constants import app_initializer
 
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mvi_init = app_initializer if use_initializers else {}
-    mvi_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+
     from geoapps.io.DirectCurrent.constants import app_initializer
 
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_init = app_initializer if use_initializers else {}
-    dc_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+
     from geoapps.io.InducedPolarization.constants import app_initializer
 
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     ip_init = app_initializer if use_initializers else {}
-    ip_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
 
     from geoapps.io.magnetotellurics.constants import app_initializer
 
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mt_init = app_initializer if use_initializers else {}
 
     from geoapps.io.Octree.constants import app_initializer
 
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     oct_init = app_initializer if use_initializers else {}
-    oct_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+
     from geoapps.io.PeakFinder.constants import app_initializer
 
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     peak_init = app_initializer if use_initializers else {}
-    peak_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
 
     filedict = {
         "gravity_inversion.ui.json": GravityParams(validate=False, **grav_init),
@@ -96,7 +102,7 @@ def write_default_uijson(path, use_initializers=False):
     }
 
     for filename, params in filedict.items():
-        params.write_input_file(name=filename, path=path, default=not use_initializers)
+        params.write_input_file(name=filename, path=path, validate=False)
 
 
 if __name__ == "__main__":

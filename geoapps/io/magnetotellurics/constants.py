@@ -8,11 +8,9 @@
 from uuid import UUID
 
 from geoh5py.groups import ContainerGroup
+from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
-from geoapps.io.Inversion.constants import (
-    required_parameters as base_required_parameters,
-)
 from geoapps.io.Inversion.constants import validations as base_validations
 
 ################# defaults ##################
@@ -113,7 +111,6 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": None,
     "out_group": "MagnetotelluricsInversion",
-    "no_data_value": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.drivers.magnetotellurics_inversion",
@@ -498,89 +495,13 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
-
-required_parameters = [
-    "inversion_type",
-]
-required_parameters += base_required_parameters
-
 validations = {
     "inversion_type": {
         "types": [str],
+        "required": True,
         "values": ["magnetotellurics"],
     },
-    "zxx_real_channel_bool": {"types": [bool]},
-    "zxx_real_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zxx_real_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zxx_imag_channel_bool": {"types": [bool]},
-    "zxx_imag_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zxx_imag_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zxy_real_channel_bool": {"types": [bool]},
-    "zxy_real_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zxy_real_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zxy_imag_channel_bool": {"types": [bool]},
-    "zxy_imag_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zxy_imag_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zyx_real_channel_bool": {"types": [bool]},
-    "zyx_real_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zyx_real_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zyx_imag_channel_bool": {"types": [bool]},
-    "zyx_imag_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zyx_imag_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zyy_real_channel_bool": {"types": [bool]},
-    "zyy_real_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zyy_real_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "zyy_imag_channel_bool": {"types": [bool]},
-    "zyy_imag_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "zyy_imag_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "background_conductivity": {
-        "types": [str, int, float, UUID],
-        "reqs": [("starting_model_object")],
-    },
-    "out_group": {"types": [str, ContainerGroup]},
+    "data_object": {"types": [str, UUID, MTReceivers]},
 }
-
-validations = dict(base_validations, **validations)
-
 
 app_initializer = {}

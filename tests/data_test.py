@@ -25,7 +25,9 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 
 def setup_params(tmp):
     d_u_j = deepcopy(default_ui_json)
-    geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", d_u_j, MagneticVectorParams)
+    geotest = Geoh5Tester(
+        geoh5, tmp, "test.geoh5", ui=d_u_j, params_class=MagneticVectorParams
+    )
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
@@ -76,7 +78,7 @@ def test_survey_data(tmp_path):
         tile_spatial=2,
         z_from_topo=True,
         receivers_offset_z=50.0,
-        resolution=0,
+        resolution=0.0,
     )
 
     driver = InversionDriver(params, warmstart=False)
@@ -119,7 +121,7 @@ def test_survey_data(tmp_path):
 
 def test_save_data(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
+    locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
 
@@ -128,9 +130,9 @@ def test_save_data(tmp_path):
 
 def test_get_uncertainty_component(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
+    locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
-    params.tmi_uncertainty = 1
+    params.tmi_uncertainty = 1.0
     data = InversionData(ws, params, window)
     unc = data.get_data()[2]["tmi"]
     assert len(np.unique(unc)) == 1
@@ -140,7 +142,7 @@ def test_get_uncertainty_component(tmp_path):
 
 def test_parse_ignore_values(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
+    locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     params.ignore_values = "<99"
     data = InversionData(ws, params, window)
@@ -163,7 +165,7 @@ def test_parse_ignore_values(tmp_path):
 
 def test_set_infinity_uncertainties(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
+    locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     test_data = np.array([0, 1, 2, 3, 4, 5])
@@ -197,7 +199,7 @@ def test_set_infinity_uncertainties(tmp_path):
 
 def test_displace(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
+    locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     test_locs = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]])
@@ -219,7 +221,7 @@ def test_displace(tmp_path):
 
 def test_drape(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
+    locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     test_locs = np.array([[1.0, 2.0, 1.0], [2.0, 1.0, 1.0], [8.0, 9.0, 1.0]])
@@ -232,7 +234,7 @@ def test_drape(tmp_path):
 
 def test_normalize(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
+    locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     data.observed = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
@@ -245,7 +247,7 @@ def test_normalize(tmp_path):
 
 def test_get_survey(tmp_path):
     ws, params = setup_params(tmp_path)
-    locs = ws.get_entity(params.data_object)[0].centroids
+    locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
     survey, _ = data.survey()

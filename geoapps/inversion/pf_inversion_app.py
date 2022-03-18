@@ -15,6 +15,8 @@ from collections import OrderedDict
 import ipywidgets as widgets
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
+from geoh5py.shared import Entity
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets.widgets import (
     Button,
@@ -29,7 +31,6 @@ from ipywidgets.widgets import (
     Widget,
 )
 
-from geoapps.io import InputFile
 from geoapps.io.Gravity.params import GravityParams
 from geoapps.io.MagneticScalar.params import MagneticScalarParams
 from geoapps.io.MagneticVector.constants import app_initializer
@@ -93,12 +94,17 @@ class InversionApp(PlotSelection2D):
 
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
-            ifile = InputFile(ui_json)
+            ifile = InputFile.read_ui_json(ui_json)
             self.params = self._param_class(ifile, **kwargs)
         else:
             self.params = self._param_class(**app_initializer)
         self.data_object = self.objects
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+
+        for key, value in self.params.to_dict().items():
+            if isinstance(value, Entity):
+                self.defaults[key] = value.uid
+            else:
+                self.defaults[key] = value
 
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
@@ -131,7 +137,6 @@ class InversionApp(PlotSelection2D):
             button_style="warning",
             icon="check",
         )
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
         self._ga_group_name = widgets.Text(
             value="Inversion_", description="Save as:", disabled=False
         )
@@ -846,29 +851,22 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        params = self.params.to_dict(ui_json_format=False)
         if self.inversion_type.value == "magnetic vector" and not isinstance(
             self.params, MagneticVectorParams
         ):
             self._param_class = MagneticVectorParams
-            params["inversion_type"] = "magnetic vector"
-            params["out_group"] = "VectorInversion"
 
         elif self.inversion_type.value == "magnetic scalar" and not isinstance(
             self.params, MagneticScalarParams
         ):
-            params["inversion_type"] = "magnetic scalar"
-            params["out_group"] = "SusceptibilityInversion"
             self._param_class = MagneticScalarParams
         elif self.inversion_type.value == "gravity" and not isinstance(
             self.params, GravityParams
         ):
-            params["inversion_type"] = "gravity"
-            params["out_group"] = "GravityInversion"
             self._param_class = GravityParams
 
         self.params = self._param_class(validate=False, verbose=False)
-        self.ga_group_name.value = self.params.defaults["out_group"]
+        self.ga_group_name.value = self.params.out_group
 
         if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
             data_type_list = [
@@ -1096,6 +1094,8 @@ class InversionApp(PlotSelection2D):
                 self._reference_model_group.main,
             ]
 
+        self.params.validate = True
+
     def object_observer(self, _):
         """ """
         self.resolution.indices = None
@@ -1224,27 +1224,27 @@ class InversionApp(PlotSelection2D):
         self.params.geoh5 = new_workspace
 
         for key in self.__dict__:
-            try:
-                attr = getattr(self, key)
-                if isinstance(attr, Widget):
-                    setattr(self.params, key, attr.value)
-                else:
-                    sub_keys = []
-                    if isinstance(attr, (ModelOptions, TopographyOptions)):
-                        sub_keys = [attr.identifier, attr.identifier + "_object"]
-                        attr = self
-                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                        sub_keys = attr.params_keys
-                    for sub_key in sub_keys:
-                        value = getattr(attr, sub_key)
-                        if isinstance(value, Widget):
-                            value = value.value
-                        if isinstance(value, uuid.UUID):
-                            value = str(value)
-                        setattr(self.params, sub_key, value)
 
-            except AttributeError:
-                continue
+            attr = getattr(self, key)
+            if isinstance(attr, Widget) and hasattr(attr, "value"):
+                value = attr.value
+                if isinstance(value, uuid.UUID):
+                    value = new_workspace.get_entity(value)[0]
+                setattr(self.params, key, value)
+            else:
+                sub_keys = []
+                if isinstance(attr, (ModelOptions, TopographyOptions)):
+                    sub_keys = [attr.identifier, attr.identifier + "_object"]
+                    attr = self
+                elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                    sub_keys = attr.params_keys
+                for sub_key in sub_keys:
+                    value = getattr(attr, sub_key)
+                    if isinstance(value, Widget) and hasattr(value, "value"):
+                        value = value.value
+                    if isinstance(value, uuid.UUID):
+                        value = new_workspace.get_entity(value)[0]
+                    setattr(self.params, sub_key, value)
 
         self.params.write_input_file(
             name=self._ga_group_name.value + ".ui.json",
@@ -1272,7 +1272,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m geoapps.drivers.{inversion_routine} "
-            + f'"{params.input_file.filepath}"'
+            + f'"{params.input_file.path_name}"'
         )
 
     def file_browser_change(self, _):

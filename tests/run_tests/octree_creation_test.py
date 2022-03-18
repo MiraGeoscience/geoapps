@@ -37,9 +37,9 @@ def test_create_octree_app(tmp_path):
     # Create a geoh5 surface
     topo = Surface.create(ws, vertices=np.c_[x, y, z], cells=simplices)
     h = [5.0, 10.0, 15.0]
-    depth_core = 400
-    horizontal_padding = 500
-    vertical_padding = 200
+    depth_core = 400.0
+    horizontal_padding = 500.0
+    vertical_padding = 200.0
     p_d = [
         [horizontal_padding, horizontal_padding],
         [horizontal_padding, horizontal_padding],
@@ -110,8 +110,8 @@ def test_create_octree_app(tmp_path):
         depth_core=depth_core,
         **refinements,
     )
-    app.trigger.click()
+    app.trigger_click(None)
     # Re-load the new mesh and compare
-    ws_B = Workspace(app.h5file)
+    ws_B = Workspace(path.join(app.monitoring_directory, "Octree_Mesh.geoh5"))
     rec_octree = ws_B.get_entity("Octree_Mesh")[0]
-    compare_entities(octree, rec_octree, ignore=["_name", "_uid"])
+    compare_entities(octree, rec_octree, ignore=["_uid"])
