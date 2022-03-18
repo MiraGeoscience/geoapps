@@ -20,19 +20,15 @@ from .constants import (
     forward_ui_json,
     inversion_defaults,
     inversion_ui_json,
-    required_parameters,
     validations,
 )
 
 
 class MagnetotelluricsParams(InversionParams):
+    """
+    Parameter class for magnetotelluric->conductivity inversion.
+    """
 
-    _required_parameters = required_parameters
-    _validations = validations
-    _forward_defaults = forward_defaults
-    _inversion_defaults = inversion_defaults
-    forward_ui_json = forward_ui_json
-    inversion_ui_json = inversion_ui_json
     _directive_list = [
         "Update_IRLS",
         "UpdateSensitivityWeights",
@@ -41,13 +37,14 @@ class MagnetotelluricsParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
-
-        self.validate = False
-        self.default_ui_json = deepcopy(default_ui_json)
-        self._inversion_type: str = "magnetotellurics"
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
+        self._default_ui_json = deepcopy(default_ui_json)
+        self._forward_defaults = deepcopy(forward_defaults)
+        self._forward_ui_json = deepcopy(forward_ui_json)
+        self._inversion_defaults = deepcopy(inversion_defaults)
+        self._inversion_ui_json = deepcopy(inversion_ui_json)
+        self._inversion_type = "magnetotellurics"
+        self._validations = validations
         self._zxx_real_channel_bool = None
         self._zxx_real_channel = None
         self._zxx_real_uncertainty = None
@@ -74,7 +71,7 @@ class MagnetotelluricsParams(InversionParams):
         self._zyy_imag_uncertainty = None
         self._background_conductivity = None
 
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
+        super().__init__(input_file=None, forward_only=False, **kwargs)
 
     def data_channel(self, component: str):
         """Return uuid of data channel."""
@@ -101,10 +98,10 @@ class MagnetotelluricsParams(InversionParams):
                 try:
                     f_ind = property_names.index(
                         [k for k in property_names if f"{f:.2e}" in k][0]
-                    ) # Safer if data was saved with geoapps naming convention
+                    )  # Safer if data was saved with geoapps naming convention
                     data[f] = properties[f_ind]
                 except IndexError:
-                    data[f] = properties[i] # in case of other naming conventions
+                    data[f] = properties[i]  # in case of other naming conventions
 
             return data
 

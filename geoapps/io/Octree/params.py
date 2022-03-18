@@ -8,82 +8,62 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any
 
 from geoh5py.shared import Entity
+from geoh5py.ui_json import InputFile
 
-from ..input_file import InputFile
 from ..params import Params
-from ..validators import InputFreeformValidator
-from . import (
-    default_ui_json,
-    defaults,
-    free_format_dict,
-    required_parameters,
-    validations,
-)
+from . import default_ui_json, defaults, template_dict, validations
 
 
 class OctreeParams(Params):
+    """
+    Parameter class for octree mesh creation application.
+    """
 
-    _required_parameters = required_parameters
-    _validations = validations
-    param_names = list(default_ui_json.keys())
-    _free_param_keys = ["object", "levels", "type", "distance"]
-    _free_param_identifier = "refinement"
-    _free_param_dict = {}
+    def __init__(self, input_file=None, **kwargs):
+        self._default_ui_json = deepcopy(default_ui_json)
+        self._defaults = deepcopy(defaults)
+        self._free_parameter_keys = ["object", "levels", "type", "distance"]
+        self._free_parameter_identifier = "refinement"
+        self._validations = validations
+        self._objects = None
+        self._u_cell_size = None
+        self._v_cell_size = None
+        self._w_cell_size = None
+        self._horizontal_padding = None
+        self._vertical_padding = None
+        self._depth_core = None
+        self._ga_group_name = None
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
+        if input_file is None:
+            free_param_dict = {}
+            for key, value in kwargs.items():
+                if (
+                    self._free_parameter_identifier in key.lower()
+                    and "object" in key.lower()
+                ):
+                    group = key.replace("object", "").rstrip()
+                    free_param_dict[group] = deepcopy(template_dict)
 
-        self.validate = False
-        self.default_ui_json = deepcopy(default_ui_json)
-        self.title = None
-        self.objects = None
-        self.u_cell_size = None
-        self.v_cell_size = None
-        self.w_cell_size = None
-        self.horizontal_padding = None
-        self.vertical_padding = None
-        self.depth_core = None
-        self.ga_group_name = None
+            # Add at least one refinements
+            if len(free_param_dict) == 0:
+                free_param_dict["Refinenement A"] = deepcopy(template_dict)
 
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
+            ui_json = deepcopy(self._default_ui_json)
+            for group, forms in free_param_dict.items():
+                for key, form in forms.items():
+                    form["group"] = group
+                    ui_json[f"{group} {key}"] = form
+                    self._defaults[f"{group} {key}"] = form["value"]
 
-        self._initialize(kwargs)
-
-    def _initialize(self, params_dict):
-
-        if self.input_file:
-            params_dict = dict(self.input_file.data, **params_dict)
-
-        # Use forward_only state to determine defaults and default_ui_json.
-        self.defaults = defaults
-        self.param_names = list(self.defaults.keys())
-
-        # Superimpose params_dict onto defaults.
-        if self.default:
-            params_dict = dict(self.defaults, **params_dict)
-
-        # Validate.
-        if self.validate:
-            self.geoh5 = params_dict["geoh5"]
-            self.associations = self.get_associations(params_dict)
-            self.validator: InputFreeformValidator = InputFreeformValidator(
-                required_parameters,
-                validations,
-                self.geoh5,
-                free_params_keys=self._free_param_keys,
+            input_file = InputFile(
+                ui_json=ui_json,
+                validations=self.validations,
+                validation_options={"disabled": True},
             )
-            self.validator.validate_chunk(params_dict, self.associations)
 
-        # Set params attributes from validated input.
-        self.update(params_dict)
-
-    def default(self, param) -> Any:
-        """Wraps Params.default."""
-        return super().default(self.default_ui_json, param)
+        super().__init__(input_file=input_file, **kwargs)
 
     @property
     def title(self):
@@ -156,49 +136,3 @@ class OctreeParams(Params):
     @ga_group_name.setter
     def ga_group_name(self, val):
         self.setter_validator("ga_group_name", val)
-
-    def update(self, params_dict: Dict[str, Any]):
-        """Update parameters with dictionary contents."""
-
-        # Pull out workspace data for validations and forward_only for defaults.
-
-        if "geoh5" in params_dict.keys():
-            if params_dict["geoh5"] is not None:
-                setattr(self, "geoh5", params_dict["geoh5"])
-
-        free_param_dict = {}
-        for key, value in params_dict.items():
-
-            if "Template" in key:
-                continue
-
-            # Update default_ui_json and store free_param_groups for app
-            if self._free_param_identifier in key.lower():
-                for param in self._free_param_keys:
-                    if param in key.lower():
-                        group = key.lower().replace(param, "").rstrip()
-
-                        if group not in free_param_dict:
-                            free_param_dict[group] = {}
-
-                        free_param_dict[group][param] = value
-                        self.default_ui_json[key] = deepcopy(
-                            free_format_dict[f"Template {param.capitalize()}"]
-                        )
-                        self.default_ui_json[key]["group"] = group
-                        break
-
-            if isinstance(value, dict):
-                field = "value"
-                if "isValue" in value.keys():
-                    if not value["isValue"]:
-                        field = "property"
-                setattr(self, key, value[field])
-            else:
-                if isinstance(value, Entity):
-                    setattr(self, key, value.uid)
-                else:
-                    setattr(self, key, value)
-
-        self._free_param_dict = free_param_dict
-        self.param_names = list(self.default_ui_json.keys())

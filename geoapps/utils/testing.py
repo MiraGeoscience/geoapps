@@ -16,13 +16,17 @@ from uuid import UUID
 import numpy as np
 from discretize.utils import active_from_xyz, mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import (
-    CurrentElectrode, Points, PotentialElectrode, Surface, MTReceivers
+    CurrentElectrode,
+    MTReceivers,
+    Points,
+    PotentialElectrode,
+    Surface,
 )
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 from SimPEG import utils
 
-from geoapps.io import InputFile
 from geoapps.utils import treemesh_2_octree
 
 
@@ -44,14 +48,17 @@ class Geoh5Tester:
             self.has_params = False
 
     def copy_entity(self, uid):
-        self.geoh5.get_entity(uid)[0].copy(parent=self.ws)
+        entity = self.ws.get_entity(uid)
+        if not entity or entity[0] is None:
+            return self.geoh5.get_entity(uid)[0].copy(parent=self.ws)
+        return entity[0]
 
     def set_param(self, param, value):
         if self.has_params:
             try:
                 uid = UUID(value)
-                self.copy_entity(uid)
-                setattr(self.params, param, value)
+                entity = self.copy_entity(uid)
+                setattr(self.params, param, entity)
             except:
                 setattr(self.params, param, value)
         else:
@@ -60,9 +67,6 @@ class Geoh5Tester:
 
     def make(self):
         if self.has_params:
-            self.params.associations = self.params.get_associations(
-                self.params.to_dict(ui_json_format=False)
-            )
             return self.ws, self.params
         else:
             return self.ws
@@ -94,7 +98,9 @@ def setup_inversion_workspace(
         geoh5, vertices=topo, cells=triang.simplices, name="topography"
     )
     # Observation points
-    n_electrodes = 4 if (inversion_type == "dcip") & (n_electrodes < 4) else n_electrodes
+    n_electrodes = (
+        4 if (inversion_type == "dcip") & (n_electrodes < 4) else n_electrodes
+    )
     xr = np.linspace(-100.0, 100.0, n_electrodes)
     yr = np.linspace(-100.0, 100.0, n_lines)
     X, Y = np.meshgrid(xr, yr)
@@ -142,8 +148,14 @@ def setup_inversion_workspace(
 
     elif inversion_type == "magnetotellurics":
         components = [
-            "Zxx (real)", "Zxx (imag)", "Zxy (real)", "Zxy (imag)",
-            "Zyx (real)", "Zyx (imag)", "Zyy (real)", "Zyy (imag)"
+            "Zxx (real)",
+            "Zxx (imag)",
+            "Zxy (real)",
+            "Zxy (imag)",
+            "Zyx (real)",
+            "Zyx (imag)",
+            "Zyy (real)",
+            "Zyy (imag)",
         ]
         mt_receivers = MTReceivers.create(
             geoh5,
