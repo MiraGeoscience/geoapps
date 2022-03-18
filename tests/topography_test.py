@@ -40,7 +40,7 @@ def test_get_locations(tmp_path):
     locs = topo.get_locations(params.topography_object)
     np.testing.assert_allclose(
         locs[:, 2],
-        ws.get_entity(params.topography)[0].values,
+        params.topography.values,
     )
 
     params.topography = 199.0

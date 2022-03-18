@@ -15,7 +15,12 @@ geoh5 = Workspace(project)
 
 def test_em1d_inversion(tmp_path):
     app = InversionApp(
-        h5file=project, plot_result=False, inversion_parameters={"max_iterations": 1}
+        h5file=project,
+        plot_result=False,
+        inversion_parameters={
+            "max_iterations": 1,
+        },
     )
+    app.inversion_parameters.reference_model.options.value = "Value"
     app.write.click()
     app.trigger.click()

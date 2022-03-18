@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.io import Params
-    from uuid import UUID
 
 from copy import deepcopy
 
@@ -128,7 +127,7 @@ class InversionData(InversionLocations):
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
         self.offset, self.radar = self.params.offset()
-        self.locations = self.get_locations(self.params.data_object)
+        self.locations = super().get_locations(self.params.data_object)
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
@@ -155,7 +154,7 @@ class InversionData(InversionLocations):
         self.observed = self.normalize(self.observed)
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
-        self.locations = self.get_locations(self.entity.uid)
+        self.locations = super().get_locations(self.entity)
         self._survey, _ = self.survey()
         self.save_data(self.entity)
 
@@ -165,8 +164,9 @@ class InversionData(InversionLocations):
             self.params.inversion_type in ["direct current", "induced polarization"]
             and self.indices is None
         ):
-            potential_electrodes = self.workspace.get_entity(self.params.data_object)[0]
-            ab_ind = np.where(np.any(self.mask[potential_electrodes.cells], axis=1))[0]
+            ab_ind = np.where(np.any(self.mask[self.params.data_object.cells], axis=1))[
+                0
+            ]
             self.indices = ab_ind
 
         if self.indices is None:
@@ -176,22 +176,22 @@ class InversionData(InversionLocations):
 
         return a
 
-    def get_locations(self, uid: UUID) -> dict[str, np.ndarray]:
-        """
-        Returns locations of sources and receivers centroids or vertices.
-
-        :param uid: UUID of geoh5py object containing centroid or
-            vertex location data
-
-        :return: dictionary containing at least a receivers array, but
-            possibly also a sources and pseudo array of x, y, z locations.
-
-        """
-
-        data_object = self.workspace.get_entity(uid)[0]
-        locs = super().get_locations(data_object)
-
-        return locs
+    # def get_locations(self, uid: UUID) -> dict[str, np.ndarray]:
+    #     """
+    #     Returns locations of sources and receivers centroids or vertices.
+    #
+    #     :param uid: UUID of geoh5py object containing centroid or
+    #         vertex location data
+    #
+    #     :return: dictionary containing at least a receivers array, but
+    #         possibly also a sources and pseudo array of x, y, z locations.
+    #
+    #     """
+    #
+    #     data_object = self.workspace.get_entity(uid)[0]
+    #     locs = super().get_locations(data_object)
+    #
+    #     return locs
 
     def get_data(self) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
         """
@@ -255,7 +255,6 @@ class InversionData(InversionLocations):
                         entity.add_data_to_group(
                             uncert_entity, f"Uncertainties_{component}"
                         )
-
         else:
             for component in data.keys():
                 dnorm = self.normalizations[component] * data[component]

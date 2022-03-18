@@ -61,8 +61,7 @@ class InversionWindow:
         self.window = self.params.window()
 
         if self.is_empty():
-
-            data_object = self.workspace.get_entity(self.params.data_object)[0]
+            data_object = self.params.data_object
             if isinstance(data_object, Grid2D):
                 locs = data_object.centroids
             elif isinstance(data_object, PotentialElectrode):

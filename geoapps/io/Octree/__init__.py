@@ -5,13 +5,11 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from ..validators import InputFreeformValidator
 from .constants import (
     app_initializer,
     default_ui_json,
     defaults,
-    free_format_dict,
-    required_parameters,
+    template_dict,
     validations,
 )
 from .params import OctreeParams
