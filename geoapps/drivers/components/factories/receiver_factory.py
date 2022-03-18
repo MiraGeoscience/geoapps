@@ -134,7 +134,11 @@ class ReceiversFactory(SimPEGFactory):
         args = []
         locs = locations[local_index]
         if mesh is not None and active_cells is not None:
-            locs = drapeTopotoLoc(mesh, locs, actind=active_cells)
+            draped_locs = drapeTopotoLoc(mesh, locs, actind=active_cells)
+            locs[:, 2] -= np.max(locs[:, 2] - draped_locs[:, 2])
+            print(
+                "Shifting receiver locations to avoid floaters, this may mean that some locations are in the ground."
+            )
         args.append(locs)
 
         return args
