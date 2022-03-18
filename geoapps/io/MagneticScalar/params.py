@@ -14,27 +14,21 @@ from geoh5py.workspace import Workspace
 
 from geoapps.io.Inversion import InversionParams
 
-from ..input_file import InputFile
-from ..validators import InputValidator
 from .constants import (
     default_ui_json,
     forward_defaults,
     forward_ui_json,
     inversion_defaults,
     inversion_ui_json,
-    required_parameters,
     validations,
 )
 
 
 class MagneticScalarParams(InversionParams):
+    """
+    Parameter class for magnetics->susceptibility inversion.
+    """
 
-    _required_parameters = required_parameters
-    _validations = validations
-    _forward_defaults = forward_defaults
-    _inversion_defaults = inversion_defaults
-    forward_ui_json = forward_ui_json
-    inversion_ui_json = inversion_ui_json
     _directive_list = [
         "UpdateSensitivityWeights",
         "Update_IRLS",
@@ -43,49 +37,49 @@ class MagneticScalarParams(InversionParams):
         "SaveIterationsGeoH5",
     ]
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
+        self._default_ui_json = deepcopy(default_ui_json)
+        self._forward_defaults = deepcopy(forward_defaults)
+        self._forward_ui_json = deepcopy(forward_ui_json)
+        self._inversion_defaults = deepcopy(inversion_defaults)
+        self._inversion_ui_json = deepcopy(inversion_ui_json)
+        self._inversion_type = "magnetic scalar"
+        self._validations = validations
+        self._inducing_field_strength: float = None
+        self._inducing_field_inclination: float = None
+        self._inducing_field_declination: float = None
+        self._tmi_channel_bool = None
+        self._tmi_channel = None
+        self._tmi_uncertainty = None
+        self._bxx_channel_bool = None
+        self._bxx_channel = None
+        self._bxx_uncertainty = None
+        self._bxy_channel_bool = None
+        self._bxy_channel = None
+        self._bxy_uncertainty = None
+        self._bxz_channel_bool = None
+        self._bxz_channel = None
+        self._bxz_uncertainty = None
+        self._byy_channel_bool = None
+        self._byy_channel = None
+        self._byy_uncertainty = None
+        self._byz_channel_bool = None
+        self._byz_channel = None
+        self._byz_uncertainty = None
+        self._bzz_channel_bool = None
+        self._bzz_channel = None
+        self._bzz_uncertainty = None
+        self._bx_channel_bool = None
+        self._bx_channel = None
+        self._bx_uncertainty = None
+        self._by_channel_bool = None
+        self._by_channel = None
+        self._by_uncertainty = None
+        self._bz_channel_bool = None
+        self._bz_channel = None
+        self._bz_uncertainty = None
 
-        self.validate = False
-        self.default_ui_json = deepcopy(default_ui_json)
-        self.inversion_type = "magnetic scalar"
-        self.inducing_field_strength: float = None
-        self.inducing_field_inclination: float = None
-        self.inducing_field_declination: float = None
-        self.tmi_channel_bool = None
-        self.tmi_channel = None
-        self.tmi_uncertainty = None
-        self.bxx_channel_bool = None
-        self.bxx_channel = None
-        self.bxx_uncertainty = None
-        self.bxy_channel_bool = None
-        self.bxy_channel = None
-        self.bxy_uncertainty = None
-        self.bxz_channel_bool = None
-        self.bxz_channel = None
-        self.bxz_uncertainty = None
-        self.byy_channel_bool = None
-        self.byy_channel = None
-        self.byy_uncertainty = None
-        self.byz_channel_bool = None
-        self.byz_channel = None
-        self.byz_uncertainty = None
-        self.bzz_channel_bool = None
-        self.bzz_channel = None
-        self.bzz_uncertainty = None
-        self.bx_channel_bool = None
-        self.bx_channel = None
-        self.bx_uncertainty = None
-        self.by_channel_bool = None
-        self.by_channel = None
-        self.by_uncertainty = None
-        self.bz_channel_bool = None
-        self.bz_channel = None
-        self.bz_uncertainty = None
-        self.out_group = None
-
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
+        super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""

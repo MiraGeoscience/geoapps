@@ -8,12 +8,10 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import FloatData
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
-from geoapps.io.Inversion.constants import (
-    required_parameters as base_required_parameters,
-)
 from geoapps.io.Inversion.constants import validations as base_validations
 
 inversion_defaults = {
@@ -46,7 +44,7 @@ inversion_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -59,7 +57,7 @@ inversion_defaults = {
     "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
-    "sens_wts_threshold": 30,
+    "sens_wts_threshold": 30.0,
     "every_iteration_bool": True,
     "f_min_change": 1e-4,
     "minGNiter": 1,
@@ -96,7 +94,6 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": None,
     "out_group": "DirectCurrentInversion",
-    "no_data_value": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.drivers.direct_current_inversion",
@@ -131,7 +128,7 @@ forward_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -231,20 +228,12 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations #################
 
-required_parameters = ["inversion_type"]
-required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
-        "types": [str],
+        "required": True,
         "values": ["direct current"],
     },
-    "data_object": {"types": [UUID, PotentialElectrode]},
-    "potential_channel_bool": {"types": [bool]},
-    "potential_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "potential_uncertainty": {"types": [str, int, float, UUID]},
+    "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }
 
 validations = dict(base_validations, **validations)
@@ -260,7 +249,7 @@ app_initializer = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "resolution": 25,
+    "resolution": None,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
@@ -281,8 +270,8 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0,
-    "receivers_offset_y": 0,
-    "receivers_offset_z": 0,
+    "receivers_offset_x": 0.0,
+    "receivers_offset_y": 0.0,
+    "receivers_offset_z": 0.0,
     "out_group": "DCInversion",
 }

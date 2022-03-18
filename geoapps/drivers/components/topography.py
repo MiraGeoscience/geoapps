@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from geoh5py.shared import Entity
+
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.io import Params
@@ -17,7 +19,6 @@ if TYPE_CHECKING:
 
 
 from copy import deepcopy
-from uuid import UUID
 
 import numpy as np
 from discretize.utils import active_from_xyz
@@ -100,22 +101,22 @@ class InversionTopography(InversionLocations):
 
         return active_cells
 
-    def get_locations(self, uid: UUID) -> np.ndarray:
+    def get_locations(self, entity: Entity) -> np.ndarray:
         """
         Returns locations of data object centroids or vertices.
 
-        :param uid: UUID of geoh5py object containing centroid or
+        :param entity: geoh5py object containing centroid or
             vertex location data
 
         :return: Array shape(*, 3) of x, y, z location data
 
         """
 
-        locs = super().get_locations(uid)
+        locs = super().get_locations(entity)
 
         if self.params.topography is not None:
-            if isinstance(self.params.topography, UUID):
-                elev = self.workspace.get_entity(self.params.topography)[0].values
+            if isinstance(self.params.topography, Entity):
+                elev = self.params.topography.values
             elif isinstance(self.params.topography, (int, float)):
                 elev = np.ones_like(locs[:, 2]) * self.params.topography
             else:

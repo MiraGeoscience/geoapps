@@ -8,12 +8,11 @@
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import FloatData
+from geoh5py.objects import Octree
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
-from geoapps.io.Inversion.constants import (
-    required_parameters as base_required_parameters,
-)
 from geoapps.io.Inversion.constants import validations as base_validations
 
 inversion_defaults = {
@@ -48,7 +47,7 @@ inversion_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -88,7 +87,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": None,
+    "reference_model": 0.0,
     "gradient_type": "total",
     "lower_bound_object": None,
     "lower_bound": None,
@@ -98,7 +97,6 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": None,
     "out_group": "InducedPolarizationInversion",
-    "no_data_value": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.drivers.induced_polarization_inversion",
@@ -136,7 +134,7 @@ forward_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -212,20 +210,6 @@ default_ui_json = {
         "property": None,
         "value": 1.0,
     },
-    "starting_model_object": {
-        "group": "Starting Models",
-        "main": True,
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
-        ],
-        "label": "Chargeability object",
-        "value": None,
-    },
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
@@ -270,26 +254,12 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations ##################
 
-required_parameters = ["inversion_type", "conductivity_model"]
-required_parameters += base_required_parameters
 validations = {
     "inversion_type": {
-        "types": [str],
+        "required": True,
         "values": ["induced polarization"],
     },
-    "data_object": {"types": [UUID, PotentialElectrode]},
-    "chargeability_channel_bool": {"types": [bool]},
-    "chargeability_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "chargeability_uncertainty": {"types": [str, int, float, UUID]},
-    "conductivity_model_object": {
-        "types": [str, UUID],
-    },
-    "conductivity_model": {
-        "types": [str, UUID, int, float],
-    },
+    "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }
 
 validations = dict(base_validations, **validations)
@@ -305,13 +275,13 @@ app_initializer = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "resolution": 25,
+    "resolution": None,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
     "window_height": None,
     "window_azimuth": None,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 1200.0,
     "horizontal_padding": 1000.0,
@@ -324,8 +294,8 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0,
-    "receivers_offset_y": 0,
-    "receivers_offset_z": 0,
+    "receivers_offset_x": 0.0,
+    "receivers_offset_y": 0.0,
+    "receivers_offset_z": 0.0,
     "out_group": "InducedPolarizationInversion",
 }

@@ -7,154 +7,127 @@
 
 from __future__ import annotations
 
-import os
 from copy import deepcopy
 from uuid import UUID
 
 import numpy as np
+from geoh5py.data import NumericData
 from geoh5py.groups import ContainerGroup
+from geoh5py.ui_json import InputFile, InputValidation
 from geoh5py.workspace import Workspace
 
-from ..input_file import InputFile
 from ..params import Params
-from ..validators import InputValidator
-from .constants import required_parameters, validations
 
 
 class InversionParams(Params):
+    """
+    Base parameter class for geophysical->property inversions.
+    """
 
+    _directive_list = None
+    _default_ui_json = None
+    _forward_defaults = None
+    _forward_ui_json = None
+    _inversion_defaults = None
+    _inversion_ui_json = None
+    _inversion_type = None
     _ga_group = None
 
-    def __init__(
-        self, input_file=None, default=True, validate=True, validator_opts={}, **kwargs
-    ):
-
-        self._forward_only: bool | None = None
-        self._topography_object: UUID | None = None
-        self._topography: UUID | float | None = None
-        self._data_object: UUID | None = None
-        self._starting_model_object: UUID | None = None
-        self._starting_model: UUID | float | None = None
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
+        self._forward_only: bool = forward_only
+        self._topography_object: UUID = None
+        self._topography: UUID | float = None
+        self._data_object: UUID = None
+        self._starting_model_object: UUID = None
+        self._starting_model: UUID | float = None
         self._tile_spatial = None
-        self._z_from_topo: bool | None = None
+        self._z_from_topo: bool = None
         self._receivers_radar_drape = None
-        self._receivers_offset_x: float | None = None
-        self._receivers_offset_y: float | None = None
-        self._receivers_offset_z: float | None = None
+        self._receivers_offset_x: float = None
+        self._receivers_offset_y: float = None
+        self._receivers_offset_z: float = None
         self._gps_receivers_offset = None
-        self._ignore_values: str | None = None
-        self._resolution: float | None = None
-        self._detrend_order: int | None = None
-        self._detrend_type: str | None = None
-        self._max_chunk_size: int | None = None
-        self._chunk_by_rows: bool | None = None
-        self._output_tile_files: bool | None = None
+        self._ignore_values: str = None
+        self._resolution: float = None
+        self._detrend_order: int = None
+        self._detrend_type: str = None
+        self._max_chunk_size: int = None
+        self._chunk_by_rows: bool = None
+        self._output_tile_files: bool = None
         self._mesh = None
-        self._u_cell_size: float | None = None
-        self._v_cell_size: float | None = None
-        self._w_cell_size: float | None = None
-        self._octree_levels_topo: list[int] | None = None
-        self._octree_levels_obs: list[int] | None = None
-        self._depth_core: float | None = None
-        self._max_distance: float | None = None
-        self._horizontal_padding: float | None = None
-        self._vertical_padding: float | None = None
-        self._window_azimuth: float | None = None
-        self._window_center_x: float | None = None
-        self._window_center_y: float | None = None
-        self._window_height: float | None = None
-        self._window_width: float | None = None
-        self._inversion_style: str | None = None
-        self._chi_factor: float | None = None
-        self._sens_wts_threshold: float | None = None
-        self._every_iteration_bool: bool | None = None
-        self._f_min_change: float | None = None
-        self._minGNiter: float | None = None
-        self._beta_tol: float | None = None
-        self._prctile: float | None = None
-        self._coolingRate: float | None = None
-        self._coolEps_q: bool | None = None
-        self._coolEpsFact: float | None = None
-        self._beta_search: bool | None = None
-        self._starting_chi_factor: float | None = None
-        self._max_iterations: int | None = None
-        self._max_line_search_iterations: int | None = None
-        self._max_cg_iterations: int | None = None
-        self._max_global_iterations: int | None = None
-        self._initial_beta: float | None = None
-        self._initial_beta_ratio: float | None = None
-        self._tol_cg: float | None = None
-        self._alpha_s: float | None = None
-        self._alpha_x: float | None = None
-        self._alpha_y: float | None = None
-        self._alpha_z: float | None = None
-        self._s_norm: float | None = None
-        self._x_norm: float | None = None
-        self._y_norm: float | None = None
-        self._z_norm: float | None = None
-        self._reference_model_object: UUID | None = None
+        self._u_cell_size: float = None
+        self._v_cell_size: float = None
+        self._w_cell_size: float = None
+        self._octree_levels_topo: list[int] = None
+        self._octree_levels_obs: list[int] = None
+        self._depth_core: float = None
+        self._max_distance: float = None
+        self._horizontal_padding: float = None
+        self._vertical_padding: float = None
+        self._window_azimuth: float = None
+        self._window_center_x: float = None
+        self._window_center_y: float = None
+        self._window_height: float = None
+        self._window_width: float = None
+        self._inversion_style: str = None
+        self._chi_factor: float = None
+        self._sens_wts_threshold: float = None
+        self._every_iteration_bool: bool = None
+        self._f_min_change: float = None
+        self._minGNiter: float = None
+        self._beta_tol: float = None
+        self._prctile: float = None
+        self._coolingRate: float = None
+        self._coolEps_q: bool = None
+        self._coolEpsFact: float = None
+        self._beta_search: bool = None
+        self._starting_chi_factor: float = None
+        self._max_iterations: int = None
+        self._max_line_search_iterations: int = None
+        self._max_cg_iterations: int = None
+        self._max_global_iterations: int = None
+        self._initial_beta: float = None
+        self._initial_beta_ratio: float = None
+        self._tol_cg: float = None
+        self._alpha_s: float = None
+        self._alpha_x: float = None
+        self._alpha_y: float = None
+        self._alpha_z: float = None
+        self._s_norm: float = None
+        self._x_norm: float = None
+        self._y_norm: float = None
+        self._z_norm: float = None
+        self._reference_model_object: UUID = None
         self._reference_model = None
-        self._gradient_type: str | None = None
-        self._lower_bound_object: UUID | None = None
+        self._gradient_type: str = None
+        self._lower_bound_object: UUID = None
         self._lower_bound = None
-        self._upper_bound_object: UUID | None = None
+        self._upper_bound_object: UUID = None
         self._upper_bound = None
-        self._parallelized: bool | None = None
-        self._n_cpu: int | None = None
-        self._max_ram: float | None = None
+        self._parallelized: bool = None
+        self._n_cpu: int = None
+        self._max_ram: float = None
         self._out_group = None
-        self._no_data_value: float | None = None
-        self._monitoring_directory: str | None = None
-        self._workspace_geoh5: str | None = None
-        self._geoh5 = None
-        self._run_command: str | None = None
-        self._run_command_boolean: bool | None = None
-        self._conda_environment: str | None = None
-        self._conda_environment_boolean: bool | None = None
+        self._no_data_value: float = None
         self._distributed_workers = None
-        super().__init__(input_file, default, validate, validator_opts, **kwargs)
-
-        self._initialize(kwargs)
-
-    def _initialize(self, params_dict):
-
-        # Collect params_dict from superposition of kwargs onto input_file.data
-        # and determine forward_only state.
-        fwd = False
-        if self.input_file:
-            params_dict = dict(self.input_file.data, **params_dict)
-        if "forward_only" in params_dict.keys():
-            fwd = params_dict["forward_only"]
-
-        # Use forward_only state to determine defaults and default_ui_json.
-        self.defaults = self._forward_defaults if fwd else self._inversion_defaults
-        self.default_ui_json.update(
-            self.forward_ui_json if fwd else self.inversion_ui_json
+        self._defaults = (
+            self.forward_defaults if self.forward_only else self.inversion_defaults
         )
-        self.default_ui_json = {
-            k: self.default_ui_json[k] for k in self.defaults.keys()
-        }
-        self.param_names = list(self.defaults.keys())
 
-        # Superimpose params_dict onto defaults.
-        if self.default:
-            params_dict = dict(self.defaults, **params_dict)
+        if input_file is None:
+            ui_json = deepcopy(self._default_ui_json)
+            ui_json.update(
+                self._forward_ui_json if self.forward_only else self._inversion_ui_json
+            )
+            ui_json = {k: ui_json[k] for k in self.defaults}  # Re-order using defaults
+            input_file = InputFile(
+                ui_json=ui_json,
+                data=self.defaults,
+                validations=self.validations,
+                validation_options={"disabled": True},
+            )
 
-        self.geoh5 = params_dict["geoh5"]
-        self.validator: InputValidator = InputValidator(
-            self._required_parameters,
-            self._validations,
-            self.geoh5,
-            **self.validator_opts,
-        )
-        self.associations = self.get_associations(params_dict)
-
-        # Validate.
-        if self.validate:
-            self.validator.validate_chunk(params_dict, self.associations)
-
-        # Set params attributes from validated input.
-        self.update(params_dict, validate=False)
+        super().__init__(input_file=input_file, **kwargs)
 
     def data_channel(self, component: str):
         """Return uuid of data channel."""
@@ -166,17 +139,17 @@ class InversionParams(Params):
 
     def data(self, component: str):
         """Returns array of data for chosen data component."""
-        uid = self.data_channel(component)
-        if uid is None:
-            return None
-        return self.geoh5.get_entity(uid)[0].values
+        data_entity = self.data_channel(component)
+        if isinstance(data_entity, NumericData):
+            return data_entity.values.astype(float)
+        return None
 
     def uncertainty(self, component: str) -> np.ndarray | None:
         """Returns uncertainty for chosen data component."""
         val = self.uncertainty_channel(component)
 
-        if isinstance(val, UUID):
-            return self.geoh5.get_entity(val)[0].values.astype(float)
+        if isinstance(val, NumericData):
+            return val.values.astype(float)
         elif self.data(component) is not None:
             d = self.data(component)
             if isinstance(val, (int, float)):
@@ -200,12 +173,10 @@ class InversionParams(Params):
         ]
 
         for c in channels:
-            use_ch = False
-            if getattr(self, f"{c}_channel", None) is not None:
-                use_ch = True
-            if getattr(self, f"{c}_channel_bool", None) is True:
-                use_ch = True
-            if use_ch:
+            if (
+                getattr(self, f"{c}_channel", None) is not None
+                or getattr(self, f"{c}_channel_bool", None) is True
+            ):
                 comps.append(c)
 
         return comps
@@ -253,12 +224,30 @@ class InversionParams(Params):
         ]
 
     @property
+    def forward_defaults(self):
+        if getattr(self, "_forward_defaults", None) is None:
+            raise NotImplementedError(
+                "The property '_forward_defaults' must be assigned on "
+                "the child inversion class."
+            )
+        return self._forward_defaults
+
+    @property
     def forward_only(self):
         return self._forward_only
 
     @forward_only.setter
     def forward_only(self, val):
         self.setter_validator("forward_only", val)
+
+    @property
+    def inversion_defaults(self):
+        if getattr(self, "_inversion_defaults", None) is None:
+            raise NotImplementedError(
+                "The property '_inversion_defaults' must be assigned on "
+                "the child inversion class."
+            )
+        return self._inversion_defaults
 
     @property
     def topography_object(self):
@@ -363,6 +352,14 @@ class InversionParams(Params):
     @ignore_values.setter
     def ignore_values(self, val):
         self.setter_validator("ignore_values", val)
+
+    @property
+    def inversion_type(self):
+        return self._inversion_type
+
+    @inversion_type.setter
+    def inversion_type(self, val):
+        self.setter_validator("inversion_type", val)
 
     @property
     def resolution(self):
@@ -864,85 +861,9 @@ class InversionParams(Params):
         return self._ga_group
 
     @property
-    def no_data_value(self):
-        return self._no_data_value
-
-    @no_data_value.setter
-    def no_data_value(self, val):
-        self.setter_validator("no_data_value", val)
-
-    @property
     def distributed_workers(self):
         return self._distributed_workers
 
     @distributed_workers.setter
     def distributed_workers(self, val):
         self.setter_validator("distributed_workers", val)
-
-    def write_input_file(
-        self,
-        ui_json: dict = None,
-        default: bool = False,
-        name: str = None,
-        path: str = None,
-    ):
-        """Write out a ui.json with the current state of parameters"""
-
-        if ui_json is None:
-            defaults = deepcopy(self.defaults)
-            ui_json = deepcopy(self.default_ui_json)
-            ui_json["geoh5"] = self.geoh5
-            self.title = defaults["title"]
-            self.run_command = defaults["run_command"]
-
-        if default:
-            for k, v in defaults.items():
-                if isinstance(ui_json[k], dict):
-                    key = "value"
-                    if "isValue" in ui_json[k].keys():
-                        if ui_json[k]["isValue"] == False:
-                            key = "property"
-                    ui_json[k][key] = v
-                else:
-                    ui_json[k] = v
-
-            ifile = InputFile.from_dict(ui_json)
-        else:
-            if self.validate:
-                self.validator.validate_chunk(
-                    self.to_dict(ui_json=ui_json, ui_json_format=False),
-                    self.associations,
-                )
-            ifile = InputFile.from_dict(self.to_dict(ui_json=ui_json))
-
-        if name is not None:
-            if ".ui.json" not in name:
-                name += ".ui.json"
-        else:
-            name = f"{self.out_group}.ui.json"
-
-        if path is not None:
-            if not os.path.exists(path):
-                raise ValueError(f"Provided path {path} does not exist.")
-            ifile.workpath = path
-
-        none_map = {
-            "starting_chi_factor": 1.0,
-            "resolution": 0.0,
-            "detrend_order": 0,
-            "detrend_type": "all",
-            "initial_beta": 1.0,
-            "window_center_x": 0.0,
-            "window_center_y": 0.0,
-            "window_width": 0.0,
-            "window_height": 0.0,
-            "window_azimuth": 0.0,
-            "n_cpu": 1,
-        }
-
-        ifile.write_ui_json(ui_json, name=name, default=default, none_map=none_map)
-        if ifile.workpath is not None:
-            ifile.filepath = os.path.join(ifile.workpath, name)
-        else:
-            ifile.filepath = os.path.abspath(name)
-        self._input_file = ifile

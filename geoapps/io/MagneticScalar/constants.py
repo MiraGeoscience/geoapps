@@ -7,12 +7,11 @@
 
 from uuid import UUID
 
+from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Grid2D, Points, Surface
 
 from geoapps.io.Inversion.constants import default_ui_json as base_default_ui_json
-from geoapps.io.Inversion.constants import (
-    required_parameters as base_required_parameters,
-)
 from geoapps.io.Inversion.constants import validations as base_validations
 
 ################# defaults ##################
@@ -68,7 +67,7 @@ inversion_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -108,7 +107,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": None,
+    "reference_model": 0.0,
     "gradient_type": "total",
     "lower_bound_object": None,
     "lower_bound": None,
@@ -118,7 +117,6 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": None,
     "out_group": "SusceptibilityInversion",
-    "no_data_value": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.drivers.magnetic_scalar_inversion",
@@ -174,7 +172,7 @@ forward_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -573,109 +571,12 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 ################ Validations #################
 
-required_parameters = [
-    "inversion_type",
-    "inducing_field_strength",
-    "inducing_field_inclination",
-    "inducing_field_declination",
-]
-required_parameters += base_required_parameters
-
 validations = {
     "inversion_type": {
-        "types": [str],
+        "required": True,
         "values": ["magnetic scalar"],
     },
-    "inducing_field_strength": {
-        "types": [int, float],
-    },
-    "inducing_field_inclination": {
-        "types": [int, float],
-    },
-    "inducing_field_declination": {
-        "types": [int, float],
-    },
-    "tmi_channel_bool": {"types": [bool]},
-    "tmi_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "tmi_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "bxx_channel_bool": {"types": [bool]},
-    "bxx_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "bxx_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "bxy_channel_bool": {"types": [bool]},
-    "bxy_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "bxy_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "bxz_channel_bool": {"types": [bool]},
-    "bxz_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "bxz_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "byy_channel_bool": {"types": [bool]},
-    "byy_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "byy_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "byz_channel_bool": {"types": [bool]},
-    "byz_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "byz_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "bzz_channel_bool": {"types": [bool]},
-    "bzz_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "bzz_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "bx_channel_bool": {"types": [bool]},
-    "bx_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "bx_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "by_channel_bool": {"types": [bool]},
-    "by_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "by_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "bz_channel_bool": {"types": [bool]},
-    "bz_channel": {
-        "types": [str, UUID],
-        "reqs": [("data_object")],
-    },
-    "bz_uncertainty": {
-        "types": [str, int, float, UUID],
-    },
-    "out_group": {"types": [str, ContainerGroup]},
+    "data_object": {"types": [str, UUID, Points, Surface, Grid2D]},
 }
 
 validations = dict(base_validations, **validations)
@@ -694,7 +595,7 @@ app_initializer = {
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
     "resolution": 50.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "horizontal_padding": 1000.0,
@@ -713,8 +614,8 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0,
-    "receivers_offset_y": 0,
-    "receivers_offset_z": 60,
+    "receivers_offset_x": 0.0,
+    "receivers_offset_y": 0.0,
+    "receivers_offset_z": 60.0,
     "out_group": "ScalarInversion",
 }
