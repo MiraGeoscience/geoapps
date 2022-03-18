@@ -8,12 +8,12 @@
 import argparse
 
 import geoapps
-from geoapps.drivers.direct_current.params import DirectCurrentParams
-from geoapps.drivers.gravity.params import GravityParams
-from geoapps.drivers.induced_polarization.params import InducedPolarizationParams
-from geoapps.drivers.magnetic_scalar.params import MagneticScalarParams
-from geoapps.drivers.magnetic_vector.params import MagneticVectorParams
-from geoapps.drivers.magnetotellurics.params import MagnetotelluricsParams
+from geoapps.drivers.inversion.direct_current.params import DirectCurrentParams
+from geoapps.drivers.inversion.gravity.params import GravityParams
+from geoapps.drivers.inversion.induced_polarization import InducedPolarizationParams
+from geoapps.drivers.inversion.magnetic_scalar import MagneticScalarParams
+from geoapps.drivers.inversion.magnetic_vector.params import MagneticVectorParams
+from geoapps.drivers.inversion.magnetotellurics import MagnetotelluricsParams
 from geoapps.drivers.octree.params import OctreeParams
 from geoapps.drivers.peak_finder.params import PeakFinderParams
 
@@ -24,32 +24,32 @@ path_to_flinflon = lambda file: "\\".join(
 
 def write_default_uijson(path, use_initializers=False):
 
-    from geoapps.drivers.gravity.constants import app_initializer
+    from geoapps.drivers.inversion.gravity import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     grav_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.magnetic_scalar.constants import app_initializer
+    from geoapps.drivers.inversion.magnetic_scalar import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mag_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.magnetic_vector.constants import app_initializer
+    from geoapps.drivers.inversion.magnetic_vector.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mvi_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.direct_current.constants import app_initializer
+    from geoapps.drivers.inversion.direct_current import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.induced_polarization.constants import app_initializer
+    from geoapps.drivers.inversion.induced_polarization import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     ip_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.magnetotellurics.constants import app_initializer
+    from geoapps.drivers.inversion.magnetotellurics import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mt_init = app_initializer if use_initializers else {}

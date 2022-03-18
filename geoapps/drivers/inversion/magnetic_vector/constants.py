@@ -9,15 +9,13 @@ from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
 
-from geoapps.drivers.base_inversion.constants import (
-    default_ui_json as base_default_ui_json,
-)
-from geoapps.drivers.base_inversion.constants import validations as base_validations
+from geoapps.drivers.inversion.constants import default_ui_json as base_default_ui_json
+from geoapps.drivers.inversion.constants import validations as base_validations
 
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Magnetic Vector base_inversion",
+    "title": "SimPEG Magnetic Vector inversion",
     "inversion_type": "magnetic vector",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -242,7 +240,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Magnetic Vector base_inversion",
+    "title": "SimPEG Magnetic Vector inversion",
     "inversion_type": "magnetic vector",
     "inducing_field_strength": {
         "min": 0.0,

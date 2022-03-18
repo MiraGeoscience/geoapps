@@ -5,13 +5,13 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
 import sys
 
 from geoh5py.ui_json import InputFile
 
-from ..base_inversion.inversion import InversionDriver
-from .params import InducedPolarizationParams
+from geoapps.drivers.inversion.inversion import InversionDriver
+
+from .params import MagneticVectorParams
 
 
 def start_inversion(filepath=None, **kwargs):
@@ -21,13 +21,13 @@ def start_inversion(filepath=None, **kwargs):
     if filepath is not None:
         input_file = InputFile.read_ui_json(filepath)
 
-    params = InducedPolarizationParams(input_file=input_file, **kwargs)
-    driver = InducedPolarizationDriver(params)
+    params = MagneticVectorParams(input_file=input_file, **kwargs)
+    driver = InversionDriver(params)
     driver.run()
 
 
-class InducedPolarizationDriver(InversionDriver):
-    def __init__(self, params: InducedPolarizationParams):
+class MagneticVectorDriver(InversionDriver):
+    def __init__(self, params: MagneticVectorParams):
         super().__init__(params)
 
     def run(self):
@@ -35,6 +35,5 @@ class InducedPolarizationDriver(InversionDriver):
 
 
 if __name__ == "__main__":
-
     filepath = sys.argv[1]
     start_inversion(filepath)

@@ -8,7 +8,7 @@
 import sys
 import warnings
 
-from .direct_current.inversion import start_inversion
+from geoapps.drivers.inversion.direct_current import start_inversion
 
 if __name__ == "__main__":
     filepath = sys.argv[1]

@@ -8,7 +8,7 @@
 import sys
 import warnings
 
-from .magnetic_vector.inversion import start_inversion
+from geoapps.drivers.inversion.magnetic_vector import start_inversion
 
 if __name__ == "__main__":
     filepath = sys.argv[1]
