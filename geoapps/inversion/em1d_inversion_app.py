@@ -485,7 +485,7 @@ class InversionOptions(BaseApplication):
         self.option_choices.observe(self.inversion_option_change, names="value")
         self._main = widgets.VBox(
             [
-                HBox([widgets.Label("base_inversion Options")]),
+                HBox([widgets.Label("inversion Options")]),
                 HBox(
                     [
                         self.option_choices,
@@ -643,7 +643,7 @@ def plot_convergence_curve(h5file):
     objects = widgets.Dropdown(
         options=names,
         value=names[0],
-        description="base_inversion Group:",
+        description="inversion Group:",
     )
 
     def plot_curve(objects):
@@ -843,7 +843,7 @@ class InversionApp(PlotSelection2D):
                     ),
                     VBox(
                         [
-                            Label("base_inversion Parameters"),
+                            Label("inversion Parameters"),
                             self.forward_only,
                             self.inversion_parameters.main,
                         ],

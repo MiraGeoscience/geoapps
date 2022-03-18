@@ -8,9 +8,9 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from uuid import UUID
 
-from ..base_inversion.params import InversionBaseParams
+from geoapps.drivers.inversion.params import InversionBaseParams
+
 from .constants import (
     default_ui_json,
     forward_defaults,
@@ -21,15 +21,14 @@ from .constants import (
 )
 
 
-class MagneticVectorParams(InversionBaseParams):
+class MagneticScalarParams(InversionBaseParams):
     """
-    Parameter class for magnetics->vector magnetization inversion.
+    Parameter class for magnetics->susceptibility inversion.
     """
 
     _directive_list = [
-        "VectorInversion",
-        "Update_IRLS",
         "UpdateSensitivityWeights",
+        "Update_IRLS",
         "BetaEstimate_ByEig",
         "UpdatePreconditioner",
         "SaveIterationsGeoH5",
@@ -41,7 +40,7 @@ class MagneticVectorParams(InversionBaseParams):
         self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
         self._inversion_ui_json = deepcopy(inversion_ui_json)
-        self._inversion_type = "magnetic vector"
+        self._inversion_type = "magnetic scalar"
         self._validations = validations
         self._inducing_field_strength: float = None
         self._inducing_field_inclination: float = None
@@ -76,18 +75,11 @@ class MagneticVectorParams(InversionBaseParams):
         self._bz_channel_bool = None
         self._bz_channel = None
         self._bz_uncertainty = None
-        self._starting_inclination_object: UUID = None
-        self._starting_declination_object: UUID = None
-        self._starting_inclination = None
-        self._starting_declination = None
-        self._reference_inclination_object: UUID = None
-        self._reference_declination_object: UUID = None
-        self._reference_inclination = None
-        self._reference_declination = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     def components(self) -> list[str]:
+        """Retrieve component names used to index channel and uncertainty data."""
         comps = super().components()
         if self.forward_only:
             if len(comps) == 0:
@@ -373,75 +365,3 @@ class MagneticVectorParams(InversionBaseParams):
     @bz_uncertainty.setter
     def bz_uncertainty(self, val):
         self.setter_validator("bz_uncertainty", val, fun=self._uuid_promoter)
-
-    @property
-    def starting_inclination_object(self):
-        return self._starting_inclination_object
-
-    @starting_inclination_object.setter
-    def starting_inclination_object(self, val):
-        self.setter_validator(
-            "starting_inclination_object", val, fun=self._uuid_promoter
-        )
-
-    @property
-    def starting_declination_object(self):
-        return self._starting_declination_object
-
-    @starting_declination_object.setter
-    def starting_declination_object(self, val):
-        self.setter_validator(
-            "starting_declination_object", val, fun=self._uuid_promoter
-        )
-
-    @property
-    def starting_inclination(self):
-        return self._starting_inclination
-
-    @starting_inclination.setter
-    def starting_inclination(self, val):
-        self.setter_validator("starting_inclination", val, fun=self._uuid_promoter)
-
-    @property
-    def starting_declination(self):
-        return self._starting_declination
-
-    @starting_declination.setter
-    def starting_declination(self, val):
-        self.setter_validator("starting_declination", val, fun=self._uuid_promoter)
-
-    @property
-    def reference_inclination_object(self):
-        return self._reference_inclination_object
-
-    @reference_inclination_object.setter
-    def reference_inclination_object(self, val):
-        self.setter_validator(
-            "reference_inclination_object", val, fun=self._uuid_promoter
-        )
-
-    @property
-    def reference_declination_object(self):
-        return self._reference_declination_object
-
-    @reference_declination_object.setter
-    def reference_declination_object(self, val):
-        self.setter_validator(
-            "reference_declination_object", val, fun=self._uuid_promoter
-        )
-
-    @property
-    def reference_inclination(self):
-        return self._reference_inclination
-
-    @reference_inclination.setter
-    def reference_inclination(self, val):
-        self.setter_validator("reference_inclination", val, fun=self._uuid_promoter)
-
-    @property
-    def reference_declination(self):
-        return self._reference_declination
-
-    @reference_declination.setter
-    def reference_declination(self, val):
-        self.setter_validator("reference_declination", val, fun=self._uuid_promoter)

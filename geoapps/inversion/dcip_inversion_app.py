@@ -37,9 +37,9 @@ from ipywidgets.widgets import (
     Widget,
 )
 
-from geoapps.drivers.direct_current.constants import app_initializer
-from geoapps.drivers.direct_current.params import DirectCurrentParams
-from geoapps.drivers.induced_polarization.params import InducedPolarizationParams
+from geoapps.drivers.inversion.direct_current import app_initializer
+from geoapps.drivers.inversion.direct_current.params import DirectCurrentParams
+from geoapps.drivers.inversion.induced_polarization import InducedPolarizationParams
 from geoapps.plotting import PlotSelection2D
 from geoapps.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils.utils import find_value, string_2_list
@@ -110,7 +110,7 @@ class InversionApp(PlotSelection2D):
         )
         self._inversion_type = Dropdown(
             options=["direct current", "induced polarization"],
-            description="base_inversion Type:",
+            description="inversion Type:",
         )
         self._write = Button(
             value=False,
@@ -572,7 +572,7 @@ class InversionApp(PlotSelection2D):
                     ),
                     VBox(
                         [
-                            Label("base_inversion Parameters"),
+                            Label("inversion Parameters"),
                             self.forward_only,
                             HBox(
                                 [

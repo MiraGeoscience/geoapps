@@ -8,7 +8,7 @@
 import sys
 import warnings
 
-from .induced_polarization.inversion import start_inversion
+from geoapps.drivers.inversion.induced_polarization.inversion import start_inversion
 
 if __name__ == "__main__":
     filepath = sys.argv[1]

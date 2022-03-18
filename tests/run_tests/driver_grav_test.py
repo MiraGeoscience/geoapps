@@ -32,8 +32,8 @@ def test_gravity_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.drivers.gravity.inversion import GravityDriver
-    from geoapps.drivers.gravity.params import GravityParams
+    from geoapps.drivers.inversion.gravity import GravityDriver
+    from geoapps.drivers.inversion.gravity.params import GravityParams
 
     np.random.seed(0)
     # Run the forward

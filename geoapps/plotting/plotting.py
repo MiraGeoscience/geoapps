@@ -649,7 +649,7 @@ def plot_convergence_curve(h5file):
     objects = widgets.Dropdown(
         options=names,
         value=names[0],
-        description="base_inversion Group:",
+        description="inversion Group:",
         style={"description_width": "initial"},
     )
 

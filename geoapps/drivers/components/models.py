@@ -48,16 +48,16 @@ class InversionModelCollection:
         """
         :param: workspace: Geoh5py workspace object containing window data.
         :param: params: Params object containing window parameters.
-        :param: mesh: base_inversion mesh on which the models are defined as cell
+        :param: mesh: inversion mesh on which the models are defined as cell
             centered properties.
         :param: is_sigma: True if models are in units of conductivity. When true,
             models will be converted to log(conductivity) for inversion purposes.
         :param: is_vector: True if models are vector valued.
         :param: n_blocks: Number of blocks (components) if vector.
-        :param: starting: base_inversion starting model.
-        :param: reference: base_inversion reference model.
-        :param: lower_bound: base_inversion lower bound model.
-        :param: upper_bound: base_inversion upper bound model.
+        :param: starting: inversion starting model.
+        :param: reference: inversion reference model.
+        :param: lower_bound: inversion lower bound model.
+        :param: upper_bound: inversion upper bound model.
         """
         self.workspace = workspace
         self.params = params
@@ -222,7 +222,7 @@ class InversionModel:
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
-        :param mesh: base_inversion mesh object
+        :param mesh: inversion mesh object
         :param model_type: Type of inversion model, can be any of "starting", "reference",
             "lower_bound", "upper_bound".
         """

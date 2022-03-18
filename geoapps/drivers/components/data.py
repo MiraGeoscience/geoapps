@@ -456,7 +456,7 @@ class InversionData(InversionLocations):
         """
         Generates SimPEG simulation object.
 
-        :param: mesh: base_inversion mesh.
+        :param: mesh: inversion mesh.
         :param: active_cells: Mask that reduces model to active (earth) cells.
         :param: survey: SimPEG survey object.
         :param: tile_id (Optional): Id associated with the tile covered by

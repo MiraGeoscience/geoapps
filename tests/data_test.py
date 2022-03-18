@@ -13,9 +13,12 @@ import SimPEG
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers.base_inversion.inversion import InversionDriver
 from geoapps.drivers.components import InversionData
-from geoapps.drivers.magnetic_vector.params import MagneticVectorParams, default_ui_json
+from geoapps.drivers.inversion.inversion import InversionDriver
+from geoapps.drivers.inversion.magnetic_vector.params import (
+    MagneticVectorParams,
+    default_ui_json,
+)
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")

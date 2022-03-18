@@ -20,7 +20,10 @@ from geoapps.drivers.components import (
     InversionTopography,
     InversionWindow,
 )
-from geoapps.drivers.magnetic_vector.params import MagneticVectorParams, default_ui_json
+from geoapps.drivers.inversion.magnetic_vector.params import (
+    MagneticVectorParams,
+    default_ui_json,
+)
 from geoapps.utils import rotate_xy
 from geoapps.utils.testing import Geoh5Tester
 
