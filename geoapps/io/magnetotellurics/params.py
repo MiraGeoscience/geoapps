@@ -71,7 +71,7 @@ class MagnetotelluricsParams(InversionParams):
         self._zyy_imag_uncertainty = None
         self._background_conductivity = None
 
-        super().__init__(input_file=None, forward_only=False, **kwargs)
+        super().__init__(input_file=None, forward_only=forward_only, **kwargs)
 
     def data_channel(self, component: str):
         """Return uuid of data channel."""
@@ -81,15 +81,18 @@ class MagnetotelluricsParams(InversionParams):
         """Return uuid of uncertainty channel."""
         return getattr(self, "_".join([component, "uncertainty"]), None)
 
-    def property_group_data(self, uid: UUID):
+    def property_group_data(self, property_group: UUID):
 
         data = {}
-        data_obj = self.geoh5.get_entity(self.data_object)[0]
-        frequencies = data_obj.channels
+        frequencies = self.data_object.channels
         if self.forward_only:
             return {k: None for k in frequencies}
         else:
-            group = [k for k in data_obj.property_groups if k.uid == uid][0]
+            group = [
+                k
+                for k in self.data_object.property_groups
+                if k.uid == property_group.uid
+            ][0]
             property_names = [
                 self.geoh5.get_entity(p)[0].name for p in group.properties
             ]
@@ -107,8 +110,8 @@ class MagnetotelluricsParams(InversionParams):
 
     def data(self, component: str):
         """Returns array of data for chosen data component."""
-        uid = self.data_channel(component)
-        return self.property_group_data(uid)
+        property_group = self.data_channel(component)
+        return self.property_group_data(property_group)
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""
