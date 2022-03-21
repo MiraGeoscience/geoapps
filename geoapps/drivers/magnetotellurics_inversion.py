@@ -12,6 +12,7 @@ from geoapps.drivers.inversion.magnetotellurics import start_inversion
 
 if __name__ == "__main__":
     filepath = sys.argv[1]
+
     warnings.warn(
         "'geoapps.drivers.magnetotellurics_inversion' moved to "
         "'geoapps.drivers.magnetotellurics.inversion' in version 0.2.0. "
