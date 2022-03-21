@@ -32,7 +32,7 @@ def test_gravity_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.inversion import InversionDriver
+    from geoapps.inversion.driver import InversionDriver
     from geoapps.inversion.potential_fields import GravityParams
 
     np.random.seed(0)
