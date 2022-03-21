@@ -6,5 +6,4 @@
 #  (see LICENSE file at the root of this source code package).
 
 from .constants import default_ui_json
-from .driver import InversionDriver
 from .params import InversionBaseParams
