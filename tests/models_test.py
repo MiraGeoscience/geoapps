@@ -12,7 +12,7 @@ import numpy as np
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers.components import (
+from geoapps.applications.simpeg_inversions.components import (
     InversionData,
     InversionMesh,
     InversionModel,
@@ -20,10 +20,7 @@ from geoapps.drivers.components import (
     InversionTopography,
     InversionWindow,
 )
-from geoapps.drivers.inversion.magnetic_vector.params import (
-    MagneticVectorParams,
-    default_ui_json,
-)
+from geoapps.drivers.inversion import MagneticVectorParams, default_ui_json
 from geoapps.utils import rotate_xy
 from geoapps.utils.testing import Geoh5Tester
 

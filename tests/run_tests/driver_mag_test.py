@@ -32,10 +32,7 @@ def test_susceptibility_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.drivers.inversion.magnetic_scalar import (
-        MagneticScalarDriver,
-        MagneticScalarParams,
-    )
+    from geoapps.drivers.inversion import MagneticScalarDriver, MagneticScalarParams
 
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
@@ -137,8 +134,7 @@ def test_magnetic_vector_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.drivers.inversion.magnetic_vector.inversion import MagneticVectorDriver
-    from geoapps.drivers.inversion.magnetic_vector.params import MagneticVectorParams
+    from geoapps.drivers.inversion import MagneticVectorDriver, MagneticVectorParams
 
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)

@@ -7,7 +7,9 @@
 
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.em1d_inversion_app import InversionApp
+from geoapps.applications.simpeg.airborne_electromagnetics.em1d_inversion_app import (
+    InversionApp,
+)
 
 project = "FlinFlon.geoh5"
 geoh5 = Workspace(project)

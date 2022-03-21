@@ -13,11 +13,16 @@ from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
-from geoapps.drivers.inversion.direct_current.inversion import DirectCurrentParams
-from geoapps.drivers.inversion.induced_polarization import InducedPolarizationParams
-from geoapps.drivers.inversion.magnetic_vector.inversion import MagneticVectorParams
-from geoapps.inversion.dcip_inversion_app import InversionApp as DCInversionApp
-from geoapps.inversion.pf_inversion_app import InversionApp as MagInversionApp
+from geoapps.applications.simpeg.electric.application import (
+    InversionApp as DCInversionApp,
+)
+from geoapps.applications.simpeg.potential_fields.application import (
+    InversionApp as MagInversionApp,
+)
+from geoapps.applications.simpeg_inversions.direct_current.inversion import (
+    DirectCurrentParams,
+)
+from geoapps.drivers.inversion import InducedPolarizationParams, MagneticVectorParams
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
