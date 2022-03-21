@@ -13,8 +13,8 @@ from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
-from geoapps.inversion.electric import DirectCurrentParams, InducedPolarizationParams
-from geoapps.inversion.electric.application import InversionApp as DCInversionApp
+from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
+from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.inversion.potential_fields.application import (
     InversionApp as MagInversionApp,

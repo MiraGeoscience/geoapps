@@ -23,7 +23,7 @@ from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import optional_type
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.electric import DirectCurrentParams, InducedPolarizationParams
+from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.potential_fields import (
     GravityParams,
     MagneticScalarParams,
@@ -251,7 +251,7 @@ def test_chunk_validation(tmp_path):
     for a in ["Cannot set a None", "starting_model"]:
         assert a in str(excinfo.value)
 
-    from geoapps.inversion.electric.direct_current.constants import app_initializer
+    from geoapps.inversion.electricals.direct_current.constants import app_initializer
 
     dc_geoh5 = Workspace("FlinFlon_dcip.geoh5")
     test_dict = dict(app_initializer, **{"geoh5": dc_geoh5})
@@ -263,7 +263,7 @@ def test_chunk_validation(tmp_path):
     for a in ["Cannot set a None value", "topography_object"]:
         assert a in str(excinfo.value)
 
-    from geoapps.inversion.electric.induced_polarization.constants import (
+    from geoapps.inversion.electricals.induced_polarization.constants import (
         app_initializer,
     )
 

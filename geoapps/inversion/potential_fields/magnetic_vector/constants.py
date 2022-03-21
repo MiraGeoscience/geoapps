@@ -699,7 +699,7 @@ validations = {
 }
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": "../../../assets/FlinFlon.geoh5",
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "tmi_channel_bool": True,

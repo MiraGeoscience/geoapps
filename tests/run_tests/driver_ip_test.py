@@ -33,7 +33,7 @@ def test_ip_run(
     refinement=(4, 6),
 ):
     from geoapps.inversion.driver import InversionDriver
-    from geoapps.inversion.electric import InducedPolarizationParams
+    from geoapps.inversion.electricals import InducedPolarizationParams
 
     np.random.seed(0)
     # Run the forward

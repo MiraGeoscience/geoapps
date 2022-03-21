@@ -6,10 +6,10 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-from geoapps.inversion.electric.direct_current import (
+from geoapps.inversion.electricals.direct_current import (
     constants as direct_current_constants,
 )
-from geoapps.inversion.electric.induced_polarization import (
+from geoapps.inversion.electricals.induced_polarization import (
     constants as induced_polarization_constants,
 )
 from geoapps.inversion.potential_fields.gravity import constants as gravity_constants

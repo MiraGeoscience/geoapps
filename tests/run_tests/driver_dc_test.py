@@ -33,7 +33,7 @@ def test_dc_run(
     refinement=(4, 6),
 ):
     from geoapps.inversion.driver import InversionDriver
-    from geoapps.inversion.electric import DirectCurrentParams
+    from geoapps.inversion.electricals import DirectCurrentParams
 
     np.random.seed(0)
     # Run the forward

@@ -8,7 +8,7 @@
 import argparse
 
 import geoapps
-from geoapps.inversion.electric import DirectCurrentParams, InducedPolarizationParams
+from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.magnetotellurics import MagnetotelluricsParams
 from geoapps.inversion.potential_fields import (
     GravityParams,
@@ -44,12 +44,12 @@ def write_default_uijson(path, use_initializers=False):
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mvi_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.electric.direct_current.constants import app_initializer
+    from geoapps.inversion.electricals.direct_current.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.electric.direct_current.constants import app_initializer
+    from geoapps.inversion.electricals.direct_current.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     ip_init = app_initializer if use_initializers else {}
