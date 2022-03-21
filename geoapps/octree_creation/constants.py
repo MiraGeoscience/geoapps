@@ -21,7 +21,7 @@ defaults = {
     "vertical_padding": 1000.0,
     "depth_core": 500.0,
     "ga_group_name": "Octree_Mesh",
-    "run_command": ("geoapps.create.octree_mesh"),
+    "run_command": "geoapps.octree_creation.application",
     "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -92,7 +92,7 @@ default_ui_json = {
         "label": "Name:",
         "value": "Octree_Mesh",
     },
-    "run_command": ("geoapps.create.octree_mesh"),
+    "run_command": "geoapps.octree_creation.application",
     "run_command_boolean": {
         "value": False,
         "label": "Run python module ",

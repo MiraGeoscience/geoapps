@@ -1225,7 +1225,6 @@ class InversionApp(PlotSelection2D):
         self.params.geoh5 = new_workspace
 
         for key in self.__dict__:
-
             attr = getattr(self, key)
             if isinstance(attr, Widget) and hasattr(attr, "value"):
                 value = attr.value
