@@ -8,12 +8,14 @@
 from __future__ import annotations
 
 import multiprocessing
+import sys
 from multiprocessing.pool import ThreadPool
 from uuid import UUID
 
 import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
+from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
@@ -354,7 +356,7 @@ def start_inversion(filepath=None, **kwargs):
 
     if filepath is not None:
         input_file = InputFile.read_ui_json(filepath)
-        inversion_type = input_file.get("inversion_type")
+        inversion_type = input_file.data.get("inversion_type")
     else:
         input_file = None
         inversion_type = kwargs.get("inversion_type")
