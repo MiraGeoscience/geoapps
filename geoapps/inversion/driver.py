@@ -380,12 +380,12 @@ def start_inversion(filepath=None, **kwargs):
         params = MagnetotelluricsParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "direct current":
-        from .electric import DirectCurrentParams
+        from .electricals import DirectCurrentParams
 
         params = DirectCurrentParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "induced polarization":
-        from .electric import InducedPolarizationParams
+        from .electricals import InducedPolarizationParams
 
         params = InducedPolarizationParams(input_file=input_file, **kwargs)
 

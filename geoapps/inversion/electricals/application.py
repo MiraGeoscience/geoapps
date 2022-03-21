@@ -39,8 +39,8 @@ from ipywidgets.widgets import (
 
 from geoapps import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.inversion.electric import DirectCurrentParams, InducedPolarizationParams
-from geoapps.inversion.electric.direct_current.constants import app_initializer
+from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
+from geoapps.inversion.electricals.direct_current.constants import app_initializer
 from geoapps.utils.utils import find_value, string_2_list
 
 
