@@ -424,7 +424,7 @@ class DataInterpolation(ObjectDataSelection):
     def trigger_click(self, _):
 
         object_from = self.object_base(self.objects.value)
-        xyz = get_locations(self.workspace, object_from)
+        xyz = get_locations(self.workspace, object_from).copy()
         if xyz is None:
             return
 
@@ -438,11 +438,11 @@ class DataInterpolation(ObjectDataSelection):
         if self.out_mode.value == "To Object":
 
             self.object_out = self.object_base(self.out_object.value)
-            xyz_out = get_locations(self._workspace, self.object_out)
+            xyz_out = get_locations(self._workspace, self.object_out).copy()
 
         else:
 
-            xyz_ref = get_locations(self._workspace, self.xy_reference.value)
+            xyz_ref = get_locations(self._workspace, self.xy_reference.value).copy()
             if xyz_ref is None:
                 print(
                     "No object selected for 'Lateral Extent'. Defaults to input object."

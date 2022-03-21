@@ -320,6 +320,7 @@ class ObjectDataSelection(BaseApplication):
     def update_objects_list(self):
         if getattr(self, "_workspace", None) is not None:
             value = self.objects.value
+            data = self.data.value
 
             if len(self.object_types) > 0:
                 obj_list = [
@@ -340,6 +341,10 @@ class ObjectDataSelection(BaseApplication):
             ]
 
             self.objects.options = options
+
+            if value in dict(self.objects.options).values():
+                self.objects.value = value
+                self.data.value = data
 
     def update_uid_name_map(self):
         """
