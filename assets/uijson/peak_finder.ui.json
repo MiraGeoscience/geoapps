@@ -1,6 +1,17 @@
 {
     "title": "Peak Finder Parameters",
     "geoh5": "",
+    "run_command": "",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "",
+    "conda_environment_boolean": false,
+    "workspace": "",
     "tem_checkbox": {
         "main": true,
         "label": "TEM type",
@@ -92,19 +103,19 @@
     "min_value": {
         "group": "Detection Parameters",
         "label": "Minimum Value",
-        "value": "",
+        "value": 0.0,
         "main": true
     },
     "min_width": {
         "group": "Detection Parameters",
         "label": "Minimum Width (m)",
-        "value": 100,
+        "value": 100.0,
         "main": true
     },
     "max_migration": {
         "group": "Detection Parameters",
         "label": "Maximum Peak Migration (m)",
-        "value": 25,
+        "value": 25.0,
         "main": true
     },
     "min_channels": {
@@ -118,7 +129,7 @@
         "main": true,
         "group": "Python run preferences",
         "label": "Save As",
-        "value": "PeakFinder"
+        "value": "peak_finder"
     },
     "structural_markers": {
         "main": true,
@@ -132,14 +143,5 @@
         "value": true
     },
     "center": "",
-    "width": "",
-    "run_command": "geoapps.processing.peak_finder",
-    "run_command_boolean": "",
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": "",
-    "template_data": "",
-    "template_color": "",
-    "workspace": "",
-    "monitoring_directory": "",
-    "plot_result": true
+    "width": ""
 }

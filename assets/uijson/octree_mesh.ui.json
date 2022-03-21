@@ -1,5 +1,5 @@
 {
-    "title": "Octree Mesh Creator",
+    "title": "octree Mesh Creator",
     "geoh5": "",
     "objects": {
         "enabled": true,
@@ -18,21 +18,21 @@
         "group": "2- Core cell size",
         "label": "Easting (m)",
         "main": true,
-        "value": 25
+        "value": 25.0
     },
     "v_cell_size": {
         "enabled": true,
         "group": "2- Core cell size",
         "label": "Northing (m)",
         "main": true,
-        "value": 25
+        "value": 25.0
     },
     "w_cell_size": {
         "enabled": true,
         "group": "2- Core cell size",
         "label": "Vertical (m)",
         "main": true,
-        "value": 25
+        "value": 25.0
     },
     "horizontal_padding": {
         "enabled": true,
@@ -71,5 +71,38 @@
     "monitoring_directory": "",
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
-    "workspace": ""
+    "Refinenement A object": {
+        "groupOptional": true,
+        "enabled": true,
+        "group": "Refinenement A",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": ""
+    },
+    "Refinenement A levels": {
+        "enabled": true,
+        "group": "Refinenement A",
+        "label": "Levels",
+        "value": "4.0, 4.0, 4.0"
+    },
+    "Refinenement A type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "Refinenement A",
+        "label": "Type",
+        "value": "radial"
+    },
+    "Refinenement A distance": {
+        "enabled": true,
+        "group": "Refinenement A",
+        "label": "Distance",
+        "value": 1000.0
+    }
 }
