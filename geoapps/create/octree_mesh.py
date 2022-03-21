@@ -352,6 +352,5 @@ class OctreeMesh(ObjectDataSelection):
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    # file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\octree Mesh Creator.ui.json"
     params = OctreeParams(InputFile.read_ui_json(file))
     OctreeMesh.run(params)
