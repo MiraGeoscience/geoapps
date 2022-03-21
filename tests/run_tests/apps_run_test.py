@@ -8,10 +8,10 @@
 
 from geoh5py.workspace import Workspace
 
-from geoapps.create.contours import ContourValues
-from geoapps.create.isosurface import IsoSurface
-from geoapps.create.surface_2d import Surface2D
-from geoapps.export import Export
+from geoapps.applications.contours.application import ContourValues
+from geoapps.applications.export.application import Export
+from geoapps.applications.iso_surfaces.application import IsoSurface
+from geoapps.applications.triangulated_surfaces.application import Surface2D
 from geoapps.processing import (
     Calculator,
     Clustering,

@@ -13,9 +13,9 @@ import SimPEG
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers.components import InversionData
-from geoapps.drivers.inversion.inversion import InversionDriver
-from geoapps.drivers.inversion.magnetic_vector.params import (
+from geoapps.applications.simpeg_inversions.components import InversionData
+from geoapps.drivers.inversion import (
+    InversionDriver,
     MagneticVectorParams,
     default_ui_json,
 )

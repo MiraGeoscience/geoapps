@@ -32,8 +32,12 @@ def test_dc_run(
     pytest=True,
     refinement=(4, 6),
 ):
-    from geoapps.drivers.inversion.direct_current.inversion import DirectCurrentDriver
-    from geoapps.drivers.inversion.direct_current.params import DirectCurrentParams
+    from geoapps.applications.simpeg_inversions.direct_current.inversion import (
+        DirectCurrentDriver,
+    )
+    from geoapps.applications.simpeg_inversions.direct_current.params import (
+        DirectCurrentParams,
+    )
 
     np.random.seed(0)
     # Run the forward

@@ -7,7 +7,7 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.processing.data_interpolation import DataInterpolation
+from geoapps.applications.interpolation.application import DataInterpolation
 
 
 def test_truncate_locs_depths():
