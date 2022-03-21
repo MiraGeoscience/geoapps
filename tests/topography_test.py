@@ -11,11 +11,9 @@ from copy import deepcopy
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.applications.simpeg_inversions.components import (
-    InversionTopography,
-    InversionWindow,
-)
-from geoapps.drivers.inversion import MagneticVectorParams, default_ui_json
+from geoapps.inversion import default_ui_json
+from geoapps.inversion.components import InversionTopography, InversionWindow
+from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")

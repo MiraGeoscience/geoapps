@@ -8,14 +8,14 @@
 import sys
 import warnings
 
-from geoapps.drivers.inversion import start_inversion
+from geoapps.inversion import start_inversion
 
 if __name__ == "__main__":
     filepath = sys.argv[1]
 
     warnings.warn(
-        "'geoapps.drivers.magnetotellurics_inversion' moved to "
-        "'geoapps.drivers.magnetotellurics.inversion' in version 0.2.0. "
+        "'geoapps.drivers.magnetotellurics_inversion' replaced by "
+        "'geoapps.inversion.driver' in version 0.7.0. "
         "This warning is likely due to the execution of older ui.json files. Please update."
     )
     start_inversion(filepath)

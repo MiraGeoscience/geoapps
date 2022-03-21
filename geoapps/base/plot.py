@@ -13,7 +13,7 @@ from geoh5py.objects import Curve, Grid2D, Points, Surface
 from ipywidgets import FloatSlider, FloatText, HBox, Label, Layout, ToggleButton, VBox
 
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.plotting import plot_plan_data_selection
+from geoapps.utils.plotting import plot_plan_data_selection
 from geoapps.utils.utils import input_string_2_float, rotate_xy
 
 

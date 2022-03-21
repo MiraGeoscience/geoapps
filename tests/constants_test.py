@@ -6,19 +6,19 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-from geoapps.applications.simpeg_inversions.gravity import (
-    constants as gravity_constants,
+from geoapps.inversion.electric.direct_current import (
+    constants as direct_current_constants,
 )
-from geoapps.applications.simpeg_inversions.induced_polarization import (
+from geoapps.inversion.electric.induced_polarization import (
     constants as induced_polarization_constants,
 )
-from geoapps.applications.simpeg_inversions.magnetic_scalar import (
+from geoapps.inversion.potential_fields.gravity import constants as gravity_constants
+from geoapps.inversion.potential_fields.magnetic_scalar import (
     constants as magnetic_scalar_constants,
 )
-from geoapps.applications.simpeg_inversions.magnetic_vector import (
+from geoapps.inversion.potential_fields.magnetic_vector import (
     constants as magnetic_vector_constants,
 )
-from geoapps.drivers.inversion import constants as direct_current_constants
 
 constants = [
     gravity_constants,

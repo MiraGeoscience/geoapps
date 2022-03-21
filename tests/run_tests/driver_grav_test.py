@@ -32,8 +32,8 @@ def test_gravity_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.applications.simpeg_inversions.gravity.params import GravityParams
-    from geoapps.drivers.inversion import GravityDriver
+    from geoapps.inversion import InversionDriver
+    from geoapps.inversion.potential_fields import GravityParams
 
     np.random.seed(0)
     # Run the forward
@@ -58,7 +58,7 @@ def test_gravity_run(
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
-    fwr_driver = GravityDriver(params)
+    fwr_driver = InversionDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
@@ -93,7 +93,7 @@ def test_gravity_run(
         prctile=100,
     )
     params.workpath = tmp_path
-    driver = GravityDriver(params)
+    driver = InversionDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
