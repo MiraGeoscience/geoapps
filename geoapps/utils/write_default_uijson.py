@@ -8,18 +8,15 @@
 import argparse
 
 import geoapps
-from geoapps.applications.octree_creation.params import OctreeParams
-from geoapps.applications.peak_finder import PeakFinderParams
-from geoapps.applications.simpeg_inversions.direct_current.params import (
-    DirectCurrentParams,
-)
-from geoapps.applications.simpeg_inversions.gravity.params import GravityParams
-from geoapps.drivers.inversion import (
-    InducedPolarizationParams,
+from geoapps.inversion.electric import DirectCurrentParams, InducedPolarizationParams
+from geoapps.inversion.magnetotellurics import MagnetotelluricsParams
+from geoapps.inversion.potential_fields import (
+    GravityParams,
     MagneticScalarParams,
     MagneticVectorParams,
-    MagnetotelluricsParams,
 )
+from geoapps.octree_creation import OctreeParams
+from geoapps.peak_finder import PeakFinderParams
 
 path_to_flinflon = lambda file: "\\".join(
     geoapps.__file__.split("\\")[:-2] + ["assets", file]
@@ -28,42 +25,46 @@ path_to_flinflon = lambda file: "\\".join(
 
 def write_default_uijson(path, use_initializers=False):
 
-    from geoapps.drivers.inversion import app_initializer
+    from geoapps.inversion.potential_fields.gravity.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     grav_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.inversion import app_initializer
+    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
+        app_initializer,
+    )
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mag_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.inversion import app_initializer
+    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
+        app_initializer,
+    )
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mvi_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.inversion import app_initializer
+    from geoapps.inversion.electric.direct_current.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.inversion import app_initializer
+    from geoapps.inversion.electric.direct_current.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     ip_init = app_initializer if use_initializers else {}
 
-    from geoapps.drivers.inversion import app_initializer
+    from geoapps.inversion.magnetotellurics.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mt_init = app_initializer if use_initializers else {}
 
-    from geoapps.applications.octree_creation.constants import app_initializer
+    from geoapps.octree_creation.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     oct_init = app_initializer if use_initializers else {}
 
-    from geoapps.applications.peak_finder.constants import app_initializer
+    from geoapps.peak_finder.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     peak_init = app_initializer if use_initializers else {}

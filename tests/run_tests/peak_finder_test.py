@@ -13,7 +13,7 @@ from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
-from geoapps.applications.peak_finder.application import PeakFinder
+from geoapps.peak_finder import PeakFinder
 
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 

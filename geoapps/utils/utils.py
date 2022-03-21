@@ -1993,7 +1993,7 @@ def direct_current_from_simpeg(
     workspace: Workspace, survey: Survey, name: str = None, data: dict = None
 ):
     """
-    Convert a simpeg direct-current survey to geoh5 format.
+    Convert a inversion direct-current survey to geoh5 format.
     """
     u_src_poles, src_pole_id = np.unique(
         np.r_[survey.locations_a, survey.locations_b], axis=0, return_inverse=True

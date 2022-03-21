@@ -11,11 +11,9 @@ import numpy as np
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
-from geoapps.applications.simpeg_inversions.components import InversionWindow
-from geoapps.applications.simpeg_inversions.gravity.params import (
-    GravityParams,
-    default_ui_json,
-)
+from geoapps.inversion import default_ui_json
+from geoapps.inversion.components import InversionWindow
+from geoapps.inversion.potential_fields import GravityParams
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")

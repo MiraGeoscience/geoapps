@@ -32,7 +32,8 @@ def test_susceptibility_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.drivers.inversion import MagneticScalarDriver, MagneticScalarParams
+    from geoapps.inversion.driver import InversionDriver
+    from geoapps.inversion.potential_fields import MagneticScalarParams
 
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
@@ -63,7 +64,7 @@ def test_susceptibility_run(
     )
     params.workpath = tmp_path
 
-    fwr_driver = MagneticScalarDriver(params)
+    fwr_driver = InversionDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
     tmi = geoh5.get_entity("Iteration_0_tmi")[0]
@@ -94,7 +95,7 @@ def test_susceptibility_run(
     )
     params.workpath = tmp_path
 
-    driver = MagneticScalarDriver(params)
+    driver = InversionDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
@@ -134,7 +135,8 @@ def test_magnetic_vector_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.drivers.inversion import MagneticVectorDriver, MagneticVectorParams
+    from geoapps.inversion.driver import InversionDriver
+    from geoapps.inversion.potential_fields import MagneticVectorParams
 
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
@@ -164,7 +166,7 @@ def test_magnetic_vector_run(
         starting_inclination=45,
         starting_declination=270,
     )
-    fwr_driver = MagneticVectorDriver(params)
+    fwr_driver = InversionDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
     tmi = geoh5.get_entity("Iteration_0_tmi")[0]
@@ -192,7 +194,7 @@ def test_magnetic_vector_run(
         initial_beta_ratio=1e1,
         prctile=100,
     )
-    driver = MagneticVectorDriver(params)
+    driver = InversionDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     # Re-open the workspace and get iterations

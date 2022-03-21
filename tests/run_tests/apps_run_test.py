@@ -8,17 +8,15 @@
 
 from geoh5py.workspace import Workspace
 
-from geoapps.applications.contours.application import ContourValues
-from geoapps.applications.export.application import Export
-from geoapps.applications.iso_surfaces.application import IsoSurface
-from geoapps.applications.triangulated_surfaces.application import Surface2D
-from geoapps.processing import (
-    Calculator,
-    Clustering,
-    CoordinateTransformation,
-    DataInterpolation,
-    EdgeDetectionApp,
-)
+from geoapps.calculator import Calculator
+from geoapps.clustering import Clustering
+from geoapps.contours.application import ContourValues
+from geoapps.coordinate_transformation import CoordinateTransformation
+from geoapps.edge_detection import EdgeDetectionApp
+from geoapps.export.application import Export
+from geoapps.interpolation import DataInterpolation
+from geoapps.iso_surfaces.application import IsoSurface
+from geoapps.triangulated_surfaces.application import Surface2D
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
