@@ -251,21 +251,19 @@ def test_chunk_validation(tmp_path):
     for a in ["Cannot set a None", "starting_model"]:
         assert a in str(excinfo.value)
 
-    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
-        app_initializer,
-    )
+    from geoapps.inversion.electric.direct_current.constants import app_initializer
 
     dc_geoh5 = Workspace("FlinFlon_dcip.geoh5")
     test_dict = dict(app_initializer, **{"geoh5": dc_geoh5})
     test_dict.pop("topography_object")
     params = DirectCurrentParams(**test_dict)
 
-    with pytest.raises(RequiredValidationError) as excinfo:
+    with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
-    for a in ["Missing required parameter", "topography_object"]:
+    for a in ["Cannot set a None value", "topography_object"]:
         assert a in str(excinfo.value)
 
-    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
+    from geoapps.inversion.electric.induced_polarization.constants import (
         app_initializer,
     )
 
