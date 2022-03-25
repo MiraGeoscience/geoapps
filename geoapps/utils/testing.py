@@ -79,13 +79,15 @@ def setup_inversion_workspace(
     n_electrodes=20,
     n_lines=5,
     refinement=(4, 6),
+    depth_core=100.0,
+    padding_dist=100.0,
     inversion_type="other",
     flatten=False,
 ):
     project = os.path.join(work_dir, "inversion_test.geoh5")
     geoh5 = Workspace(project)
     # Topography
-    xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
+    xx, yy = np.meshgrid(np.linspace(-400.0, 400.0, 50), np.linspace(-400.0, 400.0, 50))
     b = 100
     A = 50
     if flatten:
@@ -175,20 +177,42 @@ def setup_inversion_workspace(
 
     # Create a mesh
     h = 5
-    padDist = np.ones((3, 2)) * 100
+    padDist = np.array(
+        [
+            [padding_dist, padding_dist],
+            [padding_dist, padding_dist],
+            [padding_dist / 2, padding_dist / 4],
+        ]
+    )
+
     mesh = mesh_builder_xyz(
         vertices - h / 2.0,
         [h] * 3,
-        depth_core=100.0,
+        depth_core=depth_core,
         padding_distance=padDist,
         mesh_type="TREE",
     )
     mesh = refine_tree_xyz(
         mesh,
-        topo,
+        vertices,
         method="surface",
         octree_levels=refinement,
         octree_levels_padding=refinement,
+    )
+    mesh = refine_tree_xyz(
+        mesh,
+        topo,
+        method="surface",
+        octree_levels=(2, 2),
+        octree_levels_padding=refinement,
+    )
+
+    mesh = refine_tree_xyz(
+        mesh,
+        np.array([[0.0, 0.0, -50.0]]),
+        method="radial",
+        octree_levels=(6, 4, 2),
+        octree_levels_padding=(6, 4, 2),
         finalize=True,
     )
     octree = treemesh_2_octree(geoh5, mesh, name="mesh")
@@ -212,5 +236,6 @@ def setup_inversion_workspace(
         )
     model[~active] = np.nan
     octree.add_data({"model": {"values": model[mesh._ubc_order]}})
+    octree.add_data({"active": {"values": active.astype(int)[mesh._ubc_order]}})
     octree.copy()  # Keep a copy around for ref
     return geoh5
