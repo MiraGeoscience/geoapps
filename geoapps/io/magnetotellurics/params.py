@@ -71,7 +71,7 @@ class MagnetotelluricsParams(InversionParams):
         self._zyy_imag_uncertainty = None
         self._background_conductivity = None
 
-        super().__init__(input_file=None, forward_only=forward_only, **kwargs)
+        super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     def data_channel(self, component: str):
         """Return uuid of data channel."""

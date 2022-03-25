@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from geoapps.io.params import Params
 
 import numpy as np
+from geoh5py.objects import Points
 from SimPEG.electromagnetics.static.utils.static_utils import drapeTopotoLoc
 
 from .simpeg_factory import SimPEGFactory
@@ -135,10 +136,20 @@ class ReceiversFactory(SimPEGFactory):
         locs = locations[local_index]
         if mesh is not None and active_cells is not None:
             draped_locs = drapeTopotoLoc(mesh, locs, actind=active_cells)
-            locs[:, 2] -= np.max(locs[:, 2] - draped_locs[:, 2])
+            locs[:, 2] = draped_locs[:, 2] - mesh.hz.min()
             print(
                 "Shifting receiver locations to avoid floaters, this may mean that some locations are in the ground."
             )
+
+            if not self.params.geoh5.get_entity("draped locations"):
+                parent = self.params.geoh5.get_entity(self.params.out_group)[0]
+                Points.create(
+                    self.params.geoh5,
+                    name="draped locations",
+                    vertices=locs,
+                    parent=parent,
+                )
+
         args.append(locs)
 
         return args
