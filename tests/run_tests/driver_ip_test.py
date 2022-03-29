@@ -45,7 +45,7 @@ def test_ip_run(
         n_electrodes=n_electrodes,
         n_lines=n_lines,
         refinement=refinement,
-        dcip=True,
+        inversion_type="dcip",
         flatten=False,
     )
 

@@ -135,20 +135,24 @@ class ReceiversFactory(SimPEGFactory):
         args = []
         locs = locations[local_index]
         if mesh is not None and active_cells is not None:
-            draped_locs = drapeTopotoLoc(mesh, locs, actind=active_cells)
-            locs[:, 2] = draped_locs[:, 2] - mesh.hz.min()
+            draped_locs = drapeTopotoLoc(
+                mesh, locs, actind=active_cells, option="center"
+            )
+            offset = np.linalg.norm(locs - draped_locs, axis=1)
+            locs = draped_locs.copy()
             print(
                 "Shifting receiver locations to avoid floaters, this may mean that some locations are in the ground."
             )
 
             if not self.params.geoh5.get_entity("draped locations"):
                 parent = self.params.geoh5.get_entity(self.params.out_group)[0]
-                Points.create(
+                drape = Points.create(
                     self.params.geoh5,
                     name="draped locations",
-                    vertices=locs,
+                    vertices=draped_locs,
                     parent=parent,
                 )
+                drape.add_data({"offset": {"values": offset}})
 
         args.append(locs)
 
