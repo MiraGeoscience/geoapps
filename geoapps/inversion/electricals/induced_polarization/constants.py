@@ -261,7 +261,6 @@ validations = {
 app_initializer = {
     "geoh5": "../../../assets/FlinFlon_dcip.geoh5",
     "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
-    "chargeability_channel_bool": True,
     "chargeability_channel": UUID("{162320e6-2b80-4877-9ec1-a8f5b6a13673}"),
     "chargeability_uncertainty": 0.001,
     "starting_model": 1e-4,
