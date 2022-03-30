@@ -9,7 +9,6 @@
 import numpy as np
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
@@ -34,8 +33,8 @@ def test_magnetotellurics_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.drivers.magnetotellurics_inversion import MagnetotelluricsDriver
-    from geoapps.io.magnetotellurics.params import MagnetotelluricsParams
+    from geoapps.inversion.driver import InversionDriver
+    from geoapps.inversion.magnetotellurics.params import MagnetotelluricsParams
 
     np.random.seed(0)
     # Run the forward
@@ -71,7 +70,7 @@ def test_magnetotellurics_run(
         zyy_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = MagnetotelluricsDriver(params, warmstart=False)
+    fwr_driver = InversionDriver(params, warmstart=False)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
@@ -141,7 +140,7 @@ def test_magnetotellurics_run(
         **data_kwargs,
     )
     params.workpath = tmp_path
-    driver = MagnetotelluricsDriver(params)
+    driver = InversionDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(

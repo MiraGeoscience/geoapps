@@ -493,6 +493,8 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
+
+
 validations = {
     "inversion_type": {
         "required": True,
@@ -500,7 +502,5 @@ validations = {
     },
     "data_object": {"required": True, "types": [str, UUID, MTReceivers]},
 }
-
-validations = dict(base_validations, **validations)
 
 app_initializer = {}
