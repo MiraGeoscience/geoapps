@@ -160,7 +160,7 @@ def test_magnetotellurics_run(
             output["phi_m"][1], target_magnetotellurics_run["phi_m"], decimal=1
         )
         np.testing.assert_almost_equal(
-            output["phi_d"][1], target_magnetotellurics_run["phi_d"], decimal=3
+            output["phi_d"][1], target_magnetotellurics_run["phi_d"], decimal=1
         )
 
         nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
