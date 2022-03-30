@@ -8,7 +8,6 @@
 
 import numpy as np
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
@@ -33,8 +32,8 @@ def test_gravity_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.drivers.grav_inversion import GravityDriver
-    from geoapps.io.Gravity.params import GravityParams
+    from geoapps.inversion.driver import InversionDriver
+    from geoapps.inversion.potential_fields import GravityParams
 
     np.random.seed(0)
     # Run the forward
@@ -59,7 +58,7 @@ def test_gravity_run(
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
-    fwr_driver = GravityDriver(params)
+    fwr_driver = InversionDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
@@ -94,7 +93,7 @@ def test_gravity_run(
         prctile=100,
     )
     params.workpath = tmp_path
-    driver = GravityDriver(params)
+    driver = InversionDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
