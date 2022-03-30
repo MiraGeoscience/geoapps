@@ -213,6 +213,6 @@ def setup_inversion_workspace(
         )
     model[~active] = np.nan
     octree.add_data({"model": {"values": model[mesh._ubc_order]}})
-    octree.add_data({"active": {"values": active.astype(int)[mesh._ubc_order]}})
+    # octree.add_data({"active": {"values": active.astype(int)[mesh._ubc_order]}})
     octree.copy()  # Keep a copy around for ref
     return geoh5
