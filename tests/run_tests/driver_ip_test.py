@@ -7,7 +7,6 @@
 
 import numpy as np
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
@@ -33,8 +32,8 @@ def test_ip_run(
     pytest=True,
     refinement=(4, 6),
 ):
-    from geoapps.drivers.induced_polarization_inversion import InducedPolarizationDriver
-    from geoapps.io.InducedPolarization.params import InducedPolarizationParams
+    from geoapps.inversion.driver import InversionDriver
+    from geoapps.inversion.electricals import InducedPolarizationParams
 
     np.random.seed(0)
     # Run the forward
@@ -66,7 +65,7 @@ def test_ip_run(
         conductivity_model=1e-2,
     )
     params.workpath = tmp_path
-    fwr_driver = InducedPolarizationDriver(params)
+    fwr_driver = InversionDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
     potential = geoh5.get_entity("Iteration_0_ip")[0]
@@ -97,7 +96,7 @@ def test_ip_run(
         tile_spatial=n_lines,
     )
     params.workpath = tmp_path
-    driver = InducedPolarizationDriver(params)
+    driver = InversionDriver(params)
     driver.run()
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid

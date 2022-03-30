@@ -1229,7 +1229,7 @@ def treemesh_2_octree(workspace, treemesh, **kwargs):
 
 def octree_2_treemesh(mesh):
     """
-    Convert a geoh5 Octree mesh to discretize.TreeMesh
+    Convert a geoh5 octree mesh to discretize.TreeMesh
     Modified code from module discretize.TreeMesh.readUBC function.
     """
 
@@ -1968,7 +1968,7 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
             return out
     except IndexError:
         raise IndexError(
-            f"Inversion group {inversion_group} could not be found in the target geoh5 {h5file}"
+            f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
         )
 
 
@@ -1993,7 +1993,7 @@ def direct_current_from_simpeg(
     workspace: Workspace, survey: Survey, name: str = None, data: dict = None
 ):
     """
-    Convert a simpeg direct-current survey to geoh5 format.
+    Convert a inversion direct-current survey to geoh5 format.
     """
     u_src_poles, src_pole_id = np.unique(
         np.r_[survey.locations_a, survey.locations_b], axis=0, return_inverse=True

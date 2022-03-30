@@ -12,14 +12,14 @@ import pytest
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers.components import (
+from geoapps.inversion import default_ui_json
+from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
     InversionTopography,
     InversionWindow,
 )
-from geoapps.io.MagneticVector import MagneticVectorParams
-from geoapps.io.MagneticVector.constants import default_ui_json
+from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")

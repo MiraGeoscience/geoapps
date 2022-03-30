@@ -6,6 +6,5 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
-cd %~dp0geoapps\applications
-call !MY_CONDA_EXE! activate geoapps && jupyter notebook Index.ipynb
+call !MY_CONDA_EXE! activate geoapps && jupyter notebook geoapps\index.ipynb
 cmd /k
