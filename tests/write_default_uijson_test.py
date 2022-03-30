@@ -9,8 +9,8 @@ import os
 
 from geoh5py.ui_json import InputFile
 
-from geoapps.io.Gravity import GravityParams
-from geoapps.io.write_default_uijson import write_default_uijson
+from geoapps.inversion.potential_fields import GravityParams
+from geoapps.utils.write_default_uijson import write_default_uijson
 
 
 def test_write_default_uijson(tmp_path):

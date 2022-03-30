@@ -6,33 +6,15 @@
 #  (see LICENSE file at the root of this source code package).
 
 import sys
+import warnings
 
-from geoh5py.ui_json import InputFile
-
-from geoapps.drivers.base_inversion import InversionDriver
-from geoapps.io.MagneticScalar import MagneticScalarParams
-
-
-def start_inversion(filepath=None, **kwargs):
-    """Starts inversion with parameters defined in input file."""
-
-    input_file = None
-    if filepath is not None:
-        input_file = InputFile.read_ui_json(filepath)
-
-    params = MagneticScalarParams(input_file=input_file, **kwargs)
-    driver = MagneticScalarDriver(params)
-    driver.run()
-
-
-class MagneticScalarDriver(InversionDriver):
-    def __init__(self, params: MagneticScalarParams):
-        super().__init__(params)
-
-    def run(self):
-        super().run()
-
+from geoapps.inversion import start_inversion
 
 if __name__ == "__main__":
     filepath = sys.argv[1]
+    warnings.warn(
+        "'geoapps.drivers.magnetic_scalar_inversion' replaced by "
+        "'geoapps.inversion.driver' in version 0.7.0. "
+        "This warning is likely due to the execution of older ui.json files. Please update."
+    )
     start_inversion(filepath)

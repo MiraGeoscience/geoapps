@@ -7,7 +7,6 @@
 
 import numpy as np
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import setup_inversion_workspace
@@ -33,8 +32,8 @@ def test_dc_run(
     pytest=True,
     refinement=(4, 6),
 ):
-    from geoapps.drivers.direct_current_inversion import DirectCurrentDriver
-    from geoapps.io.DirectCurrent.params import DirectCurrentParams
+    from geoapps.inversion.driver import InversionDriver
+    from geoapps.inversion.electricals import DirectCurrentParams
 
     np.random.seed(0)
     # Run the forward
@@ -64,7 +63,7 @@ def test_dc_run(
         starting_model=model.uid,
     )
     params.workpath = tmp_path
-    fwr_driver = DirectCurrentDriver(params)
+    fwr_driver = InversionDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
     potential = geoh5.get_entity("Iteration_0_dc")[0]
@@ -93,7 +92,7 @@ def test_dc_run(
         tile_spatial=n_lines,
     )
     params.workpath = tmp_path
-    driver = DirectCurrentDriver(params)
+    driver = InversionDriver(params)
     driver.run()
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid

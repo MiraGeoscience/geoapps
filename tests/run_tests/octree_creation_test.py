@@ -8,14 +8,13 @@
 from os import path
 
 import numpy as np
-import pytest
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Points, Surface
 from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 from scipy import spatial
 
-from geoapps.create.octree_mesh import OctreeMesh
+from geoapps.octree_creation import OctreeMesh
 from geoapps.utils.utils import treemesh_2_octree
 
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
