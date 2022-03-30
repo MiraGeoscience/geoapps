@@ -148,7 +148,6 @@ def test_magnetotellurics_run(
     )
 
     predicted = run_ws.get_entity("Iteration_0_zxx_real_1.00e+01")[0]
-    assert not any(np.isnan(predicted.values)), "Predicted data should not have nans."
 
     if pytest:
         np.testing.assert_almost_equal(
