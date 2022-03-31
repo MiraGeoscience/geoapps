@@ -116,7 +116,7 @@ def test_magnetotellurics_run(
         data_kwargs[f"{comp}_channel"] = survey.property_groups[i].uid
         data_kwargs[f"{comp}_uncertainty"] = survey.property_groups[8 + i].uid
 
-    orig_zxy_real_1 = geoh5.get_entity("Iteration_0_zxy_real_1.00e+01")[0].values
+    orig_zyx_real_1 = geoh5.get_entity("Iteration_0_zyx_real_1.00e+01")[0].values
 
     # Run the inverse
     np.random.seed(0)
@@ -148,12 +148,12 @@ def test_magnetotellurics_run(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
 
-    predicted = run_ws.get_entity("Iteration_0_zxy_real_1.00e+01")[0]
+    predicted = run_ws.get_entity("Iteration_0_zyx_real_1.00e+01")[0]
 
     if pytest:
-        print(orig_zxy_real_1)
+        print(orig_zyx_real_1)
         np.testing.assert_almost_equal(
-            np.linalg.norm(orig_zxy_real_1),
+            np.linalg.norm(orig_zyx_real_1),
             target_magnetotellurics_run["data_norm"],
             decimal=3,
         )
@@ -180,4 +180,4 @@ if __name__ == "__main__":
     assert (
         residual < 50.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Density model is within 15% of the answer. Let's go!!")
+    print("Conductivity model is within 15% of the answer. Let's go!!")
