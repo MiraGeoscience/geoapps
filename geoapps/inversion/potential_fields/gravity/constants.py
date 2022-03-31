@@ -553,7 +553,6 @@ app_initializer = {
     "geoh5": "../../../assets/FlinFlon.geoh5",
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-    "gz_channel_bool": True,
     "gz_channel": UUID("{6de9177a-8277-4e17-b76c-2b8b05dcf23c}"),
     "gz_uncertainty": 0.05,
     "u_cell_size": 25.0,
