@@ -20,7 +20,7 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_magnetotellurics_run = {
-    "data_norm": 0.0681620,
+    "data_norm": 1.420381,
     "phi_d": 7.267,
     "phi_m": 165.5,
 }
@@ -116,7 +116,7 @@ def test_magnetotellurics_run(
         data_kwargs[f"{comp}_channel"] = survey.property_groups[i].uid
         data_kwargs[f"{comp}_uncertainty"] = survey.property_groups[8 + i].uid
 
-    orig_zxx_real_1 = geoh5.get_entity("Iteration_0_zxx_real_1.00e+01")[0].values
+    orig_zxy_real_1 = geoh5.get_entity("Iteration_0_zxy_real_1.00e+01")[0].values
 
     # Run the inverse
     np.random.seed(0)
@@ -147,11 +147,12 @@ def test_magnetotellurics_run(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
 
-    predicted = run_ws.get_entity("Iteration_0_zxx_real_1.00e+01")[0]
+    predicted = run_ws.get_entity("Iteration_0_zxy_real_1.00e+01")[0]
 
     if pytest:
+        print(orig_zxy_real_1)
         np.testing.assert_almost_equal(
-            np.linalg.norm(orig_zxx_real_1),
+            np.linalg.norm(orig_zxy_real_1),
             target_magnetotellurics_run["data_norm"],
             decimal=3,
         )
