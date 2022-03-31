@@ -138,7 +138,7 @@ class ReceiversFactory(SimPEGFactory):
             draped_locs = drapeTopotoLoc(mesh, locs, actind=active_cells)
             # offset = np.linalg.norm(locs - draped_locs, axis=1)
             locs = draped_locs.copy()
-
+# TODO: Add drape object to ouput
             # if not self.params.geoh5.get_entity("draped locations"):
             #     parent = self.params.geoh5.get_entity(self.params.out_group)[0]
             #     drape = Points.create(
