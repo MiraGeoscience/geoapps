@@ -127,6 +127,7 @@ def test_magnetotellurics_run(
         resolution=0.0,
         data_object=survey.uid,
         starting_model=0.01,
+        reference_model=None,
         s_norm=0.0,
         x_norm=1.0,
         y_norm=1.0,
