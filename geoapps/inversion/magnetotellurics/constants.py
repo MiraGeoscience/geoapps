@@ -99,7 +99,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": 0.0,
+    "reference_model": 1e-3,
     "gradient_type": "total",
     "lower_bound_object": None,
     "lower_bound": None,
