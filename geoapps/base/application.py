@@ -16,7 +16,7 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.io.utils import entity2uuid, str2uuid
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
-from geoh5py.ui_json.utils import dict_mapper
+from geoh5py.io.utils import dict_mapper
 from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import (
