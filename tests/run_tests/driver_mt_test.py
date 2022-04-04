@@ -88,6 +88,7 @@ def test_magnetotellurics_run(
         "zyy_real": "Zyy (real)",
         "zyy_imag": "Zyy (imag)",
     }
+    curve = Curve.create(geoh5, vertices=survey.vertices)
     for comp, cname in components.items():
         data[cname] = []
         # uncertainties[f"{cname} uncertainties"] = {}
@@ -97,7 +98,7 @@ def test_magnetotellurics_run(
                 parent=survey
             )
             data[cname].append(d)
-            curve = Curve.create(geoh5, vertices=survey.vertices)
+
             u = curve.add_data(
                 {
                     f"uncertainty_{comp}_{freq:.2e}": {
@@ -174,7 +175,7 @@ def test_magnetotellurics_run(
 if __name__ == "__main__":
     # Full run
     m_start, m_rec = test_magnetotellurics_run(
-        "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 8)
+        "./", n_grid_points=8, max_iterations=30, pytest=False, refinement=(4, 8)
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
