@@ -21,12 +21,6 @@ if exist !custom_script! (
   goto success
 )
 
-call conda.bat --version 2> NUL
-if !ERRORLEVEL! equ 0 (
-  set MY_CONDA_EXE=conda.bat
-  goto success
-)
-
 :: reset error level
 call (exit /B 0)
 
