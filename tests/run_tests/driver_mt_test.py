@@ -22,7 +22,7 @@ from geoapps.utils.testing import setup_inversion_workspace
 target_magnetotellurics_run = {
     "data_norm": 1.420381,
     "phi_d": 7.267,
-    "phi_m": 165.5,
+    "phi_m": 35.74,
 }
 
 
