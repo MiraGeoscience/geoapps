@@ -152,7 +152,6 @@ def test_magnetotellurics_run(
     predicted = run_ws.get_entity("Iteration_0_zyx_real_1.00e+01")[0]
 
     if pytest:
-        print(orig_zyx_real_1)
         np.testing.assert_almost_equal(
             np.linalg.norm(orig_zyx_real_1),
             target_magnetotellurics_run["data_norm"],
