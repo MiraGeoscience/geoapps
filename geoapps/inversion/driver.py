@@ -373,7 +373,9 @@ def start_inversion(filepath=None, **kwargs):
 
     elif inversion_type == "gravity":
         from .potential_fields import GravityParams
+        from .potential_fields.gravity.constants import validations
 
+        input_file = InputFile.read_ui_json(filepath, validations=validations)
         params = GravityParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "magnetotellurics":
