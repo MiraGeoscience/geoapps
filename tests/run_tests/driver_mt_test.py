@@ -153,7 +153,7 @@ def test_magnetotellurics_run(
 
     if pytest:
         if any(np.isnan(orig_zyy_real_1)):
-            warning.warn(
+            warnings.warn(
                 "Skipping data norm comparison due to nan (used to bypass lone faulty test run in GH actions)."
             )
         else:
