@@ -174,9 +174,12 @@ class Surface2D(ObjectDataSelection):
                         prop = obj.find_or_create_property_group(
                             name=string_name(self.data.uid_name_map[m])
                         ).properties[ind]
-                        m_vals.append(
-                            self.workspace.get_entity(prop)[0].values[line_ind]
-                        )
+
+                        values = self.workspace.get_entity(prop)[0].values
+                        if values is None:
+                            values = np.ones(locations.shape[0]) * np.nan
+
+                        m_vals.append(values[line_ind])
 
                     m_vals = np.vstack(m_vals).T
                     keep = (
