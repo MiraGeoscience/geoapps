@@ -33,7 +33,7 @@ class InversionBaseParams(BaseParams):
     _inversion_type = None
     _ga_group = None
 
-    def __init__(self, input_file=None, forward_only=False, validate=False, **kwargs):
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._forward_only: bool = forward_only
         self._topography_object: UUID = None
         self._topography: UUID | float = None
@@ -127,7 +127,7 @@ class InversionBaseParams(BaseParams):
                 validation_options={"disabled": True},
             )
 
-        super().__init__(input_file=input_file, validate=validate, **kwargs)
+        super().__init__(input_file=input_file, **kwargs)
 
     def data_channel(self, component: str):
         """Return uuid of data channel."""
