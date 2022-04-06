@@ -11,12 +11,13 @@ from typing import TYPE_CHECKING
 
 from geoh5py.shared import Entity
 
+from geoapps.inversion.magnetotellurics.params import MagnetotelluricsParams
+
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.drivers import BaseParams
     from . import InversionMesh
     from typing import Any
-
 
 from copy import deepcopy
 
@@ -47,7 +48,9 @@ class InversionTopography(InversionLocations):
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
+    def __init__(
+        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
+    ):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
@@ -61,6 +64,12 @@ class InversionTopography(InversionLocations):
     def _initialize(self):
 
         self.locations = self.get_locations(self.params.topography_object)
+
+        if isinstance(self.params, MagnetotelluricsParams):
+            self.locations = np.r_[
+                self.locations, self.get_locations(self.params.data_object)
+            ]
+
         self.mask = np.ones(len(self.locations), dtype=bool)
         topo_window = deepcopy(self.window)
 
@@ -90,7 +99,16 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
-        active_cells = active_from_xyz(mesh.mesh, self.locations, grid_reference="CC")
+        if isinstance(self.params, MagnetotelluricsParams):
+            locations = np.squeeze(
+                self.locations + np.c_[0, 0, mesh.mesh.h[2][0] / 2.0][None, :]
+            )
+            active_cells = active_from_xyz(mesh.mesh, locations, grid_reference="CC")
+            active_cells[mesh.mesh._get_containing_cell_indexes(self.locations)] = True
+        else:
+            active_cells = active_from_xyz(
+                mesh.mesh, self.locations, grid_reference="CC"
+            )
         mesh.entity.add_data(
             {
                 "active_cells": {

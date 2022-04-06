@@ -485,7 +485,9 @@ class InversionData(InversionLocations):
                 max_distance=np.max([mesh.h[0].min(), mesh.h[1].min()]) * padding_cells,
             )
             kwargs = {"components": 3} if self.vector else {}
-            map = maps.TileMap(mesh, active_cells, nested_mesh, **kwargs)
+            map = maps.TileMap(
+                mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
+            )
             sim = simulation_factory.build(
                 survey=survey,
                 global_mesh=mesh,

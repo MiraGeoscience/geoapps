@@ -76,9 +76,11 @@ def setup_inversion_workspace(
     work_dir,
     background=None,
     anomaly=None,
+    cell_size=[5, 5, 5],
     n_electrodes=20,
     n_lines=5,
     refinement=(4, 6),
+    z_offset=5.0,
     inversion_type="other",
     flatten=False,
 ):
@@ -108,7 +110,7 @@ def setup_inversion_workspace(
     if flatten:
         Z = np.zeros_like(X)
     else:
-        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + 5.0
+        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + z_offset
 
     vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
 
@@ -175,11 +177,10 @@ def setup_inversion_workspace(
         )
 
     # Create a mesh
-    h = 5
     padDist = np.ones((3, 2)) * 100
     mesh = mesh_builder_xyz(
-        vertices - h / 2.0,
-        [h] * 3,
+        vertices - np.r_[cell_size] / 2.0,
+        cell_size,
         depth_core=100.0,
         padding_distance=padDist,
         mesh_type="TREE",
