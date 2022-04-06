@@ -1310,7 +1310,7 @@ def csv_2_zarr(input_csv, out_dir="zarr", rowchunks=100000, dask_chunks="64MB"):
         for ii, chunk in enumerate(pd.read_csv(input_csv, chunksize=rowchunks)):
             array = chunk.to_numpy()[1:, :]
             da_array = da.from_array(array, chunks=dask_chunks)
-            da.to_zarr(da_array, url=out_dir + fr"\Tile{ii}")
+            da.to_zarr(da_array, url=out_dir + rf"\Tile{ii}")
 
     # Just read the header
     header = pd.read_csv(input_csv, nrows=1)
@@ -1646,7 +1646,7 @@ def raw_moment(data, i_order, j_order):
     nrows, ncols = data.shape
     y_indices, x_indicies = np.mgrid[:nrows, :ncols]
 
-    return (data * x_indicies ** i_order * y_indices ** j_order).sum()
+    return (data * x_indicies**i_order * y_indices**j_order).sum()
 
 
 def random_sampling(
