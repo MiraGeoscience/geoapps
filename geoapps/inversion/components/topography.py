@@ -22,10 +22,10 @@ if TYPE_CHECKING:
 from copy import deepcopy
 
 import numpy as np
-from discretize.utils import active_from_xyz
 
-from geoapps.utils import filter_xy
+from geoapps.utils import active_from_xyz, filter_xy
 
+from .data import InversionData
 from .locations import InversionLocations
 
 
@@ -62,14 +62,7 @@ class InversionTopography(InversionLocations):
         self._initialize()
 
     def _initialize(self):
-
         self.locations = self.get_locations(self.params.topography_object)
-
-        if isinstance(self.params, MagnetotelluricsParams):
-            self.locations = np.r_[
-                self.locations, self.get_locations(self.params.data_object)
-            ]
-
         self.mask = np.ones(len(self.locations), dtype=bool)
         topo_window = deepcopy(self.window)
 
@@ -91,7 +84,7 @@ class InversionTopography(InversionLocations):
 
         self.entity = self.write_entity()
 
-    def active_cells(self, mesh: InversionMesh) -> np.ndarray:
+    def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
         Return mask that restricts models to set of earth cells.
 
@@ -99,16 +92,13 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
+        active_cells = active_from_xyz(
+            mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
+        )
+
         if isinstance(self.params, MagnetotelluricsParams):
-            locations = np.squeeze(
-                self.locations + np.c_[0, 0, mesh.mesh.h[2][0] / 2.0][None, :]
-            )
-            active_cells = active_from_xyz(mesh.mesh, locations, grid_reference="CC")
-            active_cells[mesh.mesh._get_containing_cell_indexes(self.locations)] = True
-        else:
-            active_cells = active_from_xyz(
-                mesh.mesh, self.locations, grid_reference="CC"
-            )
+            active_cells[mesh.mesh._get_containing_cell_indexes(data.locations)] = True
+
         mesh.entity.add_data(
             {
                 "active_cells": {
