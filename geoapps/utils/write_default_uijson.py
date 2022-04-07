@@ -7,6 +7,8 @@
 
 import argparse
 
+from geoh5py.ui_json import InputFile
+
 import geoapps
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.magnetotellurics import MagnetotelluricsParams
@@ -108,6 +110,15 @@ def write_default_uijson(path, use_initializers=False):
 
     for filename, params in filedict.items():
         params.write_input_file(name=filename, path=path, validate=False)
+
+    from geoapps.inversion.constants import default_octree_ui_json, octree_defaults
+
+    ifile = InputFile(
+        ui_json=default_octree_ui_json,
+        data=octree_defaults,
+        validation_options={"disabled": True},
+    )
+    ifile.write_ui_json(name="inversion_mesh.ui.json", path=".")
 
 
 if __name__ == "__main__":
