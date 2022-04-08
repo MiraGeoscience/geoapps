@@ -172,8 +172,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         object_type = "mesh" if hasattr(inversion_object, "mesh") else "data"
 
         if object_type == "data":
-            if self.factory_type in ["magnetotellurics"]:
-                kwargs = self.assemble_data_keywords_magnetotellurics(
+            if self.factory_type in ["magnetotellurics", "tipper"]:
+                kwargs = self.assemble_data_keywords_naturalsource(
                     inversion_object=inversion_object,
                     active_cells=active_cells,
                     sorting=sorting,
@@ -230,7 +230,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     active_cells_map,
                 ]
 
-            if self.factory_type in ["direct current", "magnetotellurics"]:
+            if self.factory_type in ["direct current", "magnetotellurics", "tipper"]:
                 expmap = maps.ExpMap(inversion_object.mesh)
                 kwargs["transforms"] = [expmap * active_cells_map]
 
@@ -353,7 +353,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         return kwargs
 
     @staticmethod
-    def assemble_data_keywords_magnetotellurics(
+    def assemble_data_keywords_naturalsource(
         inversion_object=None,
         active_cells=None,
         sorting=None,
@@ -372,7 +372,11 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "zyy_real": "zxx_real",
             "zyy_imag": "zxx_imag",
         }
-        components = [component_map[k] for k in inversion_object.observed.keys()]  #
+        if self.factory_type == "magnetotellurics":
+            components = [component_map[k] for k in inversion_object.observed.keys()]
+        else:
+            components = list(inversion_object.observed.keys())
+
         channels = np.unique(
             [list(v.keys()) for k, v in inversion_object.observed.items()]
         )

@@ -57,6 +57,11 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Point3DImpedance
 
+        elif self.factory_type == "tipper":
+            from SimPEG.electromagnetics.natural_source import receivers
+
+            return receivers.Point3DTipper
+
     def assemble_arguments(
         self, locations=None, data=None, local_index=None, mesh=None, active_cells=None
     ):
@@ -90,7 +95,7 @@ class ReceiversFactory(SimPEGFactory):
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
             kwargs["components"] = list(data.keys())
-        if self.factory_type in ["magnetotellurics"]:
+        if self.factory_type in ["magnetotellurics", "tipper"]:
             kwargs["orientation"] = list(data.keys())[0].split("_")[0][1:]
             kwargs["component"] = list(data.keys())[0].split("_")[1]
 
