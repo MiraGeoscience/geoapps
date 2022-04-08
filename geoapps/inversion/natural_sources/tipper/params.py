@@ -41,7 +41,7 @@ class TipperParams(InversionBaseParams):
         self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
         self._inversion_ui_json = deepcopy(inversion_ui_json)
-        self._inversion_type = "magnetotellurics"
+        self._inversion_type = "tipper"
         self._validations = validations
         self._txz_real_channel_bool = None
         self._txz_real_channel = None

@@ -7,15 +7,15 @@
 
 from uuid import UUID
 
-from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
+from geoh5py.objects.surveys.electromagnetics.tipper import TipperReceivers
 
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Magnetotellurics inversion",
-    "inversion_type": "magnetotellurics",
+    "title": "SimPEG Tipper inversion",
+    "inversion_type": "tipper",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -100,7 +100,7 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "max_ram": None,
-    "out_group": "MagnetotelluricsInversion",
+    "out_group": "TipperInversion",
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -118,8 +118,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "SimPEG Magnetotellurics Forward",
-    "inversion_type": "magnetotellurics",
+    "title": "SimPEG Tipper Forward",
+    "inversion_type": "tipper",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -161,7 +161,7 @@ forward_defaults = {
     "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
-    "out_group": "MagnetotelluricsForward",
+    "out_group": "TipperForward",
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -199,8 +199,8 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Magnetotellurics inversion",
-    "inversion_type": "magnetotellurics",
+    "title": "SimPEG Tipper inversion",
+    "inversion_type": "tipper",
     "data_object": {
         "main": True,
         "group": "Data",

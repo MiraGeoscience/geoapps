@@ -377,9 +377,14 @@ def start_inversion(filepath=None, **kwargs):
         params = GravityParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "magnetotellurics":
-        from .magnetotellurics import MagnetotelluricsParams
+        from .natural_sources import MagnetotelluricsParams
 
         params = MagnetotelluricsParams(input_file=input_file, **kwargs)
+
+    elif inversion_type == "tipper":
+        from .natural_sources import TipperParams
+
+        params = TipperParams(input_file, **kwargs)
 
     elif inversion_type == "direct current":
         from .electricals import DirectCurrentParams
