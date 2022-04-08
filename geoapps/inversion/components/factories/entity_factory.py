@@ -42,7 +42,7 @@ class EntityFactory(AbstractFactory):
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
 
-        if self.factory_type in ["magnetotellurics"]:
+        if self.factory_type in ["magnetotellurics", "tipper"]:
             from geoh5py.objects import Curve
 
             return Curve

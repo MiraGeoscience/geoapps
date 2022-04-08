@@ -35,7 +35,9 @@ def test_magnetotellurics_run(
     refinement=(2,),
 ):
     from geoapps.inversion.driver import InversionDriver
-    from geoapps.inversion.magnetotellurics.params import MagnetotelluricsParams
+    from geoapps.inversion.natural_sources.magnetotellurics.params import (
+        MagnetotelluricsParams,
+    )
 
     np.random.seed(0)
     # Run the forward
