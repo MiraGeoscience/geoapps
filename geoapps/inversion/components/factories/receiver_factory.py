@@ -104,13 +104,18 @@ class ReceiversFactory(SimPEGFactory):
     def build(
         self, locations=None, data=None, local_index=None, mesh=None, active_cells=None
     ):
-        return super().build(
+        receivers = super().build(
             locations=locations,
             data=data,
             local_index=local_index,
             mesh=mesh,
             active_cells=active_cells,
         )
+
+        if self.factory_type in ["tipper"]:
+            receivers.reference_locations = receivers.locations
+
+        return receivers
 
     def _dcip_arguments(self, locations=None, local_index=None):
 
