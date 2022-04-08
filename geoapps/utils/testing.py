@@ -21,6 +21,7 @@ from geoh5py.objects import (
     Points,
     PotentialElectrode,
     Surface,
+    TipperReceivers,
 )
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -159,6 +160,21 @@ def setup_inversion_workspace(
             "Zyy (imag)",
         ]
         mt_receivers = MTReceivers.create(
+            geoh5,
+            vertices=vertices,
+            name="survey",
+            components=components,
+            channels=[10.0, 100.0, 1000.0],
+        )
+
+    elif inversion_type == "tipper":
+        components = [
+            "Txz (real)",
+            "Txz (imag)",
+            "Tyz (real)",
+            "Tyz (imag)",
+        ]
+        tipper_receivers = TipperReceivers.create(
             geoh5,
             vertices=vertices,
             name="survey",
