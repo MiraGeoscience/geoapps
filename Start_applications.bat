@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-call %~dp0get_conda_exec.bat
+call "%~dp0get_conda_exec.bat"
 if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
