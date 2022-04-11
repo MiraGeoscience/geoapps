@@ -59,7 +59,7 @@ inversion_defaults = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "octree_levels_topo": [16, 8, 4, 2],
+    "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
     "max_distance": 5000.0,
@@ -99,7 +99,7 @@ inversion_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "reference_model_object": None,
-    "reference_model": None,
+    "reference_model": 1e-3,
     "gradient_type": "total",
     "lower_bound_object": None,
     "lower_bound": None,
@@ -173,7 +173,7 @@ forward_defaults = {
     "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
-    "out_group": "MVIForward",
+    "out_group": "MagnetotelluricsForward",
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -493,13 +493,14 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
+
+
 validations = {
     "inversion_type": {
-        "types": [str],
         "required": True,
         "values": ["magnetotellurics"],
     },
-    "data_object": {"types": [str, UUID, MTReceivers]},
+    "data_object": {"required": True, "types": [str, UUID, MTReceivers]},
 }
 
 app_initializer = {}
