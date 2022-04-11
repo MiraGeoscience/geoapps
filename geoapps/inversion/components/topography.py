@@ -92,12 +92,15 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
-        active_cells = active_from_xyz(
-            mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
-        )
-
         if isinstance(self.params, MagnetotelluricsParams):
+            active_cells = active_from_xyz(
+                mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
+            )
             active_cells[mesh.mesh._get_containing_cell_indexes(data.locations)] = True
+        else:
+            active_cells = active_from_xyz(
+                mesh.mesh, self.locations, grid_reference="CC"
+            )
 
         mesh.entity.add_data(
             {
