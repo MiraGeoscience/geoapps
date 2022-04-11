@@ -113,9 +113,6 @@ def setup_inversion_workspace(
 
     vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
 
-    if inversion_type in ["tipper"]:
-        vertices[:, 2] += 15
-
     if inversion_type == "dcip":
 
         parts = np.repeat(np.arange(n_lines), n_electrodes).astype("int32")
@@ -163,21 +160,6 @@ def setup_inversion_workspace(
             "Zyy (imag)",
         ]
         mt_receivers = MTReceivers.create(
-            geoh5,
-            vertices=vertices,
-            name="survey",
-            components=components,
-            channels=[10.0, 100.0, 1000.0],
-        )
-
-    elif inversion_type == "tipper":
-        components = [
-            "Txz (real)",
-            "Txz (imag)",
-            "Tyz (real)",
-            "Tyz (imag)",
-        ]
-        tipper_receivers = TipperReceivers.create(
             geoh5,
             vertices=vertices,
             name="survey",
