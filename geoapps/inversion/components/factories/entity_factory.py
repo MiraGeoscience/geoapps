@@ -42,10 +42,15 @@ class EntityFactory(AbstractFactory):
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
 
-        if self.factory_type in ["magnetotellurics", "tipper"]:
+        if self.factory_type in ["magnetotellurics"]:
             from geoh5py.objects import Curve
 
             return Curve
+
+        elif self.factory_type in ["tipper"]:
+            from geoh5py.objects.surveys.electromagnetics.tipper import TipperReceivers
+
+            return TipperReceivers
 
         elif self.factory_type in ["direct current", "induced polarization"]:
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
@@ -62,6 +67,8 @@ class EntityFactory(AbstractFactory):
 
         if self.factory_type in ["direct current", "induced polarization"]:
             return self._build_dcip(inversion_data)
+        elif self.factory_type in ["tipper"]:
+            return self._build_tipper(inversion_data)
         else:
             return self._build(inversion_data)
 
@@ -103,6 +110,15 @@ class EntityFactory(AbstractFactory):
         entity.current_electrodes = new_currents
         entity.workspace.finalize()
 
+        return entity
+
+    def _build_tipper(self, inversion_data: InversionData):
+        entity = self.concrete_object.create(
+            self.params.geoh5,
+            vertices=inversion_data.locations,
+            parent=self.params.ga_group,
+        )
+        entity.channels = list(list(inversion_data.observed.values())[0].keys())
         return entity
 
     def _build(self, inversion_data: InversionData):

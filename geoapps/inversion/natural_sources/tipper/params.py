@@ -136,7 +136,7 @@ class TipperParams(InversionBaseParams):
 
     @txz_imag_channel.setter
     def txz_imag_channel(self, val):
-        self.setter_validator("zxx_itxz_channel", val, fun=self._uuid_promoter)
+        self.setter_validator("txz_imag_channel", val, fun=self._uuid_promoter)
 
     @property
     def txz_imag_uncertainty(self):

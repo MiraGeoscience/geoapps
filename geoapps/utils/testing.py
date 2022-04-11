@@ -113,6 +113,9 @@ def setup_inversion_workspace(
 
     vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
 
+    if inversion_type in ["tipper"]:
+        vertices[:, 2] += 15
+
     if inversion_type == "dcip":
 
         parts = np.repeat(np.arange(n_lines), n_electrodes).astype("int32")
