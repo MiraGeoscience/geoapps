@@ -59,7 +59,7 @@ def write_default_uijson(path, use_initializers=False):
     from geoapps.inversion.magnetotellurics.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
-    mt_init = app_initializer if use_initializers else {}
+    _ = app_initializer if use_initializers else {}
 
     from geoapps.octree_creation.constants import app_initializer
 
