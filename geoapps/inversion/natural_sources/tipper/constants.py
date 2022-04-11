@@ -107,14 +107,10 @@ inversion_defaults = {
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "zxx_real_channel_bool": False,
-    "zxx_imag_channel_bool": False,
-    "zxy_real_channel_bool": False,
-    "zxy_imag_channel_bool": False,
-    "zyx_real_channel_bool": False,
-    "zyx_imag_channel_bool": False,
-    "zyy_real_channel_bool": False,
-    "zyy_imag_channel_bool": False,
+    "txz_real_channel_bool": False,
+    "txz_imag_channel_bool": False,
+    "tyz_real_channel_bool": False,
+    "tyz_imag_channel_bool": False,
 }
 
 forward_defaults = {

@@ -352,8 +352,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         return kwargs
 
-    @staticmethod
     def assemble_data_keywords_naturalsource(
+        self,
         inversion_object=None,
         active_cells=None,
         sorting=None,

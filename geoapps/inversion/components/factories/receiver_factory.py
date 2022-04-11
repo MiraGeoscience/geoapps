@@ -98,6 +98,8 @@ class ReceiversFactory(SimPEGFactory):
         if self.factory_type in ["magnetotellurics", "tipper"]:
             kwargs["orientation"] = list(data.keys())[0].split("_")[0][1:]
             kwargs["component"] = list(data.keys())[0].split("_")[1]
+        if self.factory_type in ["tipper"]:
+            kwargs["orientation"] = kwargs["orientation"][::-1]
 
         return kwargs
 

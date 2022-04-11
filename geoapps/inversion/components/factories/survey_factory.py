@@ -163,10 +163,14 @@ class SurveyFactory(SimPEGFactory):
             "zyy_imag": "zxx_imag",
         }
 
-        local_data = data.observed[component_map[component]][channel][local_index]
-        local_uncertainties = data.uncertainties[component_map[component]][channel][
-            local_index
-        ]
+        if self.factory_type == "magnetotellurics":
+            local_data = data.observed[component_map[component]][channel][local_index]
+            local_uncertainties = data.uncertainties[component_map[component]][channel][
+                local_index
+            ]
+        elif self.factory_type == "tipper":
+            local_data = data.observed[component][channel][local_index]
+            local_uncertainties = data.uncertainties[component][channel][local_index]
 
         return local_data, local_uncertainties
 
