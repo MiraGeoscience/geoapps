@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set custom_script=%~dp0get_custom_conda.bat
+set custom_script="%~dp0get_custom_conda.bat"
 if exist !custom_script! (
   call !custom_script!
   if !ERRORLEVEL! neq 0 (
