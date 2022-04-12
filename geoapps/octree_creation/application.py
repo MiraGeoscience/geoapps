@@ -8,6 +8,7 @@
 import os
 import sys
 import uuid
+import warnings
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.ui_json import InputFile
@@ -296,5 +297,10 @@ class OctreeMesh(ObjectDataSelection):
 
 if __name__ == "__main__":
     file = sys.argv[1]
+    warnings.warn(
+        "'geoapps.octree_creation.application' replaced by "
+        "'geoapps.octree_creation.driver' in version 0.7.0. "
+        "This warning is likely due to the execution of older ui.json files. Please update."
+    )
     params = OctreeParams(InputFile.read_ui_json(file))
     OctreeMesh.run(params)
