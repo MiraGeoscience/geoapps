@@ -7,6 +7,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from geoapps.inversion import InversionBaseParams
+
 import multiprocessing
 import sys
 from multiprocessing.pool import ThreadPool
