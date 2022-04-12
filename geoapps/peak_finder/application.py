@@ -7,6 +7,7 @@
 
 import sys
 import uuid
+import warnings
 from copy import deepcopy
 from os import path
 from typing import Optional
@@ -1333,5 +1334,10 @@ class PeakFinder(ObjectDataSelection):
 
 if __name__ == "__main__":
     file = sys.argv[1]
+    warnings.warn(
+        "'geoapps.peak_finder.application' replaced by "
+        "'geoapps.peak_finder.driver' in version 0.7.0. "
+        "This warning is likely due to the execution of older ui.json files. Please update."
+    )
     params = PeakFinderParams(InputFile(file))
     PeakFinder.run(params)
