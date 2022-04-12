@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.objects import Octree
+    from . import OctreeParams
 
 import os
 
@@ -20,8 +21,6 @@ from geoh5py.objects import ObjectBase
 
 from geoapps.base.application import BaseApplication
 from geoapps.utils.utils import treemesh_2_octree
-
-from . import OctreeParams
 
 
 class OctreeDriver:
