@@ -43,9 +43,9 @@ class EntityFactory(AbstractFactory):
         """Returns a geoh5py object to be constructed by the build method."""
 
         if self.factory_type in ["magnetotellurics"]:
-            from geoh5py.objects import Curve
+            from geoh5py.objects import MTReceivers
 
-            return Curve
+            return MTReceivers
 
         elif self.factory_type in ["direct current", "induced polarization"]:
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
