@@ -81,6 +81,7 @@ def setup_inversion_workspace(
     n_lines=5,
     refinement=(4, 6),
     z_offset=5.0,
+    padding_distance=100,
     inversion_type="other",
     flatten=False,
 ):
@@ -177,7 +178,7 @@ def setup_inversion_workspace(
         )
 
     # Create a mesh
-    padDist = np.ones((3, 2)) * 100
+    padDist = np.ones((3, 2)) * padding_distance
     mesh = mesh_builder_xyz(
         vertices - np.r_[cell_size] / 2.0,
         cell_size,
