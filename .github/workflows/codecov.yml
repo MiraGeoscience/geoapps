@@ -1,0 +1,2 @@
+ignore:
+  - "inversion/airborne_electromagnetics/driver.py"
