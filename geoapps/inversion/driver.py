@@ -134,7 +134,7 @@ class InversionDriver:
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
 
         self.n_tiles = len(self.tiles)
-        print(f"Setting up {self.n_tiles} tiles ...")
+        print(f"Setting up {self.n_tiles} tile(s) ...")
         # Build tiled misfits and combine to form global misfit
 
         self.global_misfit, self.sorting = MisfitFactory(

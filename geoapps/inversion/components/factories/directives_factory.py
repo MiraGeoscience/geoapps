@@ -23,7 +23,7 @@ class DirectivesFactory:
         "SaveIterationsGeoH5": [
             "save_iteration_model_directive",
             "save_iteration_data_directive",
-            "save_iteration_sensitivities_directive",
+            # "save_iteration_sensitivities_directive",
             "save_iteration_residual_directive",
             "save_iteration_apparent_resistivity_directive",
         ],
@@ -40,7 +40,7 @@ class DirectivesFactory:
         self.update_preconditioner_directive = None
         self.save_iteration_model_directive = None
         self.save_iteration_data_directive = None
-        self.save_iteration_sensitivities_directive = None
+        # self.save_iteration_sensitivities_directive = None
         self.save_iteration_residual_directive = None
         self.save_iteration_apparent_resistivity_directive = None
 
@@ -99,17 +99,17 @@ class DirectivesFactory:
                 active_cells=active_cells,
                 name="Model",
             )
-            self.save_iteration_sensitivities_directive = SaveIterationGeoh5Factory(
-                self.params
-            ).build(
-                inversion_object=inversion_mesh,
-                active_cells=active_cells,
-                name="Sensitivities",
-            )
-            self.save_iteration_sensitivities_directive.attribute_type = "sensitivities"
-            self.save_iteration_sensitivities_directive.transforms = [
-                self.save_iteration_sensitivities_directive.transforms[-1].maps[-1]
-            ]
+            # self.save_iteration_sensitivities_directive = SaveIterationGeoh5Factory(
+            #     self.params
+            # ).build(
+            #     inversion_object=inversion_mesh,
+            #     active_cells=active_cells,
+            #     name="Sensitivities",
+            # )
+            # self.save_iteration_sensitivities_directive.attribute_type = "sensitivities"
+            # self.save_iteration_sensitivities_directive.transforms = [
+            #     self.save_iteration_sensitivities_directive.transforms[-1].maps[-1]
+            # ]
             self.save_iteration_data_directive = SaveIterationGeoh5Factory(
                 self.params
             ).build(
