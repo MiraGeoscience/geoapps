@@ -1292,18 +1292,21 @@ class PeakFinder(ObjectDataSelection):
                 param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
 
         param_dict["geoh5"] = new_workspace
+        if self.live_link.value:
+            param_dict["monitoring_directory"] = self.monitoring_directory
+
         ifile = InputFile(
             ui_json=ui_json,
             validations=self.params.validations,
             validation_options={"disabled": True},
         )
-        print(param_dict["line_field"].parent)
+
         new_params = PeakFinderParams(input_file=ifile, **param_dict)
         new_params.write_input_file()
         self.run(new_params)
 
         if self.live_link.value:
-            print("Live link active. Check your ANALYST session for new mesh.")
+            print("Live link active. Check your ANALYST session for result.")
 
     def update_center(self, _):
         """
