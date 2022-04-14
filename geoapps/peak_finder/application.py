@@ -46,10 +46,10 @@ from geoapps.peak_finder.constants import (
     template_dict,
 )
 from geoapps.utils import geophysical_systems
-from geoapps.utils.utils import default_groups_from_property_group, find_anomalies
 
 from . import PeakFinderParams
 from .driver import PeakFinderDriver
+from .utils import default_groups_from_property_group, find_anomalies
 
 
 class PeakFinder(ObjectDataSelection):
