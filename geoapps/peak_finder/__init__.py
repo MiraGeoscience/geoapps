@@ -7,5 +7,3 @@
 
 
 from .constants import app_initializer
-from .driver import PeakFinderDriver
-from .params import PeakFinderParams

@@ -94,6 +94,7 @@ default_ui_json.update(
             "label": "Name:",
             "value": "Octree_Mesh",
         },
+        "conda_environment": "geoapps",
         "run_command": "geoapps.octree_creation.driver",
     }
 )
