@@ -118,9 +118,12 @@ class ReceiversFactory(SimPEGFactory):
             self.factory_type in ["tipper"]
             and getattr(self.params.data_object, "base_stations", None) is not None
         ):
-            receivers.reference_locations = (
-                self.params.data_object.base_stations.vertices
-            )
+            stations = self.params.data_object.base_stations.vertices.copy()
+
+            if stations.shape[0] == 1:
+                stations = np.tile(stations.T, self.params.data_object.n_vertices).T
+
+            receivers.reference_locations = stations
 
         return receivers
 

@@ -164,20 +164,15 @@ class InversionDriver:
             beta=self.params.initial_beta,
         )
 
-        # Solve forward problem, and attach dpred to inverse problem or
-        if self.params.forward_only:
-            print("Running forward simulation ...")
-        else:
-            print("Pre-computing sensitivities ...")
-
-        if self.warmstart or self.params.forward_only:
-            self.inverse_problem.dpred = self.inversion_data.simulate(
-                self.starting_model, self.inverse_problem, self.sorting
-            )
-
         # If forward only option enabled, stop here
         if self.params.forward_only:
             return
+
+        if self.warmstart:
+            print("Pre-computing sensitivities ...")
+            self.inverse_problem.dpred = self.inversion_data.simulate(
+                self.starting_model, self.inverse_problem, self.sorting
+            )
 
         # Add a list of directives to the inversion
         self.directiveList = DirectivesFactory(self.params).build(
@@ -198,11 +193,15 @@ class InversionDriver:
         """Run inversion from params"""
 
         if self.params.forward_only:
+            print("Running the forward simulation ...")
+            self.inversion_data.simulate(
+                self.starting_model, self.inverse_problem, self.sorting
+            )
             return
 
         # Run the inversion
         self.start_inversion_message()
-        mrec = self.inversion.run(self.starting_model)
+        self.inversion.run(self.starting_model)
 
     def start_inversion_message(self):
 

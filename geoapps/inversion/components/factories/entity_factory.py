@@ -109,9 +109,12 @@ class EntityFactory(AbstractFactory):
             "Data", inversion_data.locations, geoh5_object=self.concrete_object
         )
         if getattr(self.params.data_object, "base_stations", None) is not None:
-            entity.base_stations = self.params.data_object.base_stations.copy(
-                parent=entity.workspace
+            entity.base_stations = type(self.params.data_object.base_stations).create(
+                entity.workspace,
+                parent=entity.parent,
+                vertices=self.params.data_object.base_stations.vertices,
             )
+
         if getattr(self.params.data_object, "channels", None) is not None:
             entity.channels = self.params.data_object.channels
 
