@@ -21,9 +21,9 @@ from geoh5py.objects import (
     Points,
     PotentialElectrode,
     Surface,
+    TipperBaseStations,
     TipperReceivers,
 )
-from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 from SimPEG import utils
@@ -179,7 +179,17 @@ def setup_inversion_workspace(
                 "Tyz (imag)",
             ],
             channels=[10.0, 100.0, 1000.0],
+            base_stations=TipperBaseStations.create(
+                geoh5, vertices=vertices[0, :].reshape((-1, 3))
+            ),
         )
+        dist = np.linalg.norm(
+            survey.vertices[survey.cells[:, 0], :]
+            - survey.vertices[survey.cells[:, 1], :],
+            axis=1,
+        )
+        survey.cells = survey.cells[dist < 100.0, :]
+        geoh5.finalize()
 
     else:
         survey = Points.create(
@@ -229,4 +239,4 @@ def setup_inversion_workspace(
     model = octree.add_data({"model": {"values": model[mesh._ubc_order]}})
     # octree.add_data({"active": {"values": active.astype(int)[mesh._ubc_order]}})
     # octree.copy()  # Keep a copy around for ref
-    return geoh5, mesh, model, survey, topography
+    return geoh5, octree, model, survey, topography

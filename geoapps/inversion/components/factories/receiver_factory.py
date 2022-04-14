@@ -114,8 +114,13 @@ class ReceiversFactory(SimPEGFactory):
             active_cells=active_cells,
         )
 
-        if self.factory_type in ["tipper"]:
-            receivers.reference_locations = receivers.locations
+        if (
+            self.factory_type in ["tipper"]
+            and getattr(self.params.data_object, "base_stations", None) is not None
+        ):
+            receivers.reference_locations = (
+                self.params.data_object.base_stations.vertices
+            )
 
         return receivers
 

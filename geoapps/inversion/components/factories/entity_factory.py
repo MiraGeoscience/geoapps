@@ -59,8 +59,8 @@ class EntityFactory(AbstractFactory):
 
         if self.factory_type in ["direct current", "induced polarization"]:
             return self._build_dcip(inversion_data)
-        elif self.factory_type in ["tipper"]:
-            return self._build_tipper(inversion_data)
+        # elif self.factory_type in ["tipper"]:
+        #     return self._build_tipper(inversion_data)
         else:
             return self._build(inversion_data)
 
@@ -104,44 +104,25 @@ class EntityFactory(AbstractFactory):
 
         return entity
 
-    def _build_tipper(self, inversion_data: InversionData):
-        entity = self.concrete_object.create(
-            self.params.geoh5,
-            vertices=inversion_data.locations,
-            parent=self.params.ga_group,
-        )
-        entity.channels = list(list(inversion_data.observed.values())[0].keys())
-        return entity
-
     def _build(self, inversion_data: InversionData):
         entity = inversion_data.create_entity(
             "Data", inversion_data.locations, geoh5_object=self.concrete_object
         )
-
+        if getattr(self.params.data_object, "base_stations", None) is not None:
+            entity.base_stations = self.params.data_object.base_stations.copy(
+                parent=entity.workspace
+            )
         if getattr(self.params.data_object, "channels", None) is not None:
             entity.channels = self.params.data_object.channels
 
         if getattr(self.params.data_object, "cells", None) is not None:
             active_cells = inversion_data.mask[self.params.data_object.cells]
             active_ind = np.all(active_cells, axis=1)
-            new_verts = np.zeros_like(inversion_data.mask)
+            new_verts = np.zeros_like(inversion_data.mask, dtype=int)
             new_verts[inversion_data.mask] = np.arange(int(inversion_data.mask.sum()))
-            entity.cells = new_verts[active_cells[active_ind, :]]
+            entity.cells = new_verts[self.params.data_object.cells[active_ind, :]]
 
-        # if self.concrete_object == Curve:
-        #     # Remove long cells
-        #     xv = entity.vertices[:, 0]
-        #     yv = entity.vertices[:, 1]
-        #     xrange = np.max(xv) - np.min(xv)
-        #     yrange = np.max(yv) - np.min(yv)
-        #     cutoff = np.min([xrange, yrange])
-        #     dist = np.linalg.norm(
-        #         entity.vertices[entity.cells[:, 0], :]
-        #         - entity.vertices[entity.cells[:, 1], :],
-        #         axis=1,
-        #     )
-        #     entity.cells = entity.cells[dist < cutoff, :]
-
+        entity.workspace.finalize()
         return entity
 
     @staticmethod
