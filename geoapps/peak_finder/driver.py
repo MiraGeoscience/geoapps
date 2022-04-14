@@ -8,11 +8,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from . import PeakFinderParams
-
 import sys
 from os import path
 
@@ -32,6 +27,8 @@ from geoapps.utils.utils import (
     find_anomalies,
     hex_to_rgb,
 )
+
+from .params import PeakFinderParams
 
 
 class PeakFinderDriver:

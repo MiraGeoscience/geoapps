@@ -18,7 +18,8 @@ from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base.selection import ObjectDataSelection
 
-from . import OctreeDriver, OctreeParams, app_initializer
+from . import OctreeParams, app_initializer
+from .driver import OctreeDriver
 
 
 class OctreeMesh(ObjectDataSelection):

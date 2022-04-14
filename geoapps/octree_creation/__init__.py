@@ -6,3 +6,4 @@
 #  (see LICENSE file at the root of this source code package).
 
 from .constants import app_initializer
+from .params import OctreeParams
