@@ -7,17 +7,15 @@
 
 import sys
 import uuid
+import warnings
 from copy import deepcopy
 from os import path
 from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from dask import delayed
-from dask.distributed import Client, get_client
 from geoh5py.data import ReferencedData
-from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, ObjectBase, Points
+from geoh5py.objects import Curve, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -40,9 +38,7 @@ from ipywidgets import (
     interactive_output,
 )
 from ipywidgets.widgets.widget_selection import TraitError
-from tqdm import tqdm
 
-from geoapps.base.application import BaseApplication
 from geoapps.base.selection import LineOptions, ObjectDataSelection
 from geoapps.peak_finder.constants import (
     app_initializer,
@@ -50,31 +46,10 @@ from geoapps.peak_finder.constants import (
     template_dict,
 )
 from geoapps.utils import geophysical_systems
-from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import LineDataDerivatives, hex_to_rgb, running_mean
 
-from .params import PeakFinderParams
-
-_default_channel_groups = {
-    "early": {"label": ["early"], "color": "#0000FF", "channels": []},
-    "middle": {"label": ["middle"], "color": "#FFFF00", "channels": []},
-    "late": {"label": ["late"], "color": "#FF0000", "channels": []},
-    "early + middle": {
-        "label": ["early", "middle"],
-        "color": "#00FFFF",
-        "channels": [],
-    },
-    "early + middle + late": {
-        "label": ["early", "middle", "late"],
-        "color": "#008000",
-        "channels": [],
-    },
-    "middle + late": {
-        "label": ["middle", "late"],
-        "color": "#FFA500",
-        "channels": [],
-    },
-}
+from . import PeakFinderParams
+from .driver import PeakFinderDriver
+from .utils import default_groups_from_property_group, find_anomalies
 
 
 class PeakFinder(ObjectDataSelection):
@@ -223,7 +198,7 @@ class PeakFinder(ObjectDataSelection):
         obj_list = self.workspace.get_entity(self.objects.value)
 
         if any(obj_list) and any(self.params.free_parameter_dict):
-            self._channel_groups = groups_from_free_params(self.params)
+            self._channel_groups = self.params.groups_from_free_params()
 
             group_list = []
             for pg, params in self._channel_groups.items():
@@ -730,7 +705,7 @@ class PeakFinder(ObjectDataSelection):
             obj = self.workspace.get_entity(self.objects.value)[0]
             group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
             if any(group):
-                channel_groups = self.default_groups_from_property_group(group[0])
+                channel_groups = default_groups_from_property_group(group[0])
                 self._channel_groups = channel_groups
                 self.pause_refresh = True
 
@@ -747,41 +722,6 @@ class PeakFinder(ObjectDataSelection):
 
         self.group_auto.value = False
         self._group_auto.button_style = "success"
-
-    @staticmethod
-    def default_groups_from_property_group(property_group, start_index=0):
-        parent = property_group.parent
-
-        data_list = [
-            parent.workspace.get_entity(uid)[0] for uid in property_group.properties
-        ]
-
-        start = start_index
-        end = len(data_list)
-        block = int((end - start) / 3)
-        ranges = {
-            "early": np.arange(start, start + block).tolist(),
-            "middle": np.arange(start + block, start + 2 * block).tolist(),
-            "late": np.arange(start + 2 * block, end).tolist(),
-        }
-
-        channel_groups = {}
-        for ii, (key, default) in enumerate(_default_channel_groups.items()):
-            prop_group = parent.find_or_create_property_group(name=key)
-            prop_group.properties = []
-
-            for val in default["label"]:
-                for ind in ranges[val]:
-                    prop_group.properties += [data_list[ind].uid]
-
-            channel_groups[prop_group.name] = {
-                "data": prop_group.uid,
-                "color": default["color"],
-                "label": [ii + 1],
-                "properties": prop_group.properties,
-            }
-
-        return channel_groups
 
     def edit_group(self, caller):
         """
@@ -1352,17 +1292,21 @@ class PeakFinder(ObjectDataSelection):
                 param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
 
         param_dict["geoh5"] = new_workspace
+        if self.live_link.value:
+            param_dict["monitoring_directory"] = self.monitoring_directory
+
         ifile = InputFile(
             ui_json=ui_json,
             validations=self.params.validations,
             validation_options={"disabled": True},
         )
+
         new_params = PeakFinderParams(input_file=ifile, **param_dict)
         new_params.write_input_file()
         self.run(new_params)
 
         if self.live_link.value:
-            print("Live link active. Check your ANALYST session for new mesh.")
+            print("Live link active. Check your ANALYST session for result.")
 
     def update_center(self, _):
         """
@@ -1376,304 +1320,9 @@ class PeakFinder(ObjectDataSelection):
         """
         Create an octree mesh from input values
         """
-        print("Reading parameters...")
-        try:
-            client = get_client()
-        except ValueError:
-            client = Client()
 
-        workspace = params.geoh5
-        survey = params.objects
-        prop_group = [pg for pg in survey.property_groups if pg.uid == params.data]
-
-        if params.tem_checkbox:
-            system = geophysical_systems.parameters()[params.system]
-            normalization = system["normalization"]
-        else:
-            normalization = [1]
-
-        if output_group is None:
-            output_group = ContainerGroup.create(
-                workspace, name=string_name(params.ga_group_name)
-            )
-
-        line_field = params.line_field
-        lines = np.unique(line_field.values)
-
-        if params.group_auto and any(prop_group):
-            channel_groups = PeakFinder.default_groups_from_property_group(
-                prop_group[0]
-            )
-        else:
-            channel_groups = groups_from_free_params(params)
-
-        active_channels = {}
-        for group in channel_groups.values():
-            for channel in group["properties"]:
-                obj = workspace.get_entity(channel)[0]
-                active_channels[channel] = {"name": obj.name}
-
-        for uid, channel_params in active_channels.items():
-            obj = workspace.get_entity(uid)[0]
-            if params.tem_checkbox:
-                channel = [ch for ch in system["channels"].keys() if ch in obj.name]
-                if any(channel):
-                    channel_params["time"] = system["channels"][channel[0]]
-                else:
-                    continue
-            channel_params["values"] = client.scatter(
-                obj.values.copy() * (-1.0) ** params.flip_sign
-            )
-
-        print("Submitting parallel jobs:")
-        anomalies = []
-        locations = client.scatter(survey.vertices.copy())
-
-        for line_id in tqdm(list(lines)):
-            line_indices = np.where(line_field.values == line_id)[0]
-
-            anomalies += [
-                client.compute(
-                    delayed(find_anomalies)(
-                        locations,
-                        line_indices,
-                        active_channels,
-                        channel_groups,
-                        data_normalization=normalization,
-                        smoothing=params.smoothing,
-                        min_amplitude=params.min_amplitude,
-                        min_value=params.min_value,
-                        min_width=params.min_width,
-                        max_migration=params.max_migration,
-                        min_channels=params.min_channels,
-                        minimal_output=True,
-                    )
-                )
-            ]
-        (
-            channel_group,
-            tau,
-            migration,
-            azimuth,
-            cox,
-            amplitude,
-            inflx_up,
-            inflx_dwn,
-            start,
-            end,
-            skew,
-            peaks,
-        ) = ([], [], [], [], [], [], [], [], [], [], [], [])
-
-        print("Processing and collecting results:")
-        for future_line in tqdm(anomalies):
-            line = future_line.result()
-            for group in line:
-                if "channel_group" in group.keys() and len(group["cox"]) > 0:
-                    channel_group += group["channel_group"]["label"]
-
-                    if group["linear_fit"] is None:
-                        tau += [0]
-                    else:
-                        tau += [np.abs(group["linear_fit"][0] ** -1.0)]
-                    migration += [group["migration"]]
-                    amplitude += [group["amplitude"]]
-                    azimuth += [group["azimuth"]]
-                    cox += [group["cox"]]
-                    inflx_dwn += [group["inflx_dwn"]]
-                    inflx_up += [group["inflx_up"]]
-                    start += [group["start"]]
-                    end += [group["end"]]
-                    skew += [group["skew"]]
-                    peaks += [group["peaks"]]
-
-        print("Exporting...")
-        if cox:
-            channel_group = np.hstack(channel_group)  # Start count at 1
-
-            # Create reference values and color_map
-            group_map, color_map = {}, []
-            for ind, (name, group) in enumerate(channel_groups.items()):
-                group_map[ind + 1] = name
-                color_map += [[ind + 1] + hex_to_rgb(group["color"]) + [1]]
-
-            color_map = np.core.records.fromarrays(
-                np.vstack(color_map).T, names=["Value", "Red", "Green", "Blue", "Alpha"]
-            )
-            points = Points.create(
-                params.geoh5,
-                name="PointMarkers",
-                vertices=np.vstack(cox),
-                parent=output_group,
-            )
-            points.entity_type.name = params.ga_group_name
-            migration = np.hstack(migration)
-            dip = migration / migration.max()
-            dip = np.rad2deg(np.arccos(dip))
-            skew = np.hstack(skew)
-            azimuth = np.hstack(azimuth)
-            points.add_data(
-                {
-                    "amplitude": {"values": np.hstack(amplitude)},
-                    "skew": {"values": skew},
-                }
-            )
-
-            if params.tem_checkbox:
-                points.add_data(
-                    {
-                        "tau": {"values": np.hstack(tau)},
-                        "azimuth": {"values": azimuth},
-                        "dip": {"values": dip},
-                    }
-                )
-
-            channel_group_data = points.add_data(
-                {
-                    "channel_group": {
-                        "type": "referenced",
-                        "values": np.hstack(channel_group),
-                        "value_map": group_map,
-                    }
-                }
-            )
-            channel_group_data.entity_type.color_map = {
-                "name": "Time Groups",
-                "values": color_map,
-            }
-
-            if params.tem_checkbox:
-                group = points.find_or_create_property_group(
-                    name="AzmDip", property_group_type="Dip direction & dip"
-                )
-                group.properties = [
-                    points.get_data("azimuth")[0].uid,
-                    points.get_data("dip")[0].uid,
-                ]
-
-            # Add structural markers
-            if params.structural_markers:
-
-                if params.tem_checkbox:
-                    markers = []
-
-                    def rotation_2D(angle):
-                        R = np.r_[
-                            np.c_[
-                                np.cos(np.pi * angle / 180),
-                                -np.sin(np.pi * angle / 180),
-                            ],
-                            np.c_[
-                                np.sin(np.pi * angle / 180), np.cos(np.pi * angle / 180)
-                            ],
-                        ]
-                        return R
-
-                    for azm, xyz, mig in zip(
-                        np.hstack(azimuth).tolist(),
-                        np.vstack(cox).tolist(),
-                        migration.tolist(),
-                    ):
-                        marker = np.r_[
-                            np.c_[-0.5, 0.0] * 50,
-                            np.c_[0.5, 0] * 50,
-                            np.c_[0.0, 0.0],
-                            np.c_[0.0, 1.0] * mig,
-                        ]
-
-                        marker = (
-                            np.c_[np.dot(rotation_2D(-azm), marker.T).T, np.zeros(4)]
-                            + xyz
-                        )
-                        markers.append(marker.squeeze())
-
-                    curves = Curve.create(
-                        params.geoh5,
-                        name="TickMarkers",
-                        vertices=np.vstack(markers),
-                        cells=np.arange(len(markers) * 4, dtype="uint32").reshape(
-                            (-1, 2)
-                        ),
-                        parent=output_group,
-                    )
-                    channel_group_data = curves.add_data(
-                        {
-                            "channel_group": {
-                                "type": "referenced",
-                                "values": np.kron(np.hstack(channel_group), np.ones(4)),
-                                "value_map": group_map,
-                            }
-                        }
-                    )
-                    channel_group_data.entity_type.color_map = {
-                        "name": "Time Groups",
-                        "values": color_map,
-                    }
-                inflx_pts = Points.create(
-                    params.geoh5,
-                    name="Inflections_Up",
-                    vertices=np.vstack(inflx_up),
-                    parent=output_group,
-                )
-                channel_group_data = inflx_pts.add_data(
-                    {
-                        "channel_group": {
-                            "type": "referenced",
-                            "values": np.repeat(
-                                np.hstack(channel_group),
-                                [ii.shape[0] for ii in inflx_up],
-                            ),
-                            "value_map": group_map,
-                        }
-                    }
-                )
-                channel_group_data.entity_type.color_map = {
-                    "name": "Time Groups",
-                    "values": color_map,
-                }
-                inflx_pts = Points.create(
-                    params.geoh5,
-                    name="Inflections_Down",
-                    vertices=np.vstack(inflx_dwn),
-                    parent=output_group,
-                )
-                channel_group_data.copy(parent=inflx_pts)
-
-                start_pts = Points.create(
-                    params.geoh5,
-                    name="Starts",
-                    vertices=np.vstack(start),
-                    parent=output_group,
-                )
-                channel_group_data.copy(parent=start_pts)
-
-                end_pts = Points.create(
-                    params.geoh5,
-                    name="Ends",
-                    vertices=np.vstack(end),
-                    parent=output_group,
-                )
-                channel_group_data.copy(parent=end_pts)
-
-                Points.create(
-                    params.geoh5,
-                    name="Peaks",
-                    vertices=np.vstack(peaks),
-                    parent=output_group,
-                )
-
-        workspace.finalize()
-        print("Process completed.")
-        print(f"Result exported to: {workspace.h5file}")
-
-        if params.monitoring_directory is not None and path.exists(
-            params.monitoring_directory
-        ):
-            BaseApplication.live_link_output(params.monitoring_directory, output_group)
-            print(f"Live link activated!")
-            print(
-                f"Check your current ANALYST session for results stored in group {output_group.name}."
-            )
+        driver = PeakFinderDriver(params)
+        driver.run(output_group)
 
     def show_decay_trigger(self, _):
         """
@@ -1687,340 +1336,12 @@ class PeakFinder(ObjectDataSelection):
             self.show_decay.description = "Show decay curve"
 
 
-def find_anomalies(
-    locations,
-    line_indices,
-    channels,
-    channel_groups,
-    smoothing=1,
-    use_residual=False,
-    data_normalization=[1],
-    min_amplitude=25,
-    min_value=-np.inf,
-    min_width=200,
-    max_migration=50,
-    min_channels=3,
-    minimal_output=False,
-    return_profile=False,
-):
-    """
-    Find all anomalies along a line profile of data.
-    Anomalies are detected based on the lows, inflection points and a peaks.
-    Neighbouring anomalies are then grouped and assigned a channel_group label.
-
-    :param: :obj:`geoh5py.objects.Curve`
-        Curve object containing data.
-    :param: list
-        List of Data channels
-    :param: array of int or bool
-        Array defining a line of data from the input Curve object
-
-
-    :return: list of dict
-    """
-    profile = LineDataDerivatives(
-        locations=locations[line_indices], smoothing=smoothing, residual=use_residual
-    )
-    locs = profile.locations_resampled
-    if data_normalization == "ppm":
-        data_normalization = [1e-6]
-
-    if locs is None:
-        return {}
-
-    xy = np.c_[profile.interp_x(locs), profile.interp_y(locs)]
-    angles = np.arctan2(xy[1:, 1] - xy[:-1, 1], xy[1:, 0] - xy[:-1, 0])
-    angles = np.r_[angles[0], angles].tolist()
-    azimuth = (450.0 - np.rad2deg(running_mean(angles, width=5))) % 360.0
-    anomalies = {
-        "channel": [],
-        "start": [],
-        "inflx_up": [],
-        "peak": [],
-        "peak_values": [],
-        "inflx_dwn": [],
-        "end": [],
-        "amplitude": [],
-        "group": [],
-        "channel_group": [],
-    }
-    data_uid = list(channels.keys())
-    property_groups = [pg for pg in channel_groups.values()]
-    group_prop_size = np.r_[[len(grp["properties"]) for grp in channel_groups.values()]]
-    for cc, (uid, params) in enumerate(channels.items()):
-        if "values" not in list(params.keys()):
-            continue
-
-        values = params["values"][line_indices].copy()
-        profile.values = values
-        values = profile.values_resampled
-        dx = profile.derivative(order=1)
-        ddx = profile.derivative(order=2)
-        peaks = np.where(
-            (np.diff(np.sign(dx)) != 0) & (ddx[1:] < 0) & (values[:-1] > min_value)
-        )[0]
-        lows = np.where(
-            (np.diff(np.sign(dx)) != 0) & (ddx[1:] > 0) & (values[:-1] > min_value)
-        )[0]
-        lows = np.r_[0, lows, locs.shape[0] - 1]
-        up_inflx = np.where(
-            (np.diff(np.sign(ddx)) != 0) & (dx[1:] > 0) & (values[:-1] > min_value)
-        )[0]
-        dwn_inflx = np.where(
-            (np.diff(np.sign(ddx)) != 0) & (dx[1:] < 0) & (values[:-1] > min_value)
-        )[0]
-
-        if len(peaks) == 0 or len(lows) < 2 or len(up_inflx) < 2 or len(dwn_inflx) < 2:
-            continue
-
-        for peak in peaks:
-            ind = np.median(
-                [0, lows.shape[0] - 1, np.searchsorted(locs[lows], locs[peak]) - 1]
-            ).astype(int)
-            start = lows[ind]
-            ind = np.median(
-                [0, lows.shape[0] - 1, np.searchsorted(locs[lows], locs[peak])]
-            ).astype(int)
-            end = np.min([locs.shape[0] - 1, lows[ind]])
-            ind = np.median(
-                [
-                    0,
-                    up_inflx.shape[0] - 1,
-                    np.searchsorted(locs[up_inflx], locs[peak]) - 1,
-                ]
-            ).astype(int)
-            inflx_up = up_inflx[ind]
-            ind = np.median(
-                [
-                    0,
-                    dwn_inflx.shape[0] - 1,
-                    np.searchsorted(locs[dwn_inflx], locs[peak]),
-                ]
-            ).astype(int)
-            inflx_dwn = np.min([locs.shape[0] - 1, dwn_inflx[ind] + 1])
-            # Check amplitude and width thresholds
-            delta_amp = (
-                np.abs(
-                    np.min([values[peak] - values[start], values[peak] - values[end]])
-                )
-                / (np.std(values) + 2e-32)
-            ) * 100.0
-            delta_x = locs[end] - locs[start]
-            amplitude = np.sum(np.abs(values[start:end])) * profile.sampling
-            if (delta_amp > min_amplitude) & (delta_x > min_width):
-                anomalies["channel"] += [cc]
-                anomalies["start"] += [start]
-                anomalies["inflx_up"] += [inflx_up]
-                anomalies["peak"] += [peak]
-                anomalies["peak_values"] += [values[peak]]
-                anomalies["inflx_dwn"] += [inflx_dwn]
-                anomalies["amplitude"] += [amplitude]
-                anomalies["end"] += [end]
-                anomalies["group"] += [-1]
-                anomalies["channel_group"] += [
-                    [
-                        key
-                        for key, channel_group in enumerate(channel_groups.values())
-                        if uid in channel_group["properties"]
-                    ]
-                ]
-
-    if len(anomalies["peak"]) == 0:
-        if return_profile:
-            return {}, profile
-        else:
-            return {}
-
-    groups = []
-
-    # Re-cast as numpy arrays
-    for key, values in anomalies.items():
-        if key == "channel_group":
-            continue
-        anomalies[key] = np.hstack(values)
-
-    group_id = -1
-    peaks_position = locs[anomalies["peak"]]
-    for ii in range(peaks_position.shape[0]):
-        # Skip if already labeled
-        if anomalies["group"][ii] != -1:
-            continue
-
-        group_id += 1  # Increment group id
-        dist = np.abs(peaks_position[ii] - peaks_position)
-        # Find anomalies across channels within horizontal range
-        near = np.where((dist < max_migration) & (anomalies["group"] == -1))[0]
-        # Reject from group if channel gap > 1
-        u_gates, u_count = np.unique(anomalies["channel"][near], return_counts=True)
-        if len(u_gates) > 1 and np.any((u_gates[1:] - u_gates[:-1]) > 2):
-            cutoff = u_gates[np.where((u_gates[1:] - u_gates[:-1]) > 2)[0][0]]
-            near = near[anomalies["channel"][near] <= cutoff]  # Remove after cutoff
-        # Check for multiple nearest peaks on single channel
-        # and keep the nearest
-        u_gates, u_count = np.unique(anomalies["channel"][near], return_counts=True)
-        for gate in u_gates[np.where(u_count > 1)]:
-            mask = np.ones_like(near, dtype="bool")
-            sub_ind = anomalies["channel"][near] == gate
-            sub_ind[np.where(sub_ind)[0][np.argmin(dist[near][sub_ind])]] = False
-            mask[sub_ind] = False
-            near = near[mask]
-
-        score = np.zeros(len(channel_groups))
-        for ids in near:
-            score[anomalies["channel_group"][ids]] += 1
-
-        # Find groups with largest channel overlap
-        max_scores = np.where(score == score.max())[0]
-        # Keep the group with less properties
-        in_group = max_scores[
-            np.argmax(score[max_scores] / group_prop_size[max_scores])
-        ]
-        if score[in_group] < min_channels:
-            continue
-
-        channel_group = property_groups[in_group]
-        # Remove anomalies not in group
-        mask = [
-            data_uid[anomalies["channel"][id]] in channel_group["properties"]
-            for id in near
-        ]
-        near = near[mask, ...]
-        if len(near) == 0:
-            continue
-        anomalies["group"][near] = group_id
-        gates = anomalies["channel"][near]
-        cox = anomalies["peak"][near]
-        inflx_dwn = anomalies["inflx_dwn"][near]
-        inflx_up = anomalies["inflx_up"][near]
-        cox_sort = np.argsort(locs[cox])
-        azimuth_near = azimuth[cox]
-        dip_direction = azimuth[cox[0]]
-
-        if (
-            anomalies["peak_values"][near][cox_sort][0]
-            < anomalies["peak_values"][near][cox_sort][-1]
-        ):
-            dip_direction = (dip_direction + 180) % 360.0
-
-        migration = np.abs(locs[cox[cox_sort[-1]]] - locs[cox[cox_sort[0]]])
-        skew = (locs[cox][cox_sort[0]] - locs[inflx_up][cox_sort]) / (
-            locs[inflx_dwn][cox_sort] - locs[cox][cox_sort[0]] + 1e-8
-        )
-        skew[azimuth_near[cox_sort] > 180] = 1.0 / (
-            skew[azimuth_near[cox_sort] > 180] + 1e-2
-        )
-        # Change skew factor from [-100, 1]
-        flip_skew = skew < 1
-        skew[flip_skew] = 1.0 / (skew[flip_skew] + 1e-2)
-        skew = 1.0 - skew
-        skew[flip_skew] *= -1
-        values = anomalies["peak_values"][near] * np.prod(data_normalization)
-        amplitude = np.sum(anomalies["amplitude"][near])
-        times = [
-            channel["time"]
-            for ii, channel in enumerate(channels.values())
-            if (ii in list(gates) and "time" in channel.keys())
-        ]
-        linear_fit = None
-
-        if len(times) > 2 and len(cox) > 0:
-            times = np.hstack(times)[values > 0]
-            if len(times) > 2:
-                # Compute linear trend
-                A = np.c_[np.ones_like(times), times]
-                y0, slope = np.linalg.solve(
-                    np.dot(A.T, A), np.dot(A.T, np.log(values[values > 0]))
-                )
-                linear_fit = [y0, slope]
-
-        group = {
-            "channels": gates,
-            "start": anomalies["start"][near],
-            "inflx_up": anomalies["inflx_up"][near],
-            "peak": cox,
-            "cox": np.mean(
-                np.c_[
-                    profile.interp_x(locs[cox[cox_sort[0]]]),
-                    profile.interp_y(locs[cox[cox_sort[0]]]),
-                    profile.interp_z(locs[cox[cox_sort[0]]]),
-                ],
-                axis=0,
-            ),
-            "inflx_dwn": anomalies["inflx_dwn"][near],
-            "end": anomalies["end"][near],
-            "azimuth": dip_direction,
-            "migration": migration,
-            "amplitude": amplitude,
-            "channel_group": channel_group,
-            "linear_fit": linear_fit,
-        }
-        if minimal_output:
-
-            group["skew"] = np.mean(skew)
-            group["inflx_dwn"] = np.c_[
-                profile.interp_x(locs[inflx_dwn]),
-                profile.interp_y(locs[inflx_dwn]),
-                profile.interp_z(locs[inflx_dwn]),
-            ]
-            group["inflx_up"] = np.c_[
-                profile.interp_x(locs[inflx_up]),
-                profile.interp_y(locs[inflx_up]),
-                profile.interp_z(locs[inflx_up]),
-            ]
-            start = anomalies["start"][near]
-            group["start"] = np.c_[
-                profile.interp_x(locs[start]),
-                profile.interp_y(locs[start]),
-                profile.interp_z(locs[start]),
-            ]
-
-            end = anomalies["end"][near]
-            group["peaks"] = np.c_[
-                profile.interp_x(locs[cox]),
-                profile.interp_y(locs[cox]),
-                profile.interp_z(locs[cox]),
-            ]
-
-            group["end"] = np.c_[
-                profile.interp_x(locs[end]),
-                profile.interp_y(locs[end]),
-                profile.interp_z(locs[end]),
-            ]
-
-        else:
-            group["peak_values"] = values
-
-        groups += [group]
-
-    if return_profile:
-        return groups, profile
-    else:
-        return groups
-
-
-def groups_from_free_params(params: PeakFinderParams):
-    """
-    Generate a dictionary of groups with associate properties from params.
-    """
-    count = 0
-    channel_groups = {}
-    for label, group_params in params.free_parameter_dict.items():
-        if group_params["data"] is not None:
-            prop_group = getattr(params, group_params["data"], None)
-
-            if prop_group is not None:
-                count += 1
-                channel_groups[prop_group.name] = {
-                    "data": prop_group.uid,
-                    "color": getattr(params, group_params["color"], None),
-                    "label": [count],
-                    "properties": prop_group.properties,
-                }
-
-    return channel_groups
-
-
 if __name__ == "__main__":
     file = sys.argv[1]
+    warnings.warn(
+        "'geoapps.peak_finder.application' replaced by "
+        "'geoapps.peak_finder.driver' in version 0.7.0. "
+        "This warning is likely due to the execution of older ui.json files. Please update."
+    )
     params = PeakFinderParams(InputFile(file))
     PeakFinder.run(params)

@@ -5,5 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from .application import PeakFinder
+
+from .constants import app_initializer
 from .params import PeakFinderParams
