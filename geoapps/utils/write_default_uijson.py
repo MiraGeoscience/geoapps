@@ -9,7 +9,7 @@ import argparse
 
 import geoapps
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
-from geoapps.inversion.natural_source import MagnetotelluricsParams
+from geoapps.inversion.natural_sources import MagnetotelluricsParams
 from geoapps.inversion.potential_fields import (
     GravityParams,
     MagneticScalarParams,
