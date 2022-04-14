@@ -154,7 +154,8 @@ default_ui_json.update(
         },
         "center": None,
         "width": None,
-        "run_command": "geoapps.octree_creation.driver",
+        "conda_environment": "geoapps",
+        "run_command": "geoapps.peak_finder.driver",
     }
 )
 

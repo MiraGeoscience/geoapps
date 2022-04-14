@@ -17,8 +17,8 @@ from geoapps.inversion.potential_fields import (
     MagneticScalarParams,
     MagneticVectorParams,
 )
-from geoapps.octree_creation import OctreeParams
-from geoapps.peak_finder import PeakFinderParams
+from geoapps.octree_creation.params import OctreeParams
+from geoapps.peak_finder.params import PeakFinderParams
 
 path_to_flinflon = lambda file: "\\".join(
     geoapps.__file__.split("\\")[:-2] + ["assets", file]

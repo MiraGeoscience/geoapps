@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from . import PeakFinderParams
 
+import sys
 from os import path
 
 import numpy as np
@@ -20,6 +21,7 @@ from dask import delayed
 from dask.distributed import Client, get_client
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
+from geoh5py.ui_json import InputFile
 from tqdm import tqdm
 
 from geoapps.base.application import BaseApplication
@@ -336,3 +338,10 @@ class PeakFinderDriver:
             print(
                 f"Check your current ANALYST session for results stored in group {output_group.name}."
             )
+
+
+if __name__ == "__main__":
+    file = sys.argv[1]
+    params = PeakFinderParams(InputFile.read_ui_json(file))
+    driver = PeakFinderDriver(params)
+    driver.run()
