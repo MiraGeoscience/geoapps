@@ -39,7 +39,7 @@ def test_tipper_run(
 
     np.random.seed(0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.01,
         anomaly=1.0,
@@ -47,18 +47,17 @@ def test_tipper_run(
         n_lines=n_grid_points,
         refinement=refinement,
         inversion_type="tipper",
+        drape_height=15.0,
         flatten=True,
     )
-
-    model = geoh5.get_entity("model")[0]
     params = TipperParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         resolution=0.0,
         z_from_topo=False,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
         conductivity_model=1e-2,
@@ -71,9 +70,7 @@ def test_tipper_run(
     fwr_driver = InversionDriver(params, warmstart=False)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
-
-    survey = geoh5.get_entity("survey")[0]
-
+    survey = geoh5.get_entity(survey.uid)[0]
     data = {}
     uncertainties = {}
     components = {
@@ -117,21 +114,22 @@ def test_tipper_run(
     params = TipperParams(
         geoh5=geoh5,
         mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         resolution=0.0,
         data_object=survey.uid,
         starting_model=0.01,
-        conductivity_model=1e-2,
         reference_model=None,
         s_norm=0.0,
         x_norm=1.0,
         y_norm=1.0,
         z_norm=1.0,
+        alpha_s=1.0,
         gradient_type="components",
         z_from_topo=False,
         upper_bound=0.75,
         max_iterations=max_iterations,
-        initial_beta_ratio=1e-2,
+        initial_beta_ratio=1e1,
+        sens_wts_threshold=60.0,
         prctile=100,
         **data_kwargs,
     )
@@ -173,7 +171,7 @@ def test_tipper_run(
 
 if __name__ == "__main__":
     # Full run
-    m_start, m_rec = test_magnetotellurics_run(
+    m_start, m_rec = test_tipper_run(
         "./", n_grid_points=8, max_iterations=30, pytest=False, refinement=(4, 8)
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
