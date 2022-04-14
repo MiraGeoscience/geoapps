@@ -80,6 +80,7 @@ def setup_inversion_workspace(
     n_electrodes=20,
     n_lines=5,
     refinement=(4, 6),
+    drape_height=5.0,
     inversion_type="other",
     flatten=False,
 ):
@@ -96,7 +97,7 @@ def setup_inversion_workspace(
         zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
     topo = np.c_[utils.mkvc(xx), utils.mkvc(yy), utils.mkvc(zz)]
     triang = Delaunay(topo[:, :2])
-    surf = Surface.create(
+    topography = Surface.create(
         geoh5, vertices=topo, cells=triang.simplices, name="topography"
     )
     # Observation points
@@ -109,7 +110,7 @@ def setup_inversion_workspace(
     if flatten:
         Z = np.zeros_like(X)
     else:
-        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + 5.0
+        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + drape_height
 
     vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
 
@@ -120,14 +121,14 @@ def setup_inversion_workspace(
             geoh5, name="survey (currents)", vertices=vertices, parts=parts
         )
         currents.add_default_ab_cell_id()
-        potentials = PotentialElectrode.create(geoh5, name="survey", vertices=vertices)
-        potentials.current_electrodes = currents
-        currents.potential_electrodes = potentials
+        survey = PotentialElectrode.create(geoh5, name="survey", vertices=vertices)
+        survey.current_electrodes = currents
+        currents.potential_electrodes = survey
 
         N = 6
         dipoles = []
         current_id = []
-        potentials_parts = []
+        survey_parts = []
         for val in currents.ab_cell_id.values:  # For each source dipole
             cell_id = int(currents.ab_map[val]) - 1  # Python 0 indexing
             line = currents.parts[currents.cells[cell_id, 0]]
@@ -137,39 +138,51 @@ def setup_inversion_workspace(
                 )  # Skip two poles
 
                 # Shorten the array as we get to the end of the line
-                if any(dipole_ids > (potentials.n_vertices - 1)) or any(
+                if any(dipole_ids > (survey.n_vertices - 1)) or any(
                     currents.parts[dipole_ids] != line
                 ):
                     continue
-                potentials_parts += [line] * len(dipole_ids)
+                survey_parts += [line] * len(dipole_ids)
                 dipoles += [dipole_ids]  # Save the receiver id
                 current_id += [val]  # Save the source id
 
-        potentials.cells = np.vstack(dipoles).astype("uint32")
-        potentials.ab_cell_id = np.asarray(current_id).astype("int32")
+        survey.cells = np.vstack(dipoles).astype("uint32")
+        survey.ab_cell_id = np.asarray(current_id).astype("int32")
 
     elif inversion_type == "magnetotellurics":
-        components = [
-            "Zxx (real)",
-            "Zxx (imag)",
-            "Zxy (real)",
-            "Zxy (imag)",
-            "Zyx (real)",
-            "Zyx (imag)",
-            "Zyy (real)",
-            "Zyy (imag)",
-        ]
-        mt_receivers = MTReceivers.create(
+        survey = MTReceivers.create(
             geoh5,
             vertices=vertices,
             name="survey",
-            components=components,
+            components=[
+                "Zxx (real)",
+                "Zxx (imag)",
+                "Zxy (real)",
+                "Zxy (imag)",
+                "Zyx (real)",
+                "Zyx (imag)",
+                "Zyy (real)",
+                "Zyy (imag)",
+            ],
+            channels=[10.0, 100.0, 1000.0],
+        )
+
+    elif inversion_type == "tipper":
+        survey = TipperReceivers.create(
+            geoh5,
+            vertices=vertices,
+            name="survey",
+            components=[
+                "Txz (real)",
+                "Txz (imag)",
+                "Tyz (real)",
+                "Tyz (imag)",
+            ],
             channels=[10.0, 100.0, 1000.0],
         )
 
     else:
-
-        points = Points.create(
+        survey = Points.create(
             geoh5,
             vertices=vertices,
             name="survey",
@@ -194,7 +207,7 @@ def setup_inversion_workspace(
         finalize=True,
     )
     octree = treemesh_2_octree(geoh5, mesh, name="mesh")
-    active = active_from_xyz(mesh, surf.vertices, grid_reference="N")
+    active = active_from_xyz(mesh, topography.vertices, grid_reference="N")
     # Model
     if flatten:
         model = utils.model_builder.addBlock(
@@ -213,7 +226,7 @@ def setup_inversion_workspace(
             anomaly,
         )
     model[~active] = np.nan
-    octree.add_data({"model": {"values": model[mesh._ubc_order]}})
+    model = octree.add_data({"model": {"values": model[mesh._ubc_order]}})
     # octree.add_data({"active": {"values": active.astype(int)[mesh._ubc_order]}})
-    octree.copy()  # Keep a copy around for ref
-    return geoh5
+    # octree.copy()  # Keep a copy around for ref
+    return geoh5, mesh, model, survey, topography

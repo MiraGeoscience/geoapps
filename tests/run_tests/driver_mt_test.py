@@ -41,26 +41,25 @@ def test_magnetotellurics_run(
 
     np.random.seed(0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.01,
         anomaly=1.0,
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
         refinement=refinement,
+        drape_height=0.0,
         inversion_type="magnetotellurics",
         flatten=True,
     )
-
-    model = geoh5.get_entity("model")[0]
     params = MagnetotelluricsParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         resolution=0.0,
         z_from_topo=False,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
         zxx_real_channel_bool=True,
@@ -77,7 +76,7 @@ def test_magnetotellurics_run(
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
-    survey = geoh5.get_entity("survey")[0]
+    survey = survey
 
     data = {}
     uncertainties = {}
@@ -127,7 +126,7 @@ def test_magnetotellurics_run(
     params = MagnetotelluricsParams(
         geoh5=geoh5,
         mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         resolution=0.0,
         data_object=survey.uid,
         starting_model=0.01,
