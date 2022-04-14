@@ -27,6 +27,7 @@ from .components import (
     InversionWindow,
 )
 from .components.factories import DirectivesFactory, MisfitFactory
+from .params import InversionBaseParams
 
 
 class InversionDriver:
