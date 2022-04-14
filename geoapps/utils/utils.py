@@ -11,11 +11,11 @@ import gc
 import json
 import os
 import re
+import warnings
 from uuid import UUID
 
 import dask
 import dask.array as da
-import fiona
 import geoh5py
 import numpy as np
 import pandas as pd
@@ -32,7 +32,6 @@ from geoh5py.objects import (
 )
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
-from osgeo import gdal
 from scipy.interpolate import interp1d
 from scipy.spatial import ConvexHull, cKDTree
 from shapely.geometry import LineString, mapping
@@ -227,6 +226,14 @@ def export_grid_2_geotiff(
     Modified: 2020-04-28
     """
 
+    try:
+        import gdal
+    except ModuleNotFoundError:
+        warnings.warn(
+            "Modules 'gdal' is missing from the environment. "
+            "Consider installing with: 'conda install -c conda-forge gdal'"
+        )
+
     grid2d = data.parent
 
     assert isinstance(grid2d, Grid2D), f"The parent object must be a Grid2D entity."
@@ -324,7 +331,7 @@ def geotiff_2_grid(
     grid: Grid2D = None,
     grid_name: str = None,
     parent: Group = None,
-) -> Grid2D:
+) -> Grid2D | None:
     """
     Load a geotiff from file.
 
@@ -336,6 +343,15 @@ def geotiff_2_grid(
 
      :return grid: Grid2D object with values stored.
     """
+    try:
+        import gdal
+    except ModuleNotFoundError:
+        warnings.warn(
+            "Modules 'gdal' is missing from the environment. "
+            "Consider installing with: 'conda install -c conda-forge gdal'"
+        )
+        return
+
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)
     temp = band.ReadAsArray()
@@ -386,6 +402,15 @@ def export_curve_2_shapefile(
     :param wkt_code: Well-Known-Text string used to assign a projection.
     :param file_name: Specify the path and name of the *.shp. Defaults to the current directory and `curve.name`.
     """
+    try:
+        import fiona
+    except ModuleNotFoundError:
+        warnings.warn(
+            "Modules 'fiona' is missing from the environment. "
+            "Consider installing with: 'conda install -c conda-forge fiona gdal'"
+        )
+        return
+
     attribute_vals = None
 
     if attribute is not None and curve.get_data(attribute):
