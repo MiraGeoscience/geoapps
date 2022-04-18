@@ -40,6 +40,34 @@ from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
 
+def soft_import(package, interrupt=False):
+
+    warn_str = (
+        "Module '{}' is missing from the environment." "Consider installing with: '{}'"
+    )
+
+    if package == "fiona":
+        try:
+            from fiona.transform import transform
+
+        except ModuleNotFoundError:
+            warnings.warn(
+                warn_str.format(package, "conda install -c conda-forge fiona")
+            )
+            if interrupt:
+                return
+
+    elif package == "osgeo":
+
+        try:
+            import osgeo
+
+        except ModuleNotFoundError:
+            warnings.warn(warn_str.format(package, "conda install -c conda-forge gdal"))
+            if interrupt:
+                return
+
+
 def string_2_list(string):
     """
     Convert a list of numbers separated by comma to a list of floats
@@ -226,13 +254,7 @@ def export_grid_2_geotiff(
     Modified: 2020-04-28
     """
 
-    try:
-        import gdal
-    except ModuleNotFoundError:
-        warnings.warn(
-            "Modules 'gdal' is missing from the environment. "
-            "Consider installing with: 'conda install -c conda-forge gdal'"
-        )
+    soft_import("osgeo")
 
     grid2d = data.parent
 
@@ -343,14 +365,7 @@ def geotiff_2_grid(
 
      :return grid: Grid2D object with values stored.
     """
-    try:
-        import gdal
-    except ModuleNotFoundError:
-        warnings.warn(
-            "Modules 'gdal' is missing from the environment. "
-            "Consider installing with: 'conda install -c conda-forge gdal'"
-        )
-        return
+    soft_import("osgeo", interrupt=True)
 
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)
@@ -402,14 +417,7 @@ def export_curve_2_shapefile(
     :param wkt_code: Well-Known-Text string used to assign a projection.
     :param file_name: Specify the path and name of the *.shp. Defaults to the current directory and `curve.name`.
     """
-    try:
-        import fiona
-    except ModuleNotFoundError:
-        warnings.warn(
-            "Modules 'fiona' is missing from the environment. "
-            "Consider installing with: 'conda install -c conda-forge fiona gdal'"
-        )
-        return
+    soft_import("fiona", interrupt=True)
 
     attribute_vals = None
 
