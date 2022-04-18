@@ -15,7 +15,13 @@ from uuid import UUID
 
 import numpy as np
 from discretize.utils import active_from_xyz, mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import CurrentElectrode, Points, PotentialElectrode, Surface
+from geoh5py.objects import (
+    CurrentElectrode,
+    MTReceivers,
+    Points,
+    PotentialElectrode,
+    Surface,
+)
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
@@ -73,9 +79,10 @@ def setup_inversion_workspace(
     n_electrodes=20,
     n_lines=5,
     refinement=(4, 6),
-    dcip=False,
+    inversion_type="other",
     flatten=False,
 ):
+
     project = os.path.join(work_dir, "inversion_test.geoh5")
     geoh5 = Workspace(project)
     # Topography
@@ -92,7 +99,9 @@ def setup_inversion_workspace(
         geoh5, vertices=topo, cells=triang.simplices, name="topography"
     )
     # Observation points
-    n_electrodes = 4 if dcip & (n_electrodes < 4) else n_electrodes
+    n_electrodes = (
+        4 if (inversion_type == "dcip") & (n_electrodes < 4) else n_electrodes
+    )
     xr = np.linspace(-100.0, 100.0, n_electrodes)
     yr = np.linspace(-100.0, 100.0, n_lines)
     X, Y = np.meshgrid(xr, yr)
@@ -103,7 +112,7 @@ def setup_inversion_workspace(
 
     vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
 
-    if dcip:
+    if inversion_type == "dcip":
 
         parts = np.repeat(np.arange(n_lines), n_electrodes).astype("int32")
         currents = CurrentElectrode.create(
@@ -137,6 +146,25 @@ def setup_inversion_workspace(
 
         potentials.cells = np.vstack(dipoles).astype("uint32")
         potentials.ab_cell_id = np.asarray(current_id).astype("int32")
+
+    elif inversion_type == "magnetotellurics":
+        components = [
+            "Zxx (real)",
+            "Zxx (imag)",
+            "Zxy (real)",
+            "Zxy (imag)",
+            "Zyx (real)",
+            "Zyx (imag)",
+            "Zyy (real)",
+            "Zyy (imag)",
+        ]
+        mt_receivers = MTReceivers.create(
+            geoh5,
+            vertices=vertices,
+            name="survey",
+            components=components,
+            channels=[10.0, 100.0, 1000.0],
+        )
 
     else:
 
@@ -185,5 +213,6 @@ def setup_inversion_workspace(
         )
     model[~active] = np.nan
     octree.add_data({"model": {"values": model[mesh._ubc_order]}})
+    # octree.add_data({"active": {"values": active.astype(int)[mesh._ubc_order]}})
     octree.copy()  # Keep a copy around for ref
     return geoh5

@@ -28,7 +28,6 @@ class MagnetotelluricsParams(InversionBaseParams):
     """
 
     _directive_list = [
-        "VectorInversion",
         "Update_IRLS",
         "UpdateSensitivityWeights",
         "BetaEstimate_ByEig",
@@ -80,31 +79,37 @@ class MagnetotelluricsParams(InversionBaseParams):
         """Return uuid of uncertainty channel."""
         return getattr(self, "_".join([component, "uncertainty"]), None)
 
-    def property_group_data(self, uid: UUID):
+    def property_group_data(self, property_group: UUID):
 
         data = {}
-        data_obj = self.geoh5.get_entity(self.data_object)[0]
-        frequencies = data_obj.channels
+        frequencies = self.data_object.channels
         if self.forward_only:
             return {k: None for k in frequencies}
         else:
-            group = [k for k in data_obj.property_groups if k.uid == uid][0]
+            group = [
+                k
+                for k in self.data_object.property_groups
+                if k.uid == property_group.uid
+            ][0]
             property_names = [
                 self.geoh5.get_entity(p)[0].name for p in group.properties
             ]
             properties = [self.geoh5.get_entity(p)[0].values for p in group.properties]
-            for f in frequencies:
-                f_ind = property_names.index(
-                    [k for k in property_names if str(f) in k][0]
-                )
-                data[f] = properties[f_ind]
+            for i, f in enumerate(frequencies):
+                try:
+                    f_ind = property_names.index(
+                        [k for k in property_names if f"{f:.2e}" in k][0]
+                    )  # Safer if data was saved with geoapps naming convention
+                    data[f] = properties[f_ind]
+                except IndexError:
+                    data[f] = properties[i]  # in case of other naming conventions
 
             return data
 
     def data(self, component: str):
         """Returns array of data for chosen data component."""
-        uid = self.data_channel(component)
-        return self.property_group_data(uid)
+        property_group = self.data_channel(component)
+        return self.property_group_data(property_group)
 
     def uncertainty(self, component: str) -> float:
         """Returns uncertainty for chosen data component."""

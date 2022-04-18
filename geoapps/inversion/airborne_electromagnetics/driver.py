@@ -394,7 +394,7 @@ def inversion(input_file):
             u0 = 4 * np.pi * 1e-7
             normalization = u0 * (
                 np.abs(
-                    m / R ** 3.0 * (3 * (tx_offsets[2] / R) ** 2.0 - 1) / (4.0 * np.pi)
+                    m / R**3.0 * (3 * (tx_offsets[2] / R) ** 2.0 - 1) / (4.0 * np.pi)
                 )
             )
 
