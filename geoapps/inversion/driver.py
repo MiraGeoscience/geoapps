@@ -19,15 +19,15 @@ from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
-from .components import (
+from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
     InversionModelCollection,
     InversionTopography,
     InversionWindow,
 )
-from .components.factories import DirectivesFactory, MisfitFactory
-from .params import InversionBaseParams
+from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
+from geoapps.inversion.params import InversionBaseParams
 
 
 class InversionDriver:
@@ -379,7 +379,7 @@ def start_inversion(filepath=None, **kwargs):
         params = GravityParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "magnetotellurics":
-        from .natural_sources import MagnetotelluricsParams
+        from geoapps.inversion.natural_sources import MagnetotelluricsParams
 
         params = MagnetotelluricsParams(input_file=input_file, **kwargs)
 
