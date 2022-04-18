@@ -37,7 +37,7 @@ def test_gravity_run(
 
     np.random.seed(0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.75,
@@ -46,15 +46,15 @@ def test_gravity_run(
         refinement=refinement,
         flatten=False,
     )
-    model = geoh5.get_entity("model")[0]
+
     params = GravityParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         resolution=0.0,
         z_from_topo=False,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
@@ -73,8 +73,8 @@ def test_gravity_run(
     np.random.seed(0)
     params = GravityParams(
         geoh5=geoh5,
-        mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        mesh=mesh.uid,
+        topography_object=topography.uid,
         resolution=0.0,
         data_object=gz.parent.uid,
         starting_model=1e-4,

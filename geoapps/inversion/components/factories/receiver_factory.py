@@ -57,6 +57,11 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Point3DImpedance
 
+        elif self.factory_type == "tipper":
+            from SimPEG.electromagnetics.natural_source import receivers
+
+            return receivers.Point3DTipper
+
     def assemble_arguments(
         self, locations=None, data=None, local_index=None, mesh=None, active_cells=None
     ):
@@ -90,22 +95,37 @@ class ReceiversFactory(SimPEGFactory):
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
             kwargs["components"] = list(data.keys())
-        if self.factory_type in ["magnetotellurics"]:
+        if self.factory_type in ["magnetotellurics", "tipper"]:
             kwargs["orientation"] = list(data.keys())[0].split("_")[0][1:]
             kwargs["component"] = list(data.keys())[0].split("_")[1]
+        if self.factory_type in ["tipper"]:
+            kwargs["orientation"] = kwargs["orientation"][::-1]
 
         return kwargs
 
     def build(
         self, locations=None, data=None, local_index=None, mesh=None, active_cells=None
     ):
-        return super().build(
+        receivers = super().build(
             locations=locations,
             data=data,
             local_index=local_index,
             mesh=mesh,
             active_cells=active_cells,
         )
+
+        if (
+            self.factory_type in ["tipper"]
+            and getattr(self.params.data_object, "base_stations", None) is not None
+        ):
+            stations = self.params.data_object.base_stations.vertices
+            if stations is not None:
+                if stations.shape[0] == 1:
+                    stations = np.tile(stations.T, self.params.data_object.n_vertices).T
+
+                receivers.reference_locations = stations
+
+        return receivers
 
     def _dcip_arguments(self, locations=None, local_index=None):
 

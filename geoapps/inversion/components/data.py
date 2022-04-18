@@ -229,7 +229,7 @@ class InversionData(InversionLocations):
         self._observed_data_types = {c: {} for c in data.keys()}
         data_entity = {c: {} for c in data.keys()}
 
-        if self.params.inversion_type == "magnetotellurics":
+        if self.params.inversion_type in ["magnetotellurics", "tipper"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
                     dnorm = self.normalizations[component] * values
@@ -411,6 +411,9 @@ class InversionData(InversionLocations):
                 normalizations[comp] = -1.0
             elif self.params.inversion_type in ["magnetotellurics"]:
                 if "imag" in comp:
+                    normalizations[comp] = -1.0
+            elif self.params.inversion_type in ["tipper"]:
+                if "real" in comp:
                     normalizations[comp] = -1.0
             if normalizations[comp] == -1.0:
                 print(f"Sign flip for component {comp}.")
