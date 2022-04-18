@@ -153,8 +153,6 @@ def test_magnetotellurics_run(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
 
-    predicted = run_ws.get_entity("Iteration_0_zyy_real_1.00e+01")[0]
-
     if pytest:
         if any(np.isnan(orig_zyy_real_1)):
             warnings.warn(
