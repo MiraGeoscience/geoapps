@@ -179,9 +179,7 @@ def setup_inversion_workspace(
                 "Tyz (imag)",
             ],
         )
-        survey.base_stations = TipperBaseStations.create(
-            geoh5, vertices=vertices[0, :].reshape((-1, 3))
-        )
+        survey.base_stations = TipperBaseStations.create(geoh5)
         survey.channels = [10.0, 100.0, 1000.0]
         dist = np.linalg.norm(
             survey.vertices[survey.cells[:, 0], :]
