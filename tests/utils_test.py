@@ -33,6 +33,7 @@ from geoapps.utils.utils import (
     octree_2_treemesh,
     rotate_xy,
     running_mean,
+    soft_import,
     sorted_alphanumeric_list,
     sorted_children_dict,
     string_2_numeric,
@@ -92,6 +93,11 @@ def test_sorted_alphanumeric_list():
 
     sorted_list = sorted_alphanumeric_list(random.sample(test, len(test)))
     assert all([sorted_list[i] == test[i] for i in range(len(test))])
+
+
+def test_soft_import():
+    gdal, osr = soft_import("osgeo", objects=["gdal, osr"])
+    assert True
 
 
 def test_sorted_children_dict(tmp_path):

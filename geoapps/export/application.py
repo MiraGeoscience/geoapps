@@ -17,7 +17,7 @@ from ipywidgets.widgets import HBox, VBox
 
 from geoapps.utils.utils import soft_import
 
-soft_import("osgeo")
+osr = soft_import("osgeo", objects=["osr"])
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils.plotting import plot_plan_data_selection
