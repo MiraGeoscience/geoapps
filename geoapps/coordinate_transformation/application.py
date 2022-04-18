@@ -17,8 +17,8 @@ from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
 
 from geoapps.utils.utils import soft_import
 
-soft_import("fiona")
-soft_import("osgeo")
+transform = soft_import("fiona.transform", objects=["transform"])
+gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
 
 
 from geoapps.base.selection import ObjectDataSelection
