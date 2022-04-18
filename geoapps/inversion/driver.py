@@ -368,12 +368,16 @@ def start_inversion(filepath=None, **kwargs):
 
     if inversion_type == "magnetic vector":
         from .potential_fields import MagneticVectorParams
+        from .potential_fields.magnetic_vector.constants import validations
 
+        input_file = InputFile.read_ui_json(filepath, validations=validations)
         params = MagneticVectorParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "magnetic scalar":
         from .potential_fields import MagneticScalarParams
+        from .potential_fields.magnetic_scalar.constants import validations
 
+        input_file = InputFile.read_ui_json(filepath, validations=validations)
         params = MagneticScalarParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "gravity":
