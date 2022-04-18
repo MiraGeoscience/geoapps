@@ -273,3 +273,24 @@ class PeakFinderParams(BaseParams):
     @width.setter
     def width(self, val):
         self.setter_validator("width", val)
+
+    def groups_from_free_params(self):
+        """
+        Generate a dictionary of groups with associate properties from params.
+        """
+        count = 0
+        channel_groups = {}
+        for label, group_params in self.free_parameter_dict.items():
+            if group_params["data"] is not None:
+                prop_group = getattr(self, group_params["data"], None)
+
+                if prop_group is not None:
+                    count += 1
+                    channel_groups[prop_group.name] = {
+                        "data": prop_group.uid,
+                        "color": getattr(self, group_params["color"], None),
+                        "label": [count],
+                        "properties": prop_group.properties,
+                    }
+
+        return channel_groups
