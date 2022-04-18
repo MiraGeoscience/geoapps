@@ -11,7 +11,9 @@ from typing import TYPE_CHECKING
 
 from geoh5py.shared import Entity
 
-from geoapps.inversion.magnetotellurics.params import MagnetotelluricsParams
+from geoapps.inversion.natural_sources.magnetotellurics.params import (
+    MagnetotelluricsParams,
+)
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace

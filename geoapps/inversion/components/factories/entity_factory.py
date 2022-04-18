@@ -117,7 +117,7 @@ class EntityFactory(AbstractFactory):
             )
 
         if getattr(self.params.data_object, "channels", None) is not None:
-            entity.channels = self.params.data_object.channels
+            entity.channels = [float(val) for val in self.params.data_object.channels]
 
         if getattr(self.params.data_object, "cells", None) is not None:
             active_cells = inversion_data.mask[self.params.data_object.cells]
