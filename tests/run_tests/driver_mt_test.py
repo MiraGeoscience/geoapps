@@ -62,6 +62,7 @@ def test_magnetotellurics_run(
         data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
+        conductivity_model=1e-2,
         zxx_real_channel_bool=True,
         zxx_imag_channel_bool=True,
         zxy_real_channel_bool=True,
@@ -76,7 +77,7 @@ def test_magnetotellurics_run(
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
-    survey = survey
+    survey = geoh5.get_entity(survey.uid)[0]
 
     data = {}
     uncertainties = {}
@@ -90,7 +91,7 @@ def test_magnetotellurics_run(
         "zyy_real": "Zyy (real)",
         "zyy_imag": "Zyy (imag)",
     }
-    curve = Curve.create(geoh5, vertices=survey.vertices)
+
     for comp, cname in components.items():
         data[cname] = []
         # uncertainties[f"{cname} uncertainties"] = {}
@@ -101,7 +102,7 @@ def test_magnetotellurics_run(
             )
             data[cname].append(d)
 
-            u = curve.add_data(
+            u = survey.add_data(
                 {
                     f"uncertainty_{comp}_{freq:.2e}": {
                         "values": np.abs(0.05 * d.values) + d.values.std()
@@ -138,6 +139,7 @@ def test_magnetotellurics_run(
         gradient_type="components",
         z_from_topo=False,
         upper_bound=0.75,
+        conductivity_model=1e-2,
         max_iterations=max_iterations,
         initial_beta_ratio=1e-2,
         prctile=100,
