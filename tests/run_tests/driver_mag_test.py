@@ -38,7 +38,7 @@ def test_susceptibility_run(
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.05,
@@ -47,18 +47,17 @@ def test_susceptibility_run(
         n_lines=n_grid_points,
         flatten=False,
     )
-    model = geoh5.get_entity("model")[0]
     params = MagneticScalarParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
@@ -72,8 +71,8 @@ def test_susceptibility_run(
     np.random.seed(0)
     params = MagneticScalarParams(
         geoh5=geoh5,
-        mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        mesh=mesh.uid,
+        topography_object=topography.uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
@@ -141,7 +140,7 @@ def test_magnetic_vector_run(
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.05,
@@ -149,18 +148,17 @@ def test_magnetic_vector_run(
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
     )
-    model = geoh5.get_entity("model")[0]
     params = MagneticVectorParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
         starting_inclination=45,
@@ -173,8 +171,8 @@ def test_magnetic_vector_run(
     # Run the inverse
     params = MagneticVectorParams(
         geoh5=geoh5,
-        mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        mesh=mesh.uid,
+        topography_object=topography.uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
