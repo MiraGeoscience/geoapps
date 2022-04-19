@@ -87,7 +87,9 @@ class InversionData(InversionLocations):
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
+    def __init__(
+        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
+    ):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
@@ -484,13 +486,16 @@ class InversionData(InversionLocations):
             nested_mesh = create_nested_mesh(
                 survey.unique_locations,
                 mesh,
-                method="radial",
-                max_distance=np.max([mesh.h[0].min(), mesh.h[1].min()]) * padding_cells,
+                method="padding_cells",
+                minimum_level=3,
+                padding_cells=padding_cells,
             )
+
             kwargs = {"components": 3} if self.vector else {}
             map = maps.TileMap(
                 mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
             )
+            # map._local_mesh = None
             sim = simulation_factory.build(
                 survey=survey,
                 global_mesh=mesh,
@@ -499,7 +504,7 @@ class InversionData(InversionLocations):
                 map=map,
                 tile_id=tile_id,
             )
-
+            # del nested_mesh
         return sim, map
 
     def simulate(self, model, inverse_problem, sorting):
