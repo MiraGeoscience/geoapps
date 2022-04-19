@@ -96,8 +96,15 @@ def test_sorted_alphanumeric_list():
 
 
 def test_soft_import():
-    gdal, osr = soft_import("osgeo", objects=["gdal, osr"])
-    assert True
+    from types import ModuleType
+
+    gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
+    fiona = soft_import("fiona")
+    transform = soft_import("fiona.transform", objects=["transform"])
+    assert isinstance(gdal, ModuleType) and gdal.__name__ == "osgeo.gdal"
+    assert isinstance(osr, ModuleType) and osr.__name__ == "osgeo.osr"
+    assert isinstance(fiona, ModuleType) and fiona.__name__ == "fiona"
+    assert callable(transform) and transform.__name__ == "transform"
 
 
 def test_sorted_children_dict(tmp_path):
