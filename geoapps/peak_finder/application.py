@@ -1289,10 +1289,15 @@ class PeakFinder(ObjectDataSelection):
         )
         for key, value in param_dict.items():
             if isinstance(value, ObjectBase):
-                param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
-                param_dict["line_field"] = [
-                    c for c in param_dict[key].children if c.name == "Line"
-                ][0]
+                if new_workspace.get_entity(value.uid) is not None:
+                    param_dict[key] = value.copy(
+                        parent=new_workspace, copy_children=True
+                    )
+                    line_field = [
+                        c for c in param_dict[key].children if c.name == "Line"
+                    ]
+                    if line_field:
+                        param_dict["line_field"] = line_field[0]
 
         param_dict["geoh5"] = new_workspace
         if self.live_link.value:
