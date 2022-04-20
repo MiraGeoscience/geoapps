@@ -9,7 +9,7 @@ import argparse
 
 import geoapps
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
-from geoapps.inversion.natural_sources import MagnetotelluricsParams
+from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
 from geoapps.inversion.potential_fields import (
     GravityParams,
     MagneticScalarParams,
@@ -61,6 +61,11 @@ def write_default_uijson(path, use_initializers=False):
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mt_init = app_initializer if use_initializers else {}
 
+    from geoapps.inversion.natural_sources.tipper.constants import app_initializer
+
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    tipper_init = app_initializer if use_initializers else {}
+
     from geoapps.octree_creation.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
@@ -99,11 +104,15 @@ def write_default_uijson(path, use_initializers=False):
             forward_only=True, validate=False
         ),
         "magnetotellurics_inversion.ui.json": MagnetotelluricsParams(
-            forward_only=False, validate=False
+            forward_only=False, validate=False, **mt_init
         ),
         "magnetotellurics_forward.ui.json": MagnetotelluricsParams(
             forward_only=True, validate=False
         ),
+        "tipper_inversion.ui.json": TipperParams(
+            forward_only=False, validate=False, **mt_init
+        ),
+        "tipper_forward.ui.json": TipperParams(forward_only=True, validate=False),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
         "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
     }

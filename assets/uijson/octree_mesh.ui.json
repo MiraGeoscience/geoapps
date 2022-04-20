@@ -61,7 +61,7 @@
         "label": "Name:",
         "value": "Octree_Mesh"
     },
-    "run_command": "geoapps.create.octree_mesh",
+    "run_command": "geoapps.octree_creation.application",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
