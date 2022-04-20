@@ -77,9 +77,11 @@ def setup_inversion_workspace(
     work_dir,
     background=None,
     anomaly=None,
+    cell_size=(5.0, 5.0, 5.0),
     n_electrodes=20,
     n_lines=5,
     refinement=(4, 6),
+    padding_distance=100,
     drape_height=5.0,
     inversion_type="other",
     flatten=False,
@@ -197,11 +199,10 @@ def setup_inversion_workspace(
         )
 
     # Create a mesh
-    h = 5
-    padDist = np.ones((3, 2)) * 100
+    padDist = np.ones((3, 2)) * padding_distance
     mesh = mesh_builder_xyz(
-        vertices - h / 2.0,
-        [h] * 3,
+        vertices - np.r_[cell_size] / 2.0,
+        cell_size,
         depth_core=100.0,
         padding_distance=padDist,
         mesh_type="TREE",

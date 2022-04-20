@@ -7,9 +7,11 @@
 
 from __future__ import annotations
 
+import datetime
 import multiprocessing
 import sys
 from multiprocessing.pool import ThreadPool
+from time import time
 from uuid import UUID
 
 import numpy as np
@@ -19,15 +21,15 @@ from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
-from .components import (
+from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
     InversionModelCollection,
     InversionTopography,
     InversionWindow,
 )
-from .components.factories import DirectivesFactory, MisfitFactory
-from .params import InversionBaseParams
+from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
+from geoapps.inversion.params import InversionBaseParams
 
 
 class InversionDriver:
@@ -113,7 +115,9 @@ class InversionDriver:
                 Client(cluster)
 
         # Build active cells array and reduce models active set
-        self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
+        self.active_cells = self.inversion_topography.active_cells(
+            self.inversion_mesh, self.inversion_data
+        )
         self.models.edit_ndv_model(
             self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
         )
@@ -133,7 +137,7 @@ class InversionDriver:
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
 
         self.n_tiles = len(self.tiles)
-        print(f"Setting up {self.n_tiles} tiles ...")
+        print(f"Setting up {self.n_tiles} tile(s) ...")
         # Build tiled misfits and combine to form global misfit
 
         self.global_misfit, self.sorting = MisfitFactory(
@@ -377,7 +381,7 @@ def start_inversion(filepath=None, **kwargs):
         params = GravityParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "magnetotellurics":
-        from .natural_sources import MagnetotelluricsParams
+        from geoapps.inversion.natural_sources import MagnetotelluricsParams
 
         params = MagnetotelluricsParams(input_file=input_file, **kwargs)
 
@@ -404,5 +408,7 @@ def start_inversion(filepath=None, **kwargs):
 
 
 if __name__ == "__main__":
+    ct = time()
     filepath = sys.argv[1]
     start_inversion(filepath)
+    print(f"Total runtime: {datetime.timedelta(seconds=time() - ct)}")
