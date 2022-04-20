@@ -21,9 +21,9 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_magnetotellurics_run = {
-    "data_norm": 0.0681608,
-    "phi_d": 7.267,
-    "phi_m": 165.6,
+    "data_norm": 0.07280,
+    "phi_d": 7.722,
+    "phi_m": 162.2,
 }
 
 
@@ -149,8 +149,6 @@ def test_magnetotellurics_run(
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
-
-    predicted = run_ws.get_entity("Iteration_0_zyy_real_1.00e+01")[0]
 
     if pytest:
         if any(np.isnan(orig_zyy_real_1)):
