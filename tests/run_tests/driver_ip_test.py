@@ -19,8 +19,8 @@ from geoapps.utils.testing import setup_inversion_workspace
 
 target_ip_run = {
     "data_norm": 0.007242,
-    "phi_d": 4.985,
-    "phi_m": 0.06141,
+    "phi_d": 4.975,
+    "phi_m": 0.06144,
 }
 
 

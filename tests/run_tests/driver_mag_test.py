@@ -20,8 +20,8 @@ from geoapps.utils.testing import setup_inversion_workspace
 
 target_susceptibility_run = {
     "data_norm": 11.707134,
-    "phi_d": 1.556,
-    "phi_m": 8.932e-6,
+    "phi_d": 1.598,
+    "phi_m": 8.824e-6,
 }
 
 
@@ -125,8 +125,8 @@ def test_susceptibility_run(
 
 target_magnetic_vector_run = {
     "data_norm": 8.943476,
-    "phi_d": 0.006804,
-    "phi_m": 4.679e-6,
+    "phi_d": 0.00776,
+    "phi_m": 4.674e-6,
 }
 
 
