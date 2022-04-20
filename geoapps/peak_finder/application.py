@@ -1289,7 +1289,7 @@ class PeakFinder(ObjectDataSelection):
         )
         for key, value in param_dict.items():
             if isinstance(value, ObjectBase):
-                if new_workspace.get_entity(value.uid) is not None:
+                if new_workspace.get_entity(value.uid)[0] is None:
                     param_dict[key] = value.copy(
                         parent=new_workspace, copy_children=True
                     )
