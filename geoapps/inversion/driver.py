@@ -434,6 +434,8 @@ def start_inversion(filepath=None, **kwargs):
     with open(outfile, "rb") as f:
         file_entity.values = f.read()
 
+    params.geoh5.finalize()
+
 
 if __name__ == "__main__":
     filepath = sys.argv[1]
