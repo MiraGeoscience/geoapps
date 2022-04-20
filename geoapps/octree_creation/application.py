@@ -8,19 +8,18 @@
 import os
 import sys
 import uuid
+import warnings
 
-from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
 from ipywidgets.widgets.widget_selection import TraitError
 
-from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.octree_creation.constants import app_initializer
-from geoapps.octree_creation.params import OctreeParams
-from geoapps.utils.utils import treemesh_2_octree
+
+from . import OctreeParams, app_initializer
+from .driver import OctreeDriver
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -223,10 +222,15 @@ class OctreeMesh(ObjectDataSelection):
                 param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
 
         param_dict["geoh5"] = new_workspace
+
+        if self.live_link.value:
+            param_dict["monitoring_directory"] = self.monitoring_directory
+
         ifile = InputFile(
             ui_json=self.params.input_file.ui_json,
             validation_options={"disabled": True},
         )
+
         new_params = OctreeParams(input_file=ifile, **param_dict)
         new_params.write_input_file()
         self.run(new_params)
@@ -239,62 +243,9 @@ class OctreeMesh(ObjectDataSelection):
         """
         Create an octree mesh from input values
         """
-        entity = params.objects
 
-        p_d = [
-            [
-                params.horizontal_padding,
-                params.horizontal_padding,
-            ],
-            [
-                params.horizontal_padding,
-                params.horizontal_padding,
-            ],
-            [params.vertical_padding, params.vertical_padding],
-        ]
-
-        print("Setting the mesh extent")
-        treemesh = mesh_builder_xyz(
-            entity.vertices,
-            [
-                params.u_cell_size,
-                params.v_cell_size,
-                params.w_cell_size,
-            ],
-            padding_distance=p_d,
-            mesh_type="tree",
-            depth_core=params.depth_core,
-        )
-
-        for label, value in params.free_parameter_dict.items():
-            if not isinstance(getattr(params, value["object"]), ObjectBase):
-                continue
-
-            print(f"Applying {label} on: {getattr(params, value['object']).name}")
-
-            treemesh = refine_tree_xyz(
-                treemesh,
-                getattr(params, value["object"]).vertices,
-                method=getattr(params, value["type"]),
-                octree_levels=getattr(params, value["levels"]),
-                max_distance=getattr(params, value["distance"]),
-                finalize=False,
-            )
-
-        print("Finalizing...")
-        treemesh.finalize()
-
-        print("Writing to file ")
-        octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
-
-        if params.monitoring_directory is not None and os.path.exists(
-            params.monitoring_directory
-        ):
-            BaseApplication.live_link_output(params.monitoring_directory, octree)
-
-        print(
-            f"Octree mesh '{octree.name}' completed and exported to {os.path.abspath(params.geoh5.h5file)}"
-        )
+        driver = OctreeDriver(params)
+        octree = driver.run()
 
         return octree
 
@@ -352,5 +303,10 @@ class OctreeMesh(ObjectDataSelection):
 
 if __name__ == "__main__":
     file = sys.argv[1]
+    warnings.warn(
+        "'geoapps.octree_creation.application' replaced by "
+        "'geoapps.octree_creation.driver' in version 0.7.0. "
+        "This warning is likely due to the execution of older ui.json files. Please update."
+    )
     params = OctreeParams(InputFile.read_ui_json(file))
     OctreeMesh.run(params)
