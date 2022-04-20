@@ -11,11 +11,11 @@ import gc
 import json
 import os
 import re
+import warnings
 from uuid import UUID
 
 import dask
 import dask.array as da
-import fiona
 import geoh5py
 import numpy as np
 import pandas as pd
@@ -32,7 +32,6 @@ from geoh5py.objects import (
 )
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
-from osgeo import gdal
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
 from scipy.spatial import ConvexHull, Delaunay, cKDTree
 from shapely.geometry import LineString, mapping
@@ -227,6 +226,14 @@ def export_grid_2_geotiff(
     Modified: 2020-04-28
     """
 
+    try:
+        import gdal
+    except ModuleNotFoundError:
+        warnings.warn(
+            "Modules 'gdal' is missing from the environment. "
+            "Consider installing with: 'conda install -c conda-forge gdal'"
+        )
+
     grid2d = data.parent
 
     assert isinstance(grid2d, Grid2D), f"The parent object must be a Grid2D entity."
@@ -324,7 +331,7 @@ def geotiff_2_grid(
     grid: Grid2D = None,
     grid_name: str = None,
     parent: Group = None,
-) -> Grid2D:
+) -> Grid2D | None:
     """
     Load a geotiff from file.
 
@@ -336,6 +343,15 @@ def geotiff_2_grid(
 
      :return grid: Grid2D object with values stored.
     """
+    try:
+        import gdal
+    except ModuleNotFoundError:
+        warnings.warn(
+            "Modules 'gdal' is missing from the environment. "
+            "Consider installing with: 'conda install -c conda-forge gdal'"
+        )
+        return
+
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)
     temp = band.ReadAsArray()
@@ -386,6 +402,15 @@ def export_curve_2_shapefile(
     :param wkt_code: Well-Known-Text string used to assign a projection.
     :param file_name: Specify the path and name of the *.shp. Defaults to the current directory and `curve.name`.
     """
+    try:
+        import fiona
+    except ModuleNotFoundError:
+        warnings.warn(
+            "Modules 'fiona' is missing from the environment. "
+            "Consider installing with: 'conda install -c conda-forge fiona gdal'"
+        )
+        return
+
     attribute_vals = None
 
     if attribute is not None and curve.get_data(attribute):
@@ -853,288 +878,6 @@ def running_mean(
         mean /= 2.0
 
     return mean
-
-
-class LineDataDerivatives:
-    """
-    Compute and store the derivatives of inline data values. The values are re-sampled at a constant
-    interval, padded then transformed to the Fourier domain using the :obj:`numpy.fft` package.
-
-    :param locations: An array of data locations, either as distance along line or 3D coordinates.
-        For 3D coordinates, the locations are automatically converted and sorted as distance from the origin.
-    :param values: Data values used to compute derivatives over, shape(locations.shape[0],).
-    :param epsilon: Adjustable constant used in :obj:`scipy.interpolate.Rbf`. Defaults to 20x the average sampling
-    :param interpolation: Type on interpolation accepted by the :obj:`scipy.interpolate.Rbf` routine:
-        'multiquadric', 'inverse', 'gaussian', 'linear', 'cubic', 'quintic', 'thin_plate'
-    :param sampling_width: Number of padding values used in the FFT. By default, the entire array is used as
-        padding.
-    :param residual: Use the residual between the values and the running mean to compute derivatives.
-    :param sampling: Sampling interval length (m) used in the FFT. Defaults to the mean data separation.
-    :param smoothing: Number of neighbours used by the :obj:`geoapps.utils.running_mean` routine.
-    """
-
-    def __init__(
-        self,
-        locations: np.ndarray = None,
-        values: np.array = None,
-        epsilon: float = None,
-        interpolation: str = "gaussian",
-        smoothing: int = 0,
-        residual: bool = False,
-        sampling: float = None,
-        **kwargs,
-    ):
-        self._locations_resampled = None
-        self._epsilon = epsilon
-        self.x_locations = None
-        self.y_locations = None
-        self.z_locations = None
-        self.locations = locations
-        self.values = values
-        self._interpolation = interpolation
-        self._smoothing = smoothing
-        self._residual = residual
-        self._sampling = sampling
-
-        # if values is not None:
-        #     self._values = values[self.sorting]
-
-        for key, value in kwargs.items():
-            if getattr(self, key, None) is not None:
-                setattr(self, key, value)
-
-    def interp_x(self, distance):
-        """
-        Get the x-coordinate from the inline distance.
-        """
-        if getattr(self, "Fx", None) is None and self.x_locations is not None:
-            self.Fx = interp1d(
-                self.locations,
-                self.x_locations,
-                bounds_error=False,
-                fill_value="extrapolate",
-            )
-        return self.Fx(distance)
-
-    def interp_y(self, distance):
-        """
-        Get the y-coordinate from the inline distance.
-        """
-        if getattr(self, "Fy", None) is None and self.y_locations is not None:
-            self.Fy = interp1d(
-                self.locations,
-                self.y_locations,
-                bounds_error=False,
-                fill_value="extrapolate",
-            )
-        return self.Fy(distance)
-
-    def interp_z(self, distance):
-        """
-        Get the z-coordinate from the inline distance.
-        """
-        if getattr(self, "Fz", None) is None and self.z_locations is not None:
-            self.Fz = interp1d(
-                self.locations,
-                self.z_locations,
-                bounds_error=False,
-                fill_value="extrapolate",
-            )
-        return self.Fz(distance)
-
-    @property
-    def epsilon(self):
-        """
-        Adjustable constant used by :obj:`scipy.interpolate.Rbf`
-        """
-        if getattr(self, "_epsilon", None) is None:
-            width = self.locations[-1] - self.locations[0]
-            self._epsilon = width / 5.0
-
-        return self._epsilon
-
-    @property
-    def sampling_width(self):
-        """
-        Number of padding cells added for the FFT
-        """
-        if getattr(self, "_sampling_width", None) is None:
-            self._sampling_width = int(np.floor(len(self.values_resampled)))
-
-        return self._sampling_width
-
-    @property
-    def locations(self):
-        """
-        Position of values along line.
-        """
-        return self._locations
-
-    @locations.setter
-    def locations(self, locations):
-        self._locations = None
-        self.x_locations = None
-        self.y_locations = None
-        self.z_locations = None
-        self.sorting = None
-        self.values_resampled = None
-        self._locations_resampled = None
-
-        if locations is not None:
-            if locations.ndim > 1:
-                if np.std(locations[:, 1]) > np.std(locations[:, 0]):
-                    start = np.argmin(locations[:, 1])
-                    self.sorting = np.argsort(locations[:, 1])
-                else:
-                    start = np.argmin(locations[:, 0])
-                    self.sorting = np.argsort(locations[:, 0])
-
-                self.x_locations = locations[self.sorting, 0]
-                self.y_locations = locations[self.sorting, 1]
-
-                if locations.shape[1] == 3:
-                    self.z_locations = locations[self.sorting, 2]
-
-                distances = np.linalg.norm(
-                    np.c_[
-                        locations[start, 0] - locations[self.sorting, 0],
-                        locations[start, 1] - locations[self.sorting, 1],
-                    ],
-                    axis=1,
-                )
-
-            else:
-                self.x_locations = locations
-                self.sorting = np.argsort(locations)
-                distances = locations[self.sorting]
-
-            self._locations = distances
-
-            if self._locations[0] == self._locations[-1]:
-                return
-
-            width = self._locations[-1] - self._locations[0]
-            dx = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
-            self._sampling_width = np.ceil(
-                (self._locations[-1] - self._locations[0]) / dx
-            ).astype(int)
-            self._locations_resampled = np.linspace(
-                self._locations[0], self._locations[-1], self.sampling_width
-            )
-            # self._locations_resampled = self._locations_padded[self.sampling_width: -self.sampling_width]
-
-    @property
-    def locations_resampled(self):
-        """
-        Position of values resampled on a fix interval
-        """
-        return self._locations_resampled
-
-    @property
-    def values(self):
-        """
-        Original values sorted along line.
-        """
-        return self._values
-
-    @values.setter
-    def values(self, values):
-        self.values_resampled = None
-        self._values = None
-        if (values is not None) and (self.sorting is not None):
-            self._values = values[self.sorting]
-
-    @property
-    def sampling(self):
-        """
-        Discrete interval length (m)
-        """
-        if getattr(self, "_sampling", None) is None:
-            self._sampling = np.mean(
-                np.abs(self.locations_resampled[1:] - self.locations_resampled[:-1])
-            )
-        return self._sampling
-
-    @property
-    def values_resampled(self):
-        """
-        Values re-sampled on a regular interval
-        """
-        if getattr(self, "_values_resampled", None) is None:
-            # self._values_resampled = self.values_padded[self.sampling_width: -self.sampling_width]
-            F = interp1d(self.locations, self.values, fill_value="extrapolate")
-            self._values_resampled = F(self._locations_resampled)
-            self._values_resampled_raw = self._values_resampled.copy()
-            if self._smoothing > 0:
-                mean_values = running_mean(
-                    self._values_resampled, width=self._smoothing, method="centered"
-                )
-
-                if self.residual:
-                    self._values_resampled = self._values_resampled - mean_values
-                else:
-                    self._values_resampled = mean_values
-
-        return self._values_resampled
-
-    @values_resampled.setter
-    def values_resampled(self, values):
-        self._values_resampled = values
-        self._values_resampled_raw = None
-
-    @property
-    def interpolation(self):
-        """
-        Method of interpolation: ['linear'], 'nearest', 'slinear', 'quadratic' or 'cubic'
-        """
-        return self._interpolation
-
-    @interpolation.setter
-    def interpolation(self, method):
-        methods = ["linear", "nearest", "slinear", "quadratic", "cubic"]
-        assert method in methods, f"Method on interpolation must be one of {methods}"
-
-    @property
-    def residual(self):
-        """
-        Use the residual of the smoothing data
-        """
-        return self._residual
-
-    @residual.setter
-    def residual(self, value):
-        assert isinstance(value, bool), "Residual must be a bool"
-        if value != self._residual:
-            self._residual = value
-            self.values_resampled = None
-
-    @property
-    def smoothing(self):
-        """
-        Smoothing factor in terms of number of nearest neighbours used
-        in a running mean averaging of the signal
-        """
-        return self._smoothing
-
-    @smoothing.setter
-    def smoothing(self, value):
-        assert (
-            isinstance(value, int) and value >= 0
-        ), "Smoothing parameter must be an integer >0"
-        if value != self._smoothing:
-            self._smoothing = value
-            self.values_resampled = None
-
-    def derivative(self, order=1) -> np.ndarray:
-        """
-        Compute and return the first order derivative.
-        """
-        deriv = self.values_resampled
-        for ii in range(order):
-            deriv = (deriv[1:] - deriv[:-1]) / self.sampling
-            deriv = np.r_[2 * deriv[0] - deriv[1], deriv]
-
-        return deriv
 
 
 def tensor_2_block_model(workspace, mesh, name=None, parent=None, data={}):

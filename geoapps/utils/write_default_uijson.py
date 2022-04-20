@@ -7,6 +7,8 @@
 
 import argparse
 
+from geoh5py.ui_json import InputFile
+
 import geoapps
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
@@ -15,8 +17,8 @@ from geoapps.inversion.potential_fields import (
     MagneticScalarParams,
     MagneticVectorParams,
 )
-from geoapps.octree_creation import OctreeParams
-from geoapps.peak_finder import PeakFinderParams
+from geoapps.octree_creation.params import OctreeParams
+from geoapps.peak_finder.params import PeakFinderParams
 
 path_to_flinflon = lambda file: "\\".join(
     geoapps.__file__.split("\\")[:-2] + ["assets", file]
@@ -59,7 +61,7 @@ def write_default_uijson(path, use_initializers=False):
     )
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
-    mt_init = app_initializer if use_initializers else {}
+    _ = app_initializer if use_initializers else {}
 
     from geoapps.inversion.natural_sources.tipper.constants import app_initializer
 
@@ -119,6 +121,15 @@ def write_default_uijson(path, use_initializers=False):
 
     for filename, params in filedict.items():
         params.write_input_file(name=filename, path=path, validate=False)
+
+    from geoapps.inversion.constants import default_octree_ui_json, octree_defaults
+
+    ifile = InputFile(
+        ui_json=default_octree_ui_json,
+        data=octree_defaults,
+        validation_options={"disabled": True},
+    )
+    ifile.write_ui_json(name="inversion_mesh.ui.json", path=".")
 
 
 if __name__ == "__main__":
