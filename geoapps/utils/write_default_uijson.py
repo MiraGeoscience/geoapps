@@ -61,7 +61,7 @@ def write_default_uijson(path, use_initializers=False):
     )
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
-    _ = app_initializer if use_initializers else {}
+    mt_init = app_initializer if use_initializers else {}
 
     from geoapps.inversion.natural_sources.tipper.constants import app_initializer
 
@@ -112,7 +112,7 @@ def write_default_uijson(path, use_initializers=False):
             forward_only=True, validate=False
         ),
         "tipper_inversion.ui.json": TipperParams(
-            forward_only=False, validate=False, **mt_init
+            forward_only=False, validate=False, **tipper_init
         ),
         "tipper_forward.ui.json": TipperParams(forward_only=True, validate=False),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
