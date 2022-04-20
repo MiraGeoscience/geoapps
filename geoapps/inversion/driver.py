@@ -7,9 +7,11 @@
 
 from __future__ import annotations
 
+import datetime
 import multiprocessing
 import sys
 from multiprocessing.pool import ThreadPool
+from time import time
 from uuid import UUID
 
 import numpy as np
@@ -406,5 +408,7 @@ def start_inversion(filepath=None, **kwargs):
 
 
 if __name__ == "__main__":
+    ct = time()
     filepath = sys.argv[1]
     start_inversion(filepath)
+    print(f"Total runtime: {datetime.timedelta(seconds=time() - ct)}")
