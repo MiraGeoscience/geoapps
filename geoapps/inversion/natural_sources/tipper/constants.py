@@ -199,7 +199,7 @@ default_ui_json = {
         "main": True,
         "group": "Data",
         "label": "Object",
-        "meshType": "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+        "meshType": "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
         "value": None,
     },
     "txz_real_channel_bool": {
