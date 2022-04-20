@@ -16,6 +16,7 @@ import os
 
 import numpy as np
 from SimPEG import maps
+from SimPEG.simulation import GhostMesh
 
 from .simpeg_factory import SimPEGFactory
 
@@ -75,6 +76,11 @@ class SimulationFactory(SimPEGFactory):
         tile_id=None,
     ):
         mesh = global_mesh if tile_id is None else local_mesh
+        # GhostMesh(
+        #     np.array([x.size for x in local_mesh.h]),
+        #     origin=local_mesh.origin,
+        #     n_cells=local_mesh.n_cells
+        # )
         return [mesh]
 
     def assemble_keyword_arguments(
@@ -115,7 +121,6 @@ class SimulationFactory(SimPEGFactory):
             return self._naturalsource_keywords(kwargs, mesh, active_cells=active_cells)
 
     def _magnetic_vector_keywords(self, kwargs, active_cells=None):
-
         kwargs["actInd"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
         kwargs["model_type"] = "vector"
@@ -127,7 +132,6 @@ class SimulationFactory(SimPEGFactory):
         return kwargs
 
     def _magnetic_scalar_keywords(self, kwargs, active_cells=None):
-
         kwargs["actInd"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["store_sensitivities"] = (
@@ -138,7 +142,6 @@ class SimulationFactory(SimPEGFactory):
         return kwargs
 
     def _gravity_keywords(self, kwargs, active_cells=None):
-
         kwargs["actInd"] = active_cells
         kwargs["rhoMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["store_sensitivities"] = (
@@ -149,7 +152,6 @@ class SimulationFactory(SimPEGFactory):
         return kwargs
 
     def _direct_current_keywords(self, kwargs, mesh, active_cells=None):
-
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
@@ -174,7 +176,6 @@ class SimulationFactory(SimPEGFactory):
         return kwargs
 
     def _naturalsource_keywords(self, kwargs, mesh, active_cells=None):
-
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver

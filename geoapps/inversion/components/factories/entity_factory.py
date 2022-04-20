@@ -42,6 +42,7 @@ class EntityFactory(AbstractFactory):
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
         if self.factory_type in ["direct current", "induced polarization"]:
+
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
 
             return (PotentialElectrode, CurrentElectrode)
@@ -116,7 +117,7 @@ class EntityFactory(AbstractFactory):
             )
 
         if getattr(self.params.data_object, "channels", None) is not None:
-            entity.channels = self.params.data_object.channels
+            entity.channels = [float(val) for val in self.params.data_object.channels]
 
         if getattr(self.params.data_object, "cells", None) is not None:
             active_cells = inversion_data.mask[self.params.data_object.cells]
