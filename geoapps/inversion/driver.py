@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 import multiprocessing
 import sys
+from datetime import datetime
 from multiprocessing.pool import ThreadPool
 from uuid import UUID
 
@@ -48,7 +49,7 @@ class InversionDriver:
         self.inverse_problem = None
         self.survey = None
         self.active_cells = None
-        self.initialize()
+        self.running = False
 
     @property
     def window(self):
@@ -206,6 +207,7 @@ class InversionDriver:
 
         # Run the inversion
         self.start_inversion_message()
+        self.running = True
         mrec = self.inversion.run(self.starting_model)
 
     def start_inversion_message(self):
@@ -357,14 +359,22 @@ class InversionDriver:
 
 
 class InversionLogger:
-    def __init__(self):
+    def __init__(self, logfile, outfile, driver):
         self.terminal = sys.stdout
-        self.log = open("SimPEG_inversion.log", "w")
+        self.log = open(logfile, "w")
+        self.out = open(outfile, "w")
+        self.driver = driver
+
+        date_time = datetime.now().strftime("%b-%d-%Y: %H:%M:%S\n")
+        self.write(f"SimPEG {driver.inversion_type} inversion started {date_time}")
 
     def write(self, message):
         self.terminal.write(message)
         self.log.write(message)
         self.log.flush()
+        if self.driver.running:
+            self.out.write(message)
+            self.out.flush()
 
     def flush(self):
         pass
@@ -413,14 +423,9 @@ def start_inversion(filepath=None, **kwargs):
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")
 
-    from datetime import datetime
-
-    now = datetime.now()
-    current_datetime = now.strftime("%b-%d-%Y: %H:%M:%S")
-
-    sys.stdout = InversionLogger()
-    print(f"SimPEG {inversion_type} inversion started {current_datetime}")
     driver = InversionDriver(params)
+    sys.stdout = InversionLogger("SimPEG_inversion.log", "SimPEG_inversion.out", driver)
+    driver.initialize()
     driver.run()
     sys.stdout.close()
 
