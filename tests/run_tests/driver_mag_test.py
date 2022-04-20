@@ -65,6 +65,7 @@ def test_susceptibility_run(
     params.workpath = tmp_path
 
     fwr_driver = InversionDriver(params)
+    fwr_driver.initialize()
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
     tmi = geoh5.get_entity("Iteration_0_tmi")[0]
@@ -96,6 +97,7 @@ def test_susceptibility_run(
     params.workpath = tmp_path
 
     driver = InversionDriver(params)
+    driver.initialize()
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
@@ -167,6 +169,7 @@ def test_magnetic_vector_run(
         starting_declination=270,
     )
     fwr_driver = InversionDriver(params)
+    fwr_driver.initialize()
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
     tmi = geoh5.get_entity("Iteration_0_tmi")[0]
@@ -195,6 +198,7 @@ def test_magnetic_vector_run(
         prctile=100,
     )
     driver = InversionDriver(params)
+    driver.initialize()
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     # Re-open the workspace and get iterations

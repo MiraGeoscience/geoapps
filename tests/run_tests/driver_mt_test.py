@@ -72,6 +72,7 @@ def test_magnetotellurics_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params, warmstart=False)
+    fwr_driver.initialize()
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
@@ -144,6 +145,7 @@ def test_magnetotellurics_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
+    driver.initialize()
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
