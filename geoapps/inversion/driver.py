@@ -356,6 +356,20 @@ class InversionDriver:
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
 
+class InversionLogger:
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = open("SimPEG_inversion.log", "w")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()
+
+    def flush(self):
+        pass
+
+
 def start_inversion(filepath=None, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
@@ -399,8 +413,16 @@ def start_inversion(filepath=None, **kwargs):
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")
 
+    from datetime import datetime
+
+    now = datetime.now()
+    current_datetime = now.strftime("%b-%d-%Y: %H:%M:%S")
+
+    sys.stdout = InversionLogger()
+    print(f"SimPEG {inversion_type} inversion started {current_datetime}")
     driver = InversionDriver(params)
     driver.run()
+    sys.stdout.close()
 
 
 if __name__ == "__main__":
