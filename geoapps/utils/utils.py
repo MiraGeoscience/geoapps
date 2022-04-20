@@ -1768,7 +1768,7 @@ def direct_current_from_simpeg(
 
 
 def active_from_xyz(
-    mesh, xyz, grid_reference="cell_center", method="linear", logical="all"
+    mesh, xyz, grid_reference="cell_centers", method="linear", logical="all"
 ):
     """Returns an active cell index array below a surface
 
@@ -1782,7 +1782,7 @@ def active_from_xyz(
     else:
         z_interpolate = NearestNDInterpolator(xyz[:, :2], xyz[:, 2])
 
-    if grid_reference == "cell_center":
+    if grid_reference == "cell_centers":
         # this should work for all 4 mesh types...
         locations = mesh.gridCC
 
