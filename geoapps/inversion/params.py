@@ -12,7 +12,7 @@ from uuid import UUID
 
 import numpy as np
 from geoh5py.data import NumericData
-from geoh5py.groups import ContainerGroup
+from geoh5py.groups import SimPEGGroup
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
@@ -846,7 +846,6 @@ class InversionBaseParams(BaseParams):
         self.setter_validator(
             "out_group",
             val,
-            fun=lambda x: x.name if isinstance(val, ContainerGroup) else x,
         )
 
     @property
@@ -856,7 +855,7 @@ class InversionBaseParams(BaseParams):
             and isinstance(self.geoh5, Workspace)
             and isinstance(self.out_group, str)
         ):
-            self._ga_group = ContainerGroup.create(self.geoh5, name=self.out_group)
+            self._ga_group = SimPEGGroup.create(self.geoh5, name=self.out_group)
 
         return self._ga_group
 
