@@ -804,4 +804,12 @@ validations = {
         "required": True,
         "types": [str, UUID, Surface, Points, Grid2D, Curve],
     },
+    "alpha_s": {"types": [int, float]},
+    "alpha_x": {"types": [int, float]},
+    "alpha_y": {"types": [int, float]},
+    "alpha_z": {"types": [int, float]},
+    "norm_s": {"types": [int, float]},
+    "norm_x": {"types": [int, float]},
+    "norm_y": {"types": [int, float]},
+    "norm_z": {"types": [int, float]},
 }
