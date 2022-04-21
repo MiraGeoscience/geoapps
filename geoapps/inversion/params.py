@@ -849,14 +849,15 @@ class InversionBaseParams(BaseParams):
         )
 
     @property
-    def ga_group(self) -> ContainerGroup | None:
+    def ga_group(self) -> SimPEGGroup | None:
         if (
             getattr(self, "_ga_group", None) is None
             and isinstance(self.geoh5, Workspace)
             and isinstance(self.out_group, str)
         ):
             self._ga_group = SimPEGGroup.create(self.geoh5, name=self.out_group)
-
+        elif isinstance(self.out_group, SimPEGGroup):
+            self._ga_group = self.out_group
         return self._ga_group
 
     @property
