@@ -6,7 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 import re
-import warnings
 from os import path
 
 import discretize
@@ -16,13 +15,9 @@ from geoh5py.objects import BlockModel, Curve, Octree
 from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
 from ipywidgets.widgets import HBox, VBox
 
-try:
-    from osgeo import osr
-except ModuleNotFoundError:
-    warnings.warn(
-        "Modules 'gdal' is missing from the environment. "
-        "Consider installing with: 'conda install -c conda-forge fiona gdal'"
-    )
+from geoapps.utils.utils import soft_import
+
+osr = soft_import("osgeo", objects=["osr"])
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils.plotting import plot_plan_data_selection
