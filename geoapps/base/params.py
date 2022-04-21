@@ -345,6 +345,7 @@ class BaseParams:
             else:
                 validations = self.validations[key]
 
+            validations = {k: v for k, v in validations.items() if k != "one_of"}
             self.validator.validate(key, value, validations)
 
         setattr(self, f"_{key}", value)
