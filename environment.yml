@@ -31,7 +31,8 @@ dependencies:
   - main::mkl
   - pip:
     - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.7.0
-    - git+https://github.com/MiraGeoscience/geoh5py.git@release/0.2.0
+    - git+https://github.com/MiraGeoscience/simpeg.git@v0.9.1.dev1+geoapps.0.6.0
+    - geoh5py==0.2.0
     - tqdm
 
 variables:
