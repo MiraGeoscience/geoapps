@@ -389,17 +389,23 @@ def start_inversion(filepath=None, **kwargs):
 
     elif inversion_type == "magnetotellurics":
         from .magnetotellurics import MagnetotelluricsParams
+        from .magnetotellurics.constants import validations
 
+        input_file = InputFile.read_ui_json(filepath, validations=validations)
         params = MagnetotelluricsParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "direct current":
         from .electricals import DirectCurrentParams
+        from .electricals.direct_current.constants import validations
 
+        input_file = InputFile.read_ui_json(filepath, validations=validations)
         params = DirectCurrentParams(input_file=input_file, **kwargs)
 
     elif inversion_type == "induced polarization":
         from .electricals import InducedPolarizationParams
+        from .electricals.induced_polarization.constants import validations
 
+        input_file = InputFile.read_ui_json(filepath, validations=validations)
         params = InducedPolarizationParams(input_file=input_file, **kwargs)
 
     else:
