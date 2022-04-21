@@ -21,7 +21,7 @@ from geoapps.utils.testing import setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_magnetotellurics_run = {
-    "data_norm": 0.07280,
+    "data_norm": 0.006656,
     "phi_d": 7.722,
     "phi_m": 162.2,
 }
