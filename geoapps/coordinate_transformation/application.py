@@ -7,7 +7,6 @@
 
 import os
 import re
-import warnings
 
 import matplotlib.pyplot as plt
 import numpy
@@ -16,14 +15,11 @@ from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
 
-try:
-    from fiona.transform import transform
-    from osgeo import gdal, osr
-except ModuleNotFoundError:
-    warnings.warn(
-        "Modules 'fiona' and 'gdal' are missing from the environment. "
-        "Consider installing with: 'conda install -c conda-forge fiona gdal'"
-    )
+from geoapps.utils.utils import soft_import
+
+transform = soft_import("fiona.transform", objects=["transform"])
+gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
+
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils.plotting import plot_plan_data_selection

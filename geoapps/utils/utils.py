@@ -40,6 +40,35 @@ from skimage.measure import marching_cubes
 from sklearn.neighbors import KernelDensity
 
 
+def soft_import(package, objects=None, interrupt=False):
+
+    packagename = package.split(".")[0]
+    packagename = "gdal" if packagename == "osgeo" else packagename
+    err = (
+        f"Module '{packagename}' is missing from the environment. "
+        f"Consider installing with: 'conda install -c conda-forge {packagename}'"
+    )
+
+    try:
+        imports = __import__(package, fromlist=objects)
+        if objects is not None:
+            imports = [getattr(imports, o) for o in objects]
+            return imports[0] if len(imports) == 1 else imports
+        else:
+            return imports
+
+    except ModuleNotFoundError:
+        if interrupt:
+            raise ModuleNotFoundError(err)
+        else:
+            warnings.warn(err)
+            if objects is None:
+                return None
+            else:
+                n_obj = len(objects)
+                return [None] * n_obj if n_obj > 1 else None
+
+
 def string_2_list(string):
     """
     Convert a list of numbers separated by comma to a list of floats
@@ -226,13 +255,7 @@ def export_grid_2_geotiff(
     Modified: 2020-04-28
     """
 
-    try:
-        import gdal
-    except ModuleNotFoundError:
-        warnings.warn(
-            "Modules 'gdal' is missing from the environment. "
-            "Consider installing with: 'conda install -c conda-forge gdal'"
-        )
+    gdal = soft_import("osgeo", ["gdal"], interrupt=True)
 
     grid2d = data.parent
 
@@ -343,14 +366,7 @@ def geotiff_2_grid(
 
      :return grid: Grid2D object with values stored.
     """
-    try:
-        import gdal
-    except ModuleNotFoundError:
-        warnings.warn(
-            "Modules 'gdal' is missing from the environment. "
-            "Consider installing with: 'conda install -c conda-forge gdal'"
-        )
-        return
+    gdal = soft_import("osgeo", ["gdal"], interrupt=True)
 
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)
@@ -402,14 +418,7 @@ def export_curve_2_shapefile(
     :param wkt_code: Well-Known-Text string used to assign a projection.
     :param file_name: Specify the path and name of the *.shp. Defaults to the current directory and `curve.name`.
     """
-    try:
-        import fiona
-    except ModuleNotFoundError:
-        warnings.warn(
-            "Modules 'fiona' is missing from the environment. "
-            "Consider installing with: 'conda install -c conda-forge fiona gdal'"
-        )
-        return
+    fiona = soft_import("fiona", interrupt=True)
 
     attribute_vals = None
 
