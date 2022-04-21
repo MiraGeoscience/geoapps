@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
 import multiprocessing
-import os
 import sys
 from datetime import datetime
 from multiprocessing.pool import ThreadPool
@@ -428,13 +427,6 @@ def start_inversion(filepath=None, **kwargs):
     driver.initialize()
     driver.run()
     sys.stdout.close()
-
-    outfile = os.path.abspath("SimPEG.out")
-    file_entity = params.ga_group.add_file(outfile)
-    with open(outfile, "rb") as f:
-        file_entity.values = f.read()
-
-    params.geoh5.finalize()
 
 
 if __name__ == "__main__":
