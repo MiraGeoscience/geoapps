@@ -16,7 +16,6 @@ import os
 
 import numpy as np
 from SimPEG import maps
-from SimPEG.simulation import GhostMesh
 
 from .simpeg_factory import SimPEGFactory
 
@@ -76,11 +75,6 @@ class SimulationFactory(SimPEGFactory):
         tile_id=None,
     ):
         mesh = global_mesh if tile_id is None else local_mesh
-        # GhostMesh(
-        #     np.array([x.size for x in local_mesh.h]),
-        #     origin=local_mesh.origin,
-        #     n_cells=local_mesh.n_cells
-        # )
         return [mesh]
 
     def assemble_keyword_arguments(

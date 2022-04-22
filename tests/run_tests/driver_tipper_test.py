@@ -144,8 +144,6 @@ def test_tipper_run(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
 
-    orig_tyz_real_1 = run_ws.get_entity("Iteration_0_tyz_real_1.00e+01")[0].values
-
     if pytest:
         if any(np.isnan(orig_tyz_real_1)):
             warnings.warn(

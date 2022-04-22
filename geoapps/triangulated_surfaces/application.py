@@ -155,8 +155,10 @@ class Surface2D(ObjectDataSelection):
                 # Create a 2D mesh to store the results
                 if np.std(xyz[:, 1]) > np.std(xyz[:, 0]):
                     order = np.argsort(xyz[:, 1])
+                    ori = "NS"
                 else:
                     order = np.argsort(xyz[:, 0])
+                    ori = "EW"
 
                 X, Y, Z, M, L = [], [], [], [], []
                 # Stack the z-coordinates and model
@@ -172,9 +174,12 @@ class Surface2D(ObjectDataSelection):
                         prop = obj.find_or_create_property_group(
                             name=string_name(self.data.uid_name_map[m])
                         ).properties[ind]
-                        m_vals.append(
-                            self.workspace.get_entity(prop)[0].values[line_ind]
-                        )
+
+                        values = self.workspace.get_entity(prop)[0].values
+                        if values is None:
+                            values = np.ones(locations.shape[0]) * np.nan
+
+                        m_vals.append(values[line_ind])
 
                     m_vals = np.vstack(m_vals).T
                     keep = (
@@ -219,7 +224,7 @@ class Surface2D(ObjectDataSelection):
                 self.models.append(np.vstack(M))
                 line_ids.append(np.ones_like(Z.ravel()) * line)
 
-                if np.std(y_loc) > np.std(x_loc):
+                if ori == "NS":
                     tri2D = Delaunay(np.c_[np.ravel(Y), np.ravel(L)])
                 else:
                     tri2D = Delaunay(np.c_[np.ravel(X), np.ravel(L)])
