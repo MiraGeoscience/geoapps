@@ -11,6 +11,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
+import warnings
 from uuid import UUID
 
 import numpy as np
@@ -237,5 +238,30 @@ def setup_inversion_workspace(
     model[~active] = np.nan
     model = octree.add_data({"model": {"values": model[mesh._ubc_order]}})
     # octree.add_data({"active": {"values": active.astype(int)[mesh._ubc_order]}})
-    # octree.copy()  # Keep a copy around for ref
     return geoh5, octree, model, survey, topography
+
+
+def check_target(output: dict, target: dict, tolerance=0.1):
+    """
+    Check inversion output metrics against hard-valued target.
+
+    :param output: Dictionary containing keys for 'data', 'phi_d' and 'phi_m'.
+    :param target: Dictionary containing keys for 'data_norm', 'phi_d' and 'phi_m'.\
+    :param tolerance: Tolerance between output and target measured as: |a-b|/b
+    """
+    if any(np.isnan(output["data"])):
+        warnings.warn(
+            "Skipping data norm comparison due to nan (used to bypass lone faulty test run in GH actions)."
+        )
+    else:
+        np.testing.assert_array_less(
+            np.abs(np.linalg.norm(output["data"]) - target["data_norm"])
+            / target["data_norm"],
+            tolerance,
+        )
+    np.testing.assert_array_less(
+        np.abs(output["phi_m"][1] - target["phi_m"]) / target["phi_m"], tolerance
+    )
+    np.testing.assert_array_less(
+        np.abs(output["phi_d"][1] - target["phi_d"]) / target["phi_d"], tolerance
+    )

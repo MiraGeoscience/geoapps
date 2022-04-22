@@ -12,11 +12,8 @@ from copy import deepcopy
 from typing import Any
 from uuid import UUID
 
-from geoh5py.groups import PropertyGroup
 from geoh5py.io.utils import str2uuid, uuid2entity
-from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile, InputValidation, utils
-from geoh5py.ui_json.constants import base_validations, default_ui_json, ui_validations
 from geoh5py.workspace import Workspace
 
 
@@ -222,7 +219,7 @@ class BaseParams:
         self._validations = validations
 
     @property
-    def validator(self) -> InputValidator:
+    def validator(self) -> InputValidation:
         if getattr(self, "_validator", None) is None:
             self._validator = self.input_file.validators
         return self._validator
@@ -345,6 +342,7 @@ class BaseParams:
             else:
                 validations = self.validations[key]
 
+            validations = {k: v for k, v in validations.items() if k != "one_of"}
             self.validator.validate(key, value, validations)
 
         setattr(self, f"_{key}", value)

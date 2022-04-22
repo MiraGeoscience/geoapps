@@ -491,14 +491,29 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 
 
 ################ Validations #################
-
-
 validations = {
     "inversion_type": {
+        "types": [str],
         "required": True,
         "values": ["magnetotellurics"],
     },
-    "data_object": {"required": True, "types": [str, UUID, MTReceivers]},
+    "data_object": {"types": [str, UUID, MTReceivers]},
+    "zxx_real_channel": {"one_of": "data_channel"},
+    "zxx_real_uncertainty": {"one_of": "uncertainty_channel"},
+    "zxx_imag_channel": {"one_of": "data_channel"},
+    "zxx_imag_uncertainty": {"one_of": "uncertainty_channel"},
+    "zxy_real_channel": {"one_of": "data_channel"},
+    "zxy_real_uncertainty": {"one_of": "uncertainty_channel"},
+    "zxy_imag_channel": {"one_of": "data_channel"},
+    "zxy_imag_uncertainty": {"one_of": "uncertainty_channel"},
+    "zyx_real_channel": {"one_of": "data_channel"},
+    "zyx_real_uncertainty": {"one_of": "uncertainty_channel"},
+    "zyx_imag_channel": {"one_of": "data_channel"},
+    "zyx_imag_uncertainty": {"one_of": "uncertainty_channel"},
+    "zyy_real_channel": {"one_of": "data_channel"},
+    "zyy_real_uncertainty": {"one_of": "uncertainty_channel"},
+    "zyy_imag_channel": {"one_of": "data_channel"},
+    "zyy_imag_uncertainty": {"one_of": "uncertainty_channel"},
 }
 
 app_initializer = {}

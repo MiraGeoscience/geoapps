@@ -5,13 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import warnings
 
 import numpy as np
 from geoh5py.workspace import Workspace
 
 from geoapps.utils import get_inversion_output
-from geoapps.utils.testing import setup_inversion_workspace
+from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -143,26 +142,9 @@ def test_tipper_run(
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
-
+    output["data"] = orig_tyz_real_1
     if pytest:
-        if any(np.isnan(orig_tyz_real_1)):
-            warnings.warn(
-                "Skipping data norm comparison due to nan (used to bypass lone faulty test run in GH actions)."
-            )
-        else:
-            np.testing.assert_almost_equal(
-                np.linalg.norm(orig_tyz_real_1),
-                target_tipper_run["data_norm"],
-                decimal=3,
-            )
-
-        np.testing.assert_almost_equal(
-            output["phi_m"][1], target_tipper_run["phi_m"], decimal=1
-        )
-        np.testing.assert_almost_equal(
-            output["phi_d"][1], target_tipper_run["phi_d"], decimal=1
-        )
-
+        check_target(output, target_run, tolerance=0.5)
         nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
