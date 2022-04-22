@@ -7,10 +7,7 @@
 
 from uuid import UUID
 
-from geoh5py.data import FloatData
-from geoh5py.groups import SimPEGGroup
-from geoh5py.objects import Curve, Grid2D, Octree, Points, Surface
-from geoh5py.workspace import Workspace
+from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 octree_defaults = {
     "title": "Inversion mesh creator",
@@ -760,7 +757,6 @@ default_ui_json = {
         "group": "Regularization",
         "isValue": False,
         "parent": "upper_bound_object",
-        "parent": "upper_bound_object",
         "dependency": "lower_bound_object",
         "label": "Upper bound",
         "property": None,
@@ -801,7 +797,6 @@ default_ui_json = {
 
 validations = {
     "topography_object": {
-        "required": True,
         "types": [str, UUID, Surface, Points, Grid2D, Curve],
     },
     "alpha_s": {"types": [int, float]},
