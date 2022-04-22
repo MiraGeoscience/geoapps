@@ -7,10 +7,8 @@
 
 from uuid import UUID
 
-from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, Grid2D, Octree, Points, Surface
-from geoh5py.workspace import Workspace
+from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 octree_defaults = {
     "title": "Inversion mesh creator",
