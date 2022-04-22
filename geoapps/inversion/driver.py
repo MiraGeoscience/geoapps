@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
 import multiprocessing
+import os
 import sys
 from datetime import datetime
 from multiprocessing.pool import ThreadPool
@@ -360,9 +361,9 @@ class InversionDriver:
 
 class InversionLogger:
     def __init__(self, logfile, driver):
-        self.terminal = sys.stdout
-        self.log = open(logfile, "w")
         self.driver = driver
+        self.terminal = sys.stdout
+        self.log = open(self.get_path(logfile), "w")
 
         date_time = datetime.now().strftime("%b-%d-%Y: %H:%M:%S\n")
         self.write(f"SimPEG {driver.inversion_type} inversion started {date_time}")
@@ -377,6 +378,10 @@ class InversionLogger:
 
     def flush(self):
         pass
+
+    def get_path(self, file):
+        root_directory = os.path.dirname(self.driver.workspace.h5file)
+        return os.path.join(root_directory, file)
 
 
 def start_inversion(filepath=None, **kwargs):
@@ -423,7 +428,7 @@ def start_inversion(filepath=None, **kwargs):
         raise UserWarning("A supported 'inversion_type' must be provided.")
 
     driver = InversionDriver(params)
-    sys.stdout = InversionLogger("SimPEG_inversion.log", driver)
+    sys.stdout = InversionLogger("SimPEG.log", driver)
     driver.initialize()
     driver.run()
     sys.stdout.close()
