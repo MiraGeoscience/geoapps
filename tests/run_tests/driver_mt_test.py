@@ -150,7 +150,7 @@ def test_magnetotellurics_run(
     )
     output["data"] = orig_zyy_real_1
     if pytest:
-        check_target(output, target_run)
+        check_target(output, target_run, tolerance=0.5)
         nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
