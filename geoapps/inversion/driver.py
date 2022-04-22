@@ -118,6 +118,7 @@ class InversionDriver:
 
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
+        self.workspace.remove_entity(self.inversion_topography.entity)
         self.models.edit_ndv_model(
             self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
         )
