@@ -167,7 +167,7 @@ def test_magnetotellurics_run(
         if not platform.system() == "Windows":
             if not platform.python_version_tuple()[1] == "9":
                 np.testing.assert_almost_equal(
-                    output["phi_m"][1], target_magnetotellurics_run["phi_m"], decimal=1
+                    output["phi_m"][1], target_magnetotellurics_run["phi_m"], decimal=0
                 )
                 np.testing.assert_almost_equal(
                     output["phi_d"][1], target_magnetotellurics_run["phi_d"], decimal=1
