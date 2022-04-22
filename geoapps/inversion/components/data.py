@@ -16,15 +16,12 @@ if TYPE_CHECKING:
 from copy import deepcopy
 
 import numpy as np
-from dask.distributed import get_client, progress
 from discretize import TreeMesh
-from geoh5py.objects import CurrentElectrode, Curve, PotentialElectrode
-from SimPEG import data, maps
+from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 from SimPEG.utils.drivers import create_nested_mesh
-from SimPEG.utils.io_utils.io_utils_electromagnetics import read_dcip_xyz
 
-from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
+from geoapps.utils import calculate_2D_trend, filter_xy
 
 from .factories import (
     EntityFactory,
@@ -177,23 +174,6 @@ class InversionData(InversionLocations):
         a = super().filter(a, mask=self.indices)
 
         return a
-
-    # def get_locations(self, uid: UUID) -> dict[str, np.ndarray]:
-    #     """
-    #     Returns locations of sources and receivers centroids or vertices.
-    #
-    #     :param uid: UUID of geoh5py object containing centroid or
-    #         vertex location data
-    #
-    #     :return: dictionary containing at least a receivers array, but
-    #         possibly also a sources and pseudo array of x, y, z locations.
-    #
-    #     """
-    #
-    #     data_object = self.workspace.get_entity(uid)[0]
-    #     locs = super().get_locations(data_object)
-    #
-    #     return locs
 
     def get_data(self) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
         """
