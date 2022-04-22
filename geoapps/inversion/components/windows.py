@@ -44,7 +44,7 @@ class InversionWindow:
 
     window_keys = ["center_x", "center_y", "height", "width", "size", "center"]
 
-    def __init__(self, workspace: Workspace, params: Params):
+    def __init__(self, workspace: Workspace, params: BaseParams):
         """
         :param: workspace: Geoh5py workspace object containing window data.
         :param: params: Params object containing window parameters.
