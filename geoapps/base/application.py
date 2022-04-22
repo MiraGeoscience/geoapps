@@ -10,12 +10,13 @@ from __future__ import annotations
 import time
 import types
 from os import makedirs, mkdir, path
-from shutil import copyfile, move
+from shutil import copyfile
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.io.utils import dict_mapper, entity2uuid, str2uuid
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
+from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from ipyfilechooser import FileChooser
 from ipywidgets import (
@@ -170,31 +171,14 @@ class BaseApplication:
             self._monitoring_directory = self.export_directory.selected
 
     @staticmethod
-    def live_link_output(selected_path, entity: Entity, data: dict = {}):
+    def live_link_output(selected_path, entity: Entity):
         """
         Create a temporary geoh5 file in the monitoring folder and export entity for update.
 
         :param entity: Entity to be updated
         :param data: Data name and values to be added as data to the entity on export {"name": values}
         """
-        working_path = path.join(selected_path, ".working")
-        if not path.exists(working_path):
-            mkdir(working_path)
-
-        temp_geoh5 = f"temp{time.time():.3f}.geoh5"
-
-        temp_workspace = Workspace(path.join(working_path, temp_geoh5))
-
-        for key, value in data.items():
-            entity.add_data({key: {"values": value}})
-
-        entity.copy(parent=temp_workspace)
-
-        # Move the geoh5 to monitoring folder
-        move(
-            path.join(working_path, temp_geoh5),
-            path.join(selected_path, temp_geoh5),
-        )
+        monitored_directory_copy(selected_path, entity)
 
     def live_link_choice(self, _):
         """
@@ -392,7 +376,7 @@ class BaseApplication:
     def params(self, params: BaseParams):
         assert isinstance(
             params, BaseParams
-        ), f"Input parameters must be an instance of {Params}"
+        ), f"Input parameters must be an instance of {BaseParams}"
 
         self._params = params
 

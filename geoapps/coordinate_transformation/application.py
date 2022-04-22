@@ -10,12 +10,16 @@ import re
 
 import matplotlib.pyplot as plt
 import numpy
-from fiona.transform import transform
 from geoh5py.data import FloatData
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
-from osgeo import gdal, osr
+
+from geoapps.utils.utils import soft_import
+
+transform = soft_import("fiona.transform", objects=["transform"])
+gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
+
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils.plotting import plot_plan_data_selection

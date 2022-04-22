@@ -101,7 +101,7 @@ class InversionTopography(InversionLocations):
             active_cells[mesh.mesh._get_containing_cell_indexes(data.locations)] = True
         else:
             active_cells = active_from_xyz(
-                mesh.mesh, self.locations, grid_reference="CC"
+                mesh.mesh, self.locations, grid_reference="cell_centers"
             )
 
         mesh.entity.add_data(

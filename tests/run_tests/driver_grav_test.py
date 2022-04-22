@@ -20,8 +20,8 @@ from geoapps.utils.testing import setup_inversion_workspace
 
 target_gravity_run = {
     "data_norm": 0.0071214,
-    "phi_d": 0.0001559,
-    "phi_m": 0.009337,
+    "phi_d": 0.0001572,
+    "phi_m": 0.009368,
 }
 
 

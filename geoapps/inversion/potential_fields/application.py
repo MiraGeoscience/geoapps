@@ -106,6 +106,7 @@ class InversionApp(PlotSelection2D):
                 self.defaults[key] = value.uid
             else:
                 self.defaults[key] = value
+        self.defaults["tmi_channel_bool"] = True
 
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
