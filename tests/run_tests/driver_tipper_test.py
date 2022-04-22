@@ -18,9 +18,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_tipper_run = {
+target_run = {
     "data_norm": 0.003829,
-    "phi_d": 0.1431,
+    "phi_d": 0.02935,
     "phi_m": 541.2,
 }
 
