@@ -230,10 +230,14 @@ def check_target(output: dict, target: dict):
             "Skipping data norm comparison due to nan (used to bypass lone faulty test run in GH actions)."
         )
     else:
-        assert (
+        np.testing.assert_array_less(
             np.abs(np.linalg.norm(output["data"]) - target["data_norm"])
-            / target["data_norm"]
-            < 0.01
+            / target["data_norm"],
+            0.01,
         )
-    assert np.abs(output["phi_m"][1] - target["phi_m"]) / target["phi_m"] < 0.01
-    assert np.abs(output["phi_d"][1] - target["phi_d"]) / target["phi_d"] < 0.01
+    np.testing.assert_array_less(
+        np.abs(output["phi_m"][1] - target["phi_m"]) / target["phi_m"], 0.01
+    )
+    np.testing.assert_array_less(
+        np.abs(output["phi_d"][1] - target["phi_d"]) / target["phi_d"], 0.01
+    )
