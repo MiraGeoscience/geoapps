@@ -10,7 +10,7 @@ from geoh5py.workspace import Workspace
 from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
-from geoapps.utils.testing import setup_inversion_workspace
+from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -18,7 +18,7 @@ from geoapps.utils.testing import setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_susceptibility_run = {
+target_run = {
     "data_norm": 11.707134,
     "phi_d": 1.598,
     "phi_m": 8.824e-6,
@@ -101,19 +101,9 @@ def test_susceptibility_run(
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
+    output["data"] = tmi.values
     if pytest:
-        np.testing.assert_almost_equal(
-            np.linalg.norm(tmi.values),
-            target_susceptibility_run["data_norm"],
-            decimal=3,
-        )
-        np.testing.assert_almost_equal(
-            output["phi_m"][1], target_susceptibility_run["phi_m"]
-        )
-        np.testing.assert_almost_equal(
-            output["phi_d"][1], target_susceptibility_run["phi_d"]
-        )
-
+        check_target(output, target_run)
         nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
@@ -121,7 +111,7 @@ def test_susceptibility_run(
         return fwr_driver.starting_model, driver.inverse_problem.model
 
 
-target_magnetic_vector_run = {
+target_mvi_run = {
     "data_norm": 8.943476,
     "phi_d": 0.00776,
     "phi_m": 4.674e-6,
@@ -201,19 +191,9 @@ def test_magnetic_vector_run(
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
+    output["data"] = tmi.values
     if pytest:
-        np.testing.assert_almost_equal(
-            output["phi_m"][1], target_magnetic_vector_run["phi_m"]
-        )
-        np.testing.assert_almost_equal(
-            output["phi_d"][1], target_magnetic_vector_run["phi_d"]
-        )
-        np.testing.assert_almost_equal(
-            np.linalg.norm(tmi.values),
-            target_magnetic_vector_run["data_norm"],
-            decimal=3,
-        )
-
+        check_target(output, target_mvi_run)
         nan_ind = np.isnan(run_ws.get_entity("Iteration_0_amplitude_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
