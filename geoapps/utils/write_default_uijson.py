@@ -60,12 +60,12 @@ def write_default_uijson(path, use_initializers=False):
         app_initializer,
     )
 
-    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
     mt_init = app_initializer if use_initializers else {}
 
     from geoapps.inversion.natural_sources.tipper.constants import app_initializer
 
-    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
     tipper_init = app_initializer if use_initializers else {}
 
     from geoapps.octree_creation.constants import app_initializer
