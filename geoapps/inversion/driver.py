@@ -118,6 +118,7 @@ class InversionDriver:
 
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
+        self.workspace.remove_entity(self.inversion_topography.entity)
         self.models.edit_ndv_model(
             self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
         )
@@ -363,42 +364,37 @@ def start_inversion(filepath=None, **kwargs):
         input_file = InputFile.read_ui_json(filepath)
         inversion_type = input_file.data.get("inversion_type")
     else:
-        input_file = None
         inversion_type = kwargs.get("inversion_type")
 
     if inversion_type == "magnetic vector":
-        from .potential_fields import MagneticVectorParams
-
-        params = MagneticVectorParams(input_file=input_file, **kwargs)
+        from .potential_fields import MagneticVectorParams as ParamClass
+        from .potential_fields.magnetic_vector.constants import validations
 
     elif inversion_type == "magnetic scalar":
-        from .potential_fields import MagneticScalarParams
-
-        params = MagneticScalarParams(input_file=input_file, **kwargs)
+        from .potential_fields import MagneticScalarParams as ParamClass
+        from .potential_fields.magnetic_scalar.constants import validations
 
     elif inversion_type == "gravity":
-        from .potential_fields import GravityParams
-
-        params = GravityParams(input_file=input_file, **kwargs)
+        from .potential_fields import GravityParams as ParamClass
+        from .potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
-        from .magnetotellurics import MagnetotelluricsParams
-
-        params = MagnetotelluricsParams(input_file=input_file, **kwargs)
+        from .magnetotellurics import MagnetotelluricsParams as ParamClass
+        from .magnetotellurics.constants import validations
 
     elif inversion_type == "direct current":
-        from .electricals import DirectCurrentParams
-
-        params = DirectCurrentParams(input_file=input_file, **kwargs)
+        from .electricals import DirectCurrentParams as ParamClass
+        from .electricals.direct_current.constants import validations
 
     elif inversion_type == "induced polarization":
-        from .electricals import InducedPolarizationParams
-
-        params = InducedPolarizationParams(input_file=input_file, **kwargs)
+        from .electricals import InducedPolarizationParams as ParamClass
+        from .electricals.induced_polarization.constants import validations
 
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")
 
+    input_file = InputFile.read_ui_json(filepath, validations=validations)
+    params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
     driver.run()
 
