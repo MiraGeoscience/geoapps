@@ -11,7 +11,6 @@ import gc
 import json
 import os
 import re
-import warnings
 from uuid import UUID
 
 import dask
@@ -34,39 +33,15 @@ from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
 from scipy.spatial import ConvexHull, Delaunay, cKDTree
-from shapely.geometry import LineString, mapping
+
+from .importing import soft_import
+
+LineString, mapping = soft_import("shapely.geometry", objects=["LineString", "mapping"])
+
 from SimPEG.electromagnetics.static.resistivity import Survey
-from skimage.measure import marching_cubes
+
+marching_cubes = soft_import("skimage.measure", objects=["marching_cubes"])
 from sklearn.neighbors import KernelDensity
-
-
-def soft_import(package, objects=None, interrupt=False):
-
-    packagename = package.split(".")[0]
-    packagename = "gdal" if packagename == "osgeo" else packagename
-    err = (
-        f"Module '{packagename}' is missing from the environment. "
-        f"Consider installing with: 'conda install -c conda-forge {packagename}'"
-    )
-
-    try:
-        imports = __import__(package, fromlist=objects)
-        if objects is not None:
-            imports = [getattr(imports, o) for o in objects]
-            return imports[0] if len(imports) == 1 else imports
-        else:
-            return imports
-
-    except ModuleNotFoundError:
-        if interrupt:
-            raise ModuleNotFoundError(err)
-        else:
-            warnings.warn(err)
-            if objects is None:
-                return None
-            else:
-                n_obj = len(objects)
-                return [None] * n_obj if n_obj > 1 else None
 
 
 def string_2_list(string):
@@ -255,7 +230,7 @@ def export_grid_2_geotiff(
     Modified: 2020-04-28
     """
 
-    gdal = soft_import("osgeo", ["gdal"], interrupt=True)
+    gdal = soft_import("osgeo", objects=["gdal"], interrupt=True)
 
     grid2d = data.parent
 
@@ -366,7 +341,7 @@ def geotiff_2_grid(
 
      :return grid: Grid2D object with values stored.
     """
-    gdal = soft_import("osgeo", ["gdal"], interrupt=True)
+    gdal = soft_import("osgeo", objects=["gdal"], interrupt=True)
 
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)
