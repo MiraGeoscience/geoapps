@@ -9,7 +9,7 @@ import numpy as np
 from geoh5py.workspace import Workspace
 
 from geoapps.utils import get_inversion_output
-from geoapps.utils.testing import setup_inversion_workspace
+from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -17,10 +17,10 @@ from geoapps.utils.testing import setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_dc_run = {
+target_run = {
     "data_norm": 0.152097,
-    "phi_d": 9.904,
-    "phi_m": 79.84,
+    "phi_d": 9.878,
+    "phi_m": 79.91,
 }
 
 
@@ -37,7 +37,7 @@ def test_dc_run(
 
     np.random.seed(0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.01,
         anomaly=10,
@@ -47,18 +47,13 @@ def test_dc_run(
         inversion_type="dcip",
         flatten=False,
     )
-
-    tx_obj = geoh5.get_entity("survey (currents)")[0]
-    tx_obj.cells = tx_obj.cells.astype("uint32")
-
-    model = geoh5.get_entity("model")[0]
     params = DirectCurrentParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         z_from_topo=True,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
@@ -71,8 +66,8 @@ def test_dc_run(
     np.random.seed(0)
     params = DirectCurrentParams(
         geoh5=geoh5,
-        mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        mesh=mesh.uid,
+        topography_object=topography.uid,
         data_object=potential.parent.uid,
         starting_model=1e-2,
         s_norm=0.0,
@@ -97,14 +92,9 @@ def test_dc_run(
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
+    output["data"] = potential.values
     if pytest:
-        np.testing.assert_almost_equal(
-            np.linalg.norm(potential.values),
-            target_dc_run["data_norm"],
-            decimal=3,
-        )
-        np.testing.assert_almost_equal(output["phi_m"][1], target_dc_run["phi_m"])
-        np.testing.assert_almost_equal(output["phi_d"][1], target_dc_run["phi_d"])
+        check_target(output, target_run)
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 

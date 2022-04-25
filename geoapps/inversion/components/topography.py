@@ -11,20 +11,23 @@ from typing import TYPE_CHECKING
 
 from geoh5py.shared import Entity
 
+from geoapps.inversion.natural_sources.magnetotellurics.params import (
+    MagnetotelluricsParams,
+)
+
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.drivers import BaseParams
     from . import InversionMesh
     from typing import Any
 
-
 from copy import deepcopy
 
 import numpy as np
-from discretize.utils import active_from_xyz
 
-from geoapps.utils import filter_xy
+from geoapps.utils import active_from_xyz, filter_xy
 
+from .data import InversionData
 from .locations import InversionLocations
 
 
@@ -47,7 +50,9 @@ class InversionTopography(InversionLocations):
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
+    def __init__(
+        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
+    ):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
@@ -59,7 +64,6 @@ class InversionTopography(InversionLocations):
         self._initialize()
 
     def _initialize(self):
-
         self.locations = self.get_locations(self.params.topography_object)
         self.mask = np.ones(len(self.locations), dtype=bool)
         topo_window = deepcopy(self.window)
@@ -82,7 +86,7 @@ class InversionTopography(InversionLocations):
 
         self.entity = self.write_entity()
 
-    def active_cells(self, mesh: InversionMesh) -> np.ndarray:
+    def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
         Return mask that restricts models to set of earth cells.
 
@@ -90,7 +94,16 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
-        active_cells = active_from_xyz(mesh.mesh, self.locations, grid_reference="CC")
+        if isinstance(self.params, MagnetotelluricsParams):
+            active_cells = active_from_xyz(
+                mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
+            )
+            active_cells[mesh.mesh._get_containing_cell_indexes(data.locations)] = True
+        else:
+            active_cells = active_from_xyz(
+                mesh.mesh, self.locations, grid_reference="cell_centers"
+            )
+
         mesh.entity.add_data(
             {
                 "active_cells": {

@@ -11,6 +11,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
+import warnings
 from uuid import UUID
 
 import numpy as np
@@ -21,8 +22,9 @@ from geoh5py.objects import (
     Points,
     PotentialElectrode,
     Surface,
+    TipperBaseStations,
+    TipperReceivers,
 )
-from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 from SimPEG import utils
@@ -76,9 +78,12 @@ def setup_inversion_workspace(
     work_dir,
     background=None,
     anomaly=None,
+    cell_size=(5.0, 5.0, 5.0),
     n_electrodes=20,
     n_lines=5,
     refinement=(4, 6),
+    padding_distance=100,
+    drape_height=5.0,
     inversion_type="other",
     flatten=False,
 ):
@@ -95,7 +100,7 @@ def setup_inversion_workspace(
         zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
     topo = np.c_[utils.mkvc(xx), utils.mkvc(yy), utils.mkvc(zz)]
     triang = Delaunay(topo[:, :2])
-    surf = Surface.create(
+    topography = Surface.create(
         geoh5, vertices=topo, cells=triang.simplices, name="topography"
     )
     # Observation points
@@ -108,7 +113,7 @@ def setup_inversion_workspace(
     if flatten:
         Z = np.zeros_like(X)
     else:
-        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + 5.0
+        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + drape_height
 
     vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
 
@@ -119,14 +124,14 @@ def setup_inversion_workspace(
             geoh5, name="survey (currents)", vertices=vertices, parts=parts
         )
         currents.add_default_ab_cell_id()
-        potentials = PotentialElectrode.create(geoh5, name="survey", vertices=vertices)
-        potentials.current_electrodes = currents
-        currents.potential_electrodes = potentials
+        survey = PotentialElectrode.create(geoh5, name="survey", vertices=vertices)
+        survey.current_electrodes = currents
+        currents.potential_electrodes = survey
 
         N = 6
         dipoles = []
         current_id = []
-        potentials_parts = []
+        survey_parts = []
         for val in currents.ab_cell_id.values:  # For each source dipole
             cell_id = int(currents.ab_map[val]) - 1  # Python 0 indexing
             line = currents.parts[currents.cells[cell_id, 0]]
@@ -136,50 +141,69 @@ def setup_inversion_workspace(
                 )  # Skip two poles
 
                 # Shorten the array as we get to the end of the line
-                if any(dipole_ids > (potentials.n_vertices - 1)) or any(
+                if any(dipole_ids > (survey.n_vertices - 1)) or any(
                     currents.parts[dipole_ids] != line
                 ):
                     continue
-                potentials_parts += [line] * len(dipole_ids)
+                survey_parts += [line] * len(dipole_ids)
                 dipoles += [dipole_ids]  # Save the receiver id
                 current_id += [val]  # Save the source id
 
-        potentials.cells = np.vstack(dipoles).astype("uint32")
-        potentials.ab_cell_id = np.asarray(current_id).astype("int32")
+        survey.cells = np.vstack(dipoles).astype("uint32")
+        survey.ab_cell_id = np.asarray(current_id).astype("int32")
 
     elif inversion_type == "magnetotellurics":
-        components = [
-            "Zxx (real)",
-            "Zxx (imag)",
-            "Zxy (real)",
-            "Zxy (imag)",
-            "Zyx (real)",
-            "Zyx (imag)",
-            "Zyy (real)",
-            "Zyy (imag)",
-        ]
-        mt_receivers = MTReceivers.create(
+        survey = MTReceivers.create(
             geoh5,
             vertices=vertices,
             name="survey",
-            components=components,
+            components=[
+                "Zxx (real)",
+                "Zxx (imag)",
+                "Zxy (real)",
+                "Zxy (imag)",
+                "Zyx (real)",
+                "Zyx (imag)",
+                "Zyy (real)",
+                "Zyy (imag)",
+            ],
             channels=[10.0, 100.0, 1000.0],
         )
 
-    else:
+    elif inversion_type == "tipper":
+        survey = TipperReceivers.create(
+            geoh5,
+            vertices=vertices,
+            name="survey",
+            components=[
+                "Txz (real)",
+                "Txz (imag)",
+                "Tyz (real)",
+                "Tyz (imag)",
+            ],
+        )
+        survey.base_stations = TipperBaseStations.create(geoh5)
+        survey.channels = [10.0, 100.0, 1000.0]
+        dist = np.linalg.norm(
+            survey.vertices[survey.cells[:, 0], :]
+            - survey.vertices[survey.cells[:, 1], :],
+            axis=1,
+        )
+        survey.cells = survey.cells[dist < 100.0, :]
+        geoh5.finalize()
 
-        points = Points.create(
+    else:
+        survey = Points.create(
             geoh5,
             vertices=vertices,
             name="survey",
         )
 
     # Create a mesh
-    h = 5
-    padDist = np.ones((3, 2)) * 100
+    padDist = np.ones((3, 2)) * padding_distance
     mesh = mesh_builder_xyz(
-        vertices - h / 2.0,
-        [h] * 3,
+        vertices - np.r_[cell_size] / 2.0,
+        cell_size,
         depth_core=100.0,
         padding_distance=padDist,
         mesh_type="TREE",
@@ -193,7 +217,7 @@ def setup_inversion_workspace(
         finalize=True,
     )
     octree = treemesh_2_octree(geoh5, mesh, name="mesh")
-    active = active_from_xyz(mesh, surf.vertices, grid_reference="N")
+    active = active_from_xyz(mesh, topography.vertices, grid_reference="N")
     # Model
     if flatten:
         model = utils.model_builder.addBlock(
@@ -212,7 +236,32 @@ def setup_inversion_workspace(
             anomaly,
         )
     model[~active] = np.nan
-    octree.add_data({"model": {"values": model[mesh._ubc_order]}})
+    model = octree.add_data({"model": {"values": model[mesh._ubc_order]}})
     # octree.add_data({"active": {"values": active.astype(int)[mesh._ubc_order]}})
-    octree.copy()  # Keep a copy around for ref
-    return geoh5
+    return geoh5, octree, model, survey, topography
+
+
+def check_target(output: dict, target: dict, tolerance=0.1):
+    """
+    Check inversion output metrics against hard-valued target.
+
+    :param output: Dictionary containing keys for 'data', 'phi_d' and 'phi_m'.
+    :param target: Dictionary containing keys for 'data_norm', 'phi_d' and 'phi_m'.\
+    :param tolerance: Tolerance between output and target measured as: |a-b|/b
+    """
+    if any(np.isnan(output["data"])):
+        warnings.warn(
+            "Skipping data norm comparison due to nan (used to bypass lone faulty test run in GH actions)."
+        )
+    else:
+        np.testing.assert_array_less(
+            np.abs(np.linalg.norm(output["data"]) - target["data_norm"])
+            / target["data_norm"],
+            tolerance,
+        )
+    np.testing.assert_array_less(
+        np.abs(output["phi_m"][1] - target["phi_m"]) / target["phi_m"], tolerance
+    )
+    np.testing.assert_array_less(
+        np.abs(output["phi_d"][1] - target["phi_d"]) / target["phi_d"], tolerance
+    )

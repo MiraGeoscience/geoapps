@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from geoapps.drivers import InversionData
 
 import numpy as np
-from geoh5py.objects import Curve
+from geoh5py.objects import Curve, Grid2D
 
 from geoapps.inversion.components.factories.abstract_factory import AbstractFactory
 
@@ -41,21 +41,19 @@ class EntityFactory(AbstractFactory):
     @property
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
+        if self.factory_type in ["direct current", "induced polarization"]:
 
-        if self.factory_type in ["magnetotellurics"]:
-            from geoh5py.objects import Curve
-
-            return Curve
-
-        elif self.factory_type in ["direct current", "induced polarization"]:
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
 
             return (PotentialElectrode, CurrentElectrode)
 
-        else:
+        elif isinstance(self.params.data_object, Grid2D):
             from geoh5py.objects import Points
 
             return Points
+
+        else:
+            return type(self.params.data_object)
 
     def build(self, inversion_data: InversionData):
         """Constructs geoh5py object for provided inversion type."""
@@ -109,20 +107,24 @@ class EntityFactory(AbstractFactory):
         entity = inversion_data.create_entity(
             "Data", inversion_data.locations, geoh5_object=self.concrete_object
         )
-        if self.concrete_object == Curve:
-            # Remove long cells
-            xv = entity.vertices[:, 0]
-            yv = entity.vertices[:, 1]
-            xrange = np.max(xv) - np.min(xv)
-            yrange = np.max(yv) - np.min(yv)
-            cutoff = np.min([xrange, yrange])
-            dist = np.linalg.norm(
-                entity.vertices[entity.cells[:, 0], :]
-                - entity.vertices[entity.cells[:, 1], :],
-                axis=1,
+        if getattr(self.params.data_object, "base_stations", None) is not None:
+            entity.base_stations = type(self.params.data_object.base_stations).create(
+                entity.workspace,
+                parent=entity.parent,
+                vertices=self.params.data_object.base_stations.vertices,
             )
-            entity.cells = entity.cells[dist < cutoff, :]
 
+        if getattr(self.params.data_object, "channels", None) is not None:
+            entity.channels = [float(val) for val in self.params.data_object.channels]
+
+        if getattr(self.params.data_object, "cells", None) is not None:
+            active_cells = inversion_data.mask[self.params.data_object.cells]
+            active_ind = np.all(active_cells, axis=1)
+            new_verts = np.zeros_like(inversion_data.mask, dtype=int)
+            new_verts[inversion_data.mask] = np.arange(int(inversion_data.mask.sum()))
+            entity.cells = new_verts[self.params.data_object.cells[active_ind, :]]
+
+        entity.workspace.finalize()
         return entity
 
     @staticmethod
