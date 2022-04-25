@@ -18,8 +18,11 @@ from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
-from ipyfilechooser import FileChooser
-from ipywidgets import (
+
+from geoapps.utils import soft_import
+
+FileChooser = soft_import("ipyfilechooser", objects=["FileChooser"])
+(
     Button,
     Checkbox,
     Dropdown,
@@ -30,6 +33,20 @@ from ipywidgets import (
     ToggleButton,
     VBox,
     Widget,
+) = soft_import(
+    "ipywidgets",
+    objects=[
+        "Button",
+        "Checkbox",
+        "Dropdown",
+        "HBox",
+        "Label",
+        "SelectMultiple",
+        "Text",
+        "ToggleButton",
+        "VBox",
+        "Widget",
+    ],
 )
 
 from geoapps.base.params import BaseParams

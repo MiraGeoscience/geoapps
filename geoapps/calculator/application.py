@@ -9,7 +9,12 @@ import re
 
 import numpy
 from geoh5py.groups import RootGroup
-from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
+
+from geoapps.utils import soft_import
+
+(Button, HBox, Layout, Text, Textarea, VBox) = soft_import(
+    "ipywidgets.widgets", objects=[Button, HBox, Layout, Text, Textarea, VBox]
+)
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils.plotting import plot_plan_data_selection

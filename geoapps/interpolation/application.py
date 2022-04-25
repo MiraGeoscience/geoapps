@@ -9,7 +9,13 @@ import numpy as np
 from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel, ObjectBase
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox
+
+from geoapps.utils import soft_import
+
+(Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox) = soft_import(
+    "ipywidgets",
+    objects=["Dropdown", "FloatText", "HBox", "Label", "RadioButtons", "Text", "VBox"],
+)
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 

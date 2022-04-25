@@ -8,9 +8,13 @@ from uuid import UUID
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
+
+from geoapps.utils import soft_import
+
+go = soft_import("plotly.graph_objects")
 from IPython.display import display
-from ipywidgets import (
+
+(
     Button,
     Checkbox,
     ColorPicker,
@@ -23,9 +27,27 @@ from ipywidgets import (
     ToggleButtons,
     VBox,
     interactive_output,
+) = soft_import(
+    "ipywidgets",
+    objects=[
+        "Button",
+        "Checkbox",
+        "ColorPicker",
+        "Dropdown",
+        "FloatText",
+        "HBox",
+        "IntSlider",
+        "Label",
+        "Layout",
+        "ToggleButtons",
+        "VBox",
+        "interactive_output",
+    ],
 )
+
 from scipy.spatial import cKDTree
-from sklearn.cluster import KMeans
+
+KMeans = soft_import("sklearn.cluster", objects=["KMeans"])
 
 from geoapps.scatter_plot import ScatterPlots
 from geoapps.utils.utils import colors, hex_to_rgb, random_sampling

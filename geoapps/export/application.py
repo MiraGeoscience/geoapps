@@ -12,10 +12,14 @@ import discretize
 import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree
-from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
-from ipywidgets.widgets import HBox, VBox
 
-from geoapps.utils.utils import soft_import
+from geoapps.utils import soft_import
+
+(Dropdown, FloatText, Layout, RadioButtons, Text, Textarea) = soft_import(
+    "ipywidgets",
+    objects=["Dropdown" "FloatText" "Layout" "RadioButtons" "Text" "Textarea"],
+)
+HBox, VBox = soft_import("ipywidgets.widgets", objects=["HBox", "VBox"])
 
 osr = soft_import("osgeo", objects=["osr"])
 

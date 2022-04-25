@@ -9,13 +9,16 @@ import json
 import multiprocessing
 import os
 
-import ipywidgets as widgets
-import matplotlib.pyplot as plt
+from geoapps.utils import soft_import
+
+widgets = soft_import("ipywidgets")
+plt = soft_import("matplotlib.pyplot")
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets.widgets import (
+
+(
     Button,
     Checkbox,
     Dropdown,
@@ -26,6 +29,20 @@ from ipywidgets.widgets import (
     Layout,
     Text,
     VBox,
+) = soft_import(
+    "ipywidgets.widgets",
+    objects=[
+        "Button",
+        "Checkbox",
+        "Dropdown",
+        "FloatText",
+        "HBox",
+        "IntText",
+        "Label",
+        "Layout",
+        "Text",
+        "VBox",
+    ],
 )
 
 from geoapps import PlotSelection2D
