@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
 import multiprocessing
+import os
 import sys
 from datetime import datetime
 from multiprocessing.pool import ThreadPool
@@ -119,6 +120,7 @@ class InversionDriver:
 
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
+        self.workspace.remove_entity(self.inversion_topography.entity)
         self.models.edit_ndv_model(
             self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
         )
@@ -360,9 +362,9 @@ class InversionDriver:
 
 class InversionLogger:
     def __init__(self, logfile, driver):
-        self.terminal = sys.stdout
-        self.log = open(logfile, "w")
         self.driver = driver
+        self.terminal = sys.stdout
+        self.log = open(self.get_path(logfile), "w")
 
         date_time = datetime.now().strftime("%b-%d-%Y: %H:%M:%S\n")
         self.write(f"SimPEG {driver.inversion_type} inversion started {date_time}")
@@ -377,6 +379,10 @@ class InversionLogger:
 
     def flush(self):
         pass
+
+    def get_path(self, file):
+        root_directory = os.path.dirname(self.driver.workspace.h5file)
+        return os.path.join(root_directory, file)
 
 
 def start_inversion(filepath=None, **kwargs):
@@ -418,7 +424,7 @@ def start_inversion(filepath=None, **kwargs):
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
-    sys.stdout = InversionLogger("SimPEG_inversion.log", driver)
+    sys.stdout = InversionLogger("SimPEG.log", driver)
     driver.initialize()
     driver.run()
     sys.stdout.close()
