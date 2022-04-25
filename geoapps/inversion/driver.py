@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,15 +25,14 @@ from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
-from geoapps.inversion.components import (
+from .components import (
     InversionData,
     InversionMesh,
     InversionModelCollection,
     InversionTopography,
     InversionWindow,
 )
-from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
-from geoapps.inversion.params import InversionBaseParams
+from .components.factories import DirectivesFactory, MisfitFactory
 
 
 class InversionDriver:
@@ -123,6 +121,7 @@ class InversionDriver:
         self.active_cells = self.inversion_topography.active_cells(
             self.inversion_mesh, self.inversion_data
         )
+        self.workspace.remove_entity(self.inversion_topography.entity)
         self.models.edit_ndv_model(
             self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
         )
@@ -173,15 +172,20 @@ class InversionDriver:
             beta=self.params.initial_beta,
         )
 
-        # If forward only option enabled, stop here
+        # Solve forward problem, and attach dpred to inverse problem or
         if self.params.forward_only:
-            return
-
-        if self.warmstart:
+            print("Running forward simulation ...")
+        else:
             print("Pre-computing sensitivities ...")
+
+        if self.warmstart or self.params.forward_only:
             self.inverse_problem.dpred = self.inversion_data.simulate(
                 self.starting_model, self.inverse_problem, self.sorting
             )
+
+        # If forward only option enabled, stop here
+        if self.params.forward_only:
+            return
 
         # Add a list of directives to the inversion
         self.directiveList = DirectivesFactory(self.params).build(
@@ -202,15 +206,11 @@ class InversionDriver:
         """Run inversion from params"""
 
         if self.params.forward_only:
-            print("Running the forward simulation ...")
-            self.inversion_data.simulate(
-                self.starting_model, self.inverse_problem, self.sorting
-            )
             return
 
         # Run the inversion
         self.start_inversion_message()
-        self.inversion.run(self.starting_model)
+        mrec = self.inversion.run(self.starting_model)
 
     def start_inversion_message(self):
 
@@ -371,43 +371,38 @@ def start_inversion(filepath=None, **kwargs):
         inversion_type = kwargs.get("inversion_type")
 
     if inversion_type == "magnetic vector":
-        from .potential_fields import MagneticVectorParams
-
-        params = MagneticVectorParams(input_file=input_file, **kwargs)
+        from .potential_fields import MagneticVectorParams as ParamClass
+        from .potential_fields.magnetic_vector.constants import validations
 
     elif inversion_type == "magnetic scalar":
-        from .potential_fields import MagneticScalarParams
-
-        params = MagneticScalarParams(input_file=input_file, **kwargs)
+        from .potential_fields import MagneticScalarParams as ParamClass
+        from .potential_fields.magnetic_scalar.constants import validations
 
     elif inversion_type == "gravity":
-        from .potential_fields import GravityParams
-
-        params = GravityParams(input_file=input_file, **kwargs)
+        from .potential_fields import GravityParams as ParamClass
+        from .potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
-        from geoapps.inversion.natural_sources import MagnetotelluricsParams
-
-        params = MagnetotelluricsParams(input_file=input_file, **kwargs)
+        from .natural_sources import MagnetotelluricsParams as ParamClass
+        from .natural_sources.magnetotellurics.constants import validations
 
     elif inversion_type == "tipper":
-        from .natural_sources import TipperParams
-
-        params = TipperParams(input_file, **kwargs)
+        from .natural_sources import TipperParams as ParamClass
+        from .natural_sources.tipper.constants import validations
 
     elif inversion_type == "direct current":
-        from .electricals import DirectCurrentParams
-
-        params = DirectCurrentParams(input_file=input_file, **kwargs)
+        from .electricals import DirectCurrentParams as ParamClass
+        from .electricals.direct_current.constants import validations
 
     elif inversion_type == "induced polarization":
-        from .electricals import InducedPolarizationParams
-
-        params = InducedPolarizationParams(input_file=input_file, **kwargs)
+        from .electricals import InducedPolarizationParams as ParamClass
+        from .electricals.induced_polarization.constants import validations
 
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")
 
+    input_file = InputFile.read_ui_json(filepath, validations=validations)
+    params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
     driver.run()
 
@@ -416,4 +411,3 @@ if __name__ == "__main__":
     ct = time()
     filepath = sys.argv[1]
     start_inversion(filepath)
-    print(f"Total runtime: {datetime.timedelta(seconds=time() - ct)}")

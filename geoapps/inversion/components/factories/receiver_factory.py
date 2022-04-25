@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from geoapps.base.params import BaseParams
 
 import numpy as np
-from geoh5py.objects import Points
 from SimPEG.electromagnetics.static.utils.static_utils import drapeTopotoLoc
 
 from .simpeg_factory import SimPEGFactory
