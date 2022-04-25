@@ -41,7 +41,7 @@ LineString, mapping = soft_import("shapely.geometry", objects=["LineString", "ma
 from SimPEG.electromagnetics.static.resistivity import Survey
 
 marching_cubes = soft_import("skimage.measure", objects=["marching_cubes"])
-from sklearn.neighbors import KernelDensity
+KernelDensity = soft_import("sklearn.neighbors", objects=["KernelDensity"])
 
 
 def string_2_list(string):
