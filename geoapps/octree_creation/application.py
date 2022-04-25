@@ -53,7 +53,7 @@ class OctreeMesh(ObjectDataSelection):
 
         self.refinement_list = VBox([])
 
-        super().__init__()
+        super().__init__(**self.defaults)
 
         self.required = VBox(
             [
