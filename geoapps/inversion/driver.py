@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -25,14 +26,15 @@ from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
-from .components import (
+from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
     InversionModelCollection,
     InversionTopography,
     InversionWindow,
 )
-from .components.factories import DirectivesFactory, MisfitFactory
+from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
+from geoapps.inversion.params import InversionBaseParams
 
 
 class InversionDriver:
@@ -206,6 +208,10 @@ class InversionDriver:
         """Run inversion from params"""
 
         if self.params.forward_only:
+            print("Running the forward simulation ...")
+            self.inversion_data.simulate(
+                self.starting_model, self.inverse_problem, self.sorting
+            )
             return
 
         # Run the inversion
@@ -411,3 +417,4 @@ if __name__ == "__main__":
     ct = time()
     filepath = sys.argv[1]
     start_inversion(filepath)
+    print(f"Total runtime: {datetime.timedelta(seconds=time() - ct)}")

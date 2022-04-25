@@ -47,11 +47,6 @@ def test_dc_run(
         inversion_type="dcip",
         flatten=False,
     )
-
-    # tx_obj = geoh5.get_entity("survey (currents)")[0]
-    # tx_obj.cells = tx_obj.cells.astype("uint32")
-
-    # model = geoh5.get_entity("model")[0]
     params = DirectCurrentParams(
         forward_only=True,
         geoh5=geoh5,

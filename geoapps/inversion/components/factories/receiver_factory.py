@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from geoapps.base.params import BaseParams
 
 import numpy as np
-from SimPEG.electromagnetics.static.utils.static_utils import drapeTopotoLoc
 
 from .simpeg_factory import SimPEGFactory
 
@@ -153,20 +152,6 @@ class ReceiversFactory(SimPEGFactory):
 
         args = []
         locs = locations[local_index]
-        # if mesh is not None and active_cells is not None:
-        #     draped_locs = drapeTopotoLoc(mesh, locs, actind=active_cells)
-        #     # offset = np.linalg.norm(locs - draped_locs, axis=1)
-        #     locs = draped_locs.copy()
-        # TODO: Add drape object to output
-        # if not self.params.geoh5.get_entity("draped locations"):
-        #     parent = self.params.geoh5.get_entity(self.params.out_group)[0]
-        #     drape = Points.create(
-        #         self.params.geoh5,
-        #         name="draped locations",
-        #         vertices=draped_locs,
-        #         parent=parent,
-        #     )
-        #     drape.add_data({"offset": {"values": offset}})
 
         args.append(locs)
 
