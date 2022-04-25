@@ -8,12 +8,18 @@
 import os
 import re
 
-import matplotlib.pyplot as plt
+from geoapps.utils import soft_import
+
+plt = soft_import("matplotlib.pyplot")
 import numpy
 from geoh5py.data import FloatData
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
+
+(HBox, Layout, SelectMultiple, Text, Textarea, VBox) = soft_import(
+    "ipywidgets",
+    objects=["HBox", "Layout", "SelectMultiple", "Text", "Textarea", "VBox"],
+)
 
 from geoapps.utils.utils import soft_import
 

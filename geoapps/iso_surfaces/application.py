@@ -6,7 +6,12 @@
 #  (see LICENSE file at the root of this source code package).
 
 from geoh5py.objects import Surface
-from ipywidgets import FloatText, HBox, Label, Text, VBox
+
+from geoapps.utils import soft_import
+
+(FloatText, HBox, Label, Text, VBox) = soft_import(
+    "ipywidgets", objects=["FloatText", "HBox", "Label", "Text", "VBox"]
+)
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils.formatters import string_name

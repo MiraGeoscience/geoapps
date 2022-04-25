@@ -13,8 +13,14 @@ import warnings
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
-from ipywidgets.widgets.widget_selection import TraitError
+
+from geoapps.utils import soft_import
+
+(Dropdown, FloatText, Label, Layout, Text, VBox, Widget) = soft_import(
+    "ipywidgets",
+    objects=["Dropdown", "FloatText", "Label", "Layout", "Text", "VBox", "Widget"],
+)
+TraitError = soft_import("ipywidgets.widgets.widget_selection", objects=["TraitError"])
 
 from geoapps.base.selection import ObjectDataSelection
 

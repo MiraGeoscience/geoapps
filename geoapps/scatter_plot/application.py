@@ -8,9 +8,12 @@
 import os
 
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from ipywidgets import (
+
+from geoapps.utils import soft_import
+
+px = soft_import("plotly.express")
+go = soft_import("plotly.graph_objects")
+(
     Checkbox,
     Dropdown,
     FloatText,
@@ -21,6 +24,20 @@ from ipywidgets import (
     ToggleButton,
     VBox,
     interactive_output,
+) = soft_import(
+    "ipywidgets",
+    objects=[
+        "Checkbox",
+        "Dropdown",
+        "FloatText",
+        "HBox",
+        "IntSlider",
+        "Label",
+        "Layout",
+        "ToggleButton",
+        "VBox",
+        "interactive_output",
+    ],
 )
 
 from geoapps.base.selection import ObjectDataSelection

@@ -8,8 +8,10 @@
 import numpy as np
 from geoh5py.io import H5Writer
 from geoh5py.objects import Curve, Grid2D
-from geoh5py.workspace import Workspace
-from ipywidgets import (
+
+from geoapps.utils import soft_import
+
+(
     Button,
     FloatSlider,
     HBox,
@@ -18,10 +20,24 @@ from ipywidgets import (
     Text,
     VBox,
     interactive_output,
+) = soft_import(
+    "ipywidgets",
+    objects=[
+        "Button",
+        "FloatSlider",
+        "HBox",
+        "IntSlider",
+        "Layout",
+        "Text",
+        "VBox",
+        "interactive_output",
+    ],
 )
-from matplotlib import collections
-from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line
+collections = soft_import("matplotlib", objects=["collections"])
+canny = soft_import("skimage.feature", objects=["canny"])
+probabilistic_hough_line = soft_import(
+    "skimage.transform", objects=["probabilistic_hough_line"]
+)
 
 from geoapps import PlotSelection2D
 from geoapps.utils.formatters import string_name

@@ -10,7 +10,21 @@ import re
 import numpy as np
 from geoh5py.objects import Curve, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets import FloatText, HBox, Label, RadioButtons, Text, ToggleButton, VBox
+
+from geoapps.utils import soft_import
+
+(FloatText, HBox, Label, RadioButtons, Text, ToggleButton, VBox) = soft_import(
+    "ipywidgets",
+    objects=[
+        "FloatText",
+        "HBox",
+        "Label",
+        "RadioButtons",
+        "Text",
+        "ToggleButton",
+        "VBox",
+    ],
+)
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 

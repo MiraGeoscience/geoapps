@@ -12,13 +12,16 @@ import os.path as path
 import uuid
 from collections import OrderedDict
 
-import ipywidgets as widgets
+from geoapps.utils import soft_import
+
+widgets = soft_import("ipywidgets")
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from ipywidgets.widgets import (
+
+(
     Button,
     Checkbox,
     Dropdown,
@@ -29,6 +32,20 @@ from ipywidgets.widgets import (
     Layout,
     VBox,
     Widget,
+) = soft_import(
+    "ipywidgets.widgets",
+    objects=[
+        "Button",
+        "Checkbox",
+        "Dropdown",
+        "FloatText",
+        "HBox",
+        "IntText",
+        "Label",
+        "Layout",
+        "VBox",
+        "Widget",
+    ],
 )
 
 from geoapps.base.plot import PlotSelection2D

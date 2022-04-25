@@ -19,7 +19,10 @@ from geoh5py.objects import Curve, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from ipywidgets import (
+
+from geoapps.utils import soft_import
+
+(
     Box,
     Checkbox,
     ColorPicker,
@@ -36,8 +39,28 @@ from ipywidgets import (
     VBox,
     Widget,
     interactive_output,
+) = soft_import(
+    "ipywidgets",
+    objects=[
+        "Box",
+        "Checkbox",
+        "ColorPicker",
+        "Dropdown",
+        "FloatLogSlider",
+        "FloatSlider",
+        "FloatText",
+        "HBox",
+        "IntSlider",
+        "Label",
+        "Layout",
+        "ToggleButton",
+        "ToggleButtons",
+        "VBox",
+        "Widget",
+        "interactive_output",
+    ],
 )
-from ipywidgets.widgets.widget_selection import TraitError
+TraitError = soft_import("ipywidgets.widgets.widget_selection", objects=["TraitError"])
 
 from geoapps.base.selection import LineOptions, ObjectDataSelection
 from geoapps.peak_finder.constants import (

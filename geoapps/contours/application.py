@@ -5,11 +5,23 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
 import numpy as np
-from geoh5py.io import H5Writer
 from geoh5py.objects import Curve, Points, Surface
-from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
+
+from geoapps.utils import soft_import
+
+(Checkbox, HBox, Label, Layout, Text, VBox, interactive_output) = soft_import(
+    "ipywidgets",
+    objects=[
+        "Checkbox",
+        "HBox",
+        "Label",
+        "Layout",
+        "Text",
+        "VBox",
+        "interactive_output",
+    ],
+)
 from scipy.interpolate import LinearNDInterpolator
 
 from geoapps import PlotSelection2D

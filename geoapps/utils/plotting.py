@@ -10,12 +10,16 @@ from copy import copy
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
-import plotly.graph_objects as go
+
+from geoapps.utils import soft_import
+
+go = soft_import("plotly.graph_objects")
 from geoh5py.data import Data, ReferencedData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets import widgets
+
+widgets = soft_import("ipywidgets")
 
 from geoapps.utils import get_inversion_output
 from geoapps.utils.utils import filter_xy, format_labels, inv_symlog, symlog
