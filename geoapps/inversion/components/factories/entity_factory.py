@@ -60,8 +60,6 @@ class EntityFactory(AbstractFactory):
 
         if self.factory_type in ["direct current", "induced polarization"]:
             return self._build_dcip(inversion_data)
-        # elif self.factory_type in ["tipper"]:
-        #     return self._build_tipper(inversion_data)
         else:
             return self._build(inversion_data)
 
