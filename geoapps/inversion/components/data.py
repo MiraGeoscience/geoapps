@@ -211,7 +211,7 @@ class InversionData(InversionLocations):
         self._observed_data_types = {c: {} for c in data.keys()}
         data_entity = {c: {} for c in data.keys()}
 
-        if self.params.inversion_type == "magnetotellurics":
+        if self.params.inversion_type in ["magnetotellurics", "tipper"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
                     dnorm = self.normalizations[component] * values
@@ -394,6 +394,9 @@ class InversionData(InversionLocations):
             elif self.params.inversion_type in ["magnetotellurics"]:
                 if "imag" in comp:
                     normalizations[comp] = -1.0
+            elif self.params.inversion_type in ["tipper"]:
+                if "real" in comp:
+                    normalizations[comp] = -1.0
             if normalizations[comp] == -1.0:
                 print(f"Sign flip for component {comp}.")
 
@@ -467,8 +470,11 @@ class InversionData(InversionLocations):
                 minimum_level=3,
                 padding_cells=padding_cells,
             )
+
             kwargs = {"components": 3} if self.vector else {}
-            map = maps.TileMap(mesh, active_cells, nested_mesh, **kwargs)
+            map = maps.TileMap(
+                mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
+            )
             sim = simulation_factory.build(
                 survey=survey,
                 global_mesh=mesh,
@@ -477,7 +483,6 @@ class InversionData(InversionLocations):
                 map=map,
                 tile_id=tile_id,
             )
-
         return sim, map
 
     def simulate(self, model, inverse_problem, sorting):
