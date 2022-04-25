@@ -475,7 +475,6 @@ class InversionData(InversionLocations):
             map = maps.TileMap(
                 mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
             )
-            # map._local_mesh = None
             sim = simulation_factory.build(
                 survey=survey,
                 global_mesh=mesh,
@@ -484,7 +483,6 @@ class InversionData(InversionLocations):
                 map=map,
                 tile_id=tile_id,
             )
-            # del nested_mesh
         return sim, map
 
     def simulate(self, model, inverse_problem, sorting):
