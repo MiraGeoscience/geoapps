@@ -10,28 +10,18 @@ dependencies:
   - conda-forge::discretize
   - main::numpy
   - main::scipy
-  - main::matplotlib
-  - main::ipywidgets
-  - main::ipykernel
-  - main::scikit-image
-  - main::scikit-learn
   - main::zarr
   - main::fsspec
-  - main::xarray
   - dask
-  - conda-forge::gdal
-  - conda-forge::fiona
   - main::h5py
-  - plotly
   - requests
   - empymod
-  - ipyfilechooser
   - conda-forge::pydiso
   - setuptools
   - main::mkl
   - pip:
-    - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.7.0
-    - git+https://github.com/MiraGeoscience/geoh5py.git@release/0.2.0
+    - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.8.0
+    - git+https://github.com/MiraGeoscience/geoh5py.git@release/0.3.0
     - tqdm
 
 variables:
