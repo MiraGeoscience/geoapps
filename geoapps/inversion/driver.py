@@ -174,15 +174,20 @@ class InversionDriver:
             beta=self.params.initial_beta,
         )
 
-        # If forward only option enabled, stop here
+        # Solve forward problem, and attach dpred to inverse problem or
         if self.params.forward_only:
-            return
-
-        if self.warmstart:
+            print("Running forward simulation ...")
+        else:
             print("Pre-computing sensitivities ...")
+
+        if self.warmstart or self.params.forward_only:
             self.inverse_problem.dpred = self.inversion_data.simulate(
                 self.starting_model, self.inverse_problem, self.sorting
             )
+
+        # If forward only option enabled, stop here
+        if self.params.forward_only:
+            return
 
         # Add a list of directives to the inversion
         self.directiveList = DirectivesFactory(self.params).build(
@@ -211,7 +216,7 @@ class InversionDriver:
 
         # Run the inversion
         self.start_inversion_message()
-        self.inversion.run(self.starting_model)
+        mrec = self.inversion.run(self.starting_model)
 
     def start_inversion_message(self):
 
@@ -368,6 +373,7 @@ def start_inversion(filepath=None, **kwargs):
         input_file = InputFile.read_ui_json(filepath)
         inversion_type = input_file.data.get("inversion_type")
     else:
+        input_file = None
         inversion_type = kwargs.get("inversion_type")
 
     if inversion_type == "magnetic vector":
@@ -383,13 +389,11 @@ def start_inversion(filepath=None, **kwargs):
         from .potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
-        from .natural_sources.magnetotellurics import (
-            MagnetotelluricsParams as ParamClass,
-        )
+        from .natural_sources import MagnetotelluricsParams as ParamClass
         from .natural_sources.magnetotellurics.constants import validations
 
     elif inversion_type == "tipper":
-        from .natural_sources.tipper import ParamClass
+        from .natural_sources import TipperParams as ParamClass
         from .natural_sources.tipper.constants import validations
 
     elif inversion_type == "direct current":
