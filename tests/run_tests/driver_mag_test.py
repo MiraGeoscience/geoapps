@@ -10,7 +10,7 @@ from geoh5py.workspace import Workspace
 from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
-from geoapps.utils.testing import setup_inversion_workspace
+from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -18,10 +18,10 @@ from geoapps.utils.testing import setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_susceptibility_run = {
+target_run = {
     "data_norm": 11.707134,
-    "phi_d": 1.556,
-    "phi_m": 8.932e-6,
+    "phi_d": 1.598,
+    "phi_m": 8.824e-6,
 }
 
 
@@ -38,7 +38,7 @@ def test_susceptibility_run(
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.05,
@@ -47,18 +47,17 @@ def test_susceptibility_run(
         n_lines=n_grid_points,
         flatten=False,
     )
-    model = geoh5.get_entity("model")[0]
     params = MagneticScalarParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
@@ -72,8 +71,8 @@ def test_susceptibility_run(
     np.random.seed(0)
     params = MagneticScalarParams(
         geoh5=geoh5,
-        mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        mesh=mesh.uid,
+        topography_object=topography.uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
@@ -101,19 +100,9 @@ def test_susceptibility_run(
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
+    output["data"] = tmi.values
     if pytest:
-        np.testing.assert_almost_equal(
-            np.linalg.norm(tmi.values),
-            target_susceptibility_run["data_norm"],
-            decimal=3,
-        )
-        np.testing.assert_almost_equal(
-            output["phi_m"][1], target_susceptibility_run["phi_m"]
-        )
-        np.testing.assert_almost_equal(
-            output["phi_d"][1], target_susceptibility_run["phi_d"]
-        )
-
+        check_target(output, target_run)
         nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)
@@ -121,10 +110,10 @@ def test_susceptibility_run(
         return fwr_driver.starting_model, driver.inverse_problem.model
 
 
-target_magnetic_vector_run = {
+target_mvi_run = {
     "data_norm": 8.943476,
-    "phi_d": 0.006804,
-    "phi_m": 4.679e-6,
+    "phi_d": 0.00776,
+    "phi_m": 4.674e-6,
 }
 
 
@@ -141,7 +130,7 @@ def test_magnetic_vector_run(
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.05,
@@ -149,18 +138,17 @@ def test_magnetic_vector_run(
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
     )
-    model = geoh5.get_entity("model")[0]
     params = MagneticVectorParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
         resolution=0.0,
         z_from_topo=False,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
         starting_inclination=45,
@@ -173,8 +161,8 @@ def test_magnetic_vector_run(
     # Run the inverse
     params = MagneticVectorParams(
         geoh5=geoh5,
-        mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        mesh=mesh.uid,
+        topography_object=topography.uid,
         inducing_field_strength=inducing_field[0],
         inducing_field_inclination=inducing_field[1],
         inducing_field_declination=inducing_field[2],
@@ -201,19 +189,9 @@ def test_magnetic_vector_run(
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
+    output["data"] = tmi.values
     if pytest:
-        np.testing.assert_almost_equal(
-            output["phi_m"][1], target_magnetic_vector_run["phi_m"]
-        )
-        np.testing.assert_almost_equal(
-            output["phi_d"][1], target_magnetic_vector_run["phi_d"]
-        )
-        np.testing.assert_almost_equal(
-            np.linalg.norm(tmi.values),
-            target_magnetic_vector_run["data_norm"],
-            decimal=3,
-        )
-
+        check_target(output, target_mvi_run)
         nan_ind = np.isnan(run_ws.get_entity("Iteration_0_amplitude_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)

@@ -16,15 +16,12 @@ if TYPE_CHECKING:
 from copy import deepcopy
 
 import numpy as np
-from dask.distributed import get_client, progress
 from discretize import TreeMesh
-from geoh5py.objects import CurrentElectrode, Curve, PotentialElectrode
-from SimPEG import data, maps
+from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 from SimPEG.utils.drivers import create_nested_mesh
-from SimPEG.utils.io_utils.io_utils_electromagnetics import read_dcip_xyz
 
-from geoapps.utils import calculate_2D_trend, filter_xy, rotate_xy
+from geoapps.utils import calculate_2D_trend, filter_xy
 
 from .factories import (
     EntityFactory,
@@ -87,7 +84,9 @@ class InversionData(InversionLocations):
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
+    def __init__(
+        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
+    ):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
@@ -176,23 +175,6 @@ class InversionData(InversionLocations):
 
         return a
 
-    # def get_locations(self, uid: UUID) -> dict[str, np.ndarray]:
-    #     """
-    #     Returns locations of sources and receivers centroids or vertices.
-    #
-    #     :param uid: UUID of geoh5py object containing centroid or
-    #         vertex location data
-    #
-    #     :return: dictionary containing at least a receivers array, but
-    #         possibly also a sources and pseudo array of x, y, z locations.
-    #
-    #     """
-    #
-    #     data_object = self.workspace.get_entity(uid)[0]
-    #     locs = super().get_locations(data_object)
-    #
-    #     return locs
-
     def get_data(self) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
         """
         Get all data and uncertainty components and possibly set infinite uncertainties.
@@ -229,7 +211,7 @@ class InversionData(InversionLocations):
         self._observed_data_types = {c: {} for c in data.keys()}
         data_entity = {c: {} for c in data.keys()}
 
-        if self.params.inversion_type == "magnetotellurics":
+        if self.params.inversion_type in ["magnetotellurics", "tipper"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
                     dnorm = self.normalizations[component] * values
@@ -412,6 +394,9 @@ class InversionData(InversionLocations):
             elif self.params.inversion_type in ["magnetotellurics"]:
                 if "imag" in comp:
                     normalizations[comp] = -1.0
+            elif self.params.inversion_type in ["tipper"]:
+                if "real" in comp:
+                    normalizations[comp] = -1.0
             if normalizations[comp] == -1.0:
                 print(f"Sign flip for component {comp}.")
 
@@ -481,11 +466,15 @@ class InversionData(InversionLocations):
             nested_mesh = create_nested_mesh(
                 survey.unique_locations,
                 mesh,
-                method="radial",
-                max_distance=np.max([mesh.h[0].min(), mesh.h[1].min()]) * padding_cells,
+                method="padding_cells",
+                minimum_level=3,
+                padding_cells=padding_cells,
             )
+
             kwargs = {"components": 3} if self.vector else {}
-            map = maps.TileMap(mesh, active_cells, nested_mesh, **kwargs)
+            map = maps.TileMap(
+                mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
+            )
             sim = simulation_factory.build(
                 survey=survey,
                 global_mesh=mesh,
@@ -494,7 +483,6 @@ class InversionData(InversionLocations):
                 map=map,
                 tile_id=tile_id,
             )
-
         return sim, map
 
     def simulate(self, model, inverse_problem, sorting):
