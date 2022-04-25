@@ -33,6 +33,7 @@ class SimulationFactory(SimPEGFactory):
             "direct current",
             "induced polarization",
             "magnetotellurics",
+            "tipper",
         ]:
             import pymatsolver.direct as solver_module
 
@@ -59,7 +60,7 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DNodal
 
-        if self.factory_type == "magnetotellurics":
+        if self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import simulation
 
             return simulation.Simulation3DPrimarySecondary
@@ -110,13 +111,10 @@ class SimulationFactory(SimPEGFactory):
                 mesh,
                 active_cells=active_cells,
             )
-        if self.factory_type == "magnetotellurics":
-            return self._magnetotellurics_keywords(
-                kwargs, mesh, active_cells=active_cells
-            )
+        if self.factory_type in ["magnetotellurics", "tipper"]:
+            return self._naturalsource_keywords(kwargs, mesh, active_cells=active_cells)
 
     def _magnetic_vector_keywords(self, kwargs, active_cells=None):
-
         kwargs["actInd"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
         kwargs["model_type"] = "vector"
@@ -128,7 +126,6 @@ class SimulationFactory(SimPEGFactory):
         return kwargs
 
     def _magnetic_scalar_keywords(self, kwargs, active_cells=None):
-
         kwargs["actInd"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["store_sensitivities"] = (
@@ -139,7 +136,6 @@ class SimulationFactory(SimPEGFactory):
         return kwargs
 
     def _gravity_keywords(self, kwargs, active_cells=None):
-
         kwargs["actInd"] = active_cells
         kwargs["rhoMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["store_sensitivities"] = (
@@ -150,7 +146,6 @@ class SimulationFactory(SimPEGFactory):
         return kwargs
 
     def _direct_current_keywords(self, kwargs, mesh, active_cells=None):
-
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
@@ -174,8 +169,7 @@ class SimulationFactory(SimPEGFactory):
 
         return kwargs
 
-    def _magnetotellurics_keywords(self, kwargs, mesh, active_cells=None):
-
+    def _naturalsource_keywords(self, kwargs, mesh, active_cells=None):
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
