@@ -1,0 +1,147 @@
+{
+    "title": "Peak Finder Parameters",
+    "geoh5": "../../../assets/FlinFlon.geoh5",
+    "run_command": "geoapps.peak_finder.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "workspace": "",
+    "tem_checkbox": {
+        "main": true,
+        "label": "TEM type",
+        "value": true
+    },
+    "objects": {
+        "main": true,
+        "group": "Data",
+        "label": "Object",
+        "meshType": [
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}"
+        ],
+        "value": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"
+    },
+    "data": {
+        "association": "Vertex",
+        "dataType": "Float",
+        "group": "Data",
+        "main": true,
+        "dataGroupType": "Multi-element",
+        "label": "Channels",
+        "parent": "objects",
+        "value": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}"
+    },
+    "flip_sign": {
+        "main": true,
+        "group": "Data",
+        "label": "Flip sign",
+        "value": false
+    },
+    "line_field": {
+        "association": "Vertex",
+        "dataType": "Float",
+        "group": "Data",
+        "main": true,
+        "label": "Line Field",
+        "parent": "objects",
+        "value": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}"
+    },
+    "system": {
+        "choiceList": [
+            "AeroTEM (2007)",
+            "AeroTEM (2010)",
+            "DIGHEM",
+            "GENESIS (2014)",
+            "GEOTEM 75 Hz - 2082 Pulse",
+            "HELITEM2 (25C, 7.5Hz)",
+            "HELITEM (35C)",
+            "Hummingbird",
+            "QUESTEM (1996)",
+            "Resolve",
+            "SandersGFEM",
+            "Skytem 304M (HM)",
+            "Skytem 306HP (LM)",
+            "Skytem 306M HP (HM)",
+            "Skytem 312HP (HM)",
+            "Skytem 312HP v2 (HM)",
+            "Skytem 312HP v3 (HM)",
+            "Skytem 312HP v2 (LM)",
+            "Skytem 312HP v3 (LM)",
+            "Skytem 516M (HM)",
+            "Spectrem (2000)",
+            "Spectrem Plus",
+            "Spectrem (2003)",
+            "VTEM (2007)",
+            "VTEM Plus",
+            "VTEM Max",
+            "Xcite",
+            "Zonge 8Hz"
+        ],
+        "main": true,
+        "label": "TEM system",
+        "dependency": "tem_checkbox",
+        "dependencyType": "enabled",
+        "value": "VTEM (2007)"
+    },
+    "smoothing": {
+        "group": "Detection Parameters",
+        "label": "Smoothing window",
+        "main": true,
+        "value": 6
+    },
+    "min_amplitude": {
+        "group": "Detection Parameters",
+        "label": "Minimum Amplitude (%)",
+        "value": 1,
+        "main": true
+    },
+    "min_value": {
+        "group": "Detection Parameters",
+        "label": "Minimum Value",
+        "value": -0.0004509940918069333,
+        "main": true
+    },
+    "min_width": {
+        "group": "Detection Parameters",
+        "label": "Minimum Width (m)",
+        "value": 100.0,
+        "main": true
+    },
+    "max_migration": {
+        "group": "Detection Parameters",
+        "label": "Maximum Peak Migration (m)",
+        "value": 25.0,
+        "main": true
+    },
+    "min_channels": {
+        "group": "Detection Parameters",
+        "label": "Minimum # Channels",
+        "value": 1,
+        "main": true
+    },
+    "ga_group_name": {
+        "enabled": true,
+        "main": true,
+        "group": "Python run preferences",
+        "label": "Save As",
+        "value": "peak_finder"
+    },
+    "structural_markers": {
+        "main": true,
+        "group": "Python run preferences",
+        "label": "Export all markers",
+        "value": false
+    },
+    "line_id": 6073400.0,
+    "group_auto": {
+        "label": "Auto-group",
+        "value": true
+    },
+    "center": 4041.2,
+    "width": 1000.0
+}
