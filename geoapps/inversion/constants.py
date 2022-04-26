@@ -258,7 +258,7 @@ default_ui_json = {
         "parent": "starting_model_object",
         "label": "Value",
         "property": None,
-        "value": 0.0,
+        "value": 1e-4,
     },
     "tile_spatial": {
         "group": "Receivers location options",
