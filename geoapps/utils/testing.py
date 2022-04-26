@@ -11,6 +11,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
+import warnings
 from uuid import UUID
 
 import numpy as np
