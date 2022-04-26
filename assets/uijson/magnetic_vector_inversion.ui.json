@@ -11,14 +11,14 @@
         "value": 50000.0
     },
     "inducing_field_inclination": {
-        "min": 0.0,
+        "min": -90.0,
+        "max": 90.0,
         "main": true,
         "group": "Inducing Field",
         "label": "Inclination",
         "value": 90.0
     },
     "inducing_field_declination": {
-        "min": 0.0,
         "main": true,
         "group": "Inducing Field",
         "label": "Declination",
@@ -424,7 +424,7 @@
         "parent": "starting_model_object",
         "label": "Susceptibility (SI)",
         "property": "",
-        "value": 0.0
+        "value": 0.0001
     },
     "starting_inclination": {
         "association": [
