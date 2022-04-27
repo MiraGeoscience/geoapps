@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoh5py.objects import Octree
-    from geoapps.base.params import BaseParams
+    from geoapps.driver_base.params import BaseParams
     from discretize import TreeMesh
     from . import InversionData, InversionTopography
 

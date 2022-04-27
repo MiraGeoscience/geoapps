@@ -9,15 +9,20 @@ import json
 import multiprocessing
 import os
 
-from geoapps.utils import soft_import
-
-widgets = soft_import("ipywidgets")
-plt = soft_import("matplotlib.pyplot")
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 
+from geoapps import PlotSelection2D
+from geoapps.base.application import BaseApplication
+from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
+from geoapps.utils import geophysical_systems, soft_import
+from geoapps.utils.general import find_value
+from geoapps.utils.io import string_2_list
+
+widgets = soft_import("ipywidgets")
+plt = soft_import("matplotlib.pyplot")
 (
     Button,
     Checkbox,
@@ -44,12 +49,6 @@ from geoh5py.workspace import Workspace
         "VBox",
     ],
 )
-
-from geoapps import PlotSelection2D
-from geoapps.base.application import BaseApplication
-from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
-from geoapps.utils import geophysical_systems
-from geoapps.utils.utils import find_value, string_2_list
 
 
 class ChannelOptions:

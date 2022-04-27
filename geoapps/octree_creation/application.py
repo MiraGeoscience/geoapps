@@ -14,6 +14,7 @@ from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
+from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils import soft_import
 
 (Dropdown, FloatText, Label, Layout, Text, VBox, Widget) = soft_import(
@@ -22,7 +23,6 @@ from geoapps.utils import soft_import
 )
 TraitError = soft_import("ipywidgets.widgets.widget_selection", objects=["TraitError"])
 
-from geoapps.base.selection import ObjectDataSelection
 
 from . import OctreeParams, app_initializer
 from .driver import OctreeDriver

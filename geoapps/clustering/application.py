@@ -50,7 +50,9 @@ from scipy.spatial import cKDTree
 KMeans = soft_import("sklearn.cluster", objects=["KMeans"])
 
 from geoapps.scatter_plot import ScatterPlots
-from geoapps.utils.utils import colors, hex_to_rgb, random_sampling
+from geoapps.shared_utils.utils import colors
+from geoapps.utils.general import random_sampling
+from geoapps.utils.plotting import hex_to_rgb
 
 
 class Clustering(ScatterPlots):

@@ -21,10 +21,9 @@ from geoh5py.objects import BlockModel, Grid2D
 from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 
-from geoapps.utils.testing import Geoh5Tester
-from geoapps.utils.utils import (
+from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.shared_utils.utils import (
     block_model_2_tensor,
-    calculate_2D_trend,
     downsample_grid,
     downsample_xy,
     filter_xy,
@@ -36,12 +35,13 @@ from geoapps.utils.utils import (
     soft_import,
     sorted_alphanumeric_list,
     sorted_children_dict,
-    string_2_numeric,
+    string_to_numeric,
     tensor_2_block_model,
     treemesh_2_octree,
     weighted_average,
     window_xy,
 )
+from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")
 
@@ -58,12 +58,12 @@ def test_find_value():
     assert find_value(labels, ["lskdjf"]) is None
 
 
-def test_string_2_numeric():
-    assert string_2_numeric("test") == "test"
-    assert string_2_numeric("2.1") == 2.1
-    assert string_2_numeric("34") == 34
-    assert string_2_numeric("1e-2") == 0.01
-    assert string_2_numeric("1.05e2") == 105
+def test_string_to_numeric():
+    assert string_to_numeric("test") == "test"
+    assert string_to_numeric("2.1") == 2.1
+    assert string_to_numeric("34") == 34
+    assert string_to_numeric("1e-2") == 0.01
+    assert string_to_numeric("1.05e2") == 105
 
 
 def test_sorted_alphanumeric_list():

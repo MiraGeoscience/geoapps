@@ -22,7 +22,7 @@ from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
-from geoapps.utils.utils import treemesh_2_octree
+from geoapps.driver_base.utils import treemesh_2_octree
 
 from .params import OctreeParams
 

@@ -38,8 +38,9 @@ from simpeg_archive.simpegEM1D import (
 )
 from simpeg_archive.utils import Counter, mkvc
 
+from geoapps.driver_base.utils import running_mean
+from geoapps.shared_utils.utils import filter_xy, rotate_xy
 from geoapps.utils import geophysical_systems
-from geoapps.utils.utils import filter_xy, rotate_xy, running_mean
 
 
 def inversion(input_file):

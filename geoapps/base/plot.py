@@ -5,13 +5,17 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from geoapps.utils import soft_import
-
-widgets = soft_import("ipywidgets")
-plt = soft_import("matplotlib.pyplot")
 import numpy as np
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
+from geoapps.base.selection import ObjectDataSelection
+from geoapps.shared_utils.utils import rotate_xy
+from geoapps.utils import soft_import
+from geoapps.utils.general import input_string_2_float
+from geoapps.utils.plotting import plot_plan_data_selection
+
+widgets = soft_import("ipywidgets")
+plt = soft_import("matplotlib.pyplot")
 (FloatSlider, FloatText, HBox, Label, Layout, ToggleButton, VBox) = soft_import(
     "ipywidgets",
     objects=[
@@ -24,10 +28,6 @@ from geoh5py.objects import Curve, Grid2D, Points, Surface
         "VBox",
     ],
 )
-
-from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import input_string_2_float, rotate_xy
 
 
 class PlotSelection2D(ObjectDataSelection):

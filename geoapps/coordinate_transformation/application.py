@@ -8,28 +8,24 @@
 import os
 import re
 
-from geoapps.utils import soft_import
-
-plt = soft_import("matplotlib.pyplot")
-import numpy
+import numpy as np
 from geoh5py.data import FloatData
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
+
+from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import soft_import
+from geoapps.utils.plotting import plot_plan_data_selection
+
+from .utils import geotiff_2_grid
 
 (HBox, Layout, SelectMultiple, Text, Textarea, VBox) = soft_import(
     "ipywidgets",
     objects=["HBox", "Layout", "SelectMultiple", "Text", "Textarea", "VBox"],
 )
-
-from geoapps.utils.utils import soft_import
-
+plt = soft_import("matplotlib.pyplot")
 transform = soft_import("fiona.transform", objects=["transform"])
 gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
-
-
-from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import export_grid_2_geotiff, geotiff_2_grid
 
 
 class CoordinateTransformation(ObjectDataSelection):
@@ -155,7 +151,7 @@ class CoordinateTransformation(ObjectDataSelection):
                     )
 
                     new_obj = obj.copy(parent=self.ga_group, copy_children=True)
-                    new_obj.vertices = numpy.c_[x2, y2, obj.vertices[:, 2]]
+                    new_obj.vertices = np.c_[x2, y2, obj.vertices[:, 2]]
                     new_obj.name = new_obj.name + self.code_out.value.replace(":", "_")
 
                 if self.plot_result:

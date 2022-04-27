@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.base.params import BaseParams
+    from geoapps.driver_base.params import BaseParams
 
 
 import numpy as np

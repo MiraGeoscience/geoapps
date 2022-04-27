@@ -9,28 +9,24 @@ import re
 from os import path
 
 import discretize
-import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree
 
+from geoapps.base.selection import ObjectDataSelection
+from geoapps.shared_utils.utils import octree_2_treemesh
 from geoapps.utils import soft_import
+from geoapps.utils.io import export_grid_2_geotiff
+from geoapps.utils.plotting import plot_plan_data_selection
 
+plt = soft_import("matplotlib.pyplot")
+HBox, VBox = soft_import("ipywidgets.widgets", objects=["HBox", "VBox"])
+osr = soft_import("osgeo", objects=["osr"])
 (Dropdown, FloatText, Layout, RadioButtons, Text, Textarea) = soft_import(
     "ipywidgets",
-    objects=["Dropdown" "FloatText" "Layout" "RadioButtons" "Text" "Textarea"],
+    objects=["Dropdown", "FloatText", "Layout", "RadioButtons", "Text", "Textarea"],
 )
-HBox, VBox = soft_import("ipywidgets.widgets", objects=["HBox", "VBox"])
 
-osr = soft_import("osgeo", objects=["osr"])
-
-from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import (
-    export_curve_2_shapefile,
-    export_grid_2_geotiff,
-    object_2_dataframe,
-    octree_2_treemesh,
-)
+from .utils import export_curve_2_shapefile, object_2_dataframe
 
 
 class Export(ObjectDataSelection):

@@ -15,7 +15,9 @@ from geoapps.utils import soft_import
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import input_string_2_float, iso_surface
+from geoapps.utils.general import input_string_2_float
+
+from .utils import iso_surface
 
 
 class IsoSurface(ObjectDataSelection):
