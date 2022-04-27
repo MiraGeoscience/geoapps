@@ -280,4 +280,3 @@ def test_ip_inversion(tmp_path):
             assert (
                 getattr(app, "_" + group + "_group").options.value == "Model"
             ), f"Property group {group} did not reset to 'Model'"
-
