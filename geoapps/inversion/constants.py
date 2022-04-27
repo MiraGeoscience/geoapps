@@ -7,7 +7,6 @@
 
 from uuid import UUID
 
-from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 octree_defaults = {
@@ -758,7 +757,6 @@ default_ui_json = {
         "group": "Regularization",
         "isValue": False,
         "parent": "upper_bound_object",
-        "parent": "upper_bound_object",
         "dependency": "lower_bound_object",
         "label": "Upper bound",
         "property": None,
@@ -799,8 +797,14 @@ default_ui_json = {
 
 validations = {
     "topography_object": {
-        "required": True,
         "types": [str, UUID, Surface, Points, Grid2D, Curve],
     },
-    "out_group": {"required": True, "types": [str, ContainerGroup]},
+    "alpha_s": {"types": [int, float]},
+    "alpha_x": {"types": [int, float]},
+    "alpha_y": {"types": [int, float]},
+    "alpha_z": {"types": [int, float]},
+    "norm_s": {"types": [int, float]},
+    "norm_x": {"types": [int, float]},
+    "norm_y": {"types": [int, float]},
+    "norm_z": {"types": [int, float]},
 }
