@@ -21,7 +21,7 @@ from geoh5py.objects import PotentialElectrode
 from geoh5py.workspace import Workspace
 
 from geoapps.octree_creation.params import OctreeParams
-from geoapps.utils import octree_2_treemesh
+from geoapps.shared_utils.utils import octree_2_treemesh
 
 
 class InversionMesh:

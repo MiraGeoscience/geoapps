@@ -16,7 +16,7 @@ from SimPEG.utils.mat_utils import (
 )
 
 from geoapps.driver_base.params import BaseParams
-from geoapps.utils import rotate_xy, weighted_average
+from geoapps.shared_utils.utils import rotate_xy, weighted_average
 
 from . import InversionMesh
 
