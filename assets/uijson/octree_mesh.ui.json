@@ -72,7 +72,7 @@
         "label": "Name:",
         "value": "Octree_Mesh"
     },
-    "Refinenement A object": {
+    "Refinement A object": {
         "groupOptional": true,
         "enabled": true,
         "group": "Refinenement A",
@@ -103,6 +103,39 @@
     "Refinenement A distance": {
         "enabled": true,
         "group": "Refinenement A",
+        "label": "Distance",
+        "value": 1000.0
+    },
+    "Refinement B object": {
+        "enabled": true,
+        "group": "refinement b",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": ""
+    },
+    "Refinement B levels": {
+        "enabled": true,
+        "group": "refinement b",
+        "label": "Levels",
+        "value": "4,4,4"
+    },
+    "Refinement B type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "refinement b",
+        "label": "Type",
+        "value": "radial"
+    },
+    "Refinement B distance": {
+        "enabled": true,
+        "group": "refinement b",
         "label": "Distance",
         "value": 1000.0
     }
