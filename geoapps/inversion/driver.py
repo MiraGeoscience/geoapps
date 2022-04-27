@@ -13,7 +13,9 @@ if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
 import multiprocessing
+import os
 import sys
+from datetime import datetime
 from multiprocessing.pool import ThreadPool
 from uuid import UUID
 
@@ -48,7 +50,7 @@ class InversionDriver:
         self.inverse_problem = None
         self.survey = None
         self.active_cells = None
-        self.initialize()
+        self.running = False
 
     @property
     def window(self):
@@ -118,6 +120,7 @@ class InversionDriver:
 
         # Build active cells array and reduce models active set
         self.active_cells = self.inversion_topography.active_cells(self.inversion_mesh)
+        self.workspace.remove_entity(self.inversion_topography.entity)
         self.models.edit_ndv_model(
             self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
         )
@@ -206,6 +209,7 @@ class InversionDriver:
 
         # Run the inversion
         self.start_inversion_message()
+        self.running = True
         mrec = self.inversion.run(self.starting_model)
 
     def start_inversion_message(self):
@@ -356,6 +360,31 @@ class InversionDriver:
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
 
+class InversionLogger:
+    def __init__(self, logfile, driver):
+        self.driver = driver
+        self.terminal = sys.stdout
+        self.log = open(self.get_path(logfile), "w")
+
+        date_time = datetime.now().strftime("%b-%d-%Y: %H:%M:%S\n")
+        self.write(f"SimPEG {driver.inversion_type} inversion started {date_time}")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()
+
+    def close(self):
+        self.terminal.close()
+
+    def flush(self):
+        pass
+
+    def get_path(self, file):
+        root_directory = os.path.dirname(self.driver.workspace.h5file)
+        return os.path.join(root_directory, file)
+
+
 def start_inversion(filepath=None, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
@@ -363,44 +392,42 @@ def start_inversion(filepath=None, **kwargs):
         input_file = InputFile.read_ui_json(filepath)
         inversion_type = input_file.data.get("inversion_type")
     else:
-        input_file = None
         inversion_type = kwargs.get("inversion_type")
 
     if inversion_type == "magnetic vector":
-        from .potential_fields import MagneticVectorParams
-
-        params = MagneticVectorParams(input_file=input_file, **kwargs)
+        from .potential_fields import MagneticVectorParams as ParamClass
+        from .potential_fields.magnetic_vector.constants import validations
 
     elif inversion_type == "magnetic scalar":
-        from .potential_fields import MagneticScalarParams
-
-        params = MagneticScalarParams(input_file=input_file, **kwargs)
+        from .potential_fields import MagneticScalarParams as ParamClass
+        from .potential_fields.magnetic_scalar.constants import validations
 
     elif inversion_type == "gravity":
-        from .potential_fields import GravityParams
-
-        params = GravityParams(input_file=input_file, **kwargs)
+        from .potential_fields import GravityParams as ParamClass
+        from .potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
-        from .magnetotellurics import MagnetotelluricsParams
-
-        params = MagnetotelluricsParams(input_file=input_file, **kwargs)
+        from .magnetotellurics import MagnetotelluricsParams as ParamClass
+        from .magnetotellurics.constants import validations
 
     elif inversion_type == "direct current":
-        from .electricals import DirectCurrentParams
-
-        params = DirectCurrentParams(input_file=input_file, **kwargs)
+        from .electricals import DirectCurrentParams as ParamClass
+        from .electricals.direct_current.constants import validations
 
     elif inversion_type == "induced polarization":
-        from .electricals import InducedPolarizationParams
-
-        params = InducedPolarizationParams(input_file=input_file, **kwargs)
+        from .electricals import InducedPolarizationParams as ParamClass
+        from .electricals.induced_polarization.constants import validations
 
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")
 
+    input_file = InputFile.read_ui_json(filepath, validations=validations)
+    params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
+    sys.stdout = InversionLogger("SimPEG.log", driver)
+    driver.initialize()
     driver.run()
+    sys.stdout.close()
 
 
 if __name__ == "__main__":
