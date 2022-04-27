@@ -21,8 +21,8 @@ from geoh5py.shared import Entity
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
-from geoapps.utils import get_locations as get_locs
-from geoapps.utils import rotate_xy
+from geoapps.shared_utils.utils import get_locations as get_locs
+from geoapps.shared_utils.utils import rotate_xy
 
 
 class InversionLocations:

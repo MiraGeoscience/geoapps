@@ -15,6 +15,7 @@ from geoh5py.workspace import Workspace
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils import soft_import
+from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
 
 from .utils import geotiff_2_grid

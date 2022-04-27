@@ -22,7 +22,7 @@ from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 from SimPEG.utils.drivers import create_nested_mesh
 
 from geoapps.inversion.utils import calculate_2D_trend
-from geoapps.utils import filter_xy
+from geoapps.shared_utils.utils import filter_xy
 
 from .factories import (
     EntityFactory,
