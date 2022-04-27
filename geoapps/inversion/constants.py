@@ -253,8 +253,6 @@ default_ui_json = {
         "group": "Starting Model",
         "main": True,
         "isValue": True,
-        "optional": True,
-        "enabled": True,
         "parent": "starting_model_object",
         "label": "Value",
         "property": None,
