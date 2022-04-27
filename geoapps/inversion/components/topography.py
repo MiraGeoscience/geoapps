@@ -47,7 +47,9 @@ class InversionTopography(InversionLocations):
 
     """
 
-    def __init__(self, workspace: Workspace, params: Params, window: dict[str, Any]):
+    def __init__(
+        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
+    ):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
         :param: params: Params object containing location based data parameters.

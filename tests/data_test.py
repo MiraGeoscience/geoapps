@@ -81,6 +81,7 @@ def test_survey_data(tmp_path):
     )
 
     driver = InversionDriver(params, warmstart=False)
+    driver.initialize()
     local_survey_a = driver.inverse_problem.dmisfit.objfcts[0].simulation.survey
     local_survey_b = driver.inverse_problem.dmisfit.objfcts[1].simulation.survey
 

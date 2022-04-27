@@ -9,7 +9,7 @@ import numpy as np
 from geoh5py.workspace import Workspace
 
 from geoapps.utils import get_inversion_output
-from geoapps.utils.testing import setup_inversion_workspace
+from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -17,10 +17,10 @@ from geoapps.utils.testing import setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_ip_run = {
+target_run = {
     "data_norm": 0.007242,
-    "phi_d": 4.985,
-    "phi_m": 0.06141,
+    "phi_d": 4.975,
+    "phi_m": 0.06144,
 }
 
 
@@ -66,6 +66,7 @@ def test_ip_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params)
+    fwr_driver.initialize()
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
     potential = geoh5.get_entity("Iteration_0_ip")[0]
@@ -97,18 +98,14 @@ def test_ip_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
+    driver.initialize()
     driver.run()
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
+    output["data"] = potential.values
     if pytest:
-        np.testing.assert_almost_equal(
-            np.linalg.norm(potential.values),
-            target_ip_run["data_norm"],
-            decimal=3,
-        )
-        np.testing.assert_almost_equal(output["phi_m"][1], target_ip_run["phi_m"])
-        np.testing.assert_almost_equal(output["phi_d"][1], target_ip_run["phi_d"])
+        check_target(output, target_run)
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 
