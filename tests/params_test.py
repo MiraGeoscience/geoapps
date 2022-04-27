@@ -2035,6 +2035,8 @@ def test_isValue(tmp_path):
 
 def test_unknown_key(tmp_path):
 
+    from geoapps.inversion.constants import octree_defaults
+
     filepath = tmpfile(tmp_path)
     input_file = InputFile()
     input_file.filepath = filepath
