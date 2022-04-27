@@ -85,7 +85,7 @@ To work with **geoapps** source code in development, install from GitHub::
     $ cd geoapps
     $ python setup.py install
 
-.. note:: The Jupyter-Notebook applications can be `download from source <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_ :
+.. note:: The Jupyter-Notebook applications can be `downloaded from source <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_ :
 
 	.. figure:: ../images/download.png
 	    :align: center

@@ -371,7 +371,7 @@
         "parent": "starting_model_object",
         "label": "Density (g/cc)",
         "property": "",
-        "value": 0.0
+        "value": 0.0001
     },
     "tile_spatial": {
         "group": "Receivers location options",
