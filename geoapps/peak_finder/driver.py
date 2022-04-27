@@ -20,9 +20,9 @@ from geoh5py.ui_json import InputFile
 from tqdm import tqdm
 
 from geoapps.base.application import BaseApplication
+from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import hex_to_rgb
 
 from .params import PeakFinderParams
 from .utils import default_groups_from_property_group, find_anomalies

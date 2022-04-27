@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.base.params import BaseParams
+    from geoapps.driver_base.params import BaseParams
 
 import numpy as np
 

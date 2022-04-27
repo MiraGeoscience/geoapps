@@ -25,7 +25,8 @@ from copy import deepcopy
 
 import numpy as np
 
-from geoapps.utils import active_from_xyz, filter_xy
+from geoapps.driver_base.utils import active_from_xyz
+from geoapps.utils import filter_xy
 
 from .data import InversionData
 from .locations import InversionLocations

@@ -12,7 +12,6 @@ from copy import deepcopy
 from os import path
 from typing import Optional
 
-import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.objects import Curve, ObjectBase
@@ -20,8 +19,15 @@ from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
-from geoapps.utils import soft_import
+from geoapps.base.selection import LineOptions, ObjectDataSelection
+from geoapps.peak_finder.constants import (
+    app_initializer,
+    default_ui_json,
+    template_dict,
+)
+from geoapps.utils import geophysical_systems, soft_import
 
+plt = soft_import("matplotlib.pyplot")
 (
     Box,
     Checkbox,
@@ -62,13 +68,6 @@ from geoapps.utils import soft_import
 )
 TraitError = soft_import("ipywidgets.widgets.widget_selection", objects=["TraitError"])
 
-from geoapps.base.selection import LineOptions, ObjectDataSelection
-from geoapps.peak_finder.constants import (
-    app_initializer,
-    default_ui_json,
-    template_dict,
-)
-from geoapps.utils import geophysical_systems
 
 from . import PeakFinderParams
 from .driver import PeakFinderDriver

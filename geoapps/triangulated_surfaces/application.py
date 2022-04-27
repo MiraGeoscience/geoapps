@@ -10,8 +10,12 @@ import re
 import numpy as np
 from geoh5py.objects import Curve, Surface
 from geoh5py.workspace import Workspace
+from scipy.interpolate import LinearNDInterpolator
+from scipy.spatial import Delaunay, cKDTree
 
+from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils import soft_import
+from geoapps.utils.formatters import string_name
 
 (FloatText, HBox, Label, RadioButtons, Text, ToggleButton, VBox) = soft_import(
     "ipywidgets",
@@ -25,11 +29,6 @@ from geoapps.utils import soft_import
         "VBox",
     ],
 )
-from scipy.interpolate import LinearNDInterpolator
-from scipy.spatial import Delaunay, cKDTree
-
-from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils.formatters import string_name
 
 
 class Surface2D(ObjectDataSelection):

@@ -16,7 +16,7 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
-from geoapps.base.params import BaseParams
+from geoapps.driver_base.params import BaseParams
 
 
 class InversionBaseParams(BaseParams):

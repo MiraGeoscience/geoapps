@@ -40,8 +40,8 @@ probabilistic_hough_line = soft_import(
 )
 
 from geoapps import PlotSelection2D
+from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import filter_xy
 
 
 class EdgeDetectionApp(PlotSelection2D):

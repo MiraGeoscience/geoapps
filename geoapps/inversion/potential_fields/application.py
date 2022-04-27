@@ -12,15 +12,20 @@ import os.path as path
 import uuid
 from collections import OrderedDict
 
-from geoapps.utils import soft_import
-
-widgets = soft_import("ipywidgets")
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
+from geoapps.base.plot import PlotSelection2D
+from geoapps.base.selection import ObjectDataSelection, TopographyOptions
+from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
+from geoapps.utils import geophysical_systems, soft_import
+from geoapps.utils.general import find_value
+from geoapps.utils.io import string_2_list
+
+widgets = soft_import("ipywidgets")
 (
     Button,
     Checkbox,
@@ -48,11 +53,6 @@ from geoh5py.workspace import Workspace
     ],
 )
 
-from geoapps.base.plot import PlotSelection2D
-from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
-from geoapps.utils import geophysical_systems
-from geoapps.utils.utils import find_value, string_2_list
 
 from .gravity.params import GravityParams
 from .magnetic_scalar.params import MagneticScalarParams
@@ -1060,8 +1060,6 @@ class InversionApp(PlotSelection2D):
             data_channel_options[key].children[3].children[1].options = [
                 ["", None]
             ] + options
-
-            # data_channel_options[key].children[1].value = find_value(options, [key])
 
         self.data_channel_choices.value = inversion_defaults()["component"][
             self.inversion_type.value

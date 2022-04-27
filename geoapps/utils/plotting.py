@@ -7,22 +7,53 @@
 
 from copy import copy
 
-import matplotlib.colors as colors
-import matplotlib.pyplot as plt
 import numpy as np
-
-from geoapps.utils import soft_import
-
-go = soft_import("plotly.graph_objects")
 from geoh5py.data import Data, ReferencedData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 
+from geoapps.shared_utils.utils import filter_xy, get_inversion_output
+from geoapps.utils import soft_import
+
+colors = soft_import("matplotlib.colors")
+plt = soft_import("matplotlib.pyplot")
+go = soft_import("plotly.graph_objects")
 widgets = soft_import("ipywidgets")
 
-from geoapps.utils import get_inversion_output
-from geoapps.utils.utils import filter_xy, format_labels, inv_symlog, symlog
+
+def symlog(values, threshold):
+    """
+    Convert values to log with linear threshold near zero
+    """
+    return np.sign(values) * np.log10(1 + np.abs(values) / threshold)
+
+
+def inv_symlog(values, threshold):
+    """
+    Compute the inverse symlog mapping
+    """
+    return np.sign(values) * threshold * (-1.0 + 10.0 ** np.abs(values))
+
+
+def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kwargs):
+    if labels is None:
+        axs.set_ylabel("Northing (m)")
+        axs.set_xlabel("Easting (m)")
+    else:
+        axs.set_xlabel(labels[0])
+        axs.set_ylabel(labels[1])
+    xticks = np.linspace(x.min(), x.max(), 5)
+    yticks = np.linspace(y.min(), y.max(), 5)
+
+    axs.set_yticks(yticks)
+    axs.set_yticklabels(
+        [tick_format % y for y in yticks.tolist()], rotation=90, va="center"
+    )
+    axs.set_xticks(xticks)
+    axs.set_xticklabels([tick_format % x for x in xticks.tolist()], va="center")
+    axs.autoscale(tight=True)
+    axs.set_aspect(aspect)
 
 
 def normalize(values):
@@ -506,141 +537,6 @@ def check_data_type(data):
 
     assert isinstance(data, np.ndarray), "Values must be of type numpy.ndarray"
     return data
-
-
-# def plot_em_data_widget(h5file):
-#     workspace = Workspace(h5file)
-#
-#     curves = [
-#         entity.parent.name + "." + entity.name
-#         for entity in workspace.objects
-#         if isinstance(entity, Curve)
-#     ]
-#     names = [name for name in sorted(curves)]
-#
-#     def get_parental_child(parental_name):
-#
-#         parent, child = parental_name.split(".")
-#
-#         parent_entity = workspace.get_entity(parent)[0]
-#
-#         children = [entity for entity in parent_entity.children if entity.name == child]
-#         return children
-#
-#     def plot_profiles(entity_name, groups, line_field, lines, scale, threshold):
-#
-#         fig = plt.figure(figsize=(12, 12))
-#         entity = get_parental_child(entity_name)[0]
-#
-#         ax = plt.subplot()
-#         colors = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]]
-#
-#         for group, color in zip(groups, colors):
-#
-#             prop_group = entity.get_property_group(group)
-#
-#             if prop_group is not None:
-#                 fields = [
-#                     entity.workspace.get_entity(uid)[0].name
-#                     for uid in prop_group.properties
-#                 ]
-#
-#                 ax, _ = plot_profile_data_selection(
-#                     prop_group.parent,
-#                     fields,
-#                     selection={line_field: lines},
-#                     ax=ax,
-#                     color=color,
-#                 )
-#
-#         ax.grid(True)
-#
-#         plt.yscale(scale, linthreshy=10.0 ** threshold)
-#
-#     def updateList(_):
-#         entity = get_parental_child(objects.value)[0]
-#         data_list = entity.get_data_list()
-#         obj = get_parental_child(objects.value)[0]
-#
-#         options = [pg.name for pg in obj.property_groups]
-#         options = [option for option in sorted(options)]
-#         groups.options = options
-#         groups.value = [groups.options[0]]
-#         line_field.options = data_list
-#         line_field.value = find_value(data_list, ["line"])
-#
-#         if line_field.value is None:
-#             line_ids = []
-#             value = []
-#         else:
-#             line_ids = np.unique(entity.get_data(line_field.value)[0].values)
-#             value = [line_ids[0]]
-#
-#         lines.options = line_ids
-#         lines.value = value
-#
-#     objects = Dropdown(options=names, value=names[0], description="Object:",)
-#
-#     obj = get_parental_child(objects.value)[0]
-#
-#     order = np.sort(obj.vertices[:, 0])
-#
-#     entity = get_parental_child(objects.value)[0]
-#
-#     data_list = entity.get_data_list()
-#     line_field = Dropdown(
-#         options=data_list,
-#         value=find_value(data_list, ["line"]),
-#         description="Lines field",
-#     )
-#
-#     options = [pg.name for pg in obj.property_groups]
-#     options = [option for option in sorted(options)]
-#     groups = SelectMultiple(options=options, value=[options[0]], description="Data: ",)
-#
-#     if line_field.value is None:
-#         line_list = []
-#         value = []
-#     else:
-#
-#         line_list = np.unique(entity.get_data(line_field.value)[0].values)
-#         value = [line_list[0]]
-#
-#     lines = SelectMultiple(options=line_list, value=value, description="Data: ")
-#
-#     objects.observe(updateList, names="value")
-#
-#     scale = Dropdown(
-#         options=["linear", "symlog"], value="symlog", description="Scaling",
-#     )
-#
-#     threshold = FloatSlider(
-#         min=-16,
-#         max=-1,
-#         value=-12,
-#         steps=0.5,
-#         description="Log-linear threshold",
-#         continuous_update=False,
-#     )
-#
-#     apps = VBox([objects, line_field, lines, groups, scale, threshold])
-#     layout = HBox(
-#         [
-#             apps,
-#             interactive_output(
-#                 plot_profiles,
-#                 {
-#                     "entity_name": objects,
-#                     "groups": groups,
-#                     "line_field": line_field,
-#                     "lines": lines,
-#                     "scale": scale,
-#                     "threshold": threshold,
-#                 },
-#             ),
-#         ]
-#     )
-#     return layout
 
 
 def plot_convergence_curve(h5file):

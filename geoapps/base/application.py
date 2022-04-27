@@ -49,7 +49,7 @@ FileChooser = soft_import("ipyfilechooser", objects=["FileChooser"])
     ],
 )
 
-from geoapps.base.params import BaseParams
+from geoapps.driver_base.params import BaseParams
 from geoapps.utils.formatters import string_name
 
 

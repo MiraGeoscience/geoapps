@@ -22,7 +22,9 @@ from geoh5py.workspace import Workspace
 )
 
 from geoapps.base.application import BaseApplication
-from geoapps.utils import utils
+from geoapps.utils.general import find_value
+
+from .utils import sorted_children_dict
 
 
 class ObjectDataSelection(BaseApplication):
@@ -296,7 +298,7 @@ class ObjectDataSelection(BaseApplication):
             if self.add_groups != "only":
                 options += [["--- Channels ---", None]]
 
-                children = utils.sorted_children_dict(obj)
+                children = sorted_children_dict(obj)
                 excl = ["visual parameter"]
                 options += [
                     [k, v] for k, v in children.items() if k.lower() not in excl
@@ -315,7 +317,7 @@ class ObjectDataSelection(BaseApplication):
             elif value in dict(options).values():
                 self.data.value = value
             elif self.find_label:
-                self.data.value = utils.find_value(self.data.options, self.find_label)
+                self.data.value = find_value(self.data.options, self.find_label)
         else:
             self.data.options = []
             self.data.uid_name_map = {}
