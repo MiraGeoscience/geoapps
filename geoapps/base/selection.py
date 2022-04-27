@@ -22,9 +22,7 @@ from geoh5py.workspace import Workspace
 )
 
 from geoapps.base.application import BaseApplication
-from geoapps.utils.general import find_value
-
-from .utils import sorted_children_dict
+from geoapps.utils.general import find_value, sorted_children_dict
 
 
 class ObjectDataSelection(BaseApplication):
