@@ -2031,27 +2031,3 @@ def test_isValue(tmp_path):
         ui = json.load(f)
 
     assert ui["starting_model"]["isValue"] is False, "isValue should be False"
-
-
-def test_unknown_key(tmp_path):
-
-    from geoapps.inversion.constants import octree_defaults
-
-    filepath = tmpfile(tmp_path)
-    input_file = InputFile()
-    input_file.filepath = filepath
-    input_file.write_ui_json(octree_defaults, geoh5=geoh5.h5file)
-    with open(filepath) as f:
-        ui = json.load(f)
-
-    ui["something"] = "new"
-    ui["objects"]["value"] = str(geoh5.objects[0].uid)
-    with open(filepath, "w") as f:
-        json.dump(ui, f, indent=4)
-
-    ifile = InputFile(filepath)
-    params = OctreeParams(ifile, geoh5=geoh5)
-
-    assert (
-        getattr(params, "something") == "new"
-    ), "Unknown parameter not registered to params."
