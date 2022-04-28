@@ -1,13 +1,13 @@
 Release Notes
 =============
 
+
 Release 0.7.0 - 2022/04/25
 --------------------------
 
 **(Major Release)**
 
 Changes to core functionalities:
-
  - Migration of ui.json read/write and validations to geoh5py implementation
  - Make soft dependencies for gdal/fiona
  - Resolve conflicts with geosoft/anaconda installation.
@@ -24,6 +24,19 @@ Bug fixes:
  - Remove air cells from DC starting model
  - Allow Points and Curve entities for starting/ref model input.
  - Wrong padding direction on Data transfer app mesh creation.
+
+
+Release 0.6.3 - 2022/02/09
+--------------------------
+
+**(Hot fixes)**
+
+ - Fix limitations for unrecognized ui.json keys
+ - Fix Mag/grav inversion crash for:
+    - Selection of multi-components grav/mag data
+    - Constant topography value option
+    - Min/max values for inducing field angles
+    - Update ui.json for default bool index
 
 
 Release 0.6.2 - 2022/01/05
