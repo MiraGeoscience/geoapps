@@ -79,6 +79,7 @@ class Surface2D(ObjectDataSelection):
             ind_value=["line"],
             **self.defaults["lines"],
         )
+
         self._topography = TopographyOptions(
             workspace=self.workspace, **self.defaults["topography"]
         )
