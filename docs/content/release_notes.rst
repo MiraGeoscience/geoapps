@@ -2,6 +2,30 @@ Release Notes
 =============
 
 
+Release 0.7.0 - 2022/04/25
+--------------------------
+
+**(Major Release)**
+
+Changes to core functionalities:
+ - Migration of ui.json read/write and validations to geoh5py implementation
+ - Make soft dependencies for gdal/fiona
+ - Resolve conflicts with geosoft/anaconda installation.
+ - Run command for all inversion standardized to ``geoapps.inversion.driver``
+ - Update dependency to ``geoh5py 0.2.0``
+
+New development focused on natural source data inversion:
+ - Implement impedance (MT) inversion with run test
+ - Implement tipper (ZTEM) inversion with run test\
+ - Improved spatial tiling
+
+Bug fixes:
+ - Bad residual calculations on gz, gxz and gyz
+ - Remove air cells from DC starting model
+ - Allow Points and Curve entities for starting/ref model input.
+ - Wrong padding direction on Data transfer app mesh creation.
+
+
 Release 0.6.3 - 2022/02/09
 --------------------------
 
