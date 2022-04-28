@@ -12,7 +12,7 @@ import numpy as np
 from geoapps.utils import soft_import
 
 px = soft_import("plotly.express")
-go = soft_import("plotly.graph_objects")
+go = soft_import("plotly", objects=["graph_objects"])
 (
     Checkbox,
     Dropdown,
@@ -41,8 +41,8 @@ go = soft_import("plotly.graph_objects")
 )
 
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.base.utils import random_sampling, symlog
-from geoapps.utils.plotting import format_axis, normalize
+from geoapps.utils.general import random_sampling
+from geoapps.utils.plotting import format_axis, normalize, symlog
 
 
 class ScatterPlots(ObjectDataSelection):

@@ -129,6 +129,7 @@ class ObjectDataSelection(BaseApplication):
         assert isinstance(value, Dropdown), f"'Objects' must be of type {Dropdown}"
         self._objects = value
         self._objects.observe(self.update_data_list, names="value")
+        self.update_data_list(None)
 
     @property
     def object_types(self):
