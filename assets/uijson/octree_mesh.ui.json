@@ -75,7 +75,7 @@
     "Refinement A object": {
         "groupOptional": true,
         "enabled": true,
-        "group": "Refinenement A",
+        "group": "Refinement A",
         "label": "Object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -84,31 +84,32 @@
         ],
         "value": ""
     },
-    "Refinenement A levels": {
+    "Refinement A levels": {
         "enabled": true,
-        "group": "Refinenement A",
+        "group": "Refinement A",
         "label": "Levels",
         "value": "4.0, 4.0, 4.0"
     },
-    "Refinenement A type": {
+    "Refinement A type": {
         "choiceList": [
             "surface",
             "radial"
         ],
         "enabled": true,
-        "group": "Refinenement A",
+        "group": "Refinement A",
         "label": "Type",
         "value": "radial"
     },
-    "Refinenement A distance": {
+    "Refinement A distance": {
         "enabled": true,
-        "group": "Refinenement A",
+        "group": "Refinement A",
         "label": "Distance",
         "value": 1000.0
     },
     "Refinement B object": {
+        "groupOptional": true,
         "enabled": true,
-        "group": "refinement b",
+        "group": "Refinement B",
         "label": "Object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -119,9 +120,9 @@
     },
     "Refinement B levels": {
         "enabled": true,
-        "group": "refinement b",
+        "group": "Refinement B",
         "label": "Levels",
-        "value": "4,4,4"
+        "value": "0, 0, 4.0"
     },
     "Refinement B type": {
         "choiceList": [
@@ -129,13 +130,13 @@
             "radial"
         ],
         "enabled": true,
-        "group": "refinement b",
+        "group": "Refinement B",
         "label": "Type",
-        "value": "radial"
+        "value": "surface"
     },
     "Refinement B distance": {
         "enabled": true,
-        "group": "refinement b",
+        "group": "Refinement B",
         "label": "Distance",
         "value": 1000.0
     }
