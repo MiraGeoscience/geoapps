@@ -21,25 +21,24 @@ from geoh5py.objects import BlockModel, Grid2D
 from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 
+from geoapps.driver_base.utils import running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
-from geoapps.shared_utils.utils import (
-    block_model_2_tensor,
+from geoapps.shared_utils.utils import (  # block_model_2_tensor,; tensor_2_block_model,
     downsample_grid,
     downsample_xy,
     filter_xy,
-    find_value,
     get_locations,
     octree_2_treemesh,
     rotate_xy,
-    running_mean,
-    soft_import,
+    weighted_average,
+    window_xy,
+)
+from geoapps.utils import soft_import
+from geoapps.utils.general import (
+    find_value,
     sorted_alphanumeric_list,
     sorted_children_dict,
     string_to_numeric,
-    tensor_2_block_model,
-    treemesh_2_octree,
-    weighted_average,
-    window_xy,
 )
 from geoapps.utils.testing import Geoh5Tester
 
@@ -101,6 +100,10 @@ def test_soft_import():
     gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
     fiona = soft_import("fiona")
     transform = soft_import("fiona.transform", objects=["transform"])
+    plt = soft_import("matplotlib", ["pyplot"])
+    fig = (
+        plt.figure()
+    )  # This fails if imported via plt = soft_import("matplotlib.pyplot")
     assert isinstance(gdal, ModuleType) and gdal.__name__ == "osgeo.gdal"
     assert isinstance(osr, ModuleType) and osr.__name__ == "osgeo.osr"
     assert isinstance(fiona, ModuleType) and fiona.__name__ == "fiona"

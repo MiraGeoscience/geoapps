@@ -27,7 +27,7 @@ from geoapps.peak_finder.constants import (
 )
 from geoapps.utils import geophysical_systems, soft_import
 
-plt = soft_import("matplotlib.pyplot")
+plt = soft_import("matplotlib", objects=["pyplot"])
 (
     Box,
     Checkbox,

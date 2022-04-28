@@ -16,9 +16,9 @@ from geoh5py.workspace import Workspace
 from geoapps.shared_utils.utils import filter_xy, get_inversion_output
 from geoapps.utils import soft_import
 
-colors = soft_import("matplotlib.colors")
-plt = soft_import("matplotlib.pyplot")
-go = soft_import("plotly.graph_objects")
+colors = soft_import("matplotlib", objects=["colors"])
+plt = soft_import("matplotlib", objects=["pyplot"])
+go = soft_import("plotly", objects=["graph_objects"])
 widgets = soft_import("ipywidgets")
 
 

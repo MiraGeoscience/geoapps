@@ -22,7 +22,7 @@ from geoapps.utils.general import find_value
 from geoapps.utils.io import string_2_list
 
 widgets = soft_import("ipywidgets")
-plt = soft_import("matplotlib.pyplot")
+plt = soft_import("matplotlib", objects=["pyplot"])
 (
     Button,
     Checkbox,

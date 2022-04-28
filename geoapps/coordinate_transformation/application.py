@@ -24,7 +24,7 @@ from .utils import geotiff_2_grid
     "ipywidgets",
     objects=["HBox", "Layout", "SelectMultiple", "Text", "Textarea", "VBox"],
 )
-plt = soft_import("matplotlib.pyplot")
+plt = soft_import("matplotlib", objects=["pyplot"])
 transform = soft_import("fiona.transform", objects=["transform"])
 gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
 
