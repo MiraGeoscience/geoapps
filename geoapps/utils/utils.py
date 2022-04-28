@@ -32,8 +32,8 @@ from geoh5py.objects import (
 )
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
-from scipy.interpolate import interp1d
-from scipy.spatial import ConvexHull, cKDTree
+from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator, interp1d
+from scipy.spatial import ConvexHull, Delaunay, cKDTree
 from shapely.geometry import LineString, mapping
 from SimPEG.electromagnetics.static.resistivity import Survey
 from skimage.measure import marching_cubes
@@ -1774,6 +1774,70 @@ def direct_current_from_simpeg(
         potentials.add_data({key: {"values": value} for key, value in data.items()})
 
     return currents, potentials
+
+
+def active_from_xyz(
+    mesh, xyz, grid_reference="cell_centers", method="linear", logical="all"
+):
+    """Returns an active cell index array below a surface
+
+    **** ADAPTED FROM discretize.utils.mesh_utils.active_from_xyz ****
+
+
+    """
+    if method == "linear":
+        tri2D = Delaunay(xyz[:, :2])
+        z_interpolate = LinearNDInterpolator(tri2D, xyz[:, 2])
+    else:
+        z_interpolate = NearestNDInterpolator(xyz[:, :2], xyz[:, 2])
+
+    if grid_reference == "cell_centers":
+        # this should work for all 4 mesh types...
+        locations = mesh.gridCC
+
+    elif grid_reference == "top_nodes":
+        locations = np.vstack(
+            [
+                mesh.gridCC
+                + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                mesh.gridCC
+                + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                mesh.gridCC
+                + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                mesh.gridCC
+                + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+            ]
+        )
+    elif grid_reference == "bottom_nodes":
+        locations = np.vstack(
+            [
+                mesh.gridCC
+                + (np.c_[-1, 1, -1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                mesh.gridCC
+                + (np.c_[-1, -1, -1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                mesh.gridCC
+                + (np.c_[1, 1, -1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+                mesh.gridCC
+                + (np.c_[1, -1, -1][:, None] * mesh.h_gridded / 2.0).squeeze(),
+            ]
+        )
+
+    # Interpolate z values on CC or N
+    z_xyz = z_interpolate(locations[:, :-1]).squeeze()
+
+    # Apply nearest neighbour if in extrapolation
+    ind_nan = np.isnan(z_xyz)
+    if any(ind_nan):
+        tree = cKDTree(xyz)
+        _, ind = tree.query(locations[ind_nan, :])
+        z_xyz[ind_nan] = xyz[ind, -1]
+
+    # Create an active bool of all True
+    active = getattr(np, logical)(
+        (locations[:, -1] < z_xyz).reshape((mesh.nC, -1), order="F"), axis=1
+    )
+
+    return active.ravel()
 
 
 colors = [

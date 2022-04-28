@@ -75,7 +75,7 @@ def test_collection(tmp_path):
     inversion_data = InversionData(ws, params, inversion_window.window)
     inversion_topography = InversionTopography(ws, params, inversion_window.window)
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
-    active_cells = inversion_topography.active_cells(inversion_mesh)
+    active_cells = inversion_topography.active_cells(inversion_mesh, inversion_data)
     models = InversionModelCollection(ws, params, inversion_mesh)
     models.remove_air(active_cells)
     starting = InversionModel(ws, params, inversion_mesh, "starting")

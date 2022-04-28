@@ -1,6 +1,6 @@
 {
     "title": "octree Mesh Creator",
-    "geoh5": "",
+    "geoh5": "../../../assets/FlinFlon.geoh5",
     "run_command": "geoapps.octree_creation.driver",
     "run_command_boolean": {
         "value": false,
@@ -22,7 +22,7 @@
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
         ],
-        "value": ""
+        "value": "{656acd40-25de-4865-814c-cb700f6ee51a}"
     },
     "u_cell_size": {
         "enabled": true,
@@ -82,13 +82,13 @@
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
         ],
-        "value": ""
+        "value": "{656acd40-25de-4865-814c-cb700f6ee51a}"
     },
     "Refinement A levels": {
         "enabled": true,
         "group": "Refinement A",
         "label": "Levels",
-        "value": "4.0, 4.0, 4.0"
+        "value": "4, 4, 4"
     },
     "Refinement A type": {
         "choiceList": [
@@ -116,13 +116,13 @@
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
         ],
-        "value": ""
+        "value": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"
     },
     "Refinement B levels": {
         "enabled": true,
         "group": "Refinement B",
         "label": "Levels",
-        "value": "0, 0, 4.0"
+        "value": "0, 0, 4"
     },
     "Refinement B type": {
         "choiceList": [
@@ -138,6 +138,6 @@
         "enabled": true,
         "group": "Refinement B",
         "label": "Distance",
-        "value": 1000.0
+        "value": 1200.0
     }
 }

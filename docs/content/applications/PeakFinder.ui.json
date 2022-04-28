@@ -1,6 +1,6 @@
 {
     "title": "Peak Finder Parameters",
-    "geoh5": "",
+    "geoh5": "../../../assets/FlinFlon.geoh5",
     "run_command": "geoapps.peak_finder.driver",
     "run_command_boolean": {
         "value": false,
@@ -15,7 +15,7 @@
     "tem_checkbox": {
         "main": true,
         "label": "TEM type",
-        "value": false
+        "value": true
     },
     "objects": {
         "main": true,
@@ -24,7 +24,7 @@
         "meshType": [
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}"
         ],
-        "value": ""
+        "value": "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"
     },
     "data": {
         "association": "Vertex",
@@ -34,7 +34,7 @@
         "dataGroupType": "Multi-element",
         "label": "Channels",
         "parent": "objects",
-        "value": ""
+        "value": "{b834a590-dea9-48cb-abe3-8c714bb0bb7c}"
     },
     "flip_sign": {
         "main": true,
@@ -49,7 +49,7 @@
         "main": true,
         "label": "Line Field",
         "parent": "objects",
-        "value": ""
+        "value": "{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}"
     },
     "system": {
         "choiceList": [
@@ -76,7 +76,6 @@
             "Spectrem (2000)",
             "Spectrem Plus",
             "Spectrem (2003)",
-            "TEMPEST (2006)",
             "VTEM (2007)",
             "VTEM Plus",
             "VTEM Max",
@@ -87,7 +86,7 @@
         "label": "TEM system",
         "dependency": "tem_checkbox",
         "dependencyType": "enabled",
-        "value": ""
+        "value": "VTEM (2007)"
     },
     "smoothing": {
         "group": "Detection Parameters",
@@ -104,7 +103,7 @@
     "min_value": {
         "group": "Detection Parameters",
         "label": "Minimum Value",
-        "value": 0.0,
+        "value": -0.0004509940918069333,
         "main": true
     },
     "min_width": {
@@ -138,11 +137,11 @@
         "label": "Export all markers",
         "value": false
     },
-    "line_id": "",
+    "line_id": 6073400.0,
     "group_auto": {
         "label": "Auto-group",
         "value": true
     },
-    "center": "",
-    "width": ""
+    "center": 4041.2,
+    "width": 1000.0
 }

@@ -79,7 +79,7 @@ class SurveyFactory(SimPEGFactory):
         elif self.factory_type == "induced polarization":
             from SimPEG.electromagnetics.static.induced_polarization import survey
 
-        elif self.factory_type == "magnetotellurics":
+        elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import survey
 
         return survey.Survey
@@ -102,8 +102,8 @@ class SurveyFactory(SimPEGFactory):
 
         if self.factory_type in ["direct current", "induced polarization"]:
             return self._dcip_arguments(data=data)
-        elif self.factory_type in ["magnetotellurics"]:
-            return self._magnetotellurics_arguments(
+        elif self.factory_type in ["magnetotellurics", "tipper"]:
+            return self._naturalsource_arguments(
                 data=data, mesh=mesh, active_cells=active_cells, frequency=channel
             )
         else:
@@ -163,16 +163,20 @@ class SurveyFactory(SimPEGFactory):
             "zyy_imag": "zxx_imag",
         }
 
-        local_data = data.observed[component_map[component]][channel][local_index]
-        local_uncertainties = data.uncertainties[component_map[component]][channel][
-            local_index
-        ]
+        if self.factory_type == "magnetotellurics":
+            local_data = data.observed[component_map[component]][channel][local_index]
+            local_uncertainties = data.uncertainties[component_map[component]][channel][
+                local_index
+            ]
+        elif self.factory_type == "tipper":
+            local_data = data.observed[component][channel][local_index]
+            local_uncertainties = data.uncertainties[component][channel][local_index]
 
         return local_data, local_uncertainties
 
     def _add_data(self, survey, data, local_index, channel):
 
-        if self.factory_type in ["magnetotellurics"]:
+        if self.factory_type in ["magnetotellurics", "tipper"]:
 
             components = list(data.observed.keys())
             local_data = {}
@@ -268,7 +272,7 @@ class SurveyFactory(SimPEGFactory):
 
         return [sources]
 
-    def _magnetotellurics_arguments(
+    def _naturalsource_arguments(
         self, data=None, mesh=None, active_cells=None, frequency=None
     ):
 
