@@ -1314,6 +1314,7 @@ class PeakFinder(ObjectDataSelection):
         new_workspace = self.get_output_workspace(
             self.export_directory.selected_path, self.ga_group_name.value
         )
+
         for key, value in param_dict.items():
             if isinstance(value, ObjectBase):
                 if new_workspace.get_entity(value.uid)[0] is None:
