@@ -43,6 +43,7 @@ class SimPEGFactory:
         "direct current",
         "induced polarization",
         "magnetotellurics",
+        "tipper",
     ]
 
     def __init__(self, params: BaseParams):

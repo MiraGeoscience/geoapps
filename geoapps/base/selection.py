@@ -25,7 +25,6 @@ class ObjectDataSelection(BaseApplication):
     Application to select an object and corresponding data
     """
 
-    defaults = {}
     _data = None
     _objects = None
     _add_groups = False
@@ -124,6 +123,7 @@ class ObjectDataSelection(BaseApplication):
         assert isinstance(value, Dropdown), f"'Objects' must be of type {Dropdown}"
         self._objects = value
         self._objects.observe(self.update_data_list, names="value")
+        self.update_data_list(None)
 
     @property
     def object_types(self):

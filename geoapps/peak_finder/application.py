@@ -57,7 +57,6 @@ class PeakFinder(ObjectDataSelection):
     Application for the picking of targets along Time-domain EM profiles
     """
 
-    defaults = {}
     _param_class = PeakFinderParams
     _add_groups = "only"
     _center = None
@@ -101,7 +100,13 @@ class PeakFinder(ObjectDataSelection):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults = {}
+        for key, value in self.params.to_dict().items():
+            if isinstance(value, Entity):
+                self.defaults[key] = value.uid
+            else:
+                self.defaults[key] = value
+
         self.groups_panel = VBox([])
         self.group_auto.observe(self.create_default_groups, names="value")
         self.objects.observe(self.objects_change, names="value")
@@ -117,7 +122,7 @@ class PeakFinder(ObjectDataSelection):
         self.data.observe(self.set_data, names="value")
         self.system.observe(self.set_data, names="value")
         self.previous_line = None
-        super().__init__()
+        super().__init__(**self.defaults)
         self.pause_refresh = False
         self.refresh.value = True
         self.previous_line = self.lines.lines.value

@@ -304,7 +304,7 @@
         "parent": "starting_model_object",
         "label": "Conductivity (Siemens/m)",
         "property": "",
-        "value": 0.0
+        "value": 0.001
     },
     "background_conductivity": {
         "association": [
@@ -318,7 +318,7 @@
         "parent": "starting_model_object",
         "label": "Background conductivity (Siemens/m)",
         "property": "",
-        "value": 1e-05
+        "value": 0.001
     },
     "tile_spatial": {
         "group": "Receivers location options",
