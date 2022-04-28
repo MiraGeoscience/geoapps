@@ -1,6 +1,17 @@
 {
-    "title": "Octree Mesh Creator",
+    "title": "octree Mesh Creator",
     "geoh5": "",
+    "run_command": "geoapps.octree_creation.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "workspace": "",
     "objects": {
         "enabled": true,
         "group": "1- Core",
@@ -18,21 +29,21 @@
         "group": "2- Core cell size",
         "label": "Easting (m)",
         "main": true,
-        "value": 25
+        "value": 25.0
     },
     "v_cell_size": {
         "enabled": true,
         "group": "2- Core cell size",
         "label": "Northing (m)",
         "main": true,
-        "value": 25
+        "value": 25.0
     },
     "w_cell_size": {
         "enabled": true,
         "group": "2- Core cell size",
         "label": "Vertical (m)",
         "main": true,
-        "value": 25
+        "value": 25.0
     },
     "horizontal_padding": {
         "enabled": true,
@@ -62,8 +73,9 @@
         "value": "Octree_Mesh"
     },
     "Refinement A object": {
+        "groupOptional": true,
         "enabled": true,
-        "group": "refinement a",
+        "group": "Refinement A",
         "label": "Object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -74,9 +86,9 @@
     },
     "Refinement A levels": {
         "enabled": true,
-        "group": "refinement a",
+        "group": "Refinement A",
         "label": "Levels",
-        "value": "4,4,4"
+        "value": "4.0, 4.0, 4.0"
     },
     "Refinement A type": {
         "choiceList": [
@@ -84,19 +96,20 @@
             "radial"
         ],
         "enabled": true,
-        "group": "refinement a",
+        "group": "Refinement A",
         "label": "Type",
         "value": "radial"
     },
     "Refinement A distance": {
         "enabled": true,
-        "group": "refinement a",
+        "group": "Refinement A",
         "label": "Distance",
         "value": 1000.0
     },
     "Refinement B object": {
+        "groupOptional": true,
         "enabled": true,
-        "group": "refinement b",
+        "group": "Refinement B",
         "label": "Object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -107,9 +120,9 @@
     },
     "Refinement B levels": {
         "enabled": true,
-        "group": "refinement b",
+        "group": "Refinement B",
         "label": "Levels",
-        "value": "4,4,4"
+        "value": "0, 0, 4.0"
     },
     "Refinement B type": {
         "choiceList": [
@@ -117,24 +130,14 @@
             "radial"
         ],
         "enabled": true,
-        "group": "refinement b",
+        "group": "Refinement B",
         "label": "Type",
-        "value": "radial"
+        "value": "surface"
     },
     "Refinement B distance": {
         "enabled": true,
-        "group": "refinement b",
+        "group": "Refinement B",
         "label": "Distance",
         "value": 1000.0
-    },
-    "run_command": "geoapps.create.octree_mesh",
-    "run_command_boolean": {
-        "value": false,
-        "label": "Run python module ",
-        "tooltip": "Warning: launches process to run python model on save",
-        "main": true
-    },
-    "monitoring_directory": "",
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": false
+    }
 }

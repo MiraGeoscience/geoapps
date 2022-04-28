@@ -8,14 +8,13 @@
 from os import path
 
 import numpy as np
-import pytest
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Points, Surface
 from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 from scipy import spatial
 
-from geoapps.create.octree_mesh import OctreeMesh
+from geoapps.octree_creation.application import OctreeMesh
 from geoapps.utils.utils import treemesh_2_octree
 
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -37,9 +36,9 @@ def test_create_octree_app(tmp_path):
     # Create a geoh5 surface
     topo = Surface.create(ws, vertices=np.c_[x, y, z], cells=simplices)
     h = [5.0, 10.0, 15.0]
-    depth_core = 400
-    horizontal_padding = 500
-    vertical_padding = 200
+    depth_core = 400.0
+    horizontal_padding = 500.0
+    vertical_padding = 200.0
     p_d = [
         [horizontal_padding, horizontal_padding],
         [horizontal_padding, horizontal_padding],
@@ -110,8 +109,8 @@ def test_create_octree_app(tmp_path):
         depth_core=depth_core,
         **refinements,
     )
-    app.trigger.click()
+    app.trigger_click(None)
     # Re-load the new mesh and compare
-    ws_B = Workspace(app.h5file)
+    ws_B = Workspace(path.join(app.monitoring_directory, "Octree_Mesh.geoh5"))
     rec_octree = ws_B.get_entity("Octree_Mesh")[0]
-    compare_entities(octree, rec_octree, ignore=["_name", "_uid"])
+    compare_entities(octree, rec_octree, ignore=["_uid"])

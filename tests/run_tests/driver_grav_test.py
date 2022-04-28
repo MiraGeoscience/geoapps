@@ -8,10 +8,9 @@
 
 import numpy as np
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.utils import get_inversion_output
-from geoapps.utils.testing import setup_inversion_workspace
+from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -19,10 +18,10 @@ from geoapps.utils.testing import setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_gravity_run = {
+target_run = {
     "data_norm": 0.0071214,
-    "phi_d": 0.0001571,
-    "phi_m": 0.03664,
+    "phi_d": 0.0001572,
+    "phi_m": 0.009368,
 }
 
 
@@ -33,12 +32,12 @@ def test_gravity_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.drivers.grav_inversion import GravityDriver
-    from geoapps.io.Gravity.params import GravityParams
+    from geoapps.inversion.driver import InversionDriver
+    from geoapps.inversion.potential_fields import GravityParams
 
     np.random.seed(0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.75,
@@ -47,24 +46,23 @@ def test_gravity_run(
         refinement=refinement,
         flatten=False,
     )
-    model = geoh5.get_entity("model")[0]
+
     params = GravityParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         resolution=0.0,
         z_from_topo=False,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
-    params.workpath = tmp_path
-    fwr_driver = GravityDriver(params)
+    fwr_driver = InversionDriver(params)
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
-    gz = geoh5.get_entity("Predicted_gz")[0]
+    gz = geoh5.get_entity("Iteration_0_gz")[0]
     orig_gz = gz.values.copy()
 
     # Turn some values to nan
@@ -75,8 +73,8 @@ def test_gravity_run(
     np.random.seed(0)
     params = GravityParams(
         geoh5=geoh5,
-        mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        mesh=mesh.uid,
+        topography_object=topography.uid,
         resolution=0.0,
         data_object=gz.parent.uid,
         starting_model=1e-4,
@@ -95,28 +93,21 @@ def test_gravity_run(
         prctile=100,
     )
     params.workpath = tmp_path
-    driver = GravityDriver(params)
+    driver = InversionDriver(params)
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
 
-    residual = run_ws.get_entity("Iteration_1_grav_gz_Residual")[0]
+    residual = run_ws.get_entity("Iteration_1_gz_Residual")[0]
     assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
 
-    predicted = run_ws.get_entity("Iteration_0_grav_gz")[0]
+    predicted = run_ws.get_entity("Iteration_0_gz")[0]
     assert not any(np.isnan(predicted.values)), "Predicted data should not have nans."
-
+    output["data"] = orig_gz
     if pytest:
-        np.testing.assert_almost_equal(
-            np.linalg.norm(orig_gz),
-            target_gravity_run["data_norm"],
-            decimal=3,
-        )
-        np.testing.assert_almost_equal(output["phi_m"][1], target_gravity_run["phi_m"])
-        np.testing.assert_almost_equal(output["phi_d"][1], target_gravity_run["phi_d"])
-
+        check_target(output, target_run)
         nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
         inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
         assert np.all(nan_ind == inactive_ind)

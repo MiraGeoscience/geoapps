@@ -1,0 +1,143 @@
+{
+    "title": "octree Mesh Creator",
+    "geoh5": "../../../assets/FlinFlon.geoh5",
+    "run_command": "geoapps.octree_creation.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "workspace": "",
+    "objects": {
+        "enabled": true,
+        "group": "1- Core",
+        "label": "Core hull extent",
+        "main": true,
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": "{656acd40-25de-4865-814c-cb700f6ee51a}"
+    },
+    "u_cell_size": {
+        "enabled": true,
+        "group": "2- Core cell size",
+        "label": "Easting (m)",
+        "main": true,
+        "value": 25.0
+    },
+    "v_cell_size": {
+        "enabled": true,
+        "group": "2- Core cell size",
+        "label": "Northing (m)",
+        "main": true,
+        "value": 25.0
+    },
+    "w_cell_size": {
+        "enabled": true,
+        "group": "2- Core cell size",
+        "label": "Vertical (m)",
+        "main": true,
+        "value": 25.0
+    },
+    "horizontal_padding": {
+        "enabled": true,
+        "group": "3- Padding distance",
+        "label": "Horizontal (m)",
+        "main": true,
+        "value": 1000.0
+    },
+    "vertical_padding": {
+        "enabled": true,
+        "group": "3- Padding distance",
+        "label": "Vertical (m)",
+        "main": true,
+        "value": 1000.0
+    },
+    "depth_core": {
+        "enabled": true,
+        "group": "1- Core",
+        "label": "Minimum Depth (m)",
+        "main": true,
+        "value": 500.0
+    },
+    "ga_group_name": {
+        "enabled": true,
+        "group": "",
+        "label": "Name:",
+        "value": "Octree_Mesh"
+    },
+    "Refinement A object": {
+        "groupOptional": true,
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": "{656acd40-25de-4865-814c-cb700f6ee51a}"
+    },
+    "Refinement A levels": {
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Levels",
+        "value": "4, 4, 4"
+    },
+    "Refinement A type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Type",
+        "value": "radial"
+    },
+    "Refinement A distance": {
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Distance",
+        "value": 1000.0
+    },
+    "Refinement B object": {
+        "groupOptional": true,
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"
+    },
+    "Refinement B levels": {
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Levels",
+        "value": "0, 0, 4"
+    },
+    "Refinement B type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Type",
+        "value": "surface"
+    },
+    "Refinement B distance": {
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Distance",
+        "value": 1200.0
+    }
+}

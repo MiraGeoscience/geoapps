@@ -12,9 +12,9 @@ import pytest
 from geoh5py.objects import Grid2D, Points
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers.components import InversionMesh
-from geoapps.drivers.components.locations import InversionLocations
-from geoapps.io.MagneticVector import MagneticVectorParams, default_ui_json
+from geoapps.inversion import default_ui_json
+from geoapps.inversion.components.locations import InversionLocations
+from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")

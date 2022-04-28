@@ -8,16 +8,18 @@
 from os import path
 from uuid import UUID
 
+from geoh5py.shared import Entity
+from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
-from geoapps.drivers.direct_current_inversion import DirectCurrentParams
-from geoapps.drivers.induced_polarization_inversion import InducedPolarizationParams
-from geoapps.drivers.magnetic_vector_inversion import MagneticVectorParams
-from geoapps.inversion.dcip_inversion_app import InversionApp as DCInversionApp
-from geoapps.inversion.em1d_inversion_app import InversionApp as EM1DInverionApp
-from geoapps.inversion.pf_inversion_app import InversionApp as MagInversionApp
-from geoapps.io import InputFile
+from geoapps.inversion.airborne_electromagnetics.application import InversionApp
+from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
+from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
+from geoapps.inversion.potential_fields import MagneticVectorParams
+from geoapps.inversion.potential_fields.application import (
+    InversionApp as MagInversionApp,
+)
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -69,8 +71,8 @@ def test_mag_inversion(tmp_path):
         else:
             setattr(app, param, value)
 
-    app.write.click()
-    ifile = InputFile(app.params.input_file.filepath)
+    app.write_trigger(None)
+    ifile = InputFile.read_ui_json(app.params.input_file.path_name)
     params_reload = MagneticVectorParams(ifile)
     objs = params_reload.geoh5.list_entities_name
     check_objs = [
@@ -83,13 +85,15 @@ def test_mag_inversion(tmp_path):
         assert o in objs.keys()
 
     for param, value in changes.items():
-        assert (
-            getattr(params_reload, param) == value
-        ), f"Parameter {param} not saved and loaded correctly."
+        p_value = getattr(params_reload, param)
+        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
+        assert p_value == value, f"Parameter {param} not saved and loaded correctly."
 
     for param, value in side_effects.items():
+        p_value = getattr(params_reload, param)
+        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
         assert (
-            getattr(params_reload, param) == value
+            p_value == value
         ), f"Side effect parameter {param} not saved and loaded correctly."
 
     # Test the groups
@@ -154,18 +158,20 @@ def test_dc_inversion(tmp_path):
         else:
             setattr(app, param, value)
 
-    app.write.click()
-    ifile = InputFile(app.params.input_file.filepath)
+    app.write_trigger(None)
+    ifile = InputFile.read_ui_json(app.params.input_file.path_name)
     params_reload = DirectCurrentParams(ifile)
 
     for param, value in changes.items():
-        assert (
-            getattr(params_reload, param) == value
-        ), f"Parameter {param} not saved and loaded correctly."
+        p_value = getattr(params_reload, param)
+        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
+        assert p_value == value, f"Parameter {param} not saved and loaded correctly."
 
     for param, value in side_effects.items():
+        p_value = getattr(params_reload, param)
+        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
         assert (
-            getattr(params_reload, param) == value
+            p_value == value
         ), f"Side effect parameter {param} not saved and loaded correctly."
 
     # Test the groups
@@ -216,7 +222,6 @@ def test_ip_inversion(tmp_path):
         "topography_object": new_topo.uid,
         "z_from_topo": False,
         "forward_only": False,
-        "starting_model": 0.01,
         "inversion_type": "induced polarization",
         "chargeability_channel": UUID("502e7256-aafa-4016-969f-5cc3a4f27315"),
         "conductivity_model_object": UUID("da109284-aa8c-4824-a647-29951109b058"),
@@ -232,19 +237,20 @@ def test_ip_inversion(tmp_path):
         else:
             setattr(app, param, value)
 
-    app.write.click()
-    ifile = InputFile(app.params.input_file.filepath)
+    app.write_trigger(None)
+    ifile = InputFile.read_ui_json(app.params.input_file.path_name)
     params_reload = InducedPolarizationParams(ifile)
 
     for param, value in changes.items():
-        if param not in side_effects.keys():
-            assert (
-                getattr(params_reload, param) == value
-            ), f"Parameter {param} not saved and loaded correctly."
+        p_value = getattr(params_reload, param)
+        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
+        assert p_value == value, f"Parameter {param} not saved and loaded correctly."
 
     for param, value in side_effects.items():
+        p_value = getattr(params_reload, param)
+        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
         assert (
-            getattr(params_reload, param) == value
+            p_value == value
         ), f"Side effect parameter {param} not saved and loaded correctly."
 
     groups = [
@@ -289,7 +295,7 @@ def test_em1d_inversion(tmp_path):
         "data": (UUID("{b834a590-dea9-48cb-abe3-8c714bb0bb7c}"),),
     }
     side_effects = {"system": "VTEM (2007)"}
-    app = EM1DInverionApp(geoh5=project, plot_result=False)
+    app = InversionApp(geoh5=project, plot_result=False)
     app.geoh5 = new_geoh5
 
     for param, value in changes.items():
