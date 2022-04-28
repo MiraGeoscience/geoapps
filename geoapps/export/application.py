@@ -18,7 +18,7 @@ from geoapps.utils import soft_import
 from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
 
-plt = soft_import("matplotlib.pyplot")
+plt = soft_import("matplotlib", objects=["pyplot"])
 HBox, VBox = soft_import("ipywidgets.widgets", objects=["HBox", "VBox"])
 osr = soft_import("osgeo", objects=["osr"])
 (Dropdown, FloatText, Layout, RadioButtons, Text, Textarea) = soft_import(
