@@ -41,9 +41,6 @@ class BaseApplication:
     Base class for geoapps applications
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-    }
     _geoh5 = None
     _h5file = None
     _main = None
@@ -60,6 +57,7 @@ class BaseApplication:
     plot_result = False
 
     def __init__(self, **kwargs):
+        self.defaults = {}
         self.defaults.update(**kwargs)
         self._file_browser = FileChooser()
         self._file_browser._select.on_click(self.file_browser_change)
@@ -154,7 +152,7 @@ class BaseApplication:
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
                 self.params = getattr(self, "_param_class")(
-                    InputFile(self.file_browser.selected)
+                    InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.refresh.value = False
                 self.__populate__(**self.params.to_dict(ui_json_format=False))

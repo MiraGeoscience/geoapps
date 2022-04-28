@@ -226,7 +226,7 @@ def test_chunk_validation(tmp_path):
     for a in ["Missing required parameter", "data_object"]:
         assert a in str(excinfo.value)
 
-    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
+    from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
         app_initializer,
     )
 
@@ -238,14 +238,11 @@ def test_chunk_validation(tmp_path):
     for a in ["Cannot set a None", "inducing_field_strength"]:
         assert a in str(excinfo.value)
 
-    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
-        app_initializer,
-    )
+    from geoapps.inversion.potential_fields.gravity.constants import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
-    test_dict.pop("starting_model")
+    test_dict["starting_model"] = None
     params = GravityParams(**test_dict)
-
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
     for a in ["Cannot set a None", "starting_model"]:

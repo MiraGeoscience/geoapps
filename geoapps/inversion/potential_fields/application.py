@@ -1294,7 +1294,7 @@ class InversionApp(PlotSelection2D):
                     self._param_class = MagneticScalarParams
 
                 self.params = getattr(self, "_param_class")(
-                    InputFile(self.file_browser.selected)
+                    InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.refresh.value = False
                 self.__populate__(**self.params.to_dict(ui_json_format=False))

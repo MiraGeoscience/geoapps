@@ -72,10 +72,10 @@
         "label": "Name:",
         "value": "Octree_Mesh"
     },
-    "Refinenement A object": {
+    "Refinement A object": {
         "groupOptional": true,
         "enabled": true,
-        "group": "Refinenement A",
+        "group": "Refinement A",
         "label": "Object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -84,25 +84,59 @@
         ],
         "value": ""
     },
-    "Refinenement A levels": {
+    "Refinement A levels": {
         "enabled": true,
-        "group": "Refinenement A",
+        "group": "Refinement A",
         "label": "Levels",
         "value": "4.0, 4.0, 4.0"
     },
-    "Refinenement A type": {
+    "Refinement A type": {
         "choiceList": [
             "surface",
             "radial"
         ],
         "enabled": true,
-        "group": "Refinenement A",
+        "group": "Refinement A",
         "label": "Type",
         "value": "radial"
     },
-    "Refinenement A distance": {
+    "Refinement A distance": {
         "enabled": true,
-        "group": "Refinenement A",
+        "group": "Refinement A",
+        "label": "Distance",
+        "value": 1000.0
+    },
+    "Refinement B object": {
+        "groupOptional": true,
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": ""
+    },
+    "Refinement B levels": {
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Levels",
+        "value": "0, 0, 4.0"
+    },
+    "Refinement B type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Type",
+        "value": "surface"
+    },
+    "Refinement B distance": {
+        "enabled": true,
+        "group": "Refinement B",
         "label": "Distance",
         "value": 1000.0
     }

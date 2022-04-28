@@ -49,8 +49,8 @@ class MisfitFactory(SimPEGFactory):
         mesh,
         active_cells,
     ):
-        if self.factory_type in ["magnetotellurics"]:
-            return self._magnetotellurics_arguments(
+        if self.factory_type in ["magnetotellurics", "tipper"]:
+            return self._naturalsource_arguments(
                 tiles=tiles,
                 inversion_data=inversion_data,
                 mesh=mesh,
@@ -107,7 +107,7 @@ class MisfitFactory(SimPEGFactory):
 
         return [local_misfits]
 
-    def _magnetotellurics_arguments(
+    def _naturalsource_arguments(
         self,
         tiles=None,
         inversion_data=None,
