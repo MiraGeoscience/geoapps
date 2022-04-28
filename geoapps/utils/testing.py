@@ -237,14 +237,12 @@ def setup_inversion_workspace(
         )
     model[~active] = np.nan
     model = octree.add_data({"model": {"values": model[mesh._ubc_order]}})
-    # octree.add_data({"active": {"values": active.astype(int)[mesh._ubc_order]}})
     return geoh5, octree, model, survey, topography
 
 
 def check_target(output: dict, target: dict, tolerance=0.1):
     """
     Check inversion output metrics against hard-valued target.
-
     :param output: Dictionary containing keys for 'data', 'phi_d' and 'phi_m'.
     :param target: Dictionary containing keys for 'data_norm', 'phi_d' and 'phi_m'.\
     :param tolerance: Tolerance between output and target measured as: |a-b|/b

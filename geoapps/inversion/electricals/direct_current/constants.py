@@ -10,6 +10,7 @@ from uuid import UUID
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
 from geoapps.inversion import default_ui_json as base_default_ui_json
+from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
     "title": "SimPEG Direct Current inversion",
@@ -232,6 +233,8 @@ validations = {
     },
     "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }
+
+validations = dict(base_validations, **validations)
 
 app_initializer = {
     "geoh5": "../../../assets/FlinFlon_dcip.geoh5",

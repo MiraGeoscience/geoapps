@@ -10,6 +10,7 @@ from uuid import UUID
 from geoh5py.objects import Grid2D, Points, Surface
 
 from geoapps.inversion import default_ui_json as base_default_ui_json
+from geoapps.inversion.constants import validations as base_validations
 
 ################# defaults ##################
 
@@ -47,7 +48,7 @@ inversion_defaults = {
     "starting_model_object": None,
     "starting_inclination_object": None,
     "starting_declination_object": None,
-    "starting_model": None,
+    "starting_model": 1e-4,
     "starting_inclination": None,
     "starting_declination": None,
     "tile_spatial": 1,
@@ -249,14 +250,14 @@ default_ui_json = {
         "value": 50000.0,
     },
     "inducing_field_inclination": {
-        "min": 0.0,
+        "min": -90.0,
+        "max": 90.0,
         "main": True,
         "group": "Inducing Field",
         "label": "Inclination",
         "value": 90.0,
     },
     "inducing_field_declination": {
-        "min": 0.0,
         "main": True,
         "group": "Inducing Field",
         "label": "Declination",
@@ -673,7 +674,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
         "group": "Regularization",
-        "isValue": False,
+        "isValue": True,
         "optional": True,
         "enabled": False,
         "label": "Reference declination value",
@@ -717,6 +718,8 @@ validations = {
     "bz_channel": {"one_of": "data channel"},
     "bz_uncertainty": {"one_of": "uncertainty channel"},
 }
+
+validations = dict(base_validations, **validations)
 
 app_initializer = {
     "geoh5": "../../../assets/FlinFlon.geoh5",

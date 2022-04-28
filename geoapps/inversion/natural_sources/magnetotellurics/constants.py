@@ -10,6 +10,7 @@ from uuid import UUID
 from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
 
 from geoapps.inversion import default_ui_json as base_default_ui_json
+from geoapps.inversion.constants import validations as base_validations
 
 ################# defaults ##################
 
@@ -515,5 +516,51 @@ validations = {
     "zyy_imag_channel": {"one_of": "data_channel"},
     "zyy_imag_uncertainty": {"one_of": "uncertainty_channel"},
 }
+validations = dict(base_validations, **validations)
 
-app_initializer = {}
+app_initializer = {
+    "geoh5": "../../../assets/FlinFlon_natural_sources.geoh5",
+    "topography_object": UUID("{cfabb8dd-d1ad-4c4e-a87c-7b3dd224c3f5}"),
+    "data_object": UUID("{c9643051-e623-42d5-b33b-dbc6b2b5b876}"),
+    "zxx_real_channel": UUID("{bd103ff8-5cc1-4acc-a23b-3dd9b875c20f}"),
+    "zxx_real_uncertainty": UUID("{684297aa-f09d-41ab-9c4c-bd9085818e3e}"),
+    "zxx_imag_channel": UUID("{6d463e8b-0e27-4969-bddb-6af21983c469}"),
+    "zxx_imag_uncertainty": UUID("{4f514be9-3420-49ff-8e71-cb44160dfd83}"),
+    "zxy_real_channel": UUID("{89cb9fc3-1220-4649-80a5-fdcaef8e398e}"),
+    "zxy_real_uncertainty": UUID("{79de7a3b-6505-4ee3-aa3f-53966551367c}"),
+    "zxy_imag_channel": UUID("{7fea3bf2-4309-4612-a7f2-6e04ffd4f4ea}"),
+    "zxy_imag_uncertainty": UUID("{fa4a4311-4059-4885-b2f0-a787f9837a47}"),
+    "zyx_real_channel": UUID("{33419705-6555-475c-872c-37fcf69aa351}"),
+    "zyx_real_uncertainty": UUID("{45e0fe91-e18d-42b3-80f6-59235b93ec32}"),
+    "zyx_imag_channel": UUID("{e294ddcd-4a87-4285-8cc6-0a92c0345a4a}"),
+    "zyx_imag_uncertainty": UUID("{07b9bb1f-3b2a-4fba-be09-6f69ddd9b66f}"),
+    "zyy_real_channel": UUID("{fe88daca-060c-416f-8011-7fae78fe7582}"),
+    "zyy_real_uncertainty": UUID("{cbf999bc-f9b9-4c0c-8198-9dac8135e3a3}"),
+    "zyy_imag_channel": UUID("{a8e3f100-43ad-4b37-a56a-34c6cae29f14}"),
+    "zyy_imag_uncertainty": UUID("{52212149-d873-4adc-aae1-08414d7f9a9b}"),
+    "starting_model": 0.0003,
+    "reference_model": 0.0003,
+    "background_conductivity": 0.0003,
+    "u_cell_size": 100.0,
+    "v_cell_size": 100.0,
+    "w_cell_size": 100.0,
+    "resolution": 200.0,
+    "window_center_x": None,
+    "window_center_y": None,
+    "window_width": None,
+    "window_height": None,
+    "window_azimuth": None,
+    "octree_levels_topo": [0, 0, 4, 4],
+    "octree_levels_obs": [4, 4, 4, 4],
+    "depth_core": 500.0,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+    "upper_bound": 100.0,
+    "lower_bound": 1e-5,
+    "max_iterations": 15,
+    "out_group": "MTInversion",
+}

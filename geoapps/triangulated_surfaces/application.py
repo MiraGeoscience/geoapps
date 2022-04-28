@@ -37,21 +37,12 @@ class Surface2D(ObjectDataSelection):
     a pseudo 3D conductivity model on surface.
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
-        "data": ["{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}"],
-        "max_distance": 250,
-        "elevations": {"data": "{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}"},
-        "lines": {"data": "{0be5374c-3ebb-4762-962a-97d99f3cb0e1}"},
-        "topography": {},
-    }
-
     _add_groups = "only"
     _select_multiple = True
     _object_types = (Curve,)
 
     def __init__(self, **kwargs):
+        self.defaults = app_initializer.copy()
         self.defaults.update(**kwargs)
         self._z_option = RadioButtons(
             options=["elevation", "depth"],
@@ -493,3 +484,14 @@ class Surface2D(ObjectDataSelection):
         self.lines.workspace = workspace
         self.elevations.workspace = workspace
         self.topography.workspace = workspace
+
+
+app_initializer = {
+    "h5file": "../../assets/FlinFlon.geoh5",
+    "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
+    "data": ["{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}"],
+    "max_distance": 250,
+    "elevations": {"data": "{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}"},
+    "lines": {"data": "{0be5374c-3ebb-4762-962a-97d99f3cb0e1}"},
+    "topography": {},
+}
