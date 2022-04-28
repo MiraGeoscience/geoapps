@@ -226,7 +226,7 @@ def test_chunk_validation(tmp_path):
     for a in ["Missing required parameter", "data_object"]:
         assert a in str(excinfo.value)
 
-    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
+    from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
         app_initializer,
     )
 
@@ -238,14 +238,11 @@ def test_chunk_validation(tmp_path):
     for a in ["Cannot set a None", "inducing_field_strength"]:
         assert a in str(excinfo.value)
 
-    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
-        app_initializer,
-    )
+    from geoapps.inversion.potential_fields.gravity.constants import app_initializer
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
-    test_dict.pop("starting_model")
+    test_dict["starting_model"] = None
     params = GravityParams(**test_dict)
-
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
     for a in ["Cannot set a None", "starting_model"]:
@@ -2034,25 +2031,3 @@ def test_isValue(tmp_path):
         ui = json.load(f)
 
     assert ui["starting_model"]["isValue"] is False, "isValue should be False"
-
-
-def test_unknown_key(tmp_path):
-
-    filepath = tmpfile(tmp_path)
-    input_file = InputFile()
-    input_file.filepath = filepath
-    input_file.write_ui_json(octree_defaults, geoh5=geoh5.h5file)
-    with open(filepath) as f:
-        ui = json.load(f)
-
-    ui["something"] = "new"
-    ui["objects"]["value"] = str(geoh5.objects[0].uid)
-    with open(filepath, "w") as f:
-        json.dump(ui, f, indent=4)
-
-    ifile = InputFile(filepath)
-    params = OctreeParams(ifile, geoh5=geoh5)
-
-    assert (
-        getattr(params, "something") == "new"
-    ), "Unknown parameter not registered to params."
