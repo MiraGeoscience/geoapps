@@ -59,6 +59,7 @@ def test_gravity_run(
         starting_model=model.uid,
     )
     fwr_driver = InversionDriver(params)
+    fwr_driver.initialize()
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
@@ -94,6 +95,7 @@ def test_gravity_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
+    driver.initialize()
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(

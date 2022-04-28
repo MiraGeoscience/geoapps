@@ -14,7 +14,9 @@ if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
 import multiprocessing
+import os
 import sys
+from datetime import datetime
 from multiprocessing.pool import ThreadPool
 from time import time
 from uuid import UUID
@@ -51,7 +53,7 @@ class InversionDriver:
         self.inverse_problem = None
         self.survey = None
         self.active_cells = None
-        self.initialize()
+        self.running = False
 
     @property
     def window(self):
@@ -174,15 +176,20 @@ class InversionDriver:
             beta=self.params.initial_beta,
         )
 
-        # If forward only option enabled, stop here
+        # Solve forward problem, and attach dpred to inverse problem or
         if self.params.forward_only:
-            return
-
-        if self.warmstart:
+            print("Running forward simulation ...")
+        else:
             print("Pre-computing sensitivities ...")
+
+        if self.warmstart or self.params.forward_only:
             self.inverse_problem.dpred = self.inversion_data.simulate(
                 self.starting_model, self.inverse_problem, self.sorting
             )
+
+        # If forward only option enabled, stop here
+        if self.params.forward_only:
+            return
 
         # Add a list of directives to the inversion
         self.directiveList = DirectivesFactory(self.params).build(
@@ -211,7 +218,8 @@ class InversionDriver:
 
         # Run the inversion
         self.start_inversion_message()
-        self.inversion.run(self.starting_model)
+        self.running = True
+        mrec = self.inversion.run(self.starting_model)
 
     def start_inversion_message(self):
 
@@ -361,6 +369,31 @@ class InversionDriver:
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
 
+class InversionLogger:
+    def __init__(self, logfile, driver):
+        self.driver = driver
+        self.terminal = sys.stdout
+        self.log = open(self.get_path(logfile), "w")
+
+        date_time = datetime.now().strftime("%b-%d-%Y: %H:%M:%S\n")
+        self.write(f"SimPEG {driver.inversion_type} inversion started {date_time}")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()
+
+    def close(self):
+        self.terminal.close()
+
+    def flush(self):
+        pass
+
+    def get_path(self, file):
+        root_directory = os.path.dirname(self.driver.workspace.h5file)
+        return os.path.join(root_directory, file)
+
+
 def start_inversion(filepath=None, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
@@ -368,6 +401,7 @@ def start_inversion(filepath=None, **kwargs):
         input_file = InputFile.read_ui_json(filepath)
         inversion_type = input_file.data.get("inversion_type")
     else:
+        input_file = None
         inversion_type = kwargs.get("inversion_type")
 
     if inversion_type == "magnetic vector":
@@ -383,13 +417,11 @@ def start_inversion(filepath=None, **kwargs):
         from .potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
-        from .natural_sources.magnetotellurics import (
-            MagnetotelluricsParams as ParamClass,
-        )
+        from .natural_sources import MagnetotelluricsParams as ParamClass
         from .natural_sources.magnetotellurics.constants import validations
 
     elif inversion_type == "tipper":
-        from .natural_sources.tipper import ParamClass
+        from .natural_sources import TipperParams as ParamClass
         from .natural_sources.tipper.constants import validations
 
     elif inversion_type == "direct current":
@@ -406,7 +438,10 @@ def start_inversion(filepath=None, **kwargs):
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
+    sys.stdout = InversionLogger("SimPEG.log", driver)
+    driver.initialize()
     driver.run()
+    sys.stdout.close()
 
 
 if __name__ == "__main__":

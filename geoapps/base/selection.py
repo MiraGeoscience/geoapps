@@ -30,7 +30,6 @@ class ObjectDataSelection(BaseApplication):
     Application to select an object and corresponding data
     """
 
-    defaults = {}
     _data = None
     _objects = None
     _add_groups = False
