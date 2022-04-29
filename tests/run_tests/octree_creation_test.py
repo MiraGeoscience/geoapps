@@ -14,8 +14,8 @@ from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 from scipy import spatial
 
+from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.octree_creation.application import OctreeMesh
-from geoapps.shared_utils.utils import treemesh_2_octree
 
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
