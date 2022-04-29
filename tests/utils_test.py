@@ -455,140 +455,140 @@ def test_detrend_xy():
     assert "> 0. Value of -2" in str(excinfo.value)
 
 
-def test_blockmodel_nonuniqueness(tmp_path):
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    nx, ny, nz = 11, 11, 11
-    x = np.linspace(0, 10, nx)
-    y = np.linspace(0, 10, ny)
-    z = np.linspace(0, 10, nz)
-    block_model_1 = BlockModel.create(
-        ws,
-        origin=[0.0, 0.0, -10.0],
-        u_cell_delimiters=x,
-        v_cell_delimiters=y,
-        z_cell_delimiters=z,
-        name="test_block_model",
-        allow_move=False,
-    )
-    block_model_2 = BlockModel.create(
-        ws,
-        origin=[0.0, 0.0, 0.0],
-        u_cell_delimiters=x,
-        v_cell_delimiters=y,
-        z_cell_delimiters=-z,
-        name="test_block_model_2",
-        allow_move=False,
-    )
-
-    tensor_1, _ = block_model_2_tensor(block_model_1, models=[])
-    tensor_2, _ = block_model_2_tensor(block_model_2, models=[])
-    np.testing.assert_array_equal(tensor_2.cell_centers, tensor_1.cell_centers)
-    np.testing.assert_array_equal(tensor_2.origin, tensor_1.origin)
-
-    # Conclusion - can't expect to recover the original block_model.  There isn't
-    # a single block model that is equivalent to the tensor mesh.  The circular
-    # blockModel -> TensorMesh -> blockModel should pass for a bottom soutwest corner
-    # positive cell delimiters original block model though.
-
-
-def blockmodel_tensormesh_equivalency(ws, origin, x, y, z, ignore_origin=False):
-
-    block_model = BlockModel.create(
-        ws,
-        origin=origin,
-        u_cell_delimiters=x,
-        v_cell_delimiters=y,
-        z_cell_delimiters=z,
-        name="test_block_model",
-        allow_move=False,
-    )
-
-    data = block_model.add_data(
-        {
-            "DataValues": {
-                "association": "CELL",
-                "values": np.random.randint(
-                    0, 100, size=len(block_model.centroids)
-                ).astype(np.int32),
-            }
-        }
-    )
-
-    tensor_mesh, model = block_model_2_tensor(block_model, models=[data.values])
-
-    block_model_test = tensor_2_block_model(
-        ws, tensor_mesh, data={"block_test": model[0]}
-    )
-
-    ignore_list = ["_uid", "_name", "_allow_move"]
-    if ignore_origin:
-        ignore_list += ["_origin"]
-
-    compare_entities(block_model, block_model_test, ignore=ignore_list)
+# def test_blockmodel_nonuniqueness(tmp_path):
+#     ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+#     nx, ny, nz = 11, 11, 11
+#     x = np.linspace(0, 10, nx)
+#     y = np.linspace(0, 10, ny)
+#     z = np.linspace(0, 10, nz)
+#     block_model_1 = BlockModel.create(
+#         ws,
+#         origin=[0.0, 0.0, -10.0],
+#         u_cell_delimiters=x,
+#         v_cell_delimiters=y,
+#         z_cell_delimiters=z,
+#         name="test_block_model",
+#         allow_move=False,
+#     )
+#     block_model_2 = BlockModel.create(
+#         ws,
+#         origin=[0.0, 0.0, 0.0],
+#         u_cell_delimiters=x,
+#         v_cell_delimiters=y,
+#         z_cell_delimiters=-z,
+#         name="test_block_model_2",
+#         allow_move=False,
+#     )
+#
+#     tensor_1, _ = block_model_2_tensor(block_model_1, models=[])
+#     tensor_2, _ = block_model_2_tensor(block_model_2, models=[])
+#     np.testing.assert_array_equal(tensor_2.cell_centers, tensor_1.cell_centers)
+#     np.testing.assert_array_equal(tensor_2.origin, tensor_1.origin)
+#
+#     # Conclusion - can't expect to recover the original block_model.  There isn't
+#     # a single block model that is equivalent to the tensor mesh.  The circular
+#     # blockModel -> TensorMesh -> blockModel should pass for a bottom soutwest corner
+#     # positive cell delimiters original block model though.
 
 
-def test_block_model_2_tensor(tmp_path):
+# def blockmodel_tensormesh_equivalency(ws, origin, x, y, z, ignore_origin=False):
+#
+#     block_model = BlockModel.create(
+#         ws,
+#         origin=origin,
+#         u_cell_delimiters=x,
+#         v_cell_delimiters=y,
+#         z_cell_delimiters=z,
+#         name="test_block_model",
+#         allow_move=False,
+#     )
+#
+#     data = block_model.add_data(
+#         {
+#             "DataValues": {
+#                 "association": "CELL",
+#                 "values": np.random.randint(
+#                     0, 100, size=len(block_model.centroids)
+#                 ).astype(np.int32),
+#             }
+#         }
+#     )
+#
+#     tensor_mesh, model = block_model_2_tensor(block_model, models=[data.values])
+#
+#     block_model_test = tensor_2_block_model(
+#         ws, tensor_mesh, data={"block_test": model[0]}
+#     )
+#
+#     ignore_list = ["_uid", "_name", "_allow_move"]
+#     if ignore_origin:
+#         ignore_list += ["_origin"]
+#
+#     compare_entities(block_model, block_model_test, ignore=ignore_list)
 
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
 
-    # Generate a 3D array
-    nx, ny, nz = 21, 11, 31
+# def test_block_model_2_tensor(tmp_path):
+#
+#     ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+#
+#     # Generate a 3D array
+#     nx, ny, nz = 21, 11, 31
+#
+#     x = np.linspace(0, 10, nx)
+#     y = np.linspace(0, 10, ny)
+#     z = np.linspace(0, 10, nz)
+#
+#     blockmodel_tensormesh_equivalency(ws, [0.0, 0.0, 0.0], x, y, z)
+#     blockmodel_tensormesh_equivalency(ws, [10.0, 10.0, 10], x, y, z)
+#     blockmodel_tensormesh_equivalency(ws, [-10.0, -10.0, -10], x, y, z)
 
-    x = np.linspace(0, 10, nx)
-    y = np.linspace(0, 10, ny)
-    z = np.linspace(0, 10, nz)
 
-    blockmodel_tensormesh_equivalency(ws, [0.0, 0.0, 0.0], x, y, z)
-    blockmodel_tensormesh_equivalency(ws, [10.0, 10.0, 10], x, y, z)
-    blockmodel_tensormesh_equivalency(ws, [-10.0, -10.0, -10], x, y, z)
-
-
-def test_block_model_2_tensor_negative_z(tmp_path):
-
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
-
-    # Generate a 3D array
-    nx, ny, nz = 6, 6, 5
-
-    x = np.linspace(0, 10, nx)
-    y = np.linspace(0, 5, ny)
-    z = np.linspace(0, 8, nz)
-
-    origin = [0.0, 0.0, 0.0]
-
-    block_model = BlockModel.create(
-        ws,
-        origin=origin,
-        u_cell_delimiters=x,
-        v_cell_delimiters=y,
-        z_cell_delimiters=-z,
-        name="test_block_model",
-        allow_move=False,
-    )
-
-    data = block_model.add_data(
-        {
-            "DataValues": {
-                "association": "CELL",
-                "values": np.random.randint(
-                    0, 100, size=len(block_model.centroids)
-                ).astype(np.int32),
-            }
-        }
-    )
-
-    tensor_mesh, model = block_model_2_tensor(block_model, models=[data.values])
-
-    t2bm = []
-    for i, cc in enumerate(block_model.centroids):
-        t2bm.append(np.where(np.all(tensor_mesh.cell_centers == cc, axis=1))[0])
-    t2bm = np.array(t2bm).flatten()
-
-    np.testing.assert_array_almost_equal(
-        block_model.centroids, tensor_mesh.cell_centers[t2bm]
-    )
-    assert tensor_mesh.x0[2] == np.min(block_model.z_cell_delimiters)
-    assert np.all(model[0][t2bm].flatten() == data.values)
+# def test_block_model_2_tensor_negative_z(tmp_path):
+#
+#     ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+#
+#     # Generate a 3D array
+#     nx, ny, nz = 6, 6, 5
+#
+#     x = np.linspace(0, 10, nx)
+#     y = np.linspace(0, 5, ny)
+#     z = np.linspace(0, 8, nz)
+#
+#     origin = [0.0, 0.0, 0.0]
+#
+#     block_model = BlockModel.create(
+#         ws,
+#         origin=origin,
+#         u_cell_delimiters=x,
+#         v_cell_delimiters=y,
+#         z_cell_delimiters=-z,
+#         name="test_block_model",
+#         allow_move=False,
+#     )
+#
+#     data = block_model.add_data(
+#         {
+#             "DataValues": {
+#                 "association": "CELL",
+#                 "values": np.random.randint(
+#                     0, 100, size=len(block_model.centroids)
+#                 ).astype(np.int32),
+#             }
+#         }
+#     )
+#
+#     tensor_mesh, model = block_model_2_tensor(block_model, models=[data.values])
+#
+#     t2bm = []
+#     for i, cc in enumerate(block_model.centroids):
+#         t2bm.append(np.where(np.all(tensor_mesh.cell_centers == cc, axis=1))[0])
+#     t2bm = np.array(t2bm).flatten()
+#
+#     np.testing.assert_array_almost_equal(
+#         block_model.centroids, tensor_mesh.cell_centers[t2bm]
+#     )
+#     assert tensor_mesh.x0[2] == np.min(block_model.z_cell_delimiters)
+#     assert np.all(model[0][t2bm].flatten() == data.values)
 
 
 def test_get_locations(tmp_path):
