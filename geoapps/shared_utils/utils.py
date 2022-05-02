@@ -12,11 +12,11 @@
 
 from __future__ import annotations
 
-import os
 from uuid import UUID
 
 import numpy as np
 from discretize import TreeMesh
+from geoh5py.data import FilenameData
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
@@ -407,20 +407,12 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
             f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
         )
 
-    outfile = os.path.join(
-        os.path.dirname(workspace.h5file), group.children[0].file_name
-    )
-
-    output = []
-    lineparse = lambda x: x.rstrip("\n").split(" ")
-    with open(outfile) as f:
-        cols = lineparse(f.readline())
-        line = f.readline()
-        while line:
-            output.append([string_to_numeric(k) for k in lineparse(line)])
-            line = f.readline()
-
-    out = dict(zip(cols, list(map(list, zip(*output)))))
+    # TODO use a get_entity call here once we update geoh5py entities with the method
+    outfile = [c for c in group.children if c.name == "SimPEG.out"][0]
+    out = [l for l in outfile.values.decode("utf-8").split("\r\n")][:-1]
+    cols = out.pop(0).split(" ")
+    out = [[string_to_numeric(k) for k in l.split(" ")] for l in out]
+    out = dict(zip(cols, list(map(list, zip(*out)))))
 
     return out
 
