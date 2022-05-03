@@ -9,7 +9,7 @@ from copy import copy
 
 import numpy as np
 from geoh5py.data import Data, ReferencedData
-from geoh5py.groups import ContainerGroup
+from geoh5py.groups import SimPEGGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 
@@ -542,9 +542,7 @@ def check_data_type(data):
 def plot_convergence_curve(h5file):
     """"""
     workspace = Workspace(h5file)
-    names = [
-        group.name for group in workspace.groups if isinstance(group, ContainerGroup)
-    ]
+    names = [group.name for group in workspace.groups if isinstance(group, SimPEGGroup)]
     objects = widgets.Dropdown(
         options=names,
         value=names[0],
@@ -556,20 +554,20 @@ def plot_convergence_curve(h5file):
 
         inversion = workspace.get_entity(objects)[0]
         result = None
-        if getattr(inversion, "comments", None) is not None:
-            if inversion.comments.values is not None:
-                result = get_inversion_output(workspace.h5file, objects)
-                iterations = result["iteration"]
-                phi_d = result["phi_d"]
-                phi_m = result["phi_m"]
+        child_names = [k.name for k in inversion.children]
+        if "SimPEG.out" in child_names:
+            result = get_inversion_output(workspace.h5file, objects)
+            iterations = result["iteration"]
+            phi_d = result["phi_d"]
+            phi_m = result["phi_m"]
 
-                ax1 = plt.subplot()
-                ax2 = ax1.twinx()
-                ax1.plot(iterations, phi_d, linewidth=3, c="k")
-                ax1.set_xlabel("Iterations")
-                ax1.set_ylabel(r"$\phi_d$", size=16)
-                ax2.plot(iterations, phi_m, linewidth=3, c="r")
-                ax2.set_ylabel(r"$\phi_m$", size=16)
+            ax1 = plt.subplot()
+            ax2 = ax1.twinx()
+            ax1.plot(iterations, phi_d, linewidth=3, c="k")
+            ax1.set_xlabel("Iterations")
+            ax1.set_ylabel(r"$\phi_d$", size=16)
+            ax2.plot(iterations, phi_m, linewidth=3, c="r")
+            ax2.set_ylabel(r"$\phi_m$", size=16)
 
         return result
 

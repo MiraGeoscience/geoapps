@@ -12,14 +12,16 @@
 
 from __future__ import annotations
 
-import json
 from uuid import UUID
 
 import numpy as np
 from discretize import TreeMesh
+from geoh5py.data import FilenameData
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
+
+from geoapps.utils.general import string_to_numeric
 
 
 def hex_to_rgb(hex):
@@ -398,33 +400,21 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
     else:
         workspace = Workspace(h5file)
 
-    out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
-
     try:
         group = workspace.get_entity(inversion_group)[0]
-
-        for comment in group.comments.values:
-            if "Iteration" in comment["Author"]:
-                out["iteration"] += [np.int(comment["Author"].split("_")[1])]
-                out["time"] += [comment["Date"]]
-                values = json.loads(comment["Text"])
-                out["phi_d"] += [float(values["phi_d"])]
-                out["phi_m"] += [float(values["phi_m"])]
-                out["beta"] += [float(values["beta"])]
-
-        if len(out["iteration"]) > 0:
-            out["iteration"] = np.hstack(out["iteration"])
-            ind = np.argsort(out["iteration"])
-            out["iteration"] = out["iteration"][ind]
-            out["phi_d"] = np.hstack(out["phi_d"])[ind]
-            out["phi_m"] = np.hstack(out["phi_m"])[ind]
-            out["time"] = np.hstack(out["time"])[ind]
-
-            return out
     except IndexError:
         raise IndexError(
             f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
         )
+
+    # TODO use a get_entity call here once we update geoh5py entities with the method
+    outfile = [c for c in group.children if c.name == "SimPEG.out"][0]
+    out = [l for l in outfile.values.decode("utf-8").split("\r\n")][:-1]
+    cols = out.pop(0).split(" ")
+    out = [[string_to_numeric(k) for k in l.split(" ")] for l in out]
+    out = dict(zip(cols, list(map(list, zip(*out)))))
+
+    return out
 
 
 colors = [
