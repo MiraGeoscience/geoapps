@@ -11,6 +11,7 @@ import uuid
 import warnings
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
+from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
@@ -27,7 +28,6 @@ class OctreeMesh(ObjectDataSelection):
     Widget used for the creation of an octree mesh
     """
 
-    defaults = {}
     _param_class = OctreeParams
     _object_types = (Curve, Octree, Points, Surface)
     _u_cell_size = None
@@ -44,10 +44,16 @@ class OctreeMesh(ObjectDataSelection):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults = {}
+        for key, value in self.params.to_dict().items():
+            if isinstance(value, Entity):
+                self.defaults[key] = value.uid
+            else:
+                self.defaults[key] = value
+
         self.refinement_list = VBox([])
 
-        super().__init__()
+        super().__init__(**self.defaults)
 
         self.required = VBox(
             [
