@@ -20,9 +20,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.07280,
-    "phi_d": 7.722,
-    "phi_m": 162.2,
+    "data_norm": 0.00665,
+    "phi_d": 0.495,
+    "phi_m": 40.85,
 }
 
 
@@ -34,32 +34,34 @@ def test_magnetotellurics_run(
     refinement=(2,),
 ):
     from geoapps.inversion.driver import InversionDriver
-    from geoapps.inversion.magnetotellurics.params import MagnetotelluricsParams
+    from geoapps.inversion.natural_sources.magnetotellurics.params import (
+        MagnetotelluricsParams,
+    )
 
     np.random.seed(0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.01,
         anomaly=1.0,
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
         refinement=refinement,
+        drape_height=0.0,
         inversion_type="magnetotellurics",
         flatten=True,
     )
-
-    model = geoh5.get_entity("model")[0]
     params = MagnetotelluricsParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         resolution=0.0,
         z_from_topo=False,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
+        conductivity_model=1e-2,
         zxx_real_channel_bool=True,
         zxx_imag_channel_bool=True,
         zxy_real_channel_bool=True,
@@ -75,7 +77,7 @@ def test_magnetotellurics_run(
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
-    survey = geoh5.get_entity("survey")[0]
+    survey = geoh5.get_entity(survey.uid)[0]
 
     data = {}
     uncertainties = {}
@@ -89,7 +91,7 @@ def test_magnetotellurics_run(
         "zyy_real": "Zyy (real)",
         "zyy_imag": "Zyy (imag)",
     }
-    curve = Curve.create(geoh5, vertices=survey.vertices)
+
     for comp, cname in components.items():
         data[cname] = []
         # uncertainties[f"{cname} uncertainties"] = {}
@@ -100,7 +102,7 @@ def test_magnetotellurics_run(
             )
             data[cname].append(d)
 
-            u = curve.add_data(
+            u = survey.add_data(
                 {
                     f"uncertainty_{comp}_{freq:.2e}": {
                         "values": np.abs(0.05 * d.values) + d.values.std()
@@ -125,7 +127,7 @@ def test_magnetotellurics_run(
     params = MagnetotelluricsParams(
         geoh5=geoh5,
         mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         resolution=0.0,
         data_object=survey.uid,
         starting_model=0.01,
@@ -137,6 +139,7 @@ def test_magnetotellurics_run(
         gradient_type="components",
         z_from_topo=False,
         upper_bound=0.75,
+        conductivity_model=1e-2,
         max_iterations=max_iterations,
         initial_beta_ratio=1e-2,
         prctile=100,

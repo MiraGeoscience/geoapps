@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 from .utils import (
+    active_from_xyz,
     calculate_2D_trend,
     direct_current_from_simpeg,
     downsample_grid,

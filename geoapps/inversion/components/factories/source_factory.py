@@ -50,7 +50,7 @@ class SourcesFactory(SimPEGFactory):
 
             return sources.Dipole
 
-        elif self.factory_type == "magnetotellurics":
+        elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import sources
 
             return sources.Planewave_xy_1Dprimary
@@ -70,7 +70,7 @@ class SourcesFactory(SimPEGFactory):
                 locations=locations,
             )
 
-        elif self.factory_type in ["magnetotellurics"]:
+        elif self.factory_type in ["magnetotellurics", "tipper"]:
             args.append(receivers)
             args.append(frequency)
 
@@ -86,7 +86,7 @@ class SourcesFactory(SimPEGFactory):
         kwargs = {}
         if self.factory_type in ["magnetic scalar", "magnetic vector"]:
             kwargs["parameters"] = self.params.inducing_field_aid()
-        if self.factory_type in ["magnetotellurics"]:
+        if self.factory_type in ["magnetotellurics", "tipper"]:
             kwargs["sigma_primary"] = [self.params.background_conductivity]
 
         return kwargs

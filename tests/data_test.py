@@ -118,6 +118,18 @@ def test_survey_data(tmp_path):
     np.testing.assert_array_equal(byy_test, byy_data.values)
     np.testing.assert_array_equal(bzz_test, bzz_data.values)
 
+    driver.directiveList[-1].save_components(99, survey_dobs)
+
+    assert np.all(
+        ws.get_entity("Iteration_99_bxx_Residual")[0].values == 0
+    ), "Residual data should be zero."
+    assert np.all(
+        ws.get_entity("Iteration_99_byy_Residual")[0].values == 0
+    ), "Residual data should be zero."
+    assert np.all(
+        ws.get_entity("Iteration_99_bzz_Residual")[0].values == 0
+    ), "Residual data should be zero."
+
 
 def test_save_data(tmp_path):
     ws, params = setup_params(tmp_path)

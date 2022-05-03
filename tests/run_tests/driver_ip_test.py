@@ -37,7 +37,7 @@ def test_ip_run(
 
     np.random.seed(0)
     # Run the forward
-    geoh5 = setup_inversion_workspace(
+    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=1e-6,
         anomaly=1e-1,
@@ -48,18 +48,17 @@ def test_ip_run(
         flatten=False,
     )
 
-    tx_obj = geoh5.get_entity("survey (currents)")[0]
-    tx_obj.cells = tx_obj.cells.astype("uint32")
+    # tx_obj = geoh5.get_entity("survey (currents)")[0]
+    # tx_obj.cells = tx_obj.cells.astype("uint32")
 
-    model = geoh5.get_entity("model")[0]
     params = InducedPolarizationParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        topography_object=topography.uid,
         resolution=0.0,
         z_from_topo=True,
-        data_object=geoh5.get_entity("survey")[0].uid,
+        data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
         conductivity_model=1e-2,
@@ -74,8 +73,8 @@ def test_ip_run(
     np.random.seed(0)
     params = InducedPolarizationParams(
         geoh5=geoh5,
-        mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=geoh5.get_entity("topography")[0].uid,
+        mesh=mesh.uid,
+        topography_object=topography.uid,
         resolution=0.0,
         data_object=potential.parent.uid,
         conductivity_model=1e-2,
