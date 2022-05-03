@@ -146,7 +146,7 @@ def string_to_numeric(text: str) -> int | float | str:
         text_as_int = int(text_as_float)
         return text_as_int if text_as_int == text_as_float else text_as_float
     except ValueError:
-        return text
+        return np.nan if text == "nan" else text
 
 
 def sorted_alphanumeric_list(alphanumerics: list[str]) -> list[str]:
