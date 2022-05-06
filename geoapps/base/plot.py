@@ -16,6 +16,7 @@ from geoapps.utils.plotting import plot_plan_data_selection
 
 widgets = soft_import("ipywidgets")
 plt = soft_import("matplotlib", objects=["pyplot"])
+
 (FloatSlider, FloatText, HBox, Label, Layout, ToggleButton, VBox) = soft_import(
     "ipywidgets",
     objects=[

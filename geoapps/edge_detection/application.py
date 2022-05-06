@@ -39,7 +39,7 @@ probabilistic_hough_line = soft_import(
     "skimage.transform", objects=["probabilistic_hough_line"]
 )
 
-from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
 

@@ -14,8 +14,8 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
 
-from geoapps import PlotSelection2D
 from geoapps.base.application import BaseApplication
+from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
 from geoapps.utils import geophysical_systems, soft_import
 from geoapps.utils.general import find_value

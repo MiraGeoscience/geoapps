@@ -24,7 +24,7 @@ from geoapps.utils import soft_import
 )
 from scipy.interpolate import LinearNDInterpolator
 
-from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
 from geoapps.utils.formatters import string_name
 
 

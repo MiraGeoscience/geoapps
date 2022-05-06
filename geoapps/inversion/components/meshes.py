@@ -141,8 +141,9 @@ class InversionMesh:
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
 
-        from geoapps.octree_creation.application import OctreeMesh
+        from geoapps.octree_creation.driver import OctreeDriver
 
         octree_params = self.collect_mesh_params(self.params)
-        self.entity = OctreeMesh.run(octree_params)
+        driver = OctreeDriver(octree_params)
+        self.entity = driver.run()
         self.entity.parent = self.params.ga_group

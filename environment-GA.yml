@@ -1,29 +1,25 @@
-name: geoapps
+name: geoapps_ga
 
 channels:
   - conda-forge
-  - main
 dependencies:
   - python
   - pip
   - git
-  - conda-forge::discretize
-  - main::numpy
-  - main::scipy
-  - main::zarr
-  - main::fsspec
-  - dask
-  - main::h5py
+  - discretize
+  - numpy
+  - scipy
+  - zarr
+  - fsspec
+  - h5py
   - requests
   - empymod
-  - conda-forge::pydiso
+  - pydiso
   - setuptools
-  - main::mkl
-  - pip:
-    - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.8.0
-    - git+https://github.com/MiraGeoscience/simpeg.git@v0.9.1.dev1+geoapps.0.6.0
-    - git+https://github.com/MiraGeoscience/geoh5py.git@release/0.3.0
-    - tqdm
-
+  - mkl
+  - pyyaml
+  - properties
+  - scikit-learn
+  - pymatsolver
 variables:
   KMP_WARNINGS: 0

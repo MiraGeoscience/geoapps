@@ -9,14 +9,14 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from geoapps.utils import soft_import
-
-widgets = soft_import("ipywidgets")
 import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
 
+from geoapps.utils import soft_import
+
+widgets = soft_import("ipywidgets")
 (Dropdown, FloatText, SelectMultiple, VBox) = soft_import(
     "ipywidgets", objects=["Dropdown", "FloatText", "SelectMultiple", "VBox"]
 )
