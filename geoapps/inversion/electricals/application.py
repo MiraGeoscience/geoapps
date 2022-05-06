@@ -54,7 +54,7 @@ from geoh5py.workspace import Workspace
     ],
 )
 
-from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.electricals.direct_current.constants import app_initializer
