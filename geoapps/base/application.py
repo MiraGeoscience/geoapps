@@ -87,15 +87,15 @@ class BaseApplication:
         self._live_link.observe(self.live_link_choice)
         self._export_directory = FileChooser(show_only_dirs=True)
         self._export_directory._select.on_click(self.export_browser_change)
-        self.live_link_panel = VBox([self.live_link])
-        self.output_panel = VBox(
-            [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
-        )
         self.monitoring_panel = VBox(
             [
                 Label("Monitoring folder", style={"description_width": "initial"}),
                 self.export_directory,
             ]
+        )
+        self.live_link_panel = VBox([self.live_link, self.monitoring_panel])
+        self.output_panel = VBox(
+            [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
         )
         self.trigger.on_click(self.trigger_click)
         self.ga_group_name.observe(self.ga_group_name_update)
@@ -190,10 +190,6 @@ class BaseApplication:
 
             if getattr(self, "_params", None) is not None:
                 setattr(self.params, "monitoring_directory", self.monitoring_directory)
-
-            self.live_link_panel.children = [self.live_link, self.monitoring_panel]
-        else:
-            self.live_link_panel.children = [self.live_link]
 
     @property
     def main(self):
@@ -305,6 +301,7 @@ class BaseApplication:
             name += ".geoh5"
 
         workspace = Workspace(path.join(workpath, name))
+        workspace.close()
         live_link = False
         time.sleep(1)
         # Check if GA digested the file already
@@ -313,6 +310,7 @@ class BaseApplication:
             if not path.exists(workpath):
                 makedirs(workpath)
             workspace = Workspace(path.join(workpath, name))
+
             live_link = True
             if not self.live_link.value:
                 print(
@@ -324,6 +322,7 @@ class BaseApplication:
             )
 
         self.live_link.value = live_link
+
         return workspace
 
     @property
