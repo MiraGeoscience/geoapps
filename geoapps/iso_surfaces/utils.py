@@ -9,9 +9,7 @@ from __future__ import annotations
 
 import geoh5py
 import numpy as np
-from geoh5py.objects import (
-    BlockModel,
-)
+from geoh5py.objects import BlockModel
 from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 
