@@ -5,12 +5,19 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from geoh5py.objects import Surface
-from ipywidgets import FloatText, HBox, Label, Text, VBox
+import os
+import uuid
+
+from geoh5py.shared import Entity
+from geoh5py.objects import ObjectBase
+from geoh5py.ui_json import InputFile
+from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import input_string_2_float, iso_surface
+
+from geoapps.iso_surfaces.constants import app_initializer
+from geoapps.iso_surfaces.driver import IsoSurfacesDriver
+from geoapps.iso_surfaces.params import IsoSurfacesParams
 
 
 class IsoSurface(ObjectDataSelection):
@@ -18,22 +25,24 @@ class IsoSurface(ObjectDataSelection):
     Application for the conversion of conductivity/depth curves to
     a pseudo 3D conductivity model on surface.
     """
-
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-        "data": "{f3e36334-be0a-4210-b13e-06933279de25}",
-        "max_distance": 500,
-        "resolution": 50,
-        "contours": "0.005: 0.02: 0.005, 0.0025",
-    }
-
+    _param_class = IsoSurfacesParams
     _add_groups = False
     _select_multiple = False
 
-    def __init__(self, **kwargs):
-        self.defaults.update(**kwargs)
-        self._topography = TopographyOptions()
+    def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
+        if ui_json is not None and os.path.exists(ui_json):
+            self.params = self._param_class(InputFile(ui_json))
+        else:
+            self.params = self._param_class(**app_initializer)
+
+        self.defaults = {}
+        for key, value in self.params.to_dict().items():
+            if isinstance(value, Entity):
+                self.defaults[key] = value.uid
+            else:
+                self.defaults[key] = value
+
         self._max_distance = FloatText(
             description="Max Interpolation Distance (m):",
         )
@@ -56,41 +65,51 @@ class IsoSurface(ObjectDataSelection):
 
     def trigger_click(self, _):
 
-        if not self.workspace.get_entity(self.objects.value):
-            return
+        param_dict = {}
+        for key in self.__dict__:
+            try:
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+                    if key[0] == "_":
+                        key = key[1:]
 
-        obj, data_list = self.get_selected_entities()
+                    if (
+                            isinstance(value, uuid.UUID)
+                            and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
 
-        levels = input_string_2_float(self.contours.value)
+                    param_dict[key] = value
 
-        if levels is None:
-            return
+            except AttributeError:
+                continue
 
-        surfaces = iso_surface(
-            obj,
-            data_list[0].values,
-            levels,
-            resolution=self.resolution.value,
-            max_distance=self.max_distance.value,
+        new_workspace = self.get_output_workspace(
+            self.export_directory.selected_path, self.ga_group_name.value
+        )
+        for key, value in param_dict.items():
+            if isinstance(value, ObjectBase):
+                param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
+
+        param_dict["geoh5"] = new_workspace
+
+        if self.live_link.value:
+            param_dict["monitoring_directory"] = self.monitoring_directory
+
+        ifile = InputFile(
+            ui_json=self.params.input_file.ui_json,
+            validation_options={"disabled": True},
         )
 
-        result = []
-        for ii, (surface, level) in enumerate(zip(surfaces, levels)):
-            if len(surface[0]) > 0 and len(surface[1]) > 0:
-                result += [
-                    Surface.create(
-                        self.workspace,
-                        name=string_name(self.export_as.value + f"_{level:.2e}"),
-                        vertices=surface[0],
-                        cells=surface[1],
-                        parent=self.ga_group,
-                    )
-                ]
-        self.result = result
-        if self.live_link.value:
-            self.live_link_output(self.export_directory.selected_path, self.ga_group)
+        new_params = IsoSurfacesParams(input_file=ifile, **param_dict)
+        new_params.write_input_file()
 
-        self.workspace.finalize()
+        driver = IsoSurfacesDriver(new_params)
+        driver.run()
+
+        if self.live_link.value:
+            print("Live link active. Check your ANALYST session for new mesh.")
+
 
     def data_change(self, _):
 
