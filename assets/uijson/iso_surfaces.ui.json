@@ -1,7 +1,7 @@
 {
     "title": "Create Iso Surfaces",
-    "geoh5": "",
-    "run_command": "",
+    "geoh5": "FlinFlon.geoh5",
+    "run_command": "geoapps.iso_surfaces.driver",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
@@ -12,10 +12,16 @@
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "objects": {
-        "meshType": ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"],
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}"
+        ],
         "main": true,
         "label": "Object",
-        "value": ""
+        "value": "{2e814779-c35f-4da0-ad6a-39a6912361f9}"
     },
     "data": {
         "main": true,
@@ -23,7 +29,7 @@
         "dataType": "Float",
         "label": "Value fields",
         "parent": "objects",
-        "value": ""
+        "value": "{f3e36334-be0a-4210-b13e-06933279de25}"
     },
     "contours": {
         "main": true,
