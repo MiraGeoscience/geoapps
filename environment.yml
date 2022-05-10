@@ -29,6 +29,11 @@ dependencies:
   - conda-forge::pydiso
   - setuptools
   - main::mkl
-
+  - pip:
+    - git+https://github.com/MiraGeoscience/geoana.git@GEOPY-500#egg=geoana
+    - git+https://github.com/MiraGeoscience/simpeg.git@GEOPY-500#egg=simpeg
+    - git+https://github.com/MiraGeoscience/simpeg.git@v0.9.1.dev1+geoapps.0.6.0
+    - git+https://github.com/MiraGeoscience/geoh5py.git@release/0.3.0#egg=geoh5py
+    - tqdm
 variables:
   KMP_WARNINGS: 0
