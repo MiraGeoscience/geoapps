@@ -44,11 +44,13 @@ default_ui_json.update(
         "objects": {
             "meshType": ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"],
             "main": True,
+            "group": "Data Selection",
             "label": "Object",
             "value": None
         },
         "data": {
             "main": True,
+            "group": "Data Selection",
             "association": ["Vertex", "Cell"],
             "dataType": "Float",
             "label": "Value fields",
@@ -75,7 +77,7 @@ default_ui_json.update(
         "export_as": {
             "main": True,
             "label": "Name",
-            "value": "Iso_"
+            "value": "Iso"
         }
     }
 )
@@ -86,7 +88,7 @@ app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "data": "{f3e36334-be0a-4210-b13e-06933279de25}",
-    "max_distance": 500,
-    "resolution": 50,
+    "max_distance": 500.0,
+    "resolution": 50.0,
     "contours": "0.005: 0.02: 0.005, 0.0025",
 }
