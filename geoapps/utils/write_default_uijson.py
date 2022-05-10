@@ -17,6 +17,7 @@ from geoapps.inversion.potential_fields import (
     MagneticScalarParams,
     MagneticVectorParams,
 )
+from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.params import PeakFinderParams
 
@@ -78,6 +79,11 @@ def write_default_uijson(path, use_initializers=False):
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     peak_init = app_initializer if use_initializers else {}
 
+    from geoapps.iso_surfaces.constants import app_initializer
+
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    iso_init = app_initializer if use_initializers else {}
+
     filedict = {
         "gravity_inversion.ui.json": GravityParams(validate=False, **grav_init),
         "gravity_forward.ui.json": GravityParams(forward_only=True, validate=False),
@@ -117,6 +123,7 @@ def write_default_uijson(path, use_initializers=False):
         "tipper_forward.ui.json": TipperParams(forward_only=True, validate=False),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
         "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
+        "iso_surfaces.ui.json": IsoSurfacesParams(validate=False, **oct_init),
     }
 
     for filename, params in filedict.items():
