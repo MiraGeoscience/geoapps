@@ -13,10 +13,13 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
 from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
+from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
 
 from geoapps import PlotSelection2D
 from geoapps.utils.formatters import string_name
+from geoapps.utils.plotting import plot_plan_data_selection
+from geoapps.utils.utils import input_string_2_float
 
 
 class ContourValues(PlotSelection2D):
@@ -150,9 +153,22 @@ class ContourValues(PlotSelection2D):
     def trigger_click(self, _):
         entity, data = self.get_selected_entities()
 
-        if getattr(self.contours, "contour_set", None) is not None:
-            contour_set = self.contours.contour_set
+        _, _, _, _, contour_set = plot_plan_data_selection(
+            entity,
+            data[0],
+            **{
+                "axis": axes(),
+                "resolution": self.resolution.value,
+                "window": {
+                    "center": [self.window_center_x.value, self.window_center_y.value],
+                    "size": [self.window_width.value, self.window_height.value],
+                    "azimuth": self.window_azimuth.value,
+                },
+                "contours": input_string_2_float(self.contours.value),
+            },
+        )
 
+        if contour_set is not None:
             vertices, cells, values = [], [], []
             count = 0
             for segs, level in zip(contour_set.allsegs, contour_set.levels):
