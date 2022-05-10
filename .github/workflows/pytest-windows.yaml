@@ -40,6 +40,9 @@ jobs:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
       - name: Setup conda env
         uses: conda-incubator/setup-miniconda@v2
+        env:
+          PIP_NO_CACHE_DIR: 1
+          PIP_UPGRADE: 1
         with:
           activate-environment: geoapps
           python-version: ${{ matrix.python_ver }}
