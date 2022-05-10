@@ -46,7 +46,7 @@ class IsoSurfacesDriver:
             max_distance=self.params.max_distance,
         )
 
-        container = ContainerGroup.create(self.params.geoh5)
+        container = ContainerGroup.create(self.params.geoh5, name='Isosurface')
         result = []
         for ii, (surface, level) in enumerate(zip(surfaces, levels)):
             if len(surface[0]) > 0 and len(surface[1]) > 0:

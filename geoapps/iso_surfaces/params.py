@@ -15,7 +15,7 @@ from geoh5py.data import Data
 
 from geoapps.base.params import BaseParams
 
-from .constants import default_ui_json, defaults, validations
+from geoapps.iso_surfaces.constants import default_ui_json, defaults, validations
 
 
 class IsoSurfacesParams(BaseParams):
