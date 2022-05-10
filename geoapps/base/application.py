@@ -49,7 +49,6 @@ class BaseApplication:
     _workspace_geoh5 = None
     _monitoring_directory = None
     _ga_group_name = None
-    _ga_group = None
     _trigger = None
     _figure = None
     _refresh = None
@@ -89,7 +88,7 @@ class BaseApplication:
         self._export_directory._select.on_click(self.export_browser_change)
         self.monitoring_panel = VBox(
             [
-                Label("Monitoring folder", style={"description_width": "initial"}),
+                Label("Save to:", style={"description_width": "initial"}),
                 self.export_directory,
             ]
         )
@@ -98,7 +97,7 @@ class BaseApplication:
             [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
         )
         self.trigger.on_click(self.trigger_click)
-        self.ga_group_name.observe(self.ga_group_name_update)
+
         self.__populate__(**self.defaults)
 
         for key in list(self.__dict__.keys()):
@@ -190,6 +189,9 @@ class BaseApplication:
 
             if getattr(self, "_params", None) is not None:
                 setattr(self.params, "monitoring_directory", self.monitoring_directory)
+            self.monitoring_panel.children[0].value = "Monitoring path:"
+        else:
+            self.monitoring_panel.children[0].value = "Save to:"
 
     @property
     def main(self):
@@ -237,31 +239,6 @@ class BaseApplication:
         :obj:`ipyfilechooser.FileChooser` widget
         """
         return self._file_browser
-
-    @property
-    def ga_group(self):
-
-        if getattr(self, "_ga_group", None) is None:
-
-            groups = [
-                group
-                for group in self.workspace.groups
-                if group.name == self.ga_group_name.value
-            ]
-            if any(groups):
-                self._ga_group = groups[0]
-            elif self.ga_group_name.value == "":
-                self._ga_group = self.workspace.root
-            else:
-                self._ga_group = ContainerGroup.create(
-                    self.workspace, name=string_name(self.ga_group_name.value)
-                )
-                if self.live_link.value:
-                    self.live_link_output(
-                        self.export_directory.selected_path, self._ga_group
-                    )
-
-        return self._ga_group
 
     @property
     def ga_group_name(self) -> Text:
@@ -449,9 +426,6 @@ class BaseApplication:
         if self.h5file is not None:
             value = working_copy(self.h5file)
             self.h5file = value
-
-    def ga_group_name_update(self, _):
-        self._ga_group = None
 
     def trigger_click(self, _):
         for key, value in self.__dict__.items():
