@@ -7,10 +7,7 @@
 import re
 from time import time
 
-import numpy
-from geoh5py.groups import RootGroup
 from geoh5py.ui_json.utils import monitored_directory_copy
-from geoh5py.workspace import Workspace
 from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
 
 from geoapps.base.selection import ObjectDataSelection
@@ -130,6 +127,9 @@ class Calculator(ObjectDataSelection):
                 if name not in obj.get_data_list():
                     new_child = obj.add_data({name: {"values": values}})
                     options[new_child.name] = new_child.uid
+
+                if name == out_var:  # For plotting only
+                    data = new_child
 
         if self.live_link.value:
             monitored_directory_copy(self.export_directory.selected_path, obj)
