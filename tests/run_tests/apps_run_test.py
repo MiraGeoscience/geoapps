@@ -43,9 +43,18 @@ def test_calculator(tmp_path):
         assert output.n_vertices == 2740, "Change in output. Need to verify."
 
 
-def test_coordinate_transformation():
-    app = CoordinateTransformation(h5file=project)
+def test_coordinate_transformation(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        geoh5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
+        geoh5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
+
+    app = CoordinateTransformation(h5file=temp_workspace)
     app.trigger.click()
+
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        assert len(workspace.objects) == 2, "Coordinate transform failed."
 
 
 def test_contour_values(tmp_path):
