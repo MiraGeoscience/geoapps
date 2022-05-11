@@ -9,11 +9,8 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
-
-# import pytest
-# pytest.skip("eliminating conflicting test.", allow_module_level=True)
+from geoapps.utils.utils import get_inversion_output
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
