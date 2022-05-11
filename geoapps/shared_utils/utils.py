@@ -409,7 +409,7 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
 
     # TODO use a get_entity call here once we update geoh5py entities with the method
     outfile = [c for c in group.children if c.name == "SimPEG.out"][0]
-    out = [l for l in outfile.values.decode("utf-8").split("\r\n")][:-1]
+    out = [l for l in outfile.values.decode("utf-8").replace("\n", "").split("\r")][:-1]
     cols = out.pop(0).split(" ")
     out = [[string_to_numeric(k) for k in l.split(" ")] for l in out]
     out = dict(zip(cols, list(map(list, zip(*out)))))
