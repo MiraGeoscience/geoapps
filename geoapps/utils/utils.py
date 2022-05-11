@@ -1571,11 +1571,11 @@ def input_string_2_float(input_string):
 
 
 def iso_surface(
-        entity,
-        values,
-        levels,
-        resolution=100,
-        max_distance=np.inf,
+    entity,
+    values,
+    levels,
+    resolution=100,
+    max_distance=np.inf,
 ):
     """
     Generate 3D iso surface from an entity vertices or centroids and values.
