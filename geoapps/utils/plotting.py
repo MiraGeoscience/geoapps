@@ -17,7 +17,7 @@ from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import widgets
 
-from geoapps.utils import get_inversion_output
+from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.utils import filter_xy, format_labels, inv_symlog, symlog
 
 

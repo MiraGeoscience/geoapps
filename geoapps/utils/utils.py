@@ -1686,44 +1686,6 @@ def iso_surface(
     return surfaces
 
 
-def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
-    """
-    Recover inversion iterations from a ContainerGroup comments.
-    """
-    if isinstance(h5file, Workspace):
-        workspace = h5file
-    else:
-        workspace = Workspace(h5file)
-
-    out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
-
-    try:
-        group = workspace.get_entity(inversion_group)[0]
-
-        for comment in group.comments.values:
-            if "Iteration" in comment["Author"]:
-                out["iteration"] += [np.int(comment["Author"].split("_")[1])]
-                out["time"] += [comment["Date"]]
-                values = json.loads(comment["Text"])
-                out["phi_d"] += [float(values["phi_d"])]
-                out["phi_m"] += [float(values["phi_m"])]
-                out["beta"] += [float(values["beta"])]
-
-        if len(out["iteration"]) > 0:
-            out["iteration"] = np.hstack(out["iteration"])
-            ind = np.argsort(out["iteration"])
-            out["iteration"] = out["iteration"][ind]
-            out["phi_d"] = np.hstack(out["phi_d"])[ind]
-            out["phi_m"] = np.hstack(out["phi_m"])[ind]
-            out["time"] = np.hstack(out["time"])[ind]
-
-            return out
-    except IndexError:
-        raise IndexError(
-            f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
-        )
-
-
 def load_json_params(file: str):
     """
     Read input parameters from json
