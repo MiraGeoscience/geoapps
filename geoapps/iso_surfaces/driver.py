@@ -9,18 +9,15 @@
 from __future__ import annotations
 
 import os
-
 import sys
 
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Surface
 from geoh5py.ui_json import InputFile
-
 from geoh5py.ui_json.utils import monitored_directory_copy
-from geoapps.utils.utils import input_string_2_float
-from geoapps.utils.formatters import string_name
-from geoapps.iso_surfaces.utils import iso_surface
 
+from geoapps.utils.utils import input_string_2_float, iso_surface
+from geoapps.utils.formatters import string_name
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 
 

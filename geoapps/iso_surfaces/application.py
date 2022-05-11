@@ -13,11 +13,11 @@ from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
 
-from geoapps.base.selection import ObjectDataSelection, TopographyOptions
+from geoapps.base.selection import ObjectDataSelection
 
-from geoapps.iso_surfaces.constants import app_initializer
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 from geoapps.iso_surfaces.params import IsoSurfacesParams
+from geoapps.iso_surfaces.constants import app_initializer
 
 
 class IsoSurface(ObjectDataSelection):
