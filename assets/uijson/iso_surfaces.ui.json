@@ -16,15 +16,17 @@
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}"
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}"
         ],
         "main": true,
+        "group": "Data Selection",
         "label": "Object",
         "value": "{2e814779-c35f-4da0-ad6a-39a6912361f9}"
     },
     "data": {
         "main": true,
+        "group": "Data Selection",
         "association": ["Vertex", "Cell"],
         "dataType": "Float",
         "label": "Value fields",
@@ -51,6 +53,6 @@
     "export_as": {
         "main": true,
         "label": "Name",
-        "value": "Iso_"
+        "value": "Iso"
     }
 }
