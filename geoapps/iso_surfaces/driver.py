@@ -19,6 +19,9 @@ from geoh5py.ui_json.utils import monitored_directory_copy
 from geoapps.utils.utils import input_string_2_float, iso_surface
 from geoapps.utils.formatters import string_name
 from geoapps.iso_surfaces.params import IsoSurfacesParams
+from geoapps.iso_surfaces.utils import iso_surface
+from geoapps.utils.formatters import string_name
+from geoapps.utils.utils import input_string_2_float
 
 
 class IsoSurfacesDriver:
@@ -43,7 +46,7 @@ class IsoSurfacesDriver:
             max_distance=self.params.max_distance,
         )
 
-        container = ContainerGroup.create(self.params.geoh5, name='Isosurface')
+        container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
         result = []
         for ii, (surface, level) in enumerate(zip(surfaces, levels)):
             if len(surface[0]) > 0 and len(surface[1]) > 0:
@@ -57,7 +60,7 @@ class IsoSurfacesDriver:
                     )
                 ]
         if self.params.monitoring_directory is not None and os.path.exists(
-                self.params.monitoring_directory
+            self.params.monitoring_directory
         ):
             monitored_directory_copy(self.params.monitoring_directory, container)
 
