@@ -25,7 +25,7 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
-from SimPEG import inverse_problem, inversion, maps, optimization, regularization
+from SimPEG import dask, inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
 from geoapps.inversion.components import (
