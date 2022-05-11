@@ -8,13 +8,12 @@
 import os
 import uuid
 
-from geoh5py.shared import Entity
 from geoh5py.objects import ObjectBase
+from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
 
 from geoapps.base.selection import ObjectDataSelection
-
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.iso_surfaces.constants import app_initializer
@@ -25,6 +24,7 @@ class IsoSurface(ObjectDataSelection):
     Application for the conversion of conductivity/depth curves to
     a pseudo 3D conductivity model on surface.
     """
+
     _param_class = IsoSurfacesParams
     _add_groups = False
     _select_multiple = False
@@ -74,8 +74,8 @@ class IsoSurface(ObjectDataSelection):
                         key = key[1:]
 
                     if (
-                            isinstance(value, uuid.UUID)
-                            and self.workspace.get_entity(value)[0] is not None
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
                     ):
                         value = self.workspace.get_entity(value)[0]
 
@@ -109,7 +109,6 @@ class IsoSurface(ObjectDataSelection):
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
-
 
     def data_change(self, _):
 

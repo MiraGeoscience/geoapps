@@ -36,7 +36,7 @@ default_ui_json.update(
             "value": False,
             "label": "Run python module ",
             "tooltip": "Warning: launches process to run python model on save",
-            "main": True
+            "main": True,
         },
         "monitoring_directory": "",
         "conda_environment": "geoapps",
@@ -46,7 +46,7 @@ default_ui_json.update(
             "main": True,
             "group": "Data Selection",
             "label": "Object",
-            "value": None
+            "value": None,
         },
         "data": {
             "main": True,
@@ -55,30 +55,26 @@ default_ui_json.update(
             "dataType": "Float",
             "label": "Value fields",
             "parent": "objects",
-            "value": None
+            "value": None,
         },
         "contours": {
             "main": True,
             "label": "Iso-values",
-            "value": "0.005: 0.02: 0.005, 0.0025"
+            "value": "0.005: 0.02: 0.005, 0.0025",
         },
         "max_distance": {
             "enabled": True,
             "label": "Max Interpolation Distance (m)",
             "main": True,
-            "value": 500.0
+            "value": 500.0,
         },
         "resolution": {
             "enabled": True,
             "label": "Base grid resolution (m)",
             "main": True,
-            "value": 50.0
+            "value": 50.0,
         },
-        "export_as": {
-            "main": True,
-            "label": "Name",
-            "value": "Iso"
-        }
+        "export_as": {"main": True, "label": "Name", "value": "Iso"},
     }
 )
 
