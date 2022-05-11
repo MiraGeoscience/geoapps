@@ -7,10 +7,9 @@
 
 
 import numpy as np
-from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 
-from geoapps.utils import get_inversion_output
+from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
