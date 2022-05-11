@@ -17,8 +17,13 @@ from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 from ipywidgets import widgets
 
-from geoapps.shared_utils.utils import get_inversion_output
-from geoapps.utils.utils import filter_xy, format_labels, inv_symlog, symlog
+from geoapps.utils.utils import (
+    filter_xy,
+    format_labels,
+    get_inversion_output,
+    inv_symlog,
+    symlog,
+)
 
 
 def normalize(values):
