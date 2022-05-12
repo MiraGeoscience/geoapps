@@ -9,7 +9,6 @@ from geoh5py.objects import BlockModel, Surface
 from geoh5py.workspace import Workspace
 import numpy as np
 import os
-from skimage.measure import marching_cubes
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 import random
 
@@ -17,13 +16,17 @@ def test_centroids():
     ws = Workspace(os.path.abspath("C:/Users/JamieB/Documents/GIT/geoapps/assets/iso_test.geoh5"))
 
     # Generate a 3D array
-    nx, ny, nz = 70, 70, 70 #np.random.randint(25, 100, size=3) #70, 70, 70 #(n-1)^3 points
+    n = 70
+    #nx, ny, nz = 70, 70, 70 #(n-1)^3 points
 
-    x = np.linspace(0, random.randint(5, 15), nx)
-    y = np.linspace(0, random.randint(5, 15), ny)
-    z = np.linspace(0, random.randint(5, 15), nz)
+    length = 10
+
+    x = np.linspace(0, length, n)
+    y = np.linspace(0, length, n)
+    z = np.linspace(0, length, n)
 
     origin = np.random.randint(-100, 100, 3)
+    #origin = [0.0, 0.0, 0.0]
 
     # Create test block model
     block_model = BlockModel.create(
@@ -38,13 +41,18 @@ def test_centroids():
 
     # https://stackoverflow.com/questions/53326570/how-to-create-a-sphere-inside-an-ndarray/53339684#53339684
     # Sphere test data for the block model
-    n = min([nx, ny, nz])
-    size = (n-1, n-1, n-1)#(nx-1, ny-1, nz-1)
-    center = ((nx-2)/2, (ny-2)/2, (nz-2)/2) + np.random.randint(-10, 10, 3)
-    #center = ((nx-2)/2, (ny-2)/2, (nz-2)/2)
-    distance = np.linalg.norm(np.subtract(np.indices(size).T, np.asarray(center)), axis=len(center))
-    sphere = np.ones(size) * (distance <= random.randint(1, 20))
-    sphere = np.swapaxes(sphere, 1, 2) #.transpose((1, 2, 0))
+    size = (n-1, n-1, n-1)
+    offset = np.random.randint(-10, 10, 3)
+    sphere_center = ((n-2)/2, (n-2)/2, (n-2)/2) + offset
+    sphere_center_real = (length/2, length/2, length/2) + offset*(length/(n-1))
+
+    distance = np.linalg.norm(np.subtract(np.indices(size).T, np.asarray(sphere_center)), axis=len(sphere_center))
+
+    radius = random.randint(1, 30)
+    radius_real = radius*(length/(n-1))
+
+    sphere = np.ones(size) * (distance <= random.randint(1, 30))
+    sphere = np.swapaxes(sphere, 1, 2)
 
     data = block_model.add_data(
         {
@@ -55,14 +63,35 @@ def test_centroids():
         }
     )
 
+    # Generate surface
     func_surface = IsoSurfacesDriver.iso_surface(block_model, sphere, [0], resolution=100.0, max_distance=np.inf)
 
-    Surface.create(
+    surface = Surface.create(
         ws,
-        name="function surface",
+        name="surface",
         vertices=func_surface[0][0],
         cells=func_surface[0][1]
     )
+
+    # Compare surface center with sphere center
+
+    surf_center = np.mean(surface.vertices, axis=0)
+    block_center = [np.mean(x), np.mean(y), np.mean(z)] + origin
+
+    #print(block_center)
+    #print(surf_center)
+    #print(sphere_center_real + origin)
+
+    print(np.all(np.abs((sphere_center_real + origin) - surf_center) < 1e-12))
+    print(np.abs((sphere_center_real + origin) - surf_center) < 1e-12)
+
+    # Radius of sphere
+    surf_distance = np.linalg.norm(np.subtract(np.mean(surface.vertices, axis=0), origin))
+    #print(surf_distance)
+    #print(radius_real)
+
+
+
 
 
 test_centroids()
