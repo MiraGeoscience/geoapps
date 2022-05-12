@@ -18,8 +18,8 @@ from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
 from geoapps.utils import geophysical_systems, soft_import
-from geoapps.utils.general import find_value
-from geoapps.utils.io import string_2_list
+from geoapps.utils.list import find_value
+from geoapps.utils.string import string_2_list
 
 widgets = soft_import("ipywidgets")
 plt = soft_import("matplotlib", objects=["pyplot"])

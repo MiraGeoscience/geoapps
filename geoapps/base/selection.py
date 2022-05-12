@@ -22,7 +22,8 @@ widgets = soft_import("ipywidgets")
 )
 
 from geoapps.base.application import BaseApplication
-from geoapps.utils.general import find_value, sorted_children_dict
+from geoapps.utils.list import find_value
+from geoapps.utils.workspace import sorted_children_dict
 
 
 class ObjectDataSelection(BaseApplication):

@@ -574,3 +574,39 @@ def plot_convergence_curve(h5file):
     interactive_plot = widgets.interactive(plot_curve, objects=objects)
 
     return interactive_plot
+
+
+def input_string_2_float(input_string):
+    """
+    Function to input interval and value as string to a list of floats.
+
+    Parameter
+    ---------
+    input_string: str
+        Input string value of type `val1:val2:ii` and/or a list of values `val3, val4`
+
+
+    Return
+    ------
+    list of floats
+        Corresponding list of values in float format
+
+    """
+
+    # TODO this function seems like it overlaps with string_2_list, can we use that
+    #  function here to handle the comma separated case??
+    if input_string != "":
+        vals = re.split(",", input_string)
+        cntrs = []
+        for val in vals:
+            if ":" in val:
+                param = np.asarray(re.split(":", val), dtype="float")
+                if len(param) == 2:
+                    cntrs += [np.arange(param[0], param[1] + 1)]
+                else:
+                    cntrs += [np.arange(param[0], param[1] + param[2], param[2])]
+            else:
+                cntrs += [float(val)]
+        return np.unique(np.sort(np.hstack(cntrs)))
+
+    return None

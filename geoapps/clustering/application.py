@@ -51,7 +51,7 @@ KMeans = soft_import("sklearn.cluster", objects=["KMeans"])
 
 from geoapps.scatter_plot import ScatterPlots
 from geoapps.shared_utils.utils import colors, hex_to_rgb
-from geoapps.utils.general import random_sampling
+from geoapps.utils.statistics import random_sampling
 
 
 class Clustering(ScatterPlots):

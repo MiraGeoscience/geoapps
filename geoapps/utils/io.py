@@ -16,13 +16,6 @@ from geoapps.shared_utils.utils import rotate_xy
 from geoapps.utils import soft_import
 
 
-def string_2_list(string):
-    """
-    Convert a list of numbers separated by comma to a list of floats
-    """
-    return [float(val) for val in string.split(",") if len(val) > 0]
-
-
 def export_grid_2_geotiff(
     data: FloatData, file_name: str, wkt_code: str = None, data_type: str = "float"
 ):

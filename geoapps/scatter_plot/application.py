@@ -41,8 +41,8 @@ go = soft_import("plotly", objects=["graph_objects"])
 )
 
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils.general import random_sampling
 from geoapps.utils.plotting import format_axis, normalize, symlog
+from geoapps.utils.statistics import random_sampling
 
 
 class ScatterPlots(ObjectDataSelection):
