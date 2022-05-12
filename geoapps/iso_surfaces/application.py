@@ -5,7 +5,11 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from time import time
+
+from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Surface
+from geoh5py.ui_json.utils import monitored_directory_copy
 from ipywidgets import FloatText, HBox, Label, Text, VBox
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
@@ -74,23 +78,27 @@ class IsoSurface(ObjectDataSelection):
             max_distance=self.max_distance.value,
         )
 
-        result = []
-        for ii, (surface, level) in enumerate(zip(surfaces, levels)):
-            if len(surface[0]) > 0 and len(surface[1]) > 0:
-                result += [
-                    Surface.create(
-                        self.workspace,
-                        name=string_name(self.export_as.value + f"_{level:.2e}"),
-                        vertices=surface[0],
-                        cells=surface[1],
-                        parent=self.ga_group,
-                    )
-                ]
-        self.result = result
-        if self.live_link.value:
-            self.live_link_output(self.export_directory.selected_path, self.ga_group)
+        temp_geoh5 = f"CoordinateTransformation_{time():.3f}.geoh5"
+        with self.get_output_workspace(
+            self.export_directory.selected_path, temp_geoh5
+        ) as workspace:
+            out_entity = ContainerGroup.create(workspace, name=self.ga_group_name.value)
 
-        self.workspace.finalize()
+            result = []
+            for ii, (surface, level) in enumerate(zip(surfaces, levels)):
+                if len(surface[0]) > 0 and len(surface[1]) > 0:
+                    result += [
+                        Surface.create(
+                            workspace,
+                            name=string_name(self.export_as.value + f"_{level:.2e}"),
+                            vertices=surface[0],
+                            cells=surface[1],
+                            parent=out_entity,
+                        )
+                    ]
+
+        if self.live_link.value:
+            monitored_directory_copy(self.export_directory.selected_path, out_entity)
 
     def data_change(self, _):
 
