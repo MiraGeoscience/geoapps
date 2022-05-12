@@ -78,7 +78,7 @@ class IsoSurface(ObjectDataSelection):
             max_distance=self.max_distance.value,
         )
 
-        temp_geoh5 = f"CoordinateTransformation_{time():.3f}.geoh5"
+        temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.3f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as workspace:
