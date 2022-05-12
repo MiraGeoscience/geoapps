@@ -11,8 +11,7 @@ from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.shared_utils.utils import rotate_xy
 from geoapps.utils import soft_import
-from geoapps.utils.general import input_string_2_float
-from geoapps.utils.plotting import plot_plan_data_selection
+from geoapps.utils.plotting import input_string_2_float, plot_plan_data_selection
 
 widgets = soft_import("ipywidgets")
 plt = soft_import("matplotlib", objects=["pyplot"])

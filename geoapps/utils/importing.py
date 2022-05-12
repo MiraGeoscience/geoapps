@@ -10,13 +10,7 @@ import warnings
 
 
 def soft_import(package, objects=None, interrupt=False):
-
-    packagename = package.split(".")[0]
-    packagename = "gdal" if packagename == "osgeo" else packagename
-    err = (
-        f"Module '{packagename}' is missing from the environment. "
-        f"Consider installing with: 'conda install -c conda-forge {packagename}'"
-    )
+    """Attempt to import module and raise/interrupt with custom message if not found."""
 
     try:
         imports = __import__(package, fromlist=objects)
@@ -27,6 +21,14 @@ def soft_import(package, objects=None, interrupt=False):
             return imports
 
     except ModuleNotFoundError:
+
+        packagename = package.split(".")[0]
+        packagename = "gdal" if packagename == "osgeo" else packagename
+        err = (
+            f"Module '{packagename}' is missing from the environment. "
+            f"Consider installing with: 'conda install -c conda-forge {packagename}'"
+        )
+
         if interrupt:
             raise ModuleNotFoundError(err)
         else:

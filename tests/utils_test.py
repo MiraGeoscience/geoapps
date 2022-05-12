@@ -34,13 +34,10 @@ from geoapps.shared_utils.utils import (  # block_model_2_tensor,; tensor_2_bloc
     window_xy,
 )
 from geoapps.utils import soft_import
-from geoapps.utils.general import (
-    find_value,
-    sorted_alphanumeric_list,
-    sorted_children_dict,
-    string_to_numeric,
-)
+from geoapps.utils.list import find_value, sorted_alphanumeric_list
+from geoapps.utils.string import string_to_numeric
 from geoapps.utils.testing import Geoh5Tester
+from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
 

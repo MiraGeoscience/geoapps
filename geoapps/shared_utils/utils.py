@@ -21,7 +21,7 @@ from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
-from geoapps.utils.general import string_to_numeric
+from geoapps.utils.string import string_to_numeric
 
 
 def hex_to_rgb(hex):
