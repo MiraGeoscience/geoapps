@@ -33,17 +33,13 @@ jobs:
         uses: actions/cache@v2
         env:
           # Increase this value to reset cache if environment.yml has not changed
-          CACHE_NUMBER: 6
+          CACHE_NUMBER: 7
         with:
           path: ~/conda_pkgs_dir
           key:
             ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
       - name: Setup conda env
         uses: conda-incubator/setup-miniconda@v2
-        env:
-          PIP_NO_CACHE_DIR: 1
-          PIP_UPGRADE: 1
-          PIP_FORCE_REINSTALL: 1
         with:
           activate-environment: geoapps
           python-version: ${{ matrix.python_ver }}
