@@ -111,6 +111,18 @@ def test_export():
     app.trigger.click()
 
 
-def test_iso_surface():
-    app = IsoSurface(h5file=project)
+def test_iso_surface(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        for uid in [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+        ]:
+            geoh5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
+    app = IsoSurface(h5file=temp_workspace)
     app.trigger.click()
+
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        group = workspace.get_entity("ISO")[0]
+        assert len(group.children) == 5
