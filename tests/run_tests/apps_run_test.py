@@ -23,17 +23,14 @@ from geoapps.triangulated_surfaces.application import Surface2D
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
-project = "./FlinFlon.geoh5"
-
-geoh5 = Workspace(project)
-
-project_dcip = "./FlinFlon_dcip.geoh5"
+PROJECT = "./FlinFlon.geoh5"
+GEOH5 = Workspace(PROJECT)
 
 
 def test_calculator(tmp_path):
     temp_workspace = path.join(tmp_path, "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
-        geoh5.get_entity("geochem")[0].copy(parent=workspace)
+        GEOH5.get_entity("geochem")[0].copy(parent=workspace)
 
     app = Calculator(h5file=temp_workspace)
     app.trigger.click()
@@ -47,8 +44,8 @@ def test_calculator(tmp_path):
 def test_coordinate_transformation(tmp_path):
     temp_workspace = path.join(tmp_path, "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
-        geoh5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
-        geoh5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
+        GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
+        GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
 
     app = CoordinateTransformation(h5file=temp_workspace)
     app.trigger.click()
@@ -61,7 +58,7 @@ def test_coordinate_transformation(tmp_path):
 def test_contour_values(tmp_path):
     temp_workspace = path.join(tmp_path, "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
-        geoh5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
+        GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
 
     app = ContourValues(h5file=temp_workspace, plot_result=False)
     app.trigger.click()
@@ -78,7 +75,7 @@ def test_create_surface(tmp_path):
         for uid in [
             "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
         ]:
-            geoh5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = Surface2D(h5file=temp_workspace)
     app.trigger.click()
@@ -89,9 +86,18 @@ def test_create_surface(tmp_path):
         assert len(group.children) == 1
 
 
-def test_clustering():
-    app = Clustering(h5file=project)
+def test_clustering(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
+    app = Clustering(h5file=temp_workspace)
     app.trigger.click()
+
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        assert len(workspace.get_entity("MyCluster")) == 1
 
 
 def test_data_interpolation(tmp_path):
@@ -103,7 +109,7 @@ def test_data_interpolation(tmp_path):
             "{7450be38-1327-4336-a9e4-5cff587b6715}",
             "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
         ]:
-            geoh5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = DataInterpolation(h5file=temp_workspace)
     app.trigger.click()
@@ -114,12 +120,12 @@ def test_data_interpolation(tmp_path):
 
 
 def test_edge_detection():
-    app = EdgeDetectionApp(h5file=project, plot_result=False)
+    app = EdgeDetectionApp(h5file=PROJECT, plot_result=False)
     app.trigger.click()
 
 
 def test_export():
-    app = Export(h5file=project)
+    app = Export(h5file=PROJECT)
     app.trigger.click()
 
 
@@ -129,7 +135,7 @@ def test_iso_surface(tmp_path):
         for uid in [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         ]:
-            geoh5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = IsoSurface(h5file=temp_workspace)
     app.trigger.click()
