@@ -72,9 +72,21 @@ def test_contour_values(tmp_path):
         assert output.n_vertices == 2740, "Change in output. Need to verify."
 
 
-def test_create_surface():
-    app = Surface2D(h5file=project)
+def test_create_surface(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        for uid in [
+            "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
+        ]:
+            geoh5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
+    app = Surface2D(h5file=temp_workspace)
     app.trigger.click()
+
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        group = workspace.get_entity("CDI")[0]
+        assert len(group.children) == 1
 
 
 def test_clustering():
