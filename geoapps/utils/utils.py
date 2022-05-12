@@ -41,7 +41,6 @@ from sklearn.neighbors import KernelDensity
 
 
 def soft_import(package, objects=None, interrupt=False):
-
     packagename = package.split(".")[0]
     packagename = "gdal" if packagename == "osgeo" else packagename
     err = (
@@ -86,15 +85,22 @@ def string_2_numeric(text: str) -> int | float | str:
         return text
 
 
+def string_to_numeric(text: str) -> int | float | str:
+    """Converts numeric string representation to int or string if possible."""
+    try:
+        text_as_float = float(text)
+        text_as_int = int(text_as_float)
+        return text_as_int if text_as_int == text_as_float else text_as_float
+    except ValueError:
+        return np.nan if text == "nan" else text
+
+
 def sorted_alphanumeric_list(alphanumerics: list[str]) -> list[str]:
     """
     Sorts a list of stringd containing alphanumeric characters in readable way.
-
     Sorting precedence is alphabetical for all string components followed by
     numeric component found in string from left to right.
-
     :param alphanumerics: list of alphanumeric strings.
-
     :return : naturally sorted list of alphanumeric strings.
     """
 
@@ -114,15 +120,11 @@ def sorted_children_dict(
     """
     Uses natural sorting algorithm to order the keys of a dictionary containing
     children name/uid key/value pairs.
-
     If valid uuid entered calls get_entity.  Will return None if no object found
     in workspace for provided object
-
     :param object: geoh5py object containing children IntegerData, FloatData
         entities
-
     :return : sorted name/uid dictionary of children entities of object.
-
     """
 
     if isinstance(object, UUID):
@@ -145,16 +147,12 @@ def sorted_children_dict(
 def get_locations(workspace: Workspace, entity: UUID | Entity):
     """
     Returns entity's centroids or vertices.
-
     If no location data is found on the provided entity, the method will
     attempt to call itself on it's parent.
-
     :param workspace: Geoh5py Workspace entity.
     :param entity: Object or uuid of entity containing centroid or
         vertex location data.
-
     :return: Array shape(*, 3) of x, y, z location data
-
     """
     locations = None
 
@@ -174,11 +172,9 @@ def get_locations(workspace: Workspace, entity: UUID | Entity):
 def find_value(labels: list, keywords: list, default=None) -> list:
     """
     Find matching keywords within a list of labels.
-
     :param labels: List of labels or list of [key, value] that may contain the keywords.
     :param keywords: List of keywords to search for.
     :param default: Default value be returned if none of the keywords are found.
-
     :return matching_labels: List of labels containing any of the keywords.
     """
     value = None
@@ -206,9 +202,7 @@ def find_value(labels: list, keywords: list, default=None) -> list:
 def get_surface_parts(surface: Surface) -> np.ndarray:
     """
     Find the connected cells from a surface.
-
     :param surface: Input surface with cells property.
-
     :return parts: shape(*, 3)
         Array of parts for each of the surface vertices.
     """
@@ -239,7 +233,6 @@ def export_grid_2_geotiff(
 ):
     """
     Write a geotiff from float data stored on a Grid2D object.
-
     :param data: FloatData object with Grid2D parent.
     :param file_name: Output file name *.tiff.
     :param wkt_code: Well-Known-Text string used to assign a projection.
@@ -247,11 +240,8 @@ def export_grid_2_geotiff(
         Type of data written to the geotiff.
         'float': Single band tiff with data values.
         'RGB': Three bands tiff with the colormap values.
-
     Original Source:
-
         Cameron Cooke: http://cgcooke.github.io/GDAL/
-
     Modified: 2020-04-28
     """
 
@@ -357,13 +347,11 @@ def geotiff_2_grid(
 ) -> Grid2D | None:
     """
     Load a geotiff from file.
-
     :param workspace: Workspace to load the data into.
     :param file_name: Input file name with path.
     :param grid: Existing Grid2D object to load the data into. A new object is created by default.
     :param grid_name: Name of the new Grid2D object. Defaults to the file name.
     :param parent: Group entity to store the new Grid2D object into.
-
      :return grid: Grid2D object with values stored.
     """
     gdal = soft_import("osgeo", ["gdal"], interrupt=True)
@@ -412,7 +400,6 @@ def export_curve_2_shapefile(
 ):
     """
     Export a Curve object to *.shp
-
     :param curve: Input Curve object to be exported.
     :param attribute: Data values exported on the Curve parts.
     :param wkt_code: Well-Known-Text string used to assign a projection.
@@ -475,35 +462,24 @@ def calculate_2D_trend(
 ):
     """
     detrend2D(points, values, order=0, method='all')
-
     Function to remove a trend from 2D scatter points with values
-
     Parameters:
     ----------
-
     points: array or floats, shape(*, 2)
         Coordinates of input points
-
     values: array of floats, shape(*,)
         Values to be de-trended
-
     order: Order of the polynomial to be used
-
     method: str
         Method to be used for the detrending
             "all": USe all points
             "perimeter": Only use points on the convex hull
-
-
     Returns
     -------
-
     trend: array of floats, shape(*,)
         Calculated trend
-
     coefficients: array of floats, shape(order+1)
         Coefficients for the polynomial describing the trend
-
         trend = c[0] + points[:, 0] * c[1] +  points[:, 1] * c[2]
     """
     if not isinstance(order, int) or order < 0:
@@ -570,7 +546,6 @@ def weighted_average(
 ) -> list:
     """
     Perform a inverse distance weighted averaging on a list of values.
-
     :param xyz_in: shape(*, 3) Input coordinate locations.
     :param xyz_out: shape(*, 3) Output coordinate locations.
     :param values: Values to be averaged from the input to output locations.
@@ -579,7 +554,6 @@ def weighted_average(
     :param return_indices: If True, return the indices of the nearest neighbours from the input locations.
     :param threshold: Small value added to the radial distance to avoid zero division.
         The value can also be used to smooth the interpolation.
-
     :return avg_values: List of values averaged to the output coordinates
     """
     n = np.min([xyz_in.shape[0], n])
@@ -622,14 +596,12 @@ def window_xy(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Window x, y coordinates with window limits built from center and size.
-
     Notes
     -----
     This formulation is restricted to window outside of a north-south,
     east-west oriented box.  If the data you wish to window has an
     orientation other than this, then consider using the filter_xy
     function which includes an optional rotation parameter.
-
     :param x: Easting coordinates, as vector or meshgrid-like array.
     :param y: Northing coordinates, as vector or meshgrid-like array.
     :param window: Window parameters describing a domain of interest.
@@ -640,12 +612,9 @@ def window_xy(
         }
     :param mask: Optionally provide an existing mask and return the union
         of the two masks and it's effect on x and y.
-
     :return: mask: Boolean mask that was applied to x, and y.
     :return: x[mask]: Masked input array x.
     :return: y[mask]: Masked input array y.
-
-
     """
 
     if ("center" in window.keys()) & ("size" in window.keys()):
@@ -675,20 +644,16 @@ def window_xy(
 def downsample_xy(
     x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-
     """
     Downsample locations to approximate a grid with defined spacing.
-
     :param x: Easting coordinates, as a 1-dimensional vector.
     :param y: Northing coordinates, as a 1-dimensional vector.
     :param distance: Desired coordinate spacing.
     :param mask: Optionally provide an existing mask and return the union
         of the two masks and it's effect on x and y.
-
     :return: mask: Boolean mask that was applied to x, and y.
     :return: x[mask]: Masked input array x.
     :return: y[mask]: Masked input array y.
-
     """
 
     downsample_mask = np.ones_like(x, dtype=bool)
@@ -715,22 +680,18 @@ def downsample_grid(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Downsample grid locations to approximate spacing provided by 'distance'.
-
     Notes
     -----
     This implementation is more efficient than the 'downsample_xy' function
     for locations on a regular grid.
-
     :param xg: Meshgrid-like array of Easting coordinates.
     :param yg: Meshgrid-like array of Northing coordinates.
     :param distance: Desired coordinate spacing.
     :param mask: Optionally provide an existing mask and return the union
         of the two masks and it's effect on xg and yg.
-
     :return: mask: Boolean mask that was applied to xg, and yg.
     :return: xg[mask]: Masked input array xg.
     :return: yg[mask]: Masked input array yg.
-
     """
 
     u_diff = lambda u: np.unique(np.diff(u, axis=1))[0]
@@ -760,7 +721,6 @@ def filter_xy(
 ) -> np.array:
     """
     Window and down-sample locations based on distance and window parameters.
-
     :param x: Easting coordinates, as vector or meshgrid-like array
     :param y: Northing coordinates, as vector or meshgrid-like array
     :param distance: Desired coordinate spacing.
@@ -777,7 +737,6 @@ def filter_xy(
         exists.
     :param mask: Boolean mask to be combined with filter_xy masks via
         logical 'and' operation.
-
     :return mask: Boolean mask to be applied input arrays x and y.
     """
 
@@ -829,7 +788,6 @@ def filter_xy(
 def rotate_xy(xyz: np.ndarray, center: list, angle: float):
     """
     Perform a counterclockwise rotation on the XY plane about a center point.
-
     :param xyz: shape(*, 3) Input coordinates
     :param center: len(2) Coordinates for the center of rotation.
     :param  angle: Angle of rotation in degree
@@ -853,11 +811,9 @@ def running_mean(
 ) -> np.array:
     """
     Compute a running mean of an array over a defined width.
-
     :param values: Input values to compute the running mean over
     :param width: Number of neighboring values to be used
     :param method: Choice between 'forward', 'backward' and ['centered'] averaging.
-
     :return mean_values: Averaged array values of shape(values, )
     """
     # Averaging vector (1/N)
@@ -954,7 +910,6 @@ def block_model_2_tensor(block_model, models=[]):
 
 
 def treemesh_2_octree(workspace, treemesh, **kwargs):
-
     indArr, levels = treemesh._ubc_indArr
     ubc_order = treemesh._ubc_order
 
@@ -1054,7 +1009,6 @@ def object_2_dataframe(entity, fields=[], inplace=False, vertices=True, index=No
 def csv_2_zarr(input_csv, out_dir="zarr", rowchunks=100000, dask_chunks="64MB"):
     """
     Zarr conversion for large CSV files
-
     NOTE: Need testing
     """
     # Need to run this part only once
@@ -1157,13 +1111,11 @@ def data_2_zarr(h5file, entity_name, downsampling=1, fields=[], zarr_file="data.
 def rotate_vertices(xyz, center, phi, theta):
     """
     Rotate scatter points in column format around a center location
-
     INPUT
     :param: xyz nDx3 matrix
     :param: center xyz location of rotation
     :param: theta angle rotation around z-axis
     :param: phi angle rotation around x-axis
-
     """
     xyz -= np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
 
@@ -1192,19 +1144,14 @@ def rotate_vertices(xyz, center, phi, theta):
 def rotate_azimuth_dip(azimuth, dip):
     """
     dipazm_2_xyz(dip,azimuth)
-
     Function converting degree angles for dip and azimuth from north to a
     3-components in cartesian coordinates.
-
     INPUT
     dip     : Value or vector of dip from horizontal in DEGREE
     azimuth   : Value or vector of azimuth from north in DEGREE
-
     OUTPUT
     M       : [n-by-3] Array of xyz components of a unit vector in cartesian
-
     Created on Dec, 20th 2015
-
     @author: dominiquef
     """
 
@@ -1237,7 +1184,6 @@ def string_2_list(string):
 class RectangularBlock:
     """
     Define a rotated rectangular block in 3D space
-
     :param
         - length, width, depth: width, length and height of prism
         - center : center of prism in horizontal plane
@@ -1407,15 +1353,12 @@ def random_sampling(
     """
     Perform a random sampling of the rows of the input array based on
     the distribution of the columns values.
-
     Parameters
     ----------
-
     values: numpy.array of float
         Input array of values N x M, where N >> M
     size: int
         Number of indices (rows) to be extracted from the original array
-
     Returns
     -------
     indices: numpy.array of int
@@ -1540,18 +1483,14 @@ def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kw
 def input_string_2_float(input_string):
     """
     Function to input interval and value as string to a list of floats.
-
     Parameter
     ---------
     input_string: str
         Input string value of type `val1:val2:ii` and/or a list of values `val3, val4`
-
-
     Return
     ------
     list of floats
         Corresponding list of values in float format
-
     """
     if input_string != "":
         vals = re.split(",", input_string)
@@ -1579,33 +1518,21 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
     else:
         workspace = Workspace(h5file)
 
-    out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
-
     try:
         group = workspace.get_entity(inversion_group)[0]
-
-        for comment in group.comments.values:
-            if "Iteration" in comment["Author"]:
-                out["iteration"] += [np.int(comment["Author"].split("_")[1])]
-                out["time"] += [comment["Date"]]
-                values = json.loads(comment["Text"])
-                out["phi_d"] += [float(values["phi_d"])]
-                out["phi_m"] += [float(values["phi_m"])]
-                out["beta"] += [float(values["beta"])]
-
-        if len(out["iteration"]) > 0:
-            out["iteration"] = np.hstack(out["iteration"])
-            ind = np.argsort(out["iteration"])
-            out["iteration"] = out["iteration"][ind]
-            out["phi_d"] = np.hstack(out["phi_d"])[ind]
-            out["phi_m"] = np.hstack(out["phi_m"])[ind]
-            out["time"] = np.hstack(out["time"])[ind]
-
-            return out
     except IndexError:
         raise IndexError(
             f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
         )
+
+    # TODO use a get_entity call here once we update geoh5py entities with the method
+    outfile = [c for c in group.children if c.name == "SimPEG.out"][0]
+    out = [l for l in outfile.values.decode("utf-8").replace("\r", "").split("\n")][:-1]
+    cols = out.pop(0).split(" ")
+    out = [[string_to_numeric(k) for k in l.split(" ")] for l in out]
+    out = dict(zip(cols, list(map(list, zip(*out)))))
+
+    return out
 
 
 def load_json_params(file: str):
@@ -1664,10 +1591,7 @@ def active_from_xyz(
     mesh, xyz, grid_reference="cell_centers", method="linear", logical="all"
 ):
     """Returns an active cell index array below a surface
-
     **** ADAPTED FROM discretize.utils.mesh_utils.active_from_xyz ****
-
-
     """
     if method == "linear":
         tri2D = Delaunay(xyz[:, :2])
