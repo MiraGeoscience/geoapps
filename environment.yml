@@ -4,9 +4,7 @@ channels:
   - conda-forge
   - main
 dependencies:
-  - python
-  - pip
-  - git
+  - python>=3.7
   - conda-forge::discretize=0.7.4
   - main::numpy
   - main::scipy
@@ -29,6 +27,8 @@ dependencies:
   - conda-forge::pydiso
   - setuptools
   - main::mkl
+  - git
+  - pip
   - pip:
     - geoana==0.1.3
     - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.8.0
