@@ -116,11 +116,12 @@ class IsoSurfacesDriver:
             values = values.reshape(
                 (entity.shape[2], entity.shape[0], entity.shape[1]), order="F"
             ).transpose((1, 2, 0))
-            grid = [
-                entity.u_cell_delimiters,
-                entity.v_cell_delimiters,
-                entity.z_cell_delimiters,
-            ]
+
+            grid = []
+            for ii in ["u", "v", "z"]:
+                cell_delimiters = getattr(entity, ii + "_cell_delimiters")
+                dx = cell_delimiters[1:] - cell_delimiters[:-1]
+                grid.append(cell_delimiters[:-1] + dx/2)
 
         else:
             grid = []
