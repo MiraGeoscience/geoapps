@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 from copy import deepcopy
+from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
@@ -82,8 +83,8 @@ validations = {}
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-    "data": "{f3e36334-be0a-4210-b13e-06933279de25}",
+    "objects": UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"),
+    "data": UUID("{f3e36334-be0a-4210-b13e-06933279de25}"),
     "max_distance": 500.0,
     "resolution": 50.0,
     "contours": "0.005: 0.02: 0.005, 0.0025",
