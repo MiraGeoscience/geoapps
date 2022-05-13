@@ -17,8 +17,6 @@ def test_centroids():
 
     # Generate a 3D array
     n = 70
-    #nx, ny, nz = 70, 70, 70 #(n-1)^3 points
-
     length = 10
 
     x = np.linspace(0, length, n)
@@ -26,7 +24,6 @@ def test_centroids():
     z = np.linspace(0, length, n)
 
     origin = np.random.randint(-100, 100, 3)
-    #origin = [0.0, 0.0, 0.0]
 
     # Create test block model
     block_model = BlockModel.create(
@@ -48,10 +45,10 @@ def test_centroids():
 
     distance = np.linalg.norm(np.subtract(np.indices(size).T, np.asarray(sphere_center)), axis=len(sphere_center))
 
-    radius = random.randint(1, 30)
+    radius = random.randint(15, 30)
     radius_real = radius*(length/(n-1))
 
-    sphere = np.ones(size) * (distance <= random.randint(1, 30))
+    sphere = np.ones(size) * (distance <= radius)
     sphere = np.swapaxes(sphere, 1, 2)
 
     data = block_model.add_data(
@@ -74,24 +71,15 @@ def test_centroids():
     )
 
     # Compare surface center with sphere center
-
     surf_center = np.mean(surface.vertices, axis=0)
-    block_center = [np.mean(x), np.mean(y), np.mean(z)] + origin
-
-    #print(block_center)
-    #print(surf_center)
-    #print(sphere_center_real + origin)
-
-    print(np.all(np.abs((sphere_center_real + origin) - surf_center) < 1e-12))
-    print(np.abs((sphere_center_real + origin) - surf_center) < 1e-12)
+    center_error = np.abs(((sphere_center_real + origin) - surf_center)/(sphere_center_real + origin))
+    print(np.all(center_error < 0.01))
 
     # Radius of sphere
-    surf_distance = np.linalg.norm(np.subtract(np.mean(surface.vertices, axis=0), origin))
-    #print(surf_distance)
-    #print(radius_real)
-
-
-
+    surf_distance = np.linalg.norm(np.subtract(surface.vertices, surf_center), axis=1)
+    surf_radius = np.mean(surf_distance, axis=0)
+    radius_error = np.abs((surf_radius-radius_real)/radius_real)
+    print(radius_error < 0.05)
 
 
 test_centroids()
