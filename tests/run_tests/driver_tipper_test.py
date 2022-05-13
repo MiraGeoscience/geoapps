@@ -9,8 +9,8 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
+from geoapps.utils.utils import get_inversion_output
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -66,6 +66,7 @@ def test_tipper_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params, warmstart=False)
+    fwr_driver.initialize()
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
@@ -137,6 +138,7 @@ def test_tipper_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
+    driver.initialize()
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
