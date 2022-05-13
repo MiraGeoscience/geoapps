@@ -150,7 +150,7 @@ class SurveyFactory(SimPEGFactory):
 
         return survey, self.local_index
 
-    def _something(self, data, channel, local_index):
+    def _get_local_data(self, data, channel, local_index):
 
         local_data = {}
         local_uncertainties = {}
@@ -187,20 +187,18 @@ class SurveyFactory(SimPEGFactory):
 
                 channels = np.unique([list(v.keys()) for v in data.observed.values()])
                 for chan in channels:
-                    dat, unc = self._something(data, chan, local_index)
+                    dat, unc = self._get_local_data(data, chan, local_index)
                     local_data.update(dat)
                     local_uncertainties.update(unc)
 
             else:
 
-                dat, unc = self._something(data, channel, local_index)
+                dat, unc = self._get_local_data(data, channel, local_index)
                 local_data.update(dat)
                 local_uncertainties.update(unc)
 
-            data_vec = self._stack_channels(local_data, "cluster_components")
-            uncertainty_vec = self._stack_channels(
-                local_uncertainties, "cluster_components"
-            )
+            data_vec = self._stack_channels(local_data, "row")
+            uncertainty_vec = self._stack_channels(local_uncertainties, "row")
             uncertainty_vec[np.isnan(data_vec)] = np.inf
             data_vec[
                 np.isnan(data_vec)
@@ -215,8 +213,8 @@ class SurveyFactory(SimPEGFactory):
                 k: v[local_index] for k, v in data.uncertainties.items()
             }
 
-            data_vec = self._stack_channels(local_data, "cluster_locs")
-            uncertainty_vec = self._stack_channels(local_uncertainties, "cluster_locs")
+            data_vec = self._stack_channels(local_data, "column")
+            uncertainty_vec = self._stack_channels(local_uncertainties, "column")
             uncertainty_vec[np.isnan(data_vec)] = np.inf
             data_vec[
                 np.isnan(data_vec)
@@ -224,11 +222,26 @@ class SurveyFactory(SimPEGFactory):
             survey.dobs = data_vec
             survey.std = uncertainty_vec
 
-    def _stack_channels(self, channel_data: dict[str, np.ndarray], mode):
-        """Convert dictionary of data/uncertainties to stacked array."""
-        if mode == "cluster_locs":
+    def _stack_channels(self, channel_data: dict[str, np.ndarray], mode: str):
+        """
+        Convert dictionary of data/uncertainties to stacked array.
+
+        parameters:
+        ----------
+
+        channel_data: Array of data to stack
+        mode: Stacks rows or columns before flattening. Must be either 'row' or 'column'.
+
+
+        notes:
+        ------
+        If mode is row the components will be clustered in the resulting 1D array.
+        Column stacking results in the locations being clustered.
+
+        """
+        if mode == "column":
             return np.column_stack(list(channel_data.values())).ravel()
-        elif mode == "cluster_components":
+        elif mode == "row":
             return np.row_stack(list(channel_data.values())).ravel()
 
     def _dcip_arguments(self, data=None):
