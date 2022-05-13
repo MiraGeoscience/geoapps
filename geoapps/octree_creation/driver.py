@@ -78,7 +78,6 @@ class OctreeDriver:
             )
 
         print("Finalizing...")
-        treemesh.finalize()
 
         print("Writing to file ")
         octree = treemesh_2_octree(
