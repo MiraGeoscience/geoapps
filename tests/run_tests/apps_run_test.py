@@ -69,5 +69,7 @@ def test_export():
 
 
 def test_iso_surface():
+    w_s = Workspace(project)
+    print(w_s.objects)
     app = IsoSurface(h5file=project)
     app.trigger.click()
