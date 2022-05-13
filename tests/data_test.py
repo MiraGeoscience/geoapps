@@ -110,6 +110,7 @@ def test_survey_data(tmp_path):
     # test savegeoh5iteration data
 
     driver.directiveList[-2].save_components(99, survey_dobs)
+
     bxx_test = ws.get_entity("Iteration_99_bxx")[0].values
     byy_test = ws.get_entity("Iteration_99_byy")[0].values
     bzz_test = ws.get_entity("Iteration_99_bzz")[0].values

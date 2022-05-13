@@ -99,7 +99,6 @@ class EntityFactory(AbstractFactory):
         )
         new_currents.add_default_ab_cell_id()
         entity.current_electrodes = new_currents
-        entity.workspace.finalize()
 
         return entity
 
