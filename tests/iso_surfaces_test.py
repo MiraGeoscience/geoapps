@@ -11,16 +11,15 @@ import numpy as np
 import os
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 import random
-from scipy import spatial
 
 
 def test_centroids():
     ws = Workspace(os.path.abspath("C:/Users/JamieB/Documents/GIT/geoapps/assets/iso_test.geoh5"))
 
-    # Generate a 3D array
     n = 70
     length = 10
 
+    # Axes for block model
     x = np.linspace(0, length, n)
     y = np.linspace(0, length, n)
     z = np.linspace(0, length, n)
@@ -41,29 +40,29 @@ def test_centroids():
     # https://stackoverflow.com/questions/53326570/how-to-create-a-sphere-inside-an-ndarray/53339684#53339684
     # Sphere test data for the block model
     size = (n-1, n-1, n-1)
-    offset = np.random.randint(-10, 10, 3)
+    offset = np.random.random_sample(3) * n * 0.05
     sphere_center = ((n-2)/2, (n-2)/2, (n-2)/2) + offset
-    sphere_center_real = (length/2, length/2, length/2) + offset*(length/(n-1))
+    # Convert to world units using the length of the block model axes
+    sphere_center_real = sphere_center*(length/(n-1))
 
-    distance = np.linalg.norm(np.subtract(np.indices(size).T, np.asarray(sphere_center)), axis=len(sphere_center))
+    # The value at each point is its distance from the center of the sphere
+    values = np.linalg.norm(np.subtract(np.indices(size).T, np.asarray(sphere_center)), axis=len(sphere_center))
+    values = np.swapaxes(values, 1, 2)
 
-    radius = random.randint(15, 30)
-    radius_real = radius*(length/(n-1))
-
-    sphere = distance
-    sphere = np.swapaxes(sphere, 1, 2)
+    sphere_radius = random.uniform(n*0.15, n*0.3)
+    sphere_radius_real = sphere_radius * (length / (n - 1))
 
     data = block_model.add_data(
         {
             "DataValues": {
                 "association": "CELL",
-                "values": sphere.flatten("F"),
+                "values": values.flatten("F"),
             }
         }
     )
 
     # Generate surface
-    func_surface = IsoSurfacesDriver.iso_surface(block_model, sphere, [radius], resolution=100.0, max_distance=np.inf)
+    func_surface = IsoSurfacesDriver.iso_surface(block_model, values, [sphere_radius], resolution=100.0, max_distance=np.inf)
 
     surface = Surface.create(
         ws,
@@ -75,30 +74,28 @@ def test_centroids():
     # Compare surface center with sphere center
     surf_center = np.mean(surface.vertices, axis=0)
     center_error = np.abs(((sphere_center_real + origin) - surf_center)/(sphere_center_real + origin))
-    print(center_error)
-    print(np.all(center_error < 0.01))
+
+    assert np.all(center_error < 0.01)
 
     # Radius of sphere
     surf_distance = np.linalg.norm(np.subtract(surface.vertices, surf_center), axis=1)
     surf_radius = np.mean(surf_distance, axis=0)
-    radius_error = np.abs((surf_radius-radius_real)/radius_real)
-    print(radius_error)
-    print(radius_error < 0.05)
+    radius_error = np.abs((surf_radius-sphere_radius_real)/sphere_radius_real)
+
+    assert radius_error < 0.05
 
 
 def test_vertices():
     ws = Workspace(os.path.abspath("C:/Users/JamieB/Documents/GIT/geoapps/assets/iso_test.geoh5"))
 
-    length = 100
-    #origin = np.array([0, 0, 0])
-    origin = np.random.randint(-10, 10, 3)
+    length = 10
+    origin = np.random.randint(-100, 100, 3)
     verts = np.random.randint(0, length, (1000, 3)) + origin
-    #offset = np.array([0, 0, 0])
-    offset = np.random.random_sample(3)*5
+    offset = np.random.random_sample(3)*length*0.05
     sphere_center = [length/2, length/2, length/2] + offset
 
     values = np.linalg.norm(np.subtract(verts, np.asarray(origin+sphere_center)), axis=1).flatten("F")
-    sphere_radius = random.uniform(length*0.1, length*0.5) #(max(values)-min(values))/2
+    sphere_radius = random.uniform(length*0.15, length*0.3)
 
     points = Points.create(
         ws,
@@ -115,7 +112,7 @@ def test_vertices():
         }
     )
 
-    func_surface = IsoSurfacesDriver.iso_surface(points, values, [sphere_radius], resolution=(length/100.0), max_distance=np.inf)
+    func_surface = IsoSurfacesDriver.iso_surface(points, values, [sphere_radius], resolution=(length/100), max_distance=np.inf)
 
     surface = Surface.create(
         ws,
@@ -124,20 +121,17 @@ def test_vertices():
         cells=func_surface[0][1]
     )
 
-
     # Compare surface center with sphere center
     surf_center = np.mean(surface.vertices, axis=0)
     center_error = np.abs(((sphere_center+origin) - surf_center) / (sphere_center+origin))
-    print(center_error)
-    print(np.all(center_error < 0.05))
+
+    assert np.all(center_error < 0.05)
 
     # Radius of sphere
     surf_distance = np.linalg.norm(np.subtract(surface.vertices, surf_center), axis=1)
     surf_radius = np.mean(surf_distance, axis=0)
     radius_error = np.abs((surf_radius - sphere_radius) / sphere_radius)
-    print(radius_error)
-    print(radius_error < 0.05)
+
+    assert radius_error < 0.05
 
 
-test_centroids()
-test_vertices()
