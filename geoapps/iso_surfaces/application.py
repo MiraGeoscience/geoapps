@@ -8,6 +8,7 @@
 import os
 import uuid
 
+from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
@@ -87,10 +88,11 @@ class IsoSurface(ObjectDataSelection):
         new_workspace = self.get_output_workspace(
             self.export_directory.selected_path, self.ga_group_name.value
         )
-        for key, value in param_dict.items():
-            if isinstance(value, ObjectBase):
-                param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
 
+        param_dict["objects"] = param_dict["objects"].copy(
+            parent=new_workspace, copy_children=False
+        )
+        param_dict["data"] = param_dict["data"].copy(parent=param_dict["objects"])
         param_dict["geoh5"] = new_workspace
 
         if self.live_link.value:
