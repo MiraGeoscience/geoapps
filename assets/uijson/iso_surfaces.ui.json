@@ -1,0 +1,50 @@
+{
+    "title": "Create Iso Surfaces",
+    "geoh5": "",
+    "run_command": "",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "objects": {
+        "meshType": ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"],
+        "main": true,
+        "label": "Object",
+        "value": ""
+    },
+    "data": {
+        "main": true,
+        "association": ["Vertex", "Cell"],
+        "dataType": "Float",
+        "label": "Value fields",
+        "parent": "objects",
+        "value": ""
+    },
+    "contours": {
+        "main": true,
+        "label": "Iso-values",
+        "value": "0.005: 0.02: 0.005, 0.0025"
+    },
+    "max_distance": {
+        "enabled": true,
+        "label": "Max Interpolation Distance (m)",
+        "main": true,
+        "value": 500.0
+    },
+    "resolution": {
+        "enabled": true,
+        "label": "Base grid resolution (m)",
+        "main": true,
+        "value": 50.0
+    },
+    "export_as": {
+        "main": true,
+        "label": "Name",
+        "value": "Iso_"
+    }
+}
