@@ -59,7 +59,7 @@ def test_coordinate_transformation(tmp_path):
 def test_contour_values(tmp_path):
     temp_workspace = path.join(tmp_path, "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
-        GEOH5.get_entity("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")[0].copy(
+        GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
             parent=workspace
         )
 

@@ -78,7 +78,7 @@ class OctreeDriver:
             )
 
         print("Finalizing...")
-
+        treemesh.finalize()
         print("Writing to file ")
         octree = treemesh_2_octree(
             self.params.geoh5, treemesh, name=self.params.ga_group_name
