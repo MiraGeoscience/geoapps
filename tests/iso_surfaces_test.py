@@ -50,7 +50,7 @@ def test_centroids():
     radius = random.randint(15, 30)
     radius_real = radius*(length/(n-1))
 
-    sphere = np.ones(size) * (distance <= radius)
+    sphere = distance
     sphere = np.swapaxes(sphere, 1, 2)
 
     data = block_model.add_data(
@@ -63,7 +63,7 @@ def test_centroids():
     )
 
     # Generate surface
-    func_surface = IsoSurfacesDriver.iso_surface(block_model, sphere, [0], resolution=100.0, max_distance=np.inf)
+    func_surface = IsoSurfacesDriver.iso_surface(block_model, sphere, [radius], resolution=100.0, max_distance=np.inf)
 
     surface = Surface.create(
         ws,
@@ -75,19 +75,30 @@ def test_centroids():
     # Compare surface center with sphere center
     surf_center = np.mean(surface.vertices, axis=0)
     center_error = np.abs(((sphere_center_real + origin) - surf_center)/(sphere_center_real + origin))
+    print(center_error)
     print(np.all(center_error < 0.01))
 
     # Radius of sphere
     surf_distance = np.linalg.norm(np.subtract(surface.vertices, surf_center), axis=1)
     surf_radius = np.mean(surf_distance, axis=0)
     radius_error = np.abs((surf_radius-radius_real)/radius_real)
+    print(radius_error)
     print(radius_error < 0.05)
 
 
 def test_vertices():
     ws = Workspace(os.path.abspath("C:/Users/JamieB/Documents/GIT/geoapps/assets/iso_test.geoh5"))
 
-    verts = np.random.randint(0, 100, (100, 3))
+    length = 100
+    #origin = np.array([0, 0, 0])
+    origin = np.random.randint(-10, 10, 3)
+    verts = np.random.randint(0, length, (1000, 3)) + origin
+    #offset = np.array([0, 0, 0])
+    offset = np.random.random_sample(3)*5
+    sphere_center = [length/2, length/2, length/2] + offset
+
+    values = np.linalg.norm(np.subtract(verts, np.asarray(origin+sphere_center)), axis=1).flatten("F")
+    sphere_radius = random.uniform(length*0.1, length*0.5) #(max(values)-min(values))/2
 
     points = Points.create(
         ws,
@@ -95,18 +106,16 @@ def test_vertices():
         vertices=verts,
     )
 
-    values = np.random.randint(1, 5, (100, 3))
-
     data = points.add_data(
         {
             "DataValues": {
                 "association": "CELL",
-                "values": values.flatten("F"),
+                "values": values,
             }
         }
     )
 
-    func_surface = IsoSurfacesDriver.iso_surface(points, verts, [3], resolution=10.0, max_distance=np.inf)
+    func_surface = IsoSurfacesDriver.iso_surface(points, values, [sphere_radius], resolution=(length/100.0), max_distance=np.inf)
 
     surface = Surface.create(
         ws,
@@ -116,4 +125,19 @@ def test_vertices():
     )
 
 
+    # Compare surface center with sphere center
+    surf_center = np.mean(surface.vertices, axis=0)
+    center_error = np.abs(((sphere_center+origin) - surf_center) / (sphere_center+origin))
+    print(center_error)
+    print(np.all(center_error < 0.05))
+
+    # Radius of sphere
+    surf_distance = np.linalg.norm(np.subtract(surface.vertices, surf_center), axis=1)
+    surf_radius = np.mean(surf_distance, axis=0)
+    radius_error = np.abs((surf_radius - sphere_radius) / sphere_radius)
+    print(radius_error)
+    print(radius_error < 0.05)
+
+
+test_centroids()
 test_vertices()
