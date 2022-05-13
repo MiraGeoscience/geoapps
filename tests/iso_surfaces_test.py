@@ -5,12 +5,14 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from geoh5py.objects import BlockModel, Surface
+from geoh5py.objects import BlockModel, Surface, Points
 from geoh5py.workspace import Workspace
 import numpy as np
 import os
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 import random
+from scipy import spatial
+
 
 def test_centroids():
     ws = Workspace(os.path.abspath("C:/Users/JamieB/Documents/GIT/geoapps/assets/iso_test.geoh5"))
@@ -82,4 +84,36 @@ def test_centroids():
     print(radius_error < 0.05)
 
 
-test_centroids()
+def test_vertices():
+    ws = Workspace(os.path.abspath("C:/Users/JamieB/Documents/GIT/geoapps/assets/iso_test.geoh5"))
+
+    verts = np.random.randint(0, 100, (100, 3))
+
+    points = Points.create(
+        ws,
+        name="test_points",
+        vertices=verts,
+    )
+
+    values = np.random.randint(1, 5, (100, 3))
+
+    data = points.add_data(
+        {
+            "DataValues": {
+                "association": "CELL",
+                "values": values.flatten("F"),
+            }
+        }
+    )
+
+    func_surface = IsoSurfacesDriver.iso_surface(points, verts, [3], resolution=10.0, max_distance=np.inf)
+
+    surface = Surface.create(
+        ws,
+        name="surface",
+        vertices=func_surface[0][0],
+        cells=func_surface[0][1]
+    )
+
+
+test_vertices()
