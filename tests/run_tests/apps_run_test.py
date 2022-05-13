@@ -39,7 +39,7 @@ def test_calculator(tmp_path):
     files = os.listdir(path.join(tmp_path, "Temp"))
     with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
         output = workspace.get_entity("NewChannel")[0]
-        assert output.n_vertices == 2740, "Change in output. Need to verify."
+        assert output.values.shape[0] == 4438, "Change in output. Need to verify."
 
 
 def test_coordinate_transformation(tmp_path):

@@ -7,6 +7,7 @@
 import re
 from time import time
 
+import numpy
 from geoh5py.ui_json.utils import monitored_directory_copy
 from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
 
