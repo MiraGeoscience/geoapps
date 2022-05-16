@@ -7,24 +7,16 @@
 
 import os
 
-from geoapps.io import InputFile
-from geoapps.io.Gravity import GravityParams
-from geoapps.io.write_default_uijson import write_default_uijson
+from geoh5py.ui_json import InputFile
+
+from geoapps.inversion.potential_fields import GravityParams
+from geoapps.utils.write_default_uijson import write_default_uijson
 
 
 def test_write_default_uijson(tmp_path):
     write_default_uijson(tmp_path)
     filepath = os.path.join(tmp_path, "gravity_inversion.ui.json")
     assert os.path.exists(filepath)
-    ifile = InputFile(filepath)
-    params = GravityParams(ifile, validate=False)
+    ifile = InputFile.read_ui_json(filepath, validation_options={"disabled": True})
+    params = GravityParams(input_file=ifile, validate=False)
     assert params.gz_uncertainty == 1.0
-
-
-def test_write_default_uijson_initializers(tmp_path):
-    write_default_uijson(tmp_path, use_initializers=True)
-    filepath = os.path.join(tmp_path, "gravity_inversion.ui.json")
-    assert os.path.exists(filepath)
-    ifile = InputFile(filepath)
-    params = GravityParams(ifile, validate=False)
-    assert params.gz_uncertainty == 0.05
