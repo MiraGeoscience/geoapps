@@ -54,7 +54,7 @@ simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/re
 simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev1+geoapps.0.6.0.zip#sha256=None" }
 #geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", branch = "release/0.3.0" }
 #geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0-alpha.1.zip#sha256=None" }
-geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.zip#sha256=None" }
+geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0_GA3.zip#sha256=None" }
 
 [tool.poetry.dev-dependencies]
 #pylint = "^2.3"
