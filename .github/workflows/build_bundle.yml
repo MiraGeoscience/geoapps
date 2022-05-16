@@ -1,0 +1,113 @@
+name: Build bundle
+
+on:
+  pull_request:
+    types: [labeled]
+  push:
+    tags:
+      - "v[0-9]+.**"
+
+jobs:
+  build-bundle:
+    if: ${{ github.event.action != 'labeled' || github.event.label.name == 'build:bundle' }}
+    defaults:
+      run:
+        shell: pwsh
+    runs-on: windows-latest
+    env:
+      ARTIFACT_NAME: geoapps
+    outputs:
+      bundle: ${{ steps.conda_pack.outputs.filename }}
+      artifact: ${{ env.ARTIFACT_NAME }}-${{ steps.conda_pack.outputs.name_suffix }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: git info
+        id: git-info
+        run: |
+          echo ::set-output name=ref_name::${GITHUB_REF##refs/*/}
+          echo ::set-output name=short_sha::${GITHUB_SHA:0:8}
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          # Increase this value to reset cache if environment.yml has not changed
+          CACHE_NUMBER: 1
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('conda-py3.7-win-64.lock') }}
+      - name: Setup conda env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: geoapps
+          environment-file: conda-linux-64.lock
+          channel-priority: strict
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+      - name: Install in conda env from sources
+        shell: bash -l {0}
+        run: |
+          conda activate geoapps
+          python -m pip install . -vv
+      - name: Activate conda base env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-activate-base: true
+          activate-environment: ""
+      - name: Run conda pack
+        id: conda_pack
+        env:
+          SUFFIX: ${{ steps.git-info.outputs.ref_name }}-${{ steps.git-info.outputs.short_sha }}
+        shell: bash -l {0}
+        run: |
+          pip install conda-pack
+          mkdir -p build
+          OUTPUT_NAME=geoapps-$SUFFIX.zip
+          conda-pack -n geoapps --output build/$OUTPUT_NAME
+          echo ::set-output name=filename::$OUTPUT_NAME
+          echo ::set-output name=name_suffix::$SUFFIX
+          echo ::set-output name=mime_type::$(file -b --mime-type $OUTPUT_NAME)
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-${{ steps.makeself.outputs.name_suffix }}
+          path: ${{ steps.makeself.outputs.filename }}
+          retention-days: 2
+          if-no-files-found: error
+
+  draft-release:
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.event.ref, 'refs/tags') }}
+    outputs:
+      release_id: ${{ steps.create-release.outputs.release_id }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create draft release
+        id: create-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          tag_name=${GITHUB_REF#refs/tags/}
+
+          gh release view $tag_name 2> /dev/null
+          || new_release_url=$(gh release create --draft
+          $( echo $tag_name | grep -i -q '^v[0-9]\+\(\.[0-9]\+\)\+-[a-z]' && echo --prerelease )
+          -t $tag_name
+          $tag_name)
+
+          [[ $new_release_url ]] && echo "::set-output name=release_id::${new_release_url##https*/}"
+          || echo "::set-output name=release_id::$tag_name"
+
+  release-bundle:
+    needs: [build-bundle, draft-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ needs.build-bundle.outputs.artifact }}
+      - name: Upload release asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh --version
+          gh release upload ${{ needs.draft-release.outputs.release_id }} "${{ needs.build-bundle.outputs.bundle }}#Conda Pack (.zip)"
