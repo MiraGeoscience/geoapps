@@ -27,22 +27,27 @@ class ScatterPlotParams(BaseParams):
         self._validations = validations
         self._objects = None
         self._data = None
+        self._downsampling = None
         self._x = None
-        self._x_active = None
-        self._x_log = True
+        self._x_log = None
+        self._x_min = None
+        self._x_max = None
         self._y = None
-        self._y_active = None
         self._y_log = None
+        self._y_min = None
+        self._y_max = None
         self._z = None
         self._z_log = None
-        self._z_active = None
+        self._z_min = None
+        self._z_max = None
         self._color = None
-        self._color_active = None
-        self._color_log = None
+        self._color_min = None
+        self._color_max = None
         self._color_maps = None
         self._size = None
-        self._size_active = None
-        self._size_log = None
+        self._size_min = None
+        self._size_max = None
+        self._marker_size = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -75,6 +80,17 @@ class ScatterPlotParams(BaseParams):
     @data.setter
     def data(self, val):
         self.setter_validator("data", val)
+
+    @property
+    def downsampling(self) -> int | None:
+        """
+        downsampling
+        """
+        return self._downsampling
+
+    @downsampling.setter
+    def downsampling(self, val):
+        self.setter_validator("downsampling", val)
 
     @property
     def x(self) -> Data | None:
@@ -110,6 +126,28 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("x_log", val)
 
     @property
+    def x_min(self) -> int | None:
+        """
+        x min
+        """
+        return self._x_min
+
+    @x_min.setter
+    def x_min(self, val):
+        self.setter_validator("x_min", val)
+
+    @property
+    def x_max(self) -> int | None:
+        """
+        x max
+        """
+        return self._x_max
+
+    @x_max.setter
+    def x_max(self, val):
+        self.setter_validator("x_max", val)
+
+    @property
     def y(self) -> Data | None:
         """
         y
@@ -119,17 +157,6 @@ class ScatterPlotParams(BaseParams):
     @y.setter
     def y(self, val):
         self.setter_validator("y", val)
-
-    @property
-    def y_active(self) -> bool | None:
-        """
-        y active
-        """
-        return self._y_active
-
-    @y_active.setter
-    def y_active(self, val):
-        self.setter_validator("y_active", val)
 
     @property
     def y_log(self) -> bool | None:
@@ -143,6 +170,28 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("y_log", val)
 
     @property
+    def y_min(self) -> int | None:
+        """
+        x min
+        """
+        return self._y_min
+
+    @y_min.setter
+    def y_min(self, val):
+        self.setter_validator("y_min", val)
+
+    @property
+    def y_max(self) -> int | None:
+        """
+        y max
+        """
+        return self._y_max
+
+    @y_max.setter
+    def y_max(self, val):
+        self.setter_validator("y_max", val)
+
+    @property
     def z(self) -> Data | None:
         """
         z
@@ -154,17 +203,6 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("z", val)
 
     @property
-    def z_active(self) -> bool | None:
-        """
-        z active
-        """
-        return self._z_active
-
-    @z_active.setter
-    def z_active(self, val):
-        self.setter_validator("z_active", val)
-
-    @property
     def z_log(self) -> bool | None:
         """
         z log
@@ -174,4 +212,114 @@ class ScatterPlotParams(BaseParams):
     @z_log.setter
     def z_log(self, val):
         self.setter_validator("z_log", val)
+
+    @property
+    def z_min(self) -> int | None:
+        """
+        z min
+        """
+        return self._z_min
+
+    @z_min.setter
+    def z_min(self, val):
+        self.setter_validator("z_min", val)
+
+    @property
+    def z_max(self) -> int | None:
+        """
+        z max
+        """
+        return self._z_max
+
+    @z_max.setter
+    def z_max(self, val):
+        self.setter_validator("z_max", val)
+
+    @property
+    def color(self) -> Data | None:
+        """
+        color
+        """
+        return self._color
+
+    @color.setter
+    def color(self, val):
+        self.setter_validator("color", val)
+
+    @property
+    def color_log(self) -> bool | None:
+        """
+        color log
+        """
+        return self._color_log
+
+    @color_log.setter
+    def color_log(self, val):
+        self.setter_validator("color_log", val)
+
+    @property
+    def color_min(self) -> int | None:
+        """
+        color min
+        """
+        return self._color_min
+
+    @color_min.setter
+    def color_min(self, val):
+        self.setter_validator("color_min", val)
+
+    @property
+    def color_max(self) -> int | None:
+        """
+        color max
+        """
+        return self._color_max
+
+    @color_max.setter
+    def color_max(self, val):
+        self.setter_validator("color_max", val)
+
+    @property
+    def size(self) -> Data | None:
+        """
+        size
+        """
+        return self._size
+
+    @size.setter
+    def size(self, val):
+        self.setter_validator("size", val)
+
+    @property
+    def size_log(self) -> bool | None:
+        """
+        size log
+        """
+        return self._size_log
+
+    @size_log.setter
+    def size_log(self, val):
+        self.setter_validator("size_log", val)
+
+    @property
+    def size_min(self) -> int | None:
+        """
+        size min
+        """
+        return self._size_min
+
+    @size_min.setter
+    def size_min(self, val):
+        self.setter_validator("size_min", val)
+
+    @property
+    def size_max(self) -> int | None:
+        """
+        size max
+        """
+        return self._size_max
+
+    @size_max.setter
+    def size_max(self, val):
+        self.setter_validator("size_max", val)
 

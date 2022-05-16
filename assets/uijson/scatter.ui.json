@@ -13,6 +13,7 @@
     "conda_environment_boolean": false,
     "workspace": "",
     "objects": {
+        "group": "Data Selection",
         "label": "Object",
         "main": true,
         "meshType": [
@@ -30,9 +31,18 @@
             "Vertex"
         ],
         "dataType": "Float",
+        "group": "Data Selection",
         "label": "Data",
         "main": true,
         "parent": "objects",
+        "value": ""
+    },
+    "downsampling": {
+        "group": "Data Selection",
+        "label": "Population Downsampling (%)",
+        "main": true,
+        "min": 1,
+        "max": 100,
         "value": ""
     },
     "x": {
@@ -40,80 +50,138 @@
             "Vertex"
         ],
         "dataType": "Float",
+        "group": "x axis",
         "label": "Data",
         "main": true,
         "parent": "objects",
         "value": ""
     },
-    "x_active": {
-        "label": "Active",
-        "main": true,
-        "value": true
-    },
     "x_log": {
+        "group": "x axis",
         "label": "Log10",
         "main": true,
-        "value": true
+        "value": false
+    },
+    "x_min": {
+        "group": "x axis",
+        "label": "Min",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
+    },
+    "x_max": {
+        "group": "x axis",
+        "label": "Max",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
     },
     "y": {
         "association": [
             "Vertex"
         ],
         "dataType": "Float",
+        "group": "y axis",
         "label": "Data",
         "main": true,
         "parent": "objects",
         "value": ""
     },
-    "y_active": {
-        "label": "Active",
-        "main": true,
-        "value": true
-    },
     "y_log": {
+        "group": "y axis",
         "label": "Log10",
         "main": true,
         "value": true
+    },
+    "y_min": {
+        "group": "y axis",
+        "label": "Min",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
+    },
+    "y_max": {
+        "group": "y axis",
+        "label": "Max",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
     },
     "z": {
         "association": [
             "Vertex"
         ],
         "dataType": "Float",
+        "group": "z axis",
+        "groupOptional": true,
         "label": "Data",
         "main": true,
         "parent": "objects",
-        "value": ""
-    },
-    "z_active": {
-        "label": "Active",
-        "main": true,
-        "value": true
+        "value": "",
+        "enabled": false
     },
     "z_log": {
+        "group": "z axis",
         "label": "Log10",
         "main": true,
-        "value": true
+        "value": true,
+        "enabled": false
+    },
+    "z_min": {
+        "group": "z axis",
+        "label": "Min",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
+    },
+    "z_max": {
+        "group": "z axis",
+        "label": "Max",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
     },
     "color": {
         "association": [
             "Vertex"
         ],
         "dataType": "Float",
+        "group": "Color",
+        "groupOptional": true,
         "label": "Data",
         "main": true,
         "parent": "objects",
-        "value": ""
-    },
-    "color_active": {
-        "label": "Active",
-        "main": true,
-        "value": false
+        "value": "",
+        "enabled": false
     },
     "color_log": {
+        "group": "Color",
         "label": "Log10",
         "main": true,
-        "value": true
+        "value": true,
+        "enabled": false
+    },
+    "color_min": {
+        "group": "Color",
+        "label": "Min",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
+    },
+    "color_max": {
+        "group": "Color",
+        "label": "Max",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
     },
     "color_maps": {
         "choiceList": [
@@ -212,28 +280,55 @@
             "mrybm",
             "mygbm"
         ],
+        "group": "Color",
         "label": "Colormaps",
         "main": true,
-        "value": ""
+        "value": "",
+        "enabled": false
     },
     "size": {
         "association": [
             "Vertex"
         ],
         "dataType": "Float",
+        "group": "Size",
+        "groupOptional": true,
         "label": "Data",
         "main": true,
         "parent": "objects",
-        "value": ""
-    },
-    "size_active": {
-        "label": "Active",
-        "main": true,
-        "value": false
+        "value": "",
+        "enabled": false
     },
     "size_log": {
+        "group": "Size",
         "label": "Log10",
         "main": true,
-        "value": true
+        "value": false,
+        "enabled": false
+    },
+    "size_min": {
+        "group": "Size",
+        "label": "Min",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
+    },
+    "size_max": {
+        "group": "Size",
+        "label": "Max",
+        "main": true,
+        "optional": true,
+        "enabled": false,
+        "value": ""
+    },
+    "marker_size": {
+        "group": "Size",
+        "label": "Marker Size",
+        "main": true,
+        "min": 1,
+        "max": 100,
+        "value": "",
+        "enabled": false
     }
 }
