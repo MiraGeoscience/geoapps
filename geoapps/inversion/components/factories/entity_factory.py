@@ -123,7 +123,6 @@ class EntityFactory(AbstractFactory):
             new_verts[inversion_data.mask] = np.arange(int(inversion_data.mask.sum()))
             entity.cells = new_verts[self.params.data_object.cells[active_ind, :]]
 
-        entity.workspace.finalize()
         return entity
 
     @staticmethod
