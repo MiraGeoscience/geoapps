@@ -78,6 +78,12 @@
         "enabled": false,
         "value": ""
     },
+    "x_thresh": {
+        "group": "x axis",
+        "label": "Threshold",
+        "main": true,
+        "value": ""
+    },
     "y": {
         "association": [
             "Vertex"
@@ -109,6 +115,12 @@
         "main": true,
         "optional": true,
         "enabled": false,
+        "value": ""
+    },
+    "y_thresh": {
+        "group": "y axis",
+        "label": "Threshold",
+        "main": true,
         "value": ""
     },
     "z": {
@@ -147,6 +159,13 @@
         "enabled": false,
         "value": ""
     },
+    "z_thresh": {
+        "group": "z axis",
+        "label": "Threshold",
+        "main": true,
+        "value": "",
+        "enabled": false
+    },
     "color": {
         "association": [
             "Vertex"
@@ -182,6 +201,13 @@
         "optional": true,
         "enabled": false,
         "value": ""
+    },
+    "color_thresh": {
+        "group": "Color",
+        "label": "Threshold",
+        "main": true,
+        "value": "",
+        "enabled": false
     },
     "color_maps": {
         "choiceList": [
@@ -322,7 +348,14 @@
         "enabled": false,
         "value": ""
     },
-    "marker_size": {
+    "size_thresh": {
+        "group": "Size",
+        "label": "Threshold",
+        "main": true,
+        "value": "",
+        "enabled": false
+    },
+    "size_markers": {
         "group": "Size",
         "label": "Marker Size",
         "main": true,

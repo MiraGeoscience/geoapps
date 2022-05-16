@@ -32,22 +32,27 @@ class ScatterPlotParams(BaseParams):
         self._x_log = None
         self._x_min = None
         self._x_max = None
+        self._x_thresh = None
         self._y = None
         self._y_log = None
         self._y_min = None
         self._y_max = None
+        self._y_thresh = None
         self._z = None
         self._z_log = None
         self._z_min = None
         self._z_max = None
+        self._z_thresh = None
         self._color = None
         self._color_min = None
         self._color_max = None
         self._color_maps = None
+        self._color_thresh = None
         self._size = None
         self._size_min = None
         self._size_max = None
-        self._marker_size = None
+        self._size_thresh = None
+        self._size_markers = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -58,6 +63,35 @@ class ScatterPlotParams(BaseParams):
             )
 
         super().__init__(input_file=input_file, **kwargs)
+
+    @property
+    def n_values(self):
+        """
+        Number of values contained by the current object
+        """
+
+        obj, _ = self.get_selected_entities()
+        if obj is not None:
+            # Check number of points
+            if hasattr(obj, "centroids"):
+                return obj.n_cells
+            elif hasattr(obj, "vertices"):
+                return obj.n_vertices
+        return None
+
+    @property
+    def indices(self):
+        """
+        Bool or array of int
+        Indices of data to be plotted
+        """
+        if getattr(self, "_indices", None) is None:
+            if self.n_values is not None:
+                self._indices = np.arange(self.n_values)
+            else:
+                return None
+
+        return self._indices
 
     @property
     def objects(self) -> ObjectBase | None:
@@ -148,6 +182,17 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("x_max", val)
 
     @property
+    def x_thresh(self) -> float | None:
+        """
+        x thresh
+        """
+        return self._x_thresh
+
+    @x_thresh.setter
+    def x_thresh(self, val):
+        self.setter_validator("x_thresh", val)
+
+    @property
     def y(self) -> Data | None:
         """
         y
@@ -190,6 +235,17 @@ class ScatterPlotParams(BaseParams):
     @y_max.setter
     def y_max(self, val):
         self.setter_validator("y_max", val)
+
+    @property
+    def y_thresh(self) -> float | None:
+        """
+        y thresh
+        """
+        return self._y_thresh
+
+    @y_thresh.setter
+    def y_thresh(self, val):
+        self.setter_validator("y_thresh", val)
 
     @property
     def z(self) -> Data | None:
@@ -236,6 +292,17 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("z_max", val)
 
     @property
+    def z_thresh(self) -> float | None:
+        """
+        z thresh
+        """
+        return self._z_thresh
+
+    @z_thresh.setter
+    def z_thresh(self, val):
+        self.setter_validator("z_thresh", val)
+
+    @property
     def color(self) -> Data | None:
         """
         color
@@ -280,6 +347,17 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("color_max", val)
 
     @property
+    def color_thresh(self) -> float | None:
+        """
+        color thresh
+        """
+        return self._color_thresh
+
+    @color_thresh.setter
+    def color_thresh(self, val):
+        self.setter_validator("color_thresh", val)
+
+    @property
     def size(self) -> Data | None:
         """
         size
@@ -322,4 +400,26 @@ class ScatterPlotParams(BaseParams):
     @size_max.setter
     def size_max(self, val):
         self.setter_validator("size_max", val)
+
+    @property
+    def size_thresh(self) -> float | None:
+        """
+        size thresh
+        """
+        return self._size_thresh
+
+    @size_thresh.setter
+    def size_thresh(self, val):
+        self.setter_validator("size_thresh", val)
+
+    @property
+    def size_markers(self) -> int | None:
+        """
+        size markers
+        """
+        return self._size_markers
+
+    @size_markers.setter
+    def size_markers(self, val):
+        self.setter_validator("size_markers", val)
 
