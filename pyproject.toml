@@ -29,6 +29,7 @@ numpy = "!=1.19.4"
 h5py = "^3.2.1"
 #discretize
 scipy = "^1.4.1"
+geoana = "^0.1.2"
 #matplotlib
 #ipywidgets
 #ipykernel
@@ -47,7 +48,6 @@ scipy = "^1.4.1"
 #pydiso
 #mkl
 #tqdm = ""
-geoana = { version = "0.1.3", source = "pypi" }
 #simpeg = { git = "https://github.com/MiraGeoscience/simpeg.git", branch = "@release/geoapps-0.8.0" }
 simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.8.0.zip#sha256=None" }
 #simpeg_archive = { git = "https://github.com/MiraGeoscience/simpeg.git", tag = "v0.9.1.dev1+geoapps.0.6.0" }
