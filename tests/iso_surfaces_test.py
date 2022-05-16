@@ -5,16 +5,21 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
+
+import numpy as np
+import random
+
 from geoh5py.objects import BlockModel, Surface, Points
 from geoh5py.workspace import Workspace
-import numpy as np
-import os
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
-import random
 
 
 def test_centroids():
-    ws = Workspace(os.path.abspath("C:/Users/JamieB/Documents/GIT/geoapps/assets/iso_test.geoh5"))
+    """
+    Test iso_surface with a block model. Data values are the distance from a point.
+    """
+    ws = Workspace("./iso_test.geoh5")
 
     n = 70
     length = 10
@@ -37,7 +42,6 @@ def test_centroids():
         allow_move=False,
     )
 
-    # https://stackoverflow.com/questions/53326570/how-to-create-a-sphere-inside-an-ndarray/53339684#53339684
     # Sphere test data for the block model
     size = (n-1, n-1, n-1)
     offset = np.random.random_sample(3) * n * 0.05
@@ -62,7 +66,12 @@ def test_centroids():
     )
 
     # Generate surface
-    func_surface = IsoSurfacesDriver.iso_surface(block_model, values, [sphere_radius], resolution=100.0, max_distance=np.inf)
+    func_surface = IsoSurfacesDriver.iso_surface(
+        block_model,
+        values,
+        [sphere_radius],
+        resolution=100.0,
+        max_distance=np.inf)
 
     surface = Surface.create(
         ws,
@@ -86,7 +95,10 @@ def test_centroids():
 
 
 def test_vertices():
-    ws = Workspace(os.path.abspath("C:/Users/JamieB/Documents/GIT/geoapps/assets/iso_test.geoh5"))
+    """
+        Test iso_surface with a points object. Data values are the distance from a point.
+    """
+    ws = Workspace("./iso_test.geoh5")
 
     length = 10
     origin = np.random.randint(-100, 100, 3)
@@ -112,7 +124,12 @@ def test_vertices():
         }
     )
 
-    func_surface = IsoSurfacesDriver.iso_surface(points, values, [sphere_radius], resolution=(length/100), max_distance=np.inf)
+    func_surface = IsoSurfacesDriver.iso_surface(
+        points,
+        values,
+        [sphere_radius],
+        resolution=(length/100),
+        max_distance=np.inf)
 
     surface = Surface.create(
         ws,
