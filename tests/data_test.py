@@ -108,7 +108,6 @@ def test_survey_data(tmp_path):
     np.testing.assert_array_equal(expected_dobs, np.hstack(survey_dobs))
 
     # test savegeoh5iteration data
-
     driver.directiveList[-2].save_components(99, survey_dobs)
 
     bxx_test = ws.get_entity("Iteration_99_bxx")[0].values
