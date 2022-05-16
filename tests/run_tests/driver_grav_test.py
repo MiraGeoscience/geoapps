@@ -65,7 +65,6 @@ def test_gravity_run(
 
     # Turn some values to nan
     gz.values[0] = np.nan
-    geoh5.finalize()
 
     # Run the inverse
     np.random.seed(0)
