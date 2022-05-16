@@ -6,9 +6,10 @@ dependencies:
   - python
   - pip
   - git
-  - discretize
+  - conda-forge::discretize==0.7.4
   - numpy
   - scipy
+  - matplotlib
   - zarr
   - fsspec
   - h5py
