@@ -12,18 +12,18 @@ import os
 import sys
 
 import geoh5py
+import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Surface
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
+from scipy.interpolate import interp1d
+from skimage.measure import marching_cubes
 
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import input_string_2_float, weighted_average, rotate_xy
+from geoapps.utils.utils import input_string_2_float, rotate_xy, weighted_average
 
-import numpy as np
-from scipy.interpolate import interp1d
-from skimage.measure import marching_cubes
 
 class IsoSurfacesDriver:
     def __init__(self, params: IsoSurfacesParams):
@@ -69,11 +69,11 @@ class IsoSurfacesDriver:
 
     @staticmethod
     def iso_surface(
-            entity,
-            values,
-            levels,
-            resolution=100,
-            max_distance=np.inf,
+        entity,
+        values,
+        levels,
+        resolution=100,
+        max_distance=np.inf,
     ):
         """
         Generate 3D iso surface from an entity vertices or centroids and values.
@@ -121,7 +121,7 @@ class IsoSurfacesDriver:
             for ii in ["u", "v", "z"]:
                 cell_delimiters = getattr(entity, ii + "_cell_delimiters")
                 dx = cell_delimiters[1:] - cell_delimiters[:-1]
-                grid.append(cell_delimiters[:-1] + dx/2)
+                grid.append(cell_delimiters[:-1] + dx / 2)
 
         else:
             grid = []
@@ -170,7 +170,9 @@ class IsoSurfacesDriver:
                     vertices += [F(verts[:, ii])]
 
                 if isinstance(entity, BlockModel):
-                    vertices = rotate_xy(np.vstack(vertices).T, [0, 0, 0], entity.rotation)
+                    vertices = rotate_xy(
+                        np.vstack(vertices).T, [0, 0, 0], entity.rotation
+                    )
                     vertices[:, 0] += entity.origin["x"]
                     vertices[:, 1] += entity.origin["y"]
                     vertices[:, 2] += entity.origin["z"]
