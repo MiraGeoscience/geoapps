@@ -28,7 +28,7 @@ Utilities
     applications/scatter
     applications/export
     applications/create_octree
-    applications/create_surface
+    applications/triangulated_surfaces
     applications/create_isosurface
     applications/data_interpolation
     applications/coordinate_transformation

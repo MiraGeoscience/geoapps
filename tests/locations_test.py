@@ -12,9 +12,9 @@ import pytest
 from geoh5py.objects import Grid2D, Points
 from geoh5py.workspace import Workspace
 
-from geoapps.drivers.components import InversionMesh
-from geoapps.drivers.components.locations import InversionLocations
-from geoapps.io.MagneticVector import MagneticVectorParams, default_ui_json
+from geoapps.inversion import default_ui_json
+from geoapps.inversion.components.locations import InversionLocations
+from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")
@@ -98,3 +98,8 @@ def test_z_from_topo(tmp_path):
     locations = InversionLocations(ws, params, window)
     locs = locations.set_z_from_topo(np.array([[315674, 6070832, 0]]))
     assert locs[0, 2] == 326
+
+    params.topography = 320.0
+    locations = InversionLocations(ws, params, window)
+    locs = locations.set_z_from_topo(np.array([[315674, 6070832, 0]]))
+    assert locs[0, 2] == 320.0

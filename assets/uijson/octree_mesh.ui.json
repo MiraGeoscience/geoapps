@@ -1,6 +1,17 @@
 {
-    "title": "Octree Mesh Creator",
+    "title": "octree Mesh Creator",
     "geoh5": "",
+    "run_command": "geoapps.octree_creation.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "workspace": "",
     "objects": {
         "enabled": true,
         "group": "1- Core",
@@ -18,21 +29,21 @@
         "group": "2- Core cell size",
         "label": "Easting (m)",
         "main": true,
-        "value": 25
+        "value": 25.0
     },
     "v_cell_size": {
         "enabled": true,
         "group": "2- Core cell size",
         "label": "Northing (m)",
         "main": true,
-        "value": 25
+        "value": 25.0
     },
     "w_cell_size": {
         "enabled": true,
         "group": "2- Core cell size",
         "label": "Vertical (m)",
         "main": true,
-        "value": 25
+        "value": 25.0
     },
     "horizontal_padding": {
         "enabled": true,
@@ -61,15 +72,72 @@
         "label": "Name:",
         "value": "Octree_Mesh"
     },
-    "run_command": "geoapps.create.octree_mesh",
-    "run_command_boolean": {
-        "value": false,
-        "label": "Run python module ",
-        "tooltip": "Warning: launches process to run python model on save",
-        "main": true
+    "Refinement A object": {
+        "groupOptional": true,
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": ""
     },
-    "monitoring_directory": "",
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": false,
-    "workspace": ""
+    "Refinement A levels": {
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Levels",
+        "value": "4.0, 4.0, 4.0"
+    },
+    "Refinement A type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Type",
+        "value": "radial"
+    },
+    "Refinement A distance": {
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Distance",
+        "value": 1000.0
+    },
+    "Refinement B object": {
+        "groupOptional": true,
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+        ],
+        "value": ""
+    },
+    "Refinement B levels": {
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Levels",
+        "value": "0, 0, 4.0"
+    },
+    "Refinement B type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Type",
+        "value": "surface"
+    },
+    "Refinement B distance": {
+        "enabled": true,
+        "group": "Refinement B",
+        "label": "Distance",
+        "value": 1000.0
+    }
 }

@@ -5,37 +5,16 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
 import sys
+import warnings
 
-from geoapps.io import InputFile
-from geoapps.io.Gravity import GravityParams
-
-from .base_inversion import InversionDriver
-
-
-def start_inversion(filepath=None, **kwargs):
-    """Starts inversion with parameters defined in input file."""
-
-    if filepath is None:
-        input_file = InputFile.from_dict(kwargs)
-    else:
-        input_file = InputFile(filepath)
-
-    params = GravityParams(input_file)
-    driver = GravityDriver(params)
-    driver.run()
-
-
-class GravityDriver(InversionDriver):
-    def __init__(self, params: GravityParams):
-        super().__init__(params)
-
-    def run(self):
-        super().run()
-
+from geoapps.inversion.driver import start_inversion
 
 if __name__ == "__main__":
-
     filepath = sys.argv[1]
+    warnings.warn(
+        "'geoapps.drivers.grav_inversion' replaced by "
+        "'geoapps.inversion.driver' in version 0.7.0. "
+        "This warning is likely due to the execution of older ui.json files. Please update."
+    )
     start_inversion(filepath)
