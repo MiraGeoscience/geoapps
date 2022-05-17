@@ -13,6 +13,8 @@ import sys
 
 import numpy as np
 
+import plotly.graph_objects as go
+
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.selection import ObjectDataSelection
@@ -28,117 +30,64 @@ class ScatterPlotDriver:
 
     def run(self):
         """
-        Create an octree mesh from input values
+        Create a scatter plot from input values
         """
-        if self.params.x is not None:
-            x_active = self.params.x.enabled
-        else:
-            x_active = False
-        y_active = True#self.params.y.enabled
-        z_active = False#self.params.z.enabled
-        color_active = False#self.params.color.enabled
-        size_active = False#self.params.size.enabled
-
-        if self.params.indices is None:
-            return None
-
-        if (
-                self.params.downsampling != self.n_values
-                and self.params.indices.shape[0] == self.n_values
-        ):
-            return self.update_downsampling(None)
-
-        if self.get_channel(self.params.size) is not None and size_active:
-            vals = self.get_channel(self.params.size)[self.indices]
-            inbound = (vals > self.params.size_min) * (vals < self.params.size_max)
-            vals[~inbound] = np.nan
-            size = normalize(vals)
-
-            if self.params.size_log:
-                size = symlog(size, self.params.size_thresh)
-            size *= self.params.size_markers
-        else:
-            size = None
-
-        if self.get_channel(self.params.color) is not None and color_active:
-            vals = self.get_channel(self.params.color)[self.indices]
-            inbound = (vals >= self.params.color_min) * (vals <= self.params.color_max)
-            vals[~inbound] = np.nan
-            color = normalize(vals)
-            if self.params.color_log:
-                color = symlog(color, self.params.color_thresh)
-        else:
-            color = "black"
+        figure = go.Figure()
 
         x_axis, y_axis, z_axis = None, None, None
 
-        if np.sum([x_active, y_active, z_active]) == 3:
+        if (self.params.x is not None) & (self.params.y is not None):
 
-            if x_active:
-                x_axis = self.get_channel(x)
-                if x_axis is None:
-                    x_active = False
-                else:
-                    x_axis = x_axis[self.indices]
+            indices = self.get_indices()
 
-            if y_active:
-                y_axis = self.get_channel(y)
-                if y_axis is None:
-                    y_active = False
-                else:
-                    y_axis = y_axis[self.indices]
+            if self.params.size is not None:
+                vals = self.params.size[indices]
+                inbound = (vals > self.params.size_min) * (vals < self.params.size_max)
+                vals[~inbound] = np.nan
+                size = normalize(vals)
 
-            if z_active:
-                z_axis = self.get_channel(z)
-                if z_axis is None:
-                    z_active = False
-                else:
-                    z_axis = z_axis[self.indices]
-
-            if np.sum([axis is not None for axis in [x_axis, y_axis, z_axis]]) < 2:
-                self.figure.data = []
-                return
-
-
-            if x_axis is not None:
-                inbound = (x_axis >= self.params.x_min) * (x_axis <= self.params.x_max)
-                x_axis[~inbound] = np.nan
-                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
-                    self.data.uid_name_map[x], x_axis, self.params.x_log, self.params.x_thresh
-                )
+                if self.params.size_log:
+                    size = symlog(size, self.params.size_thresh)
+                size *= self.params.size_markers
             else:
-                inbound = (z_axis >= self.params.z_min) * (z_axis <= self.params.z_max)
-                z_axis[~inbound] = np.nan
-                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
-                    self.data.uid_name_map[z], z_axis, self.params.z_log, self.params.z_thresh
-                )
+                size = None
 
-            if y_axis is not None:
-                inbound = (y_axis >= y_min) * (y_axis <= y_max)
-                y_axis[~inbound] = np.nan
-                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
-                    self.data.uid_name_map[y], y_axis, self.params.y_log, self.params.y_thresh
-                )
+            if self.params.color is not None:
+                vals = self.params.color[indices]
+                inbound = (vals >= self.params.color_min) * (vals <= self.params.color_max)
+                vals[~inbound] = np.nan
+                color = normalize(vals)
+
+                if self.params.color_log:
+                    color = symlog(color, self.params.color_thresh)
             else:
-                inbound = (z_axis >= self.params.z_min) * (z_axis <= self.params.z_max)
-                z_axis[~inbound] = np.nan
-                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
-                    self.data.uid_name_map[z], z_axis, self.params.z_log, self.params.z_thresh
-                )
+                color = "black"
 
-            if z_axis is not None:
+            x_axis = self.params.x.values[indices]
+            y_axis = self.params.y.values[indices]
+
+            inbound = (x_axis >= self.params.x_min) * (x_axis <= self.params.x_max)
+            x_axis[~inbound] = np.nan
+            x_axis, x_label, x_ticks, x_ticklabels = format_axis(
+                "label x", x_axis, self.params.x_log, self.params.x_thresh
+            )
+
+            inbound = (y_axis >= self.params.y_min) * (y_axis <= self.params.y_max)
+            y_axis[~inbound] = np.nan
+            y_axis, y_label, y_ticks, y_ticklabels = format_axis(
+                "label y", y_axis, self.params.y_log, self.params.y_thresh
+            )
+
+            if self.params.z is not None:
+                z_axis = self.params.z.values[indices]
+
                 inbound = (z_axis >= self.params.z_min) * (z_axis <= self.params.z_max)
                 z_axis[~inbound] = np.nan
                 z_axis, z_label, z_ticks, z_ticklabels = format_axis(
-                    self.data.uid_name_map[z], z_axis, self.params.z_log, self.params.z_thresh
+                    "label z", z_axis, self.params.z_log, self.params.z_thresh
                 )
-            '''
-            if self.custom_colormap:
-                color_maps = self.custom_colormap
-            '''
 
-            # 3D Scatter
-            if np.sum([x_active, y_active, z_active]) == 3:
+                # 3D Scatter
 
                 plot = go.Scatter3d(
                     x=x_axis,
@@ -156,20 +105,18 @@ class ScatterPlotDriver:
                         "zaxis_title": z_label,
                         "xaxis": {
                             "tickvals": x_ticks,
-                            # "ticktext": [f"{label:.2e}" for label in x_ticklabels],
                         },
                         "yaxis": {
                             "tickvals": y_ticks,
-                            # "ticktext": [f"{label:.2e}" for label in y_ticklabels],
                         },
                         "zaxis": {
                             "tickvals": z_ticks,
-                            # "ticktext": [f"{label:.2e}" for label in z_ticklabels],
                         },
                     },
                 }
-            # 2D Scatter
+
             else:
+            # 2D Scatter
                 plot = go.Scatter(
                     x=x_axis,
                     y=y_axis,
@@ -181,98 +128,44 @@ class ScatterPlotDriver:
                     "margin": dict(l=0, r=0, b=0, t=0),
                     "xaxis": {
                         "tickvals": x_ticks,
-                        # "ticktext": [f"{label:.2e}" for label in x_ticklabels],
                         "exponentformat": "e",
                         "title": x_label,
                     },
                     "yaxis": {
                         "tickvals": y_ticks,
-                        # "ticktext": [f"{label:.2e}" for label in y_ticklabels],
                         "exponentformat": "e",
                         "title": y_label,
                     },
                 }
 
-            self.figure.data = []
-            self.figure.add_trace(plot)
-            self.figure.update_layout(layout)
+            figure.add_trace(plot)
+            figure.update_layout(layout)
 
-        else:
-            self.figure.data = []
+        return figure
 
-    def get_channel(self, channel):
-        obj, _ = self.get_selected_entities()
+    def get_indices(self):
 
-        if channel is None:
-            return None
-
-        if channel not in self.data_channels.keys():
-
-            if self.workspace.get_entity(channel):
-                values = np.asarray(
-                    self.workspace.get_entity(channel)[0].values, dtype=float
-                ).copy()
-            elif channel in "XYZ":
-                # Check number of points
-                if hasattr(obj, "centroids"):
-                    values = obj.centroids[:, "XYZ".index(channel)]
-                elif hasattr(obj, "vertices"):
-                    values = obj.vertices[:, "XYZ".index(channel)]
-            else:
-                return
-
-            self.data_channels[channel] = values
-
-        return self.data_channels[channel].copy()
-
-    def set_channel_bounds(self, name):
-        """
-        Set the min and max values for the given axis channel
-        """
-
-        channel = getattr(self, "_" + name).value
-        self.get_channel(channel)
-
-        if channel in self.data_channels.keys():
-
-            values = self.data_channels[channel]
-            values = values[~np.isnan(values)]
-
-            cmin = getattr(self, "_" + name + "_min")
-            cmin.value = f"{np.min(values):.2e}"
-            cmax = getattr(self, "_" + name + "_max")
-            cmax.value = f"{np.max(values):.2e}"
-
-    def update_downsampling(self, _):
-
-        if not list(self.data_channels.values()):
-            return
-
-        self.refresh.value = False
         values = []
-        for axis in [self.x, self.y, self.z]:
-            vals = self.get_channel(axis.value)
+        for axis in [self.params.x, self.params.y, self.params.z]:
+            vals = axis.values
             if vals is not None:
                 values.append(np.asarray(vals, dtype=float))
 
-        if len(values) < 2:
-            return
-
         values = np.vstack(values)
-        nans = np.isnan(values)
-        values[nans] = 0
         # Normalize all columns
-        values = (values - np.min(values, axis=1)[:, None]) / (
-            np.max(values, axis=1) - np.min(values, axis=1)
+        values = (values - np.nanmin(values, axis=1)[:, None]) / (
+            np.nanmax(values, axis=1) - np.nanmin(values, axis=1)
         )[:, None]
-        values[nans] = np.nan
-        self.params.indices = random_sampling(
+
+        indices = random_sampling(
             values.T,
-            self.params.downsampling.value,
+            int((self.params.downsampling/100) * np.size(values, 0)),
             bandwidth=2.0,
             rtol=1e0,
             method="histogram",
         )
+
+        return indices
 
 
 if __name__ == "__main__":
