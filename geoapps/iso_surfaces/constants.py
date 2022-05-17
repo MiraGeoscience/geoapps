@@ -32,7 +32,7 @@ default_ui_json.update(
     {
         "title": "Create Iso Surfaces",
         "geoh5": "",
-        "run_command": "",
+        "run_command": "geoapps.iso_surfaces.driver",
         "run_command_boolean": {
             "value": False,
             "label": "Run python module ",
@@ -43,7 +43,13 @@ default_ui_json.update(
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
         "objects": {
-            "meshType": ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"],
+            "meshType": [
+                "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+                "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+                "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+                "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+                "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            ],
             "main": True,
             "group": "Data Selection",
             "label": "Object",
