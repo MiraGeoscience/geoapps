@@ -5,8 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import random
-
 import numpy as np
 from geoh5py.objects import BlockModel, Points, Surface
 from geoh5py.workspace import Workspace
@@ -14,11 +12,11 @@ from geoh5py.workspace import Workspace
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 
 
-def test_centroids():
+def test_centroids(tmp_path):
     """
     Test iso_surface with a block model. Data values are the distance from a point.
     """
-    ws = Workspace("./iso_test.geoh5")
+    ws = Workspace(tmp_path / "iso_test.geoh5")
 
     n = 70
     length = 10
@@ -42,9 +40,7 @@ def test_centroids():
     )
 
     # Sphere test data for the block model
-    size = (n - 1, n - 1, n - 1)
-
-    sphere_radius = random.uniform(length * 0.15, length * 0.3)
+    sphere_radius = np.random.uniform(length * 0.15, length * 0.3)
     offset = np.random.uniform(0, (length / 2) - sphere_radius, 3)
     sphere_center = ((length - 2) / 2, (length - 2) / 2, (length - 2) / 2) + offset
 
@@ -63,26 +59,13 @@ def test_centroids():
         axis=1,
     )
 
-    data = block_model.add_data(
-        {
-            "DataValues": {
-                "association": "CELL",
-                "values": values,
-            }
-        }
-    )
-
     # Generate surface
     func_surface = IsoSurfacesDriver.iso_surface(
         block_model, values, [sphere_radius], max_distance=np.inf
     )
 
-    surface = Surface.create(
-        ws, name="surface", vertices=func_surface[0][0], cells=func_surface[0][1]
-    )
-
     # Compare surface center with sphere center
-    surf_center = np.mean(surface.vertices, axis=0)
+    surf_center = np.mean(func_surface[0][0], axis=0)
     center_error = np.abs(
         ((sphere_center + origin) - surf_center) / (sphere_center + origin)
     )
@@ -90,29 +73,40 @@ def test_centroids():
     assert np.all(center_error < 0.02)
 
     # Radius of sphere
-    surf_distance = np.linalg.norm(np.subtract(surface.vertices, surf_center), axis=1)
+    surf_distance = np.linalg.norm(np.subtract(func_surface[0][0], surf_center), axis=1)
     surf_radius = np.mean(surf_distance, axis=0)
     radius_error = np.abs((surf_radius - sphere_radius) / sphere_radius)
 
     assert radius_error < 0.02
 
+    # For user validation only
+    Surface.create(
+        ws, name="surface", vertices=func_surface[0][0], cells=func_surface[0][1]
+    )
+    block_model.add_data(
+        {
+            "DataValues": {
+                "values": values,
+            }
+        }
+    )
+    ws.finalize()
 
-def test_vertices():
+
+def test_vertices(tmp_path):
     """
     Test iso_surface with a points object. Data values are the distance from a point.
     """
-    ws = Workspace("./iso_test.geoh5")
+    ws = Workspace(tmp_path / "iso_test.geoh5")
 
     length = 10
     origin = np.random.uniform(-100, 100, 3)
-    verts = np.random.randint(0, length, (2000, 3)) + origin
-    sphere_radius = random.uniform(length * 0.2, length * 0.3)
+    verts = np.random.uniform(-length / 2, length / 2, (2000, 3)) + origin
+    sphere_radius = np.random.uniform(length * 0.2, length * 0.3, 1)
     offset = np.random.uniform(0, (length / 2) - sphere_radius, 3)
-    sphere_center = [length / 2, length / 2, length / 2] + offset
+    sphere_center = origin + offset
 
-    values = np.linalg.norm(
-        np.subtract(verts, np.asarray(origin + sphere_center)), axis=1
-    )
+    values = np.linalg.norm(verts - sphere_center, axis=1)
 
     points = Points.create(
         ws,
@@ -120,33 +114,32 @@ def test_vertices():
         vertices=verts,
     )
 
-    data = points.add_data(
+    func_surface = IsoSurfacesDriver.iso_surface(
+        points, values, [sphere_radius], resolution=(length / 100), max_distance=np.inf
+    )
+
+    # Compare surface center with sphere center
+    surf_center = np.mean(func_surface[0][0], axis=0)
+    center_error = np.abs((sphere_center - surf_center) / (sphere_center))
+
+    assert np.all(center_error < 0.01)
+
+    # Radius of sphere
+    surf_distance = np.linalg.norm(np.subtract(func_surface[0][0], surf_center), axis=1)
+    surf_radius = np.mean(surf_distance, axis=0)
+    radius_error = np.abs((surf_radius - sphere_radius) / sphere_radius)
+
+    assert radius_error < 0.01
+
+    # For user validation only
+    Surface.create(
+        ws, name="surface", vertices=func_surface[0][0], cells=func_surface[0][1]
+    )
+    points.add_data(
         {
             "DataValues": {
                 "values": values,
             }
         }
     )
-
-    func_surface = IsoSurfacesDriver.iso_surface(
-        points, values, [sphere_radius], resolution=(length / 100), max_distance=np.inf
-    )
-
-    surface = Surface.create(
-        ws, name="surface", vertices=func_surface[0][0], cells=func_surface[0][1]
-    )
-
-    # Compare surface center with sphere center
-    surf_center = np.mean(surface.vertices, axis=0)
-    center_error = np.abs(
-        ((sphere_center + origin) - surf_center) / (sphere_center + origin)
-    )
-
-    assert np.all(center_error < 0.7)
-
-    # Radius of sphere
-    surf_distance = np.linalg.norm(np.subtract(surface.vertices, surf_center), axis=1)
-    surf_radius = np.mean(surf_distance, axis=0)
-    radius_error = np.abs((surf_radius - sphere_radius) / sphere_radius)
-
-    assert radius_error < 0.07
+    ws.finalize()
