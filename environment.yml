@@ -8,6 +8,7 @@ dependencies:
   - pip
   - git
   - conda-forge::discretize
+  - conda-forge::geoana=0.1.2
   - main::numpy
   - main::scipy
   - main::matplotlib
@@ -30,10 +31,9 @@ dependencies:
   - setuptools
   - main::mkl
   - pip:
-    - geoana==0.1.3
-    - git+https://github.com/MiraGeoscience/simpeg.git@release/geoapps-0.8.0
+    - git+https://github.com/MiraGeoscience/simpeg.git@GEOPY-508
     - git+https://github.com/MiraGeoscience/simpeg.git@v0.9.1.dev1+geoapps.0.6.0
-    - git+https://github.com/MiraGeoscience/geoh5py.git@GEOPY-511
+    - git+https://github.com/MiraGeoscience/geoh5py.git@GEOPY-508
     - tqdm
 
 variables:
