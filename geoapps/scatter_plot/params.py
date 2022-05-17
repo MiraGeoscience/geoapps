@@ -9,6 +9,10 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import numpy as np
+
+from geoh5py.data import Data
+from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.params import BaseParams
@@ -26,7 +30,6 @@ class ScatterPlotParams(BaseParams):
         self._defaults = deepcopy(defaults)
         self._validations = validations
         self._objects = None
-        self._data = None
         self._downsampling = None
         self._x = None
         self._x_log = None
@@ -64,34 +67,6 @@ class ScatterPlotParams(BaseParams):
 
         super().__init__(input_file=input_file, **kwargs)
 
-    @property
-    def n_values(self):
-        """
-        Number of values contained by the current object
-        """
-
-        obj, _ = self.get_selected_entities()
-        if obj is not None:
-            # Check number of points
-            if hasattr(obj, "centroids"):
-                return obj.n_cells
-            elif hasattr(obj, "vertices"):
-                return obj.n_vertices
-        return None
-
-    @property
-    def indices(self):
-        """
-        Bool or array of int
-        Indices of data to be plotted
-        """
-        if getattr(self, "_indices", None) is None:
-            if self.n_values is not None:
-                self._indices = np.arange(self.n_values)
-            else:
-                return None
-
-        return self._indices
 
     @property
     def objects(self) -> ObjectBase | None:
@@ -103,17 +78,6 @@ class ScatterPlotParams(BaseParams):
     @objects.setter
     def objects(self, val):
         self.setter_validator("objects", val, fun=self._uuid_promoter)
-
-    @property
-    def data(self) -> Data | None:
-        """
-        Data
-        """
-        return self._data
-
-    @data.setter
-    def data(self, val):
-        self.setter_validator("data", val)
 
     @property
     def downsampling(self) -> int | None:

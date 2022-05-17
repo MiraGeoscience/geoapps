@@ -13,6 +13,8 @@ import sys
 
 import numpy as np
 
+from geoh5py.ui_json import InputFile
+
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils.plotting import format_axis, normalize
 from geoapps.utils.utils import random_sampling, symlog
@@ -28,18 +30,21 @@ class ScatterPlotDriver:
         """
         Create an octree mesh from input values
         """
+        if self.params.x is not None:
+            x_active = self.params.x.enabled
+        else:
+            x_active = False
+        y_active = True#self.params.y.enabled
+        z_active = False#self.params.z.enabled
+        color_active = False#self.params.color.enabled
+        size_active = False#self.params.size.enabled
 
-        x_active = self.params.x.enabled
-        y_active = self.params.y.enabled
-        z_active = self.params.z.enabled
-        color_active = self.params.color.enabled
-        size_active = self.params.size.enabled
+        if self.params.indices is None:
+            return None
 
-        #if not self.refresh.value or self.indices is None:
-        #    return None
         if (
                 self.params.downsampling != self.n_values
-                and self.indices.shape[0] == self.n_values
+                and self.params.indices.shape[0] == self.n_values
         ):
             return self.update_downsampling(None)
 
@@ -89,11 +94,11 @@ class ScatterPlotDriver:
                     z_active = False
                 else:
                     z_axis = z_axis[self.indices]
-            '''
+
             if np.sum([axis is not None for axis in [x_axis, y_axis, z_axis]]) < 2:
                 self.figure.data = []
                 return
-            '''
+
 
             if x_axis is not None:
                 inbound = (x_axis >= self.params.x_min) * (x_axis <= self.params.x_max)
@@ -261,9 +266,9 @@ class ScatterPlotDriver:
             np.max(values, axis=1) - np.min(values, axis=1)
         )[:, None]
         values[nans] = np.nan
-        self._indices = random_sampling(
+        self.params.indices = random_sampling(
             values.T,
-            self.downsampling.value,
+            self.params.downsampling.value,
             bandwidth=2.0,
             rtol=1e0,
             method="histogram",
@@ -272,6 +277,6 @@ class ScatterPlotDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = OctreeParams(InputFile.read_ui_json(file))
-    driver = OctreeDriver(params)
+    params = ScatterPlotParams(InputFile.read_ui_json(file))
+    driver = ScatterPlotDriver(params)
     driver.run()
