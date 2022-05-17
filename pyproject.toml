@@ -36,17 +36,17 @@ ipykernel = "^6.9.1"
 scikit-image = "~0.19.2"
 scikit-learn = "^1.0.2"
 zarr = "^2.8.1"
-fsspec = "^2022.2.0"
+fsspec = "2022.*"
 xarray = "~0.20.1"
-dask = {version = "2022.5.0", extras = ["distributed"]}
-gdal = "^3.5.0"
+dask = {version = "2022.*", extras = ["distributed"]}
+gdal = "^3.4.3"
 fiona = "^1.8.21"
 plotly = "^5.8.0"
 requests = "^2.27.1"
 empymod = "^2.1.3"
 ipyfilechooser = "~0.6.0"
 pydiso = "~0.0.3"
-mkl = "^2022.0.0"
+mkl = "2022.*"
 tqdm = "^4.64.0"
 #simpeg = { git = "https://github.com/MiraGeoscience/simpeg.git", branch = "@release/geoapps-0.8.0" }
 simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.8.0.zip#sha256=None" }
