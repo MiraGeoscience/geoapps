@@ -11,7 +11,6 @@ from __future__ import annotations
 import os
 import sys
 
-import geoh5py
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Surface
