@@ -81,7 +81,7 @@ def test_survey_data(tmp_path):
     )
 
     driver = InversionDriver(params, warmstart=False)
-    driver.initialize()
+
     local_survey_a = driver.inverse_problem.dmisfit.objfcts[0].simulation.survey
     local_survey_b = driver.inverse_problem.dmisfit.objfcts[1].simulation.survey
 
@@ -110,16 +110,18 @@ def test_survey_data(tmp_path):
     # test savegeoh5iteration data
     driver.directiveList[-2].save_components(99, survey_dobs)
 
+    ws.open()
     bxx_test = ws.get_entity("Iteration_99_bxx")[0].values
     byy_test = ws.get_entity("Iteration_99_byy")[0].values
     bzz_test = ws.get_entity("Iteration_99_bzz")[0].values
+    ws.close()
 
     np.testing.assert_array_equal(bxx_test, bxx_data.values)
     np.testing.assert_array_equal(byy_test, byy_data.values)
     np.testing.assert_array_equal(bzz_test, bzz_data.values)
 
     driver.directiveList[-1].save_components(99, survey_dobs)
-
+    ws.open()
     assert np.all(
         ws.get_entity("Iteration_99_bxx_Residual")[0].values == 0
     ), "Residual data should be zero."
@@ -129,6 +131,7 @@ def test_survey_data(tmp_path):
     assert np.all(
         ws.get_entity("Iteration_99_bzz_Residual")[0].values == 0
     ), "Residual data should be zero."
+    ws.close()
 
 
 def test_save_data(tmp_path):

@@ -57,39 +57,39 @@ def test_gravity_run(
     )
     fwr_driver = InversionDriver(params)
     fwr_driver.run()
-    with Workspace(geoh5.h5file) as geoh5:
 
-        gz = geoh5.get_entity("Iteration_0_gz")[0]
-        orig_gz = gz.values.copy()
+    geoh5.open()
+    gz = geoh5.get_entity("Iteration_0_gz")[0]
+    orig_gz = gz.values.copy()
 
-        # Turn some values to nan
-        gz.values[0] = np.nan
+    # Turn some values to nan
+    gz.values[0] = np.nan
 
-        # Run the inverse
-        np.random.seed(0)
-        params = GravityParams(
-            geoh5=geoh5,
-            mesh=mesh.uid,
-            topography_object=topography.uid,
-            resolution=0.0,
-            data_object=gz.parent.uid,
-            starting_model=1e-4,
-            s_norm=0.0,
-            x_norm=1.0,
-            y_norm=1.0,
-            z_norm=1.0,
-            gradient_type="components",
-            gz_channel_bool=True,
-            z_from_topo=False,
-            gz_channel=gz.uid,
-            gz_uncertainty=2e-3,
-            upper_bound=0.75,
-            max_iterations=max_iterations,
-            initial_beta_ratio=1e-2,
-            prctile=100,
-        )
-        params.workpath = tmp_path
-        driver = InversionDriver(params)
+    # Run the inverse
+    np.random.seed(0)
+    params = GravityParams(
+        geoh5=geoh5,
+        mesh=mesh.uid,
+        topography_object=topography.uid,
+        resolution=0.0,
+        data_object=gz.parent.uid,
+        starting_model=1e-4,
+        s_norm=0.0,
+        x_norm=1.0,
+        y_norm=1.0,
+        z_norm=1.0,
+        gradient_type="components",
+        gz_channel_bool=True,
+        z_from_topo=False,
+        gz_channel=gz.uid,
+        gz_uncertainty=2e-3,
+        upper_bound=0.75,
+        max_iterations=max_iterations,
+        initial_beta_ratio=1e-2,
+        prctile=100,
+    )
+    params.workpath = tmp_path
+    driver = InversionDriver(params)
 
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
