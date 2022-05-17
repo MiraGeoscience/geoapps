@@ -26,17 +26,6 @@
         ],
         "value": ""
     },
-    "data": {
-        "association": [
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data Selection",
-        "label": "Data",
-        "main": true,
-        "parent": "objects",
-        "value": ""
-    },
     "downsampling": {
         "group": "Data Selection",
         "label": "Population Downsampling (%)",

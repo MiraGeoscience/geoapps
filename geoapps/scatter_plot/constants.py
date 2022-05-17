@@ -16,7 +16,6 @@ defaults = {
     "title": "Scatter Plot",
     "geoh5": None,
     "objects": None,
-    "data": None,
     "downsampling": None,
     "x": None,
     "x_log": None,
@@ -57,7 +56,7 @@ default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
         "title": "Scatter Plot",
-        "geoh5": None,
+        "geoh5": "",
         "objects": {
             "group": "Data Selection",
             "label": "Object",
@@ -70,15 +69,6 @@ default_ui_json.update(
                 "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
                 "{7CAEBF0E-D16E-11E3-BC69-E4632694AA37}",
             ],
-            "value": None,
-        },
-        "data": {
-            "association": ["Vertex"],
-            "dataType": "Float",
-            "group": "Data Selection",
-            "label": "Data",
-            "main": True,
-            "parent": "objects",
             "value": None,
         },
         "downsampling": {
@@ -300,14 +290,8 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
     "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
-    "data": [
-        "{18c2560c-6161-468a-8571-5d9d59649535}",
-        "{41d51965-3670-43ba-8a10-d399070689e3}",
-        "{94a150e8-16d9-4784-a7aa-e6271df3a3ef}",
-        "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
-        "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
-    ],
     "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
     "x_log": False,
     "y": "{18c2560c-6161-468a-8571-5d9d59649535}",
