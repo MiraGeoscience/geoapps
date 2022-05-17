@@ -13,7 +13,7 @@ import sys
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import BlockModel, Surface
+from geoh5py.objects import BlockModel, ObjectBase, Surface
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import interp1d
@@ -68,11 +68,11 @@ class IsoSurfacesDriver:
 
     @staticmethod
     def iso_surface(
-        entity,
-        values,
-        levels,
-        resolution=100,
-        max_distance=np.inf,
+        entity: ObjectBase,
+        values: np.ndarray,
+        levels: str,
+        resolution: float = 100,
+        max_distance: float = np.inf,
     ):
         """
         Generate 3D iso surface from an entity vertices or centroids and values.
