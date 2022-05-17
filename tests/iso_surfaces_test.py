@@ -49,12 +49,18 @@ def test_centroids():
     sphere_center = ((length - 2) / 2, (length - 2) / 2, (length - 2) / 2) + offset
 
     # The value at each point is its distance from the center of the sphere
-    x_coords, y_coords, z_coords = np.meshgrid(np.linspace(0, length, n - 1), np.linspace(0, length, n - 1),
-                                               np.linspace(0, length, n - 1))
-    verts = np.stack((x_coords.flatten(), y_coords.flatten(), z_coords.flatten()), axis=1)
+    x_coords, y_coords, z_coords = np.meshgrid(
+        np.linspace(0, length, n - 1),
+        np.linspace(0, length, n - 1),
+        np.linspace(0, length, n - 1),
+    )
+    verts = np.stack(
+        (x_coords.flatten(), y_coords.flatten(), z_coords.flatten()), axis=1
+    )
 
     values = np.linalg.norm(
-        np.subtract(verts, np.asarray(sphere_center)), axis=1,
+        np.subtract(verts, np.asarray(sphere_center)),
+        axis=1,
     )
 
     data = block_model.add_data(
