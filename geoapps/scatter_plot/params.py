@@ -322,6 +322,17 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("color_thresh", val)
 
     @property
+    def color_maps(self) -> list | None:
+        """
+        color maps
+        """
+        return self._color_maps
+
+    @color_maps.setter
+    def color_maps(self, val):
+        self.setter_validator("color_maps", val)
+
+    @property
     def size(self) -> Data | None:
         """
         size
