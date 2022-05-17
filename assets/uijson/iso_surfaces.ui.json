@@ -1,7 +1,7 @@
 {
     "title": "Create Iso Surfaces",
     "geoh5": "",
-    "run_command": "",
+    "run_command": "geoapps.iso_surfaces.driver",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
@@ -11,13 +11,14 @@
     "monitoring_directory": "",
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
+    "workspace": "",
     "objects": {
         "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}"
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}"
         ],
         "main": true,
         "group": "Data Selection",
@@ -27,7 +28,10 @@
     "data": {
         "main": true,
         "group": "Data Selection",
-        "association": ["Vertex", "Cell"],
+        "association": [
+            "Vertex",
+            "Cell"
+        ],
         "dataType": "Float",
         "label": "Value fields",
         "parent": "objects",
