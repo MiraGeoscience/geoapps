@@ -18,7 +18,7 @@ defaults = {
     "contours": "0.005: 0.02: 0.005, 0.0025",
     "max_distance": 500.0,
     "resolution": 50.0,
-    "export_as": "Iso_",
+    "export_as": "Iso",
     "run_command": "geoapps.iso_surfaces.driver",
     "run_command_boolean": False,
     "monitoring_directory": None,
