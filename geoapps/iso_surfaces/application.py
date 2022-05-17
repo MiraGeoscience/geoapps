@@ -5,11 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
 import os
 import uuid
 
-from geoh5py.data import Data
-from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
@@ -113,7 +112,6 @@ class IsoSurface(ObjectDataSelection):
             print("Live link active. Check your ANALYST session for new mesh.")
 
     def data_change(self, _):
-
         if self.data.value:
             self.export_as.value = "Iso_" + self.data.uid_name_map[self.data.value]
 

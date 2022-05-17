@@ -190,7 +190,6 @@ def setup_inversion_workspace(
             axis=1,
         )
         survey.cells = survey.cells[dist < 100.0, :]
-        geoh5.finalize()
 
     else:
         survey = Points.create(
