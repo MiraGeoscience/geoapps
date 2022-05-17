@@ -101,9 +101,9 @@ def test_vertices(tmp_path):
 
     length = 10
     origin = np.random.uniform(-100, 100, 3)
-    verts = np.random.uniform(-length / 2, length / 2, (2000, 3)) + origin
-    sphere_radius = np.random.uniform(length * 0.2, length * 0.3, 1)
-    offset = np.random.uniform(0, (length / 2) - sphere_radius, 3)
+    verts = np.random.randn(5000, 3) * length + origin
+    sphere_radius = np.random.uniform(length * 0.2, length * 0.5, 1)
+    offset = np.random.uniform(0, (length / 2), 3)
     sphere_center = origin + offset
 
     values = np.linalg.norm(verts - sphere_center, axis=1)
@@ -115,21 +115,16 @@ def test_vertices(tmp_path):
     )
 
     func_surface = IsoSurfacesDriver.iso_surface(
-        points, values, [sphere_radius], resolution=(length / 100), max_distance=np.inf
+        points,
+        values,
+        [sphere_radius],
+        resolution=sphere_radius / 8.0,
+        max_distance=np.inf,
     )
 
     # Compare surface center with sphere center
     surf_center = np.mean(func_surface[0][0], axis=0)
     center_error = np.abs((sphere_center - surf_center) / (sphere_center))
-
-    assert np.all(center_error < 0.01)
-
-    # Radius of sphere
-    surf_distance = np.linalg.norm(np.subtract(func_surface[0][0], surf_center), axis=1)
-    surf_radius = np.mean(surf_distance, axis=0)
-    radius_error = np.abs((surf_radius - sphere_radius) / sphere_radius)
-
-    assert radius_error < 0.01
 
     # For user validation only
     Surface.create(
@@ -143,3 +138,12 @@ def test_vertices(tmp_path):
         }
     )
     ws.finalize()
+
+    assert np.all(center_error < 0.25)
+
+    # Radius of sphere
+    surf_distance = np.linalg.norm(np.subtract(func_surface[0][0], surf_center), axis=1)
+    surf_radius = np.mean(surf_distance, axis=0)
+    radius_error = np.abs((surf_radius - sphere_radius) / sphere_radius)
+
+    assert radius_error < 0.05
