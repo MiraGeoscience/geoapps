@@ -4,8 +4,11 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+import os
+import uuid
+from os import path
 
-
+from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 
 from geoapps.calculator import Calculator
@@ -21,55 +24,151 @@ from geoapps.triangulated_surfaces.application import Surface2D
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
-project = "./FlinFlon.geoh5"
-
-geoh5 = Workspace(project)
-
-project_dcip = "./FlinFlon_dcip.geoh5"
+PROJECT = "./FlinFlon.geoh5"
+GEOH5 = Workspace(PROJECT)
 
 
-def test_calculator():
-    app = Calculator(h5file=project)
+def test_calculator(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        GEOH5.get_entity("geochem")[0].copy(parent=workspace)
+
+    app = Calculator(h5file=temp_workspace)
     app.trigger.click()
 
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        output = workspace.get_entity("NewChannel")[0]
+        assert output.values.shape[0] == 4438, "Change in output. Need to verify."
 
-def test_coordinate_transformation():
-    app = CoordinateTransformation(h5file=project)
+
+def test_coordinate_transformation(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
+        GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
+
+    app = CoordinateTransformation(h5file=temp_workspace)
     app.trigger.click()
 
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        assert len(workspace.objects) == 2, "Coordinate transform failed."
 
-def test_contour_values():
-    app = ContourValues(h5file=project, plot_result=False)
+
+def test_contour_values(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
+            parent=workspace
+        )
+
+    app = ContourValues(h5file=temp_workspace, plot_result=False)
     app.trigger.click()
 
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        output = workspace.get_entity("Airborne_TMI")[0]
+        assert output.n_vertices == 2740, "Change in output. Need to verify."
 
-def test_create_surface():
-    app = Surface2D(h5file=project)
+
+def test_create_surface(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        for uid in [
+            "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
+        ]:
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
+    app = Surface2D(h5file=temp_workspace)
     app.trigger.click()
 
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        group = workspace.get_entity("CDI")[0]
+        assert len(group.children) == 1
 
-def test_clustering():
-    app = Clustering(h5file=project)
+
+def test_clustering(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
+    app = Clustering(h5file=temp_workspace)
     app.trigger.click()
 
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        assert len(workspace.get_entity("MyCluster")) == 1
 
-def test_data_interpolation():
-    app = DataInterpolation(h5file=project)
+
+def test_data_interpolation(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        for uid in [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{f3e36334-be0a-4210-b13e-06933279de25}",
+            "{7450be38-1327-4336-a9e4-5cff587b6715}",
+            "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+        ]:
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
+    app = DataInterpolation(h5file=temp_workspace)
     app.trigger.click()
 
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        assert len(workspace.get_entity("Iteration_7_model_Interp")) == 1
 
-def test_edge_detection():
-    app = EdgeDetectionApp(h5file=project, plot_result=False)
+
+def test_edge_detection(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        for uid in [
+            "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+        ]:
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
+    app = EdgeDetectionApp(h5file=temp_workspace, plot_result=False)
+
     app.trigger.click()
+
+    files = os.listdir(path.join(tmp_path, "Temp"))
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        assert (
+            len(
+                [
+                    child
+                    for child in workspace.get_entity("Airborne_Gxx")
+                    if isinstance(child, Curve)
+                ]
+            )
+            == 1
+        )
 
 
 def test_export():
-    app = Export(h5file=project)
+    app = Export(h5file=PROJECT)
     app.trigger.click()
 
 
-def test_iso_surface():
-    w_s = Workspace(project)
-    print(w_s.objects)
-    app = IsoSurface(h5file=project)
+def test_iso_surface(tmp_path):
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        for uid in [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+        ]:
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
+    app = IsoSurface(geoh5=temp_workspace)
     app.trigger.click()
+
+    files = [
+        file
+        for file in os.listdir(path.join(tmp_path, "Temp"))
+        if file.endswith(".geoh5")
+    ]
+    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+        group = workspace.get_entity("Isosurface")[0]
+        assert len(group.children) == 5

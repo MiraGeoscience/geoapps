@@ -318,7 +318,6 @@ class PeakFinderDriver:
                     parent=output_group,
                 )
 
-        workspace.finalize()
         print("Process completed.")
         print(f"Result exported to: {workspace.h5file}")
 

@@ -54,6 +54,7 @@ class InversionDriver:
         self.survey = None
         self.active_cells = None
         self.running = False
+        self.initialize()
 
     @property
     def window(self):
@@ -189,6 +190,7 @@ class InversionDriver:
 
         # If forward only option enabled, stop here
         if self.params.forward_only:
+            self.workspace.close()
             return
 
         # Add a list of directives to the inversion
@@ -205,6 +207,7 @@ class InversionDriver:
         self.inversion = inversion.BaseInversion(
             self.inverse_problem, directiveList=self.directiveList
         )
+        self.workspace.close()
 
     def run(self):
         """Run inversion from params"""
@@ -219,7 +222,7 @@ class InversionDriver:
         # Run the inversion
         self.start_inversion_message()
         self.running = True
-        mrec = self.inversion.run(self.starting_model)
+        self.inversion.run(self.starting_model)
 
     def start_inversion_message(self):
 
@@ -439,7 +442,6 @@ def start_inversion(filepath=None, **kwargs):
     params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
     sys.stdout = InversionLogger("SimPEG.log", driver)
-    driver.initialize()
     driver.run()
     sys.stdout.close()
 
