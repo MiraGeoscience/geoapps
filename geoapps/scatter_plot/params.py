@@ -67,11 +67,10 @@ class ScatterPlotParams(BaseParams):
 
         super().__init__(input_file=input_file, **kwargs)
 
-
     @property
     def objects(self) -> ObjectBase | None:
         """
-            Input object
+        Input object
         """
         return self._objects
 
@@ -82,7 +81,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def downsampling(self) -> int | None:
         """
-        downsampling
+        Percent to downsample the data
         """
         return self._downsampling
 
@@ -93,7 +92,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def x(self) -> Data | None:
         """
-        x
+        X-axis data
         """
         return self._x
 
@@ -102,20 +101,9 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("x", val)
 
     @property
-    def x_active(self) -> bool | None:
-        """
-        x active
-        """
-        return self._x_active
-
-    @x_active.setter
-    def x_active(self, val):
-        self.setter_validator("x_active", val)
-
-    @property
     def x_log(self) -> bool | None:
         """
-        x log
+        Plot x-axis logarithmically
         """
         return self._x_log
 
@@ -126,7 +114,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def x_min(self) -> int | None:
         """
-        x min
+        Minimum value for x data
         """
         return self._x_min
 
@@ -137,7 +125,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def x_max(self) -> int | None:
         """
-        x max
+        Max value for x data
         """
         return self._x_max
 
@@ -159,7 +147,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def y(self) -> Data | None:
         """
-        y
+        Y-axis data
         """
         return self._y
 
@@ -170,7 +158,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def y_log(self) -> bool | None:
         """
-        y log
+        Plot y-axis logarithmically
         """
         return self._y_log
 
@@ -181,7 +169,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def y_min(self) -> int | None:
         """
-        x min
+        Minimum value for y data
         """
         return self._y_min
 
@@ -192,7 +180,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def y_max(self) -> int | None:
         """
-        y max
+        Max value for y data
         """
         return self._y_max
 
@@ -214,7 +202,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def z(self) -> Data | None:
         """
-        z
+        Z-axis data
         """
         return self._z
 
@@ -225,7 +213,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def z_log(self) -> bool | None:
         """
-        z log
+        Plot z-axis logarithmically
         """
         return self._z_log
 
@@ -236,7 +224,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def z_min(self) -> int | None:
         """
-        z min
+        Minimum value for z data
         """
         return self._z_min
 
@@ -247,7 +235,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def z_max(self) -> int | None:
         """
-        z max
+        Max value for z data
         """
         return self._z_max
 
@@ -269,7 +257,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def color(self) -> Data | None:
         """
-        color
+        Color data
         """
         return self._color
 
@@ -280,7 +268,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def color_log(self) -> bool | None:
         """
-        color log
+        Plot color data logarithmically
         """
         return self._color_log
 
@@ -291,7 +279,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def color_min(self) -> int | None:
         """
-        color min
+        Minimum value for color data
         """
         return self._color_min
 
@@ -302,7 +290,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def color_max(self) -> int | None:
         """
-        color max
+        Max value for color data
         """
         return self._color_max
 
@@ -324,7 +312,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def color_maps(self) -> list | None:
         """
-        color maps
+        Color map choices
         """
         return self._color_maps
 
@@ -335,7 +323,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def size(self) -> Data | None:
         """
-        size
+        Size data
         """
         return self._size
 
@@ -346,7 +334,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def size_log(self) -> bool | None:
         """
-        size log
+        Plot size data logarithmically
         """
         return self._size_log
 
@@ -357,7 +345,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def size_min(self) -> int | None:
         """
-        size min
+        Minimum value for size data
         """
         return self._size_min
 
@@ -368,7 +356,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def size_max(self) -> int | None:
         """
-        size max
+        Max value for size data
         """
         return self._size_max
 
@@ -390,7 +378,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def size_markers(self) -> int | None:
         """
-        size markers
+        Size of markers
         """
         return self._size_markers
 
