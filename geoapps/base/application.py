@@ -34,6 +34,7 @@ from ipywidgets import (
 
 from geoapps.base.params import BaseParams
 from geoapps.utils.formatters import string_name
+from geoapps.utils.string import existing_file_incrementer
 
 
 class BaseApplication:
@@ -304,7 +305,9 @@ class BaseApplication:
         if not name.endswith(".geoh5"):
             name += ".geoh5"
 
-        workspace = Workspace(path.join(workpath, name))
+        h5file = path.join(workpath, name)
+        h5file = existing_file_incrementer(h5file)
+        workspace = Workspace(h5file)
         live_link = False
         time.sleep(1)
         # Check if GA digested the file already

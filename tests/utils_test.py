@@ -21,6 +21,7 @@ from geoh5py.objects import BlockModel, Grid2D
 from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 
+from geoapps.utils.string import existing_file_incrementer
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.utils import (
     block_model_2_tensor,
@@ -44,6 +45,20 @@ from geoapps.utils.utils import (
 )
 
 geoh5 = Workspace("./FlinFlon.geoh5")
+
+
+def test_existing_file_incrementer(tmp_path):
+
+    original_name = os.path.join(tmp_path, "test_file.ui.geoh5")
+    non_incremented_name = existing_file_incrementer(original_name)
+    assert non_incremented_name == original_name
+
+    with open(original_name, "w") as f:
+        incremented_name = existing_file_incrementer(original_name)
+        assert "test_file (1).ui.geoh5" in incremented_name
+        with open(incremented_name, "w") as g:
+            second_name = existing_file_incrementer(incremented_name)
+            assert "test_file (2).ui.geoh5" in second_name
 
 
 def test_find_value():
