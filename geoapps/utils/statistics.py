@@ -16,18 +16,10 @@ def random_sampling(
     Perform a random sampling of the rows of the input array based on
     the distribution of the columns values.
 
-    Parameters
-    ----------
+    :param values: Input array of values N x M, where N >> M
+    :param size: Number of indices (rows) to be extracted from the original array
 
-    values: numpy.array of float
-        Input array of values N x M, where N >> M
-    size: int
-        Number of indices (rows) to be extracted from the original array
-
-    Returns
-    -------
-    indices: numpy.array of int
-        Indices of samples randomly selected from the PDF
+    :returns: Indices of samples randomly selected from the PDF
     """
     if size == values.shape[0]:
         return np.where(np.all(~np.isnan(values), axis=1))[0]
