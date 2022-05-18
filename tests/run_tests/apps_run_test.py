@@ -71,4 +71,5 @@ def test_export():
 def test_iso_surface():
     w_s = Workspace(project)
     app = IsoSurface(geoh5=project)
-    app.trigger.click()
+    app.trigger_click(None)
+    app.trigger_click(None)  # Make sure we can twice
