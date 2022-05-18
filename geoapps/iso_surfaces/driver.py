@@ -138,7 +138,7 @@ class IsoSurfacesDriver:
                 locations,
                 np.c_[x.flatten(), y.flatten(), z.flatten()],
                 [values],
-                threshold=1e-1,
+                threshold=resolution / 2.0,
                 n=8,
                 max_distance=max_distance,
             )
