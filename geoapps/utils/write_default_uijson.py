@@ -123,7 +123,7 @@ def write_default_uijson(path, use_initializers=False):
         "tipper_forward.ui.json": TipperParams(forward_only=True, validate=False),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
         "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
-        "iso_surfaces.ui.json": IsoSurfacesParams(validate=False, **oct_init),
+        "iso_surfaces.ui.json": IsoSurfacesParams(validate=False, **iso_init),
     }
 
     for filename, params in filedict.items():
