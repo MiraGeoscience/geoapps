@@ -8,10 +8,10 @@
 import os
 import uuid
 
-from geoh5py.data import Data
-from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
+
+from geoapps.utils.importing import soft_import
 
 (FloatText, HBox, Label, Text, VBox) = soft_import(
     "ipywidgets", objects=["FloatText", "HBox", "Label", "Text", "VBox"]
