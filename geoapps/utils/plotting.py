@@ -580,17 +580,11 @@ def input_string_2_float(input_string):
     """
     Function to input interval and value as string to a list of floats.
 
-    Parameter
-    ---------
-    input_string: str
-        Input string value of type `val1:val2:ii` and/or a list of values `val3, val4`
+    :param input_string: Input string value of type `val1:val2:ii` and/or
+        a list of values `val3, val4`
 
 
-    Return
-    ------
-    list of floats
-        Corresponding list of values in float format
-
+    :return: Corresponding list of values in float format
     """
 
     # TODO this function seems like it overlaps with string_2_list, can we use that
