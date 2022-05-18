@@ -7,7 +7,7 @@ dependencies:
   - python
   - pip
   - git
-  - conda-forge::discretize==0.7.4
+  - conda-forge::discretize=0.7.4
   - main::numpy
   - main::scipy
   - main::matplotlib
