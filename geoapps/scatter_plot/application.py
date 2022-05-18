@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
+import uuid
 
 import numpy as np
 import plotly.express as px
@@ -21,11 +22,18 @@ from ipywidgets import (
     ToggleButton,
     VBox,
     interactive_output,
+    Widget,
 )
 
+from geoh5py.shared import Entity
+from geoh5py.ui_json import InputFile
+
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils.plotting import format_axis, normalize
-from geoapps.utils.utils import random_sampling, symlog
+from geoapps.scatter_plot.constants import app_initializer
+from geoapps.scatter_plot.driver import ScatterPlotDriver
+from geoapps.scatter_plot.params import ScatterPlotParams
+
+from geoapps.utils.utils import random_sampling
 
 
 class ScatterPlots(ObjectDataSelection):
@@ -33,34 +41,7 @@ class ScatterPlots(ObjectDataSelection):
     Application for 2D and 3D crossplots of data using symlog scaling
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
-        "data": [
-            "{18c2560c-6161-468a-8571-5d9d59649535}",
-            "{41d51965-3670-43ba-8a10-d399070689e3}",
-            "{94a150e8-16d9-4784-a7aa-e6271df3a3ef}",
-            "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
-            "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
-        ],
-        "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
-        "x_active": True,
-        "y": "{18c2560c-6161-468a-8571-5d9d59649535}",
-        "y_active": True,
-        "z": "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
-        "y_log": True,
-        "z_log": True,
-        "z_active": True,
-        "color": "{94a150e8-16d9-4784-a7aa-e6271df3a3ef}",
-        "color_active": True,
-        "color_log": True,
-        "size": "{41d51965-3670-43ba-8a10-d399070689e3}",
-        "size_active": True,
-        "color_maps": "inferno",
-        "refresh": True,
-        "refresh": True,
-    }
-
+    _param_class = ScatterPlotParams
     _select_multiple = True
     _add_groups = False
     _downsampling = None
@@ -70,10 +51,24 @@ class ScatterPlots(ObjectDataSelection):
     _z = None
     _size = None
 
-    def __init__(self, **kwargs):
-        self.defaults.update(**kwargs)
+    def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
+        if ui_json is not None and os.path.exists(ui_json):
+            self.params = self._param_class(InputFile(ui_json))
+        else:
+            self.params = self._param_class(**app_initializer)
+
+        self.defaults = {}
+        for key, value in self.params.to_dict().items():
+            if isinstance(value, Entity):
+                self.defaults[key] = value.uid
+            else:
+                self.defaults[key] = value
+
         self.custom_colormap = []
         self._indices = None
+
+
 
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
@@ -255,6 +250,43 @@ class ScatterPlots(ObjectDataSelection):
         self.objects.observe(self.update_objects, names="value")
         self.downsampling.observe(self.update_downsampling, names="value")
         self.figure = go.FigureWidget()
+
+        '''
+        self.x.observe(self.plot_selection, names="value")
+        self.x_log.observe(self.plot_selection, names="value")
+        self.x_active.observe(self.plot_selection, names="value")
+        self.x_thresh.observe(self.plot_selection, names="value")
+        self.x_min.observe(self.plot_selection, names="value")
+        self.x_max.observe(self.plot_selection, names="value")
+        self.y.observe(self.plot_selection, names="value")
+        self.y_log.observe(self.plot_selection, names="value")
+        self.y_active.observe(self.plot_selection, names="value")
+        self.y_thresh.observe(self.plot_selection, names="value")
+        self.y_min.observe(self.plot_selection, names="value")
+        self.y_max.observe(self.plot_selection, names="value")
+        self.z.observe(self.plot_selection, names="value")
+        self.z_log.observe(self.plot_selection, names="value")
+        self.z_active.observe(self.plot_selection, names="value")
+        self.z_thresh.observe(self.plot_selection, names="value")
+        self.z_min.observe(self.plot_selection, names="value")
+        self.z_max.observe(self.plot_selection, names="value")
+        self.color.observe(self.plot_selection, names="value")
+        self.color_log.observe(self.plot_selection, names="value")
+        self.color_active.observe(self.plot_selection, names="value")
+        self.color_thresh.observe(self.plot_selection, names="value")
+        self.color_min.observe(self.plot_selection, names="value")
+        self.color_max.observe(self.plot_selection, names="value")
+        self.color_maps.observe(self.plot_selection, names="value")
+        self.size.observe(self.plot_selection, names="value")
+        self.size_log.observe(self.plot_selection, names="value")
+        self.size_active.observe(self.plot_selection, names="value")
+        self.size_thresh.observe(self.plot_selection, names="value")
+        self.size_min.observe(self.plot_selection, names="value")
+        self.size_max.observe(self.plot_selection, names="value")
+        self.size_markers.observe(self.plot_selection, names="value")
+        self.refresh.observe(self.plot_selection, names="value")
+        '''
+
         self.crossplot = interactive_output(
             self.plot_selection,
             {
@@ -293,6 +325,7 @@ class ScatterPlots(ObjectDataSelection):
                 "refresh": self.refresh,
             },
         )
+
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Save HTML"
 
@@ -647,201 +680,61 @@ class ScatterPlots(ObjectDataSelection):
             cmax = getattr(self, "_" + name + "_max")
             cmax.value = f"{np.max(values):.2e}"
 
+    #def plot_selection(self):
     def plot_selection(
-        self,
-        x,
-        x_log,
-        x_active,
-        x_thresh,
-        x_min,
-        x_max,
-        y,
-        y_log,
-        y_active,
-        y_thresh,
-        y_min,
-        y_max,
-        z,
-        z_log,
-        z_active,
-        z_thresh,
-        z_min,
-        z_max,
-        color,
-        color_log,
-        color_active,
-        color_thresh,
-        color_maps,
-        color_min,
-        color_max,
-        size,
-        size_log,
-        size_active,
-        size_thresh,
-        size_markers,
-        size_min,
-        size_max,
-        refresh,
+            self,
+            x,
+            x_log,
+            x_active,
+            x_thresh,
+            x_min,
+            x_max,
+            y,
+            y_log,
+            y_active,
+            y_thresh,
+            y_min,
+            y_max,
+            z,
+            z_log,
+            z_active,
+            z_thresh,
+            z_min,
+            z_max,
+            color,
+            color_log,
+            color_active,
+            color_thresh,
+            color_maps,
+            color_min,
+            color_max,
+            size,
+            size_log,
+            size_active,
+            size_thresh,
+            size_markers,
+            size_min,
+            size_max,
+            refresh,
     ):
-
-        if not self.refresh.value or self.indices is None:
-            return None
-
-        if (
-            self.downsampling.value != self.n_values
-            and self.indices.shape[0] == self.n_values
-        ):
-            return self.update_downsampling(None)
-
-        if self.get_channel(size) is not None and size_active:
-            vals = self.get_channel(size)[self.indices]
-            inbound = (vals > size_min) * (vals < size_max)
-            vals[~inbound] = np.nan
-            size = normalize(vals)
-
-            if size_log:
-                size = symlog(size, size_thresh)
-            size *= size_markers
-        else:
-            size = None
-
-        if self.get_channel(color) is not None and color_active:
-            vals = self.get_channel(color)[self.indices]
-            inbound = (vals >= color_min) * (vals <= color_max)
-            vals[~inbound] = np.nan
-            color = normalize(vals)
-            if color_log:
-                color = symlog(color, color_thresh)
-        else:
-            color = "black"
-
-        x_axis, y_axis, z_axis = None, None, None
-
-        if np.sum([x_active, y_active, z_active]) > 1:
-
-            if x_active:
-                x_axis = self.get_channel(x)
-                if x_axis is None:
-                    x_active = False
-                else:
-                    x_axis = x_axis[self.indices]
-
-            if y_active:
-                y_axis = self.get_channel(y)
-                if y_axis is None:
-                    y_active = False
-                else:
-                    y_axis = y_axis[self.indices]
-
-            if z_active:
-                z_axis = self.get_channel(z)
-                if z_axis is None:
-                    z_active = False
-                else:
-                    z_axis = z_axis[self.indices]
-
-            if np.sum([axis is not None for axis in [x_axis, y_axis, z_axis]]) < 2:
-                self.figure.data = []
-                return
-
-            if x_axis is not None:
-                inbound = (x_axis >= x_min) * (x_axis <= x_max)
-                x_axis[~inbound] = np.nan
-                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
-                    self.data.uid_name_map[x], x_axis, x_log, x_thresh
-                )
+        new_params_dict = {}
+        for key, value in self.params.to_dict().items():
+            if isinstance(value, Entity):
+                new_params_dict[key] = locals()[key].uid
             else:
-                inbound = (z_axis >= z_min) * (z_axis <= z_max)
-                z_axis[~inbound] = np.nan
-                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
-                    self.data.uid_name_map[z], z_axis, z_log, z_thresh
-                )
+                new_params_dict[key] = locals()[key]
 
-            if y_axis is not None:
-                inbound = (y_axis >= y_min) * (y_axis <= y_max)
-                y_axis[~inbound] = np.nan
-                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
-                    self.data.uid_name_map[y], y_axis, y_log, y_thresh
-                )
-            else:
-                inbound = (z_axis >= z_min) * (z_axis <= z_max)
-                z_axis[~inbound] = np.nan
-                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
-                    self.data.uid_name_map[z], z_axis, z_log, z_thresh
-                )
+        ifile = InputFile(
+            ui_json=self.params.input_file.ui_json,
+            validation_options={"disabled": True},
+        )
 
-            if z_axis is not None:
-                inbound = (z_axis >= z_min) * (z_axis <= z_max)
-                z_axis[~inbound] = np.nan
-                z_axis, z_label, z_ticks, z_ticklabels = format_axis(
-                    self.data.uid_name_map[z], z_axis, z_log, z_thresh
-                )
+        new_params = ScatterPlotParams(input_file=ifile, **new_params_dict)
+        new_params.write_input_file()
 
-            if self.custom_colormap:
-                color_maps = self.custom_colormap
+        driver = ScatterPlotDriver(new_params)
+        self.figure = driver.run()
 
-            # 3D Scatter
-            if np.sum([x_active, y_active, z_active]) == 3:
-
-                plot = go.Scatter3d(
-                    x=x_axis,
-                    y=y_axis,
-                    z=z_axis,
-                    mode="markers",
-                    marker={"color": color, "size": size, "colorscale": color_maps},
-                )
-
-                layout = {
-                    "margin": dict(l=0, r=0, b=0, t=0),
-                    "scene": {
-                        "xaxis_title": x_label,
-                        "yaxis_title": y_label,
-                        "zaxis_title": z_label,
-                        "xaxis": {
-                            "tickvals": x_ticks,
-                            # "ticktext": [f"{label:.2e}" for label in x_ticklabels],
-                        },
-                        "yaxis": {
-                            "tickvals": y_ticks,
-                            # "ticktext": [f"{label:.2e}" for label in y_ticklabels],
-                        },
-                        "zaxis": {
-                            "tickvals": z_ticks,
-                            # "ticktext": [f"{label:.2e}" for label in z_ticklabels],
-                        },
-                    },
-                }
-            # 2D Scatter
-            else:
-                plot = go.Scatter(
-                    x=x_axis,
-                    y=y_axis,
-                    mode="markers",
-                    marker={"color": color, "size": size, "colorscale": color_maps},
-                )
-
-                layout = {
-                    "margin": dict(l=0, r=0, b=0, t=0),
-                    "xaxis": {
-                        "tickvals": x_ticks,
-                        # "ticktext": [f"{label:.2e}" for label in x_ticklabels],
-                        "exponentformat": "e",
-                        "title": x_label,
-                    },
-                    "yaxis": {
-                        "tickvals": y_ticks,
-                        # "ticktext": [f"{label:.2e}" for label in y_ticklabels],
-                        "exponentformat": "e",
-                        "title": y_label,
-                    },
-                }
-
-            self.figure.data = []
-            self.figure.add_trace(plot)
-            self.figure.update_layout(layout)
-
-        else:
-            self.figure.data = []
 
     def update_axes(self, refresh_plot=True):
 
