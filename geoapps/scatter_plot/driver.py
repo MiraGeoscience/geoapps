@@ -41,8 +41,14 @@ class ScatterPlotDriver:
             indices = self.get_indices()
 
             if self.params.size is not None:
-                vals = self.params.size[indices]
-                inbound = (vals > self.params.size_min) * (vals < self.params.size_max)
+                vals = self.params.size.values[indices]
+                min = self.params.size_min
+                max = self.params.size_max
+                if min is None:
+                    min = np.nanmin(vals)
+                if max is None:
+                    max = np.nanmax(vals)
+                inbound = (vals > min) * (vals < max)
                 vals[~inbound] = np.nan
                 size = normalize(vals)
 
@@ -53,8 +59,14 @@ class ScatterPlotDriver:
                 size = None
 
             if self.params.color is not None:
-                vals = self.params.color[indices]
-                inbound = (vals >= self.params.color_min) * (vals <= self.params.color_max)
+                vals = self.params.color.values[indices]
+                min = self.params.color_min
+                max = self.params.color_max
+                if min is None:
+                    min = np.nanmin(vals)
+                if max is None:
+                    max = np.nanmax(vals)
+                inbound = (vals > min) * (vals < max)
                 vals[~inbound] = np.nan
                 color = normalize(vals)
 
@@ -66,13 +78,25 @@ class ScatterPlotDriver:
             x_axis = self.params.x.values[indices]
             y_axis = self.params.y.values[indices]
 
-            inbound = (x_axis >= self.params.x_min) * (x_axis <= self.params.x_max)
+            min = self.params.x_min
+            max = self.params.x_max
+            if min is None:
+                min = np.nanmin(x_axis)
+            if max is None:
+                max = np.nanmax(x_axis)
+            inbound = (x_axis >= min) * (x_axis <= max)
             x_axis[~inbound] = np.nan
             x_axis, x_label, x_ticks, x_ticklabels = format_axis(
                 "label x", x_axis, self.params.x_log, self.params.x_thresh
             )
 
-            inbound = (y_axis >= self.params.y_min) * (y_axis <= self.params.y_max)
+            min = self.params.y_min
+            max = self.params.y_max
+            if min is None:
+                min = np.nanmin(y_axis)
+            if max is None:
+                max = np.nanmax(y_axis)
+            inbound = (y_axis >= min) * (y_axis <= max)
             y_axis[~inbound] = np.nan
             y_axis, y_label, y_ticks, y_ticklabels = format_axis(
                 "label y", y_axis, self.params.y_log, self.params.y_thresh
@@ -81,7 +105,13 @@ class ScatterPlotDriver:
             if self.params.z is not None:
                 z_axis = self.params.z.values[indices]
 
-                inbound = (z_axis >= self.params.z_min) * (z_axis <= self.params.z_max)
+                min = self.params.z_min
+                max = self.params.z_max
+                if min is None:
+                    min = np.nanmin(z_axis)
+                if max is None:
+                    max = np.nanmax(z_axis)
+                inbound = (z_axis >= min) * (z_axis <= max)
                 z_axis[~inbound] = np.nan
                 z_axis, z_label, z_ticks, z_ticklabels = format_axis(
                     "label z", z_axis, self.params.z_log, self.params.z_thresh
@@ -141,15 +171,15 @@ class ScatterPlotDriver:
             figure.add_trace(plot)
             figure.update_layout(layout)
 
-        return figure
+        figure.show()
+        #figure.write_html("path")
 
     def get_indices(self):
 
         values = []
         for axis in [self.params.x, self.params.y, self.params.z]:
-            vals = axis.values
-            if vals is not None:
-                values.append(np.asarray(vals, dtype=float))
+            if axis is not None:
+                values.append(np.asarray(axis.values, dtype=float))
 
         values = np.vstack(values)
         # Normalize all columns
@@ -157,9 +187,14 @@ class ScatterPlotDriver:
             np.nanmax(values, axis=1) - np.nanmin(values, axis=1)
         )[:, None]
 
+        if self.params.downsampling is None:
+            percent = 1
+        else:
+            percent = self.params.downsampling/100
+
         indices = random_sampling(
             values.T,
-            int((self.params.downsampling/100) * np.size(values, 0)),
+            int(percent * np.size(values, 1)),
             bandwidth=2.0,
             rtol=1e0,
             method="histogram",
