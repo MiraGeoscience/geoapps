@@ -9,6 +9,7 @@ import re
 from copy import copy
 
 import numpy as np
+import numpy.typing as npt
 from geoh5py.data import Data, ReferencedData
 from geoh5py.groups import SimPEGGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
@@ -577,7 +578,7 @@ def plot_convergence_curve(h5file):
     return interactive_plot
 
 
-def input_string_2_float(input_string):
+def input_string_2_float(input_string: str) -> npt.NDArray[np.int_]:
     """
     Function to input interval and value as string to a list of floats.
 

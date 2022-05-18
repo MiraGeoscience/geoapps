@@ -6,12 +6,18 @@
 #  (see LICENSE file at the root of this source code package).
 
 import numpy as np
+import numpy.typing as npt
 from sklearn.neighbors import KernelDensity
 
 
 def random_sampling(
-    values, size, method="histogram", n_bins=100, bandwidth=0.2, rtol=1e-4
-):
+    values: npt.NDArray[np.float64],
+    size: int,
+    method="histogram",
+    n_bins=100,
+    bandwidth=0.2,
+    rtol=1e-4,
+) -> npt.NDArray[np.int_]:
     """
     Perform a random sampling of the rows of the input array based on
     the distribution of the columns values.
