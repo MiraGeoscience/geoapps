@@ -161,6 +161,23 @@ def test_magnetotellurics_run(
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
 
+    # test that one channel works
+    data_kwargs = {k: v for k, v in data_kwargs.items() if "zxx_real" in k}
+    params = MagnetotelluricsParams(
+        geoh5=geoh5,
+        mesh=geoh5.get_entity("mesh")[0].uid,
+        topography_object=topography.uid,
+        data_object=survey.uid,
+        starting_model=0.01,
+        conductivity_model=1e-2,
+        max_iterations=0,
+        **data_kwargs,
+    )
+    params.workpath = tmp_path
+    driver = InversionDriver(params)
+    driver.initialize()
+    driver.run()
+
 
 if __name__ == "__main__":
     # Full run

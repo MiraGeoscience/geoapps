@@ -161,10 +161,15 @@ def test_iso_surface(tmp_path):
         ]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = IsoSurface(h5file=temp_workspace)
+    app = IsoSurface(geoh5=temp_workspace)
     app.trigger.click()
 
-    files = os.listdir(path.join(tmp_path, "Temp"))
+    files = [
+        file
+        for file in os.listdir(path.join(tmp_path, "Temp"))
+        if file.endswith("geoh5")
+    ]
+
     with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
-        group = workspace.get_entity("ISO")[0]
+        group = workspace.get_entity("Isosurface")[0]
         assert len(group.children) == 5
