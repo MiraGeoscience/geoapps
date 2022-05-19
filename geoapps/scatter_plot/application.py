@@ -646,23 +646,34 @@ class ScatterPlots(ObjectDataSelection):
         new_params_dict = {}
         for key, value in self.params.to_dict().items():
             param = getattr(self, key, None)
+
             if param is None:
-                pass
-            elif getattr(param, "value", None) is None:
+                new_params_dict[key] = value
+            elif hasattr(param, "value") is False:
                 new_params_dict[key] = param
+            elif (key == "x") | (key == "y") | (key == "z") | (key == "color") | (key == "size"):
+                if param.value is None:
+                    print(None)
+                    new_params_dict[key] = None
+                else:
+                    print(self.data_channels[param.value])
+                    new_params_dict[key] = self.data_channels[param.value]
             else:
                 new_params_dict[key] = param.value
+
+
 
         ifile = InputFile(
             ui_json=self.params.input_file.ui_json,
             validation_options={"disabled": True},
         )
 
-        new_params = ScatterPlotParams(input_file=ifile, **new_params_dict)
-        new_params.write_input_file()
-
+        ifile.data = new_params_dict
+        new_params = ScatterPlotParams(input_file=ifile)
         driver = ScatterPlotDriver(new_params)
-        self.figure = driver.run()
+        generated_figure = driver.run()
+        self.figure.data = generated_figure.data
+        self.figure.layout = generated_figure.layout
 
     def update_axes(self, refresh_plot=True):
         for name in [
@@ -688,6 +699,7 @@ class ScatterPlots(ObjectDataSelection):
             self.refresh.value = True
 
     def update_choices(self, _):
+        print(self.x)
         self.refresh.value = False
 
         obj, _ = self.get_selected_entities()
