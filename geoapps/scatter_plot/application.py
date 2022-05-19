@@ -27,13 +27,14 @@ from ipywidgets import (
 
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
+from geoh5py.objects import ObjectBase
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.params import ScatterPlotParams
 
-from geoapps.utils.utils import random_sampling
+from geoapps.utils.utils import random_sampling, sorted_children_dict, find_value
 
 
 class ScatterPlots(ObjectDataSelection):
@@ -246,8 +247,10 @@ class ScatterPlots(ObjectDataSelection):
         self.axes_pannels.observe(axes_pannels_trigger, names="value")
         self.axes_options = VBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
-        self.data.observe(self.update_choices, names="value")
+        self.data_values = {}
+        #self.data.observe(self.update_choices, names="value")
         self.objects.observe(self.update_objects, names="value")
+        self.objects.observe(self.update_choices, names="value")
         self.downsampling.observe(self.update_downsampling, names="value")
         self.figure = go.FigureWidget()
 
@@ -432,7 +435,7 @@ class ScatterPlots(ObjectDataSelection):
             self._main = VBox(
                 [
                     self.project_panel,
-                    HBox([self.objects, self.data]),
+                    self.objects,
                     VBox([Label("Downsampling"), self.downsampling]),
                     self.axes_options,
                     self.refresh,
@@ -717,6 +720,7 @@ class ScatterPlots(ObjectDataSelection):
             size_max,
             refresh,
     ):
+
         new_params_dict = {}
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
@@ -735,7 +739,6 @@ class ScatterPlots(ObjectDataSelection):
         driver = ScatterPlotDriver(new_params)
         self.figure = driver.run()
 
-
     def update_axes(self, refresh_plot=True):
 
         for name in [
@@ -748,9 +751,9 @@ class ScatterPlots(ObjectDataSelection):
             self.refresh.value = False
             widget = getattr(self, "_" + name)
             val = widget.value
-            widget.options = [
-                [self.data.uid_name_map[key], key] for key in self.data_channels
-            ]
+            widget.options = list(self.data_channels.keys())
+            #[[self.data.uid_name_map[key], key] for key in self.data_channels]
+            print(widget.options)
 
             if val in list(dict(widget.options).values()):
                 widget.value = val
@@ -762,13 +765,15 @@ class ScatterPlots(ObjectDataSelection):
     def update_choices(self, _):
         self.refresh.value = False
 
-        for channel in self.data.value:
-            self.get_channel(channel)
+        obj, _ = self.get_selected_entities()
+        channel_list = ObjectBase.get_data_list(obj)
+        channel_list.remove("Visual Parameters")
+        channel_list.remove("interval_length")
 
-        keys = list(self.data_channels.keys())
-        for key in keys:
-            if key not in self.data.value:
-                del self.data_channels[key]
+        self.data_values = []
+        for channel in channel_list:
+            self.get_channel(channel)
+            self.data_values.append(ObjectBase.get_data(obj, channel_list[0]))
 
         self.update_axes(refresh_plot=False)
 
@@ -776,6 +781,58 @@ class ScatterPlots(ObjectDataSelection):
             self.update_downsampling(None, refresh_plot=False)
 
         self.refresh.value = True
+
+    def get_data_list(self):
+        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
+            self.objects.value
+        ):
+            for entity in self._workspace.get_entity(self.objects.value):
+                if isinstance(entity, ObjectBase):
+                    obj = entity
+
+            if getattr(obj, "get_data_list", None) is None:
+                return
+
+            options = [["", None]]
+
+            if (self.add_groups or self.add_groups == "only") and obj.property_groups:
+                options = (
+                    options
+                    + [["-- Groups --", None]]
+                    + [[p_g.name, p_g.uid] for p_g in obj.property_groups]
+                )
+
+            if self.add_groups != "only":
+                options += [["--- Channels ---", None]]
+
+                children = sorted_children_dict(obj)
+                excl = ["visual parameter"]
+                options += [
+                    [k, v] for k, v in children.items() if k.lower() not in excl
+                ]
+
+                if self.add_xyz:
+                    options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
+
+            #value = self.data.value
+            #self.data.options = options
+
+            #self.update_uid_name_map()
+
+            '''
+            if self.select_multiple and any([val in options for val in value]):
+                self.data.value = [val for val in value if val in options]
+            elif value in dict(options).values():
+                self.data.value = value
+            elif self.find_label:
+                self.data.value = utils.find_value(self.data.options, self.find_label)
+            '''
+            value = find_value(options, self.find_label)
+        else:
+            options = []
+            #uid_name_map = {}
+
+        return options
 
     def update_downsampling(self, _, refresh_plot=True):
 
