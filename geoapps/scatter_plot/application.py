@@ -248,13 +248,11 @@ class ScatterPlots(ObjectDataSelection):
         self.axes_options = VBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
         self.data_values = {}
-        #self.data.observe(self.update_choices, names="value")
         self.objects.observe(self.update_objects, names="value")
         self.objects.observe(self.update_choices, names="value")
         self.downsampling.observe(self.update_downsampling, names="value")
         self.figure = go.FigureWidget()
 
-        '''
         self.x.observe(self.plot_selection, names="value")
         self.x_log.observe(self.plot_selection, names="value")
         self.x_active.observe(self.plot_selection, names="value")
@@ -288,46 +286,6 @@ class ScatterPlots(ObjectDataSelection):
         self.size_max.observe(self.plot_selection, names="value")
         self.size_markers.observe(self.plot_selection, names="value")
         self.refresh.observe(self.plot_selection, names="value")
-        '''
-
-        self.crossplot = interactive_output(
-            self.plot_selection,
-            {
-                "x": self.x,
-                "x_log": self.x_log,
-                "x_active": self.x_active,
-                "x_thresh": self.x_thresh,
-                "x_min": self.x_min,
-                "x_max": self.x_max,
-                "y": self.y,
-                "y_log": self.y_log,
-                "y_thresh": self.y_thresh,
-                "y_active": self.y_active,
-                "y_min": self.y_min,
-                "y_max": self.y_max,
-                "z": self.z,
-                "z_log": self.z_log,
-                "z_thresh": self.z_thresh,
-                "z_active": self.z_active,
-                "z_min": self.z_min,
-                "z_max": self.z_max,
-                "color": self.color,
-                "color_log": self.color_log,
-                "color_thresh": self.color_thresh,
-                "color_active": self.color_active,
-                "color_maps": self.color_maps,
-                "color_min": self.color_min,
-                "color_max": self.color_max,
-                "size": self.size,
-                "size_log": self.size_log,
-                "size_thresh": self.size_thresh,
-                "size_active": self.size_active,
-                "size_markers": self.size_markers,
-                "size_min": self.size_min,
-                "size_max": self.size_max,
-                "refresh": self.refresh,
-            },
-        )
 
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Save HTML"
@@ -683,50 +641,17 @@ class ScatterPlots(ObjectDataSelection):
             cmax = getattr(self, "_" + name + "_max")
             cmax.value = f"{np.max(values):.2e}"
 
-    #def plot_selection(self):
-    def plot_selection(
-            self,
-            x,
-            x_log,
-            x_active,
-            x_thresh,
-            x_min,
-            x_max,
-            y,
-            y_log,
-            y_active,
-            y_thresh,
-            y_min,
-            y_max,
-            z,
-            z_log,
-            z_active,
-            z_thresh,
-            z_min,
-            z_max,
-            color,
-            color_log,
-            color_active,
-            color_thresh,
-            color_maps,
-            color_min,
-            color_max,
-            size,
-            size_log,
-            size_active,
-            size_thresh,
-            size_markers,
-            size_min,
-            size_max,
-            refresh,
-    ):
+    def plot_selection(self, _):
 
         new_params_dict = {}
         for key, value in self.params.to_dict().items():
-            if isinstance(value, Entity):
-                new_params_dict[key] = locals()[key].uid
+            param = getattr(self, key, None)
+            if param is None:
+                pass
+            elif getattr(param, "value", None) is None:
+                new_params_dict[key] = param
             else:
-                new_params_dict[key] = locals()[key]
+                new_params_dict[key] = param.value
 
         ifile = InputFile(
             ui_json=self.params.input_file.ui_json,
@@ -740,7 +665,6 @@ class ScatterPlots(ObjectDataSelection):
         self.figure = driver.run()
 
     def update_axes(self, refresh_plot=True):
-
         for name in [
             "x",
             "y",
@@ -750,15 +674,16 @@ class ScatterPlots(ObjectDataSelection):
         ]:
             self.refresh.value = False
             widget = getattr(self, "_" + name)
-            val = widget.value
             widget.options = list(self.data_channels.keys())
-            #[[self.data.uid_name_map[key], key] for key in self.data_channels]
-            print(widget.options)
+            val = widget.value
 
+            '''
             if val in list(dict(widget.options).values()):
+            #if val in list(dict(widget.options)):
                 widget.value = val
             else:
                 widget.value = None
+            '''
         if refresh_plot:
             self.refresh.value = True
 
@@ -767,13 +692,19 @@ class ScatterPlots(ObjectDataSelection):
 
         obj, _ = self.get_selected_entities()
         channel_list = ObjectBase.get_data_list(obj)
-        channel_list.remove("Visual Parameters")
-        channel_list.remove("interval_length")
+
+        if "Visual Parameters" in channel_list:
+            channel_list.remove("Visual Parameters")
+
+        channel_list.extend(["X", "Y", "Z"])
 
         self.data_values = []
         for channel in channel_list:
             self.get_channel(channel)
             self.data_values.append(ObjectBase.get_data(obj, channel_list[0]))
+
+        #channel_list.insert(0, "None")
+        #self.data_values.insert(0, None)
 
         self.update_axes(refresh_plot=False)
 
@@ -782,60 +713,8 @@ class ScatterPlots(ObjectDataSelection):
 
         self.refresh.value = True
 
-    def get_data_list(self):
-        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
-            self.objects.value
-        ):
-            for entity in self._workspace.get_entity(self.objects.value):
-                if isinstance(entity, ObjectBase):
-                    obj = entity
-
-            if getattr(obj, "get_data_list", None) is None:
-                return
-
-            options = [["", None]]
-
-            if (self.add_groups or self.add_groups == "only") and obj.property_groups:
-                options = (
-                    options
-                    + [["-- Groups --", None]]
-                    + [[p_g.name, p_g.uid] for p_g in obj.property_groups]
-                )
-
-            if self.add_groups != "only":
-                options += [["--- Channels ---", None]]
-
-                children = sorted_children_dict(obj)
-                excl = ["visual parameter"]
-                options += [
-                    [k, v] for k, v in children.items() if k.lower() not in excl
-                ]
-
-                if self.add_xyz:
-                    options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
-
-            #value = self.data.value
-            #self.data.options = options
-
-            #self.update_uid_name_map()
-
-            '''
-            if self.select_multiple and any([val in options for val in value]):
-                self.data.value = [val for val in value if val in options]
-            elif value in dict(options).values():
-                self.data.value = value
-            elif self.find_label:
-                self.data.value = utils.find_value(self.data.options, self.find_label)
-            '''
-            value = find_value(options, self.find_label)
-        else:
-            options = []
-            #uid_name_map = {}
-
-        return options
-
     def update_downsampling(self, _, refresh_plot=True):
-
+        '''
         if not list(self.data_channels.values()):
             return
 
@@ -865,6 +744,7 @@ class ScatterPlots(ObjectDataSelection):
             method="histogram",
         )
         self.refresh.value = refresh_plot
+        '''
 
     def update_objects(self, _):
         self.data_channels = {}
