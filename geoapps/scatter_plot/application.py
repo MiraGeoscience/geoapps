@@ -250,7 +250,6 @@ class ScatterPlots(ObjectDataSelection):
         self.data_values = {}
         self.objects.observe(self.update_objects, names="value")
         self.objects.observe(self.update_choices, names="value")
-        self.downsampling.observe(self.update_downsampling, names="value")
         self.figure = go.FigureWidget()
 
         self.x.observe(self.plot_selection, names="value")
@@ -658,11 +657,9 @@ class ScatterPlots(ObjectDataSelection):
                     new_params_dict[key] = None
                 else:
                     index = list(self.data_channels.keys()).index(param.value)
-                    new_params_dict[key] = self.data_values[index][0]
+                    new_params_dict[key] = self.data_values[index]
             else:
                 new_params_dict[key] = param.value
-
-
 
         ifile = InputFile(
             ui_json=self.params.input_file.ui_json,
@@ -671,12 +668,18 @@ class ScatterPlots(ObjectDataSelection):
 
         ifile.data = new_params_dict
         new_params = ScatterPlotParams(input_file=ifile)
-        driver = ScatterPlotDriver(new_params)
-        generated_figure = driver.run()
 
-        self.figure = go.FigureWidget(generated_figure)
+        driver = ScatterPlotDriver(new_params)
+        generated_figure = go.FigureWidget(driver.run())
+
+        self.figure.data = []
+        if len(generated_figure.data) > 0:
+            self.figure.add_trace(generated_figure.data[0])
+
+        self.figure.update_layout(generated_figure.layout)
 
     def update_axes(self, refresh_plot=True):
+
         for name in [
             "x",
             "y",
@@ -684,23 +687,16 @@ class ScatterPlots(ObjectDataSelection):
             "color",
             "size",
         ]:
+
             self.refresh.value = False
             widget = getattr(self, "_" + name)
             widget.options = list(self.data_channels.keys())
             val = widget.value
 
-            '''
-            if val in list(dict(widget.options).values()):
-            #if val in list(dict(widget.options)):
-                widget.value = val
-            else:
-                widget.value = None
-            '''
         if refresh_plot:
             self.refresh.value = True
 
     def update_choices(self, _):
-        print(self.x)
         self.refresh.value = False
 
         obj, _ = self.get_selected_entities()
@@ -709,55 +705,18 @@ class ScatterPlots(ObjectDataSelection):
         if "Visual Parameters" in channel_list:
             channel_list.remove("Visual Parameters")
 
-        channel_list.extend(["X", "Y", "Z"])
+        #channel_list.extend(["X", "Y", "Z"])
 
+        #self.data_channels["None"] = None
         self.data_values = []
         for channel in channel_list:
             self.get_channel(channel)
-            self.data_values.append(ObjectBase.get_data(obj, channel_list[0]))
+            self.data_values.append(ObjectBase.get_data(obj, channel)[0])
 
-        #channel_list.insert(0, "None")
         #self.data_values.insert(0, None)
-
         self.update_axes(refresh_plot=False)
 
-        #if self.downsampling.value != self.n_values:
-        #    self.update_downsampling(None, refresh_plot=False)
-
         self.refresh.value = True
-
-    def update_downsampling(self, _, refresh_plot=True):
-        '''
-        if not list(self.data_channels.values()):
-            return
-
-        self.refresh.value = False
-        values = []
-        for axis in [self.x, self.y, self.z]:
-            vals = self.get_channel(axis.value)
-            if vals is not None:
-                values.append(np.asarray(vals, dtype=float))
-
-        if len(values) < 2:
-            return
-
-        values = np.vstack(values)
-        nans = np.isnan(values)
-        values[nans] = 0
-        # Normalize all columns
-        values = (values - np.min(values, axis=1)[:, None]) / (
-            np.max(values, axis=1) - np.min(values, axis=1)
-        )[:, None]
-        values[nans] = np.nan
-        self._indices = random_sampling(
-            values.T,
-            self.downsampling.value,
-            bandwidth=2.0,
-            rtol=1e0,
-            method="histogram",
-        )
-        self.refresh.value = refresh_plot
-        '''
 
     def update_objects(self, _):
         self.data_channels = {}
@@ -768,11 +727,7 @@ class ScatterPlots(ObjectDataSelection):
         self.z_active.value = False
         self.color_active.value = False
         self.size_active.value = False
-        #if self.n_values is not None:
-        #    self.downsampling.max = self.n_values
-        #    self.downsampling.value = np.min([5000, self.n_values])
         self._indices = None
-        self.update_downsampling(None, refresh_plot=False)
         self.refresh.value = True
 
     def trigger_click(self, _):
