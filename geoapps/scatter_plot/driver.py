@@ -87,7 +87,7 @@ class ScatterPlotDriver:
             inbound = (x_axis >= min) * (x_axis <= max)
             x_axis[~inbound] = np.nan
             x_axis, x_label, x_ticks, x_ticklabels = format_axis(
-                "label x", x_axis, self.params.x_log, self.params.x_thresh
+                self.params.x.name, x_axis, self.params.x_log, self.params.x_thresh
             )
 
             min = self.params.y_min
@@ -99,7 +99,7 @@ class ScatterPlotDriver:
             inbound = (y_axis >= min) * (y_axis <= max)
             y_axis[~inbound] = np.nan
             y_axis, y_label, y_ticks, y_ticklabels = format_axis(
-                "label y", y_axis, self.params.y_log, self.params.y_thresh
+                self.params.y.name, y_axis, self.params.y_log, self.params.y_thresh
             )
 
             if self.params.z is not None:
@@ -114,7 +114,7 @@ class ScatterPlotDriver:
                 inbound = (z_axis >= min) * (z_axis <= max)
                 z_axis[~inbound] = np.nan
                 z_axis, z_label, z_ticks, z_ticklabels = format_axis(
-                    "label z", z_axis, self.params.z_log, self.params.z_thresh
+                    self.params.z.name, z_axis, self.params.z_log, self.params.z_thresh
                 )
 
                 # 3D Scatter
