@@ -382,8 +382,10 @@ class ScatterPlots(ObjectDataSelection):
             self._downsampling = IntSlider(
                 description="Population Downsampling:",
                 min=1,
+                max=100,
                 style={"description_width": "initial"},
                 continuous_update=False,
+                value=100,
             )
         return self._downsampling
 
@@ -653,11 +655,10 @@ class ScatterPlots(ObjectDataSelection):
                 new_params_dict[key] = param
             elif (key == "x") | (key == "y") | (key == "z") | (key == "color") | (key == "size"):
                 if param.value is None:
-                    print(None)
                     new_params_dict[key] = None
                 else:
-                    print(self.data_channels[param.value])
-                    new_params_dict[key] = self.data_channels[param.value]
+                    index = list(self.data_channels.keys()).index(param.value)
+                    new_params_dict[key] = self.data_values[index][0]
             else:
                 new_params_dict[key] = param.value
 
@@ -672,8 +673,8 @@ class ScatterPlots(ObjectDataSelection):
         new_params = ScatterPlotParams(input_file=ifile)
         driver = ScatterPlotDriver(new_params)
         generated_figure = driver.run()
-        self.figure.data = generated_figure.data
-        self.figure.layout = generated_figure.layout
+
+        self.figure = go.FigureWidget(generated_figure)
 
     def update_axes(self, refresh_plot=True):
         for name in [
@@ -720,8 +721,8 @@ class ScatterPlots(ObjectDataSelection):
 
         self.update_axes(refresh_plot=False)
 
-        if self.downsampling.value != self.n_values:
-            self.update_downsampling(None, refresh_plot=False)
+        #if self.downsampling.value != self.n_values:
+        #    self.update_downsampling(None, refresh_plot=False)
 
         self.refresh.value = True
 
@@ -767,9 +768,9 @@ class ScatterPlots(ObjectDataSelection):
         self.z_active.value = False
         self.color_active.value = False
         self.size_active.value = False
-        if self.n_values is not None:
-            self.downsampling.max = self.n_values
-            self.downsampling.value = np.min([5000, self.n_values])
+        #if self.n_values is not None:
+        #    self.downsampling.max = self.n_values
+        #    self.downsampling.value = np.min([5000, self.n_values])
         self._indices = None
         self.update_downsampling(None, refresh_plot=False)
         self.refresh.value = True
