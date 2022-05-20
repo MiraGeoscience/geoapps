@@ -278,7 +278,7 @@ class BaseApplication:
             name += ".geoh5"
 
         workspace = Workspace(path.join(workpath, name))
-        workspace.close()
+
         live_link = False
         time.sleep(1)
         # Check if GA digested the file already
