@@ -4,7 +4,6 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-import os
 import uuid
 from os import path
 
@@ -20,6 +19,7 @@ from geoapps.export.application import Export
 from geoapps.interpolation import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.triangulated_surfaces.application import Surface2D
+from geoapps.utils.testing import get_output_workspace
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -36,8 +36,7 @@ def test_calculator(tmp_path):
     app = Calculator(h5file=temp_workspace)
     app.trigger.click()
 
-    files = os.listdir(path.join(tmp_path, "Temp"))
-    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("NewChannel")[0]
         assert output.values.shape[0] == 4438, "Change in output. Need to verify."
 
@@ -51,8 +50,7 @@ def test_coordinate_transformation(tmp_path):
     app = CoordinateTransformation(h5file=temp_workspace)
     app.trigger.click()
 
-    files = os.listdir(path.join(tmp_path, "Temp"))
-    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
         assert len(workspace.objects) == 2, "Coordinate transform failed."
 
 
@@ -66,8 +64,7 @@ def test_contour_values(tmp_path):
     app = ContourValues(h5file=temp_workspace, plot_result=False)
     app.trigger.click()
 
-    files = os.listdir(path.join(tmp_path, "Temp"))
-    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("Airborne_TMI")[0]
         assert output.n_vertices == 2740, "Change in output. Need to verify."
 
@@ -83,8 +80,7 @@ def test_create_surface(tmp_path):
     app = Surface2D(h5file=temp_workspace)
     app.trigger.click()
 
-    files = os.listdir(path.join(tmp_path, "Temp"))
-    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("CDI")[0]
         assert len(group.children) == 1
 
@@ -98,8 +94,7 @@ def test_clustering(tmp_path):
     app = Clustering(h5file=temp_workspace)
     app.trigger.click()
 
-    files = os.listdir(path.join(tmp_path, "Temp"))
-    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
         assert len(workspace.get_entity("MyCluster")) == 1
 
 
@@ -117,8 +112,7 @@ def test_data_interpolation(tmp_path):
     app = DataInterpolation(h5file=temp_workspace)
     app.trigger.click()
 
-    files = os.listdir(path.join(tmp_path, "Temp"))
-    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
         assert len(workspace.get_entity("Iteration_7_model_Interp")) == 1
 
 
@@ -134,8 +128,7 @@ def test_edge_detection(tmp_path):
 
     app.trigger.click()
 
-    files = os.listdir(path.join(tmp_path, "Temp"))
-    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
         assert (
             len(
                 [
@@ -164,12 +157,6 @@ def test_iso_surface(tmp_path):
     app = IsoSurface(geoh5=temp_workspace)
     app.trigger.click()
 
-    files = [
-        file
-        for file in os.listdir(path.join(tmp_path, "Temp"))
-        if file.endswith("geoh5")
-    ]
-
-    with Workspace(path.join(tmp_path, "Temp", files[0])) as workspace:
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("Isosurface")[0]
         assert len(group.children) == 5
