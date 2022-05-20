@@ -226,6 +226,7 @@ class ScatterPlots(ObjectDataSelection):
         self.objects.observe(self.update_choices, names="value")
         self.figure = go.FigureWidget()
 
+        self.downsampling.observe(self.plot_selection, names="value")
         self.x.observe(self.plot_selection, names="value")
         self.x_log.observe(self.plot_selection, names="value")
         self.x_thresh.observe(self.plot_selection, names="value")
@@ -327,7 +328,7 @@ class ScatterPlots(ObjectDataSelection):
         """
         if getattr(self, "_downsampling", None) is None:
             self._downsampling = IntSlider(
-                description="Population Downsampling:",
+                description="Population Downsampling (%):",
                 min=1,
                 max=100,
                 style={"description_width": "initial"},
@@ -533,12 +534,6 @@ class ScatterPlots(ObjectDataSelection):
                 values = np.asarray(
                     self.workspace.get_entity(channel)[0].values, dtype=float
                 ).copy()
-            elif channel in "XYZ":
-                # Check number of points
-                if hasattr(obj, "centroids"):
-                    values = obj.centroids[:, "XYZ".index(channel)]
-                elif hasattr(obj, "vertices"):
-                    values = obj.vertices[:, "XYZ".index(channel)]
             else:
                 return
 
@@ -591,7 +586,6 @@ class ScatterPlots(ObjectDataSelection):
                 else:
                     index = list(self.data_channels.keys()).index(param.value)
                     new_params_dict[key] = self.data_values[index]
-                    #print(str(new_params_dict[key]) + ": " + str(self.data_values[index]))
             else:
                 new_params_dict[key] = param.value
 
@@ -613,7 +607,6 @@ class ScatterPlots(ObjectDataSelection):
         self.figure.update_layout(generated_figure.layout)
 
     def update_axes(self, refresh_plot=True):
-
         for name in [
             "x",
             "y",
@@ -640,10 +633,8 @@ class ScatterPlots(ObjectDataSelection):
         if "Visual Parameters" in channel_list:
             channel_list.remove("Visual Parameters")
 
-        #channel_list.extend(["X", "Y", "Z"])
-
         self.data_values = []
-        for channel in channel_list[0:5]:
+        for channel in channel_list:
             self.get_channel(channel)
             if channel == "None":
                 self.data_values.append(None)
