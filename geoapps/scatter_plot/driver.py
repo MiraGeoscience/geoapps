@@ -171,8 +171,9 @@ class ScatterPlotDriver:
             figure.add_trace(plot)
             figure.update_layout(layout)
 
-        figure.show()
+        #figure.show()
         #figure.write_html("path")
+        return figure
 
     def get_indices(self):
 
