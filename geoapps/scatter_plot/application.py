@@ -67,7 +67,7 @@ class ScatterPlots(ObjectDataSelection):
                 self.defaults[key] = value
 
         self.custom_colormap = []
-        self._indices = None
+        #self._indices = None
 
 
 
@@ -76,7 +76,6 @@ class ScatterPlots(ObjectDataSelection):
 
         self.x.observe(channel_bounds_setter, names="value")
         self.x.name = "x"
-        self._x_active = Checkbox(description="Active", value=True, indent=False)
         self._x_log = Checkbox(
             description="Log10",
             value=False,
@@ -94,7 +93,6 @@ class ScatterPlots(ObjectDataSelection):
         )
         self._x_panel = VBox(
             [
-                self._x_active,
                 HBox([self._x]),
                 HBox([self._x_log, self._x_thresh]),
                 HBox([self._x_min, self._x_max]),
@@ -102,11 +100,6 @@ class ScatterPlots(ObjectDataSelection):
         )
         self.y.observe(channel_bounds_setter, names="value")
         self.y.name = "y"
-        self._y_active = Checkbox(
-            description="Active",
-            value=True,
-            indent=False,
-        )
         self._y_log = Checkbox(description="Log10", value=False, indent=False)
         self._y_thresh = FloatText(
             description="Threshold",
@@ -120,7 +113,6 @@ class ScatterPlots(ObjectDataSelection):
         )
         self._y_panel = VBox(
             [
-                self._y_active,
                 HBox([self._y]),
                 HBox([self._y_log, self._y_thresh]),
                 HBox([self._y_min, self._y_max]),
@@ -128,11 +120,6 @@ class ScatterPlots(ObjectDataSelection):
         )
         self.z.observe(channel_bounds_setter, names="value")
         self.z.name = "z"
-        self._z_active = Checkbox(
-            description="Active",
-            value=False,
-            indent=False,
-        )
         self._z_log = Checkbox(
             description="Log10",
             value=False,
@@ -150,7 +137,6 @@ class ScatterPlots(ObjectDataSelection):
         )
         self._z_panel = VBox(
             [
-                self._z_active,
                 HBox([self._z]),
                 HBox([self._z_log, self._z_thresh]),
                 HBox([self._z_min, self._z_max]),
@@ -167,11 +153,6 @@ class ScatterPlots(ObjectDataSelection):
             description="Threshold",
             value=1e-1,
         )
-        self._color_active = Checkbox(
-            description="Active",
-            value=False,
-            indent=False,
-        )
         self._color_maps = Dropdown(
             description="Colormaps",
             options=px.colors.named_colorscales(),
@@ -185,7 +166,6 @@ class ScatterPlots(ObjectDataSelection):
         )
         self._color_panel = VBox(
             [
-                self._color_active,
                 HBox([self._color]),
                 self._color_maps,
                 HBox([self._color_log, self._color_thresh]),
@@ -194,11 +174,6 @@ class ScatterPlots(ObjectDataSelection):
         )
         self.size.observe(channel_bounds_setter, names="value")
         self.size.name = "size"
-        self._size_active = Checkbox(
-            description="Active",
-            value=False,
-            indent=False,
-        )
         self._size_log = Checkbox(
             description="Log10",
             value=False,
@@ -220,7 +195,6 @@ class ScatterPlots(ObjectDataSelection):
 
         self._size_panel = VBox(
             [
-                self._size_active,
                 HBox([self._size]),
                 self._size_markers,
                 HBox([self._size_log, self._size_thresh]),
@@ -254,37 +228,32 @@ class ScatterPlots(ObjectDataSelection):
 
         self.x.observe(self.plot_selection, names="value")
         self.x_log.observe(self.plot_selection, names="value")
-        self.x_active.observe(self.plot_selection, names="value")
         self.x_thresh.observe(self.plot_selection, names="value")
         self.x_min.observe(self.plot_selection, names="value")
         self.x_max.observe(self.plot_selection, names="value")
         self.y.observe(self.plot_selection, names="value")
         self.y_log.observe(self.plot_selection, names="value")
-        self.y_active.observe(self.plot_selection, names="value")
         self.y_thresh.observe(self.plot_selection, names="value")
         self.y_min.observe(self.plot_selection, names="value")
         self.y_max.observe(self.plot_selection, names="value")
         self.z.observe(self.plot_selection, names="value")
         self.z_log.observe(self.plot_selection, names="value")
-        self.z_active.observe(self.plot_selection, names="value")
         self.z_thresh.observe(self.plot_selection, names="value")
         self.z_min.observe(self.plot_selection, names="value")
         self.z_max.observe(self.plot_selection, names="value")
         self.color.observe(self.plot_selection, names="value")
         self.color_log.observe(self.plot_selection, names="value")
-        self.color_active.observe(self.plot_selection, names="value")
         self.color_thresh.observe(self.plot_selection, names="value")
         self.color_min.observe(self.plot_selection, names="value")
         self.color_max.observe(self.plot_selection, names="value")
         self.color_maps.observe(self.plot_selection, names="value")
         self.size.observe(self.plot_selection, names="value")
         self.size_log.observe(self.plot_selection, names="value")
-        self.size_active.observe(self.plot_selection, names="value")
         self.size_thresh.observe(self.plot_selection, names="value")
         self.size_min.observe(self.plot_selection, names="value")
         self.size_max.observe(self.plot_selection, names="value")
         self.size_markers.observe(self.plot_selection, names="value")
-        self.refresh.observe(self.plot_selection, names="value")
+        #self.refresh.observe(self.plot_selection, names="value")
 
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Save HTML"
@@ -305,20 +274,6 @@ class ScatterPlots(ObjectDataSelection):
             elif hasattr(obj, "vertices"):
                 return obj.n_vertices
         return None
-
-    @property
-    def indices(self):
-        """
-        Bool or array of int
-        Indices of data to be plotted
-        """
-        if getattr(self, "_indices", None) is None:
-            if self.n_values is not None:
-                self._indices = np.arange(self.n_values)
-            else:
-                return None
-
-        return self._indices
 
     @property
     def color(self):
@@ -343,13 +298,6 @@ class ScatterPlots(ObjectDataSelection):
         :obj:`ipywidgets.FloatText`
         """
         return self._color_thresh
-
-    @property
-    def color_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._color_active
 
     @property
     def color_maps(self):
@@ -397,7 +345,7 @@ class ScatterPlots(ObjectDataSelection):
                     self.objects,
                     VBox([Label("Downsampling"), self.downsampling]),
                     self.axes_options,
-                    self.refresh,
+                    #self.refresh,
                     self.figure,
                     self.trigger,
                 ]
@@ -418,13 +366,6 @@ class ScatterPlots(ObjectDataSelection):
         if getattr(self, "_size", None) is None:
             self._size = Dropdown(description="Data:")
         return self._size
-
-    @property
-    def size_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._size_active
 
     @property
     def size_log(self):
@@ -471,13 +412,6 @@ class ScatterPlots(ObjectDataSelection):
         return self._x
 
     @property
-    def x_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._x_active
-
-    @property
     def x_log(self):
         """
         :obj:`ipywidgets.Checkbox`
@@ -515,13 +449,6 @@ class ScatterPlots(ObjectDataSelection):
         return self._y
 
     @property
-    def y_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._y_active
-
-    @property
     def y_log(self):
         """
         :obj:`ipywidgets.Checkbox`
@@ -557,13 +484,6 @@ class ScatterPlots(ObjectDataSelection):
         if getattr(self, "_z", None) is None:
             self._z = Dropdown(description="Data:")
         return self._z
-
-    @property
-    def z_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._z_active
 
     @property
     def z_log(self):
@@ -607,7 +527,9 @@ class ScatterPlots(ObjectDataSelection):
 
         if channel not in self.data_channels.keys():
 
-            if self.workspace.get_entity(channel):
+            if channel == "None":
+                values = [None]
+            elif self.workspace.get_entity(channel):
                 values = np.asarray(
                     self.workspace.get_entity(channel)[0].values, dtype=float
                 ).copy()
@@ -628,21 +550,32 @@ class ScatterPlots(ObjectDataSelection):
         """
         Set the min and max values for the given axis channel
         """
+        self.refresh.value = False
 
         channel = getattr(self, "_" + name).value
         self.get_channel(channel)
 
         if channel in self.data_channels.keys():
+            if channel == "None":
+                cmin = getattr(self, "_" + name + "_min")
+                cmin.value = 0
+                cmax = getattr(self, "_" + name + "_max")
+                cmax.value = 0
+            else:
+                values = self.data_channels[channel]
+                values = values[~np.isnan(values)]
 
-            values = self.data_channels[channel]
-            values = values[~np.isnan(values)]
+                cmin = getattr(self, "_" + name + "_min")
+                cmin.value = f"{np.min(values):.2e}"
+                cmax = getattr(self, "_" + name + "_max")
+                cmax.value = f"{np.max(values):.2e}"
 
-            cmin = getattr(self, "_" + name + "_min")
-            cmin.value = f"{np.min(values):.2e}"
-            cmax = getattr(self, "_" + name + "_max")
-            cmax.value = f"{np.max(values):.2e}"
+        self.refresh.value = True
 
     def plot_selection(self, _):
+
+        if not self.refresh.value:
+            return None
 
         new_params_dict = {}
         for key, value in self.params.to_dict().items():
@@ -658,6 +591,7 @@ class ScatterPlots(ObjectDataSelection):
                 else:
                     index = list(self.data_channels.keys()).index(param.value)
                     new_params_dict[key] = self.data_values[index]
+                    #print(str(new_params_dict[key]) + ": " + str(self.data_values[index]))
             else:
                 new_params_dict[key] = param.value
 
@@ -700,20 +634,22 @@ class ScatterPlots(ObjectDataSelection):
         self.refresh.value = False
 
         obj, _ = self.get_selected_entities()
-        channel_list = ObjectBase.get_data_list(obj)
+        channel_list = ["None"]
+        channel_list.extend(ObjectBase.get_data_list(obj))
 
         if "Visual Parameters" in channel_list:
             channel_list.remove("Visual Parameters")
 
         #channel_list.extend(["X", "Y", "Z"])
 
-        #self.data_channels["None"] = None
         self.data_values = []
-        for channel in channel_list:
+        for channel in channel_list[0:5]:
             self.get_channel(channel)
-            self.data_values.append(ObjectBase.get_data(obj, channel)[0])
+            if channel == "None":
+                self.data_values.append(None)
+            else:
+                self.data_values.append(ObjectBase.get_data(obj, channel)[0])
 
-        #self.data_values.insert(0, None)
         self.update_axes(refresh_plot=False)
 
         self.refresh.value = True
@@ -722,12 +658,6 @@ class ScatterPlots(ObjectDataSelection):
         self.data_channels = {}
         self.refresh.value = False
         self.figure.data = []
-        self.x_active.value = False
-        self.y_active.value = False
-        self.z_active.value = False
-        self.color_active.value = False
-        self.size_active.value = False
-        self._indices = None
         self.refresh.value = True
 
     def trigger_click(self, _):
