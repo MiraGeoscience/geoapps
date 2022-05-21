@@ -65,7 +65,7 @@ geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/
 [tool.poetry.extras]
 
 [tool.conda-lock]
-platforms = ['win-64']
+platforms = ['win-64', 'osx-64', 'linux-64']
 channels = ['conda-forge', 'main']
 
 [tool.dephell.main]
