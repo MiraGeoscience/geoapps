@@ -4,7 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
+import os
 from os import path
 
 import numpy as np
@@ -47,7 +47,6 @@ def test_create_octree_app(tmp_path):
     max_distance = 200
     refine_A = [4, 4, 4]
     refine_B = [0, 0, 4]
-
     # Create a tree mesh from discretize
     treemesh = mesh_builder_xyz(
         points.vertices,
@@ -80,9 +79,7 @@ def test_create_octree_app(tmp_path):
         max_distance=max_distance,
         finalize=True,
     )
-
     octree = treemesh_2_octree(ws, treemesh, name="Octree_Mesh")
-
     # Repeat the creation using the app
     refinements = {
         "Refinement A object": points.uid,
@@ -111,6 +108,11 @@ def test_create_octree_app(tmp_path):
     )
     app.trigger_click(None)
     # Re-load the new mesh and compare
-    ws_B = Workspace(path.join(app.monitoring_directory, "Octree_Mesh.geoh5"))
+    file = [
+        file
+        for file in os.listdir(app.export_directory.selected_path)
+        if file.endswith("geoh5")
+    ][0]
+    ws_B = Workspace(path.join(app.export_directory.selected_path, file))
     rec_octree = ws_B.get_entity("Octree_Mesh")[0]
     compare_entities(octree, rec_octree, ignore=["_uid"])
