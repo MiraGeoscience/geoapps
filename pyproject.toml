@@ -26,16 +26,12 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.7"
 numpy = "!=1.19.4, ^1.21.5"
-h5py = "^3.2.1"
 discretize = "0.7.4"
 scipy = "^1.7.3"
-geoana = "~0.1.2"
 matplotlib = "^3.5.1"
 ipywidgets = "^7.6.5"
-ipykernel = "^6.9.1"
 scikit-image = "~0.19.2"
 scikit-learn = "^1.0.2"
-zarr = "^2.8.1"
 fsspec = "2022.*"
 xarray = "~0.20.1"
 dask = {version = "2022.*", extras = ["distributed"]}
@@ -43,17 +39,23 @@ gdal = "^3.4.3"
 fiona = "^1.8.21"
 plotly = "^5.8.0"
 requests = "^2.27.1"
-empymod = "^2.1.3"
 ipyfilechooser = "~0.6.0"
-pydiso = "~0.0.3"
-mkl = "2022.*"
 tqdm = "^4.64.0"
-#simpeg = { git = "https://github.com/MiraGeoscience/simpeg.git", branch = "@release/geoapps-0.8.0" }
-simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.8.0.zip#sha256=None" }
-#simpeg_archive = { git = "https://github.com/MiraGeoscience/simpeg.git", tag = "v0.9.1.dev1+geoapps.0.6.0" }
-simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev1+geoapps.0.6.0.zip#sha256=None" }
-#geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", branch = "release/0.3.0" }
-#geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0-alpha.1.zip#sha256=None" }
+empymod = "^2.1.3" # indirect dependency from simpeg
+geoana = "~0.1.2" # indirect dependency from simpeg
+h5py = "^3.2.1" # indirect dependency from geoh5py
+mkl = "2022.*" # indirect dependency from simpeg
+properties = "~0.5.2" # indirect dependency from simpeg
+pydiso = "~0.0.3" # indirect dependency from simpeg
+zarr = "^2.8.1" # indirect dependency from simpgeg using Dask
+##simpeg = { git = "https://github.com/MiraGeoscience/simpeg.git", branch = "@release/geoapps-0.8.0" }
+#simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.8.0.zip#sha256=None" }
+simpeg = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None" }
+##simpeg_archive = { git = "https://github.com/MiraGeoscience/simpeg.git", tag = "v0.9.1.dev1+geoapps.0.6.0" }
+#simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev1+geoapps.0.6.0.zip#sha256=None" }
+simpeg_archive = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None" }
+##geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", branch = "release/0.3.0" }
+##geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0-alpha.1.zip#sha256=None" }
 geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0_GA3.zip#sha256=None" }
 
 [tool.poetry.dev-dependencies]
