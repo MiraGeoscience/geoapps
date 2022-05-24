@@ -620,10 +620,10 @@ class ScatterPlots(ObjectDataSelection):
 
         obj, _ = self.get_selected_entities()
 
-        #channel_list = ["None"]
-        #channel_list.extend(obj.get_data_list())
+        channel_list = ["None"]
+        channel_list.extend(obj.get_data_list())
 
-        channel_list = obj.get_data_list()
+        #channel_list = obj.get_data_list()
 
         if "Visual Parameters" in channel_list:
             channel_list.remove("Visual Parameters")
