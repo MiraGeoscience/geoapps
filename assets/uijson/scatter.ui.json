@@ -45,12 +45,6 @@
         "parent": "objects",
         "value": ""
     },
-    "x_log": {
-        "group": "x axis",
-        "label": "Log10",
-        "main": true,
-        "value": false
-    },
     "x_min": {
         "group": "x axis",
         "label": "Min",
@@ -67,11 +61,19 @@
         "enabled": false,
         "value": ""
     },
+    "x_log": {
+        "group": "x axis",
+        "label": "Log10",
+        "main": true,
+        "value": false
+    },
     "x_thresh": {
         "group": "x axis",
         "label": "Threshold",
         "main": true,
-        "value": ""
+        "value": "",
+        "dependency": "x_log",
+        "dependencyType": "enabled"
     },
     "y": {
         "association": [
@@ -83,12 +85,6 @@
         "main": true,
         "parent": "objects",
         "value": ""
-    },
-    "y_log": {
-        "group": "y axis",
-        "label": "Log10",
-        "main": true,
-        "value": true
     },
     "y_min": {
         "group": "y axis",
@@ -112,25 +108,26 @@
         "main": true,
         "value": ""
     },
+    "y_log": {
+        "group": "y axis",
+        "label": "Log10",
+        "main": true,
+        "value": false,
+        "dependency": "y_log",
+        "dependencyType": "enabled"
+    },
     "z": {
         "association": [
             "Vertex"
         ],
         "dataType": "Float",
         "group": "z axis",
-        "groupOptional": true,
+        "optional": true,
+        "enabled": false,
         "label": "Data",
         "main": true,
         "parent": "objects",
-        "value": "",
-        "enabled": false
-    },
-    "z_log": {
-        "group": "z axis",
-        "label": "Log10",
-        "main": true,
-        "value": true,
-        "enabled": false
+        "value": ""
     },
     "z_min": {
         "group": "z axis",
@@ -148,12 +145,21 @@
         "enabled": false,
         "value": ""
     },
+    "z_log": {
+        "group": "z axis",
+        "label": "Log10",
+        "main": true,
+        "value": false
+    },
     "z_thresh": {
+        "optional": true,
+        "enabled": false,
         "group": "z axis",
         "label": "Threshold",
         "main": true,
         "value": "",
-        "enabled": false
+        "dependency": "z_log",
+        "dependencyType": "enabled"
     },
     "color": {
         "association": [
@@ -161,19 +167,12 @@
         ],
         "dataType": "Float",
         "group": "Color",
-        "groupOptional": true,
+        "optional": true,
+        "enabled": false,
         "label": "Data",
         "main": true,
         "parent": "objects",
-        "value": "",
-        "enabled": false
-    },
-    "color_log": {
-        "group": "Color",
-        "label": "Log10",
-        "main": true,
-        "value": true,
-        "enabled": false
+        "value": ""
     },
     "color_min": {
         "group": "Color",
@@ -191,12 +190,19 @@
         "enabled": false,
         "value": ""
     },
+    "color_log": {
+        "group": "Color",
+        "label": "Log10",
+        "main": true,
+        "value": false
+    },
     "color_thresh": {
         "group": "Color",
         "label": "Threshold",
         "main": true,
         "value": "",
-        "enabled": false
+        "dependency": "color_log",
+        "dependencyType": "enabled"
     },
     "color_maps": {
         "choiceList": [
@@ -299,7 +305,8 @@
         "label": "Colormaps",
         "main": true,
         "value": "",
-        "enabled": false
+        "dependency": "color",
+        "dependencyType": "enabled"
     },
     "size": {
         "association": [
@@ -307,19 +314,12 @@
         ],
         "dataType": "Float",
         "group": "Size",
-        "groupOptional": true,
+        "optional": true,
+        "enabled": false,
         "label": "Data",
         "main": true,
         "parent": "objects",
-        "value": "",
-        "enabled": false
-    },
-    "size_log": {
-        "group": "Size",
-        "label": "Log10",
-        "main": true,
-        "value": false,
-        "enabled": false
+        "value": ""
     },
     "size_min": {
         "group": "Size",
@@ -337,12 +337,19 @@
         "enabled": false,
         "value": ""
     },
+    "size_log": {
+        "group": "Size",
+        "label": "Log10",
+        "main": true,
+        "value": false
+    },
     "size_thresh": {
         "group": "Size",
         "label": "Threshold",
         "main": true,
         "value": "",
-        "enabled": false
+        "dependency": "size_log",
+        "dependencyType": "enabled"
     },
     "size_markers": {
         "group": "Size",
@@ -351,6 +358,13 @@
         "min": 1,
         "max": 100,
         "value": "",
-        "enabled": false
+        "dependency": "size",
+        "dependencyType": "enabled"
+    },
+    "save": {
+        "label": "Save as html",
+        "main": true,
+        "value": false,
+        "group": "Python run preferences"
     }
 }
