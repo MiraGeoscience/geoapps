@@ -88,12 +88,6 @@ default_ui_json.update(
             "parent": "objects",
             "value": None,
         },
-        "x_log": {
-            "group": "x axis",
-            "label": "Log10",
-            "main": True,
-            "value": False,
-        },
         "x_min": {
             "group": "x axis",
             "label": "Min",
@@ -110,11 +104,19 @@ default_ui_json.update(
             "enabled": False,
             "value": None,
         },
+        "x_log": {
+            "group": "x axis",
+            "label": "Log10",
+            "main": True,
+            "value": False,
+        },
         "x_thresh": {
             "group": "x axis",
             "label": "Threshold",
             "main": True,
             "value": None,
+            "dependency": "x_log",
+            "dependencyType": "enabled"
         },
         "y": {
             "association": ["Vertex"],
@@ -124,12 +126,6 @@ default_ui_json.update(
             "main": True,
             "parent": "objects",
             "value": None,
-        },
-        "y_log": {
-            "group": "y axis",
-            "label": "Log10",
-            "main": True,
-            "value": True,
         },
         "y_min": {
             "group": "y axis",
@@ -153,21 +149,24 @@ default_ui_json.update(
             "main": True,
             "value": None,
         },
+        "y_log": {
+            "group": "y axis",
+            "label": "Log10",
+            "main": True,
+            "value": False,
+            "dependency": "y_log",
+            "dependencyType": "enabled"
+        },
         "z": {
             "association": ["Vertex"],
             "dataType": "Float",
             "group": "z axis",
-            "groupOptional": True,
+            "optional": True,
+            "enabled": False,
             "label": "Data",
             "main": True,
             "parent": "objects",
             "value": None,
-        },
-        "z_log": {
-            "group": "z axis",
-            "label": "Log10",
-            "main": True,
-            "value": True,
         },
         "z_min": {
             "group": "z axis",
@@ -185,27 +184,32 @@ default_ui_json.update(
             "enabled": False,
             "value": None,
         },
+        "z_log": {
+            "group": "z axis",
+            "label": "Log10",
+            "main": True,
+            "value": False,
+        },
         "z_thresh": {
+            "optional": True,
+            "enabled": False,
             "group": "z axis",
             "label": "Threshold",
             "main": True,
             "value": None,
+            "dependency": "z_log",
+            "dependencyType": "enabled"
         },
         "color": {
             "association": ["Vertex"],
             "dataType": "Float",
             "group": "Color",
-            "groupOptional": True,
+            "optional": True,
+            "enabled": False,
             "label": "Data",
             "main": True,
             "parent": "objects",
             "value": None,
-        },
-        "color_log": {
-            "group": "Color",
-            "label": "Log10",
-            "main": True,
-            "value": True,
         },
         "color_min": {
             "group": "Color",
@@ -223,11 +227,19 @@ default_ui_json.update(
             "enabled": False,
             "value": None,
         },
+        "color_log": {
+            "group": "Color",
+            "label": "Log10",
+            "main": True,
+            "value": False,
+        },
         "color_thresh": {
             "group": "Color",
             "label": "Threshold",
             "main": True,
             "value": None,
+            "dependency": "color_log",
+            "dependencyType": "enabled"
         },
         "color_maps": {
             "choiceList": px.colors.named_colorscales(),
@@ -235,22 +247,19 @@ default_ui_json.update(
             "label": "Colormaps",
             "main": True,
             "value": None,
+            "dependency": "color",
+            "dependencyType": "enabled"
         },
         "size": {
             "association": ["Vertex"],
             "dataType": "Float",
             "group": "Size",
-            "groupOptional": True,
+            "optional": True,
+            "enabled": False,
             "label": "Data",
             "main": True,
             "parent": "objects",
             "value": None,
-        },
-        "size_log": {
-            "group": "Size",
-            "label": "Log10",
-            "main": True,
-            "value": False,
         },
         "size_min": {
             "group": "Size",
@@ -268,11 +277,19 @@ default_ui_json.update(
             "enabled": False,
             "value": None,
         },
+        "size_log": {
+            "group": "Size",
+            "label": "Log10",
+            "main": True,
+            "value": False,
+        },
         "size_thresh": {
             "group": "Size",
             "label": "Threshold",
             "main": True,
             "value": None,
+            "dependency": "size_log",
+            "dependencyType": "enabled"
         },
         "size_markers": {
             "group": "Size",
@@ -280,7 +297,15 @@ default_ui_json.update(
             "main": True,
             "min": 1,
             "max": 100,
-            "value": None
+            "value": None,
+            "dependency": "size",
+            "dependencyType": "enabled"
+        },
+        "save": {
+            "label": "Save as html",
+            "main": True,
+            "value": False,
+            "group": "Python run preferences"
         },
         "conda_environment": "geoapps",
         "run_command": "geoapps.scatter_plot.driver",
