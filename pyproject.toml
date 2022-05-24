@@ -60,10 +60,10 @@ simpeg_archive = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GE
 geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0_GA3.zip#sha256=None" }
 
 [tool.poetry.dev-dependencies]
-#pylint = "^2.3"
-#pytest = "^3.0"
-#pytest-cov = "^2.7.1"
-#toml = "^0.10.2"
+pylint = "^2.3"
+pytest = "^3.0"
+pytest-cov = "^2.7.1"
+toml = "^0.10.2"
 
 [tool.poetry.extras]
 
