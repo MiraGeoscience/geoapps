@@ -1153,39 +1153,23 @@ class InversionApp(PlotSelection2D):
 
     def write_trigger(self, _):
         # Copy object to work geoh5
-        new_workspace = Workspace(
+        with Workspace(
             path.join(
                 self.export_directory.selected_path,
                 self._ga_group_name.value + ".geoh5",
             )
-        )
-        for elem in [
-            self,
-            self._mesh_octree,
-            self._topography_group,
-            self._starting_model_group,
-            self._reference_model_group,
-            self._lower_bound_group,
-            self._upper_bound_group,
-        ]:
-            obj, data = elem.get_selected_entities()
-
-            if obj is not None:
-                new_obj = new_workspace.get_entity(obj.uid)[0]
-                if new_obj is None:
-                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
-                for d in data:
-                    if new_workspace.get_entity(d.uid)[0] is None:
-                        d.copy(parent=new_obj)
-
-        if self.inversion_type.value == "magnetic vector":
+        ) as new_workspace:
             for elem in [
-                self._starting_inclination_group,
-                self._starting_declination_group,
-                self._reference_inclination_group,
-                self._reference_declination_group,
+                self,
+                self._mesh_octree,
+                self._topography_group,
+                self._starting_model_group,
+                self._reference_model_group,
+                self._lower_bound_group,
+                self._upper_bound_group,
             ]:
                 obj, data = elem.get_selected_entities()
+
                 if obj is not None:
                     new_obj = new_workspace.get_entity(obj.uid)[0]
                     if new_obj is None:
@@ -1194,63 +1178,81 @@ class InversionApp(PlotSelection2D):
                         if new_workspace.get_entity(d.uid)[0] is None:
                             d.copy(parent=new_obj)
 
-        new_obj = new_workspace.get_entity(self.objects.value)
-        if len(new_obj) == 0 or new_obj[0] is None:
-            print("An object with data must be selected to write the input file.")
-            return
+            if self.inversion_type.value == "magnetic vector":
+                for elem in [
+                    self._starting_inclination_group,
+                    self._starting_declination_group,
+                    self._reference_inclination_group,
+                    self._reference_declination_group,
+                ]:
+                    obj, data = elem.get_selected_entities()
+                    if obj is not None:
+                        new_obj = new_workspace.get_entity(obj.uid)[0]
+                        if new_obj is None:
+                            new_obj = obj.copy(
+                                parent=new_workspace, copy_children=False
+                            )
+                        for d in data:
+                            if new_workspace.get_entity(d.uid)[0] is None:
+                                d.copy(parent=new_obj)
 
-        new_obj = new_obj[0]
-        for key in self.data_channel_choices.options:
-            widget = getattr(self, f"{key}_uncertainty_channel")
-            if widget.value is not None:
-                setattr(self.params, f"{key}_uncertainty", str(widget.value))
-                if new_workspace.get_entity(widget.value)[0] is None:
-                    self.workspace.get_entity(widget.value)[0].copy(
-                        parent=new_obj, copy_children=False
-                    )
-            else:
-                widget = getattr(self, f"{key}_uncertainty_floor")
-                setattr(self.params, f"{key}_uncertainty", widget.value)
+            new_obj = new_workspace.get_entity(self.objects.value)
+            if len(new_obj) == 0 or new_obj[0] is None:
+                print("An object with data must be selected to write the input file.")
+                return
 
-            if getattr(self, f"{key}_channel_bool").value:
-                if not self.forward_only.value:
-                    self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
-                        0
-                    ].copy(parent=new_obj)
+            new_obj = new_obj[0]
+            for key in self.data_channel_choices.options:
+                widget = getattr(self, f"{key}_uncertainty_channel")
+                if widget.value is not None:
+                    setattr(self.params, f"{key}_uncertainty", str(widget.value))
+                    if new_workspace.get_entity(widget.value)[0] is None:
+                        self.workspace.get_entity(widget.value)[0].copy(
+                            parent=new_obj, copy_children=False
+                        )
+                else:
+                    widget = getattr(self, f"{key}_uncertainty_floor")
+                    setattr(self.params, f"{key}_uncertainty", widget.value)
 
-        if self.receivers_radar_drape.value is not None:
-            self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
-                parent=new_obj
-            )
+                if getattr(self, f"{key}_channel_bool").value:
+                    if not self.forward_only.value:
+                        self.workspace.get_entity(
+                            getattr(self, f"{key}_channel").value
+                        )[0].copy(parent=new_obj)
 
-        self.params.geoh5 = new_workspace
+            if self.receivers_radar_drape.value is not None:
+                self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
+                    parent=new_obj
+                )
 
-        for key in self.__dict__:
-            attr = getattr(self, key)
-            if isinstance(attr, Widget) and hasattr(attr, "value"):
-                value = attr.value
-                if isinstance(value, uuid.UUID):
-                    value = new_workspace.get_entity(value)[0]
-                setattr(self.params, key, value)
-            else:
-                sub_keys = []
-                if isinstance(attr, (ModelOptions, TopographyOptions)):
-                    sub_keys = [attr.identifier, attr.identifier + "_object"]
-                    attr = self
-                elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                    sub_keys = attr.params_keys
-                for sub_key in sub_keys:
-                    value = getattr(attr, sub_key)
-                    if isinstance(value, Widget) and hasattr(value, "value"):
-                        value = value.value
+            self.params.geoh5 = new_workspace
+
+            for key in self.__dict__:
+                attr = getattr(self, key)
+                if isinstance(attr, Widget) and hasattr(attr, "value"):
+                    value = attr.value
                     if isinstance(value, uuid.UUID):
                         value = new_workspace.get_entity(value)[0]
-                    setattr(self.params, sub_key, value)
+                    setattr(self.params, key, value)
+                else:
+                    sub_keys = []
+                    if isinstance(attr, (ModelOptions, TopographyOptions)):
+                        sub_keys = [attr.identifier, attr.identifier + "_object"]
+                        attr = self
+                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                        sub_keys = attr.params_keys
+                    for sub_key in sub_keys:
+                        value = getattr(attr, sub_key)
+                        if isinstance(value, Widget) and hasattr(value, "value"):
+                            value = value.value
+                        if isinstance(value, uuid.UUID):
+                            value = new_workspace.get_entity(value)[0]
+                        setattr(self.params, sub_key, value)
 
-        self.params.write_input_file(
-            name=self._ga_group_name.value + ".ui.json",
-            path=self.export_directory.selected_path,
-        )
+            self.params.write_input_file(
+                name=self._ga_group_name.value + ".ui.json",
+                path=self.export_directory.selected_path,
+            )
         self.write.button_style = ""
         self.trigger.button_style = "success"
 
