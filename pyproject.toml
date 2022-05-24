@@ -85,10 +85,6 @@ full = [
 platforms = ['win-64', 'osx-64', 'linux-64']
 channels = ['conda-forge', 'main']
 
-[tool.dephell.main]
-from = {format = "poetry", path = "pyproject.toml"}
-to = {format = "setuppy", path = "setup.py"}
-
 [tool.isort]
 # settings for compatibility between ``isort`` and ``black`` formatting
 multi_line_output = 3
