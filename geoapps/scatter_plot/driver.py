@@ -171,18 +171,20 @@ class ScatterPlotDriver:
             figure.add_trace(plot)
             figure.update_layout(layout)
 
-        #figure.show()
-        #figure.write_html("path")
         return figure
 
     def get_indices(self):
 
         values = []
+        non_nan = []
         for axis in [self.params.x, self.params.y, self.params.z]:
             if axis is not None:
                 values.append(np.asarray(axis.values, dtype=float))
+                non_nan.append(~np.isnan(axis.values))
 
         values = np.vstack(values)
+        non_nan = np.vstack(non_nan)
+
         # Normalize all columns
         values = (values - np.nanmin(values, axis=1)[:, None]) / (
             np.nanmax(values, axis=1) - np.nanmin(values, axis=1)
@@ -193,9 +195,11 @@ class ScatterPlotDriver:
         else:
             percent = self.params.downsampling/100
 
+        size = np.sum(np.all(non_nan, axis=0))
+
         indices = random_sampling(
             values.T,
-            int(percent * np.size(values, 1)),
+            int(percent * size),
             bandwidth=2.0,
             rtol=1e0,
             method="histogram",
@@ -208,4 +212,6 @@ if __name__ == "__main__":
     file = sys.argv[1]
     params = ScatterPlotParams(InputFile.read_ui_json(file))
     driver = ScatterPlotDriver(params)
-    driver.run()
+    figure = driver.run()
+    figure.show()
+    #figure.write_html("path")
