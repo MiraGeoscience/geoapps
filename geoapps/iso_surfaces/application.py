@@ -8,8 +8,6 @@
 import os
 import uuid
 
-from geoh5py.data import Data
-from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
@@ -66,7 +64,7 @@ class IsoSurface(ObjectDataSelection):
 
     def trigger_click(self, _):
 
-        param_dict = {}
+        param_dict = {"geoh5": None, "objects": None, "data": None}
         for key in self.__dict__:
             try:
                 if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):

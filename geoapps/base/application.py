@@ -302,8 +302,11 @@ class BaseApplication:
         """
         Create an active workspace with check for GA monitoring directory
         """
+        timestamp = f"_{time.time():.0f}"
         if not name.endswith(".geoh5"):
-            name += ".geoh5"
+            name += timestamp + ".geoh5"
+        else:
+            name.replace(".geoh5", timestamp + ".geoh5")
 
         h5file = path.join(workpath, name)
         h5file = existing_file_incrementer(h5file)
