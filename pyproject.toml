@@ -51,7 +51,7 @@ pymatsolver = "~0.1.1" # indirect dependency from simpeg
 zarr = "^2.8.1" # indirect dependency from simpgeg using Dask
 ##simpeg = { git = "https://github.com/MiraGeoscience/simpeg.git", branch = "@release/geoapps-0.8.0" }
 #simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.8.0.zip#sha256=None" }
-simpeg = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None" }
+simpeg = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None", extra = ["dask"] }
 ##simpeg_archive = { git = "https://github.com/MiraGeoscience/simpeg.git", tag = "v0.9.1.dev1+geoapps.0.6.0" }
 #simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev1+geoapps.0.6.0.zip#sha256=None" }
 simpeg_archive = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None" }
