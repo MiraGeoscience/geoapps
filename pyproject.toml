@@ -47,6 +47,7 @@ h5py = "^3.2.1" # indirect dependency from geoh5py
 mkl = "2022.*" # indirect dependency from simpeg
 properties = "~0.5.2" # indirect dependency from simpeg
 pydiso = "~0.0.3" # indirect dependency from simpeg
+pymatsolver = "~0.1.1" # indirect dependency from simpeg
 zarr = "^2.8.1" # indirect dependency from simpgeg using Dask
 ##simpeg = { git = "https://github.com/MiraGeoscience/simpeg.git", branch = "@release/geoapps-0.8.0" }
 #simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.8.0.zip#sha256=None" }
