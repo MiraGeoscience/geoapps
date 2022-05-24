@@ -31,7 +31,6 @@ scipy = "^1.7.3" # also in simpeg and geoana
 matplotlib = "^3.5.1" # also in simpeg and geoana
 scikit-learn = "^1.0.2" # also in simpeg
 fsspec = "2022.*" # also in simpeg
-xarray = "~0.20.1"
 dask = {version = "2022.*", extras = ["distributed"]}
 # ipywidgets = "^7.6.5" # soft dependency
 # scikit-image = "~0.19.2" # soft dependency
