@@ -221,7 +221,6 @@ class ScatterPlots(ObjectDataSelection):
         self.axes_pannels.observe(axes_pannels_trigger, names="value")
         self.axes_options = VBox([self.axes_pannels, self._x_panel])
         self.data_channels = {}
-        self.data_values = {}
         self.objects.observe(self.update_objects, names="value")
         self.objects.observe(self.update_choices, names="value")
         self.figure = go.FigureWidget()
@@ -527,19 +526,15 @@ class ScatterPlots(ObjectDataSelection):
             return None
 
         if channel not in self.data_channels.keys():
-
             if channel == "None":
-                values = [None]
+                data = None
             elif self.workspace.get_entity(channel):
-                values = np.asarray(
-                    self.workspace.get_entity(channel)[0].values, dtype=float
-                ).copy()
+                data = self.workspace.get_entity(channel)[0]
             else:
                 return
 
-            self.data_channels[channel] = values
+            self.data_channels[channel] = data
 
-        return self.data_channels[channel].copy()
 
     def set_channel_bounds(self, name):
         """
@@ -557,9 +552,8 @@ class ScatterPlots(ObjectDataSelection):
                 cmax = getattr(self, "_" + name + "_max")
                 cmax.value = 0
             else:
-                values = self.data_channels[channel]
+                values = self.data_channels[channel].values
                 values = values[~np.isnan(values)]
-
                 cmin = getattr(self, "_" + name + "_min")
                 cmin.value = f"{np.min(values):.2e}"
                 cmax = getattr(self, "_" + name + "_max")
@@ -568,7 +562,6 @@ class ScatterPlots(ObjectDataSelection):
         self.refresh.value = True
 
     def plot_selection(self, _):
-
         if not self.refresh.value:
             return None
 
@@ -581,11 +574,10 @@ class ScatterPlots(ObjectDataSelection):
             elif hasattr(param, "value") is False:
                 new_params_dict[key] = param
             elif (key == "x") | (key == "y") | (key == "z") | (key == "color") | (key == "size"):
-                if param.value is None:
+                if (param.value == "None") | (param.value is None):
                     new_params_dict[key] = None
                 else:
-                    index = list(self.data_channels.keys()).index(param.value)
-                    new_params_dict[key] = self.data_values[index]
+                    new_params_dict[key] = self.data_channels[param.value]
             else:
                 new_params_dict[key] = param.value
 
@@ -627,19 +619,17 @@ class ScatterPlots(ObjectDataSelection):
         self.refresh.value = False
 
         obj, _ = self.get_selected_entities()
-        channel_list = ["None"]
-        channel_list.extend(ObjectBase.get_data_list(obj))
+
+        #channel_list = ["None"]
+        #channel_list.extend(obj.get_data_list())
+
+        channel_list = obj.get_data_list()
 
         if "Visual Parameters" in channel_list:
             channel_list.remove("Visual Parameters")
 
-        self.data_values = []
         for channel in channel_list:
             self.get_channel(channel)
-            if channel == "None":
-                self.data_values.append(None)
-            else:
-                self.data_values.append(ObjectBase.get_data(obj, channel)[0])
 
         self.update_axes(refresh_plot=False)
 
