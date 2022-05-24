@@ -25,9 +25,9 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-numpy = "!=1.19.4, ^1.21.5" # also in simpeg
+numpy = "!=1.19.4, ^1.21.5" # also in simpeg and geoana
 discretize = "~0.7.4" # also in simpeg
-scipy = "^1.7.3" # also in simpeg
+scipy = "^1.7.3" # also in simpeg and geoana
 matplotlib = "^3.5.1" # also in simpeg and geoana
 scikit-learn = "^1.0.2" # also in simpeg
 fsspec = "2022.*" # also in simpeg
@@ -41,11 +41,11 @@ dask = {version = "2022.*", extras = ["distributed"]}
 # requests = "^2.27.1" # soft dependency
 # ipyfilechooser = "~0.6.0" # soft dependency
 tqdm = "^4.64.0"
-empymod = "^2.1.3" # indirect dependency from simpeg
+empymod = "^2.1.3" # indirect dependency from simpeg and geoana
 geoana = "~0.1.2" # indirect dependency from simpeg
 h5py = "^3.2.1" # indirect dependency from geoh5py
 mkl = "2022.*" # indirect dependency from simpeg
-properties = "~0.5.2" # indirect dependency from simpeg
+properties = "~0.5.2" # indirect dependency from simpeg and geoana
 pydiso = "~0.0.3" # indirect dependency from simpeg
 pymatsolver = "~0.1.1" # indirect dependency from simpeg
 zarr = "^2.8.1" # indirect dependency from simpgeg using Dask
