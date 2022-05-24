@@ -25,14 +25,14 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-numpy = "!=1.19.4, ^1.21.5"
-discretize = "~0.7.4"
-scipy = "^1.7.3"
-matplotlib = "^3.5.1"
 ipywidgets = "^7.6.5"
 scikit-image = "~0.19.2"
-scikit-learn = "^1.0.2"
-fsspec = "2022.*"
+numpy = "!=1.19.4, ^1.21.5" # also in simpeg
+discretize = "~0.7.4" # also in simpeg
+scipy = "^1.7.3" # also in simpeg
+matplotlib = "^3.5.1" # also in simpeg and geoana
+scikit-learn = "^1.0.2" # also in simpeg
+fsspec = "2022.*" # also in simpeg
 xarray = "~0.20.1"
 dask = {version = "2022.*", extras = ["distributed"]}
 gdal = "^3.4.3"
