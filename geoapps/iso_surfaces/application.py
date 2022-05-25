@@ -5,13 +5,15 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
 import os
 import uuid
 
-from geoh5py.data import Data
-from geoh5py.objects import ObjectBase
+from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Surface
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
+from geoh5py.ui_json.utils import monitored_directory_copy
 from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
 
 from geoapps.base.selection import ObjectDataSelection
@@ -88,7 +90,6 @@ class IsoSurface(ObjectDataSelection):
         new_workspace = self.get_output_workspace(
             self.export_directory.selected_path, self.ga_group_name.value
         )
-
         param_dict["objects"] = param_dict["objects"].copy(
             parent=new_workspace, copy_children=False
         )
