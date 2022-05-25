@@ -54,7 +54,8 @@ class ScatterPlotDriver:
 
                 if self.params.size_log:
                     size = symlog(size, self.params.size_thresh)
-                size *= self.params.size_markers
+                if self.params.size_markers is not None:
+                    size *= self.params.size_markers
             else:
                 size = None
 
@@ -210,8 +211,10 @@ class ScatterPlotDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = ScatterPlotParams(InputFile.read_ui_json(file))
+    ifile = InputFile.read_ui_json(file)
+    params = ScatterPlotParams(ifile)
     driver = ScatterPlotDriver(params)
     figure = driver.run()
     figure.show()
-    #figure.write_html("path")
+    if params.save:
+        figure.write_html(ifile.path + "/Crossplot.html")
