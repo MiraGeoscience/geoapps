@@ -32,14 +32,14 @@
         "main": true,
         "min": 1,
         "max": 100,
-        "value": ""
+        "value": 100
     },
     "x": {
         "association": [
             "Vertex"
         ],
-        "dataType": "Float",
         "group": "x axis",
+        "dataType": "Float",
         "label": "Data",
         "main": true,
         "parent": "objects",
@@ -51,7 +51,7 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
+        "value": 0
     },
     "x_max": {
         "group": "x axis",
@@ -59,7 +59,7 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
+        "value": 0
     },
     "x_log": {
         "group": "x axis",
@@ -71,7 +71,7 @@
         "group": "x axis",
         "label": "Threshold",
         "main": true,
-        "value": "",
+        "value": 0.1,
         "dependency": "x_log",
         "dependencyType": "enabled"
     },
@@ -92,7 +92,7 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
+        "value": 0
     },
     "y_max": {
         "group": "y axis",
@@ -100,19 +100,19 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
-    },
-    "y_thresh": {
-        "group": "y axis",
-        "label": "Threshold",
-        "main": true,
-        "value": ""
+        "value": 0
     },
     "y_log": {
         "group": "y axis",
         "label": "Log10",
         "main": true,
-        "value": false,
+        "value": false
+    },
+    "y_thresh": {
+        "group": "y axis",
+        "label": "Threshold",
+        "main": true,
+        "value": 0.1,
         "dependency": "y_log",
         "dependencyType": "enabled"
     },
@@ -135,7 +135,7 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
+        "value": 0
     },
     "z_max": {
         "group": "z axis",
@@ -143,7 +143,7 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
+        "value": 0
     },
     "z_log": {
         "group": "z axis",
@@ -152,12 +152,10 @@
         "value": false
     },
     "z_thresh": {
-        "optional": true,
-        "enabled": false,
         "group": "z axis",
         "label": "Threshold",
         "main": true,
-        "value": "",
+        "value": 0.1,
         "dependency": "z_log",
         "dependencyType": "enabled"
     },
@@ -180,7 +178,7 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
+        "value": 0
     },
     "color_max": {
         "group": "Color",
@@ -188,7 +186,7 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
+        "value": 0
     },
     "color_log": {
         "group": "Color",
@@ -200,7 +198,7 @@
         "group": "Color",
         "label": "Threshold",
         "main": true,
-        "value": "",
+        "value": 0.1,
         "dependency": "color_log",
         "dependencyType": "enabled"
     },
@@ -305,8 +303,8 @@
         "label": "Colormaps",
         "main": true,
         "value": "",
-        "dependency": "color",
-        "dependencyType": "enabled"
+        "enabled": false,
+        "optional": true
     },
     "size": {
         "association": [
@@ -327,7 +325,7 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
+        "value": 0
     },
     "size_max": {
         "group": "Size",
@@ -335,7 +333,7 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": ""
+        "value": 0
     },
     "size_log": {
         "group": "Size",
@@ -347,7 +345,7 @@
         "group": "Size",
         "label": "Threshold",
         "main": true,
-        "value": "",
+        "value": 0.1,
         "dependency": "size_log",
         "dependencyType": "enabled"
     },
@@ -357,9 +355,9 @@
         "main": true,
         "min": 1,
         "max": 100,
-        "value": "",
-        "dependency": "size",
-        "dependencyType": "enabled"
+        "value": 1,
+        "enabled": false,
+        "optional": true
     },
     "save": {
         "label": "Save as html",
