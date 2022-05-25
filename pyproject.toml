@@ -96,6 +96,9 @@ line_length = 88
 [tool.black]
 # defaults are just fine
 
+[tool.poetry2conda]
+name = "geoapps"
+
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools"]
 build-backend = "poetry.core.masonry.api"
