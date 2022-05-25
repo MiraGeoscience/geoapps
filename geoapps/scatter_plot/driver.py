@@ -8,19 +8,15 @@
 
 from __future__ import annotations
 
-import os
 import sys
 
 import numpy as np
-
 import plotly.graph_objects as go
 
 from geoh5py.ui_json import InputFile
 
-from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils.plotting import format_axis, normalize
 from geoapps.utils.utils import random_sampling, symlog
-
 from geoapps.scatter_plot.params import ScatterPlotParams
 
 
@@ -34,12 +30,11 @@ class ScatterPlotDriver:
         """
         figure = go.Figure()
 
-        x_axis, y_axis, z_axis = None, None, None
-
         if (self.params.x is not None) & (self.params.y is not None):
 
             indices = self.get_indices()
 
+            size = None
             if self.params.size is not None:
                 vals = self.params.size.values[indices]
                 min = self.params.size_min
@@ -52,16 +47,12 @@ class ScatterPlotDriver:
                 if np.sum(inbound) > 0:
                     vals[~inbound] = np.nan
                     size = normalize(vals)
-
                     if self.params.size_log:
                         size = symlog(size, self.params.size_thresh)
                     if self.params.size_markers is not None:
                         size *= self.params.size_markers
-                else:
-                    size = None
-            else:
-                size = None
 
+            color = "black"
             if self.params.color is not None:
                 vals = self.params.color.values[indices]
                 min = self.params.color_min
@@ -74,13 +65,8 @@ class ScatterPlotDriver:
                 if np.sum(inbound) > 0:
                     vals[~inbound] = np.nan
                     color = normalize(vals)
-
                     if self.params.color_log:
                         color = symlog(color, self.params.color_thresh)
-                else:
-                    color = "black"
-            else:
-                color = "black"
 
             x_axis = self.params.x.values[indices]
             y_axis = self.params.y.values[indices]
@@ -134,7 +120,6 @@ class ScatterPlotDriver:
                     z_axis, z_label, z_ticks, z_ticklabels = None, None, None, None
 
                 # 3D Scatter
-
                 plot = go.Scatter3d(
                     x=x_axis,
                     y=y_axis,
@@ -211,6 +196,7 @@ class ScatterPlotDriver:
         else:
             percent = self.params.downsampling/100
 
+        # Number of values that are not nan along all three axes
         size = np.sum(np.all(non_nan, axis=0))
 
         indices = random_sampling(

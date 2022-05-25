@@ -6,7 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
-import uuid
 
 import numpy as np
 import plotly.express as px
@@ -21,20 +20,14 @@ from ipywidgets import (
     Layout,
     ToggleButton,
     VBox,
-    interactive_output,
-    Widget,
 )
 
-from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
-from geoh5py.objects import ObjectBase
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.params import ScatterPlotParams
-
-from geoapps.utils.utils import random_sampling, sorted_children_dict, find_value
 
 
 class ScatterPlots(ObjectDataSelection):
@@ -62,12 +55,6 @@ class ScatterPlots(ObjectDataSelection):
         self.defaults = {}
         for key, value in self.params.to_dict().items():
             self.defaults[key] = value
-            '''
-            if isinstance(value, Entity):
-                self.defaults[key] = value.uid
-            else:
-                self.defaults[key] = value
-            '''
 
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
@@ -254,7 +241,6 @@ class ScatterPlots(ObjectDataSelection):
         self.size_min.observe(self.plot_selection, names="value")
         self.size_max.observe(self.plot_selection, names="value")
         self.size_markers.observe(self.plot_selection, names="value")
-        #self.refresh.observe(self.plot_selection, names="value")
 
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Save HTML"
@@ -337,7 +323,6 @@ class ScatterPlots(ObjectDataSelection):
                     self.objects,
                     VBox([Label("Downsampling"), self.downsampling]),
                     self.axes_options,
-                    #self.refresh,
                     self.figure,
                     self.trigger,
                 ]
@@ -527,7 +512,6 @@ class ScatterPlots(ObjectDataSelection):
 
             self.data_channels[channel] = data
 
-
     def set_channel_bounds(self, name):
         """
         Set the min and max values for the given axis channel
@@ -599,12 +583,9 @@ class ScatterPlots(ObjectDataSelection):
             "color",
             "size",
         ]:
-
             self.refresh.value = False
 
             widget = getattr(self, "_" + name)
-            param = getattr(self.params, name)
-
             val = widget.value
             widget.options = list(self.data_channels.keys())
 
@@ -612,10 +593,8 @@ class ScatterPlots(ObjectDataSelection):
                 widget.value = val
             elif "None" in list(self.data_channels.keys()):
                 widget.value = "None"
-                param = None
             else:
                 widget.value = None
-                param = None
 
         if refresh_plot:
             self.refresh.value = True
