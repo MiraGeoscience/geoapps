@@ -278,7 +278,7 @@ class BaseApplication:
             name += ".geoh5"
 
         workspace = Workspace(path.join(workpath, name))
-
+        workspace.close()
         live_link = False
         time.sleep(1)
         # Check if GA digested the file already
@@ -287,7 +287,7 @@ class BaseApplication:
             if not path.exists(workpath):
                 makedirs(workpath)
             workspace = Workspace(path.join(workpath, name))
-
+            workspace.close()
             live_link = True
             if not self.live_link.value:
                 print(
@@ -300,6 +300,7 @@ class BaseApplication:
 
         self.live_link.value = live_link
 
+        workspace.open()
         return workspace
 
     @property
