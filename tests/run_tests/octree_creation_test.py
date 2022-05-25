@@ -15,6 +15,7 @@ from geoh5py.workspace import Workspace
 from scipy import spatial
 
 from geoapps.octree_creation.application import OctreeMesh
+from geoapps.utils.testing import get_output_workspace
 from geoapps.utils.utils import treemesh_2_octree
 
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -111,6 +112,7 @@ def test_create_octree_app(tmp_path):
     )
     app.trigger_click(None)
     # Re-load the new mesh and compare
-    ws_B = Workspace(path.join(app.monitoring_directory, "Octree_Mesh.geoh5"))
-    rec_octree = ws_B.get_entity("Octree_Mesh")[0]
-    compare_entities(octree, rec_octree, ignore=["_uid"])
+
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
+        rec_octree = workspace.get_entity("Octree_Mesh")[0]
+        compare_entities(octree, rec_octree, ignore=["_uid"])
