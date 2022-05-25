@@ -72,7 +72,7 @@ def test_magnetotellurics_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params, warmstart=False)
-    fwr_driver.initialize()
+
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
@@ -146,7 +146,7 @@ def test_magnetotellurics_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
-    driver.initialize()
+
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
@@ -163,6 +163,7 @@ def test_magnetotellurics_run(
 
     # test that one channel works
     data_kwargs = {k: v for k, v in data_kwargs.items() if "zxx_real" in k}
+    geoh5.open()
     params = MagnetotelluricsParams(
         geoh5=geoh5,
         mesh=geoh5.get_entity("mesh")[0].uid,
@@ -175,7 +176,7 @@ def test_magnetotellurics_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
-    driver.initialize()
+
     driver.run()
 
 
