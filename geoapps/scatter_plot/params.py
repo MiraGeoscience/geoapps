@@ -383,4 +383,3 @@ class ScatterPlotParams(BaseParams):
     @size_markers.setter
     def size_markers(self, val):
         self.setter_validator("size_markers", val)
-

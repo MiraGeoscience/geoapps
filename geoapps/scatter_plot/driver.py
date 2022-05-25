@@ -12,12 +12,11 @@ import sys
 
 import numpy as np
 import plotly.graph_objects as go
-
 from geoh5py.ui_json import InputFile
 
+from geoapps.scatter_plot.params import ScatterPlotParams
 from geoapps.utils.plotting import format_axis, normalize
 from geoapps.utils.utils import random_sampling, symlog
-from geoapps.scatter_plot.params import ScatterPlotParams
 
 
 class ScatterPlotDriver:
@@ -114,7 +113,10 @@ class ScatterPlotDriver:
                 if np.sum(inbound) > 0:
                     z_axis[~inbound] = np.nan
                     z_axis, z_label, z_ticks, z_ticklabels = format_axis(
-                        self.params.z.name, z_axis, self.params.z_log, self.params.z_thresh
+                        self.params.z.name,
+                        z_axis,
+                        self.params.z_log,
+                        self.params.z_thresh,
                     )
                 else:
                     z_axis, z_label, z_ticks, z_ticklabels = None, None, None, None
@@ -125,7 +127,11 @@ class ScatterPlotDriver:
                     y=y_axis,
                     z=z_axis,
                     mode="markers",
-                    marker={"color": color, "size": size, "colorscale": self.params.color_maps},
+                    marker={
+                        "color": color,
+                        "size": size,
+                        "colorscale": self.params.color_maps,
+                    },
                 )
 
                 layout = {
@@ -147,12 +153,16 @@ class ScatterPlotDriver:
                 }
 
             else:
-            # 2D Scatter
+                # 2D Scatter
                 plot = go.Scatter(
                     x=x_axis,
                     y=y_axis,
                     mode="markers",
-                    marker={"color": color, "size": size, "colorscale": self.params.color_maps},
+                    marker={
+                        "color": color,
+                        "size": size,
+                        "colorscale": self.params.color_maps,
+                    },
                 )
 
                 layout = {
@@ -194,7 +204,7 @@ class ScatterPlotDriver:
         if self.params.downsampling is None:
             percent = 1
         else:
-            percent = self.params.downsampling/100
+            percent = self.params.downsampling / 100
 
         # Number of values that are not nan along all three axes
         size = np.sum(np.all(non_nan, axis=0))

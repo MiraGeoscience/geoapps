@@ -8,7 +8,6 @@
 from copy import deepcopy
 
 import plotly.express as px
-
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
 defaults = {
@@ -76,7 +75,7 @@ default_ui_json.update(
             "main": True,
             "min": 1,
             "max": 100,
-            "value": 100
+            "value": 100,
         },
         "x": {
             "association": ["Vertex"],
@@ -115,7 +114,7 @@ default_ui_json.update(
             "main": True,
             "value": 0.1,
             "dependency": "x_log",
-            "dependencyType": "enabled"
+            "dependencyType": "enabled",
         },
         "y": {
             "association": ["Vertex"],
@@ -154,7 +153,7 @@ default_ui_json.update(
             "main": True,
             "value": 0.1,
             "dependency": "y_log",
-            "dependencyType": "enabled"
+            "dependencyType": "enabled",
         },
         "z": {
             "association": ["Vertex"],
@@ -195,7 +194,7 @@ default_ui_json.update(
             "main": True,
             "value": 0.1,
             "dependency": "z_log",
-            "dependencyType": "enabled"
+            "dependencyType": "enabled",
         },
         "color": {
             "association": ["Vertex"],
@@ -236,7 +235,7 @@ default_ui_json.update(
             "main": True,
             "value": 0.1,
             "dependency": "color_log",
-            "dependencyType": "enabled"
+            "dependencyType": "enabled",
         },
         "color_maps": {
             "choiceList": px.colors.named_colorscales(),
@@ -245,7 +244,7 @@ default_ui_json.update(
             "main": True,
             "value": None,
             "enabled": False,
-            "optional": True
+            "optional": True,
         },
         "size": {
             "association": ["Vertex"],
@@ -286,7 +285,7 @@ default_ui_json.update(
             "main": True,
             "value": 0.1,
             "dependency": "size_log",
-            "dependencyType": "enabled"
+            "dependencyType": "enabled",
         },
         "size_markers": {
             "group": "Size",
@@ -296,13 +295,13 @@ default_ui_json.update(
             "max": 100,
             "value": 1,
             "enabled": False,
-            "optional": True
+            "optional": True,
         },
         "save": {
             "label": "Save as html",
             "main": True,
             "value": False,
-            "group": "Python run preferences"
+            "group": "Python run preferences",
         },
         "conda_environment": "geoapps",
         "run_command": "geoapps.scatter_plot.driver",
