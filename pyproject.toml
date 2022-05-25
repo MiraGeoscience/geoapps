@@ -63,7 +63,7 @@ zarr = "^2.8.1" # from simpgeg using Dask
 # Note - conda-lock does not support the syntaxe: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
 geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0_GA3.zip#sha256=None" }
-#geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", tag="0.3.0_GA3" }
+#geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", tag="release/0.3.0_GA3" }
 simpeg_archive = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None" }
 #simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="GEOPY-433_archive" }
 simpeg = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None", extras = ["dask"] }
