@@ -14,12 +14,12 @@ if TYPE_CHECKING:
     from geoh5py.objects import Octree
     from . import OctreeParams
 
-import os
 import sys
+from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import ObjectBase
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import InputFile, monitored_directory_copy
 
 from geoapps.base.application import BaseApplication
 from geoapps.utils.utils import treemesh_2_octree
@@ -79,20 +79,18 @@ class OctreeDriver:
 
         print("Finalizing...")
         treemesh.finalize()
-        print("Writing to file ")
+
         octree = treemesh_2_octree(
             self.params.geoh5, treemesh, name=self.params.ga_group_name
         )
 
-        if self.params.monitoring_directory is not None and os.path.exists(
+        if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
         ):
-            BaseApplication.live_link_output(self.params.monitoring_directory, octree)
+            monitored_directory_copy(self.params.monitoring_directory, octree)
 
-        print(
-            f"Octree mesh '{octree.name}' completed and exported to {os.path.abspath(self.params.geoh5.h5file)}"
-        )
-
+        else:
+            print(f"Result exported to: {workspace.h5file}")
         return octree
 
 

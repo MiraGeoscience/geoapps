@@ -9,6 +9,7 @@ import os
 import sys
 import uuid
 import warnings
+from time import time
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.shared import Entity
@@ -220,8 +221,9 @@ class OctreeMesh(ObjectDataSelection):
             except AttributeError:
                 continue
 
+        temp_geoh5 = f"{self.ga_group_name.value}_{time():.3f}.geoh5"
         new_workspace = self.get_output_workspace(
-            self.export_directory.selected_path, self.ga_group_name.value
+            self.export_directory.selected_path, temp_geoh5
         )
         for key, value in param_dict.items():
             if isinstance(value, ObjectBase):
