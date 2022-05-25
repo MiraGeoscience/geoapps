@@ -566,10 +566,10 @@ class ScatterPlots(ObjectDataSelection):
             elif hasattr(param, "value") is False:
                 new_params_dict[key] = param
             elif (key == "x") | (key == "y") | (key == "z") | (key == "color") | (key == "size"):
-                if (param.value == "None") | (param.value is None):
-                    new_params_dict[key] = None
-                else:
+                if (param.value != "None") & (param.value in self.data_channels.keys()):
                     new_params_dict[key] = self.data_channels[param.value]
+                else:
+                    new_params_dict[key] = None
             else:
                 new_params_dict[key] = param.value
 
@@ -591,6 +591,7 @@ class ScatterPlots(ObjectDataSelection):
         self.figure.update_layout(generated_figure.layout)
 
     def update_axes(self, refresh_plot=True):
+
         for name in [
             "x",
             "y",
@@ -600,8 +601,21 @@ class ScatterPlots(ObjectDataSelection):
         ]:
 
             self.refresh.value = False
+
             widget = getattr(self, "_" + name)
+            param = getattr(self.params, name)
+
+            val = widget.value
             widget.options = list(self.data_channels.keys())
+
+            if val in list(self.data_channels.keys()):
+                widget.value = val
+            elif "None" in list(self.data_channels.keys()):
+                widget.value = "None"
+                param = None
+            else:
+                widget.value = None
+                param = None
 
         if refresh_plot:
             self.refresh.value = True
