@@ -27,7 +27,7 @@ from ipywidgets import (
 from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
-from geoapps.scatter_plot import ScatterPlots
+from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.utils.utils import colors, hex_to_rgb, random_sampling
 
 
