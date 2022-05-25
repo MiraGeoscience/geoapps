@@ -77,7 +77,7 @@ default_ui_json.update(
             "main": True,
             "min": 1,
             "max": 100,
-            "value": None
+            "value": 100
         },
         "x": {
             "association": ["Vertex"],
@@ -94,7 +94,7 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
+            "value": 0,
         },
         "x_max": {
             "group": "x axis",
@@ -102,7 +102,7 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
+            "value": 0,
         },
         "x_log": {
             "group": "x axis",
@@ -114,7 +114,7 @@ default_ui_json.update(
             "group": "x axis",
             "label": "Threshold",
             "main": True,
-            "value": None,
+            "value": 0.1,
             "dependency": "x_log",
             "dependencyType": "enabled"
         },
@@ -133,7 +133,7 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
+            "value": 0,
         },
         "y_max": {
             "group": "y axis",
@@ -141,19 +141,19 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
-        },
-        "y_thresh": {
-            "group": "y axis",
-            "label": "Threshold",
-            "main": True,
-            "value": None,
+            "value": 0,
         },
         "y_log": {
             "group": "y axis",
             "label": "Log10",
             "main": True,
             "value": False,
+        },
+        "y_thresh": {
+            "group": "y axis",
+            "label": "Threshold",
+            "main": True,
+            "value": 0.1,
             "dependency": "y_log",
             "dependencyType": "enabled"
         },
@@ -174,7 +174,7 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
+            "value": 0,
         },
         "z_max": {
             "group": "z axis",
@@ -182,7 +182,7 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
+            "value": 0,
         },
         "z_log": {
             "group": "z axis",
@@ -191,12 +191,10 @@ default_ui_json.update(
             "value": False,
         },
         "z_thresh": {
-            "optional": True,
-            "enabled": False,
             "group": "z axis",
             "label": "Threshold",
             "main": True,
-            "value": None,
+            "value": 0.1,
             "dependency": "z_log",
             "dependencyType": "enabled"
         },
@@ -217,7 +215,7 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
+            "value": 0,
         },
         "color_max": {
             "group": "Color",
@@ -225,7 +223,7 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
+            "value": 0,
         },
         "color_log": {
             "group": "Color",
@@ -237,7 +235,7 @@ default_ui_json.update(
             "group": "Color",
             "label": "Threshold",
             "main": True,
-            "value": None,
+            "value": 0.1,
             "dependency": "color_log",
             "dependencyType": "enabled"
         },
@@ -247,8 +245,8 @@ default_ui_json.update(
             "label": "Colormaps",
             "main": True,
             "value": None,
-            "dependency": "color",
-            "dependencyType": "enabled"
+            "enabled": False,
+            "optional": True
         },
         "size": {
             "association": ["Vertex"],
@@ -267,7 +265,7 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
+            "value": 0,
         },
         "size_max": {
             "group": "Size",
@@ -275,7 +273,7 @@ default_ui_json.update(
             "main": True,
             "optional": True,
             "enabled": False,
-            "value": None,
+            "value": 0,
         },
         "size_log": {
             "group": "Size",
@@ -287,7 +285,7 @@ default_ui_json.update(
             "group": "Size",
             "label": "Threshold",
             "main": True,
-            "value": None,
+            "value": 0.1,
             "dependency": "size_log",
             "dependencyType": "enabled"
         },
@@ -297,9 +295,9 @@ default_ui_json.update(
             "main": True,
             "min": 1,
             "max": 100,
-            "value": None,
-            "dependency": "size",
-            "dependencyType": "enabled"
+            "value": 1,
+            "enabled": False,
+            "optional": True
         },
         "save": {
             "label": "Save as html",
