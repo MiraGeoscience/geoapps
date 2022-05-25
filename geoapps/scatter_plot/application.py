@@ -10,6 +10,7 @@ import os
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+from geoh5py.ui_json import InputFile
 from ipywidgets import (
     Checkbox,
     Dropdown,
@@ -21,8 +22,6 @@ from ipywidgets import (
     ToggleButton,
     VBox,
 )
-
-from geoh5py.ui_json import InputFile
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.scatter_plot.constants import app_initializer
@@ -85,10 +84,7 @@ class ScatterPlots(ObjectDataSelection):
         )
         self.y.observe(channel_bounds_setter, names="value")
         self.y.name = "y"
-        self._y_log = Checkbox(
-            description="Log10",
-            value=False,
-            indent=False)
+        self._y_log = Checkbox(description="Log10", value=False, indent=False)
         self._y_thresh = FloatText(
             description="Threshold",
             value=1e-1,
@@ -549,7 +545,13 @@ class ScatterPlots(ObjectDataSelection):
                 new_params_dict[key] = value
             elif hasattr(param, "value") is False:
                 new_params_dict[key] = param
-            elif (key == "x") | (key == "y") | (key == "z") | (key == "color") | (key == "size"):
+            elif (
+                (key == "x")
+                | (key == "y")
+                | (key == "z")
+                | (key == "color")
+                | (key == "size")
+            ):
                 if (param.value != "None") & (param.value in self.data_channels.keys()):
                     new_params_dict[key] = self.data_channels[param.value]
                 else:
