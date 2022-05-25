@@ -61,15 +61,13 @@ class ScatterPlots(ObjectDataSelection):
 
         self.defaults = {}
         for key, value in self.params.to_dict().items():
+            self.defaults[key] = value
+            '''
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
             else:
                 self.defaults[key] = value
-
-        self.custom_colormap = []
-        #self._indices = None
-
-
+            '''
 
         def channel_bounds_setter(caller):
             self.set_channel_bounds(caller["owner"].name)
@@ -100,7 +98,10 @@ class ScatterPlots(ObjectDataSelection):
         )
         self.y.observe(channel_bounds_setter, names="value")
         self.y.name = "y"
-        self._y_log = Checkbox(description="Log10", value=False, indent=False)
+        self._y_log = Checkbox(
+            description="Log10",
+            value=False,
+            indent=False)
         self._y_thresh = FloatText(
             description="Threshold",
             value=1e-1,
@@ -260,20 +261,11 @@ class ScatterPlots(ObjectDataSelection):
 
         super().__init__(**self.defaults)
 
-    @property
-    def n_values(self):
-        """
-        Number of values contained by the current object
-        """
-
-        obj, _ = self.get_selected_entities()
-        if obj is not None:
-            # Check number of points
-            if hasattr(obj, "centroids"):
-                return obj.n_cells
-            elif hasattr(obj, "vertices"):
-                return obj.n_vertices
-        return None
+        self._x.value = self.params.x.name
+        self._y.value = self.params.y.name
+        self._z.value = self.params.z.name
+        self._color.value = self.params.color.name
+        self._size.value = self.params.size.name
 
     @property
     def color(self):
@@ -610,7 +602,6 @@ class ScatterPlots(ObjectDataSelection):
             self.refresh.value = False
             widget = getattr(self, "_" + name)
             widget.options = list(self.data_channels.keys())
-            val = widget.value
 
         if refresh_plot:
             self.refresh.value = True
@@ -622,8 +613,6 @@ class ScatterPlots(ObjectDataSelection):
 
         channel_list = ["None"]
         channel_list.extend(obj.get_data_list())
-
-        #channel_list = obj.get_data_list()
 
         if "Visual Parameters" in channel_list:
             channel_list.remove("Visual Parameters")
