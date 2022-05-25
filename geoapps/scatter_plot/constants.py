@@ -6,7 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 from copy import deepcopy
-from uuid import UUID
 
 import plotly.express as px
 

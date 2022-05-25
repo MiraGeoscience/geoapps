@@ -9,8 +9,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-import numpy as np
-
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
@@ -136,7 +134,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def x_thresh(self) -> float | None:
         """
-        x thresh
+        Threshold for x log
         """
         return self._x_thresh
 
@@ -191,7 +189,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def y_thresh(self) -> float | None:
         """
-        y thresh
+        Threshold for y log
         """
         return self._y_thresh
 
@@ -246,7 +244,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def z_thresh(self) -> float | None:
         """
-        z thresh
+        Threshold for z log
         """
         return self._z_thresh
 
@@ -301,7 +299,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def color_thresh(self) -> float | None:
         """
-        color thresh
+        Threshold for color log
         """
         return self._color_thresh
 
@@ -367,7 +365,7 @@ class ScatterPlotParams(BaseParams):
     @property
     def size_thresh(self) -> float | None:
         """
-        size thresh
+        Threshold for size log
         """
         return self._size_thresh
 
