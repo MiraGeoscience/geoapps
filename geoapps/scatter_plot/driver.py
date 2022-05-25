@@ -49,13 +49,16 @@ class ScatterPlotDriver:
                 if max is None:
                     max = np.nanmax(vals)
                 inbound = (vals > min) * (vals < max)
-                vals[~inbound] = np.nan
-                size = normalize(vals)
+                if np.sum(inbound) > 0:
+                    vals[~inbound] = np.nan
+                    size = normalize(vals)
 
-                if self.params.size_log:
-                    size = symlog(size, self.params.size_thresh)
-                if self.params.size_markers is not None:
-                    size *= self.params.size_markers
+                    if self.params.size_log:
+                        size = symlog(size, self.params.size_thresh)
+                    if self.params.size_markers is not None:
+                        size *= self.params.size_markers
+                else:
+                    size = None
             else:
                 size = None
 
@@ -68,11 +71,14 @@ class ScatterPlotDriver:
                 if max is None:
                     max = np.nanmax(vals)
                 inbound = (vals > min) * (vals < max)
-                vals[~inbound] = np.nan
-                color = normalize(vals)
+                if np.sum(inbound) > 0:
+                    vals[~inbound] = np.nan
+                    color = normalize(vals)
 
-                if self.params.color_log:
-                    color = symlog(color, self.params.color_thresh)
+                    if self.params.color_log:
+                        color = symlog(color, self.params.color_thresh)
+                else:
+                    color = "black"
             else:
                 color = "black"
 
@@ -86,10 +92,13 @@ class ScatterPlotDriver:
             if max is None:
                 max = np.nanmax(x_axis)
             inbound = (x_axis >= min) * (x_axis <= max)
-            x_axis[~inbound] = np.nan
-            x_axis, x_label, x_ticks, x_ticklabels = format_axis(
-                self.params.x.name, x_axis, self.params.x_log, self.params.x_thresh
-            )
+            if np.sum(inbound) > 0:
+                x_axis[~inbound] = np.nan
+                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
+                    self.params.x.name, x_axis, self.params.x_log, self.params.x_thresh
+                )
+            else:
+                x_axis, x_label, x_ticks, x_ticklabels = None, None, None, None
 
             min = self.params.y_min
             max = self.params.y_max
@@ -98,10 +107,13 @@ class ScatterPlotDriver:
             if max is None:
                 max = np.nanmax(y_axis)
             inbound = (y_axis >= min) * (y_axis <= max)
-            y_axis[~inbound] = np.nan
-            y_axis, y_label, y_ticks, y_ticklabels = format_axis(
-                self.params.y.name, y_axis, self.params.y_log, self.params.y_thresh
-            )
+            if np.sum(inbound) > 0:
+                y_axis[~inbound] = np.nan
+                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
+                    self.params.y.name, y_axis, self.params.y_log, self.params.y_thresh
+                )
+            else:
+                y_axis, y_label, y_ticks, y_ticklabels = None, None, None, None
 
             if self.params.z is not None:
                 z_axis = self.params.z.values[indices]
@@ -113,10 +125,13 @@ class ScatterPlotDriver:
                 if max is None:
                     max = np.nanmax(z_axis)
                 inbound = (z_axis >= min) * (z_axis <= max)
-                z_axis[~inbound] = np.nan
-                z_axis, z_label, z_ticks, z_ticklabels = format_axis(
-                    self.params.z.name, z_axis, self.params.z_log, self.params.z_thresh
-                )
+                if np.sum(inbound) > 0:
+                    z_axis[~inbound] = np.nan
+                    z_axis, z_label, z_ticks, z_ticklabels = format_axis(
+                        self.params.z.name, z_axis, self.params.z_log, self.params.z_thresh
+                    )
+                else:
+                    z_axis, z_label, z_ticks, z_ticklabels = None, None, None, None
 
                 # 3D Scatter
 
