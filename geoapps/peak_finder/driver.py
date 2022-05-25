@@ -325,7 +325,7 @@ class PeakFinderDriver:
         ):
             monitored_directory_copy(self.params.monitoring_directory, output_group)
         else:
-            print(f"Result exported to: {workspace.h5file}")
+            print(f"Result exported to: {self.params.geoh5.h5file}")
 
 
 if __name__ == "__main__":

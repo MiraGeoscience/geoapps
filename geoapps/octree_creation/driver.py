@@ -90,7 +90,7 @@ class OctreeDriver:
             monitored_directory_copy(self.params.monitoring_directory, octree)
 
         else:
-            print(f"Result exported to: {workspace.h5file}")
+            print(f"Result exported to: {self.params.geoh5.h5file}")
         return octree
 
 
