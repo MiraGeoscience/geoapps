@@ -70,9 +70,9 @@ simpeg = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.
 #simpeg = { git = "https://github.com/sebhmg/simpeg.git", tag="GEOPY-433", extras = ["dask"] }
 
 [tool.poetry.dev-dependencies]
-pylint = "^2.3"
-pytest = "^3.0"
-pytest-cov = "^2.7.1"
+pylint = "^2.13"
+pytest = "^7.1.2"
+pytest-cov = "^3.0.0"
 requests = "^2.27.1" # for tests only
 
 [tool.poetry.extras]
