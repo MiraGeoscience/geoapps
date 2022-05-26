@@ -15,7 +15,9 @@ jobs:
         shell: pwsh
     runs-on: windows-latest
     env:
-      ARTIFACT_NAME: geoapps
+      ARTIFACT_NAME: geoapps-simpeg
+      CONDA_ENV_NAME: geoapps-simpeg
+      CONDA_LOCK_FILE: conda-py-3.9-lock.yml
     outputs:
       bundle: ${{ steps.conda_pack.outputs.filename }}
       artifact: ${{ env.ARTIFACT_NAME }}-${{ steps.conda_pack.outputs.name_suffix }}
@@ -36,37 +38,37 @@ jobs:
         with:
           path: ~/conda_pkgs_dir
           key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('conda-py3.7-win-64.lock') }}
-      - name: Setup conda env
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: geoapps
-          environment-file: conda-linux-64.lock
-          channel-priority: strict
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-      - name: Install in conda env from sources
-        shell: bash -l {0}
-        run: |
-          conda activate geoapps
-          python -m pip install . -vv
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles(env.CONDA_LOCK_FILE) }}
       - name: Activate conda base env
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-activate-base: true
           activate-environment: ""
+      - name: Install tools
+        id: conda_tools
+        run: |
+          conda install conda-pack conda-lock
+          conda-lock render -p win-64 -k env --no-dev-dependencies ${{ env.CONDA_LOCK_FILE }}
+      - name: Create the Conda environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: ${{ env.CONDA_ENV_NAME }}
+          environment-file: conda-win-64.lock
+          channel-priority: strict
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+      - name: Install in Conda env from sources
+        run: |
+          conda activate ${{ env.CONDA_ENV_NAME }}
+          python -m pip install . -vv --no-deps
       - name: Run conda pack
         id: conda_pack
         env:
           SUFFIX: ${{ steps.git-info.outputs.ref_name }}-${{ steps.git-info.outputs.short_sha }}
-        shell: bash -l {0}
         run: |
-          pip install conda-pack
-          mkdir -p build
-          OUTPUT_NAME=geoapps-$SUFFIX.zip
-          conda-pack -n geoapps --output build/$OUTPUT_NAME
-          echo ::set-output name=filename::$OUTPUT_NAME
-          echo ::set-output name=name_suffix::$SUFFIX
-          echo ::set-output name=mime_type::$(file -b --mime-type $OUTPUT_NAME)
+          $Env:OUTPUT_NAME = $CONDA_ENV_NAME-$SUFFIX.zip
+          conda-pack -n geoapps --output $Env:OUTPUT_NAME
+          echo ::set-output name=filename::$Env:OUTPUT_NAME
+          echo ::set-output name=name_suffix::$Env:SUFFIX
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ env.ARTIFACT_NAME }}-${{ steps.makeself.outputs.name_suffix }}
