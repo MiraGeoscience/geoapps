@@ -9,17 +9,24 @@
 
 import subprocess
 
-for py_ver in ["3.7", "3.8", "3.9"]:
-    print(f"# for Python version {py_ver}")
+for py_ver in ["3.9", "3.8", "3.7"]:
+    print(f"# Create multi-platform lock file for Python {py_ver}")
     subprocess.run(
-        [
-            "conda-lock",
-            "lock",
-            "-f",
-            "environment.yml",
-            "-f",
-            f"env-python-{py_ver}.yml",
-            "--filename-template",
-            f"conda-py-{py_ver}-{{platform}}.lock",
-        ]
+        f"conda-lock lock -f pyproject.toml -f env-python-{py_ver}.yml --lockfile conda-py-{py_ver}-lock.yml",
+        shell=True,
+        check=True,
+        stderr=subprocess.STDOUT,
+    )
+
+    print(
+        f"# Create per platform Conda env files for Python {py_ver} (no dev dependencies) "
+    )
+    subprocess.run(
+        (
+            "conda-lock render --no-dev-dependencies --extras full -k env"
+            f" --filename-template conda-py-{py_ver}-{{platform}}.lock conda-py-{py_ver}-lock.yml"
+        ),
+        shell=True,
+        check=True,
+        stderr=subprocess.STDOUT,
     )
