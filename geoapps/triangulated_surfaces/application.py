@@ -6,9 +6,12 @@
 #  (see LICENSE file at the root of this source code package).
 
 import re
+from time import time
 
 import numpy as np
+from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Surface
+from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
@@ -298,46 +301,50 @@ class Surface2D(ObjectDataSelection):
             for data_obj in data_list:
                 self.models += [data_obj.values[ind]]
 
-        if len(model_cells) > 0:
-            self.surface = Surface.create(
-                self.workspace,
-                name=string_name(self.export_as.value),
-                vertices=np.vstack(model_vertices),
-                cells=np.vstack(model_cells),
-                parent=self.ga_group,
-            )
-        else:
-            print(
-                "No triangulation found to export. Increase the max triangulation distance?"
-            )
-            return
+        temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.3f}.geoh5"
+        with self.get_output_workspace(
+            self.export_directory.selected_path, temp_geoh5
+        ) as workspace:
+            out_entity = ContainerGroup.create(workspace, name=self.ga_group_name.value)
 
-        if self.type.value == "Sections":
-            self.surface.add_data(
-                {
-                    "Line": {"values": np.hstack(line_ids)},
-                }
-            )
+            if len(model_cells) > 0:
+                self.surface = Surface.create(
+                    workspace,
+                    name=string_name(self.export_as.value),
+                    vertices=np.vstack(model_vertices),
+                    cells=np.vstack(model_cells),
+                    parent=out_entity,
+                )
+            else:
+                print(
+                    "No triangulation found to export. Increase the max triangulation distance?"
+                )
+                return
 
-            if len(self.models) > 0:
-                for uid, model in zip(self.data.value, self.models):
-                    self.surface.add_data(
-                        {
-                            self.data.uid_name_map[uid]: {"values": model},
-                        }
-                    )
-        else:
-            for data_obj, model in zip(data_list, self.models):
+            if self.type.value == "Sections":
                 self.surface.add_data(
                     {
-                        data_obj.name: {"values": model},
+                        "Line": {"values": np.hstack(line_ids)},
                     }
                 )
 
-        if self.live_link.value:
-            self.live_link_output(self.export_directory.selected_path, self.ga_group)
+                if len(self.models) > 0:
+                    for uid, model in zip(self.data.value, self.models):
+                        self.surface.add_data(
+                            {
+                                self.data.uid_name_map[uid]: {"values": model},
+                            }
+                        )
+            else:
+                for data_obj, model in zip(data_list, self.models):
+                    self.surface.add_data(
+                        {
+                            data_obj.name: {"values": model},
+                        }
+                    )
 
-        self.workspace.finalize()
+        if self.live_link.value:
+            monitored_directory_copy(self.export_directory.selected_path, out_entity)
 
     def type_change(self, _):
         if self.type.value == "Horizon":

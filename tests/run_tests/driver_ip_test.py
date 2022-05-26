@@ -65,8 +65,9 @@ def test_ip_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params)
-    fwr_driver.initialize()
+
     fwr_driver.run()
+
     geoh5 = Workspace(geoh5.h5file)
     potential = geoh5.get_entity("Iteration_0_ip")[0]
     # Run the inverse
@@ -97,7 +98,7 @@ def test_ip_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
-    driver.initialize()
+
     driver.run()
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid

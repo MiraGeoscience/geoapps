@@ -66,7 +66,6 @@ class BaseApplication:
     _workspace_geoh5 = None
     _monitoring_directory = None
     _ga_group_name = None
-    _ga_group = None
     _trigger = None
     _figure = None
     _refresh = None
@@ -104,18 +103,18 @@ class BaseApplication:
         self._live_link.observe(self.live_link_choice)
         self._export_directory = FileChooser(show_only_dirs=True)
         self._export_directory._select.on_click(self.export_browser_change)
-        self.live_link_panel = VBox([self.live_link])
-        self.output_panel = VBox(
-            [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
-        )
         self.monitoring_panel = VBox(
             [
-                Label("Monitoring folder", style={"description_width": "initial"}),
+                Label("Save to:", style={"description_width": "initial"}),
                 self.export_directory,
             ]
         )
+        self.live_link_panel = VBox([self.live_link, self.monitoring_panel])
+        self.output_panel = VBox(
+            [VBox([self.trigger, self.ga_group_name]), self.live_link_panel]
+        )
         self.trigger.on_click(self.trigger_click)
-        self.ga_group_name.observe(self.ga_group_name_update)
+
         self.__populate__(**self.defaults)
 
         for key in list(self.__dict__.keys()):
@@ -207,10 +206,9 @@ class BaseApplication:
 
             if getattr(self, "_params", None) is not None:
                 setattr(self.params, "monitoring_directory", self.monitoring_directory)
-
-            self.live_link_panel.children = [self.live_link, self.monitoring_panel]
+            self.monitoring_panel.children[0].value = "Monitoring path:"
         else:
-            self.live_link_panel.children = [self.live_link]
+            self.monitoring_panel.children[0].value = "Save to:"
 
     @property
     def main(self):
@@ -260,31 +258,6 @@ class BaseApplication:
         return self._file_browser
 
     @property
-    def ga_group(self):
-
-        if getattr(self, "_ga_group", None) is None:
-
-            groups = [
-                group
-                for group in self.workspace.groups
-                if group.name == self.ga_group_name.value
-            ]
-            if any(groups):
-                self._ga_group = groups[0]
-            elif self.ga_group_name.value == "":
-                self._ga_group = self.workspace.root
-            else:
-                self._ga_group = ContainerGroup.create(
-                    self.workspace, name=string_name(self.ga_group_name.value)
-                )
-                if self.live_link.value:
-                    self.live_link_output(
-                        self.export_directory.selected_path, self._ga_group
-                    )
-
-        return self._ga_group
-
-    @property
     def ga_group_name(self) -> Text:
         """
         Widget to assign a group name to export to
@@ -322,6 +295,7 @@ class BaseApplication:
             name += ".geoh5"
 
         workspace = Workspace(path.join(workpath, name))
+        workspace.close()
         live_link = False
         time.sleep(1)
         # Check if GA digested the file already
@@ -330,6 +304,7 @@ class BaseApplication:
             if not path.exists(workpath):
                 makedirs(workpath)
             workspace = Workspace(path.join(workpath, name))
+            workspace.close()
             live_link = True
             if not self.live_link.value:
                 print(
@@ -341,6 +316,8 @@ class BaseApplication:
             )
 
         self.live_link.value = live_link
+
+        workspace.open()
         return workspace
 
     @property
@@ -467,9 +444,6 @@ class BaseApplication:
         if self.h5file is not None:
             value = working_copy(self.h5file)
             self.h5file = value
-
-    def ga_group_name_update(self, _):
-        self._ga_group = None
 
     def trigger_click(self, _):
         for key, value in self.__dict__.items():
