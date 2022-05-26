@@ -51,7 +51,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "x_max": {
         "group": "x axis",
@@ -59,7 +61,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "x_log": {
         "group": "x axis",
@@ -92,7 +96,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "y_max": {
         "group": "y axis",
@@ -100,7 +106,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "y_log": {
         "group": "y axis",
@@ -135,7 +143,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "z_max": {
         "group": "z axis",
@@ -143,7 +153,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "z_log": {
         "group": "z axis",
@@ -178,7 +190,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "color_max": {
         "group": "Color",
@@ -186,7 +200,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "color_log": {
         "group": "Color",
@@ -325,7 +341,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "size_max": {
         "group": "Size",
@@ -333,7 +351,9 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "value": 0
+        "value": 0.0,
+        "precision": 1,
+        "lineEdit": false
     },
     "size_log": {
         "group": "Size",

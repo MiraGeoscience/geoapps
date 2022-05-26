@@ -110,7 +110,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("x_log", val)
 
     @property
-    def x_min(self) -> int | None:
+    def x_min(self) -> float | None:
         """
         Minimum value for x data
         """
@@ -121,7 +121,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("x_min", val)
 
     @property
-    def x_max(self) -> int | None:
+    def x_max(self) -> float | None:
         """
         Max value for x data
         """
@@ -165,7 +165,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("y_log", val)
 
     @property
-    def y_min(self) -> int | None:
+    def y_min(self) -> float | None:
         """
         Minimum value for y data
         """
@@ -176,7 +176,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("y_min", val)
 
     @property
-    def y_max(self) -> int | None:
+    def y_max(self) -> float | None:
         """
         Max value for y data
         """
@@ -220,7 +220,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("z_log", val)
 
     @property
-    def z_min(self) -> int | None:
+    def z_min(self) -> float | None:
         """
         Minimum value for z data
         """
@@ -231,7 +231,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("z_min", val)
 
     @property
-    def z_max(self) -> int | None:
+    def z_max(self) -> float | None:
         """
         Max value for z data
         """
@@ -275,7 +275,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("color_log", val)
 
     @property
-    def color_min(self) -> int | None:
+    def color_min(self) -> float | None:
         """
         Minimum value for color data
         """
@@ -286,7 +286,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("color_min", val)
 
     @property
-    def color_max(self) -> int | None:
+    def color_max(self) -> float | None:
         """
         Max value for color data
         """
@@ -341,7 +341,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("size_log", val)
 
     @property
-    def size_min(self) -> int | None:
+    def size_min(self) -> float | None:
         """
         Minimum value for size data
         """
@@ -352,7 +352,7 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("size_min", val)
 
     @property
-    def size_max(self) -> int | None:
+    def size_max(self) -> float | None:
         """
         Max value for size data
         """
