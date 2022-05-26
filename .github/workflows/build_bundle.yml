@@ -47,7 +47,7 @@ jobs:
       - name: Install tools
         id: conda_tools
         run: |
-          conda install conda-pack conda-lock
+          conda install -c conda-forge conda-pack conda-lock
           conda-lock render -p win-64 -k env --no-dev-dependencies ${{ env.CONDA_LOCK_FILE }}
       - name: Create the Conda environment
         uses: conda-incubator/setup-miniconda@v2
