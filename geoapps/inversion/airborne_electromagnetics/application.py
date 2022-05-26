@@ -1333,38 +1333,38 @@ class InversionApp(PlotSelection2D):
             self.trigger.button_style = "danger"
             return
 
-        new_workspace = Workspace(
+        with Workspace(
             os.path.join(
                 self.export_directory.selected_path,
                 self.ga_group_name.value + ".geoh5",
             )
-        )
+        ) as new_workspace:
 
-        obj, data = self.get_selected_entities()
-        new_obj = obj.copy(parent=new_workspace, copy_children=False)
-        for d in data:
-            d.copy(parent=new_obj)
+            obj, data = self.get_selected_entities()
+            new_obj = obj.copy(parent=new_workspace, copy_children=False)
+            for d in data:
+                d.copy(parent=new_obj)
 
-        _, data = self.sensor.get_selected_entities()
-        for d in data:
-            d.copy(parent=new_obj)
+            _, data = self.sensor.get_selected_entities()
+            for d in data:
+                d.copy(parent=new_obj)
 
-        _, data = self.lines.get_selected_entities()
-        for d in data:
-            d.copy(parent=new_obj)
+            _, data = self.lines.get_selected_entities()
+            for d in data:
+                d.copy(parent=new_obj)
 
-        for elem in [
-            self.topography,
-            self.inversion_parameters.starting_model,
-            self.inversion_parameters.reference_model,
-            self.inversion_parameters.susceptibility_model,
-        ]:
-            obj, data = elem.get_selected_entities()
+            for elem in [
+                self.topography,
+                self.inversion_parameters.starting_model,
+                self.inversion_parameters.reference_model,
+                self.inversion_parameters.susceptibility_model,
+            ]:
+                obj, data = elem.get_selected_entities()
 
-            if obj is not None:
-                new_obj = obj.copy(parent=new_workspace, copy_children=False)
-                for d in data:
-                    d.copy(parent=new_obj)
+                if obj is not None:
+                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
+                    for d in data:
+                        d.copy(parent=new_obj)
 
         input_dict["workspace"] = os.path.abspath(new_workspace.h5file)
         input_dict["save_to_geoh5"] = os.path.abspath(new_workspace.h5file)

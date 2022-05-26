@@ -258,7 +258,9 @@ class ObjectDataSelection(BaseApplication):
 
             data = []
             for value in values:
-                if any([pg.uid == value for pg in obj.property_groups]):
+                if obj.property_groups is not None and any(
+                    [pg.uid == value for pg in obj.property_groups]
+                ):
                     data += [
                         self.workspace.get_entity(prop)[0]
                         for prop in obj.find_or_create_property_group(

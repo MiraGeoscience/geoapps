@@ -39,8 +39,9 @@ dependencies:
   - pymatsolver>=0.1.1,<0.2.0
   - zarr>=2.8.1,<3.0.0
   - pip
+  - conda-forge::geoana=0.1.2
   - pip:
-    - git+https://github.com/MiraGeoscience/geoh5py.git@release/0.3.0_GA3#egg=geoh5py
+    - git+https://github.com/MiraGeoscience/geoh5py.git@release/0.3.0#egg=geoh5py
     - git+https://github.com/sebhmg/simpeg.git@GEOPY-433_archive#egg=simpeg_archive
     - git+https://github.com/sebhmg/simpeg.git@GEOPY-433#egg=simpeg
 
