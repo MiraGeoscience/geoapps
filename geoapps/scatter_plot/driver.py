@@ -31,7 +31,10 @@ class ScatterPlotDriver:
 
         if (self.params.x is not None) & (self.params.y is not None):
 
-            indices = self.get_indices()
+            if (self.params.downsampling == 100) | self.params.downsampling is None:
+                indices = np.full(len(self.params.x.values), True)
+            else:
+                indices = self.get_indices()
 
             size = None
             if self.params.size is not None:
@@ -201,10 +204,7 @@ class ScatterPlotDriver:
             np.nanmax(values, axis=1) - np.nanmin(values, axis=1)
         )[:, None]
 
-        if self.params.downsampling is None:
-            percent = 1
-        else:
-            percent = self.params.downsampling / 100
+        percent = self.params.downsampling / 100
 
         # Number of values that are not nan along all three axes
         size = np.sum(np.all(non_nan, axis=0))
@@ -221,11 +221,15 @@ class ScatterPlotDriver:
 
 
 if __name__ == "__main__":
+    print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
     params = ScatterPlotParams(ifile)
     driver = ScatterPlotDriver(params)
+    print("Loaded. Building the plotly scatterplot . . .")
     figure = driver.run()
     figure.show()
     if params.save:
         figure.write_html(ifile.path + "/Crossplot.html")
+        print("Figure saved to " + ifile.path + "/Crossplot.html")
+    print("Done")
