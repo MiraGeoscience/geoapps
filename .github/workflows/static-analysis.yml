@@ -24,31 +24,27 @@ jobs:
       matrix:
         python_ver: [3.7]
     runs-on: ubuntu-latest
+    env:
+      CONDA_LOCK_ENV_FILE: conda-py-{{matrix.python_ver}}-linux-64-dev.lock.yml
     steps:
       - uses: actions/checkout@v2
       - name: Cache conda
         uses: actions/cache@v2
         env:
           # Increase this value to reset cache if environment.yml has not changed
-          CACHE_NUMBER: 2
+          CACHE_NUMBER: 1
         with:
           path: ~/conda_pkgs_dir
           key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles(env.CONDA_LOCK_ENV_FILE) }}
       - name: Setup conda env
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: geoapps
           python-version: ${{ matrix.python_ver }}
           channel-priority: flexible
-          environment-file: environment.yml
+          environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-      - name: Install dev packages
-        shell: bash -l {0}
-        run: |
-          conda activate geoapps
-          python --version
-          conda install --file dev-extra-requirements.txt
       - name: Run pylint on modified files
         if: github.event_name == 'pull_request'
         shell: bash -l {0}
