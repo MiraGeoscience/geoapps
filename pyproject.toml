@@ -87,7 +87,7 @@ full = [
 
 [tool.conda-lock]
 platforms = ['win-64', 'osx-64', 'linux-64']
-channels = ['conda-forge', 'main']
+channels = ['conda-forge', 'defaults']
 
 [tool.isort]
 # settings for compatibility between ``isort`` and ``black`` formatting
