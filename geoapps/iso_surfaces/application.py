@@ -8,15 +8,17 @@
 import os
 import uuid
 
+from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Surface
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
+from geoh5py.ui_json.utils import monitored_directory_copy
 
 from geoapps.utils.importing import soft_import
 
 (FloatText, HBox, Label, Text, VBox) = soft_import(
     "ipywidgets", objects=["FloatText", "HBox", "Label", "Text", "VBox"]
 )
-
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.iso_surfaces.constants import app_initializer
