@@ -355,8 +355,6 @@ class InversionModel:
                 values[~model] = np.nan
                 data_obj[0].values = values
 
-        self.workspace.finalize()
-
     def _get(self, name: str) -> np.ndarray | None:
         """
         Return model vector from value stored in params class.
