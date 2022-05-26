@@ -65,10 +65,10 @@ jobs:
         env:
           SUFFIX: ${{ steps.git-info.outputs.ref_name }}-${{ steps.git-info.outputs.short_sha }}
         run: |
-          $Env:OUTPUT_NAME = $CONDA_ENV_NAME-$SUFFIX.zip
-          conda-pack -n geoapps --output $Env:OUTPUT_NAME
-          echo ::set-output name=filename::$Env:OUTPUT_NAME
-          echo ::set-output name=name_suffix::$Env:SUFFIX
+          $OUTPUT_NAME = ${{ env.CONDA_ENV_NAME }}-${{ env.SUFFIX }}.zip
+          conda-pack -n geoapps --output $OUTPUT_NAME
+          echo ::set-output name=filename::$OUTPUT_NAME
+          echo ::set-output name=name_suffix::${{ env.SUFFIX }}
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ env.ARTIFACT_NAME }}-${{ steps.makeself.outputs.name_suffix }}
