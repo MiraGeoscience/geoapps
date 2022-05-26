@@ -10,6 +10,7 @@ import uuid
 import warnings
 from copy import deepcopy
 from os import path
+from time import time
 from typing import Optional
 
 import numpy as np
@@ -1311,8 +1312,9 @@ class PeakFinder(ObjectDataSelection):
                 ui_json[name]["group"] = f"Group {label}"
                 param_dict[name] = group[member]
 
+        temp_geoh5 = f"{self.ga_group_name.value}_{time():.3f}.geoh5"
         new_workspace = self.get_output_workspace(
-            self.export_directory.selected_path, self.ga_group_name.value
+            self.export_directory.selected_path, temp_geoh5
         )
 
         for key, value in param_dict.items():
