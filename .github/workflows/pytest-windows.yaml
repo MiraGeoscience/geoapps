@@ -28,7 +28,7 @@ jobs:
         shell: pwsh
     runs-on: windows-latest
     env:
-      CONDA_LOCK_ENV_FILE: conda-py-{{matrix.python_ver}}-win-64-dev.lock.yml
+      CONDA_LOCK_ENV_FILE: conda-py-${{ matrix.python_ver }}-win-64-dev.lock.yml
     steps:
       - uses: actions/checkout@v2
       - name: Cache conda
