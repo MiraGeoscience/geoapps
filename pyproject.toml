@@ -26,6 +26,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.7"
 
+dask = {version = "2022.*", extras = ["distributed"]}
 discretize = "~0.7.4" # also in simpeg
 fsspec = "2022.*" # also in simpeg
 matplotlib = "^3.5.1" # also in simpeg and geoana
@@ -36,7 +37,6 @@ scipy = "^1.7.3" # also in simpeg and geoana
 tqdm = "^4.64.0"
 
 ## "soft" dependencies
-dask = {version = "2022.*", extras = ["distributed"]}
 fiona = {version = "^1.8.21", optional = true}
 gdal = {version = "^3.4.3", optional = true}
 ipyfilechooser = {version = "~0.6.0", optional = true}
