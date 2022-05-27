@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 import multiprocessing
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from multiprocessing.pool import ThreadPool
 from time import time
 from uuid import UUID
@@ -54,6 +53,7 @@ class InversionDriver:
         self.survey = None
         self.active_cells = None
         self.running = False
+        sys.stdout = InversionLogger("SimPEG.log", self)
         self.initialize()
 
     @property
@@ -223,6 +223,7 @@ class InversionDriver:
         self.start_inversion_message()
         self.running = True
         self.inversion.run(self.starting_model)
+        sys.stdout.close()
 
     def start_inversion_message(self):
 
@@ -231,7 +232,6 @@ class InversionDriver:
         chi_start = (
             self.params.starting_chi_factor if has_chi_start else self.params.chi_factor
         )
-        print(f"Starting {self.params.inversion_style} inversion...")
         print(
             "Target Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
                 0.5 * self.params.chi_factor * len(self.survey.std),
@@ -377,6 +377,7 @@ class InversionLogger:
         self.driver = driver
         self.terminal = sys.stdout
         self.log = open(self.get_path(logfile), "w")
+        self.initial_time = time()
 
         date_time = datetime.now().strftime("%b-%d-%Y:%H:%M:%S")
         self.write(f"SimPEG {driver.inversion_type} inversion started {date_time}\n")
@@ -386,7 +387,21 @@ class InversionLogger:
         self.log.write(message)
         self.log.flush()
 
+    def format_seconds(self, seconds):
+        days = seconds // (24 * 3600)
+        seconds = seconds % (24 * 3600)
+        hours = seconds // 3600
+        seconds = seconds % 3600
+        minutes = seconds // 60
+        seconds = seconds % 60
+        return days, hours, minutes, seconds
+
     def close(self):
+        elapsed_time = timedelta(seconds=time() - self.initial_time).seconds
+        days, hours, minutes, seconds = self.format_seconds(elapsed_time)
+        self.write(
+            f"Total runtime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.\n"
+        )
         self.terminal.close()
 
     def flush(self):
@@ -441,13 +456,10 @@ def start_inversion(filepath=None, **kwargs):
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
-    sys.stdout = InversionLogger("SimPEG.log", driver)
     driver.run()
-    sys.stdout.close()
 
 
 if __name__ == "__main__":
-    ct = time()
+
     filepath = sys.argv[1]
     start_inversion(filepath)
-    print(f"Total runtime: {datetime.timedelta(seconds=time() - ct)}")
