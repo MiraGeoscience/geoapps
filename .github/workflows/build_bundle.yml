@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
     env:
       PYTHONUTF8: 1
-      ARTIFACT_NAME: geoapps-simpeg
+      ARTIFACT_NAME: geoapps-simpeg.conda-pack
       CONDA_ENV_NAME: geoapps-simpeg
       CONDA_LOCK_FILE: conda-py-3.9-lock.yml
     outputs:
@@ -74,13 +74,13 @@ jobs:
         shell: bash -l {0}
         run: |
           conda install -c conda-forge conda-pack
-          set OUTPUT_NAME = ${{ env.CONDA_ENV_NAME }}-${{ env.SUFFIX }}.zip
-          conda-pack -n geoapps --output $OUTPUT_NAME
+          OUTPUT_NAME=${{ env.CONDA_ENV_NAME }}-${{ env.SUFFIX }}.zip
+          conda-pack -n ${{ env.CONDA_ENV_NAME }} --output $OUTPUT_NAME
           echo ::set-output name=filename::$OUTPUT_NAME
           echo ::set-output name=name_suffix::${{ env.SUFFIX }}
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ARTIFACT_NAME }}-${{ steps.makeself.outputs.name_suffix }}
+          name: ${{ env.ARTIFACT_NAME }}.${{ steps.makeself.outputs.name_suffix }}
           path: ${{ steps.makeself.outputs.filename }}
           retention-days: 2
           if-no-files-found: error
