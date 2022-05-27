@@ -29,9 +29,11 @@ class EdgeDetectionDriver:
     def __init__(self, params: EdgeDetectionParams):
         self.params: EdgeDetectionParams = params
         self.collections = None
-        self.trigger = None
+        self.trigger_vertices = None
+        self.trigger_cells = None
         self._unique_object = {}
         self.indices = None
+        self.object_lines = None
 
     def run(self):
         """ """
@@ -114,19 +116,25 @@ class EdgeDetectionDriver:
                         )
             if coords:
                 coord = np.vstack(coords)
-                self.params.objects.lines = coord
+                self.object_lines = coord
                 self.plot_store_lines()
             else:
-                self.params.objects.lines = None
+                self.object_lines = None
 
     def plot_store_lines(self):
 
         if hasattr(self.params, "resolution"):
-            resolution = self.params.resolution.value
+            resolution = self.params.resolution
         else:
             resolution = 50
 
-        xy = self.params.objects.lines
+        print(self.params.window_center_x)
+        print(self.params.window_center_y)
+        print(self.params.window_width)
+        print(self.params.window_height)
+        print(self.params.window_azimuth)
+
+        xy = self.object_lines
         indices_1 = filter_xy(
             xy[1::2, 0],
             xy[1::2, 1],
@@ -165,7 +173,7 @@ class EdgeDetectionDriver:
             np.ones(2),
         ).astype(bool)
 
-        xy = self.params.objects.lines[indices, :2]
+        xy = self.object_lines[indices, :2]
         self.collections = [
             collections.LineCollection(
                 np.reshape(xy, (-1, 2, 2)), colors="k", linewidths=2
@@ -173,39 +181,41 @@ class EdgeDetectionDriver:
         ]
 
         if np.any(xy):
-            vertices = np.vstack(self.params.objects.lines[indices, :])
+            vertices = np.vstack(self.object_lines[indices, :])
             cells = np.arange(vertices.shape[0]).astype("uint32").reshape((-1, 2))
             if np.any(cells):
-                self.trigger.vertices = vertices
-                self.trigger.cells = cells
+                self.trigger_vertices = vertices
+                self.trigger_cells = cells
         else:
-            self.trigger.vertices = None
-            self.trigger.cells = None
+            self.trigger_vertices = None
+            self.trigger_cells = None
 
     def export(self):
         # entity, _ = self.get_selected_entities()
         entity = self.params.objects
-        if getattr(self.trigger, "vertices", None) is not None:
+        print(self.trigger_vertices)
+        if self.trigger_vertices is not None:
             name = string_name(self.params.export_as)
             temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
 
             workspace = Workspace(temp_geoh5)
+            print(temp_geoh5)
 
             out_entity = ContainerGroup.create(
                 workspace,
-                name=self.params.ga_group_name.value,
-                uid=self._unique_object.get(self.params.ga_group_name.value, None),
+                name=self.params.ga_group_name,
+                uid=self._unique_object.get(self.params.ga_group_name, None),
             )
             curve = Curve.create(
                 workspace,
                 name=name,
-                vertices=self.trigger.vertices,
-                cells=self.trigger.cells,
+                vertices=self.trigger_vertices,
+                cells=self.trigger_cells,
                 parent=out_entity,
                 uid=self._unique_object.get(name, None),
             )
             self._unique_object[name] = curve.uid
-            self._unique_object[self.params.ga_group_name.value] = out_entity.uid
+            self._unique_object[self.params.ga_group_name] = out_entity.uid
 
 
 if __name__ == "__main__":
