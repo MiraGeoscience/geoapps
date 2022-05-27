@@ -50,9 +50,9 @@ empymod = "^2.1.3" # from simpeg and geoana
 geoana = "~0.1.2" # from simpeg
 h5py = "^3.2.1" # from geoh5py
 mkl = "2022.*" # from simpeg
-properties = "~0.5.2" # from simpeg and geoana
+properties = "~0.6.1" # from simpeg and geoana
 pydiso = "~0.0.3" # from simpeg
-pymatsolver = "~0.1.1" # from simpeg
+pymatsolver = "~0.2.0" # from simpeg
 zarr = "^2.8.1" # from simpgeg using Dask
 
 ## pip dependencies

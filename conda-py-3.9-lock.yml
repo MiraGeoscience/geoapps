@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: f44e6b1be385c364ec91e1ca1322c1569444545dccf1dcfbc9ee473b17be702c
-    osx-64: a41452293d0a2a117aefabb086d13705b19fe267071eda863959a34d17040326
-    win-64: 6d29ad38f1677f723e3b3e64f8f339ba5dd1c86685ea16a6f1fbbed02e9f3497
+    linux-64: c91328f0bb22b8e37411c0b1e09f01eb57dbc3e777025de942fc71a3f3f91558
+    osx-64: f4832af806b18719692086cfce7896fce0523fadf95290498bbb2326640b091a
+    win-64: 9384ca02215d7d5e079261636f15f247aea0bd7708a7abeba262dbbcadb2387c
   platforms:
   - linux-64
   - osx-64
@@ -2817,16 +2817,15 @@ package:
 - category: full
   dependencies:
     python: '>=3.6'
-    six: ''
     tenacity: '>=6.2.0'
   hash:
-    md5: a90144286004fa7643d01b370bb82178
-    sha256: a4aa162445e1533c9d305a8704b3e88a88938574d829b217dcfab16fb78145f6
+    md5: 72678df73b10b2a10eb692d55482e2a6
+    sha256: 5e9474ce662f4b05f097a9f9f66edfabad7c714574d077958b99f85dc71535d1
   manager: conda
   name: plotly
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_1.tar.bz2
   version: 5.8.0
 - category: dev
   dependencies:
@@ -3751,14 +3750,14 @@ package:
     six: ''
     vectormath: '>=0.1.4'
   hash:
-    md5: b336a4567e40a868e93c5b19abd66660
-    sha256: 312b3e44e240beb713a94cc6ccb585a08987c7d31e300a3b4023ad6b566911a0
+    md5: 62052fa8409d12536ff149e25b0e9905
+    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
   manager: conda
   name: properties
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.5.6-py_0.tar.bz2
-  version: 0.5.6
+  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
+  version: 0.6.1
 - category: main
   dependencies:
     libgcc-ng: '>=9.4.0'
@@ -3978,19 +3977,18 @@ package:
 - category: main
   dependencies:
     numpy: ''
-    properties: ''
-    pymkl: '>=0.0.3'
+    pydiso: ''
     python: '>=3.6'
-    scipy: '>=0.13'
+    scipy: ''
   hash:
-    md5: be25af88b04fd64a49889945cc51db2c
-    sha256: 4d377633a2142591a7ab4c97ad6835fec1d908841a2fbd58977a64552fbd67d3
+    md5: d824e3266c690c6b8c662cf19fa62b3f
+    sha256: e1d39044c41541a09ba846c51c2ba315858622dfb4e7eaebcb0823316159fab8
   manager: conda
   name: pymatsolver
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.1.3-pyhd8ed1ab_0.tar.bz2
-  version: 0.1.3
+  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.2.0-pyhd8ed1ab_0.tar.bz2
+  version: 0.2.0
 - category: full
   dependencies:
     cloudpickle: '>=0.2.1'
@@ -6801,16 +6799,15 @@ package:
 - category: full
   dependencies:
     python: '>=3.6'
-    six: ''
     tenacity: '>=6.2.0'
   hash:
-    md5: a90144286004fa7643d01b370bb82178
-    sha256: a4aa162445e1533c9d305a8704b3e88a88938574d829b217dcfab16fb78145f6
+    md5: 72678df73b10b2a10eb692d55482e2a6
+    sha256: 5e9474ce662f4b05f097a9f9f66edfabad7c714574d077958b99f85dc71535d1
   manager: conda
   name: plotly
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_1.tar.bz2
   version: 5.8.0
 - category: dev
   dependencies:
@@ -7835,14 +7832,14 @@ package:
     six: ''
     vectormath: '>=0.1.4'
   hash:
-    md5: b336a4567e40a868e93c5b19abd66660
-    sha256: 312b3e44e240beb713a94cc6ccb585a08987c7d31e300a3b4023ad6b566911a0
+    md5: 62052fa8409d12536ff149e25b0e9905
+    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
   manager: conda
   name: properties
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.5.6-py_0.tar.bz2
-  version: 0.5.6
+  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
+  version: 0.6.1
 - category: main
   dependencies:
     mkl: '>=2022.0.0,<2023.0a0'
@@ -8074,19 +8071,18 @@ package:
 - category: main
   dependencies:
     numpy: ''
-    properties: ''
-    pymkl: '>=0.0.3'
+    pydiso: ''
     python: '>=3.6'
-    scipy: '>=0.13'
+    scipy: ''
   hash:
-    md5: be25af88b04fd64a49889945cc51db2c
-    sha256: 4d377633a2142591a7ab4c97ad6835fec1d908841a2fbd58977a64552fbd67d3
+    md5: d824e3266c690c6b8c662cf19fa62b3f
+    sha256: e1d39044c41541a09ba846c51c2ba315858622dfb4e7eaebcb0823316159fab8
   manager: conda
   name: pymatsolver
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.1.3-pyhd8ed1ab_0.tar.bz2
-  version: 0.1.3
+  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.2.0-pyhd8ed1ab_0.tar.bz2
+  version: 0.2.0
 - category: dev
   dependencies:
     certifi: '>=2017.4.17'
@@ -10528,16 +10524,15 @@ package:
 - category: full
   dependencies:
     python: '>=3.6'
-    six: ''
     tenacity: '>=6.2.0'
   hash:
-    md5: a90144286004fa7643d01b370bb82178
-    sha256: a4aa162445e1533c9d305a8704b3e88a88938574d829b217dcfab16fb78145f6
+    md5: 72678df73b10b2a10eb692d55482e2a6
+    sha256: 5e9474ce662f4b05f097a9f9f66edfabad7c714574d077958b99f85dc71535d1
   manager: conda
   name: plotly
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_1.tar.bz2
   version: 5.8.0
 - category: dev
   dependencies:
@@ -11816,14 +11811,14 @@ package:
     six: ''
     vectormath: '>=0.1.4'
   hash:
-    md5: b336a4567e40a868e93c5b19abd66660
-    sha256: 312b3e44e240beb713a94cc6ccb585a08987c7d31e300a3b4023ad6b566911a0
+    md5: 62052fa8409d12536ff149e25b0e9905
+    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
   manager: conda
   name: properties
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.5.6-py_0.tar.bz2
-  version: 0.5.6
+  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
+  version: 0.6.1
 - category: main
   dependencies:
     mkl: '>=2022.0.0,<2023.0a0'
@@ -12076,19 +12071,18 @@ package:
 - category: main
   dependencies:
     numpy: ''
-    properties: ''
-    pymkl: '>=0.0.3'
+    pydiso: ''
     python: '>=3.6'
-    scipy: '>=0.13'
+    scipy: ''
   hash:
-    md5: be25af88b04fd64a49889945cc51db2c
-    sha256: 4d377633a2142591a7ab4c97ad6835fec1d908841a2fbd58977a64552fbd67d3
+    md5: d824e3266c690c6b8c662cf19fa62b3f
+    sha256: e1d39044c41541a09ba846c51c2ba315858622dfb4e7eaebcb0823316159fab8
   manager: conda
   name: pymatsolver
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.1.3-pyhd8ed1ab_0.tar.bz2
-  version: 0.1.3
+  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.2.0-pyhd8ed1ab_0.tar.bz2
+  version: 0.2.0
 - category: dev
   dependencies:
     certifi: '>=2017.4.17'
