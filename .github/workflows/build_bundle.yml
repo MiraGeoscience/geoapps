@@ -15,6 +15,7 @@ jobs:
         shell: pwsh
     runs-on: windows-latest
     env:
+      PYTHONUTF8: 1
       ARTIFACT_NAME: geoapps-simpeg
       CONDA_ENV_NAME: geoapps-simpeg
       CONDA_LOCK_FILE: conda-py-3.9-lock.yml

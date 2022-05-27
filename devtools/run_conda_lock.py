@@ -7,6 +7,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
 import subprocess
 
 
@@ -14,6 +15,7 @@ def create_multi_platform_lock(py_ver: str):
     print(f"# Create multi-platform lock file for Python {py_ver}")
     subprocess.run(
         f"conda-lock lock -f pyproject.toml -f env-python-{py_ver}.yml --lockfile conda-py-{py_ver}-lock.yml",
+        env=dict(os.environ, PYTHONUTF8="1"),
         shell=True,
         check=True,
         stderr=subprocess.STDOUT,
@@ -31,6 +33,7 @@ def per_platform_env(py_ver: str, dev=False):
             f"conda-lock render {dev_dep_option} --extras full -k env"
             f" --filename-template conda-py-{py_ver}-{{platform}}{dev_suffix}.lock conda-py-{py_ver}-lock.yml"
         ),
+        env=dict(os.environ, PYTHONUTF8="1"),
         shell=True,
         check=True,
         stderr=subprocess.STDOUT,

@@ -25,6 +25,7 @@ jobs:
         python_ver: [3.7]
     runs-on: ubuntu-latest
     env:
+      PYTHONUTF8: 1
       CONDA_LOCK_ENV_FILE: conda-py-${{ matrix.python_ver }}-linux-64-dev.lock.yml
     steps:
       - uses: actions/checkout@v2
