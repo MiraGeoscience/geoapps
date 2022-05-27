@@ -380,7 +380,9 @@ class InversionLogger:
 
     def log_initial_time(self):
         date_time = datetime.now().strftime("%b-%d-%Y:%H:%M:%S")
-        self.write(f"SimPEG {driver.inversion_type} inversion started {date_time}\n")
+        self.write(
+            f"SimPEG {self.driver.inversion_type} inversion started {date_time}\n"
+        )
 
     def write(self, message):
         self.terminal.write(message)
