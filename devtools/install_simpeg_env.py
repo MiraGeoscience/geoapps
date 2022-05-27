@@ -6,7 +6,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
+import os
 import subprocess
 from datetime import datetime
 
@@ -23,6 +23,7 @@ subprocess.run(
         "&& conda deactivate ^"
         f"conda-pack -n {env_name} -o {env_name}.zip",
     ),
+    env=dict(os.environ, PYTHONUTF8="1"),
     shell=True,
     check=True,
     stderr=subprocess.STDOUT,
