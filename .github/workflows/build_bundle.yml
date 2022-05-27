@@ -80,8 +80,8 @@ jobs:
           echo ::set-output name=name_suffix::${{ env.SUFFIX }}
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ARTIFACT_NAME }}.${{ steps.makeself.outputs.name_suffix }}
-          path: ${{ steps.makeself.outputs.filename }}
+          name: ${{ env.ARTIFACT_NAME }}.${{ steps.conda_pack.outputs.name_suffix }}
+          path: ${{ steps.conda_pack.outputs.filename }}
           retention-days: 2
           if-no-files-found: error
 
