@@ -12,7 +12,7 @@ jobs:
     if: ${{ github.event.action != 'labeled' || github.event.label.name == 'build:bundle' }}
     defaults:
       run:
-        shell: pwsh
+        shell: bash
     runs-on: windows-latest
     env:
       PYTHONUTF8: 1
@@ -47,6 +47,7 @@ jobs:
           activate-environment: ""
       - name: Install tools
         id: conda_tools
+        shell: bash -l {0}
         run: |
           conda install -c conda-forge conda-pack conda-lock
           conda-lock render -k env --no-dev-dependencies ${{ env.CONDA_LOCK_FILE }}
@@ -58,6 +59,7 @@ jobs:
           channel-priority: strict
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: Install in Conda env from sources
+        shell: bash -l {0}
         run: |
           conda activate ${{ env.CONDA_ENV_NAME }}
           python -m pip install . -vv --no-deps
@@ -65,8 +67,9 @@ jobs:
         id: conda_pack
         env:
           SUFFIX: ${{ steps.git-info.outputs.ref_name }}-${{ steps.git-info.outputs.short_sha }}
+        shell: bash -l {0}
         run: |
-          $OUTPUT_NAME = ${{ env.CONDA_ENV_NAME }}-${{ env.SUFFIX }}.zip
+          set OUTPUT_NAME = ${{ env.CONDA_ENV_NAME }}-${{ env.SUFFIX }}.zip
           conda-pack -n geoapps --output $OUTPUT_NAME
           echo ::set-output name=filename::$OUTPUT_NAME
           echo ::set-output name=name_suffix::${{ env.SUFFIX }}
