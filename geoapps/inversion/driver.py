@@ -456,12 +456,12 @@ def start_inversion(filepath=None, **kwargs):
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
+    sys.stdout = InversionLogger("SimPEG.log", driver)
     driver.run()
 
 
 if __name__ == "__main__":
 
-    sys.stdout = InversionLogger("SimPEG.log", self)
     filepath = sys.argv[1]
     start_inversion(filepath)
     sys.stdout.close()
