@@ -45,11 +45,10 @@ jobs:
         with:
           auto-activate-base: true
           activate-environment: ""
-      - name: Install tools
-        id: conda_tools
+      - name: Render conda lock
         shell: bash -l {0}
         run: |
-          conda install -c conda-forge conda-pack conda-lock
+          conda install -c conda-forge conda-lock
           conda-lock render -k env --no-dev-dependencies ${{ env.CONDA_LOCK_FILE }}
       - name: Create the Conda environment
         uses: conda-incubator/setup-miniconda@v2
@@ -63,12 +62,18 @@ jobs:
         run: |
           conda activate ${{ env.CONDA_ENV_NAME }}
           python -m pip install . -vv --no-deps
+      - name: Activate conda base env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-activate-base: true
+          activate-environment: ""
       - name: Run conda pack
         id: conda_pack
         env:
           SUFFIX: ${{ steps.git-info.outputs.ref_name }}-${{ steps.git-info.outputs.short_sha }}
         shell: bash -l {0}
         run: |
+          conda install -c conda-forge conda-pack
           set OUTPUT_NAME = ${{ env.CONDA_ENV_NAME }}-${{ env.SUFFIX }}.zip
           conda-pack -n geoapps --output $OUTPUT_NAME
           echo ::set-output name=filename::$OUTPUT_NAME
