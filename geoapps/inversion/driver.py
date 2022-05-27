@@ -53,7 +53,6 @@ class InversionDriver:
         self.survey = None
         self.active_cells = None
         self.running = False
-        sys.stdout = InversionLogger("SimPEG.log", self)
         self.initialize()
 
     @property
@@ -223,7 +222,6 @@ class InversionDriver:
         self.start_inversion_message()
         self.running = True
         self.inversion.run(self.starting_model)
-        sys.stdout.close()
 
     def start_inversion_message(self):
 
@@ -378,7 +376,9 @@ class InversionLogger:
         self.terminal = sys.stdout
         self.log = open(self.get_path(logfile), "w")
         self.initial_time = time()
+        self.log_initial_time()
 
+    def log_initial_time(self):
         date_time = datetime.now().strftime("%b-%d-%Y:%H:%M:%S")
         self.write(f"SimPEG {driver.inversion_type} inversion started {date_time}\n")
 
@@ -461,5 +461,7 @@ def start_inversion(filepath=None, **kwargs):
 
 if __name__ == "__main__":
 
+    sys.stdout = InversionLogger("SimPEG.log", self)
     filepath = sys.argv[1]
     start_inversion(filepath)
+    sys.stdout.close()
