@@ -313,7 +313,7 @@ default_ui_json.update(
             "main": True,
             "min": 1,
             "max": 100,
-            "value": 1,
+            "value": 20,
             "enabled": False,
             "optional": True,
         },
