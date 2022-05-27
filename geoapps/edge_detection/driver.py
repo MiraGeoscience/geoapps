@@ -9,14 +9,19 @@
 from __future__ import annotations
 
 import sys
+from time import time
 
 import numpy as np
+from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Curve, Grid2D
 from geoh5py.ui_json import InputFile
+from geoh5py.workspace import Workspace
 from matplotlib import collections
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
 from geoapps.edge_detection.params import EdgeDetectionParams
+from geoapps.utils.formatters import string_name
 from geoapps.utils.utils import filter_xy
 
 
@@ -24,6 +29,9 @@ class EdgeDetectionDriver:
     def __init__(self, params: EdgeDetectionParams):
         self.params: EdgeDetectionParams = params
         self.collections = None
+        self.trigger = None
+        self._unique_object = {}
+        self.indices = None
 
     def run(self):
         """ """
@@ -174,33 +182,30 @@ class EdgeDetectionDriver:
             self.trigger.vertices = None
             self.trigger.cells = None
 
-    def export(self, _):
-        """
-        entity, _ = self.get_selected_entities()
+    def export(self):
+        # entity, _ = self.get_selected_entities()
+        entity = self.params.objects
         if getattr(self.trigger, "vertices", None) is not None:
-            name = string_name(self.export_as.value)
-            temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.3f}.geoh5"
-            with self.get_output_workspace(
-                self.export_directory.selected_path, temp_geoh5
-            ) as workspace:
-                out_entity = ContainerGroup.create(
-                    workspace,
-                    name=self.ga_group_name.value,
-                    uid=self._unique_object.get(self.ga_group_name.value, None),
-                )
-                curve = Curve.create(
-                    workspace,
-                    name=name,
-                    vertices=self.trigger.vertices,
-                    cells=self.trigger.cells,
-                    parent=out_entity,
-                    uid=self._unique_object.get(name, None),
-                )
-                self._unique_object[name] = curve.uid
-                self._unique_object[self.ga_group_name.value] = out_entity.uid
-        if self.live_link.value:
-            monitored_directory_copy(self.export_directory.selected_path, out_entity)
-        """
+            name = string_name(self.params.export_as)
+            temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
+
+            workspace = Workspace(temp_geoh5)
+
+            out_entity = ContainerGroup.create(
+                workspace,
+                name=self.params.ga_group_name.value,
+                uid=self._unique_object.get(self.params.ga_group_name.value, None),
+            )
+            curve = Curve.create(
+                workspace,
+                name=name,
+                vertices=self.trigger.vertices,
+                cells=self.trigger.cells,
+                parent=out_entity,
+                uid=self._unique_object.get(name, None),
+            )
+            self._unique_object[name] = curve.uid
+            self._unique_object[self.params.ga_group_name.value] = out_entity.uid
 
 
 if __name__ == "__main__":

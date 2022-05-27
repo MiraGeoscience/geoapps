@@ -10,12 +10,12 @@ from copy import deepcopy
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
 defaults = {
-    "title": "Create Iso Surfaces",
+    "title": "Edge Detection",
     "geoh5": None,
     "objects": None,
     "data": None,
     "sigma": None,
-    "window": None,
+    "window_azimuth": None,
     "export_as": "",
     "ga_group_name": None,
     "run_command": "geoapps.edge_detection.driver",
@@ -31,7 +31,7 @@ default_ui_json.update(
     {
         "title": "Edge Detection",
         "geoh5": "",
-        "run_command": "geoapps.iso_surfaces.driver",
+        "run_command": "geoapps.edge_detection.driver",
         "run_command_boolean": {
             "value": False,
             "label": "Run python module ",
@@ -169,6 +169,12 @@ default_ui_json.update(
             "value": "",
             "group": "Python run preferences",
         },
+        "ga_group_name": {
+            "main": True,
+            "label": "Group",
+            "value": "",
+            "group": "Python run preferences",
+        },
     }
 )
 
@@ -179,8 +185,6 @@ app_initializer = {
     "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
     "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
     "sigma": 0.5,
-    "window": {
-        "azimuth": -20,
-    },
+    "window_azimuth": -20,
     "ga_group_name": "Edges",
 }
