@@ -41,6 +41,7 @@ class EdgeDetectionParams(BaseParams):
         self._colorbar = None
         self._zoom_extent = None
         self._export_as = None
+        self._ga_group_name = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -216,3 +217,14 @@ class EdgeDetectionParams(BaseParams):
     @export_as.setter
     def export_as(self, val):
         self.setter_validator("export_as", val)
+
+    @property
+    def ga_group_name(self) -> str | None:
+        """
+        ga_group_name
+        """
+        return self._ga_group_name
+
+    @ga_group_name.setter
+    def ga_group_name(self, val):
+        self.setter_validator("ga_group_name", val)
