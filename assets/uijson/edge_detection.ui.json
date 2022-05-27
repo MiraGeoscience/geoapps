@@ -1,7 +1,7 @@
 {
     "title": "Edge Detection",
     "geoh5": "",
-    "run_command": "geoapps.iso_surfaces.driver",
+    "run_command": "geoapps.edge_detection.driver",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
@@ -142,5 +142,11 @@
         "main": true,
         "label": "Save as",
         "value": ""
+    },
+    "ga_group_name": {
+        "main": true,
+        "label": "Group",
+        "value": "",
+        "group": "Python run preferences"
     }
 }
