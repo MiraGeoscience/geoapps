@@ -11,10 +11,11 @@ import os
 import subprocess
 
 
-def create_multi_platform_lock(py_ver: str):
+def create_multi_platform_lock(py_ver: str, platform: str = None):
     print(f"# Create multi-platform lock file for Python {py_ver}")
+    platform_option = f"-p {platform}" if platform else ""
     subprocess.run(
-        f"conda-lock lock -f pyproject.toml -f env-python-{py_ver}.yml --lockfile conda-py-{py_ver}-lock.yml",
+        f"conda-lock lock -f pyproject.toml -f env-python-{py_ver}.yml {platform_option} --lockfile conda-py-{py_ver}-lock.yml",
         env=dict(os.environ, PYTHONUTF8="1"),
         shell=True,
         check=True,
