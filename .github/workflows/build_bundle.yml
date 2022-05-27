@@ -48,12 +48,12 @@ jobs:
         id: conda_tools
         run: |
           conda install -c conda-forge conda-pack conda-lock
-          conda-lock render -p win-64 -k env --no-dev-dependencies ${{ env.CONDA_LOCK_FILE }}
+          conda-lock render -k env --no-dev-dependencies ${{ env.CONDA_LOCK_FILE }}
       - name: Create the Conda environment
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: ${{ env.CONDA_ENV_NAME }}
-          environment-file: conda-win-64.lock
+          environment-file: conda-win-64.lock.yml
           channel-priority: strict
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: Install in Conda env from sources
