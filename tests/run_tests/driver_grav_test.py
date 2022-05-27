@@ -56,16 +56,14 @@ def test_gravity_run(
         starting_model=model.uid,
     )
     fwr_driver = InversionDriver(params)
-    fwr_driver.initialize()
     fwr_driver.run()
-    geoh5 = Workspace(geoh5.h5file)
 
+    geoh5.open()
     gz = geoh5.get_entity("Iteration_0_gz")[0]
     orig_gz = gz.values.copy()
 
     # Turn some values to nan
     gz.values[0] = np.nan
-    geoh5.finalize()
 
     # Run the inverse
     np.random.seed(0)
@@ -92,7 +90,7 @@ def test_gravity_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
-    driver.initialize()
+
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
