@@ -47,7 +47,7 @@ scikit-image = {version = "~0.19.2", optional = true}
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 empymod = "^2.1.3" # from simpeg and geoana
-geoana = "~0.1.2" # from simpeg
+geoana = "~0.0.6" # from simpeg
 h5py = "^3.2.1" # from geoh5py
 mkl = "2022.*" # from simpeg
 properties = "~0.6.1" # from simpeg and geoana
