@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: b2eb991db5d1b8149434372f5c2432e3c6a2e60e47f2c1f87b104ff4c11c98a5
-    osx-64: 9b31ef60fa03606cb993f3945d6f2b3f85222035b14a9b71030a491cf4289650
-    win-64: 218fb5a7f08bb6ffd5d4d893e900fabb21fe4e3baf81a3d5c6c6399910aa1ab6
+    linux-64: 9b00dd487b94e77c69d3dc621e282a420dfb95989e12b79830a587a3548fc616
+    osx-64: fa228005bba782ca381ad55883bcd87f3c3ed3a44c693c83e8379ec6d123b6e6
+    win-64: ee54ee52972cd34cd12ce045f05240ba804715bbca9a8b606064cf6b01769e56
   platforms:
   - linux-64
   - osx-64
@@ -2698,16 +2698,15 @@ package:
 - category: full
   dependencies:
     python: '>=3.6'
-    six: ''
     tenacity: '>=6.2.0'
   hash:
-    md5: a90144286004fa7643d01b370bb82178
-    sha256: a4aa162445e1533c9d305a8704b3e88a88938574d829b217dcfab16fb78145f6
+    md5: 72678df73b10b2a10eb692d55482e2a6
+    sha256: 5e9474ce662f4b05f097a9f9f66edfabad7c714574d077958b99f85dc71535d1
   manager: conda
   name: plotly
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_1.tar.bz2
   version: 5.8.0
 - category: main
   dependencies:
@@ -3680,14 +3679,14 @@ package:
     six: ''
     vectormath: '>=0.1.4'
   hash:
-    md5: b336a4567e40a868e93c5b19abd66660
-    sha256: 312b3e44e240beb713a94cc6ccb585a08987c7d31e300a3b4023ad6b566911a0
+    md5: 62052fa8409d12536ff149e25b0e9905
+    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
   manager: conda
   name: properties
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.5.6-py_0.tar.bz2
-  version: 0.5.6
+  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
+  version: 0.6.1
 - category: main
   dependencies:
     libgcc-ng: '>=9.4.0'
@@ -3838,27 +3837,23 @@ package:
   version: 3.4.3
 - category: main
   dependencies:
-    empymod: ''
     future: ''
-    libgcc-ng: '>=9.4.0'
-    libstdcxx-ng: '>=9.4.0'
     matplotlib-base: ''
-    numpy: '>=1.21.1,<2.0a0'
+    numpy: '>=1.7'
     properties: ''
-    python: '>=3.7,<3.8.0a0'
-    python_abi: 3.7.* *_cp37m
+    python: ''
     scipy: '>=0.13'
     utm: ''
     vectormath: ''
   hash:
-    md5: 2911c18bee20d96bf8da1f8a5a949419
-    sha256: 52c8d41e08c2a78fe79b41e6c883bcc3d529766808c98501db7540d408711bc2
+    md5: 940c153c790eec5801d26ad7115d69bf
+    sha256: 6ef4cb86ab786166d39b6a55f2b5b9027f298d4aa7ba676d587b31cf80053ae5
   manager: conda
   name: geoana
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/geoana-0.1.2-py37h2527ec5_0.tar.bz2
-  version: 0.1.2
+  url: https://conda.anaconda.org/conda-forge/noarch/geoana-0.0.6-py_1.tar.bz2
+  version: 0.0.6
 - category: full
   dependencies:
     jupyter_client: '>=6.1.5'
@@ -3907,19 +3902,18 @@ package:
 - category: main
   dependencies:
     numpy: ''
-    properties: ''
-    pymkl: '>=0.0.3'
+    pydiso: ''
     python: '>=3.6'
-    scipy: '>=0.13'
+    scipy: ''
   hash:
-    md5: be25af88b04fd64a49889945cc51db2c
-    sha256: 4d377633a2142591a7ab4c97ad6835fec1d908841a2fbd58977a64552fbd67d3
+    md5: d824e3266c690c6b8c662cf19fa62b3f
+    sha256: e1d39044c41541a09ba846c51c2ba315858622dfb4e7eaebcb0823316159fab8
   manager: conda
   name: pymatsolver
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.1.3-pyhd8ed1ab_0.tar.bz2
-  version: 0.1.3
+  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.2.0-pyhd8ed1ab_0.tar.bz2
+  version: 0.2.0
 - category: dev
   dependencies:
     attrs: '>=19.2.0'
@@ -6625,16 +6619,15 @@ package:
 - category: full
   dependencies:
     python: '>=3.6'
-    six: ''
     tenacity: '>=6.2.0'
   hash:
-    md5: a90144286004fa7643d01b370bb82178
-    sha256: a4aa162445e1533c9d305a8704b3e88a88938574d829b217dcfab16fb78145f6
+    md5: 72678df73b10b2a10eb692d55482e2a6
+    sha256: 5e9474ce662f4b05f097a9f9f66edfabad7c714574d077958b99f85dc71535d1
   manager: conda
   name: plotly
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_1.tar.bz2
   version: 5.8.0
 - category: main
   dependencies:
@@ -7705,14 +7698,14 @@ package:
     six: ''
     vectormath: '>=0.1.4'
   hash:
-    md5: b336a4567e40a868e93c5b19abd66660
-    sha256: 312b3e44e240beb713a94cc6ccb585a08987c7d31e300a3b4023ad6b566911a0
+    md5: 62052fa8409d12536ff149e25b0e9905
+    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
   manager: conda
   name: properties
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.5.6-py_0.tar.bz2
-  version: 0.5.6
+  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
+  version: 0.6.1
 - category: main
   dependencies:
     mkl: '>=2022.0.0,<2023.0a0'
@@ -7861,26 +7854,23 @@ package:
   version: 1.8.21
 - category: main
   dependencies:
-    empymod: ''
     future: ''
-    libcxx: '>=11.1.0'
     matplotlib-base: ''
-    numpy: '>=1.21.1,<2.0a0'
+    numpy: '>=1.7'
     properties: ''
-    python: '>=3.7,<3.8.0a0'
-    python_abi: 3.7.* *_cp37m
+    python: ''
     scipy: '>=0.13'
     utm: ''
     vectormath: ''
   hash:
-    md5: d85dfeb9e9bd1c72889c3ecf29f8b059
-    sha256: d6f564854f912bda9525ddb97b0e1072ca1e4c64020a25be69b097b0e465da2e
+    md5: 940c153c790eec5801d26ad7115d69bf
+    sha256: 6ef4cb86ab786166d39b6a55f2b5b9027f298d4aa7ba676d587b31cf80053ae5
   manager: conda
   name: geoana
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/geoana-0.1.2-py37h737db71_0.tar.bz2
-  version: 0.1.2
+  url: https://conda.anaconda.org/conda-forge/noarch/geoana-0.0.6-py_1.tar.bz2
+  version: 0.0.6
 - category: full
   dependencies:
     appnope: ''
@@ -7936,19 +7926,18 @@ package:
 - category: main
   dependencies:
     numpy: ''
-    properties: ''
-    pymkl: '>=0.0.3'
+    pydiso: ''
     python: '>=3.6'
-    scipy: '>=0.13'
+    scipy: ''
   hash:
-    md5: be25af88b04fd64a49889945cc51db2c
-    sha256: 4d377633a2142591a7ab4c97ad6835fec1d908841a2fbd58977a64552fbd67d3
+    md5: d824e3266c690c6b8c662cf19fa62b3f
+    sha256: e1d39044c41541a09ba846c51c2ba315858622dfb4e7eaebcb0823316159fab8
   manager: conda
   name: pymatsolver
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.1.3-pyhd8ed1ab_0.tar.bz2
-  version: 0.1.3
+  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.2.0-pyhd8ed1ab_0.tar.bz2
+  version: 0.2.0
 - category: dev
   dependencies:
     coverage: '>=5.2.1'
@@ -10271,16 +10260,15 @@ package:
 - category: full
   dependencies:
     python: '>=3.6'
-    six: ''
     tenacity: '>=6.2.0'
   hash:
-    md5: a90144286004fa7643d01b370bb82178
-    sha256: a4aa162445e1533c9d305a8704b3e88a88938574d829b217dcfab16fb78145f6
+    md5: 72678df73b10b2a10eb692d55482e2a6
+    sha256: 5e9474ce662f4b05f097a9f9f66edfabad7c714574d077958b99f85dc71535d1
   manager: conda
   name: plotly
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/plotly-5.8.0-pyhd8ed1ab_1.tar.bz2
   version: 5.8.0
 - category: full
   dependencies:
@@ -11607,14 +11595,14 @@ package:
     six: ''
     vectormath: '>=0.1.4'
   hash:
-    md5: b336a4567e40a868e93c5b19abd66660
-    sha256: 312b3e44e240beb713a94cc6ccb585a08987c7d31e300a3b4023ad6b566911a0
+    md5: 62052fa8409d12536ff149e25b0e9905
+    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
   manager: conda
   name: properties
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.5.6-py_0.tar.bz2
-  version: 0.5.6
+  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
+  version: 0.6.1
 - category: main
   dependencies:
     mkl: '>=2022.0.0,<2023.0a0'
@@ -11741,27 +11729,23 @@ package:
   version: 2.11.3
 - category: main
   dependencies:
-    empymod: ''
     future: ''
     matplotlib-base: ''
-    numpy: '>=1.21.1,<2.0a0'
+    numpy: '>=1.7'
     properties: ''
-    python: '>=3.7,<3.8.0a0'
-    python_abi: 3.7.* *_cp37m
+    python: ''
     scipy: '>=0.13'
     utm: ''
-    vc: '>=14.1,<15.0a0'
     vectormath: ''
-    vs2015_runtime: '>=14.16.27012'
   hash:
-    md5: a2fff1b0facaf78182d2f0ba3ceeaae4
-    sha256: 2c1df054ebb1c62857e647b1b22860bc320be7e23e2f1b3328a07d6d351c1ba6
+    md5: 940c153c790eec5801d26ad7115d69bf
+    sha256: 6ef4cb86ab786166d39b6a55f2b5b9027f298d4aa7ba676d587b31cf80053ae5
   manager: conda
   name: geoana
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/geoana-0.1.2-py37h8c56517_0.tar.bz2
-  version: 0.1.2
+  url: https://conda.anaconda.org/conda-forge/noarch/geoana-0.0.6-py_1.tar.bz2
+  version: 0.0.6
 - category: full
   dependencies:
     backcall: ''
@@ -11860,19 +11844,18 @@ package:
 - category: main
   dependencies:
     numpy: ''
-    properties: ''
-    pymkl: '>=0.0.3'
+    pydiso: ''
     python: '>=3.6'
-    scipy: '>=0.13'
+    scipy: ''
   hash:
-    md5: be25af88b04fd64a49889945cc51db2c
-    sha256: 4d377633a2142591a7ab4c97ad6835fec1d908841a2fbd58977a64552fbd67d3
+    md5: d824e3266c690c6b8c662cf19fa62b3f
+    sha256: e1d39044c41541a09ba846c51c2ba315858622dfb4e7eaebcb0823316159fab8
   manager: conda
   name: pymatsolver
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.1.3-pyhd8ed1ab_0.tar.bz2
-  version: 0.1.3
+  url: https://conda.anaconda.org/conda-forge/noarch/pymatsolver-0.2.0-pyhd8ed1ab_0.tar.bz2
+  version: 0.2.0
 - category: dev
   dependencies:
     coverage: '>=5.2.1'

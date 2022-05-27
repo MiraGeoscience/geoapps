@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: a0c53e645a474efe7119917aa3c8ff0f158fa5748449579b109bb5ca67f6f55b
-    osx-64: 216ddfa2f4e89a2473e92ee87c540bc900e7dbd25691502adb7c66a63ccb15b3
-    win-64: add2ebff2774119ff84fd1d2d909714f7333417cfd6dab939ed25678448e8524
+    linux-64: a63e6af8e4987d1dab51f06396e42ad1a684b38e80f1e61d56057ea20d28ec2d
+    osx-64: 1a12d32882372715f6f9a8849c0230dbcfa1c6312d92d584ca7dadb1362dd8d0
+    win-64: bbb022a08c104112a63b13da5e41cfa5c39700bbf737795425b5ad782d785fec
   platforms:
   - linux-64
   - osx-64
@@ -3922,27 +3922,23 @@ package:
   version: 3.4.3
 - category: main
   dependencies:
-    empymod: ''
     future: ''
-    libgcc-ng: '>=9.4.0'
-    libstdcxx-ng: '>=9.4.0'
     matplotlib-base: ''
-    numpy: '>=1.21.1,<2.0a0'
+    numpy: '>=1.7'
     properties: ''
-    python: '>=3.8,<3.9.0a0'
-    python_abi: 3.8.* *_cp38
+    python: ''
     scipy: '>=0.13'
     utm: ''
     vectormath: ''
   hash:
-    md5: 35fe747b2dfca386062bc49609ce09ba
-    sha256: 7b83a85ee694588907ef49c63be9df4d363fd31065db0a11bf192133b783b8f1
+    md5: 940c153c790eec5801d26ad7115d69bf
+    sha256: 6ef4cb86ab786166d39b6a55f2b5b9027f298d4aa7ba676d587b31cf80053ae5
   manager: conda
   name: geoana
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/geoana-0.1.2-py38h1fd1430_0.tar.bz2
-  version: 0.1.2
+  url: https://conda.anaconda.org/conda-forge/noarch/geoana-0.0.6-py_1.tar.bz2
+  version: 0.0.6
 - category: full
   dependencies:
     jupyter_client: '>=6.1.5'
@@ -7992,26 +7988,23 @@ package:
   version: 1.8.21
 - category: main
   dependencies:
-    empymod: ''
     future: ''
-    libcxx: '>=11.1.0'
     matplotlib-base: ''
-    numpy: '>=1.21.1,<2.0a0'
+    numpy: '>=1.7'
     properties: ''
-    python: '>=3.8,<3.9.0a0'
-    python_abi: 3.8.* *_cp38
+    python: ''
     scipy: '>=0.13'
     utm: ''
     vectormath: ''
   hash:
-    md5: ca29c27d92462453a3d402ba332209d4
-    sha256: 5b04d15a643d0712f6c77af40e1950a6669dfbb0cecb520dd2d6aa06ea14dcfc
+    md5: 940c153c790eec5801d26ad7115d69bf
+    sha256: 6ef4cb86ab786166d39b6a55f2b5b9027f298d4aa7ba676d587b31cf80053ae5
   manager: conda
   name: geoana
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/geoana-0.1.2-py38h12bbefe_0.tar.bz2
-  version: 0.1.2
+  url: https://conda.anaconda.org/conda-forge/noarch/geoana-0.0.6-py_1.tar.bz2
+  version: 0.0.6
 - category: full
   dependencies:
     appnope: ''
@@ -11936,27 +11929,23 @@ package:
   version: 2022.5.2
 - category: main
   dependencies:
-    empymod: ''
     future: ''
     matplotlib-base: ''
-    numpy: '>=1.21.1,<2.0a0'
+    numpy: '>=1.7'
     properties: ''
-    python: '>=3.8,<3.9.0a0'
-    python_abi: 3.8.* *_cp38
+    python: ''
     scipy: '>=0.13'
     utm: ''
-    vc: '>=14.1,<15.0a0'
     vectormath: ''
-    vs2015_runtime: '>=14.16.27012'
   hash:
-    md5: 65ff292243fa973eef68b54048a654ad
-    sha256: 93214e3b6f3cb4579bc6e6e80fc9b23af85ecc3f10339a2b98c6cf851b2c3b7f
+    md5: 940c153c790eec5801d26ad7115d69bf
+    sha256: 6ef4cb86ab786166d39b6a55f2b5b9027f298d4aa7ba676d587b31cf80053ae5
   manager: conda
   name: geoana
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/geoana-0.1.2-py38hbd9d945_0.tar.bz2
-  version: 0.1.2
+  url: https://conda.anaconda.org/conda-forge/noarch/geoana-0.0.6-py_1.tar.bz2
+  version: 0.0.6
 - category: full
   dependencies:
     backcall: ''
