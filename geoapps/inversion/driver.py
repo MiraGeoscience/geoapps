@@ -53,6 +53,11 @@ class InversionDriver:
         self.survey = None
         self.active_cells = None
         self.running = False
+
+        self.logger = InversionLogger("SimPEG.log", self)
+        sys.stdout = self.logger
+        self.logger.start()
+
         self.initialize()
 
     @property
@@ -222,6 +227,7 @@ class InversionDriver:
         self.start_inversion_message()
         self.running = True
         self.inversion.run(self.starting_model)
+        self.logger.end()
 
     def start_inversion_message(self):
 
@@ -376,12 +382,18 @@ class InversionLogger:
         self.terminal = sys.stdout
         self.log = open(self.get_path(logfile), "w")
         self.initial_time = time()
-        self.log_initial_time()
 
-    def log_initial_time(self):
+    def start(self):
         date_time = datetime.now().strftime("%b-%d-%Y:%H:%M:%S")
         self.write(
             f"SimPEG {self.driver.inversion_type} inversion started {date_time}\n"
+        )
+
+    def end(self):
+        elapsed_time = timedelta(seconds=time() - self.initial_time).seconds
+        days, hours, minutes, seconds = self.format_seconds(elapsed_time)
+        self.write(
+            f"Total runtime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.\n"
         )
 
     def write(self, message):
@@ -399,11 +411,6 @@ class InversionLogger:
         return days, hours, minutes, seconds
 
     def close(self):
-        elapsed_time = timedelta(seconds=time() - self.initial_time).seconds
-        days, hours, minutes, seconds = self.format_seconds(elapsed_time)
-        self.write(
-            f"Total runtime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.\n"
-        )
         self.terminal.close()
 
     def flush(self):
@@ -458,7 +465,7 @@ def start_inversion(filepath=None, **kwargs):
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
-    sys.stdout = InversionLogger("SimPEG.log", driver)
+
     driver.run()
 
 
