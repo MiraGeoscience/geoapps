@@ -17,7 +17,7 @@ from geoh5py.ui_json.utils import monitored_directory_copy
 from geoapps.utils.importing import soft_import
 
 (FloatText, HBox, Label, Text, VBox) = soft_import(
-    "ipywidgets", objects=["FloatText", "HBox", "Label", "Text", "VBox"]
+    "ipywidgets", objects=["FloatText", "HBox", "Label", "Text", "VBox", "Widget"]
 )
 
 from geoapps.base.selection import ObjectDataSelection
