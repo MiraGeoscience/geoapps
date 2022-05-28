@@ -48,6 +48,7 @@ jobs:
           python-version: ${{ matrix.python_ver }}
           channel-priority: flexible
           environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
+          auto-update-conda: true
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: pytest
         run: |
