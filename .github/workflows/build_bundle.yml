@@ -18,7 +18,7 @@ jobs:
       PYTHONUTF8: 1
       ARTIFACT_NAME: geoapps-simpeg.conda-pack
       CONDA_ENV_NAME: geoapps-simpeg
-      CONDA_LOCK_FILE: conda-py-3.9-lock.yml
+      CONDA_LOCK_ENV_FILE: conda-py-3.9-win-64-simpeg.lock.yml
     outputs:
       bundle: ${{ steps.conda_pack.outputs.filename }}
       artifact: ${{ env.ARTIFACT_NAME }}-${{ steps.conda_pack.outputs.name_suffix }}
@@ -39,22 +39,17 @@ jobs:
         with:
           path: ~/conda_pkgs_dir
           key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles(env.CONDA_LOCK_FILE) }}
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles(env.CONDA_LOCK_ENV_FILE) }}
       - name: Activate conda base env
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-activate-base: true
           activate-environment: ""
-      - name: Render conda lock
-        shell: bash -l {0}
-        run: |
-          conda install -c conda-forge conda-lock
-          conda-lock render -k env --no-dev-dependencies ${{ env.CONDA_LOCK_FILE }}
       - name: Create the Conda environment
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: ${{ env.CONDA_ENV_NAME }}
-          environment-file: conda-win-64.lock.yml
+          environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
           channel-priority: strict
           use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
       - name: Install in Conda env from sources
