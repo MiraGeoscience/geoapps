@@ -42,7 +42,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: geoapps
-          python-version: ${{ matrix.python_ver }}
           channel-priority: flexible
           environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
           auto-update-conda: true
