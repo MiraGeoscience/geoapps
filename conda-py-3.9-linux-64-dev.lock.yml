@@ -48,7 +48,7 @@ dependencies:
   - libsodium=1.0.18=h36c2ea0_1
   - libuuid=2.32.1=h7f98852_1000
   - libwebp-base=1.2.2=h7f98852_1
-  - libzlib=1.2.11=h166bdaf_1014
+  - libzlib=1.2.12=h166bdaf_0
   - libzopfli=1.0.3=h9c3ff4c_0
   - lz4-c=1.9.3=h9c3ff4c_1
   - ncurses=6.3=h27087fc_1
@@ -86,7 +86,7 @@ dependencies:
   - xerces-c=3.2.3=h8ce2273_4
   - xorg-libsm=1.2.3=hd9c2040_1000
   - zeromq=4.3.4=h9c3ff4c_1
-  - zlib=1.2.11=h166bdaf_1014
+  - zlib=1.2.12=h166bdaf_0
   - zstd=1.5.2=h8a70e8d_1
   - blosc=1.21.1=h83bc5f7_3
   - boost-cpp=1.74.0=h6cacc03_7
@@ -115,7 +115,7 @@ dependencies:
   - libwebp=1.2.2=h3452ae3_0
   - nss=3.78=h2350873_0
   - openjpeg=2.4.0=hb52868f_1
-  - python=3.9.12=h9a8a25e_1_cpython
+  - python=3.9.13=h9a8a25e_0_cpython
   - xorg-libxext=1.3.4=h7f98852_1
   - xorg-libxrender=0.9.10=h7f98852_1003
   - asciitree=0.3.3=py_2
@@ -272,7 +272,6 @@ dependencies:
   - properties=0.6.1=py_0
   - pydiso=0.0.3=py39h6964271_2
   - pylint=2.13.9=pyhd8ed1ab_1
-  - pymkl=0.0.3=py_0
   - pyopenssl=22.0.0=pyhd8ed1ab_0
   - pytest-cov=3.0.0=pyhd8ed1ab_0
   - scikit-learn=1.1.1=py39h4037b75_0
@@ -288,7 +287,7 @@ dependencies:
   - urllib3=1.26.9=pyhd8ed1ab_0
   - distributed=2022.5.2=pyhd8ed1ab_0
   - fiona=1.8.21=py39h83acdc4_1
-  - ipython=8.3.0=py39hf3d152e_0
+  - ipython=8.4.0=py39hf3d152e_0
   - nbconvert-core=6.5.0=pyhd8ed1ab_0
   - requests=2.27.1=pyhd8ed1ab_0
   - ipykernel=6.13.0=py39hef51801_0

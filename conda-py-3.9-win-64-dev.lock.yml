@@ -42,7 +42,7 @@ dependencies:
   - libiconv=1.16=he774522_0
   - libsodium=1.0.18=h8d14728_1
   - libwebp-base=1.2.2=h8ffe710_1
-  - libzlib=1.2.11=h8ffe710_1014
+  - libzlib=1.2.12=h8ffe710_0
   - libzopfli=1.0.3=h0e60522_0
   - lz4-c=1.9.3=h8ffe710_1
   - m2w64-gcc-libgfortran=5.3.0=6
@@ -70,7 +70,7 @@ dependencies:
   - mkl=2022.1.0=h6a75c08_874
   - python=3.9.13=h9a09f29_0_cpython
   - zeromq=4.3.4=h0e60522_1
-  - zlib=1.2.11=h8ffe710_1014
+  - zlib=1.2.12=h8ffe710_0
   - zstd=1.5.2=h6255e5f_1
   - asciitree=0.3.3=py_2
   - atomicwrites=1.4.0=pyh9f0ad1d_0
@@ -255,14 +255,13 @@ dependencies:
   - prompt-toolkit=3.0.29=pyha770c72_0
   - properties=0.6.1=py_0
   - pydiso=0.0.3=py39hb3d4d92_2
-  - pymkl=0.0.3=py_0
   - scikit-learn=1.1.1=py39he931e04_0
   - tifffile=2022.5.4=pyhd8ed1ab_0
   - urllib3=1.26.9=pyhd8ed1ab_0
   - zarr=2.11.3=pyhd8ed1ab_0
   - distributed=2022.5.2=pyhd8ed1ab_0
   - geoana=0.0.6=py_1
-  - ipython=8.3.0=py39hcbf5309_0
+  - ipython=8.4.0=py39hcbf5309_0
   - libgdal=3.4.3=hb47f0b7_0
   - nbconvert-core=6.5.0=pyhd8ed1ab_0
   - pymatsolver=0.2.0=pyhd8ed1ab_0
