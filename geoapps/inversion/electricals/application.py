@@ -11,9 +11,6 @@ import os
 import os.path as path
 import uuid
 
-from geoapps.utils import soft_import
-
-widgets = soft_import("ipywidgets")
 import numpy as np
 from geoh5py.objects import (
     BlockModel,
@@ -27,39 +24,28 @@ from geoh5py.objects import (
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
-(
-    Button,
-    Checkbox,
-    Dropdown,
-    FloatText,
-    HBox,
-    IntText,
-    Label,
-    Layout,
-    VBox,
-    Widget,
-) = soft_import(
-    "ipywidgets.widgets",
-    objects=[
-        "Button",
-        "Checkbox",
-        "Dropdown",
-        "FloatText",
-        "HBox",
-        "IntText",
-        "Label",
-        "Layout",
-        "VBox",
-        "Widget",
-    ],
-)
-
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.electricals.direct_current.constants import app_initializer
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.string import string_2_list
+
+with warn_module_not_found():
+    import ipywidgets as widgets
+    from ipywidgets.widgets import (
+        Button,
+        Checkbox,
+        Dropdown,
+        FloatText,
+        HBox,
+        IntText,
+        Label,
+        Layout,
+        VBox,
+        Widget,
+    )
 
 
 def inversion_defaults():

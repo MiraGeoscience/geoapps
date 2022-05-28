@@ -17,12 +17,10 @@ from scipy.spatial import cKDTree
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.shared_utils.utils import get_locations, weighted_average
-from geoapps.utils import soft_import
+from geoapps.utils import warn_module_not_found
 
-(Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox) = soft_import(
-    "ipywidgets",
-    objects=["Dropdown", "FloatText", "HBox", "Label", "RadioButtons", "Text", "VBox"],
-)
+with warn_module_not_found():
+    from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox
 
 
 class DataInterpolation(ObjectDataSelection):

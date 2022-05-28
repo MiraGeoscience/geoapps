@@ -5,36 +5,27 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
 import warnings
+from contextlib import contextmanager
 
 
-def soft_import(package, objects=None, interrupt=False):
-    """Attempt to import module and raise/interrupt with custom message if not found."""
+@contextmanager
+def warn_module_not_found():
+    """Context manager to suppress ModuleNotFoundError exceptions, and warn instead.
 
+    After the exception is suppressed, execution proceeds with the next
+    statement following the with statement.
+
+         with warn_module_not_found():
+             from ipywidgets import Widget
+         # Execution still resumes here if ipywidget is not found
+    """
     try:
-        imports = __import__(package, fromlist=objects)
-        if objects is not None:
-            imports = [getattr(imports, o) for o in objects]
-            return imports[0] if len(imports) == 1 else imports
-        else:
-            return imports
-
-    except ModuleNotFoundError:
-
-        packagename = package.split(".")[0]
-        packagename = "gdal" if packagename == "osgeo" else packagename
+        yield
+    except ModuleNotFoundError as e:
+        module_name = e.name
         err = (
-            f"Module '{packagename}' is missing from the environment. "
-            f"Consider installing with: 'conda install -c conda-forge {packagename}'"
+            f"Module '{module_name}' is missing from the environment. "
+            f"Consider installing with: 'conda install -c conda-forge {module_name}'"
         )
-
-        if interrupt:
-            raise ModuleNotFoundError(err)
-        else:
-            warnings.warn(err)
-            if objects is None:
-                return None
-            else:
-                n_obj = len(objects)
-                return [None] * n_obj if n_obj > 1 else None
+        warnings.warn(err)

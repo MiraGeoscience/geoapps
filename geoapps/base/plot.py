@@ -10,24 +10,23 @@ from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.shared_utils.utils import rotate_xy
-from geoapps.utils import soft_import
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import input_string_2_float, plot_plan_data_selection
 
-widgets = soft_import("ipywidgets")
-plt = soft_import("matplotlib", objects=["pyplot"])
+with warn_module_not_found():
+    from matplotlib import pyplot as plt
 
-(FloatSlider, FloatText, HBox, Label, Layout, ToggleButton, VBox) = soft_import(
-    "ipywidgets",
-    objects=[
-        "FloatSlider",
-        "FloatText",
-        "HBox",
-        "Label",
-        "Layout",
-        "ToggleButton",
-        "VBox",
-    ],
-)
+with warn_module_not_found():
+    import ipywidgets as widgets
+    from ipywidgets import (
+        FloatSlider,
+        FloatText,
+        HBox,
+        Label,
+        Layout,
+        ToggleButton,
+        VBox,
+    )
 
 
 class PlotSelection2D(ObjectDataSelection):

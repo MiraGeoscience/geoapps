@@ -10,30 +10,18 @@ from time import time
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
-from geoh5py.io import H5Writer
 from geoh5py.objects import Curve, Points, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
-
-from geoapps.utils import soft_import
-
-(Checkbox, HBox, Label, Layout, Text, VBox, interactive_output) = soft_import(
-    "ipywidgets",
-    objects=[
-        "Checkbox",
-        "HBox",
-        "Label",
-        "Layout",
-        "Text",
-        "VBox",
-        "interactive_output",
-    ],
-)
 from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.base.plot import PlotSelection2D
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 from geoapps.utils.plotting import input_string_2_float, plot_plan_data_selection
+
+with warn_module_not_found():
+    from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
 
 
 class ContourValues(PlotSelection2D):

@@ -17,21 +17,19 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils import soft_import
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
-(FloatText, HBox, Label, RadioButtons, Text, ToggleButton, VBox) = soft_import(
-    "ipywidgets",
-    objects=[
-        "FloatText",
-        "HBox",
-        "Label",
-        "RadioButtons",
-        "Text",
-        "ToggleButton",
-        "VBox",
-    ],
-)
+with warn_module_not_found():
+    from ipywidgets import (
+        FloatText,
+        HBox,
+        Label,
+        RadioButtons,
+        Text,
+        ToggleButton,
+        VBox,
+    )
 
 
 class Surface2D(ObjectDataSelection):

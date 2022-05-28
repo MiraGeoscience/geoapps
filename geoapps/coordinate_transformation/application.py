@@ -16,23 +16,21 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
 
-from geoapps.utils.importing import soft_import
-
-(HBox, Layout, SelectMultiple, Text, Textarea, VBox) = soft_import(
-    "ipywidgets",
-    objects=["HBox", "Layout", "SelectMultiple", "Text", "Textarea", "VBox"],
-)
-
-
-transform = soft_import("fiona.transform", objects=["transform"])
-gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
-
-
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
 
 from .utils import geotiff_2_grid
+
+with warn_module_not_found():
+    from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
+
+with warn_module_not_found():
+    from fiona.transform import transform
+
+with warn_module_not_found():
+    from osgeo import gdal, osr
 
 
 class CoordinateTransformation(ObjectDataSelection):

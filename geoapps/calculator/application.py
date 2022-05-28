@@ -8,19 +8,15 @@
 import re
 from time import time
 
-import numpy
 from geoh5py.ui_json.utils import monitored_directory_copy
 
-from geoapps.utils import soft_import
-
-(Button, HBox, Layout, Text, Textarea, VBox) = soft_import(
-    "ipywidgets.widgets",
-    objects=["Button", "HBox", "Layout", "Text", "Textarea", "VBox"],
-)
-
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
 from geoapps.utils.workspace import sorted_children_dict
+
+with warn_module_not_found():
+    from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
 
 
 class Calculator(ObjectDataSelection):
