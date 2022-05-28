@@ -14,6 +14,7 @@ import itertools
 import os
 import random
 
+import geoh5py.objects
 import numpy as np
 import pytest
 from discretize import TreeMesh
@@ -32,7 +33,7 @@ from geoapps.shared_utils.utils import (
     weighted_average,
     window_xy,
 )
-from geoapps.utils import soft_import
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.testing import Geoh5Tester
@@ -90,20 +91,68 @@ def test_sorted_alphanumeric_list():
     assert all([sorted_list[i] == test[i] for i in range(len(test))])
 
 
-def test_soft_import():
-    from types import ModuleType
+def test_no_warn_module_not_found(recwarn):
+    with warn_module_not_found():
+        import os as test_import
+    assert test_import == os
 
-    gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
-    fiona = soft_import("fiona")
-    transform = soft_import("fiona.transform", objects=["transform"])
-    plt = soft_import("matplotlib", ["pyplot"])
-    fig = (
-        plt.figure()
-    )  # This fails if imported via plt = soft_import("matplotlib.pyplot")
-    assert isinstance(gdal, ModuleType) and gdal.__name__ == "osgeo.gdal"
-    assert isinstance(osr, ModuleType) and osr.__name__ == "osgeo.osr"
-    assert isinstance(fiona, ModuleType) and fiona.__name__ == "fiona"
-    assert callable(transform) and transform.__name__ == "transform"
+    with warn_module_not_found():
+        from os import system as test_import_from
+    assert test_import_from == os.system
+
+    with warn_module_not_found():
+        import geoh5py.objects as test_import_submodule
+    assert test_import_submodule == geoh5py.objects
+
+    with warn_module_not_found():
+        from geoh5py.objects import ObjectBase as test_import_from_submodule
+    assert test_import_from_submodule == geoh5py.objects.ObjectBase
+
+    assert len(recwarn) == 0
+
+
+def test_warn_module_not_found():
+    noop = lambda x: None
+
+    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+        with warn_module_not_found():
+            import nonexisting as test_import
+    with pytest.raises(NameError):
+        noop(test_import)
+
+    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+        with warn_module_not_found():
+            from nonexisting import nope as test_import_from
+    with pytest.raises(NameError):
+        noop(test_import_from)
+
+    with pytest.warns(
+        match=f"Module 'os.nonexisting' is missing from the environment."
+    ):
+        with warn_module_not_found():
+            import os.nonexisting as test_import_os_submodule
+    with pytest.raises(NameError):
+        noop(test_import_os_submodule)
+
+    with pytest.warns(
+        match=f"Module 'os.nonexisting' is missing from the environment."
+    ):
+        with warn_module_not_found():
+            from os.nonexisting import nope as test_import_from_os_submodule
+    with pytest.raises(NameError):
+        noop(test_import_from_os_submodule)
+
+    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+        with warn_module_not_found():
+            import nonexisting.nope as test_import_nonexising_submodule
+    with pytest.raises(NameError):
+        noop(test_import_nonexising_submodule)
+
+    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+        with warn_module_not_found():
+            from nonexisting.nope import nada as test_import_from_nonexisting_submodule
+    with pytest.raises(NameError):
+        noop(test_import_from_nonexisting_submodule)
 
 
 def test_sorted_children_dict(tmp_path):

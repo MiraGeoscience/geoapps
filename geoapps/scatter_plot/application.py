@@ -9,40 +9,28 @@ import os
 
 import numpy as np
 
-from geoapps.utils import soft_import
-
-px = soft_import("plotly.express")
-go = soft_import("plotly", objects=["graph_objects"])
-(
-    Checkbox,
-    Dropdown,
-    FloatText,
-    HBox,
-    IntSlider,
-    Label,
-    Layout,
-    ToggleButton,
-    VBox,
-    interactive_output,
-) = soft_import(
-    "ipywidgets",
-    objects=[
-        "Checkbox",
-        "Dropdown",
-        "FloatText",
-        "HBox",
-        "IntSlider",
-        "Label",
-        "Layout",
-        "ToggleButton",
-        "VBox",
-        "interactive_output",
-    ],
-)
-
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import format_axis, normalize, symlog
 from geoapps.utils.statistics import random_sampling
+
+with warn_module_not_found():
+    import plotly.express as px
+    from plotly import graph_objects as go
+
+with warn_module_not_found():
+    from ipywidgets import (
+        Checkbox,
+        Dropdown,
+        FloatText,
+        HBox,
+        IntSlider,
+        Label,
+        Layout,
+        ToggleButton,
+        VBox,
+        interactive_output,
+    )
 
 
 class ScatterPlots(ObjectDataSelection):

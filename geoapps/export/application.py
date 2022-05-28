@@ -14,17 +14,19 @@ from geoh5py.objects import BlockModel, Curve, Octree
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.shared_utils.utils import octree_2_treemesh
-from geoapps.utils import soft_import
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
 
-plt = soft_import("matplotlib", objects=["pyplot"])
-HBox, VBox = soft_import("ipywidgets.widgets", objects=["HBox", "VBox"])
-osr = soft_import("osgeo", objects=["osr"])
-(Dropdown, FloatText, Layout, RadioButtons, Text, Textarea) = soft_import(
-    "ipywidgets",
-    objects=["Dropdown", "FloatText", "Layout", "RadioButtons", "Text", "Textarea"],
-)
+with warn_module_not_found():
+    from matplotlib import pyplot as plt
+
+with warn_module_not_found():
+    from osgeo import osr
+
+with warn_module_not_found():
+    from ipywidgets.widgets import HBox, VBox
+    from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
 
 from .utils import export_curve_2_shapefile, object_2_dataframe
 

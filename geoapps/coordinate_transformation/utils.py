@@ -14,8 +14,6 @@ from geoh5py.groups import Group
 from geoh5py.objects import Grid2D
 from geoh5py.workspace import Workspace
 
-from geoapps.utils import soft_import
-
 
 def geotiff_2_grid(
     workspace: Workspace,
@@ -35,7 +33,7 @@ def geotiff_2_grid(
 
      :return grid: Grid2D object with values stored.
     """
-    gdal = soft_import("osgeo", objects=["gdal"], interrupt=True)
+    from osgeo import gdal
 
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)

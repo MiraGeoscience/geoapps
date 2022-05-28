@@ -8,10 +8,13 @@
 import geoh5py
 import numpy as np
 
-from geoapps.utils import soft_import
+from geoapps.utils import warn_module_not_found
 
-LineString, mapping = soft_import("shapely.geometry", ["LineString", "mapping"])
-pd = soft_import("pandas")
+with warn_module_not_found():
+    from shapely.geometry import LineString, mapping
+
+with warn_module_not_found():
+    import pandas as pd
 
 
 def object_2_dataframe(entity, fields=[], inplace=False, vertices=True, index=None):
@@ -54,7 +57,7 @@ def export_curve_2_shapefile(
     :param wkt_code: Well-Known-Text string used to assign a projection.
     :param file_name: Specify the path and name of the *.shp. Defaults to the current directory and `curve.name`.
     """
-    fiona = soft_import("fiona", interrupt=True)
+    import fiona
 
     attribute_vals = None
 

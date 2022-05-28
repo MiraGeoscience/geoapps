@@ -17,17 +17,14 @@ from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils import soft_import
-
-(Dropdown, FloatText, Label, Layout, Text, VBox, Widget) = soft_import(
-    "ipywidgets",
-    objects=["Dropdown", "FloatText", "Label", "Layout", "Text", "VBox", "Widget"],
-)
-TraitError = soft_import("ipywidgets.widgets.widget_selection", objects=["TraitError"])
-
+from geoapps.utils import warn_module_not_found
 
 from . import OctreeParams, app_initializer
 from .driver import OctreeDriver
+
+with warn_module_not_found():
+    from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
+    from ipywidgets.widgets.widget_selection import TraitError
 
 
 class OctreeMesh(ObjectDataSelection):

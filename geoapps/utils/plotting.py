@@ -16,12 +16,17 @@ from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
 
 from geoapps.shared_utils.utils import filter_xy, get_inversion_output
-from geoapps.utils import soft_import
+from geoapps.utils import warn_module_not_found
 
-colors = soft_import("matplotlib", objects=["colors"])
-plt = soft_import("matplotlib", objects=["pyplot"])
-go = soft_import("plotly", objects=["graph_objects"])
-widgets = soft_import("ipywidgets")
+with warn_module_not_found():
+    from matplotlib import colors
+    from matplotlib import pyplot as plt
+
+with warn_module_not_found():
+    from plotly import graph_objects as go
+
+with warn_module_not_found():
+    import ipywidgets as widgets
 
 
 def symlog(values, threshold):

@@ -13,7 +13,6 @@ from geoh5py.objects import Grid2D
 from scipy.interpolate import interp1d
 
 from geoapps.shared_utils.utils import rotate_xy
-from geoapps.utils import soft_import
 
 
 def export_grid_2_geotiff(
@@ -37,7 +36,7 @@ def export_grid_2_geotiff(
     Modified: 2020-04-28
     """
 
-    gdal = soft_import("osgeo", objects=["gdal"], interrupt=True)
+    from osgeo import gdal
 
     grid2d = data.parent
 

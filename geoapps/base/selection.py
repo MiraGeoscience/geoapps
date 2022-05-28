@@ -14,16 +14,14 @@ from geoh5py.data import ReferencedData
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
 
-from geoapps.utils import soft_import
-
-widgets = soft_import("ipywidgets")
-(Dropdown, FloatText, SelectMultiple, VBox) = soft_import(
-    "ipywidgets", objects=["Dropdown", "FloatText", "SelectMultiple", "VBox"]
-)
-
 from geoapps.base.application import BaseApplication
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.workspace import sorted_children_dict
+
+with warn_module_not_found():
+    import ipywidgets as widgets
+    from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
 
 
 class ObjectDataSelection(BaseApplication):

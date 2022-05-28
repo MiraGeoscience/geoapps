@@ -26,53 +26,35 @@ from geoapps.peak_finder.constants import (
     default_ui_json,
     template_dict,
 )
-from geoapps.utils import geophysical_systems, soft_import
-
-plt = soft_import("matplotlib", objects=["pyplot"])
-(
-    Box,
-    Checkbox,
-    ColorPicker,
-    Dropdown,
-    FloatLogSlider,
-    FloatSlider,
-    FloatText,
-    HBox,
-    IntSlider,
-    Label,
-    Layout,
-    ToggleButton,
-    ToggleButtons,
-    VBox,
-    Widget,
-    interactive_output,
-) = soft_import(
-    "ipywidgets",
-    objects=[
-        "Box",
-        "Checkbox",
-        "ColorPicker",
-        "Dropdown",
-        "FloatLogSlider",
-        "FloatSlider",
-        "FloatText",
-        "HBox",
-        "IntSlider",
-        "Label",
-        "Layout",
-        "ToggleButton",
-        "ToggleButtons",
-        "VBox",
-        "Widget",
-        "interactive_output",
-    ],
-)
-TraitError = soft_import("ipywidgets.widgets.widget_selection", objects=["TraitError"])
-
+from geoapps.utils import geophysical_systems, warn_module_not_found
 
 from . import PeakFinderParams
 from .driver import PeakFinderDriver
 from .utils import default_groups_from_property_group, find_anomalies
+
+with warn_module_not_found():
+    from matplotlib import pyplot as plt
+
+with warn_module_not_found():
+    from ipywidgets import (
+        Box,
+        Checkbox,
+        ColorPicker,
+        Dropdown,
+        FloatLogSlider,
+        FloatSlider,
+        FloatText,
+        HBox,
+        IntSlider,
+        Label,
+        Layout,
+        ToggleButton,
+        ToggleButtons,
+        VBox,
+        Widget,
+        interactive_output,
+    )
+    from ipywidgets.widgets.widget_selection import TraitError
 
 
 class PeakFinder(ObjectDataSelection):
