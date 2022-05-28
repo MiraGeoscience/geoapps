@@ -27,7 +27,7 @@ dependencies:
   - libiconv=1.16=haf1e3a3_0
   - libsodium=1.0.18=hbcb3906_1
   - libwebp-base=1.2.2=h0d85af4_1
-  - libzlib=1.2.11=h6c3fc93_1014
+  - libzlib=1.2.12=h6c3fc93_0
   - llvm-openmp=14.0.4=ha654fa7_0
   - ncurses=6.3=h96cf925_1
   - pandoc=2.18=h694c41f_0
@@ -65,7 +65,7 @@ dependencies:
   - tk=8.6.12=h5dbffcc_0
   - zeromq=4.3.4=he49afe7_1
   - zfp=0.5.5=h4a89273_8
-  - zlib=1.2.11=h6c3fc93_1014
+  - zlib=1.2.12=h6c3fc93_0
   - brotli-bin=1.0.9=h5eb16cf_7
   - fonts-conda-ecosystem=1=0
   - hdf4=4.2.15=hefd3b78_3
@@ -257,7 +257,6 @@ dependencies:
   - prompt-toolkit=3.0.29=pyha770c72_0
   - properties=0.6.1=py_0
   - pydiso=0.0.3=py37h3201b9e_2
-  - pymkl=0.0.3=py_0
   - pytest=7.1.2=py37hf985489_0
   - scikit-learn=1.0.2=py37h572704e_0
   - tifffile=2021.7.2=pyhd8ed1ab_0

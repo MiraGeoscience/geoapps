@@ -26,7 +26,7 @@ dependencies:
   - libiconv=1.16=haf1e3a3_0
   - libsodium=1.0.18=hbcb3906_1
   - libwebp-base=1.2.2=h0d85af4_1
-  - libzlib=1.2.11=h6c3fc93_1014
+  - libzlib=1.2.12=h6c3fc93_0
   - llvm-openmp=14.0.4=ha654fa7_0
   - ncurses=6.3=h96cf925_1
   - pandoc=2.18=h694c41f_0
@@ -65,7 +65,7 @@ dependencies:
   - tk=8.6.12=h5dbffcc_0
   - zeromq=4.3.4=he49afe7_1
   - zfp=0.5.5=h4a89273_8
-  - zlib=1.2.11=h6c3fc93_1014
+  - zlib=1.2.12=h6c3fc93_0
   - brotli-bin=1.0.9=h5eb16cf_7
   - fonts-conda-ecosystem=1=0
   - hdf4=4.2.15=hefd3b78_3
@@ -243,7 +243,6 @@ dependencies:
   - prompt-toolkit=3.0.29=pyha770c72_0
   - properties=0.6.1=py_0
   - pydiso=0.0.3=py38hc79da48_2
-  - pymkl=0.0.3=py_0
   - scikit-learn=1.1.1=py38h4ade575_0
   - tifffile=2022.5.4=pyhd8ed1ab_0
   - urllib3=1.26.9=pyhd8ed1ab_0
@@ -251,7 +250,7 @@ dependencies:
   - distributed=2022.5.2=pyhd8ed1ab_0
   - fiona=1.8.21=py38h1e9a8ad_1
   - geoana=0.0.6=py_1
-  - ipython=8.3.0=py38h50d1736_0
+  - ipython=8.4.0=py38h50d1736_0
   - nbconvert-core=6.5.0=pyhd8ed1ab_0
   - pymatsolver=0.2.0=pyhd8ed1ab_0
   - scikit-image=0.19.2=py38ha53d530_0

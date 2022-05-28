@@ -25,9 +25,9 @@ metadata:
     osx-64: 1a12d32882372715f6f9a8849c0230dbcfa1c6312d92d584ca7dadb1362dd8d0
     win-64: bbb022a08c104112a63b13da5e41cfa5c39700bbf737795425b5ad782d785fec
   platforms:
-  - linux-64
-  - osx-64
   - win-64
+  - osx-64
+  - linux-64
   sources:
   - pyproject.toml
   - env-python-3.8.yml
@@ -540,16 +540,16 @@ package:
   version: 1.2.2
 - category: main
   dependencies:
-    libgcc-ng: '>=10.3.0'
+    libgcc-ng: '>=12'
   hash:
-    md5: 757138ba3ddc6777b82e91d9ff62e7b9
-    sha256: b46b66d1cb171be2227a275e226195ca9e56c6f5b16250b85645e82a69518378
+    md5: 6c06394781511bdc3c37512ed7b16730
+    sha256: 0b05a169613a5596f1947b6ddd6065a28685016fd9869c736bbcd5c82ce515fa
   manager: conda
   name: libzlib
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libzlib-1.2.11-h166bdaf_1014.tar.bz2
-  version: 1.2.11
+  url: https://conda.anaconda.org/conda-forge/linux-64/libzlib-1.2.12-h166bdaf_0.tar.bz2
+  version: 1.2.12
 - category: full
   dependencies:
     libgcc-ng: '>=9.3.0'
@@ -1012,17 +1012,17 @@ package:
   version: 4.3.4
 - category: main
   dependencies:
-    libgcc-ng: '>=10.3.0'
-    libzlib: 1.2.11 h166bdaf_1014
+    libgcc-ng: '>=12'
+    libzlib: 1.2.12 h166bdaf_0
   hash:
-    md5: def3b82d1a03aa695bb38ac1dd072ff2
-    sha256: ccfdb4dcceae8b191ddd4703e7be84eff2ba82b53788d6bb9298e531bae4eaf9
+    md5: c6b89248778ae9a05320f19eb212ad90
+    sha256: dc05bb807ce08b14d5ce6dd8b6789bb72388f224b8b9bd4ad85e585596bb44d9
   manager: conda
   name: zlib
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/zlib-1.2.11-h166bdaf_1014.tar.bz2
-  version: 1.2.11
+  url: https://conda.anaconda.org/conda-forge/linux-64/zlib-1.2.12-h166bdaf_0.tar.bz2
+  version: 1.2.12
 - category: main
   dependencies:
     libgcc-ng: '>=10.3.0'
@@ -3795,22 +3795,6 @@ package:
   version: 2.13.9
 - category: main
   dependencies:
-    future: ''
-    mkl: ''
-    numpy: '>=1.7'
-    python: ''
-    scipy: '>=0.13'
-  hash:
-    md5: 839bd475a3d299c141bd49d7565ecfe9
-    sha256: 7773972fc63a86a2783836d65b59ff078cd9923b62a8558424b0f140d5cc1819
-  manager: conda
-  name: pymkl
-  optional: false
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pymkl-0.0.3-py_0.tar.bz2
-  version: 0.0.3
-- category: main
-  dependencies:
     cryptography: '>=35.0'
     python: '>=3.6'
   hash:
@@ -4098,14 +4082,14 @@ package:
     stack_data: ''
     traitlets: '>=5'
   hash:
-    md5: 67501b153d004e3abd548bf8dd2a1df8
-    sha256: d5901f58952dcfc3716537b563be61cb3ea5e20ae75ad68dc84cc04baba47a0b
+    md5: 45164b6fd0616b2ed5217970c39865da
+    sha256: 7d819318c41b877bff0ac561c5f78685b52597569313185b1ae164a11fa64087
   manager: conda
   name: ipython
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/ipython-8.3.0-py38h578d9bd_0.tar.bz2
-  version: 8.3.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/ipython-8.4.0-py38h578d9bd_0.tar.bz2
+  version: 8.4.0
 - category: full
   dependencies:
     beautifulsoup4: ''
@@ -4305,7 +4289,7 @@ package:
     type: url
     url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None
   url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip
-  version: 0.9.1.dev1+geoapps.0.6.0
+  version: 0.9.1.dev2+geoapps.0.8.0
 - category: main
   dependencies:
     discretize: '>=0.7.0'
@@ -4328,7 +4312,7 @@ package:
     type: url
     url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None
   url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip
-  version: 0.15.1.dev1+geoapps.0.6.0
+  version: 0.15.1.dev2+geoapps.0.8.0
 - category: main
   dependencies: {}
   hash:
@@ -4552,14 +4536,14 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: 49f20ed86f7ed34204be74fbb2868c60
-    sha256: 7e01a61f197bae37cc4c21f3e4767f9fb3b327a9e100c9b479ec83d8ede4a921
+    md5: f07bbb7d382718623d13296bd6f486f3
+    sha256: 596ff2f9a1b41fd39601e65a3752c47ab9fbdb3fe6cde34bed6b6b75cefd2c79
   manager: conda
   name: libzlib
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libzlib-1.2.11-h6c3fc93_1014.tar.bz2
-  version: 1.2.11
+  url: https://conda.anaconda.org/conda-forge/osx-64/libzlib-1.2.12-h6c3fc93_0.tar.bz2
+  version: 1.2.12
 - category: main
   dependencies: {}
   hash:
@@ -5013,16 +4997,16 @@ package:
   version: 0.5.5
 - category: main
   dependencies:
-    libzlib: 1.2.11 h6c3fc93_1014
+    libzlib: 1.2.12 h6c3fc93_0
   hash:
-    md5: 98b82f6a8de694bc6259f2d1a69bc02b
-    sha256: 825ad325db6febfcc5ec1051a57a50be5504613c737ef3be8ccf38ec4dd12b70
+    md5: 6afaa92362b47e2b058d2385b60727ea
+    sha256: d04c59f639866370d7ea07a78b3691d1e30913b511a664e888ac384f6a594e73
   manager: conda
   name: zlib
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/zlib-1.2.11-h6c3fc93_1014.tar.bz2
-  version: 1.2.11
+  url: https://conda.anaconda.org/conda-forge/osx-64/zlib-1.2.12-h6c3fc93_0.tar.bz2
+  version: 1.2.12
 - category: main
   dependencies:
     libbrotlidec: 1.0.9 h5eb16cf_7
@@ -7851,22 +7835,6 @@ package:
   version: 0.0.3
 - category: main
   dependencies:
-    future: ''
-    mkl: ''
-    numpy: '>=1.7'
-    python: ''
-    scipy: '>=0.13'
-  hash:
-    md5: 839bd475a3d299c141bd49d7565ecfe9
-    sha256: 7773972fc63a86a2783836d65b59ff078cd9923b62a8558424b0f140d5cc1819
-  manager: conda
-  name: pymkl
-  optional: false
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pymkl-0.0.3-py_0.tar.bz2
-  version: 0.0.3
-- category: main
-  dependencies:
     joblib: '>=1.0.0'
     libcblas: '>=3.8.0,<4.0a0'
     libcxx: '>=13.0.1'
@@ -8022,14 +7990,14 @@ package:
     stack_data: ''
     traitlets: '>=5'
   hash:
-    md5: 8bd29f11cd3579274421490ac23918cb
-    sha256: 1389964515dadaed4020ac15340f0f8a00a15db287cf99bb2959aa33eec21770
+    md5: 01aa6e4355138850ed06c972926cc153
+    sha256: 9cfea16227753fc91f148dc45a2c65f16b053e7ec2c08a18949fe641320fa6d3
   manager: conda
   name: ipython
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/ipython-8.3.0-py38h50d1736_0.tar.bz2
-  version: 8.3.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/ipython-8.4.0-py38h50d1736_0.tar.bz2
+  version: 8.4.0
 - category: full
   dependencies:
     beautifulsoup4: ''
@@ -8271,7 +8239,7 @@ package:
     type: url
     url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None
   url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip
-  version: 0.9.1.dev1+geoapps.0.6.0
+  version: 0.9.1.dev2+geoapps.0.8.0
 - category: main
   dependencies:
     discretize: '>=0.7.0'
@@ -8294,7 +8262,7 @@ package:
     type: url
     url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None
   url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip
-  version: 0.15.1.dev1+geoapps.0.6.0
+  version: 0.15.1.dev2+geoapps.0.8.0
 - category: main
   dependencies: {}
   hash:
@@ -8731,14 +8699,14 @@ package:
     vc: '>=14.1,<15'
     vs2015_runtime: '>=14.16.27033'
   hash:
-    md5: 5e57ffcf6d651d94d329a3e9ce1f8f21
-    sha256: 5859eb888e306ab8d974b9214b1739e0b5f12c0ccc6085c8c3ad2dcdc5681687
+    md5: c3d49ce531c0b5bfe1a8c464ac3c709a
+    sha256: 70646f37e9968b564792c5fd4fb397af95836fc1f0f7ced5ac04d7d5d2348320
   manager: conda
   name: libzlib
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libzlib-1.2.11-h8ffe710_1014.tar.bz2
-  version: 1.2.11
+  url: https://conda.anaconda.org/conda-forge/win-64/libzlib-1.2.12-h8ffe710_0.tar.bz2
+  version: 1.2.12
 - category: full
   dependencies:
     vc: '>=14.1,<15.0a0'
@@ -9110,18 +9078,18 @@ package:
   version: 4.3.4
 - category: main
   dependencies:
-    libzlib: 1.2.11 h8ffe710_1014
+    libzlib: 1.2.12 h8ffe710_0
     vc: '>=14.1,<15'
     vs2015_runtime: '>=14.16.27033'
   hash:
-    md5: 8f3f8b243814bddb2898c314ed024e03
-    sha256: 21c83bb04be3a0137ea240fd0ef4762481373eb5c402d065272a32a23c9b1c29
+    md5: d512bc564ba90eb83c4ae178d8c6fc72
+    sha256: 96aa4164760e3943bf3aec85c565c098e9ccd655aad05f6a795309b515293b41
   manager: conda
   name: zlib
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/zlib-1.2.11-h8ffe710_1014.tar.bz2
-  version: 1.2.11
+  url: https://conda.anaconda.org/conda-forge/win-64/zlib-1.2.12-h8ffe710_0.tar.bz2
+  version: 1.2.12
 - category: main
   dependencies:
     libzlib: '>=1.2.11,<1.3.0a0'
@@ -11817,22 +11785,6 @@ package:
   version: 0.0.3
 - category: main
   dependencies:
-    future: ''
-    mkl: ''
-    numpy: '>=1.7'
-    python: ''
-    scipy: '>=0.13'
-  hash:
-    md5: 839bd475a3d299c141bd49d7565ecfe9
-    sha256: 7773972fc63a86a2783836d65b59ff078cd9923b62a8558424b0f140d5cc1819
-  manager: conda
-  name: pymkl
-  optional: false
-  platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pymkl-0.0.3-py_0.tar.bz2
-  version: 0.0.3
-- category: main
-  dependencies:
     joblib: '>=1.0.0'
     libcblas: '>=3.8.0,<4.0a0'
     numpy: '>=1.19.5,<2.0a0'
@@ -11962,14 +11914,14 @@ package:
     stack_data: ''
     traitlets: '>=5'
   hash:
-    md5: f10d1ae441011f4238abb3752ae5c13b
-    sha256: d3c5955477e98a704d1d0546b9c0ad2762b98c22b1977d8472455136aab18a02
+    md5: 02c0592a642ec43379ce11c924135d9c
+    sha256: c610bfc28e66e87653e44801ad12dd791b17e08bd19bb5566fd3c5d0d9536996
   manager: conda
   name: ipython
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/ipython-8.3.0-py38haa244fe_0.tar.bz2
-  version: 8.3.0
+  url: https://conda.anaconda.org/conda-forge/win-64/ipython-8.4.0-py38haa244fe_0.tar.bz2
+  version: 8.4.0
 - category: full
   dependencies:
     blosc: '>=1.21.1,<2.0a0'
@@ -12300,7 +12252,7 @@ package:
     type: url
     url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None
   url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip
-  version: 0.9.1.dev1+geoapps.0.6.0
+  version: 0.9.1.dev2+geoapps.0.8.0
 - category: main
   dependencies:
     discretize: '>=0.7.0'
@@ -12323,5 +12275,5 @@ package:
     type: url
     url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None
   url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip
-  version: 0.15.1.dev1+geoapps.0.6.0
+  version: 0.15.1.dev2+geoapps.0.8.0
 version: 1
