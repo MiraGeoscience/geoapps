@@ -47,3 +47,6 @@ if __name__ == "__main__":
         create_multi_platform_lock(py_ver)
         per_platform_env(py_ver, dev=False)
         per_platform_env(py_ver, dev=True)
+
+    # for simpeg with Python 3.9
+    per_platform_env("3.9", full=False, dev=False, suffix="-simpeg")
