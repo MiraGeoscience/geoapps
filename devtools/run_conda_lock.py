@@ -10,6 +10,12 @@
 import os
 import subprocess
 from contextlib import contextmanager
+from pathlib import Path
+
+env_file_variables_section_ = """
+variables:
+  KMP_WARNINGS: 0
+"""
 
 
 @contextmanager
@@ -55,6 +61,12 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
         check=True,
         stderr=subprocess.STDOUT,
     )
+    platform_glob = "*-64"
+    for lock_env_file in Path.cwd().glob(
+        f"conda-py-{py_ver}-{platform_glob}{dev_suffix}{suffix}.lock.yml"
+    ):
+        with open(lock_env_file, "a") as f:
+            f.write(env_file_variables_section_)
 
 
 def config_conda():
