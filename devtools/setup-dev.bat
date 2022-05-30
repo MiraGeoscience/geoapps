@@ -1,3 +1,13 @@
+:: Setup a local conda dev environment under .conda-dev
+::  with all dependencies for geoapps,
+::  and local editable installation of geoh5py.
+:: Note: geoapps itself is not installed in the environment.
+::
+:: The script has no parameters, and can be executed by double-clicking
+:: the .bat file from Windows Explorer.
+::
+:: Usage: setup-dev.bat
+
 @echo off
 setlocal EnableDelayedExpansion
 
