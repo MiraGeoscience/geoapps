@@ -57,7 +57,17 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
     )
 
 
+def config_conda():
+    subprocess.run(
+        "conda config --set channel_priority strict",
+        shell=True,
+        check=True,
+        stderr=subprocess.STDOUT,
+    )
+
+
 if __name__ == "__main__":
+    config_conda()
     with print_execution_time(f"run_conda_lock"):
         for py_ver in ["3.9", "3.8", "3.7"]:
             create_multi_platform_lock(py_ver)
