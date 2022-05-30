@@ -14,7 +14,6 @@ import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.ui_json import InputFile
-from geoh5py.workspace import Workspace
 from matplotlib import collections
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
@@ -34,13 +33,30 @@ class EdgeDetectionDriver:
         self.indices = None
         self.object_lines = None
 
-    # def run(self):
-    #    """ """
-    #    self.compute_trigger()
-
-    # @staticmethod
-    # def compute_trigger(self):
     def run(self):
+        """ """
+        entity = self.params.objects
+        if self.trigger_vertices is not None:
+            name = string_name(self.params.export_as)
+            workspace = self.params.geoh5
+
+            out_entity = ContainerGroup.create(
+                workspace,
+                name=self.params.ga_group_name,
+                uid=self._unique_object.get(self.params.ga_group_name, None),
+            )
+            curve = Curve.create(
+                workspace,
+                name=name,
+                vertices=self.trigger_vertices,
+                cells=self.trigger_cells,
+                parent=out_entity,
+                uid=self._unique_object.get(name, None),
+            )
+            self._unique_object[name] = curve.uid
+            self._unique_object[self.params.ga_group_name] = out_entity.uid
+
+    def compute_trigger(self):
 
         grid = self.params.objects
 
@@ -126,15 +142,8 @@ class EdgeDetectionDriver:
                 self.object_lines = None
 
             return self.collections
-            # return self.collections, self.trigger_vertices, self.trigger_cells
 
-    # @staticmethod
     def plot_store_lines(self):
-
-        if hasattr(self.params, "resolution"):
-            resolution = self.params.resolution
-        else:
-            resolution = 50
 
         # Fetch vertices in the project
         lim_x = [1e8, -1e8]
@@ -166,7 +175,7 @@ class EdgeDetectionDriver:
         indices_1 = filter_xy(
             xy[1::2, 0],
             xy[1::2, 1],
-            resolution,
+            self.params.resolution,
             window={
                 "center": [
                     self.params.window_center_x,
@@ -182,7 +191,7 @@ class EdgeDetectionDriver:
         indices_2 = filter_xy(
             xy[::2, 0],
             xy[::2, 1],
-            resolution,
+            self.params.resolution,
             window={
                 "center": [
                     self.params.window_center_x,
@@ -218,28 +227,6 @@ class EdgeDetectionDriver:
             self.trigger_vertices = None
             self.trigger_cells = None
 
-    def export(self, workspace):
-        # entity, _ = self.get_selected_entities()
-        entity = self.params.objects
-        if self.trigger_vertices is not None:
-            name = string_name(self.params.export_as)
-
-            out_entity = ContainerGroup.create(
-                workspace,
-                name=self.params.ga_group_name,
-                uid=self._unique_object.get(self.params.ga_group_name, None),
-            )
-            curve = Curve.create(
-                workspace,
-                name=name,
-                vertices=self.trigger_vertices,
-                cells=self.trigger_cells,
-                parent=out_entity,
-                uid=self._unique_object.get(name, None),
-            )
-            self._unique_object[name] = curve.uid
-            self._unique_object[self.params.ga_group_name] = out_entity.uid
-
 
 if __name__ == "__main__":
     file = sys.argv[1]
@@ -247,4 +234,3 @@ if __name__ == "__main__":
     params = EdgeDetectionParams(ifile)
     driver = EdgeDetectionDriver(params)
     driver.run()
-    driver.export(ifile.workspace)
