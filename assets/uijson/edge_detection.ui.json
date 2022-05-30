@@ -15,7 +15,7 @@
     "objects": {
         "group": "Data Selection",
         "meshType": [
-            " {48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
         ],
         "main": true,
         "label": "Object",
@@ -62,7 +62,7 @@
     "threshold": {
         "group": "Parameters",
         "main": true,
-        "label": "Line Gap",
+        "label": "Threshold",
         "min": 1,
         "max": 100,
         "value": 1
@@ -70,7 +70,7 @@
     "window_size": {
         "group": "Parameters",
         "main": true,
-        "label": "Line Gap",
+        "label": "Window Size",
         "min": 16,
         "max": 512,
         "value": 64
@@ -89,8 +89,6 @@
         "group": "Figure Options",
         "main": true,
         "label": "Easting",
-        "min": -100,
-        "max": 100,
         "value": 0,
         "optional": true,
         "enabled": false
@@ -99,8 +97,6 @@
         "group": "Figure Options",
         "main": true,
         "label": "Northing",
-        "min": -100,
-        "max": 100,
         "value": 0,
         "optional": true,
         "enabled": false
@@ -110,7 +106,6 @@
         "main": true,
         "label": "Width",
         "min": 0,
-        "max": 100,
         "value": 100,
         "optional": true,
         "enabled": false
@@ -120,28 +115,15 @@
         "main": true,
         "label": "Height",
         "min": 0,
-        "max": 100,
         "value": 100,
         "optional": true,
         "enabled": false
     },
-    "colorbar": {
-        "group": "Figure Options",
-        "main": true,
-        "label": "Colorbar",
-        "value": false
-    },
-    "zoom_extent": {
-        "group": "Figure Options",
-        "main": true,
-        "label": "Zoom on selection",
-        "value": true
-    },
     "export_as": {
-        "group": "Python run preferences",
         "main": true,
         "label": "Save as",
-        "value": ""
+        "value": "",
+        "group": "Python run preferences"
     },
     "ga_group_name": {
         "main": true,

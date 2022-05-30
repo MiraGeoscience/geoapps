@@ -142,7 +142,7 @@ class EdgeDetectionParams(BaseParams):
         self.setter_validator("window_azimuth", val)
 
     @property
-    def window_center_x(self) -> int | None:
+    def window_center_x(self) -> float | None:
         """
         window_center_x
         """
@@ -153,7 +153,7 @@ class EdgeDetectionParams(BaseParams):
         self.setter_validator("window_center_x", val)
 
     @property
-    def window_center_y(self) -> int | None:
+    def window_center_y(self) -> float | None:
         """
         window_center_y
         """
@@ -164,7 +164,7 @@ class EdgeDetectionParams(BaseParams):
         self.setter_validator("window_center_y", val)
 
     @property
-    def window_width(self) -> int | None:
+    def window_width(self) -> float | None:
         """
         window_width
         """
@@ -175,7 +175,7 @@ class EdgeDetectionParams(BaseParams):
         self.setter_validator("window_width", val)
 
     @property
-    def window_height(self) -> int | None:
+    def window_height(self) -> float | None:
         """
         window_height
         """
