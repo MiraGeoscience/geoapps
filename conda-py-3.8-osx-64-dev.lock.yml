@@ -196,7 +196,7 @@ dependencies:
   - packaging=21.3=pyhd8ed1ab_0
   - partd=1.2.0=pyhd8ed1ab_0
   - pexpect=4.8.0=pyh9f0ad1d_2
-  - pillow=9.1.1=py38h21af888_0
+  - pillow=9.1.1=py38h21af888_1
   - plotly=5.8.0=pyhd8ed1ab_1
   - pluggy=1.0.0=py38h50d1736_3
   - psutil=5.9.1=py38h0dd4459_0
@@ -242,7 +242,7 @@ dependencies:
   - imagecodecs=2022.2.22=py38h6428fbb_5
   - imageio=2.19.2=pyhcf75d05_0
   - jupyterlab_pygments=0.2.2=pyhd8ed1ab_0
-  - libgdal=3.4.3=h6474519_0
+  - libgdal=3.5.0=h6474519_0
   - matplotlib-base=3.5.2=py38h1b6b9d1_0
   - nbformat=5.4.0=pyhd8ed1ab_0
   - numba=0.53.0=py38hab5c5c7_0
@@ -258,7 +258,7 @@ dependencies:
   - wcwidth=0.2.5=pyh9f0ad1d_2
   - discretize=0.7.4=py38ha47dcfc_0
   - empymod=2.1.3=pyhd8ed1ab_0
-  - gdal=3.4.3=py38hbf5d6e3_0
+  - gdal=3.5.0=py38hbf5d6e3_0
   - nbclient=0.6.3=pyhd8ed1ab_0
   - prompt-toolkit=3.0.29=pyha770c72_0
   - properties=0.6.1=py_0
@@ -268,7 +268,7 @@ dependencies:
   - urllib3=1.26.9=pyhd8ed1ab_0
   - zarr=2.11.3=pyhd8ed1ab_0
   - distributed=2022.5.2=pyhd8ed1ab_0
-  - fiona=1.8.21=py38h1e9a8ad_1
+  - fiona=1.8.21=py38ha0dec4d_2
   - geoana=0.0.6=py_1
   - ipython=8.4.0=py38h50d1736_0
   - nbconvert-core=6.5.0=pyhd8ed1ab_0
