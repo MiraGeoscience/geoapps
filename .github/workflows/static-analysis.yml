@@ -29,7 +29,7 @@ jobs:
         shell: bash -l {0}
     env:
       PYTHONUTF8: 1
-      CONDA_LOCK_ENV_FILE: conda-py-${{ matrix.python_ver }}-win-64-dev.lock.yml
+      CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-win-64-dev.lock.yml
     steps:
       - uses: actions/checkout@v2
       - name: Setup conda env

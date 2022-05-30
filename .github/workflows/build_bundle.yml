@@ -18,7 +18,7 @@ jobs:
       PYTHONUTF8: 1
       ARTIFACT_NAME: geoapps-simpeg.conda-pack
       CONDA_ENV_NAME: geoapps-simpeg
-      CONDA_LOCK_ENV_FILE: conda-py-3.9-win-64-simpeg.lock.yml
+      CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64-simpeg.lock.yml
     outputs:
       bundle: ${{ steps.conda_pack.outputs.filename }}
       artifact: ${{ env.ARTIFACT_NAME }}-${{ steps.conda_pack.outputs.name_suffix }}
