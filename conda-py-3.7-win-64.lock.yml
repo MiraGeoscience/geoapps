@@ -247,3 +247,6 @@ dependencies:
     - geoh5py @ https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.zip#sha256=None
     - simpeg-archive @ https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None
     - simpeg @ https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None
+
+variables:
+  KMP_WARNINGS: 0
