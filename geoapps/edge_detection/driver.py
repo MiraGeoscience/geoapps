@@ -9,11 +9,10 @@
 from __future__ import annotations
 
 import sys
-from time import time
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, Grid2D
+from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from matplotlib import collections
@@ -128,11 +127,31 @@ class EdgeDetectionDriver:
         else:
             resolution = 50
 
-        print(self.params.window_center_x)
-        print(self.params.window_center_y)
-        print(self.params.window_width)
-        print(self.params.window_height)
-        print(self.params.window_azimuth)
+        # Fetch vertices in the project
+        lim_x = [1e8, -1e8]
+        lim_y = [1e8, -1e8]
+
+        obj = self.params.objects
+        if isinstance(obj, Grid2D):
+            lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
+            lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
+        elif isinstance(obj, (Points, Curve, Surface)):
+            lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
+            lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
+        else:
+            return
+
+        width = lim_x[1] - lim_x[0]
+        height = lim_y[1] - lim_y[0]
+
+        if self.params.window_center_x is None:
+            self.params.window_center_x = np.mean(lim_x)
+        if self.params.window_center_y is None:
+            self.params.window_center_y = np.mean(lim_y)
+        if self.params.window_width is None:
+            self.params.window_width = (width * 1.2) / 2.0
+        if self.params.window_height is None:
+            self.params.window_height = (height * 1.2) / 2.0
 
         xy = self.object_lines
         indices_1 = filter_xy(
@@ -190,16 +209,11 @@ class EdgeDetectionDriver:
             self.trigger_vertices = None
             self.trigger_cells = None
 
-    def export(self):
+    def export(self, workspace):
         # entity, _ = self.get_selected_entities()
         entity = self.params.objects
-        print(self.trigger_vertices)
         if self.trigger_vertices is not None:
             name = string_name(self.params.export_as)
-            temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
-
-            workspace = Workspace(temp_geoh5)
-            print(temp_geoh5)
 
             out_entity = ContainerGroup.create(
                 workspace,
@@ -220,7 +234,8 @@ class EdgeDetectionDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = EdgeDetectionParams(InputFile.read_ui_json(file))
+    ifile = InputFile.read_ui_json(file)
+    params = EdgeDetectionParams(ifile)
     driver = EdgeDetectionDriver(params)
     driver.run()
-    driver.export()
+    driver.export(ifile.workspace)
