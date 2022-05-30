@@ -17,6 +17,8 @@ variables:
   KMP_WARNINGS: 0
 """
 
+environments_folder_ = "environments"
+
 
 @contextmanager
 def print_execution_time(name: str = ""):
@@ -54,7 +56,7 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
     subprocess.run(
         (
             f"conda-lock render {dev_dep_option} {extras_option} -k env"
-            f" --filename-template conda-py-{py_ver}-{{platform}}{dev_suffix}{suffix}.lock conda-py-{py_ver}-lock.yml"
+            f" --filename-template {environments_folder_}/conda-py-{py_ver}-{{platform}}{dev_suffix}{suffix}.lock conda-py-{py_ver}-lock.yml"
         ),
         env=dict(os.environ, PYTHONUTF8="1"),
         shell=True,
@@ -62,7 +64,7 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
         stderr=subprocess.STDOUT,
     )
     platform_glob = "*-64"
-    for lock_env_file in Path.cwd().glob(
+    for lock_env_file in Path(environments_folder_).glob(
         f"conda-py-{py_ver}-{platform_glob}{dev_suffix}{suffix}.lock.yml"
     ):
         with open(lock_env_file, "a") as f:
@@ -80,6 +82,8 @@ def config_conda():
 
 if __name__ == "__main__":
     config_conda()
+    if not Path(environments_folder_).exists():
+        Path(environments_folder_).mkdir()
     with print_execution_time(f"run_conda_lock"):
         for py_ver in ["3.9", "3.8", "3.7"]:
             create_multi_platform_lock(py_ver)
