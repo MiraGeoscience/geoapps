@@ -105,9 +105,9 @@ default_ui_json.update(
             "group": "Figure Options",
             "main": True,
             "label": "Azimuth",
-            "min": -90,
-            "max": 90,
-            "value": 0,
+            "min": -90.0,
+            "max": 90.0,
+            "value": 0.0,
             "optional": True,
             "enabled": False,
         },
@@ -157,6 +157,7 @@ default_ui_json.update(
             "value": "",
             "group": "Python run preferences",
         },
+        "resolution": 50.0,
     }
 )
 

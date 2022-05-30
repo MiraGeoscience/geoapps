@@ -120,6 +120,9 @@ class EdgeDetectionDriver:
             else:
                 self.object_lines = None
 
+            # return self.collections
+            return self.collections, self.trigger_vertices, self.trigger_cells
+
     def plot_store_lines(self):
 
         if hasattr(self.params, "resolution"):
