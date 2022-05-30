@@ -7,6 +7,17 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+"""
+Creates a zipped conda environment that can be unpacked to run simpeg.
+
+The environment is created for Windows, and uses Python 3.9
+
+Usage: from a the conda base environment, at the root of the project:
+> python devtools/pack_simpeg_env.py
+
+To prepare the conda base environment, see devtools/setup-conda-base.bat
+"""
+
 import os
 import subprocess
 from datetime import datetime
