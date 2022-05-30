@@ -12,7 +12,7 @@ jobs:
     if: ${{ github.event.action != 'labeled' || github.event.label.name == 'build:bundle' }}
     defaults:
       run:
-        shell: bash
+        shell: bash -l {0}
     runs-on: windows-latest
     env:
       PYTHONUTF8: 1
@@ -31,46 +31,30 @@ jobs:
         run: |
           echo ::set-output name=ref_name::${GITHUB_REF##refs/*/}
           echo ::set-output name=short_sha::${GITHUB_SHA:0:8}
-      - name: Cache conda
-        uses: actions/cache@v2
-        env:
-          # Increase this value to reset cache if environment.yml has not changed
-          CACHE_NUMBER: 1
-        with:
-          path: ~/conda_pkgs_dir
-          key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles(env.CONDA_LOCK_ENV_FILE) }}
-      - name: Activate conda base env
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          auto-activate-base: true
-          activate-environment: ""
       - name: Create the Conda environment
-        uses: conda-incubator/setup-miniconda@v2
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          activate-environment: ${{ env.CONDA_ENV_NAME }}
           environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
-          channel-priority: strict
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          environment-name: ${{ env.CONDA_ENV_NAME }}
+          cache-downloads: true
       - name: Install in Conda env from sources
-        shell: bash -l {0}
         run: |
           conda activate ${{ env.CONDA_ENV_NAME }}
           python -m pip install . -vv --no-deps
       - name: Activate conda base env
-        uses: conda-incubator/setup-miniconda@v2
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          auto-activate-base: true
-          activate-environment: ""
+          environment-file: env-python-3.9.yml
+          environment-name: conda-pack
+          extra-specs: conda-pack
+          channels: conda-forge
       - name: Run conda pack
         id: conda_pack
         env:
           SUFFIX: ${{ steps.git-info.outputs.ref_name }}-${{ steps.git-info.outputs.short_sha }}
-        shell: bash -l {0}
         run: |
-          conda install -c conda-forge conda-pack
           OUTPUT_NAME=${{ env.CONDA_ENV_NAME }}-${{ env.SUFFIX }}.zip
-          conda-pack -n ${{ env.CONDA_ENV_NAME }} --output $OUTPUT_NAME
+          conda-pack --prefix $MAMBA_ROOT_PREFIX/envs/${{ env.CONDA_ENV_NAME }} --output $OUTPUT_NAME
           echo ::set-output name=filename::$OUTPUT_NAME
           echo ::set-output name=name_suffix::${{ env.SUFFIX }}
       - uses: actions/upload-artifact@v2
