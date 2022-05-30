@@ -127,8 +127,6 @@ class EdgeDetectionApp(PlotSelection2D):
         self._unique_object = {}
         super().__init__(**self.defaults)
 
-        print(self.params.resolution)
-
         # Make changes to trigger warning color
         self.trigger.description = "Export"
         self.trigger.on_click(self.trigger_click)
@@ -257,17 +255,7 @@ class EdgeDetectionApp(PlotSelection2D):
             except AttributeError:
                 continue
 
-        new_workspace = self.get_output_workspace(
-            self.export_directory.selected_path, self.ga_group_name.value
-        )
-        param_dict["objects"] = param_dict["objects"].copy(
-            parent=new_workspace, copy_children=False
-        )
-        param_dict["data"] = param_dict["data"].copy(parent=param_dict["objects"])
-        param_dict["geoh5"] = new_workspace
-
-        if self.live_link.value:
-            param_dict["monitoring_directory"] = self.monitoring_directory
+        param_dict["geoh5"] = self.params.geoh5
 
         ifile = InputFile(
             ui_json=self.params.input_file.ui_json,
@@ -279,9 +267,6 @@ class EdgeDetectionApp(PlotSelection2D):
 
         driver = EdgeDetectionDriver(new_params)
         self.refresh.value = False
-        self.collections, self.trigger.vertices, self.trigger.cells = driver.run()
-        # self.collections = driver.run()
+        # self.collections, self.trigger.vertices, self.trigger.cells = driver.run()
+        self.collections = driver.run()
         self.refresh.value = True
-
-        if self.live_link.value:
-            print("Live link active. Check your ANALYST session for new mesh.")

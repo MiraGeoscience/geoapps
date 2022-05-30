@@ -34,8 +34,13 @@ class EdgeDetectionDriver:
         self.indices = None
         self.object_lines = None
 
+    # def run(self):
+    #    """ """
+    #    self.compute_trigger()
+
+    # @staticmethod
+    # def compute_trigger(self):
     def run(self):
-        """ """
 
         grid = self.params.objects
 
@@ -120,9 +125,10 @@ class EdgeDetectionDriver:
             else:
                 self.object_lines = None
 
-            # return self.collections
-            return self.collections, self.trigger_vertices, self.trigger_cells
+            return self.collections
+            # return self.collections, self.trigger_vertices, self.trigger_cells
 
+    # @staticmethod
     def plot_store_lines(self):
 
         if hasattr(self.params, "resolution"):

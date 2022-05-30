@@ -43,9 +43,7 @@ default_ui_json.update(
         "conda_environment_boolean": False,
         "objects": {
             "group": "Data Selection",
-            "meshType": [
-                "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
-            ],
+            "meshType": ["{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"],
             "main": True,
             "label": "Object",
             "value": None,
@@ -158,6 +156,8 @@ default_ui_json.update(
             "group": "Python run preferences",
         },
         "resolution": 50.0,
+        "colorbar": False,
+        "zoom_extent": False,
     }
 )
 
@@ -168,5 +168,6 @@ app_initializer = {
     "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
     "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
     "sigma": 0.5,
+    "window_azimuth": -20.0,
     "ga_group_name": "Edges",
 }
