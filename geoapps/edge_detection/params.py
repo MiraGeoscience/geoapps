@@ -42,6 +42,7 @@ class EdgeDetectionParams(BaseParams):
         self._zoom_extent = None
         self._export_as = None
         self._ga_group_name = None
+        self._resolution = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -131,7 +132,7 @@ class EdgeDetectionParams(BaseParams):
         self.setter_validator("window_size", val)
 
     @property
-    def window_azimuth(self) -> int | None:
+    def window_azimuth(self) -> float | None:
         """
         window_azimuth
         """
@@ -228,3 +229,14 @@ class EdgeDetectionParams(BaseParams):
     @ga_group_name.setter
     def ga_group_name(self, val):
         self.setter_validator("ga_group_name", val)
+
+    @property
+    def resolution(self) -> float | None:
+        """
+        resolution
+        """
+        return self._resolution
+
+    @resolution.setter
+    def resolution(self, val):
+        self.setter_validator("resolution", val)
