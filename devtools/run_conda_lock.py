@@ -9,18 +9,33 @@
 
 import os
 import subprocess
+from contextlib import contextmanager
+
+
+@contextmanager
+def print_execution_time(name: str = ""):
+    from datetime import datetime
+
+    start = datetime.now()
+    try:
+        yield
+    finally:
+        duration = datetime.now() - start
+        message_prefix = f" {name} -" if name else ""
+        print(f"--{message_prefix} execution time: {duration}")
 
 
 def create_multi_platform_lock(py_ver: str, platform: str = None):
     print(f"# Create multi-platform lock file for Python {py_ver}")
     platform_option = f"-p {platform}" if platform else ""
-    subprocess.run(
-        f"conda-lock lock -f pyproject.toml -f env-python-{py_ver}.yml {platform_option} --lockfile conda-py-{py_ver}-lock.yml",
-        env=dict(os.environ, PYTHONUTF8="1"),
-        shell=True,
-        check=True,
-        stderr=subprocess.STDOUT,
-    )
+    with print_execution_time(f"conda-lock for {py_ver}"):
+        subprocess.run(
+            f"conda-lock lock --mamba --no-micromamba -f pyproject.toml -f env-python-{py_ver}.yml {platform_option} --lockfile conda-py-{py_ver}-lock.yml",
+            env=dict(os.environ, PYTHONUTF8="1"),
+            shell=True,
+            check=True,
+            stderr=subprocess.STDOUT,
+        )
 
 
 def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
@@ -43,10 +58,11 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
 
 
 if __name__ == "__main__":
-    for py_ver in ["3.9", "3.8", "3.7"]:
-        create_multi_platform_lock(py_ver)
-        per_platform_env(py_ver, dev=False)
-        per_platform_env(py_ver, dev=True)
+    with print_execution_time(f"run_conda_lock"):
+        for py_ver in ["3.9", "3.8", "3.7"]:
+            create_multi_platform_lock(py_ver)
+            per_platform_env(py_ver, dev=False)
+            per_platform_env(py_ver, dev=True)
 
-    # for simpeg with Python 3.9
-    per_platform_env("3.9", full=False, dev=False, suffix="-simpeg")
+        # for simpeg with Python 3.9
+        per_platform_env("3.9", full=False, dev=False, suffix="-simpeg")
