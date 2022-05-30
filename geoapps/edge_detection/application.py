@@ -7,35 +7,16 @@
 
 import os
 import uuid
-from time import time
 
-import numpy as np
-from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, Grid2D
+from geoh5py.objects import Grid2D
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
-from geoh5py.ui_json.utils import monitored_directory_copy
-from ipywidgets import (
-    Button,
-    FloatSlider,
-    HBox,
-    IntSlider,
-    Layout,
-    Text,
-    VBox,
-    Widget,
-    interactive_output,
-)
-from matplotlib import collections
-from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line
+from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox, Widget
 
 from geoapps import PlotSelection2D
 from geoapps.edge_detection.constants import app_initializer
 from geoapps.edge_detection.driver import EdgeDetectionDriver
 from geoapps.edge_detection.params import EdgeDetectionParams
-from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import filter_xy
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -203,30 +184,12 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._window_size
 
     def trigger_click(self, _):
-        entity, _ = self.get_selected_entities()
-        if getattr(self.trigger, "vertices", None) is not None:
-            name = string_name(self.export_as.value)
-            temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.3f}.geoh5"
-            with self.get_output_workspace(
-                self.export_directory.selected_path, temp_geoh5
-            ) as workspace:
-                out_entity = ContainerGroup.create(
-                    workspace,
-                    name=self.ga_group_name.value,
-                    uid=self._unique_object.get(self.ga_group_name.value, None),
-                )
-                curve = Curve.create(
-                    workspace,
-                    name=name,
-                    vertices=self.trigger.vertices,
-                    cells=self.trigger.cells,
-                    parent=out_entity,
-                    uid=self._unique_object.get(name, None),
-                )
-                self._unique_object[name] = curve.uid
-                self._unique_object[self.ga_group_name.value] = out_entity.uid
-        if self.live_link.value:
-            monitored_directory_copy(self.export_directory.selected_path, out_entity)
+        # new_params = self.get_updated_params()
+        # driver = EdgeDetectionDriver(new_params)
+        driver = EdgeDetectionDriver(self.params)
+        self.refresh.value = False
+        driver.run()
+        self.refresh.value = True
 
     def update_name(self, _):
         if self.data.value is not None:
@@ -235,7 +198,13 @@ class EdgeDetectionApp(PlotSelection2D):
             self.export_as.value = "Edges"
 
     def compute_trigger(self, _):
+        new_params = self.get_updated_params()
+        driver = EdgeDetectionDriver(new_params)
+        self.refresh.value = False
+        self.collections = driver.compute_trigger()
+        self.refresh.value = True
 
+    def get_updated_params(self):
         param_dict = {}
         for key in self.__dict__:
             try:
@@ -265,8 +234,4 @@ class EdgeDetectionApp(PlotSelection2D):
         new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
         new_params.write_input_file()
 
-        driver = EdgeDetectionDriver(new_params)
-        self.refresh.value = False
-        # self.collections, self.trigger.vertices, self.trigger.cells = driver.run()
-        self.collections = driver.run()
-        self.refresh.value = True
+        return new_params
