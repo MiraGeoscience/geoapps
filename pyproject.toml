@@ -53,6 +53,7 @@ mkl = "2022.*" # from simpeg
 properties = "~0.6.1" # from simpeg and geoana
 pydiso = "~0.0.3" # from simpeg
 pymatsolver = "~0.2.0" # from simpeg
+utm = "~0.7.0"
 zarr = "^2.8.1" # from simpgeg using Dask
 
 ## pip dependencies

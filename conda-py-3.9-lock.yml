@@ -21,13 +21,13 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 87ba15825dc7399fcccd4cef23b67c19e8fb8ba152cf7a40974b4f0fe2dd18b5
-    osx-64: 5e2c3623dbca91fd764178dfc065e836a1e2816068807a8e2a18bc2fdcf0a373
-    win-64: 03ded247c2fabfdcec7758bce9f6bf4b6d1bcf4a15adf3e416750fbc4f282612
+    linux-64: 52d2f9279daded465a33bb8aeb1975f28ddbef37a446cd2c65c362e998be5f65
+    osx-64: 81093ea5b887845898230868e674769582d45b3821a8aafb2353e7aa17d20af9
+    win-64: eb5afc68f26a220e221dbb9b63cf4c6c258ff9216b9998748b6dbe4e545bc41e
   platforms:
-  - win-64
-  - osx-64
   - linux-64
+  - osx-64
+  - win-64
   sources:
   - pyproject.toml
   - env-python-3.9.yml
@@ -1244,18 +1244,18 @@ package:
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
     libwebp-base: ''
-    libzlib: '>=1.2.11,<1.3.0a0'
+    libzlib: '>=1.2.12,<1.3.0a0'
     xz: '>=5.2.5,<5.3.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 2cdb3944029c2cb99cbe981b182a2e9a
-    sha256: 46ede756ba5cd5249e4c3c09206751546eb5ad8ddce58adf17b13c7dfc8d174a
+    md5: 3c343938f969d6434bb648119d576c0f
+    sha256: 7027b72990889740ee0de117c25691c262ecec3beca0d8421a51555c520c444d
   manager: conda
   name: libtiff
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libtiff-4.3.0-h0fcbabc_4.tar.bz2
-  version: 4.3.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/libtiff-4.4.0-h0fcbabc_0.tar.bz2
+  version: 4.4.0
 - category: full
   dependencies:
     icu: '>=69.1,<70.0a0'
@@ -1957,18 +1957,6 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.3-pyhd8ed1ab_0.tar.bz2
   version: 0.8.3
-- category: full
-  dependencies:
-    python: '>=3'
-  hash:
-    md5: 415f0ebb6198cc2801c73438a9fb5761
-    sha256: a1ed1a094dd0d1b94a09ed85c283a0eb28943f2e6f22161fb45e128d35229738
-  manager: conda
-  name: pickleshare
-  optional: true
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-py_1003.tar.bz2
-  version: 0.7.5
 - category: dev
   dependencies:
     python: '>=3.6'
@@ -2789,6 +2777,19 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.8.0-pyh9f0ad1d_2.tar.bz2
   version: 4.8.0
+- category: full
+  dependencies:
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.* *_cp39
+  hash:
+    md5: 2dc9995512c80256532250a6fd616b14
+    sha256: f3864a023507cda727997bcdf17baf404c98342a4dea6eb834b5e1fc9bdc388b
+  manager: conda
+  name: pickleshare
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/linux-64/pickleshare-0.7.5-py39hde42818_1002.tar.bz2
+  version: 0.7.5
 - category: main
   dependencies:
     freetype: '>=2.10.4,<3.0a0'
@@ -4303,6 +4304,7 @@ package:
     pymatsolver: '>=0.1.1'
     scikit-learn: '>=0.22'
     scipy: '>=1.0.0'
+    utm: '*'
     vectormath: '>=0.2.0'
   hash:
     sha256: None
@@ -5384,18 +5386,18 @@ package:
     libcxx: '>=13.0.1'
     libdeflate: '>=1.10,<1.11.0a0'
     libwebp-base: ''
-    libzlib: '>=1.2.11,<1.3.0a0'
+    libzlib: '>=1.2.12,<1.3.0a0'
     xz: '>=5.2.5,<5.3.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 68a3b39d4dda075c47ebebe0290347b5
-    sha256: 2071518f091067dfb079137f8fd8cb704d237ea56ff0a6ea140e96d955105dbd
+    md5: 7b6d99d80fa5cbd448d84cbafa026425
+    sha256: 1677446ea5c11313fbe8fdbacb7fddcbae71f3d4abb09aabe4f841dde226a7d6
   manager: conda
   name: libtiff
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libtiff-4.3.0-hfca7e8f_4.tar.bz2
-  version: 4.3.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/libtiff-4.4.0-hfca7e8f_0.tar.bz2
+  version: 4.4.0
 - category: full
   dependencies:
     libcxx: '>=13.0.1'
@@ -5939,18 +5941,6 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.3-pyhd8ed1ab_0.tar.bz2
   version: 0.8.3
-- category: full
-  dependencies:
-    python: '>=3'
-  hash:
-    md5: 415f0ebb6198cc2801c73438a9fb5761
-    sha256: a1ed1a094dd0d1b94a09ed85c283a0eb28943f2e6f22161fb45e128d35229738
-  manager: conda
-  name: pickleshare
-  optional: true
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-py_1003.tar.bz2
-  version: 0.7.5
 - category: dev
   dependencies:
     python: '>=3.6'
@@ -6752,6 +6742,19 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.8.0-pyh9f0ad1d_2.tar.bz2
   version: 4.8.0
+- category: full
+  dependencies:
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.* *_cp39
+  hash:
+    md5: ea16ea8f9953518f231b76ca97acea9a
+    sha256: eb2f1ef2bed9ed433e5992c4b875ed3894acddf79b40ee29af768e902348cca7
+  manager: conda
+  name: pickleshare
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/osx-64/pickleshare-0.7.5-py39hde42818_1002.tar.bz2
+  version: 0.7.5
 - category: main
   dependencies:
     freetype: '>=2.10.4,<3.0a0'
@@ -8254,6 +8257,7 @@ package:
     pymatsolver: '>=0.1.1'
     scikit-learn: '>=0.22'
     scipy: '>=1.0.0'
+    utm: '*'
     vectormath: '>=0.2.0'
   hash:
     sha256: None
@@ -9725,18 +9729,6 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.3-pyhd8ed1ab_0.tar.bz2
   version: 0.8.3
-- category: full
-  dependencies:
-    python: '>=3'
-  hash:
-    md5: 415f0ebb6198cc2801c73438a9fb5761
-    sha256: a1ed1a094dd0d1b94a09ed85c283a0eb28943f2e6f22161fb45e128d35229738
-  manager: conda
-  name: pickleshare
-  optional: true
-  platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-py_1003.tar.bz2
-  version: 0.7.5
 - category: dev
   dependencies:
     python: '>=3.6'
@@ -10507,6 +10499,19 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/partd-1.2.0-pyhd8ed1ab_0.tar.bz2
   version: 1.2.0
+- category: full
+  dependencies:
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.* *_cp39
+  hash:
+    md5: bebd93292ba509fa274353ca4707b2eb
+    sha256: a3e02626884279c3baf02c531309de7443096070621fdc935ab53009a633adc5
+  manager: conda
+  name: pickleshare
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/pickleshare-0.7.5-py39hde42818_1002.tar.bz2
+  version: 0.7.5
 - category: full
   dependencies:
     python: '>=3.6'
@@ -12328,6 +12333,7 @@ package:
     pymatsolver: '>=0.1.1'
     scikit-learn: '>=0.22'
     scipy: '>=1.0.0'
+    utm: '*'
     vectormath: '>=0.2.0'
   hash:
     sha256: None
