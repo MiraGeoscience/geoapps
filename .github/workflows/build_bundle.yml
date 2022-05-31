@@ -9,19 +9,22 @@ on:
 
 jobs:
   build-bundle:
-    if: ${{ github.event.action != 'labeled' || github.event.label.name == 'build:bundle' }}
+    if: ${{ github.event.action != 'labeled' || contains(fromJSON('["pack:full", "pack:simpeg"]'), github.event.label.name) }}
     defaults:
       run:
         shell: bash -l {0}
     runs-on: windows-latest
     env:
       PYTHONUTF8: 1
-      ARTIFACT_NAME: geoapps-simpeg.conda-pack
-      CONDA_ENV_NAME: geoapps-simpeg
-      CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64-simpeg.lock.yml
+      ARTIFACT_NAME: geoapps.conda-pack
+      CONDA_ENV_NAME_GLOB_PATTERN: geoapps*
+      SIMPEG_CONDA_ENV_NAME: geoapps-simpeg
+      FULL_CONDA_ENV_NAME: geoapps
+      SIMPEG_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64-simpeg.lock.yml
+      FULL_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64.lock.yml
     outputs:
-      bundle: ${{ steps.conda_pack.outputs.filename }}
-      artifact: ${{ env.ARTIFACT_NAME }}-${{ steps.conda_pack.outputs.name_suffix }}
+      full_bundle: ${{ steps.conda-pack-full.outputs.filename }}
+      artifact: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -29,18 +32,29 @@ jobs:
       - name: git info
         id: git-info
         run: |
-          echo ::set-output name=ref_name::${GITHUB_REF##refs/*/}
-          echo ::set-output name=short_sha::${GITHUB_SHA:0:8}
-      - name: Create the Conda environment
+          REF_NAME=${GITHUB_REF##refs/*/}
+          SHORT_SHA=${GITHUB_SHA:0:8}
+          echo ::set-output name=git_ref_suffix::${REF_NAME}-${SHORT_SHA}
+      - name: Create the full Conda environment
+        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:full' }}
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
-          environment-name: ${{ env.CONDA_ENV_NAME }}
+          environment-file: ${{ env.FULL_CONDA_LOCK_ENV_FILE }}
+          environment-name: ${{ env.FULL_CONDA_ENV_NAME }}
           cache-downloads: true
-      - name: Install in Conda env from sources
-        run: |
-          conda activate ${{ env.CONDA_ENV_NAME }}
-          python -m pip install . -vv --no-deps
+      - name: Install in full Conda env from sources
+        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:full' }}
+        run: python -m pip install . -vv --no-deps
+      - name: Create the SimPEG Conda environment
+        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:simpeg' }}
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: ${{ env.SIMPEG_CONDA_LOCK_ENV_FILE }}
+          environment-name: ${{ env.SIMPEG_CONDA_ENV_NAME }}
+          cache-downloads: true
+      - name: Install in SimPEG Conda env from sources
+        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:simpeg' }}
+        run: python -m pip install . -vv --no-deps
       - name: Activate conda base env
         uses: mamba-org/provision-with-micromamba@main
         with:
@@ -48,19 +62,25 @@ jobs:
           environment-name: conda-pack
           extra-specs: conda-pack
           channels: conda-forge
-      - name: Run conda pack
-        id: conda_pack
-        env:
-          SUFFIX: ${{ steps.git-info.outputs.ref_name }}-${{ steps.git-info.outputs.short_sha }}
+      - name: Run conda pack for SimPEG
+        id: conda-pack-simpeg
+        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:simpeg' }}
         run: |
-          OUTPUT_NAME=${{ env.CONDA_ENV_NAME }}-${{ env.SUFFIX }}.zip
-          conda-pack --prefix $MAMBA_ROOT_PREFIX/envs/${{ env.CONDA_ENV_NAME }} --output $OUTPUT_NAME
-          echo ::set-output name=filename::$OUTPUT_NAME
-          echo ::set-output name=name_suffix::${{ env.SUFFIX }}
+          ENV_PATH=$MAMBA_ROOT_PREFIX/envs/$SIMPEG_CONDA_ENV_NAME
+          OUTPUT_FILE=$SIMPEG_CONDA_ENV_NAME-${{ steps.git-info.outputs.git_ref_suffix }}.zip
+          conda-pack --prefix $ENV_PATH --output $OUTPUT_FILE
+      - name: Run conda pack full
+        id: conda-pack-full
+        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:full' }}
+        run: |
+          ENV_PATH=$MAMBA_ROOT_PREFIX/envs/$FULL_CONDA_ENV_NAME
+          OUTPUT_FILE=$FULL_CONDA_ENV_NAME-${{ steps.git-info.outputs.git_ref_suffix }}.zip
+          conda-pack --prefix $ENV_PATH --output $OUTPUT_FILE
+          echo ::set-output name=filename::${OUTPUT_FILE}
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.ARTIFACT_NAME }}.${{ steps.conda_pack.outputs.name_suffix }}
-          path: ${{ steps.conda_pack.outputs.filename }}
+          name: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
+          path: ${{ env.CONDA_ENV_NAME_GLOB_PATTERN }}-${{ steps.git-info.outputs.git_ref_suffix }}.zip
           retention-days: 2
           if-no-files-found: error
 
@@ -100,4 +120,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh --version
-          gh release upload ${{ needs.draft-release.outputs.release_id }} "${{ needs.build-bundle.outputs.bundle }}#Conda Pack (.zip)"
+          gh release upload ${{ needs.draft-release.outputs.release_id }} "${{ needs.build-bundle.outputs.full_bundle }}#Conda Pack (.zip)"
