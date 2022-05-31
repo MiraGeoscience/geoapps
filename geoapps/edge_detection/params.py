@@ -57,7 +57,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def objects(self) -> ObjectBase | None:
         """
-        Input object
+        Input object.
         """
         return self._objects
 
@@ -68,7 +68,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def data(self) -> Data | None:
         """
-        Input data
+        Input data.
         """
         return self._data
 
@@ -79,7 +79,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def line_length(self) -> int | None:
         """
-        line_length
+        Minimum accepted pixel length of detected lines. (Hough)
         """
         return self._line_length
 
@@ -90,7 +90,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def line_gap(self) -> int | None:
         """
-        line_gap
+        Maximum gap between pixels to still form a line. (Hough)
         """
         return self._line_gap
 
@@ -101,7 +101,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def sigma(self) -> float | None:
         """
-        sigma
+        Standard deviation of the Gaussian filter. (Canny)
         """
         return self._sigma
 
@@ -112,7 +112,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def threshold(self) -> int | None:
         """
-        threshold
+        Value threshold. (Hough)
         """
         return self._threshold
 
@@ -123,7 +123,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def window_size(self) -> int | None:
         """
-        window_size
+        Window size.
         """
         return self._window_size
 
@@ -134,7 +134,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def window_azimuth(self) -> float | None:
         """
-        window_azimuth
+        Rotation angle of the selection box.
         """
         return self._window_azimuth
 
@@ -145,7 +145,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def window_center_x(self) -> float | None:
         """
-        window_center_x
+        Easting position of the selection box.
         """
         return self._window_center_x
 
@@ -156,7 +156,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def window_center_y(self) -> float | None:
         """
-        window_center_y
+        Northing position of the selection box.
         """
         return self._window_center_y
 
@@ -167,7 +167,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def window_width(self) -> float | None:
         """
-        window_width
+        Width (m) of the selection box.
         """
         return self._window_width
 
@@ -178,7 +178,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def window_height(self) -> float | None:
         """
-        window_height
+        Height (m) of the selection box.
         """
         return self._window_height
 
@@ -189,7 +189,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def colorbar(self) -> bool | None:
         """
-        colorbar
+        Display the colorbar.
         """
         return self._colorbar
 
@@ -200,7 +200,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def zoom_extent(self) -> bool | None:
         """
-        zoom_extent
+        Set plotting limits to the selection box.
         """
         return self._zoom_extent
 
@@ -222,7 +222,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def ga_group_name(self) -> str | None:
         """
-        ga_group_name
+        Name to save geoh5 file as.
         """
         return self._ga_group_name
 
@@ -233,7 +233,7 @@ class EdgeDetectionParams(BaseParams):
     @property
     def resolution(self) -> float | None:
         """
-        resolution
+        Minimum data separation (m).
         """
         return self._resolution
 

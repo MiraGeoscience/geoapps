@@ -14,7 +14,6 @@ import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.ui_json import InputFile
-from matplotlib import collections
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
@@ -26,17 +25,32 @@ from geoapps.utils.utils import filter_xy
 class EdgeDetectionDriver:
     def __init__(self, params: EdgeDetectionParams):
         self.params: EdgeDetectionParams = params
-        self.collections = None
-        self.trigger_vertices = None
-        self.trigger_cells = None
         self._unique_object = {}
-        self.indices = None
-        self.object_lines = None
 
     def run(self):
-        """ """
+        """
+        Driver for Grid2D objects for the automated detection of line features.
+        The application relies on the Canny and Hough transforms from the
+        Scikit-Image library.
+        """
+        vertices, cells, _ = EdgeDetectionDriver.get_edges(
+            self.params.objects,
+            self.params.data,
+            self.params.sigma,
+            self.params.line_length,
+            self.params.threshold,
+            self.params.line_gap,
+            self.params.window_size,
+            self.params.window_center_x,
+            self.params.window_center_y,
+            self.params.window_width,
+            self.params.window_height,
+            self.params.window_azimuth,
+            self.params.resolution,
+        )
+
         entity = self.params.objects
-        if self.trigger_vertices is not None:
+        if vertices is not None:
             name = string_name(self.params.export_as)
             workspace = self.params.geoh5
 
@@ -48,26 +62,84 @@ class EdgeDetectionDriver:
             curve = Curve.create(
                 workspace,
                 name=name,
-                vertices=self.trigger_vertices,
-                cells=self.trigger_cells,
+                vertices=vertices,
+                cells=cells,
                 parent=out_entity,
                 uid=self._unique_object.get(name, None),
             )
             self._unique_object[name] = curve.uid
             self._unique_object[self.params.ga_group_name] = out_entity.uid
 
-    def compute_trigger(self):
+    @staticmethod
+    def get_edges(
+        grid,
+        data,
+        sigma,
+        line_length,
+        threshold,
+        line_gap,
+        window_size,
+        window_center_x,
+        window_center_y,
+        window_width,
+        window_height,
+        window_azimuth,
+        resolution,
+    ):
+        """
+        Get indices within window.
 
-        grid = self.params.objects
+        Parameters
+        ----------
+        grid: geoh5py.objects
+            A Grid2D object.
+
+        data:
+
+        sigma:
+
+        line_length:
+
+        threshold:
+
+        line_gap:
+
+        window_size:
+
+        window_center_x: float
+            Easting position of the selection box.
+
+        window_center_y: float
+            Northing position of the selection box.
+
+        window_width: float
+            Width (m) of the selection box.
+
+        window_height: float
+            Height (m) of the selection box.
+
+        window_azimuth: float
+            Rotation angle of the selection box.
+
+        resolution: float
+            Minimum data separation (m).
+
+        object_lines: list
+
+
+        Returns
+        -------
+        indices: list
+
+        """
+        vertices, cells, xy = None, None, None
 
         x = grid.centroids[:, 0].reshape(grid.shape, order="F")
         y = grid.centroids[:, 1].reshape(grid.shape, order="F")
         z = grid.centroids[:, 2].reshape(grid.shape, order="F")
-        grid_data = self.params.data.values.reshape(grid.shape, order="F")
+        grid_data = data.values.reshape(grid.shape, order="F")
 
-        indices = self.indices
-        if indices is None:
-            indices = np.ones_like(grid_data, dtype="bool")
+        indices = np.ones_like(grid_data, dtype="bool")
 
         ind_x, ind_y = (
             np.any(indices, axis=1),
@@ -83,10 +155,10 @@ class EdgeDetectionDriver:
 
         if np.any(grid_data):
             # Find edges
-            edges = canny(grid_data, sigma=self.params.sigma, use_quantiles=True)
+            edges = canny(grid_data, sigma=sigma, use_quantiles=True)
             shape = edges.shape
             # Cycle through tiles of square size
-            max_l = np.min([self.params.window_size, shape[0], shape[1]])
+            max_l = np.min([window_size, shape[0], shape[1]])
             half = np.floor(max_l / 2)
             overlap = 1.25
 
@@ -119,9 +191,9 @@ class EdgeDetectionDriver:
                     j_min, j_max = int(cx - half_x), int(cx + half_x)
                     lines = probabilistic_hough_line(
                         edges[i_min:i_max, j_min:j_max],
-                        line_length=self.params.line_length,
-                        threshold=self.params.threshold,
-                        line_gap=self.params.line_gap,
+                        line_length=line_length,
+                        threshold=threshold,
+                        line_gap=line_gap,
                         seed=0,
                     )
 
@@ -136,72 +208,126 @@ class EdgeDetectionDriver:
                         )
             if coords:
                 coord = np.vstack(coords)
-                self.object_lines = coord
-                self.plot_store_lines()
-            else:
-                self.object_lines = None
+                object_lines = coord
+                indices = EdgeDetectionDriver.get_indices(
+                    grid,
+                    window_center_x,
+                    window_center_y,
+                    window_width,
+                    window_height,
+                    window_azimuth,
+                    resolution,
+                    object_lines,
+                )
+                xy = object_lines[indices, :2]
+                if np.any(xy):
+                    vertices = np.vstack(object_lines[indices, :])
+                    cells = (
+                        np.arange(vertices.shape[0]).astype("uint32").reshape((-1, 2))
+                    )
+                    # if np.any(cells):
+                    #    return vertices, cells, xy
 
-            return self.collections
+            return vertices, cells, xy
 
-    def plot_store_lines(self):
+    @staticmethod
+    def get_indices(
+        grid,
+        window_center_x,
+        window_center_y,
+        window_width,
+        window_height,
+        window_azimuth,
+        resolution,
+        object_lines,
+    ):
+        """
+        Get indices within window.
 
+        Parameters
+        ----------
+        grid: geoh5py.objects
+            A Grid2D object.
+
+        window_center_x: float
+            Easting position of the selection box.
+
+        window_center_y: float
+            Northing position of the selection box.
+
+        window_width: float
+            Width (m) of the selection box.
+
+        window_height: float
+            Height (m) of the selection box.
+
+        window_azimuth: float
+            Rotation angle of the selection box.
+
+        resolution: float
+            Minimum data separation (m).
+
+        object_lines: list
+
+
+        Returns
+        -------
+        indices: list
+
+        """
         # Fetch vertices in the project
         lim_x = [1e8, -1e8]
         lim_y = [1e8, -1e8]
 
-        obj = self.params.objects
-        if isinstance(obj, Grid2D):
-            lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
-            lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
-        elif isinstance(obj, (Points, Curve, Surface)):
-            lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
-            lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
+        if isinstance(grid, Grid2D):
+            lim_x[0], lim_x[1] = grid.centroids[:, 0].min(), grid.centroids[:, 0].max()
+            lim_y[0], lim_y[1] = grid.centroids[:, 1].min(), grid.centroids[:, 1].max()
         else:
             return
 
         width = lim_x[1] - lim_x[0]
         height = lim_y[1] - lim_y[0]
 
-        if self.params.window_center_x is None:
-            self.params.window_center_x = np.mean(lim_x)
-        if self.params.window_center_y is None:
-            self.params.window_center_y = np.mean(lim_y)
-        if self.params.window_width is None:
-            self.params.window_width = (width * 1.2) / 2.0
-        if self.params.window_height is None:
-            self.params.window_height = (height * 1.2) / 2.0
+        if window_center_x is None:
+            window_center_x = np.mean(lim_x)
+        if window_center_y is None:
+            window_center_y = np.mean(lim_y)
+        if window_width is None:
+            window_width = (width * 1.2) / 2.0
+        if window_height is None:
+            window_height = (height * 1.2) / 2.0
 
-        xy = self.object_lines
+        xy = object_lines
         indices_1 = filter_xy(
             xy[1::2, 0],
             xy[1::2, 1],
-            self.params.resolution,
+            resolution,
             window={
                 "center": [
-                    self.params.window_center_x,
-                    self.params.window_center_y,
+                    window_center_x,
+                    window_center_y,
                 ],
                 "size": [
-                    self.params.window_width,
-                    self.params.window_height,
+                    window_width,
+                    window_height,
                 ],
-                "azimuth": self.params.window_azimuth,
+                "azimuth": window_azimuth,
             },
         )
         indices_2 = filter_xy(
             xy[::2, 0],
             xy[::2, 1],
-            self.params.resolution,
+            resolution,
             window={
                 "center": [
-                    self.params.window_center_x,
-                    self.params.window_center_y,
+                    window_center_x,
+                    window_center_y,
                 ],
                 "size": [
-                    self.params.window_width,
-                    self.params.window_height,
+                    window_width,
+                    window_height,
                 ],
-                "azimuth": self.params.window_azimuth,
+                "azimuth": window_azimuth,
             },
         )
 
@@ -210,27 +336,15 @@ class EdgeDetectionDriver:
             np.ones(2),
         ).astype(bool)
 
-        xy = self.object_lines[indices, :2]
-        self.collections = [
-            collections.LineCollection(
-                np.reshape(xy, (-1, 2, 2)), colors="k", linewidths=2
-            )
-        ]
-
-        if np.any(xy):
-            vertices = np.vstack(self.object_lines[indices, :])
-            cells = np.arange(vertices.shape[0]).astype("uint32").reshape((-1, 2))
-            if np.any(cells):
-                self.trigger_vertices = vertices
-                self.trigger_cells = cells
-        else:
-            self.trigger_vertices = None
-            self.trigger_cells = None
+        return indices
 
 
 if __name__ == "__main__":
+    print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
     params = EdgeDetectionParams(ifile)
     driver = EdgeDetectionDriver(params)
+    print("Loaded. Running edge detection . . .")
     driver.run()
+    print("Saved to " + params.geoh5.h5file)
