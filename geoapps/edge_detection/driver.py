@@ -12,7 +12,7 @@ import sys
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, Grid2D, Points, Surface
+from geoh5py.objects import Curve, Grid2D
 from geoh5py.ui_json import InputFile
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
@@ -49,18 +49,16 @@ class EdgeDetectionDriver:
             self.params.resolution,
         )
 
-        entity = self.params.objects
         if vertices is not None:
             name = string_name(self.params.export_as)
-            workspace = self.params.geoh5
 
             out_entity = ContainerGroup.create(
-                workspace,
+                workspace=self.params.geoh5,
                 name=self.params.ga_group_name,
                 uid=self._unique_object.get(self.params.ga_group_name, None),
             )
             curve = Curve.create(
-                workspace,
+                workspace=self.params.geoh5,
                 name=name,
                 vertices=vertices,
                 cells=cells,
@@ -94,17 +92,23 @@ class EdgeDetectionDriver:
         grid: geoh5py.objects
             A Grid2D object.
 
-        data:
+        data: geoh5py.data
+            Input data.
 
-        sigma:
+        sigma: float
+            Standard deviation of the Gaussian filter. (Canny)
 
-        line_length:
+        line_length: int
+            Minimum accepted pixel length of detected lines. (Hough)
 
-        threshold:
+        threshold: int
+            Value threshold. (Hough)
 
-        line_gap:
+        line_gap: int
+            Maximum gap between pixels to still form a line. (Hough)
 
-        window_size:
+        window_size: int
+            Window size.
 
         window_center_x: float
             Easting position of the selection box.
@@ -124,12 +128,16 @@ class EdgeDetectionDriver:
         resolution: float
             Minimum data separation (m).
 
-        object_lines: list
-
-
         Returns
         -------
-        indices: list
+        vertices: list
+            n x 3 float array. Vertices of edges.
+
+        cells: list
+            n x 2 float array. Cells of edges.
+
+        xy: list
+            n x 2 float array. Array of edge lines.
 
         """
         vertices, cells, xy = None, None, None
@@ -225,9 +233,6 @@ class EdgeDetectionDriver:
                     cells = (
                         np.arange(vertices.shape[0]).astype("uint32").reshape((-1, 2))
                     )
-                    # if np.any(cells):
-                    #    return vertices, cells, xy
-
             return vertices, cells, xy
 
     @staticmethod
@@ -268,12 +273,12 @@ class EdgeDetectionDriver:
             Minimum data separation (m).
 
         object_lines: list
-
+            n x 3 float array. Full list of edges.
 
         Returns
         -------
         indices: list
-
+            n x 1 boolean array. Indices within the window bounds.
         """
         # Fetch vertices in the project
         lim_x = [1e8, -1e8]
@@ -347,4 +352,4 @@ if __name__ == "__main__":
     driver = EdgeDetectionDriver(params)
     print("Loaded. Running edge detection . . .")
     driver.run()
-    print("Saved to " + params.geoh5.h5file)
+    print("Saved to " + ifile.path)
