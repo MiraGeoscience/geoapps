@@ -60,6 +60,8 @@ jobs:
         with:
           environment-file: env-python-3.9.yml
           environment-name: conda-pack
+          cache-downloads: true
+          cache-env: true
           extra-specs: conda-pack
           channels: conda-forge
       - name: Run conda pack for SimPEG
