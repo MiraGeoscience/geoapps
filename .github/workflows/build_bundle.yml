@@ -15,6 +15,7 @@ jobs:
         shell: bash -l {0}
     runs-on: windows-latest
     env:
+      releaseFullBundle: false
       PYTHONUTF8: 1
       ARTIFACT_NAME: geoapps.conda-pack
       CONDA_ENV_NAME_GLOB_PATTERN: geoapps*
@@ -23,6 +24,7 @@ jobs:
       SIMPEG_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64-simpeg.lock.yml
       FULL_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64.lock.yml
     outputs:
+      releaseFullBundle: ${{ env.releaseFullBundle }}
       full_bundle: ${{ steps.conda-pack-full.outputs.filename }}
       artifact: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
     steps:
@@ -73,7 +75,7 @@ jobs:
           conda-pack --prefix $ENV_PATH --output $OUTPUT_FILE
       - name: Run conda pack full
         id: conda-pack-full
-        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:full' }}
+        if: ${{ (env.releaseFullBundle && github.event.action != 'labeled') || github.event.label.name == 'pack:full' }}
         run: |
           ENV_PATH=$MAMBA_ROOT_PREFIX/envs/$FULL_CONDA_ENV_NAME
           OUTPUT_FILE=$FULL_CONDA_ENV_NAME-${{ steps.git-info.outputs.git_ref_suffix }}.zip
@@ -87,8 +89,8 @@ jobs:
           if-no-files-found: error
 
   draft-release:
-    runs-on: ubuntu-latest
     if: ${{ startsWith(github.event.ref, 'refs/tags') }}
+    runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create-release.outputs.release_id }}
     steps:
@@ -111,6 +113,7 @@ jobs:
 
   release-bundle:
     needs: [build-bundle, draft-release]
+    if: ${{ needs.build-bundle.outputs.releaseFullBundle }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
