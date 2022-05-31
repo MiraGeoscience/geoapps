@@ -14,7 +14,7 @@ from geoapps.calculator import Calculator
 from geoapps.clustering import Clustering
 from geoapps.contours.application import ContourValues
 from geoapps.coordinate_transformation import CoordinateTransformation
-from geoapps.edge_detection import EdgeDetectionApp
+from geoapps.edge_detection.application import EdgeDetectionApp
 from geoapps.export.application import Export
 from geoapps.interpolation import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
