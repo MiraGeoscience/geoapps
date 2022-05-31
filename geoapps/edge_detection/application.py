@@ -8,10 +8,12 @@
 import os
 import uuid
 
+import numpy as np
 from geoh5py.objects import Grid2D
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox, Widget
+from matplotlib import collections
 
 from geoapps import PlotSelection2D
 from geoapps.edge_detection.constants import app_initializer
@@ -22,7 +24,7 @@ from geoapps.edge_detection.params import EdgeDetectionParams
 class EdgeDetectionApp(PlotSelection2D):
     """
     Widget for Grid2D objects for the automated detection of line features.
-    The application relies on the Canny and Hough trandforms from the
+    The application relies on the Canny and Hough transforms from the
     Scikit-Image library.
 
     :param grid: Grid2D object
@@ -54,7 +56,6 @@ class EdgeDetectionApp(PlotSelection2D):
             else:
                 self.defaults[key] = value
 
-        # self.defaults.update(**kwargs)
         self._compute = Button(
             description="Compute",
             button_style="warning",
@@ -184,8 +185,6 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._window_size
 
     def trigger_click(self, _):
-        # new_params = self.get_updated_params()
-        # driver = EdgeDetectionDriver(new_params)
         driver = EdgeDetectionDriver(self.params)
         self.refresh.value = False
         driver.run()
@@ -198,13 +197,6 @@ class EdgeDetectionApp(PlotSelection2D):
             self.export_as.value = "Edges"
 
     def compute_trigger(self, _):
-        new_params = self.get_updated_params()
-        driver = EdgeDetectionDriver(new_params)
-        self.refresh.value = False
-        self.collections = driver.compute_trigger()
-        self.refresh.value = True
-
-    def get_updated_params(self):
         param_dict = {}
         for key in self.__dict__:
             try:
@@ -226,12 +218,29 @@ class EdgeDetectionApp(PlotSelection2D):
 
         param_dict["geoh5"] = self.params.geoh5
 
-        ifile = InputFile(
-            ui_json=self.params.input_file.ui_json,
-            validation_options={"disabled": True},
+        new_params = EdgeDetectionParams(**param_dict)
+
+        self.refresh.value = False
+
+        _, _, xy = EdgeDetectionDriver.get_edges(
+            new_params.objects,
+            new_params.data,
+            new_params.sigma,
+            new_params.line_length,
+            new_params.threshold,
+            new_params.line_gap,
+            new_params.window_size,
+            new_params.window_center_x,
+            new_params.window_center_y,
+            new_params.window_width,
+            new_params.window_height,
+            new_params.window_azimuth,
+            new_params.resolution,
         )
 
-        new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
-        new_params.write_input_file()
-
-        return new_params
+        self.collections = [
+            collections.LineCollection(
+                np.reshape(xy, (-1, 2, 2)), colors="k", linewidths=2
+            )
+        ]
+        self.refresh.value = True
