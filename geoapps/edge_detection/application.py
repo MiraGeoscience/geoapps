@@ -7,9 +7,10 @@
 
 import os
 import uuid
+from time import time
 
 import numpy as np
-from geoh5py.objects import Grid2D
+from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox, Widget
@@ -19,6 +20,7 @@ from geoapps import PlotSelection2D
 from geoapps.edge_detection.constants import app_initializer
 from geoapps.edge_detection.driver import EdgeDetectionDriver
 from geoapps.edge_detection.params import EdgeDetectionParams
+from geoapps.utils.formatters import string_name
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -185,10 +187,34 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._window_size
 
     def trigger_click(self, _):
-        driver = EdgeDetectionDriver(self.params)
-        self.refresh.value = False
+
+        param_dict = self.get_param_dict()
+        temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
+        new_workspace = self.get_output_workspace(
+            self.export_directory.selected_path, temp_geoh5
+        )
+        for key, value in param_dict.items():
+            if isinstance(value, ObjectBase):
+                param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
+
+        param_dict["geoh5"] = new_workspace
+
+        if self.live_link.value:
+            param_dict["monitoring_directory"] = self.monitoring_directory
+
+        ifile = InputFile(
+            ui_json=self.params.input_file.ui_json,
+            validation_options={"disabled": True},
+        )
+
+        new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
+        new_params.write_input_file()
+
+        driver = EdgeDetectionDriver(new_params)
         driver.run()
-        self.refresh.value = True
+
+        if self.live_link.value:
+            print("Live link active. Check your ANALYST session for new mesh.")
 
     def update_name(self, _):
         if self.data.value is not None:
@@ -197,28 +223,11 @@ class EdgeDetectionApp(PlotSelection2D):
             self.export_as.value = "Edges"
 
     def compute_trigger(self, _):
-        param_dict = {}
-        for key in self.__dict__:
-            try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
-                    value = getattr(self, key).value
-                    if key[0] == "_":
-                        key = key[1:]
-
-                    if (
-                        isinstance(value, uuid.UUID)
-                        and self.workspace.get_entity(value)[0] is not None
-                    ):
-                        value = self.workspace.get_entity(value)[0]
-
-                    param_dict[key] = value
-
-            except AttributeError:
-                continue
+        param_dict = self.get_param_dict()
 
         param_dict["geoh5"] = self.params.geoh5
-
         new_params = EdgeDetectionParams(**param_dict)
+        self.params = new_params
 
         self.refresh.value = False
 
@@ -244,3 +253,24 @@ class EdgeDetectionApp(PlotSelection2D):
             )
         ]
         self.refresh.value = True
+
+    def get_param_dict(self):
+        param_dict = {}
+        for key in self.__dict__:
+            try:
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+                    if key[0] == "_":
+                        key = key[1:]
+
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
+
+                    param_dict[key] = value
+
+            except AttributeError:
+                continue
+        return param_dict
