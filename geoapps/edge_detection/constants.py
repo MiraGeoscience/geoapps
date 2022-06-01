@@ -20,7 +20,6 @@ defaults = {
     "ga_group_name": None,
     "run_command": "geoapps.edge_detection.driver",
     "run_command_boolean": False,
-    "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
