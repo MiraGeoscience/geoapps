@@ -33,7 +33,7 @@ class EdgeDetectionDriver:
         The application relies on the Canny and Hough transforms from the
         Scikit-Image library.
         """
-        vertices, cells, _ = EdgeDetectionDriver.get_edges(
+        vertices, cells = EdgeDetectionDriver.get_edges(
             self.params.objects,
             self.params.data,
             self.params.sigma,
@@ -136,9 +136,6 @@ class EdgeDetectionDriver:
         cells: list
             n x 2 float array. Cells of edges.
 
-        xy: list
-            n x 2 float array. Array of edge lines.
-
         """
         vertices, cells, xy = None, None, None
 
@@ -233,7 +230,7 @@ class EdgeDetectionDriver:
                     cells = (
                         np.arange(vertices.shape[0]).astype("uint32").reshape((-1, 2))
                     )
-            return vertices, cells, xy
+            return vertices, cells
 
     @staticmethod
     def get_indices(
