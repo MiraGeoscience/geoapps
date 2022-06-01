@@ -4274,7 +4274,7 @@ package:
     type: url
     url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.zip#sha256=None
   url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.zip
-  version: 0.3.0-alpha.1
+  version: 0.3.0-alpha.2
 - category: main
   dependencies:
     discretize: '*'
@@ -8227,7 +8227,7 @@ package:
     type: url
     url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.zip#sha256=None
   url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.zip
-  version: 0.3.0-alpha.1
+  version: 0.3.0-alpha.2
 - category: main
   dependencies:
     discretize: '*'
@@ -12303,7 +12303,7 @@ package:
     type: url
     url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.zip#sha256=None
   url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.zip
-  version: 0.3.0-alpha.1
+  version: 0.3.0-alpha.2
 - category: main
   dependencies:
     discretize: '*'
