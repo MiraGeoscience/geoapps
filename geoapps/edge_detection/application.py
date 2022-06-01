@@ -6,7 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
-import uuid
 from time import time
 
 import numpy as np
@@ -190,28 +189,23 @@ class EdgeDetectionApp(PlotSelection2D):
 
         param_dict = self.get_param_dict()
         temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
-        new_workspace = self.get_output_workspace(
+        with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
-        )
-        for key, value in param_dict.items():
-            if isinstance(value, ObjectBase):
-                param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
+        ) as workspace:
+            for key, value in param_dict.items():
+                if isinstance(value, ObjectBase):
+                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
-        param_dict["geoh5"] = new_workspace
+            param_dict["geoh5"] = workspace
 
-        if self.live_link.value:
-            param_dict["monitoring_directory"] = self.monitoring_directory
+            if self.live_link.value:
+                param_dict["monitoring_directory"] = self.monitoring_directory
 
-        ifile = InputFile(
-            ui_json=self.params.input_file.ui_json,
-            validation_options={"disabled": True},
-        )
+            self.params.update(param_dict)
+            self.params.write_input_file()
 
-        new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
-        new_params.write_input_file()
-
-        driver = EdgeDetectionDriver(new_params)
-        driver.run()
+            driver = EdgeDetectionDriver(self.params)
+            driver.run()
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
@@ -226,51 +220,29 @@ class EdgeDetectionApp(PlotSelection2D):
         param_dict = self.get_param_dict()
 
         param_dict["geoh5"] = self.params.geoh5
-        new_params = EdgeDetectionParams(**param_dict)
-        self.params = new_params
+        self.params.update(param_dict)
 
         self.refresh.value = False
 
-        _, _, xy = EdgeDetectionDriver.get_edges(
-            new_params.objects,
-            new_params.data,
-            new_params.sigma,
-            new_params.line_length,
-            new_params.threshold,
-            new_params.line_gap,
-            new_params.window_size,
-            new_params.window_center_x,
-            new_params.window_center_y,
-            new_params.window_width,
-            new_params.window_height,
-            new_params.window_azimuth,
-            new_params.resolution,
+        vertices, _, = EdgeDetectionDriver.get_edges(
+            self.params.objects,
+            self.params.data,
+            self.params.sigma,
+            self.params.line_length,
+            self.params.threshold,
+            self.params.line_gap,
+            self.params.window_size,
+            self.params.window_center_x,
+            self.params.window_center_y,
+            self.params.window_width,
+            self.params.window_height,
+            self.params.window_azimuth,
+            self.params.resolution,
         )
 
         self.collections = [
             collections.LineCollection(
-                np.reshape(xy, (-1, 2, 2)), colors="k", linewidths=2
+                np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2
             )
         ]
         self.refresh.value = True
-
-    def get_param_dict(self):
-        param_dict = {}
-        for key in self.__dict__:
-            try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
-                    value = getattr(self, key).value
-                    if key[0] == "_":
-                        key = key[1:]
-
-                    if (
-                        isinstance(value, uuid.UUID)
-                        and self.workspace.get_entity(value)[0] is not None
-                    ):
-                        value = self.workspace.get_entity(value)[0]
-
-                    param_dict[key] = value
-
-            except AttributeError:
-                continue
-        return param_dict
