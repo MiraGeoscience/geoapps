@@ -50,7 +50,7 @@ default_ui_json.update(
         "data": {
             "group": "Data Selection",
             "main": True,
-            "association": ["Vertex", "Cell"],
+            "association": ["Cell"],
             "dataType": "Float",
             "label": "Data",
             "parent": "objects",

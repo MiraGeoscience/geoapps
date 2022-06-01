@@ -25,7 +25,6 @@
         "group": "Data Selection",
         "main": true,
         "association": [
-            "Vertex",
             "Cell"
         ],
         "dataType": "Float",
