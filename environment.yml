@@ -23,6 +23,8 @@ dependencies:
   - conda-forge::gdal
   - conda-forge::fiona
   - main::h5py
+  - dash
+  - flask
   - plotly
   - requests
   - empymod
