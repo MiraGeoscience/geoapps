@@ -124,7 +124,7 @@ def test_edge_detection(tmp_path):
         ]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = EdgeDetectionApp(h5file=temp_workspace, plot_result=False)
+    app = EdgeDetectionApp(geoh5=temp_workspace, plot_result=False)
 
     app.trigger.click()
 
