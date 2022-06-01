@@ -66,10 +66,10 @@ zarr = "^2.8.1" # from simpgeg using Dask
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
 geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.zip#sha256=None" }
 #geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", tag="release/0.3.0" }
-simpeg_archive = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None" }
-#simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="GEOPY-433_archive" }
-simpeg = { url = "https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None", extras = ["dask"] }
-#simpeg = { git = "https://github.com/sebhmg/simpeg.git", tag="GEOPY-433", extras = ["dask"] }
+simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev2+geoapps.0.8.0.tar.gz#sha256=None" }
+#simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="v0.9.1.dev2+geoapps.0.8.0" }
+simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev2+geoapps.0.8.0.tar.gz#sha256=None", extras = ["dask"] }
+#simpeg = { git = "https://github.com/sebhmg/simpeg.git", tag="v0.15.1.dev2+geoapps.0.8.0", extras = ["dask"] }
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.13"
