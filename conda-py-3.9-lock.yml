@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 52d2f9279daded465a33bb8aeb1975f28ddbef37a446cd2c65c362e998be5f65
-    osx-64: 81093ea5b887845898230868e674769582d45b3821a8aafb2353e7aa17d20af9
-    win-64: eb5afc68f26a220e221dbb9b63cf4c6c258ff9216b9998748b6dbe4e545bc41e
+    linux-64: c408acce66c67c5a748a7f38c8b168e0203730f4f55f2d0f589d6285c2382187
+    osx-64: cb532dcc62defb98b99f5b4dff548e2717bc6c428521429bd9b88eae7fe73b27
+    win-64: 873c80747fd0f4f749f10ff787abc1354d49d75a9b22f06ad0ef2ab0bc3ceef8
   platforms:
   - linux-64
   - osx-64
@@ -2238,14 +2238,14 @@ package:
   dependencies:
     python: '>=3.7'
   hash:
-    md5: 2d5189768c7b0bd336e913123477f0e9
-    sha256: bcd1dc41174a9af4630de5c767b2db7739010c7b181c9a63e7114d27113476d7
+    md5: 2b06b17ee111c3df688affbe3964a3b3
+    sha256: 5c1dc557377ea61a569ef82bbe3100ecfa7cc1418f9be81692038cd210e62d33
   manager: conda
   name: traitlets
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.2.1.post0-pyhd8ed1ab_0.tar.bz2
-  version: 5.2.1.post0
+  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.2.2.post1-pyhd8ed1ab_0.tar.bz2
+  version: 5.2.2.post1
 - category: dev
   dependencies:
     python: '>=3.7'
@@ -3274,14 +3274,14 @@ package:
     pillow: '>=8.3.2'
     python: '>=3'
   hash:
-    md5: 91806152074cba0105cf95350581376c
-    sha256: 6a07faa938ee964b72bb2dceaa0ab073fdbaa1f764b2ff80388d7d0d12884d35
+    md5: 9a5e536d761271c400310ec5dff8c5e1
+    sha256: 3a88f8cd5096c7c867e05995de1a4761c0cf26c70e75059e6620eb4d423b1b24
   manager: conda
   name: imageio
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.19.2-pyhcf75d05_0.tar.bz2
-  version: 2.19.2
+  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.19.3-pyhcf75d05_0.tar.bz2
+  version: 2.19.3
 - category: dev
   dependencies:
     python: '>=3.6,<4.0'
@@ -3390,20 +3390,20 @@ package:
   version: 0.55.1
 - category: main
   dependencies:
-    libgcc-ng: '>=9.4.0'
-    libstdcxx-ng: '>=9.4.0'
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
     msgpack-python: ''
     numpy: '>=1.7'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.* *_cp39
   hash:
-    md5: 8cd2d62dc2dda0d8b6c9e05596dadfa1
-    sha256: 6dc46e73fc9b67be587de65c7847b0b06f0c7df5e65ce19a168b1e317cb97357
+    md5: 818357b12e270b3005aa641bdd231b4b
+    sha256: 87988efe0386c323640befc581caf8293f2ea47e48d878b12affca0d0534aeb7
   manager: conda
   name: numcodecs
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/numcodecs-0.9.1-py39he80948d_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/numcodecs-0.9.1-py39h5a03fae_3.tar.bz2
   version: 0.9.1
 - category: main
   dependencies:
@@ -3429,14 +3429,14 @@ package:
     setuptools: ''
     wheel: ''
   hash:
-    md5: 6affaf2f490f479c73d819735f80a104
-    sha256: ec6a87b8f3c1fb6ec244bb9dd7d8c315b531ba01bc56ecba1d12535032d44c0a
+    md5: d29185c662a424f8bea1103270b85c96
+    sha256: 139e9fb1c67fb5743febe466bed33d0220a2650fdaaa2e90bca97860a75c48ef
   manager: conda
   name: pip
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.1.1-pyhd8ed1ab_0.tar.bz2
-  version: 22.1.1
+  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.1.2-pyhd8ed1ab_0.tar.bz2
+  version: 22.1.2
 - category: full
   dependencies:
     boost-cpp: '>=1.74.0,<1.74.1.0a0'
@@ -3932,16 +3932,16 @@ package:
     nbformat: '>=5.0'
     nest-asyncio: ''
     python: '>=3.7'
-    traitlets: '>=5.0.0'
+    traitlets: '>=5.2.2'
   hash:
-    md5: d9fd2a7bc1b4cabf52f114f9602e5b0a
-    sha256: 43ba231a1c2b967d5f8824172d3dc1a67dfcc4bd2b57bd2ef1a17fbba26151e9
+    md5: 3c7bdd38f81daf5dbf8dd1fba0b4ad12
+    sha256: 6435a86c4597785d8cbf440bd7d58692b48375fc3e4ef4dbb99ae3eec3ed4d6d
   manager: conda
   name: nbclient
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.6.3-pyhd8ed1ab_0.tar.bz2
-  version: 0.6.3
+  url: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.6.4-pyhd8ed1ab_1.tar.bz2
+  version: 0.6.4
 - category: full
   dependencies:
     python: '>=3.6'
@@ -4290,8 +4290,8 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None
-  url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev2+geoapps.0.8.0.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev2+geoapps.0.8.0.tar.gz
   version: 0.9.1.dev2+geoapps.0.8.0
 - category: main
   dependencies:
@@ -4314,8 +4314,8 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None
-  url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev2+geoapps.0.8.0.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev2+geoapps.0.8.0.tar.gz
   version: 0.15.1.dev2+geoapps.0.8.0
 - category: main
   dependencies: {}
@@ -6220,14 +6220,14 @@ package:
   dependencies:
     python: '>=3.7'
   hash:
-    md5: 2d5189768c7b0bd336e913123477f0e9
-    sha256: bcd1dc41174a9af4630de5c767b2db7739010c7b181c9a63e7114d27113476d7
+    md5: 2b06b17ee111c3df688affbe3964a3b3
+    sha256: 5c1dc557377ea61a569ef82bbe3100ecfa7cc1418f9be81692038cd210e62d33
   manager: conda
   name: traitlets
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.2.1.post0-pyhd8ed1ab_0.tar.bz2
-  version: 5.2.1.post0
+  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.2.2.post1-pyhd8ed1ab_0.tar.bz2
+  version: 5.2.2.post1
 - category: dev
   dependencies:
     python: '>=3.7'
@@ -7270,14 +7270,14 @@ package:
     setuptools: ''
     wheel: ''
   hash:
-    md5: 6affaf2f490f479c73d819735f80a104
-    sha256: ec6a87b8f3c1fb6ec244bb9dd7d8c315b531ba01bc56ecba1d12535032d44c0a
+    md5: d29185c662a424f8bea1103270b85c96
+    sha256: 139e9fb1c67fb5743febe466bed33d0220a2650fdaaa2e90bca97860a75c48ef
   manager: conda
   name: pip
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.1.1-pyhd8ed1ab_0.tar.bz2
-  version: 22.1.1
+  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.1.2-pyhd8ed1ab_0.tar.bz2
+  version: 22.1.2
 - category: full
   dependencies:
     boost-cpp: '>=1.74.0,<1.74.1.0a0'
@@ -7448,14 +7448,14 @@ package:
     pillow: '>=8.3.2'
     python: '>=3'
   hash:
-    md5: 91806152074cba0105cf95350581376c
-    sha256: 6a07faa938ee964b72bb2dceaa0ab073fdbaa1f764b2ff80388d7d0d12884d35
+    md5: 9a5e536d761271c400310ec5dff8c5e1
+    sha256: 3a88f8cd5096c7c867e05995de1a4761c0cf26c70e75059e6620eb4d423b1b24
   manager: conda
   name: imageio
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.19.2-pyhcf75d05_0.tar.bz2
-  version: 2.19.2
+  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.19.3-pyhcf75d05_0.tar.bz2
+  version: 2.19.3
 - category: full
   dependencies:
     pygments: '>=2.4.1,<3'
@@ -7575,19 +7575,19 @@ package:
   version: 0.53.0
 - category: main
   dependencies:
-    libcxx: '>=11.1.0'
+    libcxx: '>=13.0.1'
     msgpack-python: ''
     numpy: '>=1.7'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.* *_cp39
   hash:
-    md5: 81fd2adf60d877ffdbed94960aff2aab
-    sha256: bf23d341973a6e608956a1379ee016984574d993e7a35bfceee18a50f45321e5
+    md5: 705d2018581720d3878afa6371586ca4
+    sha256: ee7b81ea60305b1b26503dce56549e5e4726e0998f695be0cc92fa1285cd76a8
   manager: conda
   name: numcodecs
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/numcodecs-0.9.1-py39h9fcab8e_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/numcodecs-0.9.1-py39hd408605_3.tar.bz2
   version: 0.9.1
 - category: main
   dependencies:
@@ -7785,16 +7785,16 @@ package:
     nbformat: '>=5.0'
     nest-asyncio: ''
     python: '>=3.7'
-    traitlets: '>=5.0.0'
+    traitlets: '>=5.2.2'
   hash:
-    md5: d9fd2a7bc1b4cabf52f114f9602e5b0a
-    sha256: 43ba231a1c2b967d5f8824172d3dc1a67dfcc4bd2b57bd2ef1a17fbba26151e9
+    md5: 3c7bdd38f81daf5dbf8dd1fba0b4ad12
+    sha256: 6435a86c4597785d8cbf440bd7d58692b48375fc3e4ef4dbb99ae3eec3ed4d6d
   manager: conda
   name: nbclient
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.6.3-pyhd8ed1ab_0.tar.bz2
-  version: 0.6.3
+  url: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.6.4-pyhd8ed1ab_1.tar.bz2
+  version: 0.6.4
 - category: full
   dependencies:
     python: '>=3.6'
@@ -8243,8 +8243,8 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None
-  url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev2+geoapps.0.8.0.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev2+geoapps.0.8.0.tar.gz
   version: 0.9.1.dev2+geoapps.0.8.0
 - category: main
   dependencies:
@@ -8267,8 +8267,8 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None
-  url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev2+geoapps.0.8.0.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev2+geoapps.0.8.0.tar.gz
   version: 0.15.1.dev2+geoapps.0.8.0
 - category: main
   dependencies: {}
@@ -9973,14 +9973,14 @@ package:
   dependencies:
     python: '>=3.7'
   hash:
-    md5: 2d5189768c7b0bd336e913123477f0e9
-    sha256: bcd1dc41174a9af4630de5c767b2db7739010c7b181c9a63e7114d27113476d7
+    md5: 2b06b17ee111c3df688affbe3964a3b3
+    sha256: 5c1dc557377ea61a569ef82bbe3100ecfa7cc1418f9be81692038cd210e62d33
   manager: conda
   name: traitlets
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.2.1.post0-pyhd8ed1ab_0.tar.bz2
-  version: 5.2.1.post0
+  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.2.2.post1-pyhd8ed1ab_0.tar.bz2
+  version: 5.2.2.post1
 - category: dev
   dependencies:
     python: '>=3.7'
@@ -11149,14 +11149,14 @@ package:
     setuptools: ''
     wheel: ''
   hash:
-    md5: 6affaf2f490f479c73d819735f80a104
-    sha256: ec6a87b8f3c1fb6ec244bb9dd7d8c315b531ba01bc56ecba1d12535032d44c0a
+    md5: d29185c662a424f8bea1103270b85c96
+    sha256: 139e9fb1c67fb5743febe466bed33d0220a2650fdaaa2e90bca97860a75c48ef
   manager: conda
   name: pip
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.1.1-pyhd8ed1ab_0.tar.bz2
-  version: 22.1.1
+  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.1.2-pyhd8ed1ab_0.tar.bz2
+  version: 22.1.2
 - category: full
   dependencies:
     libcurl: '>=7.82.0,<8.0a0'
@@ -11577,14 +11577,14 @@ package:
     pillow: '>=8.3.2'
     python: '>=3'
   hash:
-    md5: 91806152074cba0105cf95350581376c
-    sha256: 6a07faa938ee964b72bb2dceaa0ab073fdbaa1f764b2ff80388d7d0d12884d35
+    md5: 9a5e536d761271c400310ec5dff8c5e1
+    sha256: 3a88f8cd5096c7c867e05995de1a4761c0cf26c70e75059e6620eb4d423b1b24
   manager: conda
   name: imageio
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.19.2-pyhcf75d05_0.tar.bz2
-  version: 2.19.2
+  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.19.3-pyhcf75d05_0.tar.bz2
+  version: 2.19.3
 - category: main
   dependencies:
     certifi: '>=2020.06.20'
@@ -11616,16 +11616,16 @@ package:
     nbformat: '>=5.0'
     nest-asyncio: ''
     python: '>=3.7'
-    traitlets: '>=5.0.0'
+    traitlets: '>=5.2.2'
   hash:
-    md5: d9fd2a7bc1b4cabf52f114f9602e5b0a
-    sha256: 43ba231a1c2b967d5f8824172d3dc1a67dfcc4bd2b57bd2ef1a17fbba26151e9
+    md5: 3c7bdd38f81daf5dbf8dd1fba0b4ad12
+    sha256: 6435a86c4597785d8cbf440bd7d58692b48375fc3e4ef4dbb99ae3eec3ed4d6d
   manager: conda
   name: nbclient
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.6.3-pyhd8ed1ab_0.tar.bz2
-  version: 0.6.3
+  url: https://conda.anaconda.org/conda-forge/noarch/nbclient-0.6.4-pyhd8ed1ab_1.tar.bz2
+  version: 0.6.4
 - category: main
   dependencies:
     llvmlite: '>=0.36.0,<0.37.0a0'
@@ -11650,16 +11650,16 @@ package:
     numpy: '>=1.7'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.* *_cp39
-    vc: '>=14.1,<15.0a0'
-    vs2015_runtime: '>=14.16.27012'
+    vc: '>=14.1,<15'
+    vs2015_runtime: '>=14.16.27033'
   hash:
-    md5: 4a6283f63bdde6bfbef5353a73bc0355
-    sha256: b6a9dbd23aa716fc906c001c7520fc57b95d30f45557219db82a04613f8cf83e
+    md5: 9d5b2445a021807758f6d4bc9cea5780
+    sha256: 2ca3fc092db3cf4c4a1fe6b0ebf88523617cffeab5cfb30382a60922873cc26e
   manager: conda
   name: numcodecs
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/numcodecs-0.9.1-py39h415ef7b_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/win-64/numcodecs-0.9.1-py39h415ef7b_3.tar.bz2
   version: 0.9.1
 - category: main
   dependencies:
@@ -12319,8 +12319,8 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip#sha256=None
-  url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433_archive.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev2+geoapps.0.8.0.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev2+geoapps.0.8.0.tar.gz
   version: 0.9.1.dev2+geoapps.0.8.0
 - category: main
   dependencies:
@@ -12343,7 +12343,7 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip#sha256=None
-  url: https://github.com/sebhmg/simpeg/archive/refs/heads/GEOPY-433.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev2+geoapps.0.8.0.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev2+geoapps.0.8.0.tar.gz
   version: 0.15.1.dev2+geoapps.0.8.0
 version: 1
