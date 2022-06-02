@@ -6,7 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-from geoapps.scatter_plot.v2 import ScatterPlots
+from geoapps.scatter_plot.dash_application import ScatterPlots
 
 app = ScatterPlots()
-app.run()
+app.app.run_server(host="127.0.0.1", port=8050, debug=False)
