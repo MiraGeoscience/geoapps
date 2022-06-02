@@ -240,3 +240,20 @@ class EdgeDetectionParams(BaseParams):
     @resolution.setter
     def resolution(self, val):
         self.setter_validator("resolution", val)
+
+    def edge_args(self):
+        return (
+            self.objects,
+            self.data,
+            self.sigma,
+            self.line_length,
+            self.threshold,
+            self.line_gap,
+            self.window_size,
+            self.window_center_x,
+            self.window_center_y,
+            self.window_width,
+            self.window_height,
+            self.window_azimuth,
+            self.resolution,
+        )
