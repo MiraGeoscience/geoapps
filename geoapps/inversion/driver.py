@@ -217,10 +217,8 @@ class InversionDriver:
         """Run inversion from params"""
 
         if self.params.forward_only:
-            print("Running the forward simulation ...")
-            self.inversion_data.simulate(
-                self.starting_model, self.inverse_problem, self.sorting
-            )
+            self.logger.end()
+            print("Forward simulation completed.")
             return
 
         # Run the inversion
