@@ -16,7 +16,9 @@ import plotly.graph_objects as go
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from flask import Flask
+from geoh5py.objects.object_base import ObjectBase
 from geoh5py.ui_json import InputFile
+from geoh5py.workspace import Workspace
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.scatter_plot.constants import app_initializer
@@ -48,9 +50,6 @@ class ScatterPlots(ObjectDataSelection):
 
         self.data_channels = {}
 
-        self.trigger.on_click(self.trigger_click)
-        self.trigger.description = "Save HTML"
-
         super().__init__(**self.defaults)
 
         # https://community.plotly.com/t/putting-a-dash-instance-inside-a-class/6097/5
@@ -70,7 +69,7 @@ class ScatterPlots(ObjectDataSelection):
                     [
                         dcc.Markdown(
                             """
-                            #Scatter Plots
+                            ### Scatter Plots
                             """
                         ),
                     ],
@@ -82,13 +81,27 @@ class ScatterPlots(ObjectDataSelection):
                 ),
                 html.Div(
                     [
-                        dcc.Upload(id="workspace"),
+                        dcc.Upload(
+                            id="geoh5",
+                            children=html.Div(
+                                ["Drag and drop or click to select a file to upload."]
+                            ),
+                            multiple=False,
+                        ),
                         dcc.Dropdown(
                             id="objects",
                             options=["New York City", "Montreal", "San Francisco"],
                             value="Montreal",
                         ),
-                        dcc.Slider(id="downsampling", value=10, min=0, max=20, step=5),
+                        dcc.Slider(
+                            id="downsampling",
+                            value=10,
+                            min=1,
+                            max=100,
+                            step=1,
+                            marks=None,
+                            tooltip={"placement": "bottom", "always_visible": True},
+                        ),
                         dcc.Dropdown(
                             id="axes_pannels",
                             options=[
@@ -98,10 +111,10 @@ class ScatterPlots(ObjectDataSelection):
                                 {"label": "Color", "value": "color"},
                                 {"label": "Size", "value": "size"},
                             ],
-                            value="X-axis",
+                            value="x",
                         ),
                     ],
-                    style={"width": "100%"},
+                    style={"width": "50%"},
                 ),
                 html.Div(
                     id="x_div",
@@ -118,17 +131,15 @@ class ScatterPlots(ObjectDataSelection):
                                 ),
                                 dcc.Input(id="x_thresh", type="number", value=0.1),
                             ],
-                            style={"width": "100%"},
                         ),
                         html.Div(
                             [
                                 dcc.Input(id="x_min", type="number", value=-17),
                                 dcc.Input(id="x_max", type="number", value=25.5),
                             ],
-                            style={"width": "100%"},
                         ),
                     ],
-                    style={"display": "block"},
+                    style={"display": "block", "width": "50%"},
                 ),
                 html.Div(
                     id="y_div",
@@ -145,17 +156,15 @@ class ScatterPlots(ObjectDataSelection):
                                 ),
                                 dcc.Input(id="y_thresh", type="number", value=0.1),
                             ],
-                            style={"width": "100%"},
                         ),
                         html.Div(
                             [
                                 dcc.Input(id="y_min", type="number", value=-17),
                                 dcc.Input(id="y_max", type="number", value=25.5),
                             ],
-                            style={"width": "100%"},
                         ),
                     ],
-                    style={"display": "block"},
+                    style={"display": "block", "width": "50%"},
                 ),
                 html.Div(
                     id="z_div",
@@ -172,17 +181,15 @@ class ScatterPlots(ObjectDataSelection):
                                 ),
                                 dcc.Input(id="z_thresh", type="number", value=0.1),
                             ],
-                            style={"width": "100%"},
                         ),
                         html.Div(
                             [
                                 dcc.Input(id="z_min", type="number", value=-17),
                                 dcc.Input(id="z_max", type="number", value=25.5),
                             ],
-                            style={"width": "100%"},
                         ),
                     ],
-                    style={"display": "block"},
+                    style={"display": "block", "width": "50%"},
                 ),
                 html.Div(
                     id="color_div",
@@ -204,17 +211,15 @@ class ScatterPlots(ObjectDataSelection):
                                 ),
                                 dcc.Input(id="color_thresh", type="number", value=0.1),
                             ],
-                            style={"width": "100%"},
                         ),
                         html.Div(
                             [
                                 dcc.Input(id="color_min", type="number", value=-17),
                                 dcc.Input(id="color_max", type="number", value=25.5),
                             ],
-                            style={"width": "100%"},
                         ),
                     ],
-                    style={"display": "block"},
+                    style={"display": "block", "width": "50%"},
                 ),
                 html.Div(
                     id="size_div",
@@ -232,17 +237,15 @@ class ScatterPlots(ObjectDataSelection):
                                 ),
                                 dcc.Input(id="size_thresh", type="number", value=0.1),
                             ],
-                            style={"width": "100%"},
                         ),
                         html.Div(
                             [
                                 dcc.Input(id="size_min", type="number", value=-17),
                                 dcc.Input(id="size_max", type="number", value=25.5),
                             ],
-                            style={"width": "100%"},
                         ),
                     ],
-                    style={"display": "block"},
+                    style={"display": "block", "width": "50%"},
                 ),
                 html.Div(
                     [
@@ -302,18 +305,18 @@ class ScatterPlots(ObjectDataSelection):
             Input(component_id="size_markers", component_property="value"),
         )(self.plot_selection)
         self.app.callback(
+            Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Input(component_id="geoh5", component_property="value"),
+        )(self.update_object_options)
+        self.app.callback(
             Output(component_id="x", component_property="options"),
             Output(component_id="y", component_property="options"),
             Output(component_id="z", component_property="options"),
             Output(component_id="color", component_property="options"),
             Output(component_id="size", component_property="options"),
-            Output(component_id="x", component_property="value"),
-            Output(component_id="y", component_property="value"),
-            Output(component_id="z", component_property="value"),
-            Output(component_id="color", component_property="value"),
-            Output(component_id="size", component_property="value"),
             Input(component_id="objects", component_property="value"),
-        )(self.update_choices)
+        )(self.update_data_options)
 
     # https://stackoverflow.com/questions/50213761/changing-visibility-of-a-dash-component-by-updating-other-component
     def update_visibility(self, axis):
@@ -358,6 +361,22 @@ class ScatterPlots(ObjectDataSelection):
                 {"display": "block"},
             )
 
+    def get_channel(self, channel):
+        obj, _ = self.get_selected_entities()
+
+        if channel is None:
+            return None
+
+        if channel not in self.data_channels.keys():
+            if channel == "None":
+                data = None
+            elif self.workspace.get_entity(channel):
+                data = self.workspace.get_entity(channel)[0]
+            else:
+                return
+
+            self.data_channels[channel] = data
+
     def get_channel_bounds(self, name):
         """
         Set the min and max values for the given axis channel
@@ -367,18 +386,14 @@ class ScatterPlots(ObjectDataSelection):
         channel = getattr(self, "_" + name).value
         self.get_channel(channel)
 
-        if channel in self.data_channels.keys():
-            if channel == "None":
-                cmin = 0
-                cmax = 0
-            else:
-                values = self.data_channels[channel].values
-                values = values[~np.isnan(values)]
-                cmin = f"{np.min(values):.2e}"
-                cmax = f"{np.max(values):.2e}"
+        cmin, cmax = 0, 0
+        if (channel in self.data_channels.keys()) & (channel != "None"):
+            values = self.data_channels[channel].values
+            values = values[~np.isnan(values)]
+            cmin = f"{np.min(values):.2e}"
+            cmax = f"{np.max(values):.2e}"
 
         self.refresh.value = True
-
         return cmin, cmax
 
     def set_channel_bounds(self, x):
@@ -457,9 +472,34 @@ class ScatterPlots(ObjectDataSelection):
 
         return figure
 
-    def update_choices(self, objects):
+    def update_object_options(self, geoh5):
+        # print(self.params.geoh5)
+        # self.workspace = Workspace(self.params.geoh5)
+        obj_list = self.params.geoh5.objects
+
+        # options = [["", None]] + [
+        #    [obj.parent.name + "/" + obj.name, obj.uid] for obj in obj_list
+        # ]
+
+        # options = ["None"]
+        options = [
+            {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
+            for obj in obj_list
+        ]
+        value = options[8]["value"]
+
+        return options, value
+
+    def update_data_options(self, object):
         self.refresh.value = False
-        obj, _ = self.get_selected_entities()
+        # obj, _ = self.get_selected_entities()
+        obj = None
+        if getattr(
+            self.params, "geoh5", None
+        ) is not None and self.params.geoh5.get_entity(object):
+            for entity in self.params.geoh5.get_entity(object):
+                if isinstance(entity, ObjectBase):
+                    obj = entity
 
         channel_list = ["None"]
         channel_list.extend(obj.get_data_list())
@@ -470,6 +510,18 @@ class ScatterPlots(ObjectDataSelection):
         for channel in channel_list:
             self.get_channel(channel)
 
+        options = list(self.data_channels.keys())
+        self.refresh.value = True
+
+        return (
+            options,
+            options,
+            options,
+            options,
+            options,
+        )
+
+    def update_values(self, objects):
         values = {}
         for name in [
             "x",
@@ -494,11 +546,6 @@ class ScatterPlots(ObjectDataSelection):
         options = self.data_channels
 
         return (
-            options["x"],
-            options["y"],
-            options["z"],
-            options["color"],
-            options["size"],
             values["x"],
             values["y"],
             values["z"],
