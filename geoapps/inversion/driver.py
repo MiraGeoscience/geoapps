@@ -218,6 +218,7 @@ class InversionDriver:
 
         if self.params.forward_only:
             self.logger.end()
+            print("Forward simulation completed.")
             return
 
         # Run the inversion
