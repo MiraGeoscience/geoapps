@@ -224,21 +224,10 @@ class EdgeDetectionApp(PlotSelection2D):
 
         self.refresh.value = False
 
-        vertices, _, = EdgeDetectionDriver.get_edges(
-            self.params.objects,
-            self.params.data,
-            self.params.sigma,
-            self.params.line_length,
-            self.params.threshold,
-            self.params.line_gap,
-            self.params.window_size,
-            self.params.window_center_x,
-            self.params.window_center_y,
-            self.params.window_width,
-            self.params.window_height,
-            self.params.window_azimuth,
-            self.params.resolution,
-        )
+        (
+            vertices,
+            _,
+        ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
 
         self.collections = [
             collections.LineCollection(
