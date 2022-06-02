@@ -201,8 +201,8 @@ class ScatterPlots(ObjectDataSelection):
                         ),
                         dcc.Dropdown(
                             id="color_maps",
-                            options=["New York City", "Montreal", "San Francisco"],
-                            value="Montreal",
+                            options=px.colors.named_colorscales(),
+                            value="viridis",
                         ),
                         html.Div(
                             [
@@ -271,7 +271,19 @@ class ScatterPlots(ObjectDataSelection):
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
             Output(component_id="x_max", component_property="value"),
+            Output(component_id="y_min", component_property="value"),
+            Output(component_id="y_max", component_property="value"),
+            Output(component_id="z_min", component_property="value"),
+            Output(component_id="z_max", component_property="value"),
+            Output(component_id="color_min", component_property="value"),
+            Output(component_id="color_max", component_property="value"),
+            Output(component_id="size_min", component_property="value"),
+            Output(component_id="size_max", component_property="value"),
             Input(component_id="x", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="size", component_property="value"),
         )(self.set_channel_bounds)
         self.app.callback(
             Output(component_id="plot", component_property="figure"),
@@ -315,6 +327,11 @@ class ScatterPlots(ObjectDataSelection):
             Output(component_id="z", component_property="options"),
             Output(component_id="color", component_property="options"),
             Output(component_id="size", component_property="options"),
+            Output(component_id="x", component_property="value"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="size", component_property="value"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
 
@@ -377,13 +394,13 @@ class ScatterPlots(ObjectDataSelection):
 
             self.data_channels[channel] = data
 
-    def get_channel_bounds(self, name):
+    def get_channel_bounds(self, channel):
         """
         Set the min and max values for the given axis channel
         """
         self.refresh.value = False
 
-        channel = getattr(self, "_" + name).value
+        # channel = getattr(self, "_" + name).value
         self.get_channel(channel)
 
         cmin, cmax = 0, 0
@@ -396,11 +413,26 @@ class ScatterPlots(ObjectDataSelection):
         self.refresh.value = True
         return cmin, cmax
 
-    def set_channel_bounds(self, x):
+    def set_channel_bounds(self, x, y, z, color, size):
         self.refresh.value = False
-        cmin, cmax = self.get_channel_bounds("x")
+        x_min, x_max = self.get_channel_bounds(x)
+        y_min, y_max = self.get_channel_bounds(y)
+        z_min, z_max = self.get_channel_bounds(z)
+        color_min, color_max = self.get_channel_bounds(color)
+        size_min, size_max = self.get_channel_bounds(size)
         self.refresh.value = True
-        return cmin, cmax
+        return (
+            x_min,
+            x_max,
+            y_min,
+            y_max,
+            z_min,
+            z_max,
+            color_min,
+            color_max,
+            size_min,
+            size_max,
+        )
 
     def plot_selection(
         self,
@@ -439,12 +471,14 @@ class ScatterPlots(ObjectDataSelection):
         new_params_dict = {}
         for key, value in self.params.to_dict().items():
             # param = getattr(scatter, key, None)
-            param = locals()[key]
+
+            if key in locals():
+                param = locals()[key]
+            else:
+                param = None
 
             if param is None:
                 new_params_dict[key] = value
-            elif hasattr(param, "value") is False:
-                new_params_dict[key] = param
             elif (
                 (key == "x")
                 | (key == "y")
@@ -452,12 +486,12 @@ class ScatterPlots(ObjectDataSelection):
                 | (key == "color")
                 | (key == "size")
             ):
-                if (param.value != "None") & (param.value in self.data_channels.keys()):
-                    new_params_dict[key] = self.data_channels[param.value]
+                if (param != "None") & (param in self.data_channels.keys()):
+                    new_params_dict[key] = self.data_channels[param]
                 else:
                     new_params_dict[key] = None
             else:
-                new_params_dict[key] = param.value
+                new_params_dict[key] = param
 
         ifile = InputFile(
             ui_json=self.params.input_file.ui_json,
@@ -519,38 +553,11 @@ class ScatterPlots(ObjectDataSelection):
             options,
             options,
             options,
-        )
-
-    def update_values(self, objects):
-        values = {}
-        for name in [
-            "x",
-            "y",
-            "z",
-            "color",
-            "size",
-        ]:
-
-            widget = getattr(self, "_" + name)
-            val = widget.value
-            widget.options = list(self.data_channels.keys())
-
-            if val in list(self.data_channels.keys()):
-                values[name] = val
-            elif "None" in list(self.data_channels.keys()):
-                values[name] = "None"
-            else:
-                values[name] = None
-
-        self.refresh.value = True
-        options = self.data_channels
-
-        return (
-            values["x"],
-            values["y"],
-            values["z"],
-            values["color"],
-            values["size"],
+            "None",
+            "None",
+            "None",
+            "None",
+            "None",
         )
 
     """
