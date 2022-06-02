@@ -23,6 +23,7 @@ jobs:
       FULL_CONDA_ENV_NAME: geoapps
       SIMPEG_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64-simpeg.lock.yml
       FULL_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64.lock.yml
+      CONDA_PACK_OUTPUT_EXT: .tar.xz
     outputs:
       releaseFullBundle: ${{ env.releaseFullBundle }}
       full_bundle: ${{ steps.conda-pack-full.outputs.filename }}
@@ -71,20 +72,20 @@ jobs:
         if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:simpeg' }}
         run: |
           ENV_PATH=$MAMBA_ROOT_PREFIX/envs/$SIMPEG_CONDA_ENV_NAME
-          OUTPUT_FILE=$SIMPEG_CONDA_ENV_NAME-${{ steps.git-info.outputs.git_ref_suffix }}.zip
+          OUTPUT_FILE=$SIMPEG_CONDA_ENV_NAME-${{ steps.git-info.outputs.git_ref_suffix }}${{ env.CONDA_PACK_OUTPUT_EXT }}
           conda-pack --prefix $ENV_PATH --output $OUTPUT_FILE
       - name: Run conda pack full
         id: conda-pack-full
         if: ${{ (env.releaseFullBundle && github.event.action != 'labeled') || github.event.label.name == 'pack:full' }}
         run: |
           ENV_PATH=$MAMBA_ROOT_PREFIX/envs/$FULL_CONDA_ENV_NAME
-          OUTPUT_FILE=$FULL_CONDA_ENV_NAME-${{ steps.git-info.outputs.git_ref_suffix }}.zip
+          OUTPUT_FILE=$FULL_CONDA_ENV_NAME-${{ steps.git-info.outputs.git_ref_suffix }}${{ env.CONDA_PACK_OUTPUT_EXT }}
           conda-pack --prefix $ENV_PATH --output $OUTPUT_FILE
           echo ::set-output name=filename::${OUTPUT_FILE}
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
-          path: ${{ env.CONDA_ENV_NAME_GLOB_PATTERN }}-${{ steps.git-info.outputs.git_ref_suffix }}.zip
+          path: ${{ env.CONDA_ENV_NAME_GLOB_PATTERN }}-${{ steps.git-info.outputs.git_ref_suffix }}${{ env.CONDA_PACK_OUTPUT_EXT }}
           retention-days: 2
           if-no-files-found: error
 
@@ -125,4 +126,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh --version
-          gh release upload ${{ needs.draft-release.outputs.release_id }} "${{ needs.build-bundle.outputs.full_bundle }}#Conda Pack (.zip)"
+          gh release upload ${{ needs.draft-release.outputs.release_id }} "${{ needs.build-bundle.outputs.full_bundle }}#Conda Pack (${{ env.CONDA_PACK_OUTPUT_EXT }})"
