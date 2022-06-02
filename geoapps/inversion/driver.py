@@ -216,6 +216,7 @@ class InversionDriver:
             self.inversion_data.simulate(
                 self.starting_model, self.inverse_problem, self.sorting
             )
+            self.logger.end()
             return
 
         # Run the inversion
