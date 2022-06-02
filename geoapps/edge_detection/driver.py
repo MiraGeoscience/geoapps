@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import sys
 
+import geoh5py.data
+import geoh5py.objects
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D
@@ -33,21 +35,7 @@ class EdgeDetectionDriver:
         The application relies on the Canny and Hough transforms from the
         Scikit-Image library.
         """
-        vertices, cells = EdgeDetectionDriver.get_edges(
-            self.params.objects,
-            self.params.data,
-            self.params.sigma,
-            self.params.line_length,
-            self.params.threshold,
-            self.params.line_gap,
-            self.params.window_size,
-            self.params.window_center_x,
-            self.params.window_center_y,
-            self.params.window_width,
-            self.params.window_height,
-            self.params.window_azimuth,
-            self.params.resolution,
-        )
+        vertices, cells = EdgeDetectionDriver.get_edges(*self.params.edge_args())
 
         if vertices is not None:
             name = string_name(self.params.export_as)
@@ -70,70 +58,52 @@ class EdgeDetectionDriver:
 
     @staticmethod
     def get_edges(
-        grid,
-        data,
-        sigma,
-        line_length,
-        threshold,
-        line_gap,
-        window_size,
-        window_center_x,
-        window_center_y,
-        window_width,
-        window_height,
-        window_azimuth,
-        resolution,
-    ):
+        grid: geoh5py.objects,
+        data: geoh5py.data,
+        sigma: float,
+        line_length: int,
+        threshold: int,
+        line_gap: int,
+        window_size: int,
+        window_center_x: float,
+        window_center_y: float,
+        window_width: float,
+        window_height: float,
+        window_azimuth: float,
+        resolution: float,
+    ) -> [list[float], list[float]]:
         """
         Get indices within window.
 
-        Parameters
-        ----------
-        grid: geoh5py.objects
-            A Grid2D object.
+        :params grid: A Grid2D object.
 
-        data: geoh5py.data
-            Input data.
+        :params data: Input data.
 
-        sigma: float
-            Standard deviation of the Gaussian filter. (Canny)
+        :params sigma: Standard deviation of the Gaussian filter. (Canny)
 
-        line_length: int
-            Minimum accepted pixel length of detected lines. (Hough)
+        :params line_length: Minimum accepted pixel length of detected lines. (Hough)
 
-        threshold: int
-            Value threshold. (Hough)
+        :params threshold: Value threshold. (Hough)
 
-        line_gap: int
-            Maximum gap between pixels to still form a line. (Hough)
+        :params line_gap: Maximum gap between pixels to still form a line. (Hough)
 
-        window_size: int
-            Window size.
+        :params window_size: Window size.
 
-        window_center_x: float
-            Easting position of the selection box.
+        :params window_center_x: Easting position of the selection box.
 
-        window_center_y: float
-            Northing position of the selection box.
+        :params window_center_y: Northing position of the selection box.
 
-        window_width: float
-            Width (m) of the selection box.
+        :params window_width: Width (m) of the selection box.
 
-        window_height: float
-            Height (m) of the selection box.
+        :params window_height: Height (m) of the selection box.
 
-        window_azimuth: float
-            Rotation angle of the selection box.
+        :params window_azimuth: Rotation angle of the selection box.
 
-        resolution: float
-            Minimum data separation (m).
+        :params resolution: Minimum data separation (m).
 
-        Returns
-        -------
-        vertices: list
-            n x 3 float array. Vertices of edges.
+        :return : n x 3 array. Vertices of edges.
 
-        cells: list
+        :return : list
             n x 2 float array. Cells of edges.
 
         """
@@ -234,48 +204,35 @@ class EdgeDetectionDriver:
 
     @staticmethod
     def get_indices(
-        grid,
-        window_center_x,
-        window_center_y,
-        window_width,
-        window_height,
-        window_azimuth,
-        resolution,
-        object_lines,
-    ):
+        grid: geoh5py.objects,
+        window_center_x: float,
+        window_center_y: float,
+        window_width: float,
+        window_height: float,
+        window_azimuth: float,
+        resolution: float,
+        object_lines: list[float],
+    ) -> list[bool]:
         """
         Get indices within window.
 
-        Parameters
-        ----------
-        grid: geoh5py.objects
-            A Grid2D object.
+        :param grid: A Grid2D object.
 
-        window_center_x: float
-            Easting position of the selection box.
+        :param window_center_x: Easting position of the selection box.
 
-        window_center_y: float
-            Northing position of the selection box.
+        :param window_center_y: Northing position of the selection box.
 
-        window_width: float
-            Width (m) of the selection box.
+        :param window_width: Width (m) of the selection box.
 
-        window_height: float
-            Height (m) of the selection box.
+        :param window_height: Height (m) of the selection box.
 
-        window_azimuth: float
-            Rotation angle of the selection box.
+        :param window_azimuth: Rotation angle of the selection box.
 
-        resolution: float
-            Minimum data separation (m).
+        :param resolution: Minimum data separation (m).
 
-        object_lines: list
-            n x 3 float array. Full list of edges.
+        :param object_lines: n x 3 array. Full list of edges.
 
-        Returns
-        -------
-        indices: list
-            n x 1 boolean array. Indices within the window bounds.
+        :return : n x 1 array. Indices within the window bounds.
         """
         # Fetch vertices in the project
         lim_x = [1e8, -1e8]
