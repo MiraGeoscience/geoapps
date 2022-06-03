@@ -29,13 +29,13 @@ if __name__ == "__main__":
 
     py_ver = "3.9"
     platform = "win-64"
-    lock_file = Path(f"conda-py-{py_ver}-{platform}-simpeg.lock.yml")
+    lock_file = Path(f"environments/conda-py-{py_ver}-{platform}-simpeg.lock.yml")
     assert lock_file.is_file()
 
     try:
-        print(f"# Create environment {env_name} from {lock_file.name}")
+        print(f"# Create environment {env_name} from {lock_file}")
         subprocess.run(
-            f"""conda env create -f {lock_file.name} -n {env_name} ^
+            f"""conda env create -f {lock_file} -n {env_name} ^
             && conda activate {env_name} && python -m pip install . -v --no-deps ^
             && conda deactivate
             """,
