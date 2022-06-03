@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 import base64
+import io
 import os
 import webbrowser
 from os import environ
@@ -61,8 +62,6 @@ class ScatterPlots(ObjectDataSelection):
             url_base_pathname=environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
         )
-
-        self.app.server.route("/download/<path:path>")(self.download)
 
         self.app.layout = html.Div(
             [
@@ -249,7 +248,11 @@ class ScatterPlots(ObjectDataSelection):
                         dcc.Graph(
                             id="plot",
                         ),
-                        html.Button("Save HTML", id="save_button"),
+                        html.A(
+                            html.Button("Download as HTML"),
+                            id="download",
+                            download="Crossplot.html",
+                        ),
                     ],
                     style={"width": "100%", "display": "inline-block"},
                 ),
@@ -316,7 +319,6 @@ class ScatterPlots(ObjectDataSelection):
         self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
-            Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
         )(self.update_object_options)
         self.app.callback(
@@ -332,10 +334,10 @@ class ScatterPlots(ObjectDataSelection):
             Output(component_id="size", component_property="value"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
-
-    def download(self, path):
-        upload_directory = self.params.geoh5  # ***
-        return send_from_directory(upload_directory, path, as_attachment=True)
+        self.app.callback(
+            Output(component_id="download", component_property="href"),
+            Input(component_id="plot", component_property="figure"),
+        )(self.save_figure)
 
     # https://stackoverflow.com/questions/50213761/changing-visibility-of-a-dash-component-by-updating-other-component
     def update_visibility(self, axis):
@@ -508,11 +510,11 @@ class ScatterPlots(ObjectDataSelection):
 
         return figure
 
-    def update_object_options(self, workpath, contents):
+    def update_object_options(self, contents):
         # print(self.params.geoh5)
         # self.workspace = Workspace(self.params.geoh5)
 
-        if workpath is not None:
+        if contents is not None:
             # print(contents)
             content_type, content_string = contents.split(",")
             decoded = base64.b64decode(content_string)
@@ -572,18 +574,15 @@ class ScatterPlots(ObjectDataSelection):
             "None",
         )
 
-    """
-    @app.callback(
-        Input(component_id="save_button", component_property="n_clicks"),
-        Input(component_id="plot", component_property="figure"),
-    )
-    def trigger_click(n_click, figure):
-        figure.write_html(
-            os.path.join(
-                os.path.abspath(os.path.dirname(scatter.h5file)), "Crossplot.html"
-            )
-        )
-    """
+    # https://plotly.com/python/interactive-html-export/
+    def save_figure(self, fig):
+        buffer = io.StringIO()
+        go.Figure(fig).write_html(buffer)
+        html_bytes = buffer.getvalue().encode()
+        encoded = base64.b64encode(html_bytes).decode()
+        href = "data:text/html;base64," + encoded
+
+        return href
 
     def run(self):
         # The reloader has not yet run - open the browser
