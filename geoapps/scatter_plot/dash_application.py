@@ -4,7 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
+import base64
 import os
 import webbrowser
 from os import environ
@@ -15,7 +15,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import dcc, html
 from dash.dependencies import Input, Output
-from flask import Flask
+from flask import Flask, send_from_directory
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -56,12 +56,13 @@ class ScatterPlots(ObjectDataSelection):
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-
         self.app = dash.Dash(
             server=server,
             url_base_pathname=environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
         )
+
+        self.app.server.route("/download/<path:path>")(self.download)
 
         self.app.layout = html.Div(
             [
@@ -82,11 +83,7 @@ class ScatterPlots(ObjectDataSelection):
                 html.Div(
                     [
                         dcc.Upload(
-                            id="geoh5",
-                            children=html.Div(
-                                ["Drag and drop or click to select a file to upload."]
-                            ),
-                            multiple=False,
+                            id="upload", children=html.Button("Change Workspace")
                         ),
                         dcc.Dropdown(
                             id="objects",
@@ -319,7 +316,8 @@ class ScatterPlots(ObjectDataSelection):
         self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
-            Input(component_id="geoh5", component_property="value"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
         )(self.update_object_options)
         self.app.callback(
             Output(component_id="x", component_property="options"),
@@ -334,6 +332,10 @@ class ScatterPlots(ObjectDataSelection):
             Output(component_id="size", component_property="value"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
+
+    def download(self, path):
+        upload_directory = self.params.geoh5  # ***
+        return send_from_directory(upload_directory, path, as_attachment=True)
 
     # https://stackoverflow.com/questions/50213761/changing-visibility-of-a-dash-component-by-updating-other-component
     def update_visibility(self, axis):
@@ -506,10 +508,17 @@ class ScatterPlots(ObjectDataSelection):
 
         return figure
 
-    def update_object_options(self, geoh5):
+    def update_object_options(self, workpath, contents):
         # print(self.params.geoh5)
         # self.workspace = Workspace(self.params.geoh5)
-        obj_list = self.params.geoh5.objects
+
+        if workpath is not None:
+            # print(contents)
+            content_type, content_string = contents.split(",")
+            decoded = base64.b64decode(content_string)
+            print(Workspace(decoded).objects)
+            self.workspace = Workspace(decoded)
+        obj_list = self.workspace.objects
 
         # options = [["", None]] + [
         #    [obj.parent.name + "/" + obj.name, obj.uid] for obj in obj_list
@@ -520,7 +529,10 @@ class ScatterPlots(ObjectDataSelection):
             {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
             for obj in obj_list
         ]
-        value = options[8]["value"]
+        if len(options) > 0:
+            value = options[0]["value"]
+        else:
+            value = None
 
         return options, value
 
@@ -528,10 +540,10 @@ class ScatterPlots(ObjectDataSelection):
         self.refresh.value = False
         # obj, _ = self.get_selected_entities()
         obj = None
-        if getattr(
-            self.params, "geoh5", None
-        ) is not None and self.params.geoh5.get_entity(object):
-            for entity in self.params.geoh5.get_entity(object):
+        if getattr(self, "workspace", None) is not None and self.workspace.get_entity(
+            object
+        ):
+            for entity in self.workspace.get_entity(object):
                 if isinstance(entity, ObjectBase):
                     obj = entity
 
