@@ -23,7 +23,7 @@ jobs:
       FULL_CONDA_ENV_NAME: geoapps
       SIMPEG_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64-simpeg.lock.yml
       FULL_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64.lock.yml
-      CONDA_PACK_OUTPUT_EXT: .tar.xz
+      CONDA_PACK_OUTPUT_EXT: .zip
     outputs:
       releaseFullBundle: ${{ env.releaseFullBundle }}
       full_bundle: ${{ steps.conda-pack-full.outputs.filename }}
