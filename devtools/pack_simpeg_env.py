@@ -35,7 +35,7 @@ if __name__ == "__main__":
     try:
         print(f"# Create environment {env_name} from {lock_file}")
         subprocess.run(
-            f"""conda env create -f {lock_file} -n {env_name} ^
+            f"""mamba env create -f {lock_file} -n {env_name} ^
             && conda activate {env_name} && python -m pip install . -v --no-deps ^
             && conda deactivate
             """,
