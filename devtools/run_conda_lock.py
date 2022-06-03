@@ -47,7 +47,7 @@ def print_execution_time(name: str = ""):
 
 
 def create_multi_platform_lock(py_ver: str, platform: str = None):
-    print(f"# Create multi-platform lock file for Python {py_ver}")
+    print(f"# Creating multi-platform lock file for Python {py_ver} ...")
     platform_option = f"-p {platform}" if platform else ""
     with print_execution_time(f"conda-lock for {py_ver}"):
         subprocess.run(
@@ -61,7 +61,7 @@ def create_multi_platform_lock(py_ver: str, platform: str = None):
 
 def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
     print(
-        f"# Create per platform Conda env files for Python {py_ver} ({'WITH' if dev else 'NO'} dev dependencies) "
+        f"# Creating per platform Conda env files for Python {py_ver} ({'WITH' if dev else 'NO'} dev dependencies) ... "
     )
     dev_dep_option = "--dev-dependencies" if dev else "--no-dev-dependencies"
     dev_suffix = "-dev" if dev else ""
@@ -102,6 +102,3 @@ if __name__ == "__main__":
             create_multi_platform_lock(py_ver)
             per_platform_env(py_ver, dev=False)
             per_platform_env(py_ver, dev=True)
-
-        # for simpeg with Python 3.9
-        per_platform_env("3.9", full=False, dev=False, suffix="-simpeg")
