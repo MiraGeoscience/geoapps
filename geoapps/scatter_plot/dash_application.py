@@ -27,16 +27,8 @@ from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.params import ScatterPlotParams
 
 
-class ScatterPlots(ObjectDataSelection):
+class ScatterPlots:
     _param_class = ScatterPlotParams
-    _select_multiple = True
-    _add_groups = False
-    _downsampling = None
-    _color = None
-    _x = None
-    _y = None
-    _z = None
-    _size = None
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -50,8 +42,7 @@ class ScatterPlots(ObjectDataSelection):
             self.defaults[key] = value
 
         self.data_channels = {}
-
-        super().__init__(**self.defaults)
+        self.refresh = None
 
         # https://community.plotly.com/t/putting-a-dash-instance-inside-a-class/6097/5
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -285,7 +276,7 @@ class ScatterPlots(ObjectDataSelection):
                         ),
                     ],
                     style={
-                        "display": "block",
+                        "display": "none",
                         "width": "40%",
                         "vertical-align": "top",
                         "margin-bottom": "20px",
@@ -363,7 +354,7 @@ class ScatterPlots(ObjectDataSelection):
                         ),
                     ],
                     style={
-                        "display": "block",
+                        "display": "none",
                         "width": "40%",
                         "vertical-align": "top",
                         "margin-bottom": "20px",
@@ -447,7 +438,7 @@ class ScatterPlots(ObjectDataSelection):
                         ),
                     ],
                     style={
-                        "display": "block",
+                        "display": "none",
                         "width": "40%",
                         "vertical-align": "top",
                         "margin-bottom": "20px",
@@ -549,7 +540,7 @@ class ScatterPlots(ObjectDataSelection):
                         ),
                     ],
                     style={
-                        "display": "block",
+                        "display": "none",
                         "width": "40%",
                         "vertical-align": "top",
                         "margin-bottom": "20px",
@@ -700,7 +691,6 @@ class ScatterPlots(ObjectDataSelection):
             )
 
     def get_channel(self, channel):
-        obj, _ = self.get_selected_entities()
 
         if channel is None:
             return None
@@ -708,8 +698,8 @@ class ScatterPlots(ObjectDataSelection):
         if channel not in self.data_channels.keys():
             if channel == "None":
                 data = None
-            elif self.workspace.get_entity(channel):
-                data = self.workspace.get_entity(channel)[0]
+            elif self.params.geoh5.get_entity(channel):
+                data = self.params.geoh5.get_entity(channel)[0]
             else:
                 return
 
@@ -719,9 +709,7 @@ class ScatterPlots(ObjectDataSelection):
         """
         Set the min and max values for the given axis channel
         """
-        self.refresh.value = False
-
-        # channel = getattr(self, "_" + name).value
+        self.refresh = False
         self.get_channel(channel)
 
         cmin, cmax = 0, 0
@@ -731,17 +719,17 @@ class ScatterPlots(ObjectDataSelection):
             cmin = f"{np.min(values):.2e}"
             cmax = f"{np.max(values):.2e}"
 
-        self.refresh.value = True
+        self.refresh = True
         return cmin, cmax
 
     def set_channel_bounds(self, x, y, z, color, size):
-        self.refresh.value = False
+        self.refresh = False
         x_min, x_max = self.get_channel_bounds(x)
         y_min, y_max = self.get_channel_bounds(y)
         z_min, z_max = self.get_channel_bounds(z)
         color_min, color_max = self.get_channel_bounds(color)
         size_min, size_max = self.get_channel_bounds(size)
-        self.refresh.value = True
+        self.refresh = True
         return (
             x_min,
             x_max,
@@ -786,12 +774,11 @@ class ScatterPlots(ObjectDataSelection):
         size_max,
         size_markers,
     ):
-        if not self.refresh.value:
+        if not self.refresh:
             return None
 
         new_params_dict = {}
         for key, value in self.params.to_dict().items():
-            # param = getattr(scatter, key, None)
 
             if key in locals():
                 param = locals()[key]
@@ -828,22 +815,14 @@ class ScatterPlots(ObjectDataSelection):
         return figure
 
     def update_object_options(self, contents):
-        # print(self.params.geoh5)
-        # self.workspace = Workspace(self.params.geoh5)
 
         if contents is not None:
-            # print(contents)
             content_type, content_string = contents.split(",")
             decoded = base64.b64decode(content_string)
-            print(Workspace(decoded).objects)
-            self.workspace = Workspace(decoded)
-        obj_list = self.workspace.objects
+            self.params.geoh5 = Workspace(decoded)
 
-        # options = [["", None]] + [
-        #    [obj.parent.name + "/" + obj.name, obj.uid] for obj in obj_list
-        # ]
+        obj_list = self.params.geoh5.objects
 
-        # options = ["None"]
         options = [
             {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
             for obj in obj_list
@@ -856,13 +835,12 @@ class ScatterPlots(ObjectDataSelection):
         return options, value
 
     def update_data_options(self, object):
-        self.refresh.value = False
-        # obj, _ = self.get_selected_entities()
+        self.refresh = False
         obj = None
-        if getattr(self, "workspace", None) is not None and self.workspace.get_entity(
-            object
-        ):
-            for entity in self.workspace.get_entity(object):
+        if getattr(
+            self.params, "geoh5", None
+        ) is not None and self.params.geoh5.get_entity(object):
+            for entity in self.params.geoh5.get_entity(object):
                 if isinstance(entity, ObjectBase):
                     obj = entity
 
@@ -872,11 +850,13 @@ class ScatterPlots(ObjectDataSelection):
         if "Visual Parameters" in channel_list:
             channel_list.remove("Visual Parameters")
 
+        self.data_channels = {}
         for channel in channel_list:
             self.get_channel(channel)
 
         options = list(self.data_channels.keys())
-        self.refresh.value = True
+
+        self.refresh = True
 
         return (
             options,
