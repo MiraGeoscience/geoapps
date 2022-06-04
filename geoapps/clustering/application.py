@@ -9,26 +9,34 @@ from uuid import UUID
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 from geoh5py.ui_json.utils import monitored_directory_copy
 from IPython.display import display
-from ipywidgets import (
-    Button,
-    Checkbox,
-    ColorPicker,
-    Dropdown,
-    FloatText,
-    HBox,
-    IntSlider,
-    ToggleButtons,
-    VBox,
-    interactive_output,
-)
 from scipy.spatial import cKDTree
-from sklearn.cluster import KMeans
 
 from geoapps.scatter_plot import ScatterPlots
-from geoapps.utils.utils import colors, hex_to_rgb, random_sampling
+from geoapps.shared_utils.utils import colors, hex_to_rgb
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.statistics import random_sampling
+
+with warn_module_not_found():
+    import plotly.graph_objects as go
+
+with warn_module_not_found():
+    from ipywidgets import (
+        Button,
+        Checkbox,
+        ColorPicker,
+        Dropdown,
+        FloatText,
+        HBox,
+        IntSlider,
+        ToggleButtons,
+        VBox,
+        interactive_output,
+    )
+
+with warn_module_not_found():
+    from sklearn.cluster import KMeans
 
 
 class Clustering(ScatterPlots):

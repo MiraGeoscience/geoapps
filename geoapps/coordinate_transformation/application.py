@@ -10,22 +10,27 @@ import re
 import uuid
 from time import time
 
-import matplotlib.pyplot as plt
 import numpy
 from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
-from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
-
-from geoapps.utils.utils import soft_import
-
-transform = soft_import("fiona.transform", objects=["transform"])
-gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
 
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import export_grid_2_geotiff, geotiff_2_grid
+
+from .utils import geotiff_2_grid
+
+with warn_module_not_found():
+    from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
+
+with warn_module_not_found():
+    from fiona.transform import transform
+
+with warn_module_not_found():
+    from osgeo import gdal, osr
 
 
 class CoordinateTransformation(ObjectDataSelection):
@@ -76,6 +81,8 @@ class CoordinateTransformation(ObjectDataSelection):
         """
         Run the coordinate transformation
         """
+        import matplotlib.pyplot as plt
+
         if self.wkt_in.value != "" and self.wkt_out.value != "":
 
             if self.plot_result:
