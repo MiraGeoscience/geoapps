@@ -17,6 +17,7 @@ on:
       - hotfix/**
     tags:
       - "v[0-9]+.**"
+      - "ga-v[0-9]+.**"
 
 jobs:
   create-env-file:
