@@ -57,8 +57,8 @@ jobs:
       - name: Create env file
         id: create-env-file
         run: |
-          [ $GITHUB_REF_TYPE == tag ] && REF_TYPE="tag" || REF_TYPE="sha"
-          [ $REF_TYPE == tag ] && REF_TYPE=${GITHUB_REF_NAME} || REF=${GITHUB_SHA}
+          [ $GITHUB_REF_TYPE == tag ] && REF_TYPE=tag || REF_TYPE=sha
+          [ $REF_TYPE == tag ] && REF=${GITHUB_REF_NAME} || REF=${GITHUB_SHA}
           python devtools/create_geoapps_env_files.py $REF_TYPE $REF --url $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
           echo ::set-output name=full_env_file::conda-py-3.9-win-64-geoapps.lock.yml
           echo ::set-output name=simpeg_env_file::conda-py-3.9-win-64-geoapps-simpeg.lock.yml
