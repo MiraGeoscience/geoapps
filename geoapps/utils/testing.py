@@ -29,7 +29,7 @@ from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 from SimPEG import utils
 
-from geoapps.utils import treemesh_2_octree
+from geoapps.driver_base.utils import treemesh_2_octree
 
 
 class Geoh5Tester:

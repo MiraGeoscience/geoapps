@@ -12,12 +12,15 @@ from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel, ObjectBase
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils.utils import get_locations, weighted_average
+from geoapps.shared_utils.utils import get_locations, weighted_average
+from geoapps.utils import warn_module_not_found
+
+with warn_module_not_found():
+    from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox
 
 
 class DataInterpolation(ObjectDataSelection):

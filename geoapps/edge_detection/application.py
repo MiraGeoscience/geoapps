@@ -10,23 +10,21 @@ import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D
 from geoh5py.ui_json.utils import monitored_directory_copy
-from ipywidgets import (
-    Button,
-    FloatSlider,
-    HBox,
-    IntSlider,
-    Layout,
-    Text,
-    VBox,
-    interactive_output,
-)
-from matplotlib import collections
-from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line
 
-from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
+from geoapps.shared_utils.utils import filter_xy
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import filter_xy
+
+with warn_module_not_found():
+    from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
+
+with warn_module_not_found():
+    from matplotlib import collections
+
+with warn_module_not_found():
+    from skimage.feature import canny
+    from skimage.transform import probabilistic_hough_line
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -232,7 +230,6 @@ class EdgeDetectionApp(PlotSelection2D):
         y = grid.centroids[:, 1].reshape(grid.shape, order="F")
         z = grid.centroids[:, 2].reshape(grid.shape, order="F")
         grid_data = data[0].values.reshape(grid.shape, order="F")
-
         indices = self.indices
         if indices is None:
             indices = np.ones_like(grid_data, dtype="bool")
