@@ -40,8 +40,8 @@ def create_standalone_lock(git_url: str, full: bool, suffix=""):
     print(f"# Creating lock file for stand-alone environment (full={full})...")
     py_ver = "3.9"
     platform = "win-64"
-    base_filename = f"environments/conda-py-{py_ver}-{platform}{suffix}"
-    initial_lock_file = Path(f"{base_filename}-tmp.lock.yml")
+    base_filename = f"conda-py-{py_ver}-{platform}{suffix}"
+    initial_lock_file = Path(f"environments/{base_filename}-tmp.lock.yml")
     try:
         per_platform_env(py_ver, full, suffix=f"{suffix}-tmp")
         assert initial_lock_file.exists()
