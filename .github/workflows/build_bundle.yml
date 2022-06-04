@@ -1,32 +1,38 @@
-name: Build bundle
+name: Create env file
 
 on:
   pull_request:
-    types: [labeled]
+    branches:
+      - develop
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
   push:
+    branches:
+      - develop
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
     tags:
       - "v[0-9]+.**"
 
 jobs:
-  build-bundle:
-    if: ${{ github.event.action != 'labeled' || contains(fromJSON('["pack:full", "pack:simpeg"]'), github.event.label.name) }}
+  create-env-file:
     defaults:
       run:
         shell: bash -l {0}
     runs-on: windows-latest
     env:
-      releaseFullBundle: false
+      releaseFullEnv: false
       PYTHONUTF8: 1
-      ARTIFACT_NAME: geoapps.conda-pack
-      CONDA_ENV_NAME_GLOB_PATTERN: geoapps*
-      SIMPEG_CONDA_ENV_NAME: geoapps-simpeg
-      FULL_CONDA_ENV_NAME: geoapps
-      SIMPEG_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64-simpeg.lock.yml
-      FULL_CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64.lock.yml
-      CONDA_PACK_OUTPUT_EXT: .zip
+      ARTIFACT_NAME: geoapps.conda-env
+      CONDA_ENV_FILE_GLOB_PATTERN: conda-py-*-geoapps*.lock.yml
+      CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64.lock.yml
     outputs:
-      releaseFullBundle: ${{ env.releaseFullBundle }}
-      full_bundle: ${{ steps.conda-pack-full.outputs.filename }}
+      releaseFullEnv: ${{ env.releaseFullEnv }}
+      full_env_file: ${{ steps.create-env-file.outputs.full_env_file }}
       artifact: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
     steps:
       - uses: actions/checkout@v2
@@ -38,54 +44,26 @@ jobs:
           REF_NAME=${GITHUB_REF##refs/*/}
           SHORT_SHA=${GITHUB_SHA:0:8}
           echo ::set-output name=git_ref_suffix::${REF_NAME}-${SHORT_SHA}
-      - name: Create the full Conda environment
-        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:full' }}
-        uses: mamba-org/provision-with-micromamba@main
-        with:
-          environment-file: ${{ env.FULL_CONDA_LOCK_ENV_FILE }}
-          environment-name: ${{ env.FULL_CONDA_ENV_NAME }}
-          cache-downloads: true
-      - name: Install in full Conda env from sources
-        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:full' }}
-        run: python -m pip install . -vv --no-deps
-      - name: Create the SimPEG Conda environment
-        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:simpeg' }}
-        uses: mamba-org/provision-with-micromamba@main
-        with:
-          environment-file: ${{ env.SIMPEG_CONDA_LOCK_ENV_FILE }}
-          environment-name: ${{ env.SIMPEG_CONDA_ENV_NAME }}
-          cache-downloads: true
-      - name: Install in SimPEG Conda env from sources
-        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:simpeg' }}
-        run: python -m pip install . -vv --no-deps
+          echo ::set-output name=git_sha::${GITHUB_SHA}
       - name: Activate conda base env
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: env-python-3.9.yml
-          environment-name: conda-pack
+          environment-name: conda-lock
           cache-downloads: true
           cache-env: true
-          extra-specs: conda-pack
+          extra-specs: conda-lock
           channels: conda-forge
-      - name: Run conda pack for SimPEG
-        id: conda-pack-simpeg
-        if: ${{ github.event.action != 'labeled' || github.event.label.name == 'pack:simpeg' }}
+      - name: Create env file
+        id: create-env-file
         run: |
-          ENV_PATH=$MAMBA_ROOT_PREFIX/envs/$SIMPEG_CONDA_ENV_NAME
-          OUTPUT_FILE=$SIMPEG_CONDA_ENV_NAME-${{ steps.git-info.outputs.git_ref_suffix }}${{ env.CONDA_PACK_OUTPUT_EXT }}
-          conda-pack --prefix $ENV_PATH --output $OUTPUT_FILE
-      - name: Run conda pack full
-        id: conda-pack-full
-        if: ${{ (env.releaseFullBundle && github.event.action != 'labeled') || github.event.label.name == 'pack:full' }}
-        run: |
-          ENV_PATH=$MAMBA_ROOT_PREFIX/envs/$FULL_CONDA_ENV_NAME
-          OUTPUT_FILE=$FULL_CONDA_ENV_NAME-${{ steps.git-info.outputs.git_ref_suffix }}${{ env.CONDA_PACK_OUTPUT_EXT }}
-          conda-pack --prefix $ENV_PATH --output $OUTPUT_FILE
-          echo ::set-output name=filename::${OUTPUT_FILE}
+          python create_geoapps_env_files.py ${{ steps.git-info.outputs.git_sha }}
+          echo ::set-output name=full_env_file::conda-py-3.9-win-64-geoapps.lock.yml
+          echo ::set-output name=simpeg_env_file::conda-py-3.9-win-64-geoapps-simpeg.lock.yml
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
-          path: ${{ env.CONDA_ENV_NAME_GLOB_PATTERN }}-${{ steps.git-info.outputs.git_ref_suffix }}${{ env.CONDA_PACK_OUTPUT_EXT }}
+          path: ${{ env.CONDA_ENV_FILE_GLOB_PATTERN }}
           retention-days: 2
           if-no-files-found: error
 
@@ -112,18 +90,18 @@ jobs:
           [[ $new_release_url ]] && echo "::set-output name=release_id::${new_release_url##https*/}"
           || echo "::set-output name=release_id::$tag_name"
 
-  release-bundle:
-    needs: [build-bundle, draft-release]
-    if: ${{ needs.build-bundle.outputs.releaseFullBundle }}
+  release-env:
+    needs: [create-env-file, draft-release]
+    if: ${{ needs.create-env-file.outputs.releaseFullEnv }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: ${{ needs.build-bundle.outputs.artifact }}
+          name: ${{ needs.create-env-file.outputs.artifact }}
       - name: Upload release asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh --version
-          gh release upload ${{ needs.draft-release.outputs.release_id }} "${{ needs.build-bundle.outputs.full_bundle }}#Conda Pack (${{ env.CONDA_PACK_OUTPUT_EXT }})"
+          gh release upload ${{ needs.draft-release.outputs.release_id }} "${{ needs.create-env-file.outputs.full_env_file }}#Conda env file (.yml)"
