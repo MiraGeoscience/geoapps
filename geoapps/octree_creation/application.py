@@ -110,7 +110,7 @@ class OctreeMesh(ObjectDataSelection):
         return self._main
 
     @property
-    def u_cell_size(self) -> FloatText:
+    def u_cell_size(self) -> "FloatText":
         """
         Widget controlling the u-cell size
         """
@@ -121,7 +121,7 @@ class OctreeMesh(ObjectDataSelection):
         return self._u_cell_size
 
     @property
-    def v_cell_size(self) -> FloatText:
+    def v_cell_size(self) -> "FloatText":
         """
         Widget controlling the v-cell size
         """
@@ -132,7 +132,7 @@ class OctreeMesh(ObjectDataSelection):
         return self._v_cell_size
 
     @property
-    def w_cell_size(self) -> FloatText:
+    def w_cell_size(self) -> "FloatText":
         """
         Widget controlling the w-cell size
         """
@@ -143,7 +143,7 @@ class OctreeMesh(ObjectDataSelection):
         return self._w_cell_size
 
     @property
-    def depth_core(self) -> FloatText:
+    def depth_core(self) -> "FloatText":
         """
         Widget controlling the depth core
         """
@@ -154,7 +154,7 @@ class OctreeMesh(ObjectDataSelection):
         return self._depth_core
 
     @property
-    def horizontal_padding(self) -> FloatText:
+    def horizontal_padding(self) -> "FloatText":
         """
         Widget controlling the horizontal padding
         """
@@ -165,7 +165,7 @@ class OctreeMesh(ObjectDataSelection):
         return self._horizontal_padding
 
     @property
-    def vertical_padding(self) -> FloatText:
+    def vertical_padding(self) -> "FloatText":
         """
         Widget controlling the vertical padding
         """
