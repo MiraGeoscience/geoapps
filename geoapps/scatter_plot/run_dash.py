@@ -9,4 +9,4 @@
 from geoapps.scatter_plot.dash_application import ScatterPlots
 
 app = ScatterPlots()
-app.app.run_server(host="127.0.0.1", port=8050, debug=False)
+app.run()
