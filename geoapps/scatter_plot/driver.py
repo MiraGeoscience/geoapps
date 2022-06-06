@@ -86,7 +86,7 @@ class ScatterPlotDriver:
                     self.params.x.name, x_axis, self.params.x_log, self.params.x_thresh
                 )
             else:
-                x_axis, x_label, x_ticks, x_ticklabels = None, None, None, None
+                return figure
 
             min = self.params.y_min
             max = self.params.y_max
@@ -101,7 +101,7 @@ class ScatterPlotDriver:
                     self.params.y.name, y_axis, self.params.y_log, self.params.y_thresh
                 )
             else:
-                y_axis, y_label, y_ticks, y_ticklabels = None, None, None, None
+                return figure
 
             if self.params.z is not None:
                 z_axis = self.params.z.values[indices]
@@ -122,7 +122,7 @@ class ScatterPlotDriver:
                         self.params.z_thresh,
                     )
                 else:
-                    z_axis, z_label, z_ticks, z_ticklabels = None, None, None, None
+                    return figure
 
                 # 3D Scatter
                 plot = go.Scatter3d(
