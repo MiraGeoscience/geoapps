@@ -56,7 +56,7 @@ class ScatterPlots:
                 html.Div(
                     [
                         dcc.Markdown(
-                            """
+                            children="""
                             ### Scatter Plots\n
                             \n
                             This application lets users visualize up to 5D of data pulled from any Geoscience ANALYST objects. The application uses the rich [Plotly](https://plotly.com/) graphical interface.\n
@@ -88,7 +88,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    """Population Downsampling (%): """,
+                                    children="""Population Downsampling (%): """,
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -127,7 +127,7 @@ class ScatterPlots:
                 html.Div(
                     id="x_div",
                     children=[
-                        dcc.Markdown("""Data: """),
+                        dcc.Markdown(children="""Data: """),
                         dcc.Dropdown(
                             id="x",
                             options=self.defaults["data_options"],
@@ -137,7 +137,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Threshold: ",
+                                    children="Threshold: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -164,7 +164,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Min: ",
+                                    children="Min: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -180,7 +180,7 @@ class ScatterPlots:
                                     },
                                 ),
                                 dcc.Markdown(
-                                    "Max: ",
+                                    children="Max: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -205,7 +205,7 @@ class ScatterPlots:
                 html.Div(
                     id="y_div",
                     children=[
-                        dcc.Markdown("""Data: """),
+                        dcc.Markdown(children="""Data: """),
                         dcc.Dropdown(
                             id="y",
                             options=self.defaults["data_options"],
@@ -215,7 +215,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Threshold: ",
+                                    children="Threshold: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -242,7 +242,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Min: ",
+                                    children="Min: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -258,7 +258,7 @@ class ScatterPlots:
                                     },
                                 ),
                                 dcc.Markdown(
-                                    "Max: ",
+                                    children="Max: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -283,7 +283,7 @@ class ScatterPlots:
                 html.Div(
                     id="z_div",
                     children=[
-                        dcc.Markdown("""Data: """),
+                        dcc.Markdown(children="""Data: """),
                         dcc.Dropdown(
                             id="z",
                             options=self.defaults["data_options"],
@@ -293,7 +293,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Threshold: ",
+                                    children="Threshold: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -320,7 +320,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Min: ",
+                                    children="Min: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -336,7 +336,7 @@ class ScatterPlots:
                                     },
                                 ),
                                 dcc.Markdown(
-                                    "Max: ",
+                                    children="Max: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -361,7 +361,7 @@ class ScatterPlots:
                 html.Div(
                     id="color_div",
                     children=[
-                        dcc.Markdown("""Data: """),
+                        dcc.Markdown(children="""Data: """),
                         dcc.Dropdown(
                             id="color",
                             options=self.defaults["data_options"],
@@ -377,7 +377,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Threshold: ",
+                                    children="Threshold: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -404,7 +404,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Min: ",
+                                    children="Min: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -420,7 +420,7 @@ class ScatterPlots:
                                     },
                                 ),
                                 dcc.Markdown(
-                                    "Max: ",
+                                    children="Max: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -445,7 +445,7 @@ class ScatterPlots:
                 html.Div(
                     id="size_div",
                     children=[
-                        dcc.Markdown("""Data: """),
+                        dcc.Markdown(children="""Data: """),
                         dcc.Dropdown(
                             id="size",
                             options=self.defaults["data_options"],
@@ -455,7 +455,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    """Marker Size: """,
+                                    children="""Marker Size: """,
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -479,7 +479,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Threshold: ",
+                                    children="Threshold: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -506,7 +506,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    "Min: ",
+                                    children="Min: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -522,7 +522,7 @@ class ScatterPlots:
                                     },
                                 ),
                                 dcc.Markdown(
-                                    "Max: ",
+                                    children="Max: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -558,7 +558,7 @@ class ScatterPlots:
                     style={"width": "80%", "display": "block", "margin-bottom": "20px"},
                 ),
                 dcc.Markdown(
-                    """
+                    children="""
                     Need help? Contact us at support@mirageoscience.com\n
                     """
                 ),
