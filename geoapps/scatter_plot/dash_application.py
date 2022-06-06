@@ -50,18 +50,22 @@ class ScatterPlots:
             external_stylesheets=external_stylesheets,
         )
 
-        # Load markdown files with instructions
-        header = open("header.md")
-        header_markdown = header.read()
-        footer = open("footer.md")
-        footer_markdown = footer.read()
-
         # Set up the layout with the dash components
         self.app.layout = html.Div(
             [
                 html.Div(
                     [
-                        dcc.Markdown(children=header_markdown),
+                        dcc.Markdown(
+                            children="""
+                            ### Scatter Plots
+
+                            This application lets users visualize up to 5D of data pulled from any Geoscience ANALYST objects. The application uses the rich [Plotly](https://plotly.com/) graphical interface.
+
+                            New user? Visit the [**Getting Started**](https://geoapps.readthedocs.io/en/latest/content/installation.html) page.
+
+                            [**Online Documentation**](https://geoapps.readthedocs.io/en/latest/content/applications/scatter.html)
+                            """
+                        ),
                     ],
                     style={
                         "width": "100%",
@@ -553,7 +557,9 @@ class ScatterPlots:
                     ],
                     style={"width": "80%", "display": "block", "margin-bottom": "20px"},
                 ),
-                dcc.Markdown(children=footer_markdown),
+                dcc.Markdown(
+                    children="""Need help? Contact us at support@mirageoscience.com"""
+                ),
             ],
             style={"width": "100%", "margin-left": "50px"},
         )
