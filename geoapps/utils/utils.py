@@ -1480,6 +1480,29 @@ def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kw
     axs.set_aspect(aspect)
 
 
+def get_contours(min, max, step, fixed_contours=""):
+    """
+    Function to input interval and value as string to a list of floats.
+    Parameter
+    ---------
+    input_string: str
+        Input string value of type `val1:val2:ii` and/or a list of values `val3, val4`
+    Return
+    ------
+    list of floats
+        Corresponding list of values in float format
+    """
+    contours = np.arange(min, max + step, step).tolist()
+
+    if fixed_contours != "":
+        if type(fixed_contours) is str:
+            fixed_contours = re.split(",", fixed_contours.replace(" ", ""))
+            fixed_contours = [float(c) for c in fixed_contours]
+        contours.extend(fixed_contours)
+
+    return np.unique(np.sort(contours))
+
+
 def input_string_2_float(input_string):
     """
     Function to input interval and value as string to a list of floats.

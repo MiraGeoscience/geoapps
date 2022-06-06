@@ -15,7 +15,10 @@ defaults = {
     "geoh5": None,
     "objects": None,
     "data": None,
-    "contours": "0.005: 0.02: 0.005, 0.0025",
+    "interval_min": 0.005,
+    "interval_max": 0.02,
+    "interval_spacing": 0.005,
+    "fixed_contours": "0.0022, 0.0025",
     "max_distance": 500.0,
     "resolution": 50.0,
     "export_as": "Iso",
@@ -64,10 +67,27 @@ default_ui_json.update(
             "parent": "objects",
             "value": None,
         },
-        "contours": {
+        "interval_min": {
             "main": True,
-            "label": "Iso-values",
-            "value": "0.005: 0.02: 0.005, 0.0025",
+            "label": "Contour Min",
+            "value": 0.0,
+        },
+        "interval_max": {
+            "main": True,
+            "label": "Contour Max",
+            "value": 0.0,
+        },
+        "interval_spacing": {
+            "main": True,
+            "label": "Contour Spacing",
+            "value": 0.0,
+        },
+        "fixed_contours": {
+            "main": True,
+            "label": "Fixed Contours",
+            "value": "",
+            "optional": True,
+            "enabled": True,
         },
         "max_distance": {
             "enabled": True,
@@ -93,5 +113,8 @@ app_initializer = {
     "data": UUID("{f3e36334-be0a-4210-b13e-06933279de25}"),
     "max_distance": 500.0,
     "resolution": 50.0,
-    "contours": "0.005: 0.02: 0.005, 0.0025",
+    "interval_min": 0.005,
+    "interval_max": 0.02,
+    "interval_spacing": 0.005,
+    "fixed_contours": "0.0022, 0.0025",
 }
