@@ -50,22 +50,18 @@ class ScatterPlots:
             external_stylesheets=external_stylesheets,
         )
 
+        # Load markdown files with instructions
+        header = open("header.md")
+        header_markdown = header.read()
+        footer = open("footer.md")
+        footer_markdown = footer.read()
+
         # Set up the layout with the dash components
         self.app.layout = html.Div(
             [
                 html.Div(
                     [
-                        dcc.Markdown(
-                            children="""
-                            ### Scatter Plots\n
-                            \n
-                            This application lets users visualize up to 5D of data pulled from any Geoscience ANALYST objects. The application uses the rich [Plotly](https://plotly.com/) graphical interface.\n
-                            \n
-                            New user? Visit the [**Getting Started**](https://geoapps.readthedocs.io/en/latest/content/installation.html) page.\n
-                            \n
-                            [**Online Documentation**](https://geoapps.readthedocs.io/en/latest/content/applications/scatter.html)\n
-                            """
-                        ),
+                        dcc.Markdown(children=header_markdown),
                     ],
                     style={
                         "width": "100%",
@@ -88,7 +84,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    children="""Population Downsampling (%): """,
+                                    children="Population Downsampling (%): ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -127,7 +123,7 @@ class ScatterPlots:
                 html.Div(
                     id="x_div",
                     children=[
-                        dcc.Markdown(children="""Data: """),
+                        dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="x",
                             options=self.defaults["data_options"],
@@ -205,7 +201,7 @@ class ScatterPlots:
                 html.Div(
                     id="y_div",
                     children=[
-                        dcc.Markdown(children="""Data: """),
+                        dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="y",
                             options=self.defaults["data_options"],
@@ -283,7 +279,7 @@ class ScatterPlots:
                 html.Div(
                     id="z_div",
                     children=[
-                        dcc.Markdown(children="""Data: """),
+                        dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="z",
                             options=self.defaults["data_options"],
@@ -361,7 +357,7 @@ class ScatterPlots:
                 html.Div(
                     id="color_div",
                     children=[
-                        dcc.Markdown(children="""Data: """),
+                        dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="color",
                             options=self.defaults["data_options"],
@@ -445,7 +441,7 @@ class ScatterPlots:
                 html.Div(
                     id="size_div",
                     children=[
-                        dcc.Markdown(children="""Data: """),
+                        dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="size",
                             options=self.defaults["data_options"],
@@ -455,7 +451,7 @@ class ScatterPlots:
                         html.Div(
                             [
                                 dcc.Markdown(
-                                    children="""Marker Size: """,
+                                    children="Marker Size: ",
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "5px",
@@ -557,11 +553,7 @@ class ScatterPlots:
                     ],
                     style={"width": "80%", "display": "block", "margin-bottom": "20px"},
                 ),
-                dcc.Markdown(
-                    children="""
-                    Need help? Contact us at support@mirageoscience.com\n
-                    """
-                ),
+                dcc.Markdown(children=footer_markdown),
             ],
             style={"width": "100%", "margin-left": "50px"},
         )
