@@ -5,13 +5,14 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import sys
 import uuid
 import warnings
 from copy import deepcopy
 from os import path
 from time import time
-from typing import Optional
 
 import numpy as np
 from geoh5py.data import ReferencedData
@@ -568,7 +569,7 @@ class PeakFinder(ObjectDataSelection):
         return self._structural_markers
 
     @property
-    def survey(self) -> Optional[Entity]:
+    def survey(self) -> Entity | None:
         """
         Selected curve object
         """
