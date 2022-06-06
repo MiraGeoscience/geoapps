@@ -37,10 +37,27 @@
         "parent": "objects",
         "value": ""
     },
-    "contours": {
+    "interval_min": {
         "main": true,
-        "label": "Iso-values",
-        "value": "0.005: 0.02: 0.005, 0.0025"
+        "label": "Contour Min",
+        "value": 0.0
+    },
+    "interval_max": {
+        "main": true,
+        "label": "Contour Max",
+        "value": 0.0
+    },
+    "interval_spacing": {
+        "main": true,
+        "label": "Contour Spacing",
+        "value": 0.0
+    },
+    "fixed_contours": {
+        "main": true,
+        "label": "Fixed Contours",
+        "value": "1.0, 2.0",
+        "optional": true,
+        "enabled": true
     },
     "max_distance": {
         "enabled": true,

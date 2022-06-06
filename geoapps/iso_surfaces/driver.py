@@ -21,7 +21,12 @@ from skimage.measure import marching_cubes
 
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import input_string_2_float, rotate_xy, weighted_average
+from geoapps.utils.utils import (
+    get_contours,
+    input_string_2_float,
+    rotate_xy,
+    weighted_average,
+)
 
 
 class IsoSurfacesDriver:
@@ -32,8 +37,12 @@ class IsoSurfacesDriver:
         """
         Create iso surfaces from input values
         """
-
-        levels = input_string_2_float(self.params.contours)
+        levels = get_contours(
+            self.params.interval_min,
+            self.params.interval_max,
+            self.params.interval_spacing,
+            self.params.fixed_contours,
+        )
 
         if levels is None:
             return
@@ -187,7 +196,10 @@ class IsoSurfacesDriver:
 
 
 if __name__ == "__main__":
+    print("Loading geoh5 file . . .")
     file = sys.argv[1]
     params = IsoSurfacesParams(InputFile.read_ui_json(file))
     driver = IsoSurfacesDriver(params)
+    print("Loaded. Running iso surface creation . . .")
     driver.run()
+    print("Done.")
