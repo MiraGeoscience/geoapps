@@ -18,7 +18,7 @@ defaults = {
     "interval_min": 0.005,
     "interval_max": 0.02,
     "interval_spacing": 0.005,
-    "fixed_contours": "0.0022, 0.0025",
+    "fixed_contours": "0.0025",
     "max_distance": 500.0,
     "resolution": 50.0,
     "run_command": "geoapps.iso_surfaces.driver",
@@ -119,6 +119,6 @@ app_initializer = {
     "interval_min": 0.005,
     "interval_max": 0.02,
     "interval_spacing": 0.005,
-    "fixed_contours": "0.0022, 0.0025",
+    "fixed_contours": "0.0025",
     "export_as": "Iso_Iteration_7_model",
 }
