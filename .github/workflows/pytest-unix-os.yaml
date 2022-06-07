@@ -23,13 +23,14 @@ jobs:
       fail-fast: false
       matrix:
         python_ver: [3.7, 3.8, 3.9]
-    runs-on: ubuntu-latest
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash -l {0}
     env:
       PYTHONUTF8: 1
-      CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-linux-64-dev.lock.yml
+      CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-${{ startsWith(matrix.os, 'macos') && 'osx' || 'linux' }}-64-dev.lock.yml
     steps:
       - uses: actions/checkout@v2
       - name: Setup conda env
