@@ -21,12 +21,7 @@ from skimage.measure import marching_cubes
 
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import (
-    get_contours,
-    input_string_2_float,
-    rotate_xy,
-    weighted_average,
-)
+from geoapps.utils.utils import get_contours, rotate_xy, weighted_average
 
 
 class IsoSurfacesDriver:
@@ -44,7 +39,7 @@ class IsoSurfacesDriver:
             self.params.fixed_contours,
         )
 
-        if levels is None:
+        if len(levels) < 1:
             return
 
         surfaces = self.iso_surface(

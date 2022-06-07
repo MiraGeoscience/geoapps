@@ -39,23 +39,30 @@
     },
     "interval_min": {
         "main": true,
-        "label": "Contour Min",
-        "value": 0.0
+        "group": "Interval Contours",
+        "groupOptional": true,
+        "label": "Interval min",
+        "value": 0.0,
+        "enabled": true
     },
     "interval_max": {
         "main": true,
-        "label": "Contour Max",
-        "value": 0.0
+        "group": "Interval Contours",
+        "label": "Interval max",
+        "value": 0.0,
+        "enabled": true
     },
     "interval_spacing": {
         "main": true,
-        "label": "Contour Spacing",
-        "value": 0.0
+        "group": "Interval Contours",
+        "label": "Interval spacing",
+        "value": 0.0,
+        "enabled": true
     },
     "fixed_contours": {
         "main": true,
         "label": "Fixed Contours",
-        "value": "1.0, 2.0",
+        "value": "0.0",
         "optional": true,
         "enabled": true
     },
@@ -74,6 +81,6 @@
     "export_as": {
         "main": true,
         "label": "Name",
-        "value": "Iso"
+        "value": "Iso_"
     }
 }

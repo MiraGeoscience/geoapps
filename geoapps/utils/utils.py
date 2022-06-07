@@ -1492,44 +1492,21 @@ def get_contours(min, max, step, fixed_contours=""):
     list of floats
         Corresponding list of values in float format
     """
-    contours = np.arange(min, max + step, step).tolist()
 
-    if fixed_contours != "":
+    if None not in [min, max, step]:
+        interval_contours = np.arange(min, max + step, step).tolist()
+    else:
+        interval_contours = []
+
+    if fixed_contours != "" and fixed_contours is not None:
         if type(fixed_contours) is str:
             fixed_contours = re.split(",", fixed_contours.replace(" ", ""))
             fixed_contours = [float(c) for c in fixed_contours]
-        contours.extend(fixed_contours)
+    else:
+        fixed_contours = []
 
-    return np.unique(np.sort(contours))
-
-
-def input_string_2_float(input_string):
-    """
-    Function to input interval and value as string to a list of floats.
-    Parameter
-    ---------
-    input_string: str
-        Input string value of type `val1:val2:ii` and/or a list of values `val3, val4`
-    Return
-    ------
-    list of floats
-        Corresponding list of values in float format
-    """
-    if input_string != "":
-        vals = re.split(",", input_string)
-        cntrs = []
-        for val in vals:
-            if ":" in val:
-                param = np.asarray(re.split(":", val), dtype="float")
-                if len(param) == 2:
-                    cntrs += [np.arange(param[0], param[1] + 1)]
-                else:
-                    cntrs += [np.arange(param[0], param[1] + param[2], param[2])]
-            else:
-                cntrs += [float(val)]
-        return np.unique(np.sort(np.hstack(cntrs)))
-
-    return None
+    contours = np.unique(np.sort(interval_contours + fixed_contours))
+    return contours
 
 
 def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):

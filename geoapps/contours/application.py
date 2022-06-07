@@ -12,16 +12,7 @@ import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
-from ipywidgets import (
-    Checkbox,
-    FloatText,
-    HBox,
-    Label,
-    Layout,
-    Text,
-    VBox,
-    interactive_output,
-)
+from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
 from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
 
@@ -133,7 +124,13 @@ class ContourValues(PlotSelection2D):
     @staticmethod
     def get_contour_string(min, max, step, fixed_contours):
         contour_string = (
-            str(min) + ":" + str(max) + ":" + str(step) + "," + str(fixed_contours)
+            str(min)
+            + ":"
+            + str(max)
+            + ":"
+            + str(step)
+            + ","
+            + str(fixed_contours.replace(" ", ""))
         )
         return contour_string
 
@@ -184,10 +181,10 @@ class ContourValues(PlotSelection2D):
                     "azimuth": self.window_azimuth.value,
                 },
                 "contours": get_contours(
-                    self.interval_min,
-                    self.interval_max,
-                    self.interval_spacing,
-                    self.fixed_contours,
+                    self.interval_min.value,
+                    self.interval_max.value,
+                    self.interval_spacing.value,
+                    self.fixed_contours.value,
                 ),
             },
         )
@@ -243,10 +240,10 @@ class ContourValues(PlotSelection2D):
                 curve.add_data(
                     {
                         self.get_contour_string(
-                            self.interval_min,
-                            self.interval_max,
-                            self.interval_spacing,
-                            self.fixed_contours,
+                            self.interval_min.value,
+                            self.interval_max.value,
+                            self.interval_spacing.value,
+                            self.fixed_contours.value,
                         ): {"values": np.hstack(values)}
                     }
                 )
