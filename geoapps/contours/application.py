@@ -12,14 +12,23 @@ import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
-from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
+from ipywidgets import (
+    Checkbox,
+    FloatText,
+    HBox,
+    Label,
+    Layout,
+    Text,
+    VBox,
+    interactive_output,
+)
 from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
 
 from geoapps import PlotSelection2D
 from geoapps.utils.formatters import string_name
 from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import input_string_2_float
+from geoapps.utils.utils import get_contours
 
 
 class ContourValues(PlotSelection2D):
@@ -31,16 +40,16 @@ class ContourValues(PlotSelection2D):
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
-        "contours": "-400:2000:100,-240",
+        "interval_min": -400,
+        "interval_max": 2000,
+        "interval_spacing": 100,
+        "fixed_contours": "-240",
         "resolution": 50,
         "ga_group_name": "Contours",
     }
 
     def __init__(self, **kwargs):
         self.defaults.update(**kwargs)
-        self._contours = Text(
-            value="", description="Contours", disabled=False, continuous_update=False
-        )
         self._export_as = Text(value="Contours")
         self._z_value = Checkbox(
             value=False, indent=False, description="Assign Z from values"
@@ -51,23 +60,16 @@ class ContourValues(PlotSelection2D):
         self.selection = interactive_output(
             self.compute_plot,
             {
-                "contour_values": self.contours,
+                "interval_min": self.interval_min,
+                "interval_max": self.interval_max,
+                "interval_spacing": self.interval_spacing,
+                "fixed_contours": self.fixed_contours,
             },
         )
 
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export"
         self.trigger.button_style = "danger"
-
-    @property
-    def contours(self):
-        """
-        :obj:`ipywidgets.Text`: String defining sets of contours.
-        Contours can be defined over an interval `50:200:10` and/or at a fix value `215`.
-        Any combination of the above can be used:
-        50:200:10, 215 => Contours between values 50 and 200 every 10, with a contour at 215.
-        """
-        return self._contours
 
     @property
     def export(self):
@@ -105,7 +107,10 @@ class ContourValues(PlotSelection2D):
                                 [
                                     Label("Input options:"),
                                     self.data_panel,
-                                    self.contours,
+                                    self.interval_min,
+                                    self.interval_max,
+                                    self.interval_spacing,
+                                    self.fixed_contours,
                                     self.window_selection,
                                 ]
                             ),
@@ -125,15 +130,22 @@ class ContourValues(PlotSelection2D):
             )
         return self._main
 
-    def compute_plot(self, contour_values):
+    @staticmethod
+    def get_contour_string(min, max, step, fixed_contours):
+        contour_string = (
+            str(min) + ":" + str(max) + ":" + str(step) + "," + str(fixed_contours)
+        )
+        return contour_string
+
+    def compute_plot(
+        self, interval_min, interval_max, interval_spacing, fixed_contours
+    ):
         """
         Get current selection and trigger update
         """
         entity, data = self.get_selected_entities()
         if data is None:
             return
-        if contour_values is not None:
-            self.contours.value = contour_values
 
     def update_contours(self):
         """
@@ -141,7 +153,14 @@ class ContourValues(PlotSelection2D):
         """
         if self.data.value is not None:
             self.export_as.value = (
-                self.data.uid_name_map[self.data.value] + "_" + self.contours.value
+                self.data.uid_name_map[self.data.value]
+                + "_"
+                + self.get_contour_string(
+                    self.interval_min,
+                    self.interval_max,
+                    self.interval_spacing,
+                    self.fixed_contours,
+                )
             )
 
     def update_name(self, _):
@@ -164,7 +183,12 @@ class ContourValues(PlotSelection2D):
                     "size": [self.window_width.value, self.window_height.value],
                     "azimuth": self.window_azimuth.value,
                 },
-                "contours": input_string_2_float(self.contours.value),
+                "contours": get_contours(
+                    self.interval_min,
+                    self.interval_max,
+                    self.interval_spacing,
+                    self.fixed_contours,
+                ),
             },
         )
 
@@ -216,7 +240,16 @@ class ContourValues(PlotSelection2D):
                     )
                     curve.parent = out_entity
 
-                curve.add_data({self.contours.value: {"values": np.hstack(values)}})
+                curve.add_data(
+                    {
+                        self.get_contour_string(
+                            self.interval_min,
+                            self.interval_max,
+                            self.interval_spacing,
+                            self.fixed_contours,
+                        ): {"values": np.hstack(values)}
+                    }
+                )
 
             if self.live_link.value:
                 monitored_directory_copy(
