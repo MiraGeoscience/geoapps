@@ -93,10 +93,24 @@ def config_conda():
     )
 
 
+def delete_exising_files():
+    env_folder = Path(environments_folder_)
+    if env_folder.exists():
+        for f in env_folder.glob("*.lock.yml"):
+            f.unlink()
+
+    for f in Path().glob("*-lock.yml"):
+        f.unlink()
+
+
 if __name__ == "__main__":
+    delete_exising_files()
+
     config_conda()
-    if not Path(environments_folder_).exists():
-        Path(environments_folder_).mkdir()
+    env_folder = Path(environments_folder_)
+    if not env_folder.exists():
+        env_folder.mkdir()
+
     with print_execution_time(f"run_conda_lock"):
         for py_ver in ["3.9", "3.8", "3.7"]:
             create_multi_platform_lock(py_ver)
