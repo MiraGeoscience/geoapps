@@ -21,7 +21,6 @@ defaults = {
     "fixed_contours": "0.0022, 0.0025",
     "max_distance": 500.0,
     "resolution": 50.0,
-    "export_as": "Iso",
     "run_command": "geoapps.iso_surfaces.driver",
     "run_command_boolean": False,
     "monitoring_directory": None,
@@ -69,23 +68,27 @@ default_ui_json.update(
         },
         "interval_min": {
             "main": True,
-            "label": "Contour Min",
+            "group": "Interval Contours",
+            "groupOptional": True,
+            "label": "Interval min",
             "value": 0.0,
         },
         "interval_max": {
             "main": True,
-            "label": "Contour Max",
+            "group": "Interval Contours",
+            "label": "Interval max",
             "value": 0.0,
         },
         "interval_spacing": {
             "main": True,
-            "label": "Contour Spacing",
+            "group": "Interval Contours",
+            "label": "Interval spacing",
             "value": 0.0,
         },
         "fixed_contours": {
             "main": True,
             "label": "Fixed Contours",
-            "value": "",
+            "value": "0",
             "optional": True,
             "enabled": True,
         },
@@ -101,7 +104,7 @@ default_ui_json.update(
             "main": True,
             "value": 50.0,
         },
-        "export_as": {"main": True, "label": "Name", "value": "Iso"},
+        "export_as": {"main": True, "label": "Name", "value": "Iso_"},
     }
 )
 
@@ -117,4 +120,5 @@ app_initializer = {
     "interval_max": 0.02,
     "interval_spacing": 0.005,
     "fixed_contours": "0.0022, 0.0025",
+    "export_as": "Iso_Iteration_7_model",
 }

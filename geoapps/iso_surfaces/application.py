@@ -9,11 +9,9 @@
 import os
 import uuid
 
-from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Surface
+from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
-from geoh5py.ui_json.utils import monitored_directory_copy
 from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
 
 from geoapps.base.selection import ObjectDataSelection
