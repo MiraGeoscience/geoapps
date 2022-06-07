@@ -1480,21 +1480,33 @@ def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kw
     axs.set_aspect(aspect)
 
 
-def get_contours(min, max, step, fixed_contours=""):
+def get_contours(
+    interval_min: float,
+    interval_max: float,
+    interval_spacing: float,
+    fixed_contours: str | list[float] | None,
+) -> list[float]:
     """
-    Function to input interval and value as string to a list of floats.
-    Parameter
-    ---------
-    input_string: str
-        Input string value of type `val1:val2:ii` and/or a list of values `val3, val4`
-    Return
-    ------
-    list of floats
-        Corresponding list of values in float format
+    Function to input interval contour and fixed contour information and get contours as a list of floats.
+
+    :params interval_min: Minimum value for contour list.
+
+    :params interval_max: Maximum value for contour list.
+
+    :params interval_spacing: Step size for contour list.
+
+    :params fixed_contours: List of fixed contours.
+
+    :return : Corresponding list of values in float format.
     """
 
-    if None not in [min, max, step]:
-        interval_contours = np.arange(min, max + step, step).tolist()
+    if (
+        None not in [interval_min, interval_max, interval_spacing]
+        and interval_spacing != 0
+    ):
+        interval_contours = np.arange(
+            interval_min, interval_max + interval_spacing, interval_spacing
+        ).tolist()
     else:
         interval_contours = []
 
