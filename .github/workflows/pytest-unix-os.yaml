@@ -23,30 +23,24 @@ jobs:
       fail-fast: false
       matrix:
         python_ver: [3.7, 3.8, 3.9]
-    runs-on: ubuntu-latest
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+    env:
+      PYTHONUTF8: 1
+      CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-${{ startsWith(matrix.os, 'macos') && 'osx' || 'linux' }}-64-dev.lock.yml
     steps:
       - uses: actions/checkout@v2
-      - name: Cache conda
-        uses: actions/cache@v2
-        env:
-          # Increase this value to reset cache if environment.yml has not changed
-          CACHE_NUMBER: 2
-        with:
-          path: ~/conda_pkgs_dir
-          key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
       - name: Setup conda env
-        uses: conda-incubator/setup-miniconda@v2
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          activate-environment: geoapps
-          python-version: ${{ matrix.python_ver }}
-          channel-priority: flexible
-          environment-file: environment.yml
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
+          environment-name: geoapps
+          cache-downloads: true
       - name: pytest
-        shell: bash -l {0}
         run: |
-          conda activate geoapps
           python --version
           conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch
