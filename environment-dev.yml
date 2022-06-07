@@ -47,6 +47,7 @@ dependencies:
   - pytest>=7.1.2,<8.0.0
   - pytest-cov>=3.0.0,<4.0.0
   - requests>=2.27.1,<3.0.0
+  - libblas = "*=*mkl"
   - pip
   - pip:
     - git+https://github.com/MiraGeoscience/geoh5py.git@v0.3.0-alpha.3#egg=geoh5py
