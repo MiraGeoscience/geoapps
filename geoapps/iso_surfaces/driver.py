@@ -20,8 +20,9 @@ from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 
 from geoapps.iso_surfaces.params import IsoSurfacesParams
+from geoapps.shared_utils.utils import rotate_xy, weighted_average
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import input_string_2_float, rotate_xy, weighted_average
+from geoapps.utils.plotting import input_string_2_float
 
 
 class IsoSurfacesDriver:
