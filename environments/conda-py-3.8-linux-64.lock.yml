@@ -31,7 +31,7 @@ dependencies:
   - freexl=1.0.6=h7f98852_0
   - geos=3.10.2=h9c3ff4c_0
   - giflib=5.2.1=h36c2ea0_2
-  - icu=69.1=h9c3ff4c_0
+  - icu=70.1=h27087fc_0
   - jpeg=9e=h166bdaf_1
   - json-c=0.16=hc379101_0
   - jxrlib=1.1=h7f98852_2
@@ -73,7 +73,7 @@ dependencies:
   - zlib-ng=2.0.6=h166bdaf_0
   - gettext=0.19.8.1=h73d1719_1008
   - libavif=0.10.1=h166bdaf_0
-  - libblas=3.9.0=14_linux64_openblas
+  - libblas=3.9.0=15_linux64_openblas
   - libbrotlidec=1.0.9=h166bdaf_7
   - libbrotlienc=1.0.9=h166bdaf_7
   - libedit=3.1.20191231=he28a2e2_2
@@ -82,26 +82,26 @@ dependencies:
   - llvm-openmp=14.0.4=he0ac6c6_0
   - readline=8.1=h46c0cb4_0
   - tk=8.6.12=h27826a3_0
-  - xerces-c=3.2.3=h8ce2273_4
+  - xerces-c=3.2.3=h55805fa_5
   - xorg-libsm=1.2.3=hd9c2040_1000
   - zeromq=4.3.4=h9c3ff4c_1
   - zlib=1.2.12=h166bdaf_0
   - zstd=1.5.2=h8a70e8d_1
   - blosc=1.21.1=h83bc5f7_3
-  - boost-cpp=1.74.0=h6cacc03_7
+  - boost-cpp=1.74.0=h75c5d50_8
   - brotli-bin=1.0.9=h166bdaf_7
   - c-blosc2=2.1.1=h7a311fb_2
   - hdf4=4.2.15=h10796ff_3
   - krb5=1.19.3=h3790be6_0
-  - libcblas=3.9.0=14_linux64_openblas
+  - libcblas=3.9.0=15_linux64_openblas
   - libglib=2.70.2=h174f98d_4
-  - liblapack=3.9.0=14_linux64_openblas
+  - liblapack=3.9.0=15_linux64_openblas
   - libllvm10=10.0.1=he513fc3_3
   - libnghttp2=1.47.0=h727a467_0
   - libpng=1.6.37=h21135ba_2
   - libssh2=1.10.0=ha56f1ee_2
   - libtiff=4.4.0=h0fcbabc_0
-  - libxml2=2.9.12=h885dcf4_1
+  - libxml2=2.9.14=h22db469_0
   - libzip=1.8.0=h4de3113_1
   - mkl=2022.1.0=h84fe81f_915
   - sqlite=3.38.5=h4ff8645_0
@@ -111,7 +111,7 @@ dependencies:
   - lcms2=2.12=hddcbb42_0
   - libcurl=7.83.1=h7bff187_0
   - libkml=1.3.0=h238a007_1014
-  - libpq=14.2=hd57d9b9_0
+  - libpq=14.3=hd77ab85_0
   - libwebp=1.2.2=h3452ae3_0
   - nss=3.78=h2350873_0
   - openjpeg=2.4.0=hb52868f_1
@@ -144,10 +144,10 @@ dependencies:
   - locket=1.0.0=pyhd8ed1ab_0
   - munkres=1.1.4=pyh9f0ad1d_0
   - nest-asyncio=1.5.5=pyhd8ed1ab_0
-  - networkx=2.8.2=pyhd8ed1ab_0
+  - networkx=2.8.3=pyhd8ed1ab_0
   - pandocfilters=1.5.0=pyhd8ed1ab_0
   - parso=0.8.3=pyhd8ed1ab_0
-  - postgresql=14.2=h2510834_0
+  - postgresql=14.3=hfdbbde3_0
   - proj=9.0.0=h93bde94_1
   - prometheus_client=0.14.1=pyhd8ed1ab_0
   - ptyprocess=0.7.0=pyhd3deb0d_0
@@ -173,7 +173,7 @@ dependencies:
   - asttokens=2.0.5=pyhd8ed1ab_0
   - beautifulsoup4=4.11.1=pyha770c72_0
   - cached-property=1.5.2=hd8ed1ab_1
-  - cairo=1.16.0=ha12eb4b_1010
+  - cairo=1.16.0=ha61ee94_1011
   - certifi=2022.5.18.1=py38h578d9bd_0
   - cffi=1.15.0=py38h3931269_0
   - click=8.1.3=py38h578d9bd_0
@@ -185,7 +185,7 @@ dependencies:
   - importlib_resources=5.7.1=pyhd8ed1ab_1
   - jedi=0.18.1=py38h578d9bd_1
   - jupyter_core=4.10.0=py38h578d9bd_0
-  - kealib=1.4.14=h87e4c3c_3
+  - kealib=1.4.14=hfe1a663_4
   - kiwisolver=1.4.2=py38h43d8883_1
   - libdap4=3.20.6=hd7c4107_2
   - libnetcdf=4.8.1=nompi_h329d8a1_102
@@ -230,7 +230,7 @@ dependencies:
   - jinja2=3.1.2=pyhd8ed1ab_1
   - joblib=1.1.0=pyhd8ed1ab_0
   - jsonschema=4.6.0=pyhd8ed1ab_0
-  - jupyter_client=7.3.1=pyhd8ed1ab_0
+  - jupyter_client=7.3.2=pyhd8ed1ab_1
   - munch=2.5.0=py_0
   - numba=0.51.2=py38hc5bc63f_0
   - numcodecs=0.9.1=py38hfa26641_3
@@ -248,7 +248,7 @@ dependencies:
   - discretize=0.7.4=py38h514daf8_0
   - empymod=2.1.3=pyhd8ed1ab_0
   - jupyterlab_pygments=0.2.2=pyhd8ed1ab_0
-  - libgdal=3.5.0=hd0aedcd_1
+  - libgdal=3.5.0=h1f7a3f3_2
   - matplotlib-base=3.5.2=py38h826bfd8_0
   - nbformat=5.4.0=pyhd8ed1ab_0
   - properties=0.6.1=py_0
@@ -258,7 +258,7 @@ dependencies:
   - tifffile=2022.5.4=pyhd8ed1ab_0
   - wcwidth=0.2.5=pyh9f0ad1d_2
   - zarr=2.11.3=pyhd8ed1ab_0
-  - gdal=3.5.0=py38hdd69c9e_1
+  - gdal=3.5.0=py38hdd69c9e_2
   - geoana=0.0.6=py_1
   - nbclient=0.6.4=pyhd8ed1ab_1
   - prompt-toolkit=3.0.29=pyha770c72_0
