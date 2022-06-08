@@ -30,7 +30,7 @@ class IsoSurfacesDriver:
 
     def run(self):
         """
-        Create iso surfaces from input values
+        Create iso surfaces from input values.
         """
         levels = get_contours(
             self.params.interval_min,
