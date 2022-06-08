@@ -835,7 +835,7 @@ class ScatterPlots:
     def update_object_options(self, contents):
         if contents is not None:
             content_type, content_string = contents.split(",")
-            decoded = base64.b64decode(content_string)
+            decoded = io.BytesIO(base64.b64decode(content_string))
             self.params.geoh5 = Workspace(decoded)
 
         obj_list = self.params.geoh5.objects
