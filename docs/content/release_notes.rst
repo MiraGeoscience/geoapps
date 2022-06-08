@@ -91,8 +91,7 @@ The application provides an interface to the open-source `SimPEG <https://simpeg
 
 All inversions are performed on a 3D octree mesh.
 
-Application Updates
-^^^^^^^^^^^^^^^^^^^
+**Application Updates**
 
 - All 3D inversions have been updated to SimPEG v0.15.1.
     - The transition also includes several updates to parallelization allowing computations on distributed systems.
@@ -175,8 +174,7 @@ In order to protect the applications from breaking between releases, we will now
 of most third-party packages. Users will be notified if an update of the requirements is needed.
 
 
-Application Updates
-^^^^^^^^^^^^^^^^^^^
+**Application Updates**
 
 - Fix numpy warnings for deprecated conversion to numpy.float
 - Fix issues with gdal and osr imports
@@ -208,8 +206,7 @@ Documentation Updates
 Major re-work of the documentation to solve limitations with ReadTheDocs.
 
 
-Application Updates
-^^^^^^^^^^^^^^^^^^^
+**Application Updates**
 
 - Coordinate Transformation app now supports (and relies) on Well-Known-Text strings. ESRI and EPSG codes are also allowed.
 - New option for Surface Creation of horizons (2.5D surfaces)

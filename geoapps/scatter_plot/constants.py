@@ -354,4 +354,6 @@ app_initializer = {
     "size_log": False,
     "size_min": -17.0,
     "size_max": 24.8,
+    "downsampling": 80,
+    "size_markers": 20,
 }
