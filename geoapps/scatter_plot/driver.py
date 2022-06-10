@@ -8,8 +8,6 @@
 
 from __future__ import annotations
 
-import sys
-
 import numpy as np
 import plotly.graph_objects as go
 from geoh5py.ui_json import InputFile
@@ -218,18 +216,3 @@ class ScatterPlotDriver:
         )
 
         return indices
-
-
-if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
-    file = sys.argv[1]
-    ifile = InputFile.read_ui_json(file)
-    params = ScatterPlotParams(ifile)
-    driver = ScatterPlotDriver(params)
-    print("Loaded. Building the plotly scatterplot . . .")
-    figure = driver.run()
-    figure.show()
-    if params.save:
-        figure.write_html(ifile.path + "/Crossplot.html")
-        print("Figure saved to " + ifile.path + "/Crossplot.html")
-    print("Done")

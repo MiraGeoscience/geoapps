@@ -7,6 +7,7 @@
 import base64
 import io
 import os
+import sys
 import webbrowser
 from os import environ
 
@@ -901,3 +902,13 @@ class ScatterPlots:
 
         # Otherwise, continue as normal
         self.app.run_server(host="127.0.0.1", port=8050, debug=False)
+
+
+if __name__ == "__main__":
+    print("Loading geoh5 file . . .")
+    file = sys.argv[1]
+    ifile = InputFile.read_ui_json(file)
+    app = ScatterPlots(uijson=ifile, geoh5=ifile.ui_json["geoh5"])
+    print("Loaded. Building the plotly scatterplot . . .")
+    app.run()
+    print("Done")
