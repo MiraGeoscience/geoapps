@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
 
 import os
 import uuid
@@ -12,12 +13,15 @@ import uuid
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
-from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.iso_surfaces.constants import app_initializer
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 from geoapps.iso_surfaces.params import IsoSurfacesParams
+from geoapps.utils.importing import warn_module_not_found
+
+with warn_module_not_found():
+    from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
 
 
 class IsoSurface(ObjectDataSelection):
@@ -101,6 +105,7 @@ class IsoSurface(ObjectDataSelection):
         new_workspace = self.get_output_workspace(
             self.export_directory.selected_path, self.ga_group_name.value
         )
+
         param_dict["objects"] = param_dict["objects"].copy(
             parent=new_workspace, copy_children=False
         )

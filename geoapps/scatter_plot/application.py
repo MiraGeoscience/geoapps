@@ -5,28 +5,37 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
 from geoh5py.ui_json import InputFile
-from ipywidgets import (
-    Checkbox,
-    Dropdown,
-    FloatText,
-    HBox,
-    IntSlider,
-    Label,
-    Layout,
-    ToggleButton,
-    VBox,
-)
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.params import ScatterPlotParams
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.plotting import format_axis, normalize, symlog
+from geoapps.utils.statistics import random_sampling
+
+with warn_module_not_found():
+    import plotly.express as px
+    from plotly import graph_objects as go
+
+with warn_module_not_found():
+    from ipywidgets import (
+        Checkbox,
+        Dropdown,
+        FloatText,
+        HBox,
+        IntSlider,
+        Label,
+        Layout,
+        ToggleButton,
+        VBox,
+    )
 
 
 class ScatterPlots(ObjectDataSelection):

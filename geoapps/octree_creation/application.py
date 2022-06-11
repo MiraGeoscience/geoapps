@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 import sys
 import uuid
@@ -15,13 +17,16 @@ from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
-from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import warn_module_not_found
 
 from . import OctreeParams, app_initializer
 from .driver import OctreeDriver
+
+with warn_module_not_found():
+    from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
+    from ipywidgets.widgets.widget_selection import TraitError
 
 
 class OctreeMesh(ObjectDataSelection):
