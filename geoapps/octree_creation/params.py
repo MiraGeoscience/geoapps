@@ -11,7 +11,7 @@ from copy import deepcopy
 
 from geoh5py.ui_json import InputFile
 
-from geoapps.base.params import BaseParams
+from geoapps.driver_base.params import BaseParams
 
 from .constants import default_ui_json, defaults, template_dict, validations
 

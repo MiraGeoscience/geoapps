@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 from time import time
 
@@ -12,14 +14,21 @@ import numpy as np
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
-from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox, Widget
-from matplotlib import collections
 
 from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
 from geoapps.edge_detection.constants import app_initializer
 from geoapps.edge_detection.driver import EdgeDetectionDriver
 from geoapps.edge_detection.params import EdgeDetectionParams
+from geoapps.shared_utils.utils import filter_xy
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
+
+with warn_module_not_found():
+    from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
+
+with warn_module_not_found():
+    from matplotlib import collections
 
 
 class EdgeDetectionApp(PlotSelection2D):

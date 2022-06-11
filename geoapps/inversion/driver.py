@@ -24,7 +24,7 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
-from SimPEG import inverse_problem, inversion, maps, optimization, regularization
+from SimPEG import dask, inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
 from geoapps.inversion.components import (
@@ -181,13 +181,8 @@ class InversionDriver:
             beta=self.params.initial_beta,
         )
 
-        # Solve forward problem, and attach dpred to inverse problem or
-        if self.params.forward_only:
-            print("Running forward simulation ...")
-        else:
+        if self.warmstart and not self.params.forward_only:
             print("Pre-computing sensitivities ...")
-
-        if self.warmstart or self.params.forward_only:
             self.inverse_problem.dpred = self.inversion_data.simulate(
                 self.starting_model, self.inverse_problem, self.sorting
             )
@@ -221,6 +216,7 @@ class InversionDriver:
             self.inversion_data.simulate(
                 self.starting_model, self.inverse_problem, self.sorting
             )
+            self.logger.end()
             return
 
         # Run the inversion
@@ -440,8 +436,8 @@ def start_inversion(filepath=None, **kwargs):
         from .potential_fields.magnetic_scalar.constants import validations
 
     elif inversion_type == "gravity":
-        from .potential_fields import GravityParams as ParamClass
-        from .potential_fields.gravity.constants import validations
+        from geoapps.inversion.potential_fields import GravityParams as ParamClass
+        from geoapps.inversion.potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
         from .natural_sources import MagnetotelluricsParams as ParamClass
@@ -470,7 +466,6 @@ def start_inversion(filepath=None, **kwargs):
 
 
 if __name__ == "__main__":
-
     filepath = sys.argv[1]
     start_inversion(filepath)
     sys.stdout.close()
