@@ -15,10 +15,12 @@ defaults = {
     "geoh5": None,
     "objects": None,
     "data": None,
-    "contours": "0.005: 0.02: 0.005, 0.0025",
+    "interval_min": 0.005,
+    "interval_max": 0.02,
+    "interval_spacing": 0.005,
+    "fixed_contours": "0.0025",
     "max_distance": 500.0,
     "resolution": 50.0,
-    "export_as": "Iso",
     "run_command": "geoapps.iso_surfaces.driver",
     "run_command_boolean": False,
     "monitoring_directory": None,
@@ -64,10 +66,31 @@ default_ui_json.update(
             "parent": "objects",
             "value": None,
         },
-        "contours": {
+        "interval_min": {
             "main": True,
-            "label": "Iso-values",
-            "value": "0.005: 0.02: 0.005, 0.0025",
+            "group": "Interval Contours",
+            "groupOptional": True,
+            "label": "Interval min",
+            "value": 0.0,
+        },
+        "interval_max": {
+            "main": True,
+            "group": "Interval Contours",
+            "label": "Interval max",
+            "value": 0.0,
+        },
+        "interval_spacing": {
+            "main": True,
+            "group": "Interval Contours",
+            "label": "Interval spacing",
+            "value": 0.0,
+        },
+        "fixed_contours": {
+            "main": True,
+            "label": "Fixed Contours",
+            "value": "0",
+            "optional": True,
+            "enabled": True,
         },
         "max_distance": {
             "enabled": True,
@@ -81,7 +104,7 @@ default_ui_json.update(
             "main": True,
             "value": 50.0,
         },
-        "export_as": {"main": True, "label": "Name", "value": "Iso"},
+        "export_as": {"main": True, "label": "Name", "value": "Iso_"},
     }
 )
 
@@ -93,5 +116,9 @@ app_initializer = {
     "data": UUID("{f3e36334-be0a-4210-b13e-06933279de25}"),
     "max_distance": 500.0,
     "resolution": 50.0,
-    "contours": "0.005: 0.02: 0.005, 0.0025",
+    "interval_min": 0.005,
+    "interval_max": 0.02,
+    "interval_spacing": 0.005,
+    "fixed_contours": "0.0025",
+    "export_as": "Iso_Iteration_7_model",
 }
