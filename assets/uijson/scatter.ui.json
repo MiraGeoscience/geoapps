@@ -378,11 +378,5 @@
         "value": 20,
         "enabled": false,
         "optional": true
-    },
-    "save": {
-        "label": "Save as html",
-        "main": true,
-        "value": false,
-        "group": "Python run preferences"
     }
 }
