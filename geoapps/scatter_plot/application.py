@@ -76,13 +76,8 @@ class ScatterPlots:
                 html.Div(
                     [
                         dcc.Upload(
-                            id="upload_workspace",
-                            children=html.Button("Upload Workspace"),
-                            style={"margin-bottom": "20px"},
-                        ),
-                        dcc.Upload(
-                            id="upload_uijson",
-                            children=html.Button("Upload ui.json"),
+                            id="upload",
+                            children=html.Button("Upload Workspace/ui.json"),
                             style={"margin-bottom": "20px"},
                         ),
                         dcc.Dropdown(
@@ -646,12 +641,10 @@ class ScatterPlots:
             Output(component_id="size_min", component_property="value"),
             Output(component_id="size_max", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
-            Output(component_id="upload_uijson", component_property="filename"),
-            Output(component_id="upload_uijson", component_property="contents"),
-            Input(component_id="upload_uijson", component_property="filename"),
-            Input(component_id="upload_uijson", component_property="contents"),
-            Input(component_id="upload_workspace", component_property="filename"),
-            Input(component_id="upload_workspace", component_property="contents"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
             Input(component_id="objects", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="y", component_property="value"),
@@ -809,61 +802,51 @@ class ScatterPlots:
 
     def update_from_uijson(self, filename, contents):
         defaults = {}
-        if filename.endswith(".ui.json"):
-            content_type, content_string = contents.split(",")
-            decoded = base64.b64decode(content_string)
-            ui_json = json.loads(decoded)
+        content_type, content_string = contents.split(",")
+        decoded = base64.b64decode(content_string)
+        ui_json = json.loads(decoded)
 
-            for key, value in ui_json.items():
-                if hasattr(self.params, key):
-                    if key == "geoh5":
-                        setattr(self.params, key, value)
-                    elif type(value) is dict:
-                        if key in ["objects", "x", "y", "z", "color", "size"]:
-                            if self.params.geoh5.get_entity(uuid.UUID(value["value"])):
-                                setattr(
-                                    self.params,
-                                    key,
-                                    self.params.geoh5.get_entity(
-                                        uuid.UUID(value["value"])
-                                    )[0],
-                                )
-                        elif value["value"]:
-                            setattr(self.params, key, value["value"])
-                        else:
-                            setattr(self.params, key, None)
+        for key, value in ui_json.items():
+            if hasattr(self.params, key):
+                if key == "geoh5":
+                    setattr(self.params, key, value)
+                elif type(value) is dict:
+                    if key in ["objects", "x", "y", "z", "color", "size"]:
+                        if self.params.geoh5.get_entity(uuid.UUID(value["value"])):
+                            setattr(
+                                self.params,
+                                key,
+                                self.params.geoh5.get_entity(uuid.UUID(value["value"]))[
+                                    0
+                                ],
+                            )
+                    elif value["value"]:
+                        setattr(self.params, key, value["value"])
                     else:
-                        setattr(self.params, key, value)
+                        setattr(self.params, key, None)
+                else:
+                    setattr(self.params, key, value)
 
-            self.data_channels = {}
-            defaults = self.get_defaults()
-
-        else:
-            print("Uploaded file must end with '.ui.json'.")
+        self.data_channels = {}
+        defaults = self.get_defaults()
 
         return defaults
 
     def update_object_options(self, filename, contents):
         objects, value = None, None
+        if contents is not None:
+            content_type, content_string = contents.split(",")
+            decoded = io.BytesIO(base64.b64decode(content_string))
+            self.params.geoh5 = Workspace(decoded)
 
-        if filename.endswith(".geoh5"):
-            if contents is not None:
-                content_type, content_string = contents.split(",")
-                decoded = io.BytesIO(base64.b64decode(content_string))
-                self.params.geoh5 = Workspace(decoded)
+        obj_list = self.params.geoh5.objects
 
-            obj_list = self.params.geoh5.objects
-
-            options = [
-                {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                for obj in obj_list
-            ]
-            if len(options) > 0:
-                value = options[0]["value"]
-            else:
-                value = None
-        else:
-            print("Workspace file must end with '.geoh5'.")
+        options = [
+            {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
+            for obj in obj_list
+        ]
+        if len(options) > 0:
+            value = options[0]["value"]
 
         return {"objects_options": options, "objects_name": value}
 
@@ -948,10 +931,8 @@ class ScatterPlots:
 
     def update_params(
         self,
-        uijson_file,
-        uijson_contents,
-        ws_file,
-        ws_contents,
+        filename,
+        contents,
         objects,
         x,
         y,
@@ -961,7 +942,7 @@ class ScatterPlots:
     ):
         param_list = [
             "objects_options",
-            "options_name",
+            "objects_name",
             "downsampling",
             "data_options",
             "x_name",
@@ -1000,12 +981,18 @@ class ScatterPlots:
         ]
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "upload_uijson":
-            update_dict = self.update_from_uijson(uijson_file, uijson_contents)
+        if trigger == "upload":
+            if filename.endswith(".ui.json"):
+                update_dict = self.update_from_uijson(filename, contents)
+            elif filename.endswith(".geoh5"):
+                update_dict = self.update_object_options(filename, contents)
+                update_dict.update(
+                    self.update_data_options(update_dict["objects_name"])
+                )
+            else:
+                print("Uploaded file must be a workspace or ui.json.")
             update_dict["filename"] = None
             update_dict["contents"] = None
-        elif trigger == "upload_workspace":
-            update_dict = self.update_object_options(ws_file, ws_contents)
         elif trigger == "objects":
             update_dict = self.update_data_options(objects)
         elif trigger in ["x", "y", "z", "color", "size"]:
