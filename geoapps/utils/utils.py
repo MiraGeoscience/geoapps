@@ -1480,33 +1480,45 @@ def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kw
     axs.set_aspect(aspect)
 
 
-def input_string_2_float(input_string):
+def get_contours(
+    interval_min: float,
+    interval_max: float,
+    interval_spacing: float,
+    fixed_contours: str | list[float] | None,
+) -> list[float]:
     """
-    Function to input interval and value as string to a list of floats.
-    Parameter
-    ---------
-    input_string: str
-        Input string value of type `val1:val2:ii` and/or a list of values `val3, val4`
-    Return
-    ------
-    list of floats
-        Corresponding list of values in float format
-    """
-    if input_string != "":
-        vals = re.split(",", input_string)
-        cntrs = []
-        for val in vals:
-            if ":" in val:
-                param = np.asarray(re.split(":", val), dtype="float")
-                if len(param) == 2:
-                    cntrs += [np.arange(param[0], param[1] + 1)]
-                else:
-                    cntrs += [np.arange(param[0], param[1] + param[2], param[2])]
-            else:
-                cntrs += [float(val)]
-        return np.unique(np.sort(np.hstack(cntrs)))
+    Function to input interval contour and fixed contour information and get contours as a list of floats.
 
-    return None
+    :params interval_min: Minimum value for contour list.
+
+    :params interval_max: Maximum value for contour list.
+
+    :params interval_spacing: Step size for contour list.
+
+    :params fixed_contours: List of fixed contours.
+
+    :return : Corresponding list of values in float format.
+    """
+
+    if (
+        None not in [interval_min, interval_max, interval_spacing]
+        and interval_spacing != 0
+    ):
+        interval_contours = np.arange(
+            interval_min, interval_max + interval_spacing, interval_spacing
+        ).tolist()
+    else:
+        interval_contours = []
+
+    if fixed_contours != "" and fixed_contours is not None:
+        if type(fixed_contours) is str:
+            fixed_contours = re.split(",", fixed_contours.replace(" ", ""))
+            fixed_contours = [float(c) for c in fixed_contours]
+    else:
+        fixed_contours = []
+
+    contours = np.unique(np.sort(interval_contours + fixed_contours))
+    return contours
 
 
 def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
