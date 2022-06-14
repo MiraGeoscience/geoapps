@@ -24,6 +24,7 @@ dependencies:
   - conda-forge::fiona
   - main::h5py
   - dash
+  - jupyter-dash
   - flask
   - plotly
   - requests
