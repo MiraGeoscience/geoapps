@@ -13,11 +13,10 @@ import uuid
 import webbrowser
 from os import environ
 
-import dash
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import callback_context, dcc, html, no_update
+from dash import Dash, callback_context, dcc, html, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects.object_base import ObjectBase
@@ -34,8 +33,8 @@ class ScatterPlots:
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json):
-            self.params = self._param_class(InputFile(ui_json))
+        if ui_json is not None and os.path.exists(ui_json.path):
+            self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
 
@@ -45,7 +44,7 @@ class ScatterPlots:
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-        self.app = dash.Dash(
+        self.app = Dash(
             server=server,
             url_base_pathname=environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
@@ -1030,7 +1029,7 @@ if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
-    app = ScatterPlots(uijson=ifile, geoh5=ifile.ui_json["geoh5"])
+    app = ScatterPlots(ui_json=ifile)
     print("Loaded. Building the plotly scatterplot . . .")
     app.run()
     print("Done")
