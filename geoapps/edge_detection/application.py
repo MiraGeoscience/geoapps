@@ -15,12 +15,10 @@ from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 
-from geoapps import PlotSelection2D
 from geoapps.base.plot import PlotSelection2D
 from geoapps.edge_detection.constants import app_initializer
 from geoapps.edge_detection.driver import EdgeDetectionDriver
 from geoapps.edge_detection.params import EdgeDetectionParams
-from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 

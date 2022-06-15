@@ -10,7 +10,6 @@ from __future__ import annotations
 import os
 import uuid
 
-from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 
