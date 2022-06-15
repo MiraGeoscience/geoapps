@@ -18,6 +18,7 @@ defaults = {
     "interval_max": None,
     "interval_spacing": None,
     "fixed_contours": None,
+    "window_azimuth": None,
     "resolution": None,
     "ga_group_name": None,
     "run_command": "geoapps.contours.driver",
@@ -49,6 +50,7 @@ default_ui_json.update(
                 "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
                 "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
                 "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+                "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             ],
             "main": True,
             "group": "Data Selection",
@@ -152,7 +154,7 @@ default_ui_json.update(
             "value": "",
             "group": "Python run preferences",
         },
-        "resolution": None,
+        "resolution": 50.0,
     }
 )
 
@@ -162,10 +164,11 @@ app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
     "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
     "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
-    "interval_min": -400,
-    "interval_max": 2000,
-    "interval_spacing": 100,
+    "interval_min": -400.0,
+    "interval_max": 2000.0,
+    "interval_spacing": 100.0,
     "fixed_contours": "-240",
-    "resolution": 50,
+    "window_azimuth": -20.0,
+    "resolution": 50.0,
     "ga_group_name": "Contours",
 }
