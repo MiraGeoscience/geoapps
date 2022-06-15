@@ -6,20 +6,25 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
 from time import time
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
-from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
 from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
 
-from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
+from geoapps.shared_utils.utils import get_contours
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import get_contours
+
+with warn_module_not_found():
+    from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
 
 
 class ContourValues(PlotSelection2D):
