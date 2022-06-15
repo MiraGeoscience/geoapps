@@ -209,7 +209,7 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Starting Models",
+        "group": "Starting Model",
         "main": True,
         "isValue": False,
         "parent": "starting_model_object",
@@ -218,7 +218,7 @@ default_ui_json = {
         "value": 0.0,
     },
     "conductivity_model_object": {
-        "group": "Starting Models",
+        "group": "Starting Model",
         "main": True,
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -234,7 +234,7 @@ default_ui_json = {
     "conductivity_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Starting Models",
+        "group": "Starting Model",
         "main": True,
         "isValue": False,
         "parent": "conductivity_model_object",
