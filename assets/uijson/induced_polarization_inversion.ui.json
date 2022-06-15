@@ -63,7 +63,7 @@
         "value": 1.0
     },
     "conductivity_model_object": {
-        "group": "Starting Models",
+        "group": "Starting Model",
         "main": true,
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -82,7 +82,7 @@
             "Vertex"
         ],
         "dataType": "Float",
-        "group": "Starting Models",
+        "group": "Starting Model",
         "main": true,
         "isValue": true,
         "parent": "conductivity_model_object",
@@ -112,7 +112,7 @@
             "Vertex"
         ],
         "dataType": "Float",
-        "group": "Starting Models",
+        "group": "Starting Model",
         "main": true,
         "isValue": true,
         "parent": "starting_model_object",
