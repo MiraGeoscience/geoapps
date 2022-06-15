@@ -10,12 +10,12 @@ from time import time
 
 from geoh5py.objects.object_base import Entity, ObjectBase
 from geoh5py.ui_json.input_file import InputFile
-from geoh5py.ui_json.utils import monitored_directory_copy
 from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
 
 from geoapps import PlotSelection2D
 from geoapps.contours.constants import app_initializer
 from geoapps.contours.driver import ContoursDriver
+from geoapps.contours.params import ContoursParams
 from geoapps.utils.formatters import string_name
 
 
@@ -23,6 +23,8 @@ class ContourValues(PlotSelection2D):
     """
     Application for 2D contouring of spatial data.
     """
+
+    _param_class = ContoursParams
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -38,6 +40,9 @@ class ContourValues(PlotSelection2D):
             else:
                 self.defaults[key] = value
 
+        self.defaults["fixed_contours"] = (
+            str(self.defaults["fixed_contours"]).replace("[", "").replace("]", "")
+        )
         self._export_as = Text(value="Contours")
         self._z_value = Checkbox(
             value=False, indent=False, description="Assign Z from values"
@@ -151,9 +156,8 @@ class ContourValues(PlotSelection2D):
             self.export_as.value = "Contours"
 
     def trigger_click(self, _):
-
         param_dict = self.get_param_dict()
-        temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
+        temp_geoh5 = f"{string_name(param_dict['export_as'])}_{time():.3f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as workspace:
