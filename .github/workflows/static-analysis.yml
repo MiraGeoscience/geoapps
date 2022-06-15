@@ -22,46 +22,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_ver: [3.7]
-    runs-on: ubuntu-latest
+        python_ver: [3.9]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    env:
+      PYTHONUTF8: 1
+      CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-win-64-dev.lock.yml
     steps:
       - uses: actions/checkout@v2
-      - name: Cache conda
-        uses: actions/cache@v2
-        env:
-          # Increase this value to reset cache if environment.yml has not changed
-          CACHE_NUMBER: 2
-        with:
-          path: ~/conda_pkgs_dir
-          key:
-            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-py-${{ matrix.python_ver }}-${{ hashFiles('environment.yml') }}
       - name: Setup conda env
-        uses: conda-incubator/setup-miniconda@v2
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          activate-environment: geoapps
-          python-version: ${{ matrix.python_ver }}
-          channel-priority: flexible
-          environment-file: environment.yml
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-      - name: Install dev packages
-        shell: bash -l {0}
-        run: |
-          conda activate geoapps
-          python --version
-          conda install --file dev-extra-requirements.txt
+          environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
+          environment-name: geoapps
+          cache-downloads: true
       - name: Run pylint on modified files
         if: github.event_name == 'pull_request'
-        shell: bash -l {0}
         run: >-
-          conda activate geoapps
-
           pylint $(
           git diff --diff-filter=AM --name-only refs/remotes/origin/${{github.base_ref}}... | grep -E '^(geoapps|tests)/.*\.py$'
           || echo 'geoapps/__init__.py'
           )
       - name: Run pylint on all files
         if: github.event_name == 'push'
-        shell: bash -l {0}
         run: |
-          conda activate geoapps
           pylint geoapps tests

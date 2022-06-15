@@ -21,8 +21,7 @@ from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile, monitored_directory_copy
 
-from geoapps.base.application import BaseApplication
-from geoapps.utils.utils import treemesh_2_octree
+from geoapps.driver_base.utils import treemesh_2_octree
 
 from .params import OctreeParams
 
@@ -79,7 +78,6 @@ class OctreeDriver:
 
         print("Finalizing...")
         treemesh.finalize()
-
         octree = treemesh_2_octree(
             self.params.geoh5, treemesh, name=self.params.ga_group_name
         )

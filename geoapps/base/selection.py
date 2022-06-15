@@ -9,15 +9,19 @@ from __future__ import annotations
 
 from uuid import UUID
 
-import ipywidgets as widgets
 import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
 
 from geoapps.base.application import BaseApplication
-from geoapps.utils import utils
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.list import find_value
+from geoapps.utils.workspace import sorted_children_dict
+
+with warn_module_not_found():
+    import ipywidgets as widgets
+    from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
 
 
 class ObjectDataSelection(BaseApplication):
@@ -293,7 +297,7 @@ class ObjectDataSelection(BaseApplication):
             if self.add_groups != "only":
                 options += [["--- Channels ---", None]]
 
-                children = utils.sorted_children_dict(obj)
+                children = sorted_children_dict(obj)
                 excl = ["visual parameter"]
                 options += [
                     [k, v] for k, v in children.items() if k.lower() not in excl
@@ -312,7 +316,7 @@ class ObjectDataSelection(BaseApplication):
             elif value in dict(options).values():
                 self.data.value = value
             elif self.find_label:
-                self.data.value = utils.find_value(self.data.options, self.find_label)
+                self.data.value = find_value(self.data.options, self.find_label)
         else:
             self.data.options = []
             self.data.uid_name_map = {}
