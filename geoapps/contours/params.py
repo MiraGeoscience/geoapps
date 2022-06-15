@@ -200,7 +200,7 @@ class ContoursParams(BaseParams):
         """ """
         return self._z_value
 
-    @resolution.setter
+    @z_value.setter
     def z_value(self, val):
         self.setter_validator("z_value", val)
 
