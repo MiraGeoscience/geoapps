@@ -17,8 +17,6 @@ from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.params import ScatterPlotParams
 from geoapps.utils import warn_module_not_found
-from geoapps.utils.plotting import format_axis, normalize, symlog
-from geoapps.utils.statistics import random_sampling
 
 with warn_module_not_found():
     import plotly.express as px
