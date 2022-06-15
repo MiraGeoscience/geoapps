@@ -116,15 +116,11 @@ class ContoursDriver:
         if type(fixed_contours) is list:
             fixed_contours = str(fixed_contours).replace("[", "").replace("]", "")
 
-        contour_string = (
-            str(min)
-            + ":"
-            + str(max)
-            + ":"
-            + str(step)
-            + ","
-            + str(fixed_contours.replace(" ", ""))
-        )
+        contour_string = str(min) + ":" + str(max) + ":" + str(step)
+
+        if fixed_contours is not None:
+            contour_string += "," + str(fixed_contours.replace(" ", ""))
+
         return contour_string
 
     def set_window_params(self):
