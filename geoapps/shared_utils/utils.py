@@ -23,6 +23,7 @@ from scipy.spatial import cKDTree
 
 from geoapps.utils.string import string_to_numeric
 
+
 class RectangularBlock:
     """
     Define a rotated rectangular block in 3D space
@@ -177,6 +178,7 @@ class RectangularBlock:
             self._vertices = xyz
 
         return self._vertices
+
 
 def hex_to_rgb(hex):
     """
@@ -481,6 +483,7 @@ def filter_xy(
 
     return mask
 
+
 def rotate_vertices(xyz, center, phi, theta):
     """
     Rotate scatter points in column format around a center location
@@ -507,6 +510,7 @@ def rotate_vertices(xyz, center, phi, theta):
     xyzRot = R.dot(xyz.T).T
 
     return xyzRot + np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
+
 
 def rotate_xy(xyz: np.ndarray, center: list, angle: float):
     """
