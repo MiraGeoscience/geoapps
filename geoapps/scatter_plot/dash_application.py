@@ -4,19 +4,18 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
+
 import base64
 import io
 import os
 import webbrowser
 from os import environ
 
-import dash
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import dcc, html
-from dash.dependencies import Input, Output
-from flask import Flask
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -24,6 +23,15 @@ from geoh5py.workspace import Workspace
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.params import ScatterPlotParams
+from geoapps.utils import warn_module_not_found
+
+with warn_module_not_found():
+    import dash
+    from dash import dcc, html
+    from dash.dependencies import Input, Output
+
+with warn_module_not_found():
+    from flask import Flask
 
 
 class ScatterPlots:
