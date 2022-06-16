@@ -20,8 +20,8 @@ from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
 from geoapps.edge_detection.params import EdgeDetectionParams
+from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import filter_xy
 
 
 class EdgeDetectionDriver:
