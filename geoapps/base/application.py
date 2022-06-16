@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import time
 import types
+import uuid
 from os import makedirs, mkdir, path
 from shutil import copyfile
 
@@ -461,6 +462,27 @@ class BaseApplication:
 
         self.export_directory._set_form_values(export_path, "")
         self.export_directory._apply_selection()
+
+    def get_param_dict(self):
+        param_dict = {}
+        for key in self.__dict__:
+            try:
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+                    if key[0] == "_":
+                        key = key[1:]
+
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
+
+                    param_dict[key] = value
+
+            except AttributeError:
+                continue
+        return param_dict
 
 
 def working_copy(h5file):

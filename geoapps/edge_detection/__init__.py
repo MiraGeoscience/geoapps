@@ -7,4 +7,5 @@
 
 from __future__ import annotations
 
-from .application import EdgeDetectionApp
+from .constants import app_initializer
+from .params import EdgeDetectionParams
