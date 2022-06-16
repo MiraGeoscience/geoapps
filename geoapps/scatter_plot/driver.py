@@ -13,8 +13,8 @@ import plotly.graph_objects as go
 from geoh5py.ui_json import InputFile
 
 from geoapps.scatter_plot.params import ScatterPlotParams
-from geoapps.utils.plotting import format_axis, normalize
-from geoapps.utils.utils import random_sampling, symlog
+from geoapps.utils.plotting import format_axis, normalize, symlog
+from geoapps.utils.statistics import random_sampling
 
 
 class ScatterPlotDriver:
