@@ -18,9 +18,9 @@ from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.contours.params import ContoursParams
+from geoapps.shared_utils.utils import get_contours
 from geoapps.utils.formatters import string_name
 from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import get_contours
 
 
 class ContoursDriver:
