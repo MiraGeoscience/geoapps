@@ -18,7 +18,6 @@ defaults = {
     "interval_max": None,
     "interval_spacing": None,
     "fixed_contours": None,
-    "window_azimuth": None,
     "resolution": None,
     "ga_group_name": None,
     "run_command": "geoapps.contours.driver",
@@ -155,6 +154,7 @@ default_ui_json.update(
             "group": "Python run preferences",
         },
         "resolution": 50.0,
+        "plot_result": True,
     }
 )
 
@@ -168,7 +168,6 @@ app_initializer = {
     "interval_max": 2000.0,
     "interval_spacing": 100.0,
     "fixed_contours": "-240",
-    "window_azimuth": -20.0,
     "resolution": 50.0,
     "ga_group_name": "Contours",
 }

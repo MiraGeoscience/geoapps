@@ -61,7 +61,7 @@ def test_contour_values(tmp_path):
             parent=workspace
         )
 
-    app = ContourValues(h5file=temp_workspace, plot_result=False)
+    app = ContourValues(geoh5=temp_workspace, plot_result=False)
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
