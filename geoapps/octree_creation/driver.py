@@ -79,9 +79,7 @@ class OctreeDriver:
 
         print("Finalizing...")
         treemesh.finalize()
-        octree = treemesh_2_octree(
-            workspace, treemesh, name=self.params.ga_group_name
-        )
+        octree = treemesh_2_octree(workspace, treemesh, name=self.params.ga_group_name)
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
