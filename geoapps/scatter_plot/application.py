@@ -4,6 +4,9 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
+
 import base64
 import io
 import json
@@ -707,15 +710,19 @@ class ScatterPlots:
         # Get initial values to initialize the dash components
         for key, value in self.params.to_dict().items():
             if key in ["x", "y", "z", "color", "size"]:
-                defaults[key + "_name"] = value.name
+                defaults[key + "_name"] = getattr(value, "name", None)
             elif key == "objects":
-                defaults[key + "_name"] = value.name
-                data_options = ["None"]
-                data_options.extend([data.name for data in value.children])
-                if "Visual Parameters" in data_options:
-                    data_options.remove("Visual Parameters")
-                defaults["data_options"] = data_options
-                for channel in data_options:
+                if value is None:
+                    defaults[key + "_name"] = None
+                    defaults["data_options"] = []
+                else:
+                    defaults[key + "_name"] = value.name
+                    data_options = ["None"]
+                    data_options.extend(value.get_data_list())
+                    if "Visual Parameters" in data_options:
+                        data_options.remove("Visual Parameters")
+                    defaults["data_options"] = data_options
+                for channel in defaults["data_options"]:
                     self.get_channel(channel)
             elif key in ["x_log", "y_log", "z_log", "color_log", "size_log"]:
                 if value is True:
@@ -726,10 +733,13 @@ class ScatterPlots:
                 defaults[key] = value
 
             if key == "geoh5":
-                defaults["objects_options"] = [
-                    {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                    for obj in value.objects
-                ]
+                if value is None:
+                    defaults["objects_options"] = []
+                else:
+                    defaults["objects_options"] = [
+                        {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
+                        for obj in value.objects
+                    ]
 
         return defaults
 
@@ -801,8 +811,7 @@ class ScatterPlots:
 
         return figure
 
-    def update_from_uijson(self, filename, contents):
-        defaults = {}
+    def update_from_uijson(self, contents):
         content_type, content_string = contents.split(",")
         decoded = base64.b64decode(content_string)
         ui_json = json.loads(decoded)
@@ -810,10 +819,19 @@ class ScatterPlots:
         for key, value in ui_json.items():
             if hasattr(self.params, key):
                 if key == "geoh5":
-                    setattr(self.params, key, value)
+                    if value == "":
+                        setattr(self.params, key, None)
+                    else:
+                        setattr(self.params, key, value)
                 elif type(value) is dict:
                     if key in ["objects", "x", "y", "z", "color", "size"]:
-                        if self.params.geoh5.get_entity(uuid.UUID(value["value"])):
+                        if (
+                            (value["value"] is None)
+                            | (value["value"] == "")
+                            | (self.params.geoh5 is None)
+                        ):
+                            setattr(self.params, key, None)
+                        elif self.params.geoh5.get_entity(uuid.UUID(value["value"])):
                             setattr(
                                 self.params,
                                 key,
@@ -833,7 +851,7 @@ class ScatterPlots:
 
         return defaults
 
-    def update_object_options(self, filename, contents):
+    def update_object_options(self, contents):
         objects, value = None, None
         if contents is not None:
             content_type, content_string = contents.split(",")
@@ -982,11 +1000,12 @@ class ScatterPlots:
         ]
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        update_dict = {}
         if trigger == "upload":
             if filename.endswith(".ui.json"):
-                update_dict = self.update_from_uijson(filename, contents)
+                update_dict = self.update_from_uijson(contents)
             elif filename.endswith(".geoh5"):
-                update_dict = self.update_object_options(filename, contents)
+                update_dict = self.update_object_options(contents)
                 update_dict.update(
                     self.update_data_options(update_dict["objects_name"])
                 )
@@ -998,8 +1017,6 @@ class ScatterPlots:
             update_dict = self.update_data_options(objects)
         elif trigger in ["x", "y", "z", "color", "size"]:
             update_dict = self.set_channel_bounds(x, y, z, color, size)
-        else:
-            update_dict = {}
 
         outputs = []
         for param in param_list:

@@ -5,16 +5,30 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
 
-import ipywidgets as widgets
-import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.objects import Curve, Grid2D, Points, Surface
-from ipywidgets import FloatSlider, FloatText, HBox, Label, Layout, ToggleButton, VBox
 
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.shared_utils.utils import get_contours, rotate_xy
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import get_contours, rotate_xy
+
+with warn_module_not_found():
+    from matplotlib import pyplot as plt
+
+with warn_module_not_found():
+    import ipywidgets as widgets
+    from ipywidgets import (
+        FloatSlider,
+        FloatText,
+        HBox,
+        Label,
+        Layout,
+        ToggleButton,
+        VBox,
+    )
 
 
 class PlotSelection2D(ObjectDataSelection):
