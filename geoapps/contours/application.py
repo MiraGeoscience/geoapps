@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 from time import time
 
@@ -12,7 +14,7 @@ from geoh5py.objects.object_base import Entity, ObjectBase
 from geoh5py.ui_json.input_file import InputFile
 from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
 
-from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
 from geoapps.contours.constants import app_initializer
 from geoapps.contours.driver import ContoursDriver
 from geoapps.contours.params import ContoursParams
