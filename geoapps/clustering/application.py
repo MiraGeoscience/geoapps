@@ -16,7 +16,7 @@ from geoh5py.ui_json.utils import monitored_directory_copy
 from IPython.display import display
 from scipy.spatial import cKDTree
 
-from geoapps.scatter_plot import ScatterPlots
+from geoapps.clustering.scatter_application import ScatterPlots
 from geoapps.shared_utils.utils import colors, hex_to_rgb
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.statistics import random_sampling

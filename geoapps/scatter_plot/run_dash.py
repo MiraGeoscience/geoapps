@@ -7,5 +7,7 @@
 
 from __future__ import annotations
 
-from .constants import app_initializer
-from .params import ScatterPlotParams
+from geoapps.scatter_plot.dash_application import ScatterPlots
+
+app = ScatterPlots()
+app.run()

@@ -28,7 +28,10 @@ class IsoSurfacesParams(BaseParams):
         self._validations = validations
         self._objects = None
         self._data = None
-        self._contours = None
+        self._interval_min = None
+        self._interval_max = None
+        self._interval_spacing = None
+        self._fixed_contours = None
         self._max_distance = None
         self._resolution = None
         self._export_as = None
@@ -66,18 +69,48 @@ class IsoSurfacesParams(BaseParams):
         self.setter_validator("data", val)
 
     @property
-    def contours(self) -> str | None:
+    def interval_min(self) -> float | None:
         """
-        String defining sets of contours.
-        Contours can be defined over an interval `50:200:10` and/or at a fix value `215`.
-        Any combination of the above can be used:
-        50:200:10, 215 => Contours between values 50 and 200 every 10, with a contour at 215.
+        Minimum value for contours.
         """
-        return self._contours
+        return self._interval_min
 
-    @contours.setter
-    def contours(self, val):
-        self.setter_validator("contours", val)
+    @interval_min.setter
+    def interval_min(self, val):
+        self.setter_validator("interval_min", val)
+
+    @property
+    def interval_max(self) -> float | None:
+        """
+        Maximum value for contours.
+        """
+        return self._interval_max
+
+    @interval_max.setter
+    def interval_max(self, val):
+        self.setter_validator("interval_max", val)
+
+    @property
+    def interval_spacing(self) -> float | None:
+        """
+        Step size for contours.
+        """
+        return self._interval_spacing
+
+    @interval_spacing.setter
+    def interval_spacing(self, val):
+        self.setter_validator("interval_spacing", val)
+
+    @property
+    def fixed_contours(self) -> str | None:
+        """
+        String defining list of fixed contours.
+        """
+        return self._fixed_contours
+
+    @fixed_contours.setter
+    def fixed_contours(self, val):
+        self.setter_validator("fixed_contours", val)
 
     @property
     def max_distance(self) -> float | None:

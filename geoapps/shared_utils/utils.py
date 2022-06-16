@@ -12,11 +12,11 @@
 
 from __future__ import annotations
 
+import re
 from uuid import UUID
 
 import numpy as np
 from discretize import TreeMesh
-from geoh5py.data import FilenameData
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
@@ -569,6 +569,43 @@ def octree_2_treemesh(mesh):
     treemesh.__setstate__((indArr, levels))
 
     return treemesh
+
+
+def get_contours(
+    interval_min: float,
+    interval_max: float,
+    interval_spacing: float,
+    fixed_contours: str | list[float] | None,
+) -> list[float]:
+    """
+    Function to input interval contour and fixed contour information and get contours as a list of floats.
+
+    :params interval_min: Minimum value for contour list.
+    :params interval_max: Maximum value for contour list.
+    :params interval_spacing: Step size for contour list.
+    :params fixed_contours: List of fixed contours.
+    :return : Corresponding list of values in float format.
+    """
+
+    if (
+        None not in [interval_min, interval_max, interval_spacing]
+        and interval_spacing != 0
+    ):
+        interval_contours = np.arange(
+            interval_min, interval_max + interval_spacing, interval_spacing
+        ).tolist()
+    else:
+        interval_contours = []
+
+    if fixed_contours != "" and fixed_contours is not None:
+        if type(fixed_contours) is str:
+            fixed_contours = re.split(",", fixed_contours.replace(" ", ""))
+            fixed_contours = [float(c) for c in fixed_contours]
+    else:
+        fixed_contours = []
+
+    contours = np.unique(np.sort(interval_contours + fixed_contours))
+    return contours
 
 
 def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
