@@ -228,7 +228,9 @@ default_ui_json = {
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
             "{4EA87376-3ECE-438B-BF12-3479733DED46}",
         ],
-        "label": "Conductivity object",
+        "optional": True,
+        "enabled": False,
+        "label": "Object",
         "value": None,
     },
     "conductivity_model": {
