@@ -208,7 +208,6 @@ class InversionDriver:
         )
         self.params.geoh5.close()
 
-
     def run(self):
         """Run inversion from params"""
 
