@@ -9,11 +9,14 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-import plotly.express as px
-from geoh5py.ui_json.constants import default_ui_json as base_ui_json
+# import plotly.express as px
+# from geoh5py.ui_json.constants import default_ui_json as base_ui_json
+from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
 
 defaults = {
     "title": "Clustering",
+    "n_clusters": "8",
+    "scale": "5",
     "run_command": "geoapps.clustering.application",
     "run_command_boolean": False,
     "monitoring_directory": None,
@@ -22,10 +25,62 @@ defaults = {
     "conda_environment_boolean": False,
 }
 
-default_ui_json = deepcopy(base_ui_json)
+default_ui_json = deepcopy(base_default_ui_json)
 default_ui_json.update(
     {
         "title": "Clustering",
+        "data": {
+            "association": ["Vertex"],
+            "dataType": "Float",
+            "group": "Data Selection",
+            "label": "Data",
+            "main": True,
+            "parent": "objects",
+            "value": None,
+        },
+        "n_clusters": {
+            "group": "data",
+            "label": "Number of clusters",
+            "main": True,
+            "value": None,
+            "lineEdit": False,
+        },
+        "channel": {
+            "association": ["Vertex"],
+            "dataType": "Float",
+            "group": "data",
+            "label": "Data",
+            "main": True,
+            "parent": "objects",
+            "value": None,
+        },
+        "scale": {
+            "group": "data",
+            "label": "Scale",
+            "main": True,
+            "value": None,
+            "lineEdit": False,
+        },
+        "lower_bounds": {
+            "group": "data",
+            "label": "Lower bounds",
+            "main": True,
+            "optional": True,
+            "enabled": False,
+            "value": 0.0,
+            "precision": 1,
+            "lineEdit": False,
+        },
+        "upper_bounds": {
+            "group": "x axis",
+            "label": "Upper bounds",
+            "main": True,
+            "optional": True,
+            "enabled": False,
+            "value": 0.0,
+            "precision": 1,
+            "lineEdit": False,
+        },
         "conda_environment": "geoapps",
         "run_command": "geoapps.scatter_plot.application",
     }
@@ -59,4 +114,10 @@ app_initializer = {
     "size_max": 24.8,
     "downsampling": 80,
     "size_markers": 20,
+    "data": "{41d51965-3670-43ba-8a10-d399070689e3}",
+    "n_clusters": "8",
+    "channel": "{41d51965-3670-43ba-8a10-d399070689e3}",
+    "scale": "5",
+    "lower_bounds": -5,
+    "upper_bounds": 200,
 }

@@ -14,19 +14,16 @@ from os import environ
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
-from dash import callback_context, dash_table, dcc, html, no_update
+from dash import dash_table, dcc, html
 from dash.dependencies import Input, Output
 from flask import Flask
-from geoh5py.objects.object_base import ObjectBase
 from geoh5py.ui_json import InputFile
-from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 from scipy.spatial import cKDTree
+from sklearn.cluster import KMeans
 
 from geoapps.clustering.constants import app_initializer
-from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.params import ClusteringParams
 from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.utils.statistics import random_sampling
@@ -42,14 +39,16 @@ class Clustering(ScatterPlots):
         else:
             self.params = self._param_class(**app_initializer)
 
+        self.clusters = {}
         self.data_channels = {}
         self.scalings = {}
         self.lower_bounds = {}
         self.upper_bounds = {}
         self.indices = []
+
         # Initial values for the dash components
-        defaults = self.get_defaults()
-        super().__init__(**defaults)
+        super().__init__(**self.params.to_dict())
+        self.defaults = self.get_cluster_defaults()
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -63,7 +62,7 @@ class Clustering(ScatterPlots):
             [
                 dcc.Tabs(
                     id="tabs",
-                    value="crossplot",
+                    value="crossplot_tab",
                     children=[
                         dcc.Tab(label="Crossplot", value="crossplot_tab"),
                         dcc.Tab(label="Statistics", value="statistics_tab"),
@@ -85,24 +84,39 @@ class Clustering(ScatterPlots):
                         dcc.Markdown("Data: "),
                         dcc.Dropdown(
                             id="channels",
+                            value=[
+                                self.defaults["x"].name,
+                                self.defaults["y"].name,
+                                self.defaults["z"].name,
+                                self.defaults["color"].name,
+                                self.defaults["size"].name,
+                            ],
+                            options=self.defaults["data_options"],
                             multi=True,
                         ),
-                    ]
+                    ],
+                    style={"width": "50%"},
                 ),
                 html.Div(
                     [
                         dcc.Markdown("Number of clusters"),
                         dcc.Slider(
-                            id="clusters",
+                            id="n_clusters",
                             min=2,
                             max=100,
                             step=1,
-                            value=8,
+                            value=self.defaults["n_clusters"],
+                            marks=None,
+                            tooltip={
+                                "placement": "bottom",
+                                "always_visible": True,
+                            },
                         ),
                         dcc.Markdown("Cluster"),
                         dcc.Dropdown(id="select_cluster", options=np.arange(0, 101, 1)),
                         dcc.Markdown("Color"),
-                    ]
+                    ],
+                    style={"width": "50%"},
                 ),
                 self.tabs_layout,
                 dcc.Store(id="dataframe"),
@@ -126,11 +140,6 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="dataframe", component_property="value"),
             Input(component_id="downsampling", component_property="value"),
-            # Input(component_id='x', component_property='value'),
-            # Input(component_id='y', component_property='value'),
-            # Input(component_id='z', component_property='value'),
-            # Input(component_id='color', component_property='value'),
-            # Input(component_id='size', component_property='value'),
             Input(component_id="channel", component_property="value"),
             Input(component_id="channels", component_property="value"),
             Input(component_id="scale", component_property="value"),
@@ -144,8 +153,36 @@ class Clustering(ScatterPlots):
             Output(component_id="histogram", component_property="figure"),
             Output(component_id="boxplot", component_property="figure"),
             Output(component_id="inertia", component_property="figure"),
-            Input(component_id="clusters", component_property="value"),
+            Input(component_id="n_clusters", component_property="value"),
             Input(component_id="dataframe", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="downsampling", component_property="value"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="x_log", component_property="value"),
+            Input(component_id="x_thresh", component_property="value"),
+            Input(component_id="x_min", component_property="value"),
+            Input(component_id="x_max", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="y_log", component_property="value"),
+            Input(component_id="y_thresh", component_property="value"),
+            Input(component_id="y_min", component_property="value"),
+            Input(component_id="y_max", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="z_log", component_property="value"),
+            Input(component_id="z_thresh", component_property="value"),
+            Input(component_id="z_min", component_property="value"),
+            Input(component_id="z_max", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="color_log", component_property="value"),
+            Input(component_id="color_thresh", component_property="value"),
+            Input(component_id="color_min", component_property="value"),
+            Input(component_id="color_max", component_property="value"),
+            Input(component_id="size", component_property="value"),
+            Input(component_id="size_log", component_property="value"),
+            Input(component_id="size_thresh", component_property="value"),
+            Input(component_id="size_min", component_property="value"),
+            Input(component_id="size_max", component_property="value"),
+            Input(component_id="size_markers", component_property="value"),
         )(self.update_plots)
         self.app.callback(
             Output(component_id="x", component_property="options"),
@@ -167,6 +204,10 @@ class Clustering(ScatterPlots):
             Output(component_id="upper_bounds", component_property="value"),
             Input(component_id="channel", component_property="value"),
         )(self.update_properties)
+        self.app.callback(
+            Output(component_id="download", component_property="href"),
+            Input(component_id="plot", component_property="figure"),
+        )(self.save_figure)
 
     def render_content(self, tab):
         if tab == "crossplot_tab":
@@ -191,17 +232,20 @@ class Clustering(ScatterPlots):
                 [
                     dcc.Dropdown(
                         id="channel",
+                        value=self.defaults["channel"],
+                        options=self.defaults["data"],
                     ),
                     dcc.Slider(
                         id="scale",
                         min=1,
                         max=10,
                         step=1,
+                        value=self.defaults["scale"],
                     ),
                     dcc.Markdown("Lower bound"),
-                    dcc.Input(id="lower_bounds"),
+                    dcc.Input(id="lower_bounds", value=self.defaults["lower_bounds"]),
                     dcc.Markdown("Upper bound"),
-                    dcc.Input(id="upper_bounds"),
+                    dcc.Input(id="upper_bounds", value=self.defaults["upper_bounds"]),
                     dcc.Graph(
                         id="histogram",
                     ),
@@ -226,6 +270,31 @@ class Clustering(ScatterPlots):
                     )
                 ]
             )
+
+    def get_cluster_defaults(self):
+        defaults = {}
+        # Get initial values to initialize the dash components
+
+        for key, value in self.params.to_dict().items():
+            if key == "data":
+                if value is None:
+                    defaults[key] = []
+                else:
+                    defaults[key] = [value.name]
+            elif key == "objects":
+                if value is None:
+                    defaults["data_options"] = []
+                else:
+                    data_options = value.get_data_list()
+                    if "Visual Parameters" in data_options:
+                        data_options.remove("Visual Parameters")
+                    defaults["data_options"] = data_options
+                for channel in defaults["data_options"]:
+                    self.get_channel(channel)
+            else:
+                defaults[key] = value
+
+        return defaults
 
     def update_channels(self, channels):
         self.data_channels = {}
@@ -262,8 +331,297 @@ class Clustering(ScatterPlots):
 
         return scale, lower_bounds, upper_bounds
 
-    def update_plots(self, clusters, dataframe):
-        pass
+    def update_plots(
+        self,
+        n_clusters,
+        dataframe_dict,
+        channel,
+        downsampling,
+        x,
+        x_log,
+        x_thresh,
+        x_min,
+        x_max,
+        y,
+        y_log,
+        y_thresh,
+        y_min,
+        y_max,
+        z,
+        z_log,
+        z_thresh,
+        z_min,
+        z_max,
+        color,
+        color_log,
+        color_thresh,
+        color_min,
+        color_max,
+        size,
+        size_log,
+        size_thresh,
+        size_min,
+        size_max,
+        size_markers,
+    ):
+        dataframe = pd.DataFrame(dataframe_dict["dataframe"])
+        self.run_clustering(n_clusters, dataframe)
+
+        color_maps = None
+        crossplot = self.update_plot(
+            downsampling,
+            x,
+            x_log,
+            x_thresh,
+            x_min,
+            x_max,
+            y,
+            y_log,
+            y_thresh,
+            y_min,
+            y_max,
+            z,
+            z_log,
+            z_thresh,
+            z_min,
+            z_max,
+            color,
+            color_log,
+            color_thresh,
+            color_min,
+            color_max,
+            color_maps,
+            size,
+            size_log,
+            size_thresh,
+            size_min,
+            size_max,
+            size_markers,
+        )
+        stats_table = self.make_stats_table(dataframe)
+        matrix = self.make_heatmap(dataframe)
+        histogram = self.make_hist_plot(dataframe, channel)
+        boxplot = self.make_boxplot(n_clusters, dataframe, channel)
+        inertia = self.make_inertia_plot(n_clusters)
+
+        return crossplot, stats_table, matrix, histogram, boxplot, inertia
+
+    def run_clustering(self, n_clusters, dataframe):
+        """
+        Normalize the the selected data and perform the kmeans clustering.
+        """
+        if dataframe is None:
+            return
+
+        # Prime the app with clusters
+        # Normalize values and run
+        values = []
+        for field in dataframe.columns:
+            vals = dataframe[field].values.copy()
+
+            nns = ~np.isnan(vals)
+            vals[nns] = (
+                (vals[nns] - min(vals[nns]))
+                / (max(vals[nns]) - min(vals[nns]) + 1e-32)
+                * self.scalings[dict(self.data.options)[field]].value
+            )
+            values += [vals]
+
+        for val in [2, 4, 8, 16, 32, n_clusters]:
+            if val not in self.clusters.keys():
+                kmeans = KMeans(n_clusters=val, random_state=0).fit(np.vstack(values).T)
+                self.clusters[val] = kmeans
+
+        cluster_ids = self.clusters[n_clusters].labels_.astype(float)
+
+        self.data_channels["kmeans"] = cluster_ids[self.mapping]
+        """
+        self.update_axes(refresh_plot=False)
+        self.color_max.value = self.n_clusters.value
+        self.update_colormap(None, refresh_plot=False)
+        self.color.value = "kmeans"
+        self.color_active.value = True
+        """
+
+    def make_inertia_plot(self, n_clusters):
+        """
+        Generate an inertia plot
+        """
+        if n_clusters in self.clusters.keys():
+            ind = np.sort(list(self.clusters.keys()))
+            inertias = [self.clusters[ii].inertia_ for ii in ind]
+            clusters = ind
+            line = go.Scatter(x=clusters, y=inertias, mode="lines")
+            point = go.Scatter(
+                x=[n_clusters],
+                y=[self.clusters[n_clusters].inertia_],
+            )
+
+            inertia_plot = go.Figure([line, point])
+
+            """if getattr(self, "inertia_plot", None) is None:
+                inertia_plot = go.Figure([line, point])
+            else:
+                inertia_plot.data = []
+                inertia_plot.add_trace(line)
+                inertia_plot.add_trace(point)"""
+            inertia_plot.update_layout(
+                {
+                    "height": 300,
+                    "width": 400,
+                    "xaxis": {"title": "Number of clusters"},
+                    "showlegend": False,
+                }
+            )
+            return inertia_plot
+        else:
+            return None
+
+    def make_hist_plot(self, dataframe, channel):
+        """
+        Generate an histogram plot for the selected data channel.
+        """
+        if dataframe is not None:
+            field = channel
+            histogram = go.Histogram(
+                x=dataframe[self.data.uid_name_map[field]],
+                histnorm="percent",
+                name=self.data.uid_name_map[field],
+            )
+            return histogram
+        else:
+            return None
+
+    def make_boxplot(self, n_clusters, dataframe, channel):
+        """
+        Generate a box plot for each cluster.
+        """
+        if dataframe is not None and "kmeans" in self.data_channels.keys():
+            field = channel
+
+            boxes = []
+            for ii in range(n_clusters):
+
+                cluster_ind = self.data_channels["kmeans"][self.indices] == ii
+                x = np.ones(np.sum(cluster_ind)) * ii
+                y = self.data_channels[field][self.indices][cluster_ind]
+
+                boxes.append(
+                    go.Box(
+                        x=x,
+                        y=y,
+                        fillcolor=self.color_pickers[ii].value,
+                        marker_color=self.color_pickers[ii].value,
+                        line_color=self.color_pickers[ii].value,
+                        showlegend=False,
+                    )
+                )
+
+            boxplot = go.FigureWidget()
+
+            boxplot.data = []
+            for box in boxes:
+                boxplot.add_trace(box)
+
+            boxplot.update_layout(
+                {
+                    "xaxis": {"title": "Cluster #"},
+                    "yaxis": {"title": self.data.uid_name_map[field]},
+                    "height": 600,
+                    "width": 600,
+                }
+            )
+            return boxplot
+        else:
+            return None
+
+    def make_stats_table(self, dataframe):
+        """
+        Generate a table of statistics using pandas
+        """
+        if dataframe is not None:
+            return dataframe.describe(percentiles=None, include=None, exclude=None)
+        else:
+            return None
+
+    def make_heatmap(self, dataframe):
+        """
+        Generate a confusion matrix
+        """
+        if getattr(self, "dataframe", None) is not None:
+            df = dataframe.copy()
+            corrs = df.corr()
+
+            plot = go.Heatmap(
+                x=list(corrs.columns),
+                y=list(corrs.index),
+                z=corrs.values,
+                type="heatmap",
+                colorscale="Viridis",
+                zsmooth=False,
+            )
+
+            matrix = go.Figure()
+            matrix.add_trace(plot)
+
+            matrix.update_scenes(aspectratio=dict(x=1, y=1, z=0.7), aspectmode="manual")
+            matrix.update_layout(
+                width=500,
+                height=500,
+                autosize=False,
+                margin=dict(t=0, b=0, l=0, r=0),
+                template="plotly_white",
+                updatemenus=[
+                    {
+                        "buttons": [
+                            {
+                                "args": ["type", "heatmap"],
+                                "label": "Heatmap",
+                                "method": "restyle",
+                            },
+                            {
+                                "args": ["type", "surface"],
+                                "label": "3D Surface",
+                                "method": "restyle",
+                            },
+                        ],
+                        "direction": "down",
+                        "pad": {"r": 10, "t": 10},
+                        "showactive": True,
+                        "x": 0.01,
+                        "xanchor": "left",
+                        "y": 1.15,
+                        "yanchor": "top",
+                    },
+                    {
+                        "buttons": [
+                            {
+                                "args": ["colorscale", label],
+                                "label": label,
+                                "method": "restyle",
+                            }
+                            for label in [
+                                "Viridis",
+                                "Rainbow",
+                                "Cividis",
+                                "Blues",
+                                "Greens",
+                            ]
+                        ],
+                        "direction": "down",
+                        "pad": {"r": 10, "t": 10},
+                        "showactive": True,
+                        "x": 0.32,
+                        "xanchor": "left",
+                        "y": 1.15,
+                        "yanchor": "top",
+                    },
+                ],
+                yaxis={"autorange": "reversed"},
+            )
+            return matrix
+        else:
+            return None
 
     def update_dataframe(
         self, downsampling, channel, channels, scale, lower_bounds, upper_bounds
@@ -329,7 +687,7 @@ class Clustering(ScatterPlots):
             # options = [[self.data.uid_name_map[key], key] for key in fields]
             # self.channels_plot_options.options = options
 
-            return dataframe
+            return {"dataframe": dataframe.to_dict("records")}
 
         else:
             """
@@ -347,6 +705,10 @@ class Clustering(ScatterPlots):
 
         # Otherwise, continue as normal
         self.app.run_server(host="127.0.0.1", port=8050, debug=False)
+
+
+app = Clustering()
+app.app.run()
 
 
 if __name__ == "__main__":
