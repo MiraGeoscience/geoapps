@@ -130,7 +130,6 @@ class IsoSurface(ObjectDataSelection):
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
 
-
     def data_change(self, _):
 
         if self.data.value:
