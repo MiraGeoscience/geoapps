@@ -15,8 +15,8 @@ from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_js
 
 defaults = {
     "title": "Clustering",
-    "n_clusters": "8",
-    "scale": "5",
+    "n_clusters": None,
+    "scale": None,
     "run_command": "geoapps.clustering.application",
     "run_command_boolean": False,
     "monitoring_directory": None,
@@ -115,9 +115,9 @@ app_initializer = {
     "downsampling": 80,
     "size_markers": 20,
     "data": "{41d51965-3670-43ba-8a10-d399070689e3}",
-    "n_clusters": "8",
+    "n_clusters": 8,
     "channel": "{41d51965-3670-43ba-8a10-d399070689e3}",
-    "scale": "5",
+    "scale": 5,
     "lower_bounds": -5,
     "upper_bounds": 200,
 }
