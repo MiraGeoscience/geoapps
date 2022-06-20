@@ -221,8 +221,15 @@ class Clustering(ScatterPlots):
             Input(component_id="channels", component_property="value"),
         )(self.update_channels)
         self.app.callback(
+            Output(component_id="scale", component_property="value"),
+            Output(component_id="lower_bounds", component_property="value"),
+            Output(component_id="upper_bounds", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+        )(self.update_properties)
+        self.app.callback(
             Output(component_id="dataframe", component_property="data"),
             Input(component_id="downsampling", component_property="value"),
+            Input(component_id="channel", component_property="value"),
             Input(component_id="channels", component_property="value"),
             Input(component_id="scale", component_property="value"),
             Input(component_id="lower_bounds", component_property="value"),
@@ -266,12 +273,6 @@ class Clustering(ScatterPlots):
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
         )(self.update_plots)
-        """self.app.callback(
-            Output(component_id="scale", component_property="value"),
-            Output(component_id="lower_bounds", component_property="value"),
-            Output(component_id="upper_bounds", component_property="value"),
-            Input(component_id="channel", component_property="value"),
-        )(self.update_properties)"""
 
         """self.app.callback(
             Output(component_id="download", component_property="href"),
@@ -300,6 +301,9 @@ class Clustering(ScatterPlots):
                     self.get_channel(channel)
             else:
                 defaults[key] = value
+        self.scalings[defaults["channel"].name] = defaults["scale"]
+        self.lower_bounds[defaults["channel"].name] = defaults["lower_bounds"]
+        self.upper_bounds[defaults["channel"].name] = defaults["upper_bounds"]
         return defaults
 
     def get_data_channels(self, channels):
@@ -317,6 +321,9 @@ class Clustering(ScatterPlots):
     def update_channels(self, channels):
         self.data_channels = self.get_data_channels(channels)
 
+        for channel in channels:
+            self.update_properties(channel)
+
         for channel in self.scalings.keys():
             if channel not in channels:
                 del self.scalings[channel]
@@ -330,20 +337,17 @@ class Clustering(ScatterPlots):
         return channels, channels, channels, channels, channels, channels
 
     def update_properties(self, channel):
-        if channel in self.scalings.keys():
-            scale = self.scalings[channel]
-        else:
-            scale = 1
+        if channel not in self.scalings.keys():
+            self.scalings[channel] = 1
+        scale = self.scalings[channel]
 
-        if channel in self.lower_bounds.keys():
-            lower_bounds = self.lower_bounds[channel]
-        else:
-            lower_bounds = None  # get default value
+        if channel not in self.lower_bounds.keys():
+            self.lower_bounds[channel] = np.nanmin(self.data_channels[channel].values)
+        lower_bounds = self.lower_bounds[channel]
 
-        if channel in self.upper_bounds.keys():
-            upper_bounds = self.upper_bounds[channel]
-        else:
-            upper_bounds = None  # get default value
+        if channel not in self.upper_bounds.keys():
+            self.upper_bounds[channel] = np.nanmax(self.data_channels[channel].values)
+        upper_bounds = self.upper_bounds[channel]
 
         return scale, lower_bounds, upper_bounds
 
@@ -380,48 +384,52 @@ class Clustering(ScatterPlots):
         size_max,
         size_markers,
     ):
-        dataframe = pd.DataFrame(dataframe_dict["dataframe"])
-        self.run_clustering(n_clusters, dataframe)
+        if dataframe_dict:
+            dataframe = pd.DataFrame(dataframe_dict["dataframe"])
+            self.run_clustering(n_clusters, dataframe)
 
-        color_maps = None
+            color_maps = None
 
-        crossplot = self.update_plot(
-            downsampling,
-            x,
-            x_log,
-            x_thresh,
-            x_min,
-            x_max,
-            y,
-            y_log,
-            y_thresh,
-            y_min,
-            y_max,
-            z,
-            z_log,
-            z_thresh,
-            z_min,
-            z_max,
-            color,
-            color_log,
-            color_thresh,
-            color_min,
-            color_max,
-            color_maps,
-            size,
-            size_log,
-            size_thresh,
-            size_min,
-            size_max,
-            size_markers,
-        )
-        stats_table = self.make_stats_table(dataframe).to_dict("records")
-        matrix = self.make_heatmap(dataframe)
-        histogram = self.make_hist_plot(dataframe, channel)
-        boxplot = self.make_boxplot(n_clusters, dataframe, channel)
-        inertia = self.make_inertia_plot(n_clusters)
+            crossplot = self.update_plot(
+                downsampling,
+                x,
+                x_log,
+                x_thresh,
+                x_min,
+                x_max,
+                y,
+                y_log,
+                y_thresh,
+                y_min,
+                y_max,
+                z,
+                z_log,
+                z_thresh,
+                z_min,
+                z_max,
+                color,
+                color_log,
+                color_thresh,
+                color_min,
+                color_max,
+                color_maps,
+                size,
+                size_log,
+                size_thresh,
+                size_min,
+                size_max,
+                size_markers,
+            )
+            stats_table = self.make_stats_table(dataframe).to_dict("records")
+            matrix = self.make_heatmap(dataframe)
+            histogram = self.make_hist_plot(dataframe, channel)
+            boxplot = self.make_boxplot(n_clusters, dataframe, channel)
+            inertia = self.make_inertia_plot(n_clusters)
 
-        return crossplot, stats_table, matrix, histogram, boxplot, inertia
+            return crossplot, stats_table, matrix, histogram, boxplot, inertia
+
+        else:
+            return None, None, None, None, None, None
 
     def run_clustering(self, n_clusters, dataframe):
         """
@@ -561,7 +569,9 @@ class Clustering(ScatterPlots):
         Generate a table of statistics using pandas
         """
         if dataframe is not None:
-            return dataframe.describe(percentiles=None, include=None, exclude=None)
+            stats_df = dataframe.describe(percentiles=None, include=None, exclude=None)
+            stats_df.insert(0, "", stats_df.index)
+            return stats_df
         else:
             return None
 
@@ -646,13 +656,17 @@ class Clustering(ScatterPlots):
             return None
 
     def update_dataframe(
-        self, downsampling, channels, scale, lower_bounds, upper_bounds
+        self, downsampling, channel, channels, scale, lower_bounds, upper_bounds
     ):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
         self.kmeans = None
-        # convert downsampling from percent to number***
+        percent = downsampling / 100
+        self.scalings[channel] = scale
+        self.lower_bounds[channel] = lower_bounds
+        self.upper_bounds[channel] = upper_bounds
+
         fields = channels
         if len(fields) > 0:
             values = []
@@ -660,13 +674,6 @@ class Clustering(ScatterPlots):
             for field in fields:
                 vals = self.data_channels[field].values.copy()
                 n_values = len(vals)
-                # nns = ~np.isnan(vals)
-                if field not in self.scalings.keys():
-                    self.scalings[field] = scale
-                if field not in self.lower_bounds.keys():
-                    self.lower_bounds[field] = lower_bounds
-                if field not in self.upper_bounds.keys():
-                    self.upper_bounds[field] = upper_bounds
 
                 vals[
                     (vals < self.lower_bounds[field])
@@ -683,7 +690,7 @@ class Clustering(ScatterPlots):
 
             samples = random_sampling(
                 values[active_set, :],
-                np.min([downsampling, len(active_set)]),
+                np.min([int(percent * n_values), len(active_set)]),
                 bandwidth=2.0,
                 rtol=1e0,
                 method="histogram",
