@@ -12,6 +12,7 @@ import sys
 import webbrowser
 from os import environ
 
+import dash_daq as daq
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -26,6 +27,7 @@ from sklearn.cluster import KMeans
 from geoapps.clustering.constants import app_initializer
 from geoapps.clustering.params import ClusteringParams
 from geoapps.scatter_plot.application import ScatterPlots
+from geoapps.shared_utils.utils import colors, hex_to_rgb
 from geoapps.utils.statistics import random_sampling
 
 
@@ -47,6 +49,7 @@ class Clustering(ScatterPlots):
         self.upper_bounds = {}
         self.indices = []
         self.mapping = None
+        self.color_pickers = colors
 
         # Initial values for the dash components
         super().__init__(**self.params.to_dict())
@@ -193,8 +196,13 @@ class Clustering(ScatterPlots):
                             },
                         ),
                         dcc.Markdown("Cluster"),
-                        dcc.Dropdown(id="select_cluster", options=np.arange(0, 101, 1)),
-                        dcc.Markdown("Color"),
+                        dcc.Dropdown(
+                            id="select_cluster", options=np.arange(0, 101, 1), value=0
+                        ),
+                        daq.ColorPicker(
+                            id="color_picker",
+                            value=dict(hex="#000000"),
+                        ),
                     ],
                     style={"width": "50%"},
                 ),
@@ -227,6 +235,10 @@ class Clustering(ScatterPlots):
             Input(component_id="channel", component_property="value"),
         )(self.update_properties)
         self.app.callback(
+            Output(component_id="color_picker", component_property="value"),
+            Input(component_id="select_cluster", component_property="value"),
+        )(self.update_color_picker)
+        self.app.callback(
             Output(component_id="dataframe", component_property="data"),
             Input(component_id="downsampling", component_property="value"),
             Input(component_id="channel", component_property="value"),
@@ -243,6 +255,7 @@ class Clustering(ScatterPlots):
             Output(component_id="boxplot", component_property="figure"),
             Output(component_id="inertia", component_property="figure"),
             Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="select_cluster", component_property="value"),
             Input(component_id="dataframe", component_property="data"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="downsampling", component_property="value"),
@@ -266,6 +279,7 @@ class Clustering(ScatterPlots):
             Input(component_id="color_thresh", component_property="value"),
             Input(component_id="color_min", component_property="value"),
             Input(component_id="color_max", component_property="value"),
+            Input(component_id="color_picker", component_property="value"),
             Input(component_id="size", component_property="value"),
             Input(component_id="size_log", component_property="value"),
             Input(component_id="size_thresh", component_property="value"),
@@ -354,6 +368,7 @@ class Clustering(ScatterPlots):
     def update_plots(
         self,
         n_clusters,
+        select_cluster,
         dataframe_dict,
         channel,
         downsampling,
@@ -377,6 +392,7 @@ class Clustering(ScatterPlots):
         color_thresh,
         color_min,
         color_max,
+        color_picker,
         size,
         size_log,
         size_thresh,
@@ -388,7 +404,7 @@ class Clustering(ScatterPlots):
             dataframe = pd.DataFrame(dataframe_dict["dataframe"])
             self.run_clustering(n_clusters, dataframe)
 
-            color_maps = None
+            color_maps = self.update_colormap(n_clusters, color_picker, select_cluster)
 
             crossplot = self.update_plot(
                 downsampling,
@@ -430,6 +446,34 @@ class Clustering(ScatterPlots):
 
         else:
             return None, None, None, None, None, None
+
+    def update_color_picker(self, select_cluster):
+        return dict(hex=self.color_pickers[select_cluster])
+
+    def update_colormap(self, n_clusters, new_color, select_cluster):
+        """
+        Change the colormap for clusters
+        """
+        self.color_pickers[select_cluster] = new_color["hex"]
+        colormap = {}
+        for ii in range(n_clusters):
+            colorpicker = self.color_pickers[ii]
+            if "#" in colorpicker:
+                color = colorpicker.lstrip("#")
+                colormap[ii] = [
+                    np.min([ii / (n_clusters - 1), 1]),
+                    "rgb("
+                    + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
+                    + ")",
+                ]
+            else:
+                colormap[ii] = [
+                    np.min([ii / (n_clusters - 1), 1]),
+                    colorpicker,
+                ]
+
+        # self.custom_colormap = list(self.colormap.values())
+        return list(colormap.values())
 
     def run_clustering(self, n_clusters, dataframe):
         """
@@ -539,9 +583,9 @@ class Clustering(ScatterPlots):
                     go.Box(
                         x=x,
                         y=y,
-                        fillcolor="blue",  # self.color_pickers[ii].value,
-                        marker_color="blue",  # self.color_pickers[ii].value,
-                        line_color="blue",  # self.color_pickers[ii].value,
+                        fillcolor=self.color_pickers[ii],
+                        marker_color=self.color_pickers[ii],
+                        line_color=self.color_pickers[ii],
                         showlegend=False,
                     )
                 )
