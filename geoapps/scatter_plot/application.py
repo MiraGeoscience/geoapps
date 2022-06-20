@@ -541,27 +541,25 @@ class ScatterPlots:
                 ),
             ]
         )
-        self.plot_layout = (
-            html.Div(
-                [
-                    dcc.Graph(
-                        id="plot",
-                        style={"margin-bottom": "20px"},
-                    ),
-                    html.A(
-                        html.Button("Download as HTML"),
-                        id="download",
-                        download="Crossplot.html",
-                        style={"margin-left": "30%"},
-                    ),
-                ],
-                style={
-                    "width": "45%",
-                    "display": "inline-block",
-                    "margin-bottom": "20px",
-                    "vertical-align": "bottom",
-                },
-            ),
+        self.plot_layout = html.Div(
+            [
+                dcc.Graph(
+                    id="crossplot",
+                    style={"margin-bottom": "20px"},
+                ),
+                html.A(
+                    html.Button("Download as HTML"),
+                    id="download",
+                    download="Crossplot.html",
+                    style={"margin-left": "30%"},
+                ),
+            ],
+            style={
+                "width": "45%",
+                "display": "inline-block",
+                "margin-bottom": "20px",
+                "vertical-align": "bottom",
+            },
         )
         self.app.layout = html.Div(
             [
@@ -592,7 +590,7 @@ class ScatterPlots:
             Input(component_id="axes_pannels", component_property="value"),
         )(self.update_visibility)
         self.app.callback(
-            Output(component_id="plot", component_property="figure"),
+            Output(component_id="crossplot", component_property="figure"),
             Input(component_id="downsampling", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
@@ -672,7 +670,7 @@ class ScatterPlots:
         )(self.update_params)
         self.app.callback(
             Output(component_id="download", component_property="href"),
-            Input(component_id="plot", component_property="figure"),
+            Input(component_id="crossplot", component_property="figure"),
         )(self.save_figure)
 
     def update_visibility(self, axis):
