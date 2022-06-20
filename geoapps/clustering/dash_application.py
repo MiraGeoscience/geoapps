@@ -27,7 +27,7 @@ from sklearn.cluster import KMeans
 from geoapps.clustering.constants import app_initializer
 from geoapps.clustering.params import ClusteringParams
 from geoapps.scatter_plot.application import ScatterPlots
-from geoapps.shared_utils.utils import colors, hex_to_rgb
+from geoapps.shared_utils.utils import colors
 from geoapps.utils.statistics import random_sampling
 
 
@@ -69,12 +69,53 @@ class Clustering(ScatterPlots):
                     [
                         dcc.Tab(
                             label="Crossplot",
-                            children=[html.Div([self.axis_layout, self.plot_layout])],
+                            children=[
+                                html.Div(
+                                    [self.axis_layout],
+                                    style={
+                                        "width": "40%",
+                                        "display": "inline-block",
+                                        "vertical-align": "middle",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        self.plot_layout,
+                                    ],
+                                    style={
+                                        "width": "60%",
+                                        "display": "inline-block",
+                                        "vertical-align": "middle",
+                                    },
+                                ),
+                            ],
                         ),
                         dcc.Tab(
                             label="Statistics",
                             children=[
-                                html.Div([dash_table.DataTable(id="stats_table")])
+                                html.Div(
+                                    [
+                                        dash_table.DataTable(
+                                            id="stats_table",
+                                            style_data={
+                                                "color": "black",
+                                                "backgroundColor": "white",
+                                            },
+                                            style_data_conditional=[
+                                                {
+                                                    "if": {"row_index": "odd"},
+                                                    "backgroundColor": "rgb(220, 220, 220)",
+                                                }
+                                            ],
+                                            style_header={
+                                                "backgroundColor": "rgb(210, 210, 210)",
+                                                "color": "black",
+                                                "fontWeight": "bold",
+                                            },
+                                        )
+                                    ],
+                                    style={"margin-top": "20px"},
+                                )
                             ],
                         ),
                         dcc.Tab(
@@ -161,10 +202,10 @@ class Clustering(ScatterPlots):
 
         self.app.layout = html.Div(
             [
-                self.workspace_layout,
                 html.Div(
                     [
-                        dcc.Markdown("Data: "),
+                        self.workspace_layout,
+                        dcc.Markdown("Data subset: "),
                         dcc.Dropdown(
                             id="channels",
                             value=[
@@ -178,37 +219,66 @@ class Clustering(ScatterPlots):
                             multi=True,
                         ),
                     ],
-                    style={"width": "50%"},
+                    style={
+                        "width": "45%",
+                        "display": "inline-block",
+                        "vertical-align": "top",
+                        "margin-right": "50px",
+                        "margin-bottom": "20px",
+                    },
                 ),
                 html.Div(
                     [
-                        dcc.Markdown("Number of clusters"),
-                        dcc.Slider(
-                            id="n_clusters",
-                            min=2,
-                            max=100,
-                            step=1,
-                            value=self.defaults["n_clusters"],
-                            marks=None,
-                            tooltip={
-                                "placement": "bottom",
-                                "always_visible": True,
+                        html.Div(
+                            [
+                                dcc.Markdown("Number of clusters: "),
+                                dcc.Slider(
+                                    id="n_clusters",
+                                    min=2,
+                                    max=100,
+                                    step=1,
+                                    value=self.defaults["n_clusters"],
+                                    marks=None,
+                                    tooltip={
+                                        "placement": "bottom",
+                                        "always_visible": True,
+                                    },
+                                ),
+                                dcc.Markdown("Cluster: "),
+                                dcc.Dropdown(
+                                    id="select_cluster",
+                                    options=np.arange(0, 101, 1),
+                                    value=0,
+                                    style={"margin-bottom": "20px"},
+                                ),
+                            ],
+                            style={
+                                "width": "45%",
+                                "display": "inline-block",
+                                "vertical-align": "top",
+                                "margin-right": "20px",
                             },
-                        ),
-                        dcc.Markdown("Cluster"),
-                        dcc.Dropdown(
-                            id="select_cluster", options=np.arange(0, 101, 1), value=0
                         ),
                         daq.ColorPicker(
                             id="color_picker",
                             value=dict(hex="#000000"),
+                            style={
+                                "width": "45%",
+                                "display": "inline-block",
+                                "vertical-align": "top",
+                            },
                         ),
                     ],
-                    style={"width": "50%"},
+                    style={
+                        "width": "45%",
+                        "display": "inline-block",
+                        "vertical-align": "top",
+                    },
                 ),
                 self.tabs_layout,
                 dcc.Store(id="dataframe", data={}),
-            ]
+            ],
+            style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
         )
 
         self.app.callback(

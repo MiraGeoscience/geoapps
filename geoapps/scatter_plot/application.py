@@ -532,12 +532,6 @@ class ScatterPlots:
                             ],
                         ),
                     ],
-                    style={
-                        "display": "none",
-                        "width": "40%",
-                        "vertical-align": "top",
-                        "margin-bottom": "20px",
-                    },
                 ),
             ]
         )
@@ -553,21 +547,12 @@ class ScatterPlots:
                     download="Crossplot.html",
                     style={"margin-left": "30%"},
                 ),
-            ],
-            style={
-                "width": "45%",
-                "display": "inline-block",
-                "margin-bottom": "20px",
-                "vertical-align": "bottom",
-            },
+            ]
         )
         self.app.layout = html.Div(
             [
                 html.Div(
-                    [
-                        self.workspace_layout,
-                        self.axis_layout,
-                    ],
+                    [self.workspace_layout, self.axis_layout],
                     style={
                         "width": "55%",
                         "display": "inline-block",
@@ -575,7 +560,17 @@ class ScatterPlots:
                         "vertical-align": "bottom",
                     },
                 ),
-                self.plot_layout,
+                html.Div(
+                    [
+                        self.plot_layout,
+                    ],
+                    style={
+                        "width": "45%",
+                        "display": "inline-block",
+                        "margin-bottom": "20px",
+                        "vertical-align": "bottom",
+                    },
+                ),
             ],
             style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
         )
