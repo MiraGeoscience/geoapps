@@ -206,7 +206,7 @@ class InversionDriver:
         self.inversion = inversion.BaseInversion(
             self.inverse_problem, directiveList=self.directiveList
         )
-        self.workspace.close()
+        self.params.geoh5.close()
 
     def run(self):
         """Run inversion from params"""
@@ -224,6 +224,7 @@ class InversionDriver:
         self.running = True
         self.inversion.run(self.starting_model)
         self.logger.end()
+        self.params.geoh5.close()
 
     def start_inversion_message(self):
 
@@ -461,7 +462,6 @@ def start_inversion(filepath=None, **kwargs):
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
-
     driver.run()
 
 
