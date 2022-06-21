@@ -575,7 +575,6 @@ class Clustering(ScatterPlots):
         """
         if dataframe is None:
             return
-
         # Prime the app with clusters
         # Normalize values and run
         values = []
@@ -591,9 +590,8 @@ class Clustering(ScatterPlots):
             values += [vals]
 
         for val in [2, 4, 8, 16, 32, n_clusters]:
-            if val not in self.clusters.keys():
-                kmeans = KMeans(n_clusters=val, random_state=0).fit(np.vstack(values).T)
-                self.clusters[val] = kmeans
+            kmeans = KMeans(n_clusters=val, random_state=0).fit(np.vstack(values).T)
+            self.clusters[val] = kmeans
 
         cluster_ids = self.clusters[n_clusters].labels_.astype(float)
         # self.data_channels["kmeans"] = cluster_ids[self.mapping]
@@ -792,73 +790,65 @@ class Clustering(ScatterPlots):
         Normalize the the selected data and perform the kmeans clustering.
         """
         self.kmeans = None
-        percent = downsampling / 100
+
         self.scalings[channel] = scale
         self.lower_bounds[channel] = lower_bounds
         self.upper_bounds[channel] = upper_bounds
 
-        fields = channels
-        if len(fields) > 0:
-            values = []
-            n_values = 0
-            for field in fields:
-                vals = self.data_channels[field].values.copy()
-                n_values = len(vals)
+        indices, values = self.get_indices(channels, downsampling)
+        n_values = values.shape[0]
 
-                vals[
-                    (vals < self.lower_bounds[field])
-                    | (vals > self.upper_bounds[field])
-                ] = np.nan
-                values += [vals]
+        dataframe = pd.DataFrame(
+            values[indices, :],
+            columns=channels,
+        )
 
-            values = np.vstack(values).T
-            active_set = np.where(np.all(~np.isnan(values), axis=1))[0]
+        tree = cKDTree(dataframe.values)
+        inactive_set = np.ones(n_values, dtype="bool")
+        inactive_set[indices] = False
+        out_values = values[inactive_set, :]
+        for ii in range(values.shape[1]):
+            out_values[np.isnan(out_values[:, ii]), ii] = np.mean(values[indices, ii])
 
-            if len(active_set) == 0:
-                print("No rows were found without no-data-values. Check input field")
-                return None
+        _, ind_out = tree.query(out_values)
+        del tree
 
-            samples = random_sampling(
-                values[active_set, :],
-                np.min([int(percent * n_values), len(active_set)]),
-                bandwidth=2.0,
-                rtol=1e0,
-                method="histogram",
-            )
-            self.indices = active_set[samples]
-            dataframe = pd.DataFrame(
-                values[self.indices, :],
-                columns=fields,
-            )
+        self.mapping = np.empty(n_values, dtype="int")
+        self.mapping[inactive_set] = ind_out
+        self.mapping[indices] = np.arange(len(indices))
 
-            tree = cKDTree(dataframe.values)
-            inactive_set = np.ones(n_values, dtype="bool")
-            inactive_set[self.indices] = False
-            out_values = values[inactive_set, :]
-            for ii in range(values.shape[1]):
-                out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
-                    values[self.indices, ii]
+        # self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
+        # options = [[self.data.uid_name_map[key], key] for key in fields]
+        # self.channels_plot_options.options = options
+        return {"dataframe": dataframe.to_dict("records")}
+
+    def get_indices(self, channels, downsampling):
+        values = []
+        non_nan = []
+        for channel in channels:
+            if channel is not None:
+                values.append(
+                    np.asarray(self.data_channels[channel].values, dtype=float)
                 )
+                non_nan.append(~np.isnan(self.data_channels[channel].values))
 
-            _, ind_out = tree.query(out_values)
-            del tree
+        values = np.vstack(values)
+        non_nan = np.vstack(non_nan)
 
-            self.mapping = np.empty(n_values, dtype="int")
-            self.mapping[inactive_set] = ind_out
-            self.mapping[self.indices] = np.arange(self.indices.shape[0])
-            # self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
-            # options = [[self.data.uid_name_map[key], key] for key in fields]
-            # self.channels_plot_options.options = options
-            return {"dataframe": dataframe.to_dict("records")}
+        percent = downsampling / 100
 
-        else:
-            """
-            self.dataframe = None
-            self.dataframe_scaled = None
-            self._mapping = None
-            self._inactive_set = None
-            """
-            return None
+        # Number of values that are not nan along all three axes
+        size = np.sum(np.all(non_nan, axis=0))
+
+        indices = random_sampling(
+            values.T,
+            int(percent * size),
+            bandwidth=2.0,
+            rtol=1e0,
+            method="histogram",
+        )
+        print(size)
+        return indices, values.T
 
     def run(self):
         # The reloader has not yet run - open the browser
