@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import uuid
+from time import time
 
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
@@ -101,8 +102,9 @@ class IsoSurface(ObjectDataSelection):
             except AttributeError:
                 continue
 
+        temp_geoh5 = f"{self.ga_group_name.value}_{time():.3f}.geoh5"
         new_workspace = self.get_output_workspace(
-            self.export_directory.selected_path, self.ga_group_name.value
+            self.export_directory.selected_path, temp_geoh5
         )
 
         param_dict["objects"] = param_dict["objects"].copy(
