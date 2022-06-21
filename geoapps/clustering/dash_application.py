@@ -63,74 +63,11 @@ class Clustering(ScatterPlots):
             external_stylesheets=external_stylesheets,
         )
 
-        self.tabs_layout = html.Div(
-            [
+        self.norm_tabs_layout = html.Div(
+            id="norm_tabs",
+            children=[
                 dcc.Tabs(
                     [
-                        dcc.Tab(
-                            label="Crossplot",
-                            children=[
-                                html.Div(
-                                    [self.axis_layout],
-                                    style={
-                                        "width": "45%",
-                                        "display": "inline-block",
-                                        "vertical-align": "middle",
-                                    },
-                                ),
-                                html.Div(
-                                    [
-                                        self.plot_layout,
-                                    ],
-                                    style={
-                                        "width": "55%",
-                                        "display": "inline-block",
-                                        "vertical-align": "middle",
-                                    },
-                                ),
-                            ],
-                        ),
-                        dcc.Tab(
-                            label="Statistics",
-                            children=[
-                                html.Div(
-                                    [
-                                        dash_table.DataTable(
-                                            id="stats_table",
-                                            style_data={
-                                                "color": "black",
-                                                "backgroundColor": "white",
-                                            },
-                                            style_data_conditional=[
-                                                {
-                                                    "if": {"row_index": "odd"},
-                                                    "backgroundColor": "rgb(220, 220, 220)",
-                                                }
-                                            ],
-                                            style_header={
-                                                "backgroundColor": "rgb(210, 210, 210)",
-                                                "color": "black",
-                                                "fontWeight": "bold",
-                                            },
-                                        )
-                                    ],
-                                    style={"margin-top": "20px"},
-                                )
-                            ],
-                        ),
-                        dcc.Tab(
-                            label="Confusion Matrix",
-                            children=[
-                                html.Div(
-                                    [
-                                        dcc.Graph(
-                                            id="matrix",
-                                        ),
-                                    ],
-                                    style={"width": "50%", "margin": "auto"},
-                                )
-                            ],
-                        ),
                         dcc.Tab(
                             label="Histogram",
                             children=[
@@ -194,6 +131,79 @@ class Clustering(ScatterPlots):
                             ],
                         ),
                         dcc.Tab(
+                            label="Statistics",
+                            children=[
+                                html.Div(
+                                    [
+                                        dash_table.DataTable(
+                                            id="stats_table",
+                                            style_data={
+                                                "color": "black",
+                                                "backgroundColor": "white",
+                                            },
+                                            style_data_conditional=[
+                                                {
+                                                    "if": {"row_index": "odd"},
+                                                    "backgroundColor": "rgb(220, 220, 220)",
+                                                }
+                                            ],
+                                            style_header={
+                                                "backgroundColor": "rgb(210, 210, 210)",
+                                                "color": "black",
+                                                "fontWeight": "bold",
+                                            },
+                                        )
+                                    ],
+                                    style={"margin-top": "20px"},
+                                )
+                            ],
+                        ),
+                        dcc.Tab(
+                            label="Confusion Matrix",
+                            children=[
+                                html.Div(
+                                    [
+                                        dcc.Graph(
+                                            id="matrix",
+                                        ),
+                                    ],
+                                    style={"width": "50%", "margin": "auto"},
+                                )
+                            ],
+                        ),
+                    ]
+                )
+            ],
+        )
+
+        self.cluster_tabs_layout = html.Div(
+            [
+                dcc.Tabs(
+                    [
+                        dcc.Tab(
+                            label="Crossplot",
+                            children=[
+                                html.Div(
+                                    [self.axis_layout],
+                                    style={
+                                        "width": "45%",
+                                        "display": "inline-block",
+                                        "vertical-align": "middle",
+                                    },
+                                ),
+                                html.Div(
+                                    [
+                                        self.plot_layout,
+                                    ],
+                                    style={
+                                        "width": "55%",
+                                        "display": "inline-block",
+                                        "vertical-align": "middle",
+                                    },
+                                ),
+                            ],
+                        ),
+                        dcc.Tab(
                             label="Boxplot",
                             children=[
                                 html.Div(
@@ -244,7 +254,7 @@ class Clustering(ScatterPlots):
                         ),
                     ],
                     style={
-                        "width": "45%",
+                        "width": "40%",
                         "display": "inline-block",
                         "vertical-align": "top",
                         "margin-right": "50px",
@@ -253,53 +263,59 @@ class Clustering(ScatterPlots):
                 ),
                 html.Div(
                     [
-                        html.Div(
-                            [
-                                dcc.Markdown("Number of clusters: "),
-                                dcc.Slider(
-                                    id="n_clusters",
-                                    min=2,
-                                    max=100,
-                                    step=1,
-                                    value=self.defaults["n_clusters"],
-                                    marks=None,
-                                    tooltip={
-                                        "placement": "bottom",
-                                        "always_visible": True,
-                                    },
-                                ),
-                                dcc.Markdown("Cluster: "),
-                                dcc.Dropdown(
-                                    id="select_cluster",
-                                    options=np.arange(0, 101, 1),
-                                    value=0,
-                                    style={"margin-bottom": "20px"},
-                                ),
-                            ],
-                            style={
-                                "width": "45%",
-                                "display": "inline-block",
-                                "vertical-align": "top",
-                                "margin-right": "20px",
+                        dcc.Markdown("Number of clusters: "),
+                        dcc.Slider(
+                            id="n_clusters",
+                            min=2,
+                            max=100,
+                            step=1,
+                            value=self.defaults["n_clusters"],
+                            marks=None,
+                            tooltip={
+                                "placement": "bottom",
+                                "always_visible": True,
                             },
                         ),
-                        daq.ColorPicker(
-                            id="color_picker",
-                            value=dict(hex="#000000"),
-                            style={
-                                "width": "45%",
-                                "display": "inline-block",
-                                "vertical-align": "top",
-                            },
+                        dcc.Checklist(
+                            id="show_color_picker",
+                            options=["Select cluster color"],
+                            value=[],
                         ),
                     ],
                     style={
-                        "width": "45%",
+                        "width": "25%",
                         "display": "inline-block",
                         "vertical-align": "top",
                     },
                 ),
-                self.tabs_layout,
+                html.Div(
+                    id="color_select_div",
+                    children=[
+                        dcc.Markdown("Cluster: "),
+                        dcc.Dropdown(
+                            id="select_cluster",
+                            options=np.arange(0, 101, 1),
+                            value=0,
+                            style={"margin-bottom": "20px"},
+                        ),
+                        daq.ColorPicker(
+                            id="color_picker",
+                            value=dict(hex="#000000"),
+                        ),
+                    ],
+                    style={
+                        "width": "25%",
+                        "display": "inline-block",
+                        "vertical-align": "top",
+                    },
+                ),
+                dcc.Checklist(
+                    id="show_norm_tabs",
+                    options=["Data Normalization"],
+                    value=[],
+                ),
+                self.norm_tabs_layout,
+                self.cluster_tabs_layout,
                 dcc.Store(id="dataframe", data={}),
             ],
             style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
@@ -313,6 +329,14 @@ class Clustering(ScatterPlots):
             Output(component_id="size_div", component_property="style"),
             Input(component_id="axes_pannels", component_property="value"),
         )(self.update_visibility)
+        self.app.callback(
+            Output(component_id="color_select_div", component_property="style"),
+            Input(component_id="show_color_picker", component_property="value"),
+        )(self.update_color_select)
+        self.app.callback(
+            Output(component_id="norm_tabs", component_property="style"),
+            Input(component_id="show_norm_tabs", component_property="value"),
+        )(self.update_norm_tabs)
         self.app.callback(
             Output(component_id="x", component_property="options"),
             Output(component_id="y", component_property="options"),
@@ -413,6 +437,18 @@ class Clustering(ScatterPlots):
         self.lower_bounds[defaults["channel"].name] = defaults["lower_bounds"]
         self.upper_bounds[defaults["channel"].name] = defaults["upper_bounds"]
         return defaults
+
+    def update_color_select(self, checkbox):
+        if not checkbox:
+            return {"display": "none"}
+        else:
+            return {"width": "25%", "display": "inline-block", "vertical-align": "top"}
+
+    def update_norm_tabs(self, checkbox):
+        if not checkbox:
+            return {"display": "none"}
+        else:
+            return {"display": "block"}
 
     def get_data_channels(self, channels):
         data_channels = {}
@@ -847,7 +883,6 @@ class Clustering(ScatterPlots):
             rtol=1e0,
             method="histogram",
         )
-        print(size)
         return indices, values.T
 
     def run(self):
