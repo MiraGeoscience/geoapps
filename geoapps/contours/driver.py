@@ -111,7 +111,7 @@ class ContoursDriver:
                     ): {"values": np.hstack(values)}
                 }
             )
-            
+
             workspace.close()
 
     @staticmethod
