@@ -73,7 +73,7 @@ class Clustering(ScatterPlots):
                                 html.Div(
                                     [self.axis_layout],
                                     style={
-                                        "width": "40%",
+                                        "width": "45%",
                                         "display": "inline-block",
                                         "vertical-align": "middle",
                                     },
@@ -83,7 +83,7 @@ class Clustering(ScatterPlots):
                                         self.plot_layout,
                                     ],
                                     style={
-                                        "width": "60%",
+                                        "width": "55%",
                                         "display": "inline-block",
                                         "vertical-align": "middle",
                                     },
@@ -126,7 +126,8 @@ class Clustering(ScatterPlots):
                                         dcc.Graph(
                                             id="matrix",
                                         ),
-                                    ]
+                                    ],
+                                    style={"width": "50%", "margin": "auto"},
                                 )
                             ],
                         ),
@@ -135,37 +136,58 @@ class Clustering(ScatterPlots):
                             children=[
                                 html.Div(
                                     [
-                                        dcc.Dropdown(
-                                            id="channel",
-                                            value=self.defaults["channel"].name,
-                                            options=[
-                                                self.defaults["x"].name,
-                                                self.defaults["y"].name,
-                                                self.defaults["z"].name,
-                                                self.defaults["color"].name,
-                                                self.defaults["size"].name,
+                                        html.Div(
+                                            [
+                                                dcc.Markdown("Data: "),
+                                                dcc.Dropdown(
+                                                    id="channel",
+                                                    value=self.defaults["channel"].name,
+                                                    options=[
+                                                        self.defaults["x"].name,
+                                                        self.defaults["y"].name,
+                                                        self.defaults["z"].name,
+                                                        self.defaults["color"].name,
+                                                        self.defaults["size"].name,
+                                                    ],
+                                                ),
+                                                dcc.Markdown("Scale: "),
+                                                dcc.Slider(
+                                                    id="scale",
+                                                    min=1,
+                                                    max=10,
+                                                    step=1,
+                                                    value=self.defaults["scale"],
+                                                    marks=None,
+                                                    tooltip={
+                                                        "placement": "bottom",
+                                                        "always_visible": True,
+                                                    },
+                                                ),
+                                                dcc.Markdown("Lower bound: "),
+                                                dcc.Input(
+                                                    id="lower_bounds",
+                                                    value=self.defaults["lower_bounds"],
+                                                ),
+                                                dcc.Markdown("Upper bound: "),
+                                                dcc.Input(
+                                                    id="upper_bounds",
+                                                    value=self.defaults["upper_bounds"],
+                                                ),
                                             ],
-                                        ),
-                                        dcc.Markdown("Scale"),
-                                        dcc.Slider(
-                                            id="scale",
-                                            min=1,
-                                            max=10,
-                                            step=1,
-                                            value=self.defaults["scale"],
-                                        ),
-                                        dcc.Markdown("Lower bound"),
-                                        dcc.Input(
-                                            id="lower_bounds",
-                                            value=self.defaults["lower_bounds"],
-                                        ),
-                                        dcc.Markdown("Upper bound"),
-                                        dcc.Input(
-                                            id="upper_bounds",
-                                            value=self.defaults["upper_bounds"],
+                                            style={
+                                                "width": "200px",
+                                                "display": "inline-block",
+                                                "vertical-align": "middle",
+                                                "margin-right": "50px",
+                                            },
                                         ),
                                         dcc.Graph(
                                             id="histogram",
+                                            style={
+                                                "width": "70%",
+                                                "display": "inline-block",
+                                                "vertical-align": "middle",
+                                            },
                                         ),
                                     ]
                                 )
@@ -179,7 +201,8 @@ class Clustering(ScatterPlots):
                                         dcc.Graph(
                                             id="boxplot",
                                         )
-                                    ]
+                                    ],
+                                    style={"width": "50%", "margin": "auto"},
                                 )
                             ],
                         ),
@@ -191,7 +214,8 @@ class Clustering(ScatterPlots):
                                         dcc.Graph(
                                             id="inertia",
                                         )
-                                    ]
+                                    ],
+                                    style={"width": "50%", "margin": "auto"},
                                 )
                             ],
                         ),
@@ -599,16 +623,8 @@ class Clustering(ScatterPlots):
 
             inertia_plot = go.Figure([line, point])
 
-            """if getattr(self, "inertia_plot", None) is None:
-                inertia_plot = go.Figure([line, point])
-            else:
-                inertia_plot.data = []
-                inertia_plot.add_trace(line)
-                inertia_plot.add_trace(point)"""
             inertia_plot.update_layout(
                 {
-                    "height": 300,
-                    "width": 400,
                     "xaxis": {"title": "Number of clusters"},
                     "showlegend": False,
                 }
