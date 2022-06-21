@@ -29,7 +29,7 @@ class ContoursDriver:
         self._unique_object = {}
 
     def run(self):
-
+        workspace = self.params.geoh5
         entity = self.params.objects
         data = self.params.data
 
@@ -81,7 +81,7 @@ class ContoursDriver:
                         ]
 
             curve = Curve.create(
-                self.params.geoh5,
+                workspace,
                 name=string_name(self.params.export_as),
                 vertices=vertices,
                 cells=np.vstack(cells).astype("uint32"),
@@ -89,7 +89,7 @@ class ContoursDriver:
             out_entity = curve
             if len(self.params.ga_group_name) > 0:
                 out_entity = ContainerGroup.create(
-                    self.params.geoh5, name=string_name(self.params.ga_group_name)
+                    workspace, name=string_name(self.params.ga_group_name)
                 )
                 curve.parent = out_entity
 
@@ -103,6 +103,8 @@ class ContoursDriver:
                     ): {"values": np.hstack(values)}
                 }
             )
+
+            workspace.close()
 
     @staticmethod
     def get_contour_string(min, max, step, fixed_contours):
