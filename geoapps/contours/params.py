@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import numpy as np
 from geoh5py.data import Data
-from geoh5py.objects import ObjectBase
+from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
 from geoh5py.ui_json import InputFile
 
 from geoapps.contours.constants import default_ui_json, defaults, validations
@@ -51,6 +52,50 @@ class ContoursParams(BaseParams):
             )
 
         super().__init__(input_file=input_file, **kwargs)
+
+    def set_window_params(self):
+        # Fetch vertices in the project
+        lim_x = [1e8, -1e8]
+        lim_y = [1e8, -1e8]
+
+        obj = self.objects
+        if isinstance(obj, Grid2D):
+            lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
+            lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
+        elif isinstance(obj, (Points, Curve, Surface)):
+            lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
+            lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
+        else:
+            return
+
+        width = lim_x[1] - lim_x[0]
+        height = lim_y[1] - lim_y[0]
+
+        if self.window_center_x is None:
+            self.window_center_x = np.mean(lim_x)
+        if self.window_center_y is None:
+            self.window_center_y = np.mean(lim_y)
+        if self.window_width is None:
+            self.window_width = (width * 1.2) / 2.0
+        if self.window_height is None:
+            self.window_height = (height * 1.2) / 2.0
+
+    @property
+    def window(self) -> dict[str, float] | None:
+        """Returns window dictionary"""
+        self.set_window_params()
+        win = {
+            "azimuth": self.window_azimuth,
+            "center_x": self.window_center_x,
+            "center_y": self.window_center_y,
+            "width": self.window_width,
+            "height": self.window_height,
+            "center": [self.window_center_x, self.window_center_y],
+            "size": [self.window_width, self.window_height],
+        }
+        check_keys = ["center_x", "center_y", "width", "height"]
+        no_data = all([v is None for k, v in win.items() if k in check_keys])
+        return None if no_data else win
 
     @property
     def objects(self) -> ObjectBase | None:

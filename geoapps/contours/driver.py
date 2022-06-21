@@ -12,7 +12,7 @@ import sys
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, Grid2D, Points, Surface
+from geoh5py.objects import Curve, Points, Surface
 from geoh5py.ui_json import InputFile
 from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
@@ -29,31 +29,24 @@ class ContoursDriver:
         self._unique_object = {}
 
     def run(self):
-        self.set_window_params()
+
         entity = self.params.objects
         data = self.params.data
+
+        contours = get_contours(
+            self.params.interval_min,
+            self.params.interval_max,
+            self.params.interval_spacing,
+            self.params.fixed_contours,
+        )
 
         _, _, _, _, contour_set = plot_plan_data_selection(
             entity,
             data,
-            **{
-                "axis": axes(),
-                "resolution": self.params.resolution,
-                "window": {
-                    "center": [
-                        self.params.window_center_x,
-                        self.params.window_center_y,
-                    ],
-                    "size": [self.params.window_width, self.params.window_height],
-                    "azimuth": self.params.window_azimuth,
-                },
-                "contours": get_contours(
-                    self.params.interval_min,
-                    self.params.interval_max,
-                    self.params.interval_spacing,
-                    self.params.fixed_contours,
-                ),
-            },
+            axis=axes(),
+            resolution=self.params.resolution,
+            window=self.params.window,
+            contours=contours,
         )
 
         if contour_set is not None:
@@ -122,33 +115,6 @@ class ContoursDriver:
             contour_string += "," + str(fixed_contours.replace(" ", ""))
 
         return contour_string
-
-    def set_window_params(self):
-        # Fetch vertices in the project
-        lim_x = [1e8, -1e8]
-        lim_y = [1e8, -1e8]
-
-        obj = self.params.objects
-        if isinstance(obj, Grid2D):
-            lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
-            lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
-        elif isinstance(obj, (Points, Curve, Surface)):
-            lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
-            lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
-        else:
-            return
-
-        width = lim_x[1] - lim_x[0]
-        height = lim_y[1] - lim_y[0]
-
-        if self.params.window_center_x is None:
-            self.params.window_center_x = np.mean(lim_x)
-        if self.params.window_center_y is None:
-            self.params.window_center_y = np.mean(lim_y)
-        if self.params.window_width is None:
-            self.params.window_width = (width * 1.2) / 2.0
-        if self.params.window_height is None:
-            self.params.window_height = (height * 1.2) / 2.0
 
 
 if __name__ == "__main__":
