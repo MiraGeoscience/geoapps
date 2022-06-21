@@ -72,6 +72,7 @@ class ScatterPlots:
                                     options=defaults["objects_options"],
                                     value=defaults["objects_name"],
                                     style={"margin-bottom": "20px"},
+                                    clearable=False,
                                 ),
                                 html.Div(
                                     [
@@ -109,6 +110,7 @@ class ScatterPlots:
                                     ],
                                     value="x",
                                     style={"margin-bottom": "20px"},
+                                    clearable=False,
                                 ),
                             ],
                             style={
@@ -783,7 +785,10 @@ class ScatterPlots:
                 param = None
 
             if param is None:
-                new_params_dict[key] = value
+                if key in ["x", "y", "z", "color", "size"]:
+                    new_params_dict[key] = None
+                else:
+                    new_params_dict[key] = value
             elif (
                 (key == "x")
                 | (key == "y")
