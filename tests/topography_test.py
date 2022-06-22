@@ -16,14 +16,14 @@ from geoapps.inversion.components import InversionTopography, InversionWindow
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon_v4.geoh5")
 
 
 def setup_params(tmp):
     d_u_j = deepcopy(default_ui_json)
     geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", d_u_j, MagneticVectorParams)
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
-    geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
+    geotest.set_param("data_object", "{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     return geotest.make()

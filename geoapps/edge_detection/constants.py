@@ -165,8 +165,8 @@ validations = {}
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-    "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
+    "objects": "{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}",
+    "data": "{79d6e38c-7b96-4139-82a3-109c422430df}",
     "sigma": 0.5,
     "window_azimuth": -20.0,
     "ga_group_name": "Edges",

@@ -39,14 +39,14 @@ from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon_v4.geoh5")
 
 
 def setup_params(tmp, ui, params_class):
     geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", ui, params_class)
-    geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
-    geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
-    geotest.set_param("gz_channel", "{6de9177a-8277-4e17-b76c-2b8b05dcf23c}")
+    geotest.set_param("data_object", "{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}")
+    geotest.set_param("tmi_channel", "{3fa540f4-4363-4df4-bc34-a8975367a2d5}")
+    geotest.set_param("gz_channel", "{c359db11-5173-4f15-a778-f2cf6ddc4741}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
@@ -56,7 +56,7 @@ def setup_params(tmp, ui, params_class):
 ######################  Setup  ###########################
 
 tmpfile = lambda path: os.path.join(path, "test.ui.json")
-wrkstr = "FlinFlon.geoh5"
+wrkstr = "FlinFlon_v4.geoh5"
 geoh5 = Workspace(wrkstr)
 
 
@@ -65,7 +65,7 @@ def tmp_input_file(filepath, idict):
         json.dump(idict, f)
 
 
-mvi_init["geoh5"] = "./FlinFlon.geoh5"
+mvi_init["geoh5"] = "./FlinFlon_v4.geoh5"
 mvi_params = MagneticVectorParams(**mvi_init)
 
 
@@ -103,7 +103,7 @@ def param_test_generator(tmp_path, param, value):
 
 def test_write_input_file_validation(tmp_path):
 
-    grav_init["geoh5"] = "./FlinFlon.geoh5"
+    grav_init["geoh5"] = "./FlinFlon_v4.geoh5"
     params = GravityParams(validate=False, **grav_init)
     params.starting_model = None
     params.validate = True
@@ -359,7 +359,7 @@ def test_validate_topography(tmp_path):
 
 def test_validate_data_object(tmp_path):
     param = "data_object"
-    newval = UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
+    newval = UUID("{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}")
     param_test_generator(tmp_path, param, newval)
     newval = uuid4()
     catch_invalid_generator(tmp_path, param, newval, "association")
@@ -368,7 +368,7 @@ def test_validate_data_object(tmp_path):
 
 def test_validate_tmi_channel(tmp_path):
     param = "tmi_channel"
-    newval = UUID("{44822654-b6ae-45b0-8886-2d845f80f422}")
+    newval = UUID("{3fa540f4-4363-4df4-bc34-a8975367a2d5}")
     param_test_generator(tmp_path, param, newval)
     newval = uuid4()
     catch_invalid_generator(tmp_path, param, newval, "association")
@@ -447,7 +447,7 @@ def test_validate_tile_spatial(tmp_path):
 
 def test_validate_receivers_radar_drape(tmp_path):
     param = "receivers_radar_drape"
-    newval = UUID("{44822654-b6ae-45b0-8886-2d845f80f422}")
+    newval = UUID("{3fa540f4-4363-4df4-bc34-a8975367a2d5}")
     param_test_generator(tmp_path, param, newval)
     newval = uuid4()
     catch_invalid_generator(tmp_path, param, newval, "association")
@@ -813,8 +813,8 @@ def test_validate_n_cpu(tmp_path):
 
 grav_params = GravityParams(
     **{
-        "geoh5": "./FlinFlon.geoh5",
-        "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+        "geoh5": "./FlinFlon_v4.geoh5",
+        "data_object": UUID("{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}"),
     }
 )
 
@@ -1304,8 +1304,8 @@ def test_gy_uncertainty():
 
 mag_params = MagneticScalarParams(
     **{
-        "geoh5": "./FlinFlon.geoh5",
-        "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+        "geoh5": "./FlinFlon_v4.geoh5",
+        "data_object": UUID("{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}"),
     }
 )
 

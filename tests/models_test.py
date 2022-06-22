@@ -25,7 +25,7 @@ from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils import rotate_xy
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon_v4.geoh5")
 
 
 def setup_params(path):
@@ -33,9 +33,9 @@ def setup_params(path):
     geotest = Geoh5Tester(
         geoh5, path, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
     )
-    geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
+    geotest.set_param("data_object", "{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}")
     geotest.set_param("tmi_channel_bool", True)
-    geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
+    geotest.set_param("tmi_channel", "{3fa540f4-4363-4df4-bc34-a8975367a2d5}")
     geotest.set_param("window_center_x", 314183.0)
     geotest.set_param("window_center_y", 6071014.0)
     geotest.set_param("window_width", 1000.0)

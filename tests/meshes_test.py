@@ -22,7 +22,7 @@ from geoapps.inversion.components import (
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon_v4.geoh5")
 
 
 def setup_params(tmp):
@@ -30,10 +30,10 @@ def setup_params(tmp):
         geoh5, tmp, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
     )
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
-    geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
+    geotest.set_param("data_object", "{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     geotest.set_param("tmi_channel_bool", True)
-    geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
+    geotest.set_param("tmi_channel", "{3fa540f4-4363-4df4-bc34-a8975367a2d5}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     geotest.set_param("out_group", "MVIInversion")
     return geotest.make()

@@ -38,9 +38,9 @@ class Export(ObjectDataSelection):
 
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+        "objects": "{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}",
         "data": [
-            "{44822654-b6ae-45b0-8886-2d845f80f422}",
+            "{3fa540f4-4363-4df4-bc34-a8975367a2d5}",
             "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
         ],
         "epsg_code": "EPSG:26914",

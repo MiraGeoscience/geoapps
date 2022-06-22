@@ -151,7 +151,7 @@ dmypy.json
 /tests/SimPEG_PFInversion/*
 /tests/GEOSCIENCEtemp
 /tests/Gravity*
-/tests/FlinFlon.geoh5
+/tests/FlinFlon_v4.geoh5
 /tests/Inversion_.json
 /tests/run*
 /assets/Temp/*

@@ -7,8 +7,8 @@
 
 import requests
 
-project = "FlinFlon.geoh5"
-url = "https://github.com/MiraGeoscience/geoapps/raw/main/assets/FlinFlon.geoh5"
+project = "FlinFlon_v4.geoh5"
+url = "https://github.com/MiraGeoscience/geoapps/raw/main/assets/FlinFlon_v4.geoh5"
 r = requests.get(url)
 open(project, "wb").write(r.content)
 

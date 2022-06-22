@@ -575,8 +575,8 @@ validations = dict(base_validations, **validations)
 app_initializer = {
     "geoh5": "../../../assets/FlinFlon.geoh5",
     "forward_only": False,
-    "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-    "gz_channel": UUID("{6de9177a-8277-4e17-b76c-2b8b05dcf23c}"),
+    "data_object": UUID("{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}"),
+    "gz_channel": UUID("{c359db11-5173-4f15-a778-f2cf6ddc4741}"),
     "gz_uncertainty": 0.05,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
