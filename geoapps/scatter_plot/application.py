@@ -114,7 +114,7 @@ class ScatterPlots:
                         ),
                     ],
                     style={
-                        "width": "40%",
+                        # "width": "40%",
                         "display": "block",
                         "vertical-align": "top",
                     },
@@ -127,7 +127,7 @@ class ScatterPlots:
                             id="x",
                             options=defaults["data_options"],
                             value=defaults["x_name"],
-                            style={"width": "63.3%", "margin-bottom": "20px"},
+                            style={"margin-bottom": "20px"},
                         ),
                         html.Div(
                             [
@@ -174,6 +174,11 @@ class ScatterPlots:
                                         "margin-right": "20px",
                                     },
                                 ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
                                 dcc.Markdown(
                                     children="Max: ",
                                     style={
@@ -205,7 +210,7 @@ class ScatterPlots:
                             id="y",
                             options=defaults["data_options"],
                             value=defaults["y_name"],
-                            style={"width": "63.3%", "margin-bottom": "20px"},
+                            style={"margin-bottom": "20px"},
                         ),
                         html.Div(
                             [
@@ -252,6 +257,11 @@ class ScatterPlots:
                                         "margin-right": "20px",
                                     },
                                 ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
                                 dcc.Markdown(
                                     children="Max: ",
                                     style={
@@ -283,7 +293,7 @@ class ScatterPlots:
                             id="z",
                             options=defaults["data_options"],
                             value=defaults["z_name"],
-                            style={"width": "63.3%", "margin-bottom": "20px"},
+                            style={"margin-bottom": "20px"},
                         ),
                         html.Div(
                             [
@@ -330,6 +340,11 @@ class ScatterPlots:
                                         "margin-right": "20px",
                                     },
                                 ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
                                 dcc.Markdown(
                                     children="Max: ",
                                     style={
@@ -361,13 +376,13 @@ class ScatterPlots:
                             id="color",
                             options=defaults["data_options"],
                             value=defaults["color_name"],
-                            style={"width": "63.3%", "margin-bottom": "20px"},
+                            style={"margin-bottom": "20px"},
                         ),
                         dcc.Dropdown(
                             id="color_maps",
                             options=px.colors.named_colorscales(),
                             value=defaults["color_maps"],
-                            style={"width": "63.3%", "margin-bottom": "20px"},
+                            style={"margin-bottom": "20px"},
                         ),
                         html.Div(
                             [
@@ -414,6 +429,11 @@ class ScatterPlots:
                                         "margin-right": "20px",
                                     },
                                 ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
                                 dcc.Markdown(
                                     children="Max: ",
                                     style={
@@ -445,7 +465,7 @@ class ScatterPlots:
                             id="size",
                             options=defaults["data_options"],
                             value=defaults["size_name"],
-                            style={"width": "63.3%", "margin-bottom": "20px"},
+                            style={"margin-bottom": "20px"},
                         ),
                         html.Div(
                             [
@@ -469,7 +489,7 @@ class ScatterPlots:
                                     },
                                 ),
                             ],
-                            style={"width": "40%", "margin-bottom": "20px"},
+                            style={"width": "80%", "margin-bottom": "20px"},
                         ),
                         html.Div(
                             [
@@ -516,6 +536,11 @@ class ScatterPlots:
                                         "margin-right": "20px",
                                     },
                                 ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
                                 dcc.Markdown(
                                     children="Max: ",
                                     style={
@@ -548,10 +573,11 @@ class ScatterPlots:
                 html.Div(
                     [self.workspace_layout, self.axis_layout],
                     style={
-                        "width": "55%",
+                        "width": "40%",
                         "display": "inline-block",
                         "margin-bottom": "20px",
                         "vertical-align": "bottom",
+                        "margin-right": "20px",
                     },
                 ),
                 html.Div(
@@ -565,7 +591,7 @@ class ScatterPlots:
                         ),
                     ],
                     style={
-                        "width": "45%",
+                        "width": "55%",
                         "display": "inline-block",
                         "margin-bottom": "20px",
                         "vertical-align": "bottom",
