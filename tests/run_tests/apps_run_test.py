@@ -127,7 +127,6 @@ def test_edge_detection(tmp_path):
     app = EdgeDetectionApp(geoh5=temp_workspace, plot_result=False)
 
     app.trigger_click(None)
-    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         assert (
