@@ -9,17 +9,19 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 import webbrowser
-from os import environ
+from os import environ, makedirs, path
 
 import dash_daq as daq
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from dash import dash_table, dcc, html
+from dash import callback_context, dash_table, dcc, html
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.ui_json import InputFile
+from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
@@ -27,7 +29,7 @@ from sklearn.cluster import KMeans
 from geoapps.clustering.constants import app_initializer
 from geoapps.clustering.params import ClusteringParams
 from geoapps.scatter_plot.application import ScatterPlots
-from geoapps.shared_utils.utils import colors
+from geoapps.shared_utils.utils import colors, hex_to_rgb
 from geoapps.utils.statistics import random_sampling
 
 
@@ -50,7 +52,7 @@ class Clustering(ScatterPlots):
         self.indices = []
         self.mapping = None
         self.color_pickers = colors
-
+        self.live_link = False
         # Initial values for the dash components
         super().__init__(**self.params.to_dict())
         self.defaults = self.get_cluster_defaults()
@@ -281,6 +283,9 @@ class Clustering(ScatterPlots):
                             options=["Select cluster color"],
                             value=[],
                         ),
+                        dcc.Input(id="ga_group", value="test"),
+                        html.Button("Export", id="export"),
+                        dcc.Markdown(id="export_message"),
                     ],
                     style={
                         "width": "25%",
@@ -405,11 +410,14 @@ class Clustering(ScatterPlots):
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
         )(self.update_plots)
-
-        """self.app.callback(
-            Output(component_id="download", component_property="href"),
-            Input(component_id="plot", component_property="figure"),
-        )(self.save_figure)"""
+        self.app.callback(
+            Output(component_id="export_message", component_property="children"),
+            Input(component_id="export", component_property="n_clicks"),
+            Input(component_id="dataframe", component_property="data"),
+            Input(component_id="objects", component_property="value"),
+            Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="ga_group", component_property="value"),
+        )(self.export_clusters)
 
     def get_cluster_defaults(self):
         defaults = {}
@@ -884,6 +892,103 @@ class Clustering(ScatterPlots):
             method="histogram",
         )
         return indices, values.T
+
+    def get_output_workspace(self, workpath: str = "./", name: str = "Temp.geoh5"):
+        """
+        Create an active workspace with check for GA monitoring directory
+        """
+        if not name.endswith(".geoh5"):
+            name += ".geoh5"
+
+        workspace = Workspace(path.join(workpath, name))
+        workspace.close()
+        live_link = False
+        time.sleep(1)
+        # Check if GA digested the file already
+        if not path.exists(workspace.h5file):
+            workpath = path.join(workpath, ".working")
+            if not path.exists(workpath):
+                makedirs(workpath)
+            workspace = Workspace(path.join(workpath, name))
+            workspace.close()
+            live_link = True
+            if not self.live_link:
+                print(
+                    "ANALYST Pro active live link found. Switching to monitoring directory..."
+                )
+        elif self.live_link:
+            print(
+                "ANALYST Pro 'monitoring directory' inactive. Reverting to standalone mode..."
+            )
+
+        self.live_link = live_link
+
+        workspace.open()
+        return workspace
+
+    def export_clusters(self, n_clicks, dataframe, objects, n_clusters, group_name):
+        """
+        Write cluster groups to the target geoh5 object.
+        """
+        if (
+            self.kmeans is not None
+            and callback_context.triggered[0]["prop_id"].split(".")[0] == "export"
+        ):
+            obj = self.params.objects  # ***
+
+            # Create reference values and color_map
+            group_map, color_map = {}, []
+            cluster_values = self.kmeans + 1
+            # cluster_values = self.data_channels["kmeans"] + 1
+            # cluster_values[self._inactive_set] = 0
+            for ii in range(n_clusters):
+                colorpicker = self.color_pickers[ii]
+                color = colorpicker.lstrip("#")
+                group_map[ii + 1] = f"Cluster_{ii}"
+                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+
+            color_map = np.core.records.fromarrays(
+                np.vstack(color_map).T,
+                names=["Value", "Red", "Green", "Blue", "Alpha"],
+            )
+
+            # Create reference values and color_map
+            group_map, color_map = {}, []
+            for ii in range(n_clusters):
+                colorpicker = self.color_pickers[ii]
+                color = colorpicker.lstrip("#")
+                group_map[ii + 1] = f"Cluster_{ii}"
+                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+
+            color_map = np.core.records.fromarrays(
+                np.vstack(color_map).T,
+                names=["Value", "Red", "Green", "Blue", "Alpha"],
+            )
+
+            if self.params.monitoring_directory:
+                output_path = self.params.monitoring_directory
+                # monitored_directory_copy(self.export_directory.selected_path, obj)
+            else:
+                output_path = os.path.dirname(self.params.geoh5.h5file)
+
+            temp_geoh5 = f"Clustering_{time.time():.3f}.geoh5"
+            with self.get_output_workspace(output_path, temp_geoh5) as workspace:
+                obj = obj.copy(parent=workspace)
+                cluster_groups = obj.add_data(
+                    {
+                        group_name: {
+                            "type": "referenced",
+                            "values": cluster_values,
+                            "value_map": group_map,
+                        }
+                    }
+                )
+                cluster_groups.entity_type.color_map = {
+                    "name": "Cluster Groups",
+                    "values": color_map,
+                }
+
+            return "Saved to " + output_path + "/" + temp_geoh5
 
     def run(self):
         # The reloader has not yet run - open the browser

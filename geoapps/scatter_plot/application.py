@@ -541,12 +541,6 @@ class ScatterPlots:
                     id="crossplot",
                     style={"margin-bottom": "20px"},
                 ),
-                html.A(
-                    html.Button("Download as HTML"),
-                    id="download",
-                    download="Crossplot.html",
-                    style={"margin-left": "30%"},
-                ),
             ]
         )
         self.app.layout = html.Div(
@@ -563,6 +557,12 @@ class ScatterPlots:
                 html.Div(
                     [
                         self.plot_layout,
+                        html.A(
+                            html.Button("Download as HTML"),
+                            id="download",
+                            download="Crossplot.html",
+                            style={"margin-left": "30%"},
+                        ),
                     ],
                     style={
                         "width": "45%",
