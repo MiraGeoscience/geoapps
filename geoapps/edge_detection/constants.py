@@ -164,7 +164,7 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": "../../assets/FlinFlon_v4.geoh5",
     "objects": "{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}",
     "data": "{79d6e38c-7b96-4139-82a3-109c422430df}",
     "sigma": 0.5,

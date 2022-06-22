@@ -600,7 +600,7 @@ validations = {
 validations = dict(base_validations, **validations)
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": "../../assets/FlinFlon_v4.geoh5",
     "forward_only": False,
     "data_object": UUID("{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}"),
     "tmi_channel": UUID("{3fa540f4-4363-4df4-bc34-a8975367a2d5}"),
