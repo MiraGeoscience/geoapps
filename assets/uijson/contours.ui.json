@@ -69,47 +69,39 @@
     },
     "window_azimuth": {
         "group": "Figure Options",
+        "groupOptional": true,
         "main": true,
         "label": "Azimuth",
         "min": -90.0,
         "max": 90.0,
         "value": 0.0,
-        "optional": true,
         "enabled": false
     },
     "window_center_x": {
         "group": "Figure Options",
         "main": true,
         "label": "Easting",
-        "value": 0.0,
-        "optional": true,
-        "enabled": false
+        "value": 0.0
     },
     "window_center_y": {
         "group": "Figure Options",
         "main": true,
         "label": "Northing",
-        "value": 0.0,
-        "optional": true,
-        "enabled": false
+        "value": 0.0
     },
     "window_width": {
         "group": "Figure Options",
         "main": true,
         "label": "Width",
         "min": 0.0,
-        "value": 100.0,
-        "optional": true,
-        "enabled": false
+        "value": 100.0
     },
     "window_height": {
         "group": "Figure Options",
         "main": true,
         "label": "Height",
         "min": 0.0,
-        "value": 100.0,
-        "optional": true,
-        "enabled": false
+        "value": 100.0
     },
     "export_as": {
         "main": true,

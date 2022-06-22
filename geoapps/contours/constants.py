@@ -20,6 +20,7 @@ defaults = {
     "fixed_contours": None,
     "resolution": None,
     "ga_group_name": None,
+    "window_azimuth": None,
     "run_command": "geoapps.contours.driver",
     "run_command_boolean": False,
     "workspace_geoh5": None,
@@ -93,12 +94,12 @@ default_ui_json.update(
         },
         "window_azimuth": {
             "group": "Figure Options",
+            "groupOptional": True,
             "main": True,
             "label": "Azimuth",
             "min": -90.0,
             "max": 90.0,
             "value": 0.0,
-            "optional": True,
             "enabled": False,
         },
         "window_center_x": {
@@ -106,16 +107,12 @@ default_ui_json.update(
             "main": True,
             "label": "Easting",
             "value": 0.0,
-            "optional": True,
-            "enabled": False,
         },
         "window_center_y": {
             "group": "Figure Options",
             "main": True,
             "label": "Northing",
             "value": 0.0,
-            "optional": True,
-            "enabled": False,
         },
         "window_width": {
             "group": "Figure Options",
@@ -123,8 +120,6 @@ default_ui_json.update(
             "label": "Width",
             "min": 0.0,
             "value": 100.0,
-            "optional": True,
-            "enabled": False,
         },
         "window_height": {
             "group": "Figure Options",
@@ -132,8 +127,6 @@ default_ui_json.update(
             "label": "Height",
             "min": 0.0,
             "value": 100.0,
-            "optional": True,
-            "enabled": False,
         },
         "export_as": {
             "main": True,
@@ -170,4 +163,9 @@ app_initializer = {
     "fixed_contours": "-240",
     "resolution": 50.0,
     "ga_group_name": "Contours",
+    "window_azimuth": -20.0,
+    "window_center_x": 315566.45,
+    "window_center_y": 6070767.72,
+    "window_width": 4401.30,
+    "window_height": 6811.12,
 }

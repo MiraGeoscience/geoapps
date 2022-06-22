@@ -76,9 +76,9 @@ class ContoursParams(BaseParams):
         if self.window_center_y is None:
             self.window_center_y = np.mean(lim_y)
         if self.window_width is None:
-            self.window_width = (width * 1.2) / 2.0
+            self.window_width = width
         if self.window_height is None:
-            self.window_height = (height * 1.2) / 2.0
+            self.window_height = height
 
     @property
     def window(self) -> dict[str, float] | None:
