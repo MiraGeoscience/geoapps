@@ -35,10 +35,10 @@ from geoapps.shared_utils.utils import (
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
+from geoapps.utils.models import RectangularBlock
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
-from geoapps.utils.models import RectangularBlock
 
 geoh5 = Workspace("./FlinFlon.geoh5")
 
@@ -62,27 +62,17 @@ def test_rectangular_block():
     assert [5.0, 15.0, 15.0] in block.vertices
 
     block = RectangularBlock(
-        center=[0.0, 0.0, 0.0],
-        length=0.0,
-        width=10.0,
-        depth=0.0,
-        dip=45,
-        azimuth=0.0
+        center=[0.0, 0.0, 0.0], length=0.0, width=10.0, depth=0.0, dip=45, azimuth=0.0
     )
-    pos = 5*np.cos(np.deg2rad(45))
+    pos = 5 * np.cos(np.deg2rad(45))
     assert [pos, 0.0, pos] in block.vertices.round(0)
     assert [-pos, 0.0, -pos] in block.vertices.round(0)
 
     block = RectangularBlock(
-        center=[0.0, 0.0, 0.0],
-        length=10.0,
-        width=10.0,
-        depth=10.0,
-        dip=0,
-        azimuth=45.0
+        center=[0.0, 0.0, 0.0], length=10.0, width=10.0, depth=10.0, dip=0, azimuth=45.0
     )
 
-    pos = 10*np.cos(np.deg2rad(45))
+    pos = 10 * np.cos(np.deg2rad(45))
     assert [0.0, -pos, -5.0] in block.vertices.round(0)
     assert [pos, 0.0, -5.0] in block.vertices.round(0)
     assert [-pos, 0.0, -5.0] in block.vertices.round(0)
@@ -91,6 +81,7 @@ def test_rectangular_block():
     assert [pos, 0.0, 5.0] in block.vertices.round(0)
     assert [-pos, 0.0, 5.0] in block.vertices.round(0)
     assert [0.0, pos, 5.0] in block.vertices.round(0)
+
 
 def test_find_value():
     labels = ["inversion_01_model", "inversion_01_data", "inversion_02_model"]

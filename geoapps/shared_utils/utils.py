@@ -24,9 +24,6 @@ from scipy.spatial import cKDTree
 from geoapps.utils.string import string_to_numeric
 
 
-
-
-
 def hex_to_rgb(hex):
     """
     Convert hex color code to RGB
