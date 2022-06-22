@@ -110,7 +110,7 @@ default_ui_json.update(
             "label": "Azimuth",
             "min": -90.0,
             "max": 90.0,
-            "value": 0.0
+            "value": 0.0,
         },
         "window_center_x": {
             "group": "Window",
