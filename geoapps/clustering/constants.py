@@ -81,6 +81,12 @@ default_ui_json.update(
             "precision": 1,
             "lineEdit": False,
         },
+        "ga_group_name": {
+            "main": True,
+            "label": "Group",
+            "value": "",
+            "group": "Python run preferences",
+        },
         "conda_environment": "geoapps",
         "run_command": "geoapps.scatter_plot.application",
     }
