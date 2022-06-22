@@ -344,46 +344,6 @@ class Clustering(ScatterPlots):
         )(self.update_norm_tabs)
 
         self.app.callback(
-            Output(component_id="crossplot", component_property="figure"),
-            Output(component_id="stats_table", component_property="data"),
-            Output(component_id="matrix", component_property="figure"),
-            Output(component_id="histogram", component_property="figure"),
-            Output(component_id="boxplot", component_property="figure"),
-            Output(component_id="inertia", component_property="figure"),
-            Input(component_id="n_clusters", component_property="value"),
-            Input(component_id="select_cluster", component_property="value"),
-            Input(component_id="dataframe", component_property="data"),
-            Input(component_id="channel", component_property="value"),
-            Input(component_id="downsampling", component_property="value"),
-            Input(component_id="x", component_property="value"),
-            Input(component_id="x_log", component_property="value"),
-            Input(component_id="x_thresh", component_property="value"),
-            Input(component_id="x_min", component_property="value"),
-            Input(component_id="x_max", component_property="value"),
-            Input(component_id="y", component_property="value"),
-            Input(component_id="y_log", component_property="value"),
-            Input(component_id="y_thresh", component_property="value"),
-            Input(component_id="y_min", component_property="value"),
-            Input(component_id="y_max", component_property="value"),
-            Input(component_id="z", component_property="value"),
-            Input(component_id="z_log", component_property="value"),
-            Input(component_id="z_thresh", component_property="value"),
-            Input(component_id="z_min", component_property="value"),
-            Input(component_id="z_max", component_property="value"),
-            Input(component_id="color", component_property="value"),
-            Input(component_id="color_log", component_property="value"),
-            Input(component_id="color_thresh", component_property="value"),
-            Input(component_id="color_min", component_property="value"),
-            Input(component_id="color_max", component_property="value"),
-            Input(component_id="color_picker", component_property="value"),
-            Input(component_id="size", component_property="value"),
-            Input(component_id="size_log", component_property="value"),
-            Input(component_id="size_thresh", component_property="value"),
-            Input(component_id="size_min", component_property="value"),
-            Input(component_id="size_max", component_property="value"),
-            Input(component_id="size_markers", component_property="value"),
-        )(self.update_plots)
-        self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
             Output(component_id="downsampling", component_property="value"),
@@ -442,8 +402,48 @@ class Clustering(ScatterPlots):
             Input(component_id="upper_bounds", component_property="value"),
             Input(component_id="downsampling", component_property="value"),
             Input(component_id="select_cluster", component_property="value"),
-            prevent_initial_call=True,
+            # prevent_initial_call=True,
         )(self.update_cluster_params)
+        self.app.callback(
+            Output(component_id="crossplot", component_property="figure"),
+            Output(component_id="stats_table", component_property="data"),
+            Output(component_id="matrix", component_property="figure"),
+            Output(component_id="histogram", component_property="figure"),
+            Output(component_id="boxplot", component_property="figure"),
+            Output(component_id="inertia", component_property="figure"),
+            Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="select_cluster", component_property="value"),
+            Input(component_id="dataframe", component_property="data"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="downsampling", component_property="value"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="x_log", component_property="value"),
+            Input(component_id="x_thresh", component_property="value"),
+            Input(component_id="x_min", component_property="value"),
+            Input(component_id="x_max", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="y_log", component_property="value"),
+            Input(component_id="y_thresh", component_property="value"),
+            Input(component_id="y_min", component_property="value"),
+            Input(component_id="y_max", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="z_log", component_property="value"),
+            Input(component_id="z_thresh", component_property="value"),
+            Input(component_id="z_min", component_property="value"),
+            Input(component_id="z_max", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="color_log", component_property="value"),
+            Input(component_id="color_thresh", component_property="value"),
+            Input(component_id="color_min", component_property="value"),
+            Input(component_id="color_max", component_property="value"),
+            Input(component_id="color_picker", component_property="value"),
+            Input(component_id="size", component_property="value"),
+            Input(component_id="size_log", component_property="value"),
+            Input(component_id="size_thresh", component_property="value"),
+            Input(component_id="size_min", component_property="value"),
+            Input(component_id="size_max", component_property="value"),
+            Input(component_id="size_markers", component_property="value"),
+        )(self.update_plots)
         self.app.callback(
             Output(component_id="export_message", component_property="children"),
             Input(component_id="export", component_property="n_clicks"),
@@ -451,6 +451,7 @@ class Clustering(ScatterPlots):
             Input(component_id="objects", component_property="value"),
             Input(component_id="n_clusters", component_property="value"),
             Input(component_id="ga_group", component_property="value"),
+            prevent_initial_call=True,
         )(self.export_clusters)
 
     def get_cluster_defaults(self):
@@ -593,6 +594,7 @@ class Clustering(ScatterPlots):
             "size_markers",
             "filename",
             "contents",
+            "channels_options",
             "scale",
             "lower_bounds",
             "upper_bounds",
@@ -611,7 +613,11 @@ class Clustering(ScatterPlots):
                 update_dict = self.update_object_options(contents)
                 # update data subset ***
                 update_dict.update(
-                    self.update_data_options(update_dict["objects_name"])
+                    {
+                        "channels_options": self.update_data_options(objects)[
+                            "data_options"
+                        ]
+                    }
                 )
             else:
                 print("Uploaded file must be a workspace or ui.json.")
@@ -620,50 +626,33 @@ class Clustering(ScatterPlots):
 
         elif trigger == "objects":
             # Update data subset options from object change
-            # update_dict = self.update_data_options(objects)
-            pass
+            update_dict = {
+                "channels_options": self.update_data_options(objects)["data_options"]
+            }
 
         elif trigger == "select_cluster":
             # Update color displayed by the dash colorpicker
-            self.update_color_picker
+            update_dict = self.update_color_picker(select_cluster)
             # Output(component_id="color_picker", component_property="value"),
 
         elif trigger in ["x", "y", "z", "color", "size"]:
             # Update min, max values in scatter plot
             update_dict = self.set_channel_bounds(x, y, z, color, size)
 
-        elif trigger in [
-            "downsampling",
-            "scale",
-            "lower_bounds",
-            "upper_bounds",
-            "channel",
-            "channels",
-        ]:
-            # Update dataframe and run clustering
-            self.update_dataframe
-            # Output(component_id="dataframe", component_property="data"),
-            self.run_clustering()
-
+        else:
+            print("test")
+            # Update dataframe
+            update_dict = {
+                "dataframe": self.update_dataframe(
+                    downsampling, channel, channels, scale, lower_bounds, upper_bounds
+                )
+            }
             if trigger == "channel":
                 # Update displayed scale and bounds from stored values
-                self.update_properties
-                """
-                Output(component_id="scale", component_property="value"),
-                Output(component_id="lower_bounds", component_property="value"),
-                Output(component_id="upper_bounds", component_property="value"),
-                """
+                update_dict.update(self.update_properties(channel))
             elif trigger == "channels":
                 # Update data options from data subset
-                self.update_channels
-                """
-                Output(component_id="x", component_property="options"),
-                Output(component_id="y", component_property="options"),
-                Output(component_id="z", component_property="options"),
-                Output(component_id="color", component_property="options"),
-                Output(component_id="size", component_property="options"),
-                Output(component_id="channel", component_property="options"),
-                """
+                update_dict.update(self.update_channels(channels))
 
         outputs = []
         for param in param_list:
@@ -671,6 +660,7 @@ class Clustering(ScatterPlots):
                 outputs.append(update_dict[param])
             else:
                 outputs.append(no_update)
+
         return tuple(outputs)
 
     def update_plots(
