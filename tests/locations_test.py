@@ -17,7 +17,7 @@ from geoapps.inversion.components.locations import InversionLocations
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon_v4.geoh5")
 
 
 def setup_params(tmp):

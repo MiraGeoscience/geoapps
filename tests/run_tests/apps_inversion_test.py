@@ -24,7 +24,7 @@ from geoapps.inversion.potential_fields.application import (
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
-project = "./FlinFlon.geoh5"
+project = "./FlinFlon_v4.geoh5"
 
 geoh5 = Workspace(project)
 
@@ -39,13 +39,13 @@ def test_mag_inversion(tmp_path):
     new_topo = ws.get_entity(UUID("ab3c2083-6ea8-4d31-9230-7aad3ec09525"))[0].copy(
         parent=new_geoh5
     )
-    new_obj = ws.get_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
+    new_obj = ws.get_entity(UUID("{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}"))[0].copy(
         parent=new_geoh5
     )
     topo_val = new_topo.add_data({"elev": {"values": new_topo.vertices[:, 2]}})
     changes = {
         "data_object": new_obj.uid,
-        "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+        "tmi_channel": UUID("{3fa540f4-4363-4df4-bc34-a8975367a2d5}"),
         "inducing_field_inclination": 35,
         "topography_object": new_topo.uid,
         "topography": topo_val.uid,
@@ -77,7 +77,7 @@ def test_mag_inversion(tmp_path):
     objs = params_reload.geoh5.list_entities_name
     check_objs = [
         new_obj.uid,
-        UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+        UUID("{3fa540f4-4363-4df4-bc34-a8975367a2d5}"),
         new_topo.uid,
         topo_val.uid,
     ]

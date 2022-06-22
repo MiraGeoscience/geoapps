@@ -24,7 +24,7 @@ from geoapps.utils.testing import get_output_workspace
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
-PROJECT = "./FlinFlon.geoh5"
+PROJECT = "./FlinFlon_v4.geoh5"
 GEOH5 = Workspace(PROJECT)
 
 
@@ -57,7 +57,7 @@ def test_coordinate_transformation(tmp_path):
 def test_contour_values(tmp_path):
     temp_workspace = path.join(tmp_path, "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
-        GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
+        GEOH5.get_entity(uuid.UUID("{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}"))[0].copy(
             parent=workspace
         )
 
@@ -66,7 +66,7 @@ def test_contour_values(tmp_path):
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("Airborne_TMI")[0]
-        assert output.n_vertices == 2740, "Change in output. Need to verify."
+        assert output.n_vertices == 2417, "Change in output. Need to verify."
 
 
 def test_create_surface(tmp_path):
@@ -120,7 +120,7 @@ def test_edge_detection(tmp_path):
     temp_workspace = path.join(tmp_path, "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         for uid in [
-            "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+            "{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}",
         ]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 

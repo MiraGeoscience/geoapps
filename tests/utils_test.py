@@ -43,7 +43,7 @@ from geoapps.utils.utils import (
     window_xy,
 )
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+geoh5 = Workspace("./FlinFlon_v4.geoh5")
 
 
 def test_find_value():

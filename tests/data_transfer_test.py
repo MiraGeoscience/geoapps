@@ -77,7 +77,7 @@ def test_find_top_padding(tmp_path):
     height = 300
     width = 1000
     n = 100
-    ws = Workspace("./FlinFlon.geoh5")
+    ws = Workspace("./FlinFlon_v4.geoh5")
 
     X, Y = np.meshgrid(np.arange(0, width, n), np.arange(0, height, n))
     Z = np.around((top / 2) * np.sin(X) + (top / 2), -1)
@@ -106,7 +106,7 @@ def test_get_block_model(tmp_path):
     Z = np.around((top / 2) * np.sin(X) + (top / 2), -1)
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [100, 150, 200, 300, 0, 0]
-    ws = Workspace("./FlinFlon.geoh5")
+    ws = Workspace("./FlinFlon_v4.geoh5")
     obj = DataInterpolation.get_block_model(
         ws, "test", locs, [50, 50, 50], depth_core, pads, 1.1
     )

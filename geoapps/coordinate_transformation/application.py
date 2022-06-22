@@ -35,7 +35,7 @@ class CoordinateTransformation(ObjectDataSelection):
         "ga_group_name": "CoordinateTransformation",
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": [
-            "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+            "{8c91ee71-f5dd-4aab-92ba-7a0c82c2a85b}",
             "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
         ],
         "code_in": "EPSG:26914",
