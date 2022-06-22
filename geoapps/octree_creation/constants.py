@@ -136,7 +136,7 @@ template_dict = {
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": "../../assets/FlinFlon_v4.geoh5",
     "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A object": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A levels": [4, 4, 4],

@@ -111,7 +111,7 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": "../../assets/FlinFlon_v4.geoh5",
     "objects": UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"),
     "data": UUID("{f3e36334-be0a-4210-b13e-06933279de25}"),
     "max_distance": 500.0,

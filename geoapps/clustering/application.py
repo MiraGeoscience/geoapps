@@ -37,7 +37,7 @@ class Clustering(ScatterPlots):
     """
 
     defaults = {
-        "h5file": r"../../assets/FlinFlon.geoh5",
+        "h5file": r"../../assets/FlinFlon_v4.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": [
             "{18c2560c-6161-468a-8571-5d9d59649535}",

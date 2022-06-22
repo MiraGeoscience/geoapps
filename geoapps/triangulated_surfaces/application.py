@@ -480,7 +480,7 @@ class Surface2D(ObjectDataSelection):
 
 
 app_initializer = {
-    "h5file": "../../assets/FlinFlon.geoh5",
+    "h5file": "../../assets/FlinFlon_v4.geoh5",
     "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
     "data": ["{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}"],
     "max_distance": 250,
