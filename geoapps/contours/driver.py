@@ -9,11 +9,13 @@
 from __future__ import annotations
 
 import sys
+from os import path
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points, Surface
 from geoh5py.ui_json import InputFile
+from geoh5py.ui_json.utils import monitored_directory_copy
 from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
 
@@ -103,6 +105,11 @@ class ContoursDriver:
                     ): {"values": np.hstack(values)}
                 }
             )
+
+            if self.params.monitoring_directory is not None and path.exists(
+                self.params.monitoring_directory
+            ):
+                monitored_directory_copy(self.params.monitoring_directory, out_entity)
 
             workspace.close()
 
