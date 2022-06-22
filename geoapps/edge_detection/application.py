@@ -107,7 +107,7 @@ class EdgeDetectionApp(PlotSelection2D):
         )
         self.data.observe(self.update_name, names="value")
         self.compute.on_click(self.compute_trigger)
-        self._unique_object = {}
+
         super().__init__(**self.defaults)
 
         # Make changes to trigger warning color
