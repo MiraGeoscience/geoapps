@@ -17,7 +17,7 @@ import dash_daq as daq
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from dash import callback_context, dash_table, dcc, html
+from dash import callback_context, dash_table, dcc, html, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.ui_json import InputFile
@@ -342,34 +342,7 @@ class Clustering(ScatterPlots):
             Output(component_id="norm_tabs", component_property="style"),
             Input(component_id="show_norm_tabs", component_property="value"),
         )(self.update_norm_tabs)
-        self.app.callback(
-            Output(component_id="x", component_property="options"),
-            Output(component_id="y", component_property="options"),
-            Output(component_id="z", component_property="options"),
-            Output(component_id="color", component_property="options"),
-            Output(component_id="size", component_property="options"),
-            Output(component_id="channel", component_property="options"),
-            Input(component_id="channels", component_property="value"),
-        )(self.update_channels)
-        self.app.callback(
-            Output(component_id="scale", component_property="value"),
-            Output(component_id="lower_bounds", component_property="value"),
-            Output(component_id="upper_bounds", component_property="value"),
-            Input(component_id="channel", component_property="value"),
-        )(self.update_properties)
-        self.app.callback(
-            Output(component_id="color_picker", component_property="value"),
-            Input(component_id="select_cluster", component_property="value"),
-        )(self.update_color_picker)
-        self.app.callback(
-            Output(component_id="dataframe", component_property="data"),
-            Input(component_id="downsampling", component_property="value"),
-            Input(component_id="channel", component_property="value"),
-            Input(component_id="channels", component_property="value"),
-            Input(component_id="scale", component_property="value"),
-            Input(component_id="lower_bounds", component_property="value"),
-            Input(component_id="upper_bounds", component_property="value"),
-        )(self.update_dataframe)
+
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
             Output(component_id="stats_table", component_property="data"),
@@ -410,6 +383,67 @@ class Clustering(ScatterPlots):
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
         )(self.update_plots)
+        self.app.callback(
+            Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="downsampling", component_property="value"),
+            Output(component_id="x", component_property="options"),
+            Output(component_id="x", component_property="value"),
+            Output(component_id="x_log", component_property="value"),
+            Output(component_id="x_thresh", component_property="value"),
+            Output(component_id="x_min", component_property="value"),
+            Output(component_id="x_max", component_property="value"),
+            Output(component_id="y", component_property="options"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="y_log", component_property="value"),
+            Output(component_id="y_thresh", component_property="value"),
+            Output(component_id="y_min", component_property="value"),
+            Output(component_id="y_max", component_property="value"),
+            Output(component_id="z", component_property="options"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="z_log", component_property="value"),
+            Output(component_id="z_thresh", component_property="value"),
+            Output(component_id="z_min", component_property="value"),
+            Output(component_id="z_max", component_property="value"),
+            Output(component_id="color", component_property="options"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="color_log", component_property="value"),
+            Output(component_id="color_thresh", component_property="value"),
+            Output(component_id="color_min", component_property="value"),
+            Output(component_id="color_max", component_property="value"),
+            Output(component_id="color_maps", component_property="value"),
+            Output(component_id="size", component_property="options"),
+            Output(component_id="size", component_property="value"),
+            Output(component_id="size_log", component_property="value"),
+            Output(component_id="size_thresh", component_property="value"),
+            Output(component_id="size_min", component_property="value"),
+            Output(component_id="size_max", component_property="value"),
+            Output(component_id="size_markers", component_property="value"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Output(component_id="channel", component_property="options"),
+            Output(component_id="scale", component_property="value"),
+            Output(component_id="lower_bounds", component_property="value"),
+            Output(component_id="upper_bounds", component_property="value"),
+            Output(component_id="color_picker", component_property="value"),
+            Output(component_id="dataframe", component_property="data"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+            Input(component_id="objects", component_property="value"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="size", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="channels", component_property="value"),
+            Input(component_id="scale", component_property="value"),
+            Input(component_id="lower_bounds", component_property="value"),
+            Input(component_id="upper_bounds", component_property="value"),
+            Input(component_id="downsampling", component_property="value"),
+            Input(component_id="select_cluster", component_property="value"),
+            prevent_initial_call=True,
+        )(self.update_cluster_params)
         self.app.callback(
             Output(component_id="export_message", component_property="children"),
             Input(component_id="export", component_property="n_clicks"),
@@ -502,6 +536,142 @@ class Clustering(ScatterPlots):
         upper_bounds = self.upper_bounds[channel]
 
         return scale, lower_bounds, upper_bounds
+
+    def update_cluster_params(
+        self,
+        filename,
+        contents,
+        objects,
+        x,
+        y,
+        z,
+        color,
+        size,
+        channel,
+        channels,
+        scale,
+        lower_bounds,
+        upper_bounds,
+        downsampling,
+        select_cluster,
+    ):
+        param_list = [
+            "objects_options",
+            "objects_name",
+            "downsampling",
+            "data_options",
+            "x_name",
+            "x_log",
+            "x_thresh",
+            "x_min",
+            "x_max",
+            "data_options",
+            "y_name",
+            "y_log",
+            "y_thresh",
+            "y_min",
+            "y_max",
+            "data_options",
+            "z_name",
+            "z_log",
+            "z_thresh",
+            "z_min",
+            "z_max",
+            "data_options",
+            "color_name",
+            "color_log",
+            "color_thresh",
+            "color_min",
+            "color_max",
+            "color_maps",
+            "data_options",
+            "size_name",
+            "size_log",
+            "size_thresh",
+            "size_min",
+            "size_max",
+            "size_markers",
+            "filename",
+            "contents",
+            "scale",
+            "lower_bounds",
+            "upper_bounds",
+            "color_picker",
+            "dataframe",
+        ]
+
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        update_dict = {}
+        if trigger == "upload":
+            if filename.endswith(".ui.json"):
+                # Update params from uploaded uijson
+                update_dict = self.update_from_uijson(contents)
+            elif filename.endswith(".geoh5"):
+                # Update object and data options from uploaded workspace
+                update_dict = self.update_object_options(contents)
+                # update data subset ***
+                update_dict.update(
+                    self.update_data_options(update_dict["objects_name"])
+                )
+            else:
+                print("Uploaded file must be a workspace or ui.json.")
+            update_dict["filename"] = None
+            update_dict["contents"] = None
+
+        elif trigger == "objects":
+            # Update data subset options from object change
+            # update_dict = self.update_data_options(objects)
+            pass
+
+        elif trigger == "select_cluster":
+            # Update color displayed by the dash colorpicker
+            self.update_color_picker
+            # Output(component_id="color_picker", component_property="value"),
+
+        elif trigger in ["x", "y", "z", "color", "size"]:
+            # Update min, max values in scatter plot
+            update_dict = self.set_channel_bounds(x, y, z, color, size)
+
+        elif trigger in [
+            "downsampling",
+            "scale",
+            "lower_bounds",
+            "upper_bounds",
+            "channel",
+            "channels",
+        ]:
+            # Update dataframe and run clustering
+            self.update_dataframe
+            # Output(component_id="dataframe", component_property="data"),
+            self.run_clustering()
+
+            if trigger == "channel":
+                # Update displayed scale and bounds from stored values
+                self.update_properties
+                """
+                Output(component_id="scale", component_property="value"),
+                Output(component_id="lower_bounds", component_property="value"),
+                Output(component_id="upper_bounds", component_property="value"),
+                """
+            elif trigger == "channels":
+                # Update data options from data subset
+                self.update_channels
+                """
+                Output(component_id="x", component_property="options"),
+                Output(component_id="y", component_property="options"),
+                Output(component_id="z", component_property="options"),
+                Output(component_id="color", component_property="options"),
+                Output(component_id="size", component_property="options"),
+                Output(component_id="channel", component_property="options"),
+                """
+
+        outputs = []
+        for param in param_list:
+            if param in update_dict.keys():
+                outputs.append(update_dict[param])
+            else:
+                outputs.append(no_update)
+        return tuple(outputs)
 
     def update_plots(
         self,
