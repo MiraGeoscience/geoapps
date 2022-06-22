@@ -29,7 +29,6 @@ from geoapps.utils.utils import filter_xy
 class EdgeDetectionDriver:
     def __init__(self, params: EdgeDetectionParams):
         self.params: EdgeDetectionParams = params
-        self._unique_object = {}
 
     def run(self):
         """
@@ -45,18 +44,14 @@ class EdgeDetectionDriver:
             out_entity = ContainerGroup.create(
                 workspace=self.params.geoh5,
                 name=self.params.ga_group_name,
-                uid=self._unique_object.get(self.params.ga_group_name, None),
             )
-            curve = Curve.create(
+            Curve.create(
                 workspace=self.params.geoh5,
                 name=name,
                 vertices=vertices,
                 cells=cells,
                 parent=out_entity,
-                uid=self._unique_object.get(name, None),
             )
-            self._unique_object[name] = curve.uid
-            self._unique_object[self.params.ga_group_name] = out_entity.uid
 
             if self.params.monitoring_directory is not None and path.exists(
                 self.params.monitoring_directory
@@ -175,6 +170,7 @@ class EdgeDetectionDriver:
                                 z[i_min:i_max, j_min:j_max][coord[:, 1], coord[:, 0]],
                             ]
                         )
+
             if coords:
                 coord = np.vstack(coords)
                 object_lines = coord
@@ -194,6 +190,7 @@ class EdgeDetectionDriver:
                     cells = (
                         np.arange(vertices.shape[0]).astype("uint32").reshape((-1, 2))
                     )
+
             return vertices, cells
 
     @staticmethod
