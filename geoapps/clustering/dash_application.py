@@ -52,7 +52,6 @@ class Clustering(ScatterPlots):
         self.indices = []
         self.mapping = None
         self.color_pickers = colors
-        self.live_link = False
         # Initial values for the dash components
         super().__init__(**self.params.to_dict())
         self.defaults = self.get_cluster_defaults()
@@ -283,6 +282,11 @@ class Clustering(ScatterPlots):
                             options=["Select cluster color"],
                             value=[],
                         ),
+                        dcc.Checklist(
+                            id="live_link",
+                            options=["Geoscience ANALYST Pro - Live link"],
+                            value=[],
+                        ),
                         dcc.Input(id="ga_group", value="test"),
                         html.Button("Export", id="export"),
                         dcc.Markdown(id="export_message"),
@@ -465,6 +469,7 @@ class Clustering(ScatterPlots):
             Input(component_id="objects", component_property="value"),
             Input(component_id="n_clusters", component_property="value"),
             Input(component_id="ga_group", component_property="value"),
+            Input(component_id="live_link", component_property="value"),
             prevent_initial_call=True,
         )(self.export_clusters)
 
@@ -1143,7 +1148,9 @@ class Clustering(ScatterPlots):
         )
         return indices, values.T
 
-    def get_output_workspace(self, workpath: str = "./", name: str = "Temp.geoh5"):
+    def get_output_workspace(
+        self, live_link, workpath: str = "./", name: str = "Temp.geoh5"
+    ):
         """
         Create an active workspace with check for GA monitoring directory
         """
@@ -1152,7 +1159,7 @@ class Clustering(ScatterPlots):
 
         workspace = Workspace(path.join(workpath, name))
         workspace.close()
-        live_link = False
+        new_live_link = False
         time.sleep(1)
         # Check if GA digested the file already
         if not path.exists(workspace.h5file):
@@ -1161,22 +1168,23 @@ class Clustering(ScatterPlots):
                 makedirs(workpath)
             workspace = Workspace(path.join(workpath, name))
             workspace.close()
-            live_link = True
-            if not self.live_link:
+            new_live_link = True
+            if not live_link:
                 print(
                     "ANALYST Pro active live link found. Switching to monitoring directory..."
                 )
-        elif self.live_link:
+        elif live_link:
             print(
                 "ANALYST Pro 'monitoring directory' inactive. Reverting to standalone mode..."
             )
 
-        self.live_link = live_link
-
         workspace.open()
+        # return new live link
         return workspace
 
-    def export_clusters(self, n_clicks, dataframe, objects, n_clusters, group_name):
+    def export_clusters(
+        self, n_clicks, dataframe, objects, n_clusters, group_name, live_link
+    ):
         """
         Write cluster groups to the target geoh5 object.
         """
@@ -1225,7 +1233,9 @@ class Clustering(ScatterPlots):
                 output_path = os.path.dirname(self.params.geoh5.h5file)
 
             temp_geoh5 = f"Clustering_{time.time():.3f}.geoh5"
-            with self.get_output_workspace(output_path, temp_geoh5) as workspace:
+            with self.get_output_workspace(
+                live_link, output_path, temp_geoh5
+            ) as workspace:
                 obj = obj.copy(parent=workspace)
                 cluster_groups = obj.add_data(
                     {
@@ -1240,7 +1250,7 @@ class Clustering(ScatterPlots):
                     "name": "Cluster Groups",
                     "values": color_map,
                 }
-
+            # return live_link
             return "Saved to " + output_path + "/" + temp_geoh5
 
     def run(self):
