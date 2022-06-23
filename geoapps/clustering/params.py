@@ -28,7 +28,7 @@ class ClusteringParams(ScatterPlotParams):
         self._defaults = deepcopy(defaults)
         self._validations = validations
         self.data = None
-        self.n_clusters = (None,)
+        self.n_clusters = None
         self.channel = None
         self.scale = None
         self.lower_bounds = None
