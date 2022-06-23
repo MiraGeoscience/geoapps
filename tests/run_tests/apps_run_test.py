@@ -65,7 +65,7 @@ def test_contour_values(tmp_path):
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
-        output = workspace.get_entity("Airborne_TMI")[0]
+        output = workspace.get_entity("contours")[0]
         assert output.n_vertices == 3000, "Change in output. Need to verify."
 
 
