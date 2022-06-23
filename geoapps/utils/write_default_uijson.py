@@ -57,7 +57,9 @@ def write_default_uijson(path, use_initializers=False):
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.electricals.induced_polarization.constants import app_initializer
+    from geoapps.inversion.electricals.induced_polarization.constants import (
+        app_initializer,
+    )
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     ip_init = app_initializer if use_initializers else {}
