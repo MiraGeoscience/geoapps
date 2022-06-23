@@ -16,6 +16,7 @@ from os import environ, makedirs, path
 import dash_daq as daq
 import numpy as np
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 from dash import callback_context, dash_table, dcc, html, no_update
 from dash.dependencies import Input, Output
@@ -393,6 +394,7 @@ class Clustering(ScatterPlots):
             Output(component_id="scale", component_property="value"),
             Output(component_id="lower_bounds", component_property="value"),
             Output(component_id="upper_bounds", component_property="value"),
+            Output(component_id="color_maps", component_property="options"),
             Output(component_id="color_picker", component_property="value"),
             Output(component_id="dataframe", component_property="data"),
             Output(component_id="full_scales", component_property="data"),
@@ -451,6 +453,7 @@ class Clustering(ScatterPlots):
             Input(component_id="color_thresh", component_property="value"),
             Input(component_id="color_min", component_property="value"),
             Input(component_id="color_max", component_property="value"),
+            Input(component_id="color_maps", component_property="value"),
             Input(component_id="color_picker", component_property="value"),
             Input(component_id="size", component_property="value"),
             Input(component_id="size_log", component_property="value"),
@@ -558,13 +561,16 @@ class Clustering(ScatterPlots):
 
         if self.kmeans is not None:
             channel_options = channels.append("kmeans")
+            color_maps_options = px.colors.named_colorscales() + ["kmeans"]
             self.data_channels.update({"kmeans": KMeansData("kmeans", self.kmeans)})
         else:
             channel_options = channels
+            color_maps_options = px.colors.named_colorscales()
             self.data_channels.pop("kmeans", None)
 
         return {
             "channels_options": channel_options,
+            "color_maps_options": color_maps_options,
             "data_options": channels,
             "full_scales": new_scales,
             "full_lower_bounds": new_lower_bounds,
@@ -660,6 +666,7 @@ class Clustering(ScatterPlots):
             "scale",
             "lower_bounds",
             "upper_bounds",
+            "color_maps_options",
             "color_picker",
             "dataframe",
             "full_scales",
@@ -762,11 +769,6 @@ class Clustering(ScatterPlots):
                         channel, full_scales, full_lower_bounds, full_upper_bounds
                     )
                 )
-            elif trigger == "downsampling":
-                update_dict.update(
-                    {"dataframe": self.update_dataframe(downsampling, channels)}
-                )
-                self.run_clustering(n_clusters, update_dict["dataframe"], full_scales)
 
         outputs = []
         for param in param_list:
@@ -804,6 +806,7 @@ class Clustering(ScatterPlots):
         color_thresh,
         color_min,
         color_max,
+        color_maps,
         color_picker,
         size,
         size_log,
@@ -814,8 +817,12 @@ class Clustering(ScatterPlots):
     ):
         if dataframe_dict:
             dataframe = pd.DataFrame(dataframe_dict["dataframe"])
-            color_maps = self.update_colormap(n_clusters, color_picker, select_cluster)
+            if color_maps == "kmeans":
+                color_maps = self.update_colormap(
+                    n_clusters, color_picker, select_cluster
+                )
 
+            # make plotting data variables....??? pass those with no downsampling? or update object data.
             crossplot = self.update_plot(
                 downsampling,
                 x,
