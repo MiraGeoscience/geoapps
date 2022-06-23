@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import sys
+from os import path
 
 import geoh5py.data
 import geoh5py.objects
@@ -16,6 +17,7 @@ import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D
 from geoh5py.ui_json import InputFile
+from geoh5py.ui_json.utils import monitored_directory_copy
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
@@ -27,7 +29,6 @@ from geoapps.utils.formatters import string_name
 class EdgeDetectionDriver:
     def __init__(self, params: EdgeDetectionParams):
         self.params: EdgeDetectionParams = params
-        self._unique_object = {}
 
     def run(self):
         """
@@ -43,18 +44,19 @@ class EdgeDetectionDriver:
             out_entity = ContainerGroup.create(
                 workspace=self.params.geoh5,
                 name=self.params.ga_group_name,
-                uid=self._unique_object.get(self.params.ga_group_name, None),
             )
-            curve = Curve.create(
+            Curve.create(
                 workspace=self.params.geoh5,
                 name=name,
                 vertices=vertices,
                 cells=cells,
                 parent=out_entity,
-                uid=self._unique_object.get(name, None),
             )
-            self._unique_object[name] = curve.uid
-            self._unique_object[self.params.ga_group_name] = out_entity.uid
+
+            if self.params.monitoring_directory is not None and path.exists(
+                self.params.monitoring_directory
+            ):
+                monitored_directory_copy(self.params.monitoring_directory, out_entity)
 
     @staticmethod
     def get_edges(
@@ -76,34 +78,21 @@ class EdgeDetectionDriver:
         Get indices within window.
 
         :params grid: A Grid2D object.
-
         :params data: Input data.
-
         :params sigma: Standard deviation of the Gaussian filter. (Canny)
-
         :params line_length: Minimum accepted pixel length of detected lines. (Hough)
-
         :params threshold: Value threshold. (Hough)
-
         :params line_gap: Maximum gap between pixels to still form a line. (Hough)
-
         :params window_size: Window size.
-
         :params window_center_x: Easting position of the selection box.
-
         :params window_center_y: Northing position of the selection box.
-
         :params window_width: Width (m) of the selection box.
-
         :params window_height: Height (m) of the selection box.
-
         :params window_azimuth: Rotation angle of the selection box.
-
         :params resolution: Minimum data separation (m).
 
-        :return : n x 3 array. Vertices of edges.
-
-        :return : list
+        :returns : n x 3 array. Vertices of edges.
+        :returns : list
             n x 2 float array. Cells of edges.
 
         """
@@ -181,6 +170,7 @@ class EdgeDetectionDriver:
                                 z[i_min:i_max, j_min:j_max][coord[:, 1], coord[:, 0]],
                             ]
                         )
+
             if coords:
                 coord = np.vstack(coords)
                 object_lines = coord
@@ -200,6 +190,7 @@ class EdgeDetectionDriver:
                     cells = (
                         np.arange(vertices.shape[0]).astype("uint32").reshape((-1, 2))
                     )
+
             return vertices, cells
 
     @staticmethod

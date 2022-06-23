@@ -34,6 +34,7 @@ class OctreeDriver:
         """
         Create an octree mesh from input values
         """
+        workspace = self.params.geoh5
         entity = self.params.objects
 
         p_d = [
@@ -78,9 +79,7 @@ class OctreeDriver:
 
         print("Finalizing...")
         treemesh.finalize()
-        octree = treemesh_2_octree(
-            self.params.geoh5, treemesh, name=self.params.ga_group_name
-        )
+        octree = treemesh_2_octree(workspace, treemesh, name=self.params.ga_group_name)
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
@@ -88,7 +87,9 @@ class OctreeDriver:
             monitored_directory_copy(self.params.monitoring_directory, octree)
 
         else:
-            print(f"Result exported to: {self.params.geoh5.h5file}")
+            print(f"Result exported to: {workspace.h5file}")
+
+        workspace.close()
         return octree
 
 
