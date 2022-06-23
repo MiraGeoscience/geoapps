@@ -521,7 +521,7 @@ class Clustering(ScatterPlots):
             if channel not in channels:
                 del self.upper_bounds[channel]
 
-        return channels, channels, channels, channels, channels, channels
+        return {"channels_options": channels, "data_options": channels}
 
     def update_properties(self, channel):
         if channel not in self.scalings.keys():
@@ -536,7 +536,11 @@ class Clustering(ScatterPlots):
             self.upper_bounds[channel] = np.nanmax(self.data_channels[channel].values)
         upper_bounds = self.upper_bounds[channel]
 
-        return scale, lower_bounds, upper_bounds
+        return {
+            "scale": scale,
+            "lower_bounds": lower_bounds,
+            "upper_bounds": upper_bounds,
+        }
 
     def update_cluster_params(
         self,
@@ -603,6 +607,7 @@ class Clustering(ScatterPlots):
         ]
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+
         update_dict = {}
         if trigger == "upload":
             if filename.endswith(".ui.json"):
@@ -639,20 +644,28 @@ class Clustering(ScatterPlots):
             # Update min, max values in scatter plot
             update_dict = self.set_channel_bounds(x, y, z, color, size)
 
-        else:
-            print("test")
+        elif trigger in [
+            "downsampling",
+            "channel",
+            "channels",
+            "scale",
+            "lower_bounds",
+            "upper_bounds",
+            "",
+        ]:
             # Update dataframe
             update_dict = {
                 "dataframe": self.update_dataframe(
                     downsampling, channel, channels, scale, lower_bounds, upper_bounds
                 )
             }
-            if trigger == "channel":
-                # Update displayed scale and bounds from stored values
-                update_dict.update(self.update_properties(channel))
-            elif trigger == "channels":
+
+            if trigger in ["channels", ""]:
                 # Update data options from data subset
                 update_dict.update(self.update_channels(channels))
+            elif trigger == "channel":
+                # Update displayed scale and bounds from stored values
+                update_dict.update(self.update_properties(channel))
 
         outputs = []
         for param in param_list:
@@ -999,27 +1012,29 @@ class Clustering(ScatterPlots):
         self.lower_bounds[channel] = lower_bounds
         self.upper_bounds[channel] = upper_bounds
 
-        indices, values = self.get_indices(channels, downsampling)
+        self.indices, values = self.get_indices(channels, downsampling)
         n_values = values.shape[0]
 
         dataframe = pd.DataFrame(
-            values[indices, :],
+            values[self.indices, :],
             columns=channels,
         )
 
         tree = cKDTree(dataframe.values)
         inactive_set = np.ones(n_values, dtype="bool")
-        inactive_set[indices] = False
+        inactive_set[self.indices] = False
         out_values = values[inactive_set, :]
         for ii in range(values.shape[1]):
-            out_values[np.isnan(out_values[:, ii]), ii] = np.mean(values[indices, ii])
+            out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
+                values[self.indices, ii]
+            )
 
         _, ind_out = tree.query(out_values)
         del tree
 
         self.mapping = np.empty(n_values, dtype="int")
         self.mapping[inactive_set] = ind_out
-        self.mapping[indices] = np.arange(len(indices))
+        self.mapping[self.indices] = np.arange(len(self.indices))
 
         # self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
         # options = [[self.data.uid_name_map[key], key] for key in fields]
@@ -1100,7 +1115,10 @@ class Clustering(ScatterPlots):
             group_map, color_map = {}, []
             cluster_values = self.kmeans + 1
             # cluster_values = self.data_channels["kmeans"] + 1
-            # cluster_values[self._inactive_set] = 0
+            inactive_set = np.ones(len(cluster_values), dtype="bool")
+            inactive_set[self.indices] = False
+            cluster_values[inactive_set] = 0
+
             for ii in range(n_clusters):
                 colorpicker = self.color_pickers[ii]
                 color = colorpicker.lstrip("#")
