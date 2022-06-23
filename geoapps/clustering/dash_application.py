@@ -46,9 +46,6 @@ class Clustering(ScatterPlots):
         self.clusters = {}
         self.data_channels = {}
         self.kmeans = None
-        self.scalings = {}
-        self.lower_bounds = {}
-        self.upper_bounds = {}
         self.indices = []
         self.mapping = None
         self.color_pickers = colors
@@ -416,6 +413,7 @@ class Clustering(ScatterPlots):
             Input(component_id="upper_bounds", component_property="value"),
             Input(component_id="downsampling", component_property="value"),
             Input(component_id="select_cluster", component_property="value"),
+            Input(component_id="n_clusters", component_property="value"),
             Input(component_id="full_scales", component_property="data"),
             Input(component_id="full_lower_bounds", component_property="data"),
             Input(component_id="full_upper_bounds", component_property="data"),
@@ -460,10 +458,9 @@ class Clustering(ScatterPlots):
             Input(component_id="size_min", component_property="value"),
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
-            Input(component_id="full_scales", component_property="data"),
         )(self.update_plots)
         self.app.callback(
-            Output(component_id="export_message", component_property="children"),
+            Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
             Input(component_id="dataframe", component_property="data"),
             Input(component_id="objects", component_property="value"),
@@ -559,8 +556,15 @@ class Clustering(ScatterPlots):
         if channel not in channels:
             channel = None
 
+        if self.kmeans is not None:
+            channel_options = channels.append("kmeans")
+            self.data_channels.update({"kmeans": KMeansData("kmeans", self.kmeans)})
+        else:
+            channel_options = channels
+            self.data_channels.pop("kmeans", None)
+
         return {
-            "channels_options": channels,
+            "channels_options": channel_options,
             "data_options": channels,
             "full_scales": new_scales,
             "full_lower_bounds": new_lower_bounds,
@@ -609,6 +613,7 @@ class Clustering(ScatterPlots):
         upper_bounds,
         downsampling,
         select_cluster,
+        n_clusters,
         full_scales,
         full_lower_bounds,
         full_upper_bounds,
@@ -722,7 +727,7 @@ class Clustering(ScatterPlots):
                         "full_upper_bounds": full_upper_bounds,
                     }
                 )
-            elif trigger in ["channels", ""]:
+            elif trigger in ["channels", "downsampling", ""]:
                 # Update data options from data subset
                 update_dict.update(
                     self.update_channels(
@@ -740,6 +745,16 @@ class Clustering(ScatterPlots):
                         )
                     }
                 )
+                self.run_clustering(n_clusters, update_dict["dataframe"], full_scales)
+                update_dict.update(
+                    self.update_channels(
+                        channel,
+                        channels,
+                        full_scales,
+                        full_lower_bounds,
+                        full_upper_bounds,
+                    )
+                )
             elif trigger == "channel":
                 # Update displayed scale and bounds from stored values
                 update_dict.update(
@@ -751,6 +766,7 @@ class Clustering(ScatterPlots):
                 update_dict.update(
                     {"dataframe": self.update_dataframe(downsampling, channels)}
                 )
+                self.run_clustering(n_clusters, update_dict["dataframe"], full_scales)
 
         outputs = []
         for param in param_list:
@@ -795,12 +811,9 @@ class Clustering(ScatterPlots):
         size_min,
         size_max,
         size_markers,
-        full_scales,
     ):
         if dataframe_dict:
             dataframe = pd.DataFrame(dataframe_dict["dataframe"])
-            self.run_clustering(n_clusters, dataframe, full_scales)
-
             color_maps = self.update_colormap(n_clusters, color_picker, select_cluster)
 
             crossplot = self.update_plot(
@@ -845,7 +858,7 @@ class Clustering(ScatterPlots):
             return None, None, None, None, None, None
 
     def update_color_picker(self, select_cluster):
-        return dict(hex=self.color_pickers[select_cluster])
+        return {"color_picker": dict(hex=self.color_pickers[select_cluster])}
 
     def update_colormap(self, n_clusters, new_color, select_cluster):
         """
@@ -872,12 +885,14 @@ class Clustering(ScatterPlots):
         # self.custom_colormap = list(self.colormap.values())
         return list(colormap.values())
 
-    def run_clustering(self, n_clusters, dataframe, full_scales):
+    def run_clustering(self, n_clusters, dataframe_dict, full_scales):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
-        if dataframe is None:
+        if not dataframe_dict:
             return
+
+        dataframe = pd.DataFrame(dataframe_dict["dataframe"])
         # Prime the app with clusters
         # Normalize values and run
         values = []
@@ -1180,7 +1195,7 @@ class Clustering(ScatterPlots):
 
         workspace.open()
         # return new live link
-        return workspace
+        return workspace, new_live_link
 
     def export_clusters(
         self, n_clicks, dataframe, objects, n_clusters, group_name, live_link
@@ -1233,9 +1248,11 @@ class Clustering(ScatterPlots):
                 output_path = os.path.dirname(self.params.geoh5.h5file)
 
             temp_geoh5 = f"Clustering_{time.time():.3f}.geoh5"
-            with self.get_output_workspace(
+            ws, live_link = self.get_output_workspace(
                 live_link, output_path, temp_geoh5
-            ) as workspace:
+            )
+
+            with ws as workspace:
                 obj = obj.copy(parent=workspace)
                 cluster_groups = obj.add_data(
                     {
@@ -1250,8 +1267,9 @@ class Clustering(ScatterPlots):
                     "name": "Cluster Groups",
                     "values": color_map,
                 }
-            # return live_link
-            return "Saved to " + output_path + "/" + temp_geoh5
+
+            # return "Saved to " + output_path + "/" + temp_geoh5
+            return live_link
 
     def run(self):
         # The reloader has not yet run - open the browser
@@ -1260,6 +1278,12 @@ class Clustering(ScatterPlots):
 
         # Otherwise, continue as normal
         self.app.run_server(host="127.0.0.1", port=8050, debug=False)
+
+
+class KMeansData:
+    def __init__(self, name=None, values=None):
+        self.name = name
+        self.values = values
 
 
 app = Clustering()
