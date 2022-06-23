@@ -322,6 +322,13 @@ class Clustering(ScatterPlots):
                 self.norm_tabs_layout,
                 self.cluster_tabs_layout,
                 dcc.Store(id="dataframe", data={}),
+                dcc.Store(id="full_scales", data=self.defaults["full_scales"]),
+                dcc.Store(
+                    id="full_lower_bounds", data=self.defaults["full_lower_bounds"]
+                ),
+                dcc.Store(
+                    id="full_upper_bounds", data=self.defaults["full_upper_bounds"]
+                ),
             ],
             style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
         )
@@ -387,6 +394,9 @@ class Clustering(ScatterPlots):
             Output(component_id="upper_bounds", component_property="value"),
             Output(component_id="color_picker", component_property="value"),
             Output(component_id="dataframe", component_property="data"),
+            Output(component_id="full_scales", component_property="data"),
+            Output(component_id="full_lower_bounds", component_property="data"),
+            Output(component_id="full_upper_bounds", component_property="data"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
             Input(component_id="objects", component_property="value"),
@@ -402,6 +412,9 @@ class Clustering(ScatterPlots):
             Input(component_id="upper_bounds", component_property="value"),
             Input(component_id="downsampling", component_property="value"),
             Input(component_id="select_cluster", component_property="value"),
+            Input(component_id="full_scales", component_property="data"),
+            Input(component_id="full_lower_bounds", component_property="data"),
+            Input(component_id="full_upper_bounds", component_property="data"),
             # prevent_initial_call=True,
         )(self.update_cluster_params)
         self.app.callback(
@@ -443,6 +456,7 @@ class Clustering(ScatterPlots):
             Input(component_id="size_min", component_property="value"),
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
+            Input(component_id="full_scales", component_property="data"),
         )(self.update_plots)
         self.app.callback(
             Output(component_id="export_message", component_property="children"),
@@ -476,9 +490,15 @@ class Clustering(ScatterPlots):
                     self.get_channel(channel)
             else:
                 defaults[key] = value
-        self.scalings[defaults["channel"].name] = defaults["scale"]
-        self.lower_bounds[defaults["channel"].name] = defaults["lower_bounds"]
-        self.upper_bounds[defaults["channel"].name] = defaults["upper_bounds"]
+
+        defaults["full_scales"] = {defaults["channel"].name: defaults["scale"]}
+        defaults["full_lower_bounds"] = {
+            defaults["channel"].name: defaults["lower_bounds"]
+        }
+        defaults["full_upper_bounds"] = {
+            defaults["channel"].name: defaults["upper_bounds"]
+        }
+
         return defaults
 
     def update_color_select(self, checkbox):
@@ -505,41 +525,66 @@ class Clustering(ScatterPlots):
 
         return data_channels
 
-    def update_channels(self, channels):
+    def update_channels(
+        self, channel, channels, full_scales, full_lower_bounds, full_upper_bounds
+    ):
         self.data_channels = self.get_data_channels(channels)
 
         for channel in channels:
-            self.update_properties(channel)
+            dict = self.update_properties(
+                channel, full_scales, full_lower_bounds, full_upper_bounds
+            )
+            full_scales = dict["full_scales"]
+            full_lower_bounds = dict["full_lower_bounds"]
+            full_upper_bounds = dict["full_upper_bounds"]
 
-        for channel in self.scalings.keys():
-            if channel not in channels:
-                del self.scalings[channel]
-        for channel in self.lower_bounds.keys():
-            if channel not in channels:
-                del self.lower_bounds[channel]
-        for channel in self.upper_bounds.keys():
-            if channel not in channels:
-                del self.upper_bounds[channel]
+        new_scales = {}
+        for channel, value in full_scales.items():
+            if channel in channels:
+                new_scales[channel] = value
+        new_lower_bounds = {}
+        for channel, value in full_lower_bounds.items():
+            if channel in channels:
+                new_lower_bounds[channel] = value
+        new_upper_bounds = {}
+        for channel, value in full_upper_bounds.items():
+            if channel in channels:
+                new_upper_bounds[channel] = value
 
-        return {"channels_options": channels, "data_options": channels}
+        if channel not in channels:
+            channel = None
 
-    def update_properties(self, channel):
-        if channel not in self.scalings.keys():
-            self.scalings[channel] = 1
-        scale = self.scalings[channel]
+        return {
+            "channels_options": channels,
+            "data_options": channels,
+            "full_scales": new_scales,
+            "full_lower_bounds": new_lower_bounds,
+            "full_upper_bounds": new_upper_bounds,
+            "channel": channel,
+        }
 
-        if channel not in self.lower_bounds.keys():
-            self.lower_bounds[channel] = np.nanmin(self.data_channels[channel].values)
-        lower_bounds = self.lower_bounds[channel]
+    def update_properties(
+        self, channel, full_scales, full_lower_bounds, full_upper_bounds
+    ):
+        if channel not in full_scales.keys():
+            full_scales[channel] = 1
+        scale = full_scales[channel]
 
-        if channel not in self.upper_bounds.keys():
-            self.upper_bounds[channel] = np.nanmax(self.data_channels[channel].values)
-        upper_bounds = self.upper_bounds[channel]
+        if channel not in full_lower_bounds.keys():
+            full_lower_bounds[channel] = np.nanmin(self.data_channels[channel].values)
+        lower_bounds = full_lower_bounds[channel]
+
+        if channel not in full_upper_bounds.keys():
+            full_upper_bounds[channel] = np.nanmax(self.data_channels[channel].values)
+        upper_bounds = full_upper_bounds[channel]
 
         return {
             "scale": scale,
             "lower_bounds": lower_bounds,
             "upper_bounds": upper_bounds,
+            "full_scales": full_scales,
+            "full_lower_bounds": full_lower_bounds,
+            "full_upper_bounds": full_upper_bounds,
         }
 
     def update_cluster_params(
@@ -559,6 +604,9 @@ class Clustering(ScatterPlots):
         upper_bounds,
         downsampling,
         select_cluster,
+        full_scales,
+        full_lower_bounds,
+        full_upper_bounds,
     ):
         param_list = [
             "objects_options",
@@ -604,6 +652,9 @@ class Clustering(ScatterPlots):
             "upper_bounds",
             "color_picker",
             "dataframe",
+            "full_scales",
+            "full_lower_bounds",
+            "full_upper_bounds",
         ]
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -653,19 +704,48 @@ class Clustering(ScatterPlots):
             "upper_bounds",
             "",
         ]:
-            # Update dataframe
-            update_dict = {
-                "dataframe": self.update_dataframe(
-                    downsampling, channel, channels, scale, lower_bounds, upper_bounds
-                )
-            }
+            update_dict = {}
 
-            if trigger in ["channels", ""]:
+            if trigger in ["scale", "lower_bounds", "upper_bounds"]:
+                full_scales[channel] = scale
+                full_lower_bounds[channel] = lower_bounds
+                full_upper_bounds[channel] = upper_bounds
+                update_dict.update(
+                    {
+                        "full_scales": full_scales,
+                        "full_lower_bounds": full_lower_bounds,
+                        "full_upper_bounds": full_upper_bounds,
+                    }
+                )
+            elif trigger in ["channels", ""]:
                 # Update data options from data subset
-                update_dict.update(self.update_channels(channels))
+                update_dict.update(
+                    self.update_channels(
+                        channel,
+                        channels,
+                        full_scales,
+                        full_lower_bounds,
+                        full_upper_bounds,
+                    )
+                )
+                update_dict.update(
+                    {
+                        "dataframe": self.update_dataframe(
+                            downsampling, update_dict["channels_options"]
+                        )
+                    }
+                )
             elif trigger == "channel":
                 # Update displayed scale and bounds from stored values
-                update_dict.update(self.update_properties(channel))
+                update_dict.update(
+                    self.update_properties(
+                        channel, full_scales, full_lower_bounds, full_upper_bounds
+                    )
+                )
+            elif trigger == "downsampling":
+                update_dict.update(
+                    {"dataframe": self.update_dataframe(downsampling, channels)}
+                )
 
         outputs = []
         for param in param_list:
@@ -710,10 +790,11 @@ class Clustering(ScatterPlots):
         size_min,
         size_max,
         size_markers,
+        full_scales,
     ):
         if dataframe_dict:
             dataframe = pd.DataFrame(dataframe_dict["dataframe"])
-            self.run_clustering(n_clusters, dataframe)
+            self.run_clustering(n_clusters, dataframe, full_scales)
 
             color_maps = self.update_colormap(n_clusters, color_picker, select_cluster)
 
@@ -786,7 +867,7 @@ class Clustering(ScatterPlots):
         # self.custom_colormap = list(self.colormap.values())
         return list(colormap.values())
 
-    def run_clustering(self, n_clusters, dataframe):
+    def run_clustering(self, n_clusters, dataframe, full_scales):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
@@ -802,7 +883,7 @@ class Clustering(ScatterPlots):
             vals[nns] = (
                 (vals[nns] - min(vals[nns]))
                 / (max(vals[nns]) - min(vals[nns]) + 1e-32)
-                * self.scalings[field]
+                * full_scales[field]
             )
             values += [vals]
 
@@ -1000,17 +1081,11 @@ class Clustering(ScatterPlots):
         else:
             return None
 
-    def update_dataframe(
-        self, downsampling, channel, channels, scale, lower_bounds, upper_bounds
-    ):
+    def update_dataframe(self, downsampling, channels):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
         self.kmeans = None
-
-        self.scalings[channel] = scale
-        self.lower_bounds[channel] = lower_bounds
-        self.upper_bounds[channel] = upper_bounds
 
         self.indices, values = self.get_indices(channels, downsampling)
         n_values = values.shape[0]
