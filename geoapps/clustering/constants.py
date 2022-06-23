@@ -87,6 +87,9 @@ default_ui_json.update(
             "value": "",
             "group": "Python run preferences",
         },
+        "full_scales": {},
+        "full_lower_bounds": {},
+        "full_upper_bounds": {},
         "conda_environment": "geoapps",
         "run_command": "geoapps.scatter_plot.application",
     }
