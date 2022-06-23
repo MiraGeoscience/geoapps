@@ -93,7 +93,7 @@ class ContoursParams(BaseParams):
             "center": [self.window_center_x, self.window_center_y],
             "size": [self.window_width, self.window_height],
         }
-        check_keys = ["center_x", "center_y", "width", "height"]
+        check_keys = ["azimuth", "center_x", "center_y", "width", "height"]
         no_data = any([v is None for k, v in win.items() if k in check_keys])
         return None if no_data else win
 
