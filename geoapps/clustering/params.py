@@ -51,17 +51,6 @@ class ClusteringParams(ScatterPlotParams):
         super().__init__(input_file=input_file, **kwargs)
 
     @property
-    def data(self) -> list | None:
-        """
-        Subset of data to use for clustering.
-        """
-        return self._data
-
-    @data.setter
-    def data(self, val):
-        self.setter_validator("data", val)
-
-    @property
     def n_clusters(self) -> int | None:
         """
         Number of clusters.
@@ -73,9 +62,9 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("n_clusters", val)
 
     @property
-    def channel(self) -> Data | None:
+    def channel(self) -> str | None:
         """
-        Data to plot on histogram, boxplot.
+        Name of data to plot on histogram, boxplot.
         """
         return self._channel
 
@@ -117,7 +106,7 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("upper_bounds", val)
 
     @property
-    def channels(self) -> list | None:
+    def channels(self) -> str | None:
         """
         List of channels.
         """
