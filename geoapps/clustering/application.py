@@ -50,7 +50,7 @@ class Clustering(ScatterPlots):
         self.indices = []
         self.mapping = None
         self.color_pickers = colors
-        self.defaults = {}
+        # self.defaults = {}
         # Initial values for the dash components
         super().__init__(**self.params.to_dict())
         self.defaults.update(self.get_cluster_defaults())
@@ -78,16 +78,8 @@ class Clustering(ScatterPlots):
                                                 dcc.Markdown("Data: "),
                                                 dcc.Dropdown(
                                                     id="channel",
-                                                    value=self.defaults[
-                                                        "x_name"
-                                                    ],  # self.defaults["channel"].name,
-                                                    options=[
-                                                        self.defaults["x_name"],
-                                                        self.defaults["y_name"],
-                                                        self.defaults["z_name"],
-                                                        self.defaults["color_name"],
-                                                        self.defaults["size_name"],
-                                                    ],
+                                                    value=self.defaults["channel"],
+                                                    options=self.defaults["channels"],
                                                 ),
                                                 dcc.Markdown("Scale: "),
                                                 dcc.Slider(
@@ -244,13 +236,7 @@ class Clustering(ScatterPlots):
                         dcc.Markdown("Data subset: "),
                         dcc.Dropdown(
                             id="channels",
-                            value=[
-                                self.defaults["x_name"],
-                                self.defaults["y_name"],
-                                self.defaults["z_name"],
-                                self.defaults["color_name"],
-                                self.defaults["size_name"],
-                            ],
+                            value=self.defaults["channels"],
                             options=self.defaults["channels_options"],
                             multi=True,
                         ),
@@ -478,36 +464,54 @@ class Clustering(ScatterPlots):
         )(self.export_clusters)
 
     def get_cluster_defaults(self):
-        defaults = {}
         # Get initial values to initialize the dash components
+        defaults = {}
+        # If there is no default data subset list, set it from selected scatter plot data
+        if self.params.channels is None:
+            plot_data = [
+                self.defaults["x_name"],
+                self.defaults["y_name"],
+                self.defaults["z_name"],
+                self.defaults["color_name"],
+                self.defaults["size_name"],
+            ]
+            defaults["channels"] = list(filter(None, plot_data))
+        else:
+            defaults["channels"] = self.params.channels
+
+        if len(defaults["channels"]) > 0:
+            defaults["channel"] = defaults["channels"][0]
+        else:
+            defaults["channel"] = None
 
         for key, value in self.params.to_dict().items():
-            if key == "data":
-                if value is None:
-                    defaults[key] = []
+            if key != "channels":
+                if key == "objects":
+                    if value is None:
+                        defaults["channels_options"] = []
+                    else:
+                        channels_options = value.get_data_list()
+                        if "Visual Parameters" in channels_options:
+                            channels_options.remove("Visual Parameters")
+                        defaults["channels_options"] = channels_options
+                    for channel in defaults["channels_options"]:
+                        self.get_channel(channel)
+                elif key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
+                    out_dict = {}
+                    for i in range(len(defaults["channels"])):
+                        if getattr(self.params, key) is None:
+                            if key == "full_scales":
+                                out_dict[defaults["channels"][i]] = 1
+                            else:
+                                out_dict[defaults["channels"][i]] = None
+                        else:
+                            out_dict[defaults["channels"][i]] = getattr(
+                                self.params, key
+                            )[i]
+                    defaults[key] = out_dict
                 else:
-                    defaults[key] = [value.name]
-            elif key == "objects":
-                if value is None:
-                    defaults["channels_options"] = []
-                else:
-                    channels_options = value.get_data_list()
-                    if "Visual Parameters" in channels_options:
-                        channels_options.remove("Visual Parameters")
-                    defaults["channels_options"] = channels_options
-                for channel in defaults["channels_options"]:
-                    self.get_channel(channel)
-            else:
-                defaults[key] = value
-        """
-        defaults["full_scales"] = {defaults["channel"].name: defaults["scale"]}
-        defaults["full_lower_bounds"] = {
-            defaults["channel"].name: defaults["lower_bounds"]
-        }
-        defaults["full_upper_bounds"] = {
-            defaults["channel"].name: defaults["upper_bounds"]
-        }
-        """
+                    defaults[key] = value
+
         return defaults
 
     def update_color_select(self, checkbox):
@@ -789,6 +793,8 @@ class Clustering(ScatterPlots):
                     )
                 )
 
+        # self.update_param_dict(update_dict)
+
         outputs = []
         for param in param_list:
             if param in update_dict.keys():
@@ -797,6 +803,26 @@ class Clustering(ScatterPlots):
                 outputs.append(no_update)
 
         return tuple(outputs)
+
+    def update_param_dict(self, update_dict):
+        for key, value in self.params.to_dict().items():
+            if key in update_dict:
+                if key in ["x", "y", "z", "color", "size", "channel"]:
+                    if key in self.data_channels:
+                        self.params.key = self.data_channels[key]
+                    else:
+                        self.params.key = None
+                elif key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
+                    if "channels" in update_dict:
+                        channels = update_dict["channels"]
+                    else:
+                        channels = self.params.channels
+                    outlist = []
+                    for channel in channels:
+                        outlist.append(update_dict[key][channel])
+                    setattr(self.params, key, outlist)
+                else:
+                    setattr(self.params, key, update_dict[key])
 
     def update_plots(
         self,
@@ -978,7 +1004,7 @@ class Clustering(ScatterPlots):
         """
         Generate an histogram plot for the selected data channel.
         """
-        if dataframe is not None:
+        if (dataframe is not None) & (channel is not None):
             histogram = go.Figure(
                 data=[
                     go.Histogram(
@@ -996,7 +1022,11 @@ class Clustering(ScatterPlots):
         """
         Generate a box plot for each cluster.
         """
-        if dataframe is not None and self.kmeans is not None:
+        if (
+            (dataframe is not None)
+            and (self.kmeans is not None)
+            and (channel is not None)
+        ):
             field = channel
 
             boxes = []
@@ -1131,7 +1161,6 @@ class Clustering(ScatterPlots):
         Normalize the the selected data and perform the kmeans clustering.
         """
         self.kmeans = None
-
         self.indices, values = self.get_indices(channels, downsampling)
         n_values = values.shape[0]
 
@@ -1271,6 +1300,11 @@ class Clustering(ScatterPlots):
                 # monitored_directory_copy(self.export_directory.selected_path, obj)
             else:
                 output_path = os.path.dirname(self.params.geoh5.h5file)
+
+            # Write output uijson
+            filename = "clustering"
+            params = ClusteringParams(validate=False, **self.params.to_dict())
+            params.write_input_file(name=filename, path=output_path, validate=False)
 
             temp_geoh5 = f"Clustering_{time.time():.3f}.geoh5"
             ws, live_link = self.get_output_workspace(
