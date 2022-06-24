@@ -69,7 +69,7 @@ default_ui_json.update(
             "lineEdit": False,
         },
         "upper_bounds": {
-            "group": "x axis",
+            "group": "data",
             "label": "Upper bounds",
             "main": True,
             "value": 0.0,
@@ -123,4 +123,5 @@ app_initializer = {
     "scale": 5,
     "lower_bounds": -5.0,
     "upper_bounds": 200.0,
+    "ga_group_name": "Clusters",
 }
