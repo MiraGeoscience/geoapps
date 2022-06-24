@@ -467,7 +467,7 @@ class Clustering(ScatterPlots):
         # Get initial values to initialize the dash components
         defaults = {}
         # If there is no default data subset list, set it from selected scatter plot data
-        if self.params.channels is None:
+        if not self.params.channels:
             plot_data = [
                 self.defaults["x_name"],
                 self.defaults["y_name"],
@@ -475,17 +475,17 @@ class Clustering(ScatterPlots):
                 self.defaults["color_name"],
                 self.defaults["size_name"],
             ]
-            defaults["channels"] = list(filter(None, plot_data))
-        else:
-            defaults["channels"] = self.params.channels
+            self.params.channels = list(filter(None, plot_data))
+        defaults["channels"] = self.params.channels
 
         if len(defaults["channels"]) > 0:
-            defaults["channel"] = defaults["channels"][0]
+            self.params.channel = defaults["channels"][0]
         else:
-            defaults["channel"] = None
+            self.params.channel = None
+        defaults["channel"] = self.params.channel
 
         for key, value in self.params.to_dict().items():
-            if key != "channels":
+            if (key != "channels") & (key != "channel"):
                 if key == "objects":
                     if value is None:
                         defaults["channels_options"] = []
@@ -793,7 +793,7 @@ class Clustering(ScatterPlots):
                     )
                 )
 
-        # self.update_param_dict(update_dict)
+        self.update_param_dict(update_dict)
 
         outputs = []
         for param in param_list:
@@ -1302,7 +1302,7 @@ class Clustering(ScatterPlots):
                 output_path = os.path.dirname(self.params.geoh5.h5file)
 
             # Write output uijson
-            filename = "clustering"
+            filename = "clustering.ui.json"
             params = ClusteringParams(validate=False, **self.params.to_dict())
             params.write_input_file(name=filename, path=output_path, validate=False)
 
@@ -1327,6 +1327,7 @@ class Clustering(ScatterPlots):
                     "values": color_map,
                 }
 
+            print(output_path)
             # return "Saved to " + output_path + "/" + temp_geoh5
             return live_link
 
