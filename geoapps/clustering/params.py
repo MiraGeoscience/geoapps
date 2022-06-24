@@ -34,6 +34,7 @@ class ClusteringParams(ScatterPlotParams):
         self.lower_bounds = None
         self.upper_bounds = None
         self.ga_group_name = None
+        self.channels = None
         self.full_scales = None
         self.full_lower_bounds = None
         self.full_upper_bounds = None
@@ -116,7 +117,18 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("upper_bounds", val)
 
     @property
-    def full_scales(self) -> dict | None:
+    def channels(self) -> list | None:
+        """
+        List of channels.
+        """
+        return self._channels
+
+    @channels.setter
+    def channels(self, val):
+        self.setter_validator("channels", val)
+
+    @property
+    def full_scales(self) -> list | None:
         """
         Scaling factors for all channels.
         """
@@ -127,7 +139,7 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("full_scales", val)
 
     @property
-    def full_lower_bounds(self) -> dict | None:
+    def full_lower_bounds(self) -> list | None:
         """
         Lower bounds for all channels.
         """
@@ -138,7 +150,7 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("full_lower_bounds", val)
 
     @property
-    def full_upper_bounds(self) -> dict | None:
+    def full_upper_bounds(self) -> list | None:
         """
         Upper bounds for all channels.
         """
