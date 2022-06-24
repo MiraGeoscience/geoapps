@@ -50,9 +50,10 @@ class Clustering(ScatterPlots):
         self.indices = []
         self.mapping = None
         self.color_pickers = colors
+        self.defaults = {}
         # Initial values for the dash components
         super().__init__(**self.params.to_dict())
-        self.defaults = self.get_cluster_defaults()
+        self.defaults.update(self.get_cluster_defaults())
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -77,13 +78,15 @@ class Clustering(ScatterPlots):
                                                 dcc.Markdown("Data: "),
                                                 dcc.Dropdown(
                                                     id="channel",
-                                                    value=self.defaults["channel"].name,
+                                                    value=self.defaults[
+                                                        "x_name"
+                                                    ],  # self.defaults["channel"].name,
                                                     options=[
-                                                        self.defaults["x"].name,
-                                                        self.defaults["y"].name,
-                                                        self.defaults["z"].name,
-                                                        self.defaults["color"].name,
-                                                        self.defaults["size"].name,
+                                                        self.defaults["x_name"],
+                                                        self.defaults["y_name"],
+                                                        self.defaults["z_name"],
+                                                        self.defaults["color_name"],
+                                                        self.defaults["size_name"],
                                                     ],
                                                 ),
                                                 dcc.Markdown("Scale: "),
@@ -242,13 +245,13 @@ class Clustering(ScatterPlots):
                         dcc.Dropdown(
                             id="channels",
                             value=[
-                                self.defaults["x"].name,
-                                self.defaults["y"].name,
-                                self.defaults["z"].name,
-                                self.defaults["color"].name,
-                                self.defaults["size"].name,
+                                self.defaults["x_name"],
+                                self.defaults["y_name"],
+                                self.defaults["z_name"],
+                                self.defaults["color_name"],
+                                self.defaults["size_name"],
                             ],
-                            options=self.defaults["data_options"],
+                            options=self.defaults["channels_options"],
                             multi=True,
                         ),
                     ],
@@ -391,6 +394,7 @@ class Clustering(ScatterPlots):
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Output(component_id="channel", component_property="options"),
+            Output(component_id="channels", component_property="options"),
             Output(component_id="scale", component_property="value"),
             Output(component_id="lower_bounds", component_property="value"),
             Output(component_id="upper_bounds", component_property="value"),
@@ -485,17 +489,17 @@ class Clustering(ScatterPlots):
                     defaults[key] = [value.name]
             elif key == "objects":
                 if value is None:
-                    defaults["data_options"] = []
+                    defaults["channels_options"] = []
                 else:
-                    data_options = value.get_data_list()
-                    if "Visual Parameters" in data_options:
-                        data_options.remove("Visual Parameters")
-                    defaults["data_options"] = data_options
-                for channel in defaults["data_options"]:
+                    channels_options = value.get_data_list()
+                    if "Visual Parameters" in channels_options:
+                        channels_options.remove("Visual Parameters")
+                    defaults["channels_options"] = channels_options
+                for channel in defaults["channels_options"]:
                     self.get_channel(channel)
             else:
                 defaults[key] = value
-
+        """
         defaults["full_scales"] = {defaults["channel"].name: defaults["scale"]}
         defaults["full_lower_bounds"] = {
             defaults["channel"].name: defaults["lower_bounds"]
@@ -503,7 +507,7 @@ class Clustering(ScatterPlots):
         defaults["full_upper_bounds"] = {
             defaults["channel"].name: defaults["upper_bounds"]
         }
-
+        """
         return defaults
 
     def update_color_select(self, checkbox):
@@ -534,6 +538,7 @@ class Clustering(ScatterPlots):
         self, channel, channels, full_scales, full_lower_bounds, full_upper_bounds
     ):
         self.data_channels = self.get_data_channels(channels)
+        channels = list(filter(None, channels))
 
         for channel in channels:
             dict = self.update_properties(
@@ -560,18 +565,18 @@ class Clustering(ScatterPlots):
             channel = None
 
         if self.kmeans is not None:
-            channel_options = channels.append("kmeans")
+            data_options = channels + ["kmeans"]
             color_maps_options = px.colors.named_colorscales() + ["kmeans"]
             self.data_channels.update({"kmeans": KMeansData("kmeans", self.kmeans)})
         else:
-            channel_options = channels
+            data_options = channels
             color_maps_options = px.colors.named_colorscales()
             self.data_channels.pop("kmeans", None)
 
         return {
-            "channels_options": channel_options,
+            "channel_options": channels,
             "color_maps_options": color_maps_options,
-            "data_options": channels,
+            "data_options": data_options,
             "full_scales": new_scales,
             "full_lower_bounds": new_lower_bounds,
             "full_upper_bounds": new_upper_bounds,
@@ -581,17 +586,25 @@ class Clustering(ScatterPlots):
     def update_properties(
         self, channel, full_scales, full_lower_bounds, full_upper_bounds
     ):
-        if channel not in full_scales.keys():
-            full_scales[channel] = 1
-        scale = full_scales[channel]
 
-        if channel not in full_lower_bounds.keys():
-            full_lower_bounds[channel] = np.nanmin(self.data_channels[channel].values)
-        lower_bounds = full_lower_bounds[channel]
+        if channel is not None:
+            if channel not in full_scales.keys():
+                full_scales[channel] = 1
+            scale = full_scales[channel]
 
-        if channel not in full_upper_bounds.keys():
-            full_upper_bounds[channel] = np.nanmax(self.data_channels[channel].values)
-        upper_bounds = full_upper_bounds[channel]
+            if channel not in full_lower_bounds.keys():
+                full_lower_bounds[channel] = np.nanmin(
+                    self.data_channels[channel].values
+                )
+            lower_bounds = full_lower_bounds[channel]
+
+            if channel not in full_upper_bounds.keys():
+                full_upper_bounds[channel] = np.nanmax(
+                    self.data_channels[channel].values
+                )
+            upper_bounds = full_upper_bounds[channel]
+        else:
+            scale, lower_bounds, upper_bounds = None, None, None
 
         return {
             "scale": scale,
@@ -662,6 +675,7 @@ class Clustering(ScatterPlots):
             "size_markers",
             "filename",
             "contents",
+            "channel_options",
             "channels_options",
             "scale",
             "lower_bounds",
@@ -675,6 +689,12 @@ class Clustering(ScatterPlots):
         ]
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if full_scales is None:
+            full_scales = {}
+        if full_lower_bounds is None:
+            full_lower_bounds = {}
+        if full_upper_bounds is None:
+            full_upper_bounds = {}
 
         update_dict = {}
         if trigger == "upload":
@@ -682,9 +702,8 @@ class Clustering(ScatterPlots):
                 # Update params from uploaded uijson
                 update_dict = self.update_from_uijson(contents)
             elif filename.endswith(".geoh5"):
-                # Update object and data options from uploaded workspace
+                # Update object and data subset options from uploaded workspace
                 update_dict = self.update_object_options(contents)
-                # update data subset ***
                 update_dict.update(
                     {
                         "channels_options": self.update_data_options(objects)[
@@ -748,7 +767,7 @@ class Clustering(ScatterPlots):
                 update_dict.update(
                     {
                         "dataframe": self.update_dataframe(
-                            downsampling, update_dict["channels_options"]
+                            downsampling, channels  # update_dict[""]
                         )
                     }
                 )
@@ -821,7 +840,6 @@ class Clustering(ScatterPlots):
                 color_maps = self.update_colormap(
                     n_clusters, color_picker, select_cluster
                 )
-
             # make plotting data variables....??? pass those with no downsampling? or update object data.
             crossplot = self.update_plot(
                 downsampling,
@@ -1119,7 +1137,7 @@ class Clustering(ScatterPlots):
 
         dataframe = pd.DataFrame(
             values[self.indices, :],
-            columns=channels,
+            columns=list(filter(None, channels)),
         )
 
         tree = cKDTree(dataframe.values)
@@ -1291,10 +1309,6 @@ class KMeansData:
     def __init__(self, name=None, values=None):
         self.name = name
         self.values = values
-
-
-app = Clustering()
-app.app.run()
 
 
 if __name__ == "__main__":

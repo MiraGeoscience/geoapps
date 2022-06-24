@@ -44,7 +44,7 @@ class ScatterPlots:
 
         self.data_channels = {}
         # Initial values for the dash components
-        defaults = self.get_defaults()
+        self.defaults = self.get_defaults()
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -65,8 +65,8 @@ class ScatterPlots:
                 dcc.Markdown(children="Object: "),
                 dcc.Dropdown(
                     id="objects",
-                    options=defaults["objects_options"],
-                    value=defaults["objects_name"],
+                    options=self.defaults["objects_options"],
+                    value=self.defaults["objects_name"],
                     style={"margin-bottom": "20px"},
                     clearable=False,
                 ),
@@ -81,7 +81,7 @@ class ScatterPlots:
                         ),
                         dcc.Slider(
                             id="downsampling",
-                            value=defaults["downsampling"],
+                            value=self.defaults["downsampling"],
                             min=1,
                             max=100,
                             step=1,
@@ -127,8 +127,8 @@ class ScatterPlots:
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="x",
-                            options=defaults["data_options"],
-                            value=defaults["x_name"],
+                            options=self.defaults["data_options"],
+                            value=self.defaults["x_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -143,7 +143,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="x_thresh",
                                     type="number",
-                                    value=defaults["x_thresh"],
+                                    value=self.defaults["x_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -152,7 +152,7 @@ class ScatterPlots:
                                 dcc.Checklist(
                                     id="x_log",
                                     options=["Log10"],
-                                    value=defaults["x_log"],
+                                    value=self.defaults["x_log"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -170,7 +170,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="x_min",
                                     type="number",
-                                    value=defaults["x_min"],
+                                    value=self.defaults["x_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -191,7 +191,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="x_max",
                                     type="number",
-                                    value=defaults["x_max"],
+                                    value=self.defaults["x_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -210,8 +210,8 @@ class ScatterPlots:
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="y",
-                            options=defaults["data_options"],
-                            value=defaults["y_name"],
+                            options=self.defaults["data_options"],
+                            value=self.defaults["y_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -226,7 +226,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="y_thresh",
                                     type="number",
-                                    value=defaults["y_thresh"],
+                                    value=self.defaults["y_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -235,7 +235,7 @@ class ScatterPlots:
                                 dcc.Checklist(
                                     id="y_log",
                                     options=["Log10"],
-                                    value=defaults["y_log"],
+                                    value=self.defaults["y_log"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -253,7 +253,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="y_min",
                                     type="number",
-                                    value=defaults["y_min"],
+                                    value=self.defaults["y_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -274,7 +274,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="y_max",
                                     type="number",
-                                    value=defaults["y_max"],
+                                    value=self.defaults["y_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -293,8 +293,8 @@ class ScatterPlots:
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="z",
-                            options=defaults["data_options"],
-                            value=defaults["z_name"],
+                            options=self.defaults["data_options"],
+                            value=self.defaults["z_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -309,7 +309,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="z_thresh",
                                     type="number",
-                                    value=defaults["z_thresh"],
+                                    value=self.defaults["z_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -318,7 +318,7 @@ class ScatterPlots:
                                 dcc.Checklist(
                                     id="z_log",
                                     options=["Log10"],
-                                    value=defaults["z_log"],
+                                    value=self.defaults["z_log"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -336,7 +336,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="z_min",
                                     type="number",
-                                    value=defaults["z_min"],
+                                    value=self.defaults["z_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -357,7 +357,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="z_max",
                                     type="number",
-                                    value=defaults["z_max"],
+                                    value=self.defaults["z_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -376,14 +376,14 @@ class ScatterPlots:
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="color",
-                            options=defaults["data_options"],
-                            value=defaults["color_name"],
+                            options=self.defaults["data_options"],
+                            value=self.defaults["color_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         dcc.Dropdown(
                             id="color_maps",
                             options=px.colors.named_colorscales(),
-                            value=defaults["color_maps"],
+                            value=self.defaults["color_maps"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -398,7 +398,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="color_thresh",
                                     type="number",
-                                    value=defaults["color_thresh"],
+                                    value=self.defaults["color_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -407,7 +407,7 @@ class ScatterPlots:
                                 dcc.Checklist(
                                     id="color_log",
                                     options=["Log10"],
-                                    value=defaults["color_log"],
+                                    value=self.defaults["color_log"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -425,7 +425,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="color_min",
                                     type="number",
-                                    value=defaults["color_min"],
+                                    value=self.defaults["color_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -446,7 +446,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="color_max",
                                     type="number",
-                                    value=defaults["color_max"],
+                                    value=self.defaults["color_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -465,8 +465,8 @@ class ScatterPlots:
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="size",
-                            options=defaults["data_options"],
-                            value=defaults["size_name"],
+                            options=self.defaults["data_options"],
+                            value=self.defaults["size_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -480,7 +480,7 @@ class ScatterPlots:
                                 ),
                                 dcc.Slider(
                                     id="size_markers",
-                                    value=defaults["size_markers"],
+                                    value=self.defaults["size_markers"],
                                     min=1,
                                     max=100,
                                     step=1,
@@ -505,7 +505,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="size_thresh",
                                     type="number",
-                                    value=defaults["size_thresh"],
+                                    value=self.defaults["size_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -514,7 +514,7 @@ class ScatterPlots:
                                 dcc.Checklist(
                                     id="size_log",
                                     options=["Log10"],
-                                    value=defaults["size_log"],
+                                    value=self.defaults["size_log"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -532,7 +532,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="size_min",
                                     type="number",
-                                    value=defaults["size_min"],
+                                    value=self.defaults["size_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -553,7 +553,7 @@ class ScatterPlots:
                                 dcc.Input(
                                     id="size_max",
                                     type="number",
-                                    value=defaults["size_max"],
+                                    value=self.defaults["size_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
