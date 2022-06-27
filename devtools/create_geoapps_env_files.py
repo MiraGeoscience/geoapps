@@ -10,7 +10,7 @@
 """
 Creates locked environment files for Conda to install geoapps within the environment.
 
-Usage: from a the conda base environment, at the root of the project:
+Usage: from the conda base environment, at the root of the project:
 > python devtools/create_geoapps_env_files.py
 
 To prepare the conda base environment, see devtools/setup-conda-base.bat
