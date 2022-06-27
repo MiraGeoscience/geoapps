@@ -696,7 +696,7 @@ class Clustering(ScatterPlots):
             "channel_options",
             "channel",
             "channels_options",
-            "channels_value",
+            "channels_name",
             "scale",
             "lower_bounds",
             "upper_bounds",
@@ -731,7 +731,7 @@ class Clustering(ScatterPlots):
                 update_dict.update(
                     {
                         "channels_options": channels_options,
-                        "channels_value": None,
+                        "channels_name": None,
                     }
                 )
                 update_dict.update(
@@ -743,7 +743,7 @@ class Clustering(ScatterPlots):
                         full_upper_bounds,
                     )
                 )
-                update_dict.update(
+                """update_dict.update(
                     {
                         "channel": None,
                         "x_value": None,
@@ -752,7 +752,7 @@ class Clustering(ScatterPlots):
                         "color_value": None,
                         "size_value": None,
                     }
-                )
+                )"""
             else:
                 print("Uploaded file must be a workspace or ui.json.")
             update_dict["filename"] = None
@@ -801,7 +801,7 @@ class Clustering(ScatterPlots):
                 )
             elif trigger in ["channels", "downsampling", ""]:
                 update_dict.update(
-                    {"channels_value": channels, "downsampling": downsampling}
+                    {"channels_name": channels, "downsampling": downsampling}
                 )
                 # Update data options from data subset
                 update_dict.update(
@@ -850,8 +850,8 @@ class Clustering(ScatterPlots):
         for key, value in self.params.to_dict().items():
             if key in update_dict:
                 if key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
-                    if "channels_value" in update_dict:
-                        channels = update_dict["channels_value"]
+                    if "channels_name" in update_dict:
+                        channels = update_dict["channels_name"]
                     else:
                         channels = self.params.channels
                     outlist = []
@@ -869,6 +869,10 @@ class Clustering(ScatterPlots):
                             key,
                             self.data_channels[update_dict[key + "_name"]],
                         )
+            elif key == "objects":
+                if "objects_name" in update_dict:
+                    obj = self.params.geoh5.get_entity(update_dict["objects_name"])[0]
+                    self.params.objects = obj
 
     def update_plots(
         self,
@@ -906,13 +910,12 @@ class Clustering(ScatterPlots):
         size_max,
         size_markers,
     ):
-        if dataframe_dict:
-            dataframe = pd.DataFrame(dataframe_dict["dataframe"])
+        dataframe = pd.DataFrame(dataframe_dict["dataframe"])
+        if not dataframe.empty:
             if color_maps == "kmeans":
                 color_maps = self.update_colormap(
                     n_clusters, color_picker, select_cluster
                 )
-            # make plotting data variables....??? pass those with no downsampling? or update object data.
             crossplot = self.update_plot(
                 downsampling,
                 x,
@@ -943,16 +946,15 @@ class Clustering(ScatterPlots):
                 size_max,
                 size_markers,
             )
-            stats_table = self.make_stats_table(dataframe).to_dict("records")
+            stats_table = self.make_stats_table(dataframe)
             matrix = self.make_heatmap(dataframe)
             histogram = self.make_hist_plot(dataframe, channel)
             boxplot = self.make_boxplot(n_clusters, dataframe, channel)
             inertia = self.make_inertia_plot(n_clusters)
-
             return crossplot, stats_table, matrix, histogram, boxplot, inertia
 
         else:
-            return None, None, None, None, None, None
+            return go.Figure(), None, go.Figure(), go.Figure(), go.Figure(), go.Figure()
 
     def update_color_picker(self, select_cluster):
         return {"color_picker": dict(hex=self.color_pickers[select_cluster])}
@@ -986,10 +988,10 @@ class Clustering(ScatterPlots):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
-        if not dataframe_dict:
-            return
-
         dataframe = pd.DataFrame(dataframe_dict["dataframe"])
+
+        if dataframe.empty:
+            return
         # Prime the app with clusters
         # Normalize values and run
         values = []
@@ -1050,7 +1052,7 @@ class Clustering(ScatterPlots):
         """
         Generate an histogram plot for the selected data channel.
         """
-        if (dataframe is not None) & (channel is not None):
+        if channel is not None:
             histogram = go.Figure(
                 data=[
                     go.Histogram(
@@ -1068,11 +1070,7 @@ class Clustering(ScatterPlots):
         """
         Generate a box plot for each cluster.
         """
-        if (
-            (dataframe is not None)
-            and (self.kmeans is not None)
-            and (channel is not None)
-        ):
+        if (self.kmeans is not None) and (channel is not None):
             field = channel
 
             boxes = []
@@ -1115,126 +1113,127 @@ class Clustering(ScatterPlots):
         """
         Generate a table of statistics using pandas
         """
-        if dataframe is not None:
-            stats_df = dataframe.describe(percentiles=None, include=None, exclude=None)
-            stats_df.insert(0, "", stats_df.index)
-            return stats_df
-        else:
-            return None
+        stats_df = dataframe.describe(percentiles=None, include=None, exclude=None)
+        stats_df.insert(0, "", stats_df.index)
+        return stats_df.to_dict("records")
 
     def make_heatmap(self, dataframe):
         """
         Generate a confusion matrix
         """
-        if dataframe is not None:
-            df = dataframe.copy()
-            corrs = df.corr()
+        df = dataframe.copy()
+        corrs = df.corr()
 
-            matrix = go.Figure(
-                data=[
-                    go.Heatmap(
-                        x=list(corrs.columns),
-                        y=list(corrs.index),
-                        z=corrs.values,
-                        type="heatmap",
-                        colorscale="Viridis",
-                        zsmooth=False,
-                    )
-                ]
-            )
+        matrix = go.Figure(
+            data=[
+                go.Heatmap(
+                    x=list(corrs.columns),
+                    y=list(corrs.index),
+                    z=corrs.values,
+                    type="heatmap",
+                    colorscale="Viridis",
+                    zsmooth=False,
+                )
+            ]
+        )
 
-            matrix.update_scenes(aspectratio=dict(x=1, y=1, z=0.7), aspectmode="manual")
-            matrix.update_layout(
-                width=500,
-                height=500,
-                autosize=False,
-                margin=dict(t=0, b=0, l=0, r=0),
-                template="plotly_white",
-                updatemenus=[
-                    {
-                        "buttons": [
-                            {
-                                "args": ["type", "heatmap"],
-                                "label": "Heatmap",
-                                "method": "restyle",
-                            },
-                            {
-                                "args": ["type", "surface"],
-                                "label": "3D Surface",
-                                "method": "restyle",
-                            },
-                        ],
-                        "direction": "down",
-                        "pad": {"r": 10, "t": 10},
-                        "showactive": True,
-                        "x": 0.01,
-                        "xanchor": "left",
-                        "y": 1.15,
-                        "yanchor": "top",
-                    },
-                    {
-                        "buttons": [
-                            {
-                                "args": ["colorscale", label],
-                                "label": label,
-                                "method": "restyle",
-                            }
-                            for label in [
-                                "Viridis",
-                                "Rainbow",
-                                "Cividis",
-                                "Blues",
-                                "Greens",
-                            ]
-                        ],
-                        "direction": "down",
-                        "pad": {"r": 10, "t": 10},
-                        "showactive": True,
-                        "x": 0.32,
-                        "xanchor": "left",
-                        "y": 1.15,
-                        "yanchor": "top",
-                    },
-                ],
-                yaxis={"autorange": "reversed"},
-            )
-            return matrix
-        else:
-            return None
+        matrix.update_scenes(aspectratio=dict(x=1, y=1, z=0.7), aspectmode="manual")
+        matrix.update_layout(
+            width=500,
+            height=500,
+            autosize=False,
+            margin=dict(t=0, b=0, l=0, r=0),
+            template="plotly_white",
+            updatemenus=[
+                {
+                    "buttons": [
+                        {
+                            "args": ["type", "heatmap"],
+                            "label": "Heatmap",
+                            "method": "restyle",
+                        },
+                        {
+                            "args": ["type", "surface"],
+                            "label": "3D Surface",
+                            "method": "restyle",
+                        },
+                    ],
+                    "direction": "down",
+                    "pad": {"r": 10, "t": 10},
+                    "showactive": True,
+                    "x": 0.01,
+                    "xanchor": "left",
+                    "y": 1.15,
+                    "yanchor": "top",
+                },
+                {
+                    "buttons": [
+                        {
+                            "args": ["colorscale", label],
+                            "label": label,
+                            "method": "restyle",
+                        }
+                        for label in [
+                            "Viridis",
+                            "Rainbow",
+                            "Cividis",
+                            "Blues",
+                            "Greens",
+                        ]
+                    ],
+                    "direction": "down",
+                    "pad": {"r": 10, "t": 10},
+                    "showactive": True,
+                    "x": 0.32,
+                    "xanchor": "left",
+                    "y": 1.15,
+                    "yanchor": "top",
+                },
+            ],
+            yaxis={"autorange": "reversed"},
+        )
+        return matrix
 
     def update_dataframe(self, downsampling, channels):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
         self.kmeans = None
-        self.indices, values = self.get_indices(channels, downsampling)
-        n_values = values.shape[0]
 
-        dataframe = pd.DataFrame(
-            values[self.indices, :],
-            columns=list(filter(None, channels)),
-        )
+        if (channels is None) | (not channels):
+            self.mapping = None
+            self.indices = None
+            return {"dataframe": None}
+        else:
 
-        tree = cKDTree(dataframe.values)
-        inactive_set = np.ones(n_values, dtype="bool")
-        inactive_set[self.indices] = False
-        out_values = values[inactive_set, :]
-        for ii in range(values.shape[1]):
-            out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
-                values[self.indices, ii]
+            self.indices, values = self.get_indices(channels, downsampling)
+            n_values = values.shape[0]
+
+            dataframe = pd.DataFrame(
+                values[self.indices, :],
+                columns=list(filter(None, channels)),
             )
 
-        _, ind_out = tree.query(out_values)
-        del tree
+            tree = cKDTree(dataframe.values)
+            inactive_set = np.ones(n_values, dtype="bool")
+            inactive_set[self.indices] = False
+            out_values = values[inactive_set, :]
+            for ii in range(values.shape[1]):
+                out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
+                    values[self.indices, ii]
+                )
 
-        self.mapping = np.empty(n_values, dtype="int")
-        self.mapping[inactive_set] = ind_out
-        self.mapping[self.indices] = np.arange(len(self.indices))
+            _, ind_out = tree.query(out_values)
+            del tree
 
-        # self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
-        # options = [[self.data.uid_name_map[key], key] for key in fields]
-        # self.channels_plot_options.options = options
-        return {"dataframe": dataframe.to_dict("records")}
+            self.mapping = np.empty(n_values, dtype="int")
+            self.mapping[inactive_set] = ind_out
+            self.mapping[self.indices] = np.arange(len(self.indices))
+
+            # self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
+            # options = [[self.data.uid_name_map[key], key] for key in fields]
+            # self.channels_plot_options.options = options
+            return {"dataframe": dataframe.to_dict("records")}
 
     def get_indices(self, channels, downsampling):
         values = []
@@ -1307,8 +1306,7 @@ class Clustering(ScatterPlots):
             self.kmeans is not None
             and callback_context.triggered[0]["prop_id"].split(".")[0] == "export"
         ):
-            obj = self.params.objects  # objects ***
-            print(obj.name)
+            obj = self.params.objects
             live_link = True
             # Create reference values and color_map
             group_map, color_map = {}, []
