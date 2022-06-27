@@ -807,6 +807,7 @@ class ScatterPlots:
         size_min,
         size_max,
         size_markers,
+        clustering=False,
     ):
         new_params_dict = {}
         for key, value in self.params.to_dict().items():
@@ -827,7 +828,7 @@ class ScatterPlots:
                 | (key == "z")
                 | (key == "color")
                 | (key == "size")
-            ):
+            ) & (clustering is False):
                 if (param != "None") & (param in self.data_channels.keys()):
                     new_params_dict[key] = self.data_channels[param]
                 else:
