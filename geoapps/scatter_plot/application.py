@@ -956,12 +956,12 @@ class ScatterPlots:
         """
         self.get_channel(channel)
 
-        cmin, cmax = 0, 0
+        cmin, cmax = None, None
         if (channel in self.data_channels.keys()) & (channel != "None"):
             values = self.data_channels[channel].values
             values = values[~np.isnan(values)]
-            cmin = f"{np.min(values):.2e}"
-            cmax = f"{np.max(values):.2e}"
+            cmin = float(f"{np.min(values):.2e}")
+            cmax = float(f"{np.max(values):.2e}")
 
         return cmin, cmax
 

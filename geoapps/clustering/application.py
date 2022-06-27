@@ -380,7 +380,9 @@ class Clustering(ScatterPlots):
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Output(component_id="channel", component_property="options"),
+            Output(component_id="channel", component_property="value"),
             Output(component_id="channels", component_property="options"),
+            Output(component_id="channels", component_property="value"),
             Output(component_id="scale", component_property="value"),
             Output(component_id="lower_bounds", component_property="value"),
             Output(component_id="upper_bounds", component_property="value"),
@@ -541,51 +543,63 @@ class Clustering(ScatterPlots):
     def update_channels(
         self, channel, channels, full_scales, full_lower_bounds, full_upper_bounds
     ):
-        self.data_channels = self.get_data_channels(channels)
-        channels = list(filter(None, channels))
-
-        for channel in channels:
-            dict = self.update_properties(
-                channel, full_scales, full_lower_bounds, full_upper_bounds
-            )
-            full_scales = dict["full_scales"]
-            full_lower_bounds = dict["full_lower_bounds"]
-            full_upper_bounds = dict["full_upper_bounds"]
-
-        new_scales = {}
-        for channel, value in full_scales.items():
-            if channel in channels:
-                new_scales[channel] = value
-        new_lower_bounds = {}
-        for channel, value in full_lower_bounds.items():
-            if channel in channels:
-                new_lower_bounds[channel] = value
-        new_upper_bounds = {}
-        for channel, value in full_upper_bounds.items():
-            if channel in channels:
-                new_upper_bounds[channel] = value
-
-        if channel not in channels:
-            channel = None
-
-        if self.kmeans is not None:
-            data_options = channels + ["kmeans"]
-            color_maps_options = px.colors.named_colorscales() + ["kmeans"]
-            self.data_channels.update({"kmeans": KMeansData("kmeans", self.kmeans)})
+        if channels is None:
+            self.data_channels = {}
+            return {
+                "channel_options": [],
+                "color_maps_options": px.colors.named_colorscales(),
+                "data_options": {},
+                "full_scales": {},
+                "full_lower_bounds": {},
+                "full_upper_bounds": {},
+                "channel": None,
+            }
         else:
-            data_options = channels
-            color_maps_options = px.colors.named_colorscales()
-            self.data_channels.pop("kmeans", None)
+            self.data_channels = self.get_data_channels(channels)
+            channels = list(filter(None, channels))
 
-        return {
-            "channel_options": channels,
-            "color_maps_options": color_maps_options,
-            "data_options": data_options,
-            "full_scales": new_scales,
-            "full_lower_bounds": new_lower_bounds,
-            "full_upper_bounds": new_upper_bounds,
-            "channel": channel,
-        }
+            for channel in channels:
+                dict = self.update_properties(
+                    channel, full_scales, full_lower_bounds, full_upper_bounds
+                )
+                full_scales = dict["full_scales"]
+                full_lower_bounds = dict["full_lower_bounds"]
+                full_upper_bounds = dict["full_upper_bounds"]
+
+            new_scales = {}
+            for channel, value in full_scales.items():
+                if channel in channels:
+                    new_scales[channel] = value
+            new_lower_bounds = {}
+            for channel, value in full_lower_bounds.items():
+                if channel in channels:
+                    new_lower_bounds[channel] = value
+            new_upper_bounds = {}
+            for channel, value in full_upper_bounds.items():
+                if channel in channels:
+                    new_upper_bounds[channel] = value
+
+            if channel not in channels:
+                channel = None
+
+            if self.kmeans is not None:
+                data_options = channels + ["kmeans"]
+                color_maps_options = px.colors.named_colorscales() + ["kmeans"]
+                self.data_channels.update({"kmeans": KMeansData("kmeans", self.kmeans)})
+            else:
+                data_options = channels
+                color_maps_options = px.colors.named_colorscales()
+                self.data_channels.pop("kmeans", None)
+
+            return {
+                "channel_options": channels,
+                "color_maps_options": color_maps_options,
+                "data_options": data_options,
+                "full_scales": new_scales,
+                "full_lower_bounds": new_lower_bounds,
+                "full_upper_bounds": new_upper_bounds,
+                "channel": channel,
+            }
 
     def update_properties(
         self, channel, full_scales, full_lower_bounds, full_upper_bounds
@@ -680,7 +694,9 @@ class Clustering(ScatterPlots):
             "filename",
             "contents",
             "channel_options",
+            "channel",
             "channels_options",
+            "channels_value",
             "scale",
             "lower_bounds",
             "upper_bounds",
@@ -707,34 +723,59 @@ class Clustering(ScatterPlots):
                 update_dict = self.update_from_uijson(contents)
             elif filename.endswith(".geoh5"):
                 # Update object and data subset options from uploaded workspace
+                # update_dict = self.update_from_workspace()
                 update_dict = self.update_object_options(contents)
+                channels_options = self.update_data_options(
+                    update_dict["objects_name"]
+                )["data_options"]
                 update_dict.update(
                     {
-                        "channels_options": self.update_data_options(objects)[
-                            "data_options"
-                        ]
+                        "channels_options": channels_options,
+                        "channels_value": None,
+                    }
+                )
+                update_dict.update(
+                    self.update_channels(
+                        None,
+                        None,
+                        full_scales,
+                        full_lower_bounds,
+                        full_upper_bounds,
+                    )
+                )
+                update_dict.update(
+                    {
+                        "channel": None,
+                        "x_value": None,
+                        "y_value": None,
+                        "z_value": None,
+                        "color_value": None,
+                        "size_value": None,
                     }
                 )
             else:
                 print("Uploaded file must be a workspace or ui.json.")
             update_dict["filename"] = None
             update_dict["contents"] = None
-
         elif trigger == "objects":
             # Update data subset options from object change
             update_dict = {
                 "channels_options": self.update_data_options(objects)["data_options"]
             }
-
         elif trigger == "select_cluster":
             # Update color displayed by the dash colorpicker
             update_dict = self.update_color_picker(select_cluster)
             # Output(component_id="color_picker", component_property="value"),
-
         elif trigger in ["x", "y", "z", "color", "size"]:
             # Update min, max values in scatter plot
-            update_dict = self.set_channel_bounds(x, y, z, color, size)
-
+            update_dict = {
+                "x_name": x,
+                "y_name": y,
+                "z_name": z,
+                "color_name": color,
+                "size_name": size,
+            }
+            update_dict.update(self.set_channel_bounds(x, y, z, color, size))
         elif trigger in [
             "downsampling",
             "channel",
@@ -745,6 +786,7 @@ class Clustering(ScatterPlots):
             "",
         ]:
             update_dict = {}
+            update_dict.update({"channel_name": channel})
 
             if trigger in ["scale", "lower_bounds", "upper_bounds"]:
                 full_scales[channel] = scale
@@ -758,6 +800,9 @@ class Clustering(ScatterPlots):
                     }
                 )
             elif trigger in ["channels", "downsampling", ""]:
+                update_dict.update(
+                    {"channels_value": channels, "downsampling": downsampling}
+                )
                 # Update data options from data subset
                 update_dict.update(
                     self.update_channels(
@@ -769,11 +814,7 @@ class Clustering(ScatterPlots):
                     )
                 )
                 update_dict.update(
-                    {
-                        "dataframe": self.update_dataframe(
-                            downsampling, channels  # update_dict[""]
-                        )
-                    }
+                    {"dataframe": self.update_dataframe(downsampling, channels)}
                 )
                 self.run_clustering(n_clusters, update_dict["dataframe"], full_scales)
                 update_dict.update(
@@ -786,6 +827,7 @@ class Clustering(ScatterPlots):
                     )
                 )
             elif trigger == "channel":
+                update_dict.update({"channel": channel})
                 # Update displayed scale and bounds from stored values
                 update_dict.update(
                     self.update_properties(
@@ -807,22 +849,26 @@ class Clustering(ScatterPlots):
     def update_param_dict(self, update_dict):
         for key, value in self.params.to_dict().items():
             if key in update_dict:
-                if key in ["x", "y", "z", "color", "size", "channel"]:
-                    if key in self.data_channels:
-                        self.params.key = self.data_channels[key]
-                    else:
-                        self.params.key = None
-                elif key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
-                    if "channels" in update_dict:
-                        channels = update_dict["channels"]
+                if key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
+                    if "channels_value" in update_dict:
+                        channels = update_dict["channels_value"]
                     else:
                         channels = self.params.channels
                     outlist = []
-                    for channel in channels:
-                        outlist.append(update_dict[key][channel])
+                    if channels is not None:
+                        for channel in channels:
+                            outlist.append(update_dict[key][channel])
                     setattr(self.params, key, outlist)
                 else:
                     setattr(self.params, key, update_dict[key])
+            elif key in ["x", "y", "z", "color", "size"]:
+                if key + "_name" in update_dict:
+                    if update_dict[key + "_name"] in self.data_channels:
+                        setattr(
+                            self.params,
+                            key,
+                            self.data_channels[update_dict[key + "_name"]],
+                        )
 
     def update_plots(
         self,
@@ -1261,8 +1307,9 @@ class Clustering(ScatterPlots):
             self.kmeans is not None
             and callback_context.triggered[0]["prop_id"].split(".")[0] == "export"
         ):
-            obj = self.params.objects  # ***
-
+            obj = self.params.objects  # objects ***
+            print(obj.name)
+            live_link = True
             # Create reference values and color_map
             group_map, color_map = {}, []
             cluster_values = self.kmeans + 1
@@ -1307,7 +1354,7 @@ class Clustering(ScatterPlots):
             params.write_input_file(name=filename, path=output_path, validate=False)
 
             temp_geoh5 = f"Clustering_{time.time():.3f}.geoh5"
-            ws, live_link = self.get_output_workspace(
+            ws, new_live_link = self.get_output_workspace(
                 live_link, output_path, temp_geoh5
             )
 
@@ -1329,7 +1376,11 @@ class Clustering(ScatterPlots):
 
             print(output_path)
             # return "Saved to " + output_path + "/" + temp_geoh5
-            return live_link
+            if new_live_link:
+                live_link = ["Geoscience ANALYST Pro - Live link"]
+            else:
+                live_link = []
+        return live_link
 
     def run(self):
         # The reloader has not yet run - open the browser
