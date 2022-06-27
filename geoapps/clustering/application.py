@@ -585,7 +585,7 @@ class Clustering(ScatterPlots):
             if self.kmeans is not None:
                 data_options = channels + ["kmeans"]
                 color_maps_options = px.colors.named_colorscales() + ["kmeans"]
-                self.data_channels.update({"kmeans": KMeansData("kmeans", self.kmeans)})
+                self.data_channels.update({"kmeans": PlotData("kmeans", self.kmeans)})
             else:
                 data_options = channels
                 color_maps_options = px.colors.named_colorscales()
@@ -916,8 +916,19 @@ class Clustering(ScatterPlots):
                 color_maps = self.update_colormap(
                     n_clusters, color_picker, select_cluster
                 )
+            if x is not None:
+                x = PlotData(x, dataframe[x].values)
+            if y is not None:
+                y = PlotData(y, dataframe[y].values)
+            if z is not None:
+                z = PlotData(z, dataframe[z].values)
+            if color is not None:
+                color = PlotData(color, dataframe[color].values)
+            if size is not None:
+                size = PlotData(size, dataframe[size].values)
+
             crossplot = self.update_plot(
-                downsampling,
+                100,
                 x,
                 x_log,
                 x_thresh,
@@ -945,7 +956,9 @@ class Clustering(ScatterPlots):
                 size_min,
                 size_max,
                 size_markers,
+                clustering=True,
             )
+
             stats_table = self.make_stats_table(dataframe)
             matrix = self.make_heatmap(dataframe)
             histogram = self.make_hist_plot(dataframe, channel)
@@ -1389,7 +1402,7 @@ class Clustering(ScatterPlots):
         self.app.run_server(host="127.0.0.1", port=8050, debug=False)
 
 
-class KMeansData:
+class PlotData:
     def __init__(self, name=None, values=None):
         self.name = name
         self.values = values
