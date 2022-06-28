@@ -1278,7 +1278,7 @@ class InversionApp(PlotSelection2D):
             ifile = InputFile(
                 ui_json=self.params.input_file.ui_json,
                 validation_options={"disabled": True},
-                workspace=new_workspace
+                workspace=new_workspace,
             )
             ifile.data.update(param_dict)
 
