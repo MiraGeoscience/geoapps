@@ -1296,38 +1296,38 @@ class PeakFinder(ObjectDataSelection):
                 param_dict[name] = group[member]
 
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.3f}.geoh5"
-        new_workspace = self.get_output_workspace(
+        with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
-        )
+        ) as new_workspace:
 
-        for key, value in param_dict.items():
-            if isinstance(value, ObjectBase):
-                if new_workspace.get_entity(value.uid)[0] is None:
-                    param_dict[key] = value.copy(
-                        parent=new_workspace, copy_children=True
-                    )
-                    line_field = [
-                        c for c in param_dict[key].children if c.name == "Line"
-                    ]
-                    if line_field:
-                        param_dict["line_field"] = line_field[0]
+            for key, value in param_dict.items():
+                if isinstance(value, ObjectBase):
+                    if new_workspace.get_entity(value.uid)[0] is None:
+                        param_dict[key] = value.copy(
+                            parent=new_workspace, copy_children=True
+                        )
+                        line_field = [
+                            c for c in param_dict[key].children if c.name == "Line"
+                        ]
+                        if line_field:
+                            param_dict["line_field"] = line_field[0]
 
-        param_dict["geoh5"] = new_workspace
-        if self.live_link.value:
-            param_dict["monitoring_directory"] = self.monitoring_directory
+            param_dict["geoh5"] = new_workspace
+            if self.live_link.value:
+                param_dict["monitoring_directory"] = self.monitoring_directory
 
-        ifile = InputFile(
-            ui_json=ui_json,
-            validations=self.params.validations,
-            validation_options={"disabled": True},
-        )
+            ifile = InputFile(
+                ui_json=ui_json,
+                validations=self.params.validations,
+                validation_options={"disabled": True},
+            )
 
-        new_params = PeakFinderParams(input_file=ifile, **param_dict)
-        new_params.write_input_file()
-        self.run(new_params)
+            new_params = PeakFinderParams(input_file=ifile, **param_dict)
+            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
+            self.run(new_params)
 
-        if self.live_link.value:
-            print("Live link active. Check your ANALYST session for result.")
+            if self.live_link.value:
+                print("Live link active. Check your ANALYST session for result.")
 
     def update_center(self, _):
         """
