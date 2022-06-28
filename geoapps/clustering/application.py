@@ -1424,13 +1424,12 @@ class Clustering(ScatterPlots):
         # return new live link
         return workspace, new_live_link
 
-    def export_clusters(self, n_clicks, n_clusters, group_name, live_link):
+    def export_clusters(self, n_clicks, n_clusters, group_name, live_link, test=False):
         """
         Write cluster groups to the target geoh5 object.
         """
-        if (
-            self.kmeans is not None
-            and callback_context.triggered[0]["prop_id"].split(".")[0] == "export"
+        if self.kmeans is not None and (
+            test or (callback_context.triggered[0]["prop_id"].split(".")[0] == "export")
         ):
             obj = self.params.objects
             live_link = True
