@@ -53,7 +53,7 @@ class Clustering(ScatterPlots):
         self.color_pickers = colors
         # self.defaults = {}
         # Initial values for the dash components
-        super().__init__(**self.params.to_dict())
+        super().__init__(clustering=True, **self.params.to_dict())
         self.defaults.update(self.get_cluster_defaults())
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -436,6 +436,8 @@ class Clustering(ScatterPlots):
             Input(component_id="select_cluster", component_property="value"),
             Input(component_id="dataframe", component_property="data"),
             Input(component_id="channel", component_property="value"),
+            Input(component_id="lower_bounds", component_property="value"),
+            Input(component_id="upper_bounds", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -468,8 +470,6 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="dataframe", component_property="data"),
-            Input(component_id="objects", component_property="value"),
             Input(component_id="n_clusters", component_property="value"),
             Input(component_id="ga_group", component_property="value"),
             Input(component_id="live_link", component_property="value"),
@@ -525,9 +525,10 @@ class Clustering(ScatterPlots):
                 else:
                     defaults[key] = value
 
-        self.defaults.update(
+        channel = defaults["channel"]
+        defaults.update(
             self.update_clustering(
-                None,
+                channel,
                 defaults["channels"],
                 defaults["full_scales"],
                 defaults["full_lower_bounds"],
@@ -536,6 +537,18 @@ class Clustering(ScatterPlots):
                 defaults["n_clusters"],
             )
         )
+
+        defaults["scale"], defaults["lower_bounds"], defaults["upper_bounds"] = (
+            None,
+            None,
+            None,
+        )
+        if channel in defaults["full_scales"]:
+            defaults["scale"] = defaults["full_scales"][channel]
+        if channel in defaults["full_lower_bounds"]:
+            defaults["lower_bounds"] = defaults["full_lower_bounds"][channel]
+        if channel in defaults["full_upper_bounds"]:
+            defaults["upper_bounds"] = defaults["full_upper_bounds"][channel]
 
         return defaults
 
@@ -581,26 +594,26 @@ class Clustering(ScatterPlots):
             self.data_channels = self.get_data_channels(channels)
             channels = list(filter(None, channels))
 
-            for channel in channels:
+            for chan in channels:
                 dict = self.update_properties(
-                    channel, full_scales, full_lower_bounds, full_upper_bounds
+                    chan, full_scales, full_lower_bounds, full_upper_bounds
                 )
                 full_scales = dict["full_scales"]
                 full_lower_bounds = dict["full_lower_bounds"]
                 full_upper_bounds = dict["full_upper_bounds"]
 
             new_scales = {}
-            for channel, value in full_scales.items():
-                if channel in channels:
-                    new_scales[channel] = value
+            for chan, value in full_scales.items():
+                if chan in channels:
+                    new_scales[chan] = value
             new_lower_bounds = {}
-            for channel, value in full_lower_bounds.items():
-                if channel in channels:
-                    new_lower_bounds[channel] = value
+            for chan, value in full_lower_bounds.items():
+                if chan in channels:
+                    new_lower_bounds[chan] = value
             new_upper_bounds = {}
-            for channel, value in full_upper_bounds.items():
-                if channel in channels:
-                    new_upper_bounds[channel] = value
+            for chan, value in full_upper_bounds.items():
+                if chan in channels:
+                    new_upper_bounds[chan] = value
 
             if channel not in channels:
                 channel = None
@@ -627,23 +640,26 @@ class Clustering(ScatterPlots):
     def update_properties(
         self, channel, full_scales, full_lower_bounds, full_upper_bounds
     ):
-
         if channel is not None:
             if channel not in full_scales.keys():
                 full_scales[channel] = 1
             scale = full_scales[channel]
 
-            if channel not in full_lower_bounds.keys():
+            if (channel not in full_lower_bounds.keys()) or (
+                full_lower_bounds[channel] is None
+            ):
                 full_lower_bounds[channel] = np.nanmin(
                     self.data_channels[channel].values
                 )
-            lower_bounds = full_lower_bounds[channel]
+            lower_bounds = float(full_lower_bounds[channel])
 
-            if channel not in full_upper_bounds.keys():
+            if (channel not in full_upper_bounds.keys()) or (
+                full_upper_bounds[channel] is None
+            ):
                 full_upper_bounds[channel] = np.nanmax(
                     self.data_channels[channel].values
                 )
-            upper_bounds = full_upper_bounds[channel]
+            upper_bounds = float(full_upper_bounds[channel])
         else:
             scale, lower_bounds, upper_bounds = None, None, None
 
@@ -922,6 +938,8 @@ class Clustering(ScatterPlots):
         select_cluster,
         dataframe_dict,
         channel,
+        lower_bounds,
+        upper_bounds,
         x,
         x_log,
         x_thresh,
@@ -957,6 +975,9 @@ class Clustering(ScatterPlots):
                 color_maps = self.update_colormap(
                     n_clusters, color_picker, select_cluster
                 )
+            elif color_maps is None:
+                color_maps = [[0.0, "rgb(0,0,0)"]]
+
             if x is not None:
                 x = PlotData(x, dataframe[x].values)
             if y is not None:
@@ -1002,7 +1023,9 @@ class Clustering(ScatterPlots):
 
             stats_table = self.make_stats_table(dataframe)
             matrix = self.make_heatmap(dataframe)
-            histogram = self.make_hist_plot(dataframe, channel)
+            histogram = self.make_hist_plot(
+                dataframe, channel, lower_bounds, upper_bounds
+            )
             boxplot = self.make_boxplot(n_clusters, dataframe, channel)
             inertia = self.make_inertia_plot(n_clusters)
             return crossplot, stats_table, matrix, histogram, boxplot, inertia
@@ -1134,7 +1157,7 @@ class Clustering(ScatterPlots):
         else:
             return None
 
-    def make_hist_plot(self, dataframe, channel):
+    def make_hist_plot(self, dataframe, channel, lower_bounds, upper_bounds):
         """
         Generate an histogram plot for the selected data channel.
         """
@@ -1148,6 +1171,7 @@ class Clustering(ScatterPlots):
                     )
                 ]
             )
+            histogram.update_xaxes(range=[lower_bounds, upper_bounds])
             return histogram
         else:
             return None
@@ -1382,9 +1406,7 @@ class Clustering(ScatterPlots):
         # return new live link
         return workspace, new_live_link
 
-    def export_clusters(
-        self, n_clicks, dataframe, objects, n_clusters, group_name, live_link
-    ):
+    def export_clusters(self, n_clicks, n_clusters, group_name, live_link):
         """
         Write cluster groups to the target geoh5 object.
         """

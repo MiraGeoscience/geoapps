@@ -29,10 +29,6 @@ class ClusteringParams(ScatterPlotParams):
         self._validations = validations
         self.data = None
         self.n_clusters = None
-        self.channel = None
-        self.scale = None
-        self.lower_bounds = None
-        self.upper_bounds = None
         self.ga_group_name = None
         self.channels = None
         self.full_scales = None
@@ -60,50 +56,6 @@ class ClusteringParams(ScatterPlotParams):
     @n_clusters.setter
     def n_clusters(self, val):
         self.setter_validator("n_clusters", val)
-
-    @property
-    def channel(self) -> str | None:
-        """
-        Name of data to plot on histogram, boxplot.
-        """
-        return self._channel
-
-    @channel.setter
-    def channel(self, val):
-        self.setter_validator("channel", val)
-
-    @property
-    def scale(self) -> int | None:
-        """
-        Scaling factor for selected channel.
-        """
-        return self._scale
-
-    @scale.setter
-    def scale(self, val):
-        self.setter_validator("scale", val)
-
-    @property
-    def lower_bounds(self) -> float | None:
-        """
-        Lower bounds for selected channel.
-        """
-        return self._lower_bounds
-
-    @lower_bounds.setter
-    def lower_bounds(self, val):
-        self.setter_validator("lower_bounds", val)
-
-    @property
-    def upper_bounds(self) -> float | None:
-        """
-        Upper bounds for selected channel.
-        """
-        return self._upper_bounds
-
-    @upper_bounds.setter
-    def upper_bounds(self, val):
-        self.setter_validator("upper_bounds", val)
 
     @property
     def channels(self) -> str | None:
