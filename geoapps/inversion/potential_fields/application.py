@@ -1155,13 +1155,34 @@ class InversionApp(PlotSelection2D):
         self.trigger.button_style = "danger"
 
     def write_trigger(self, _):
-        # Copy object to work geoh5
-        with Workspace(
-            path.join(
-                self.export_directory.selected_path,
-                self._ga_group_name.value + ".geoh5",
-            )
+
+        # Widgets values populate params dictionary
+        param_dict = {}
+        for key in self.__dict__:
+            try:
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+                    if key[0] == "_":
+                        key = key[1:]
+
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
+
+                    param_dict[key] = value
+
+            except AttributeError:
+                continue
+
+        # Create a new workapce and copy objects into it
+        with self.get_output_workspace(
+            self.export_directory.selected_path, self.ga_group_name.value
         ) as new_workspace:
+
+            param_dict["geoh5"] = new_workspace
+
             for elem in [
                 self,
                 self._mesh_octree,
@@ -1208,14 +1229,14 @@ class InversionApp(PlotSelection2D):
             for key in self.data_channel_choices.options:
                 widget = getattr(self, f"{key}_uncertainty_channel")
                 if widget.value is not None:
-                    setattr(self.params, f"{key}_uncertainty", str(widget.value))
+                    param_dict[f"{key}_uncertainty"] = str(widget.value)
                     if new_workspace.get_entity(widget.value)[0] is None:
                         self.workspace.get_entity(widget.value)[0].copy(
                             parent=new_obj, copy_children=False
                         )
                 else:
                     widget = getattr(self, f"{key}_uncertainty_floor")
-                    setattr(self.params, f"{key}_uncertainty", widget.value)
+                    param_dict[f"{key}_uncertainty"] = widget.value
 
                 if getattr(self, f"{key}_channel_bool").value:
                     if not self.forward_only.value:
@@ -1228,19 +1249,18 @@ class InversionApp(PlotSelection2D):
                     parent=new_obj
                 )
 
-            self.params.geoh5 = new_workspace
-
             for key in self.__dict__:
                 attr = getattr(self, key)
                 if isinstance(attr, Widget) and hasattr(attr, "value"):
                     value = attr.value
                     if isinstance(value, uuid.UUID):
                         value = new_workspace.get_entity(value)[0]
-                    setattr(self.params, key, value)
+                    if hasattr(self.params, key):
+                        param_dict[key.lstrip("_")] = value
                 else:
                     sub_keys = []
                     if isinstance(attr, (ModelOptions, TopographyOptions)):
-                        sub_keys = [attr.identifier, attr.identifier + "_object"]
+                        sub_keys = [attr.identifier + "_object", attr.identifier]
                         attr = self
                     elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
                         sub_keys = attr.params_keys
@@ -1250,12 +1270,36 @@ class InversionApp(PlotSelection2D):
                             value = value.value
                         if isinstance(value, uuid.UUID):
                             value = new_workspace.get_entity(value)[0]
-                        setattr(self.params, sub_key, value)
 
-            self.params.write_input_file(
+                        if hasattr(self.params, sub_key):
+                            param_dict[sub_key.lstrip("_")] = value
+
+            # Create new params object and write
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+                workspace=new_workspace
+            )
+            ifile.data.update(param_dict)
+
+            new_params = self.params.__class__(input_file=ifile)
+            new_params.write_input_file(
                 name=self._ga_group_name.value + ".ui.json",
                 path=self.export_directory.selected_path,
             )
+            ifile.name = self._ga_group_name.value + ".ui.json"
+            ifile.path = self.export_directory.selected_path
+            self.params.input_file = ifile
+
+            # self.params.geoh5 = new_workspace
+
+
+            #
+            # self.params.input_file.workspace = new_workspace
+            # self.params.write_input_file(
+            #     name=self._ga_group_name.value + ".ui.json",
+            #     path=self.export_directory.selected_path,
+            # )
         self.write.button_style = ""
         self.trigger.button_style = "success"
 
