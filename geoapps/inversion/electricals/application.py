@@ -1062,14 +1062,13 @@ class InversionApp(PlotSelection2D):
                         if hasattr(self.params, sub_key):
                             param_dict[sub_key.lstrip("_")] = value
 
-
             # Create new params object and write
             ifile = InputFile(
                 ui_json=self.params.input_file.ui_json,
                 validation_options={"disabled": True},
-                workspace=new_workspace
+                workspace=new_workspace,
             )
-            param_dict["resolution"] = None # No downsampling for dcip
+            param_dict["resolution"] = None  # No downsampling for dcip
             ifile.data.update(param_dict)
 
             new_params = self.params.__class__(input_file=ifile)
