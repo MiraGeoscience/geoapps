@@ -7,12 +7,15 @@
 
 from __future__ import annotations
 
+import ast
+import json
 import os
 import sys
 import time
 import webbrowser
 from os import environ, makedirs, path
 
+import dash_bootstrap_components as dbc
 import dash_daq as daq
 import numpy as np
 import pandas as pd
@@ -55,6 +58,7 @@ class Clustering(ScatterPlots):
         super().__init__(**self.params.to_dict())
         self.defaults.update(self.get_cluster_defaults())
 
+        # external_stylesheets = [dbc.themes.BOOTSTRAP]
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
         self.app = JupyterDash(
@@ -62,6 +66,11 @@ class Clustering(ScatterPlots):
             url_base_pathname=environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
         )
+
+        """self.app.css.config.serve_locally = False
+        self.app.css.append_css({
+            "external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"
+        })"""
 
         self.norm_tabs_layout = html.Div(
             id="norm_tabs",
@@ -230,6 +239,7 @@ class Clustering(ScatterPlots):
 
         self.app.layout = html.Div(
             [
+                html.H1("TEST"),
                 html.Div(
                     [
                         self.workspace_layout,
@@ -424,7 +434,6 @@ class Clustering(ScatterPlots):
             Input(component_id="select_cluster", component_property="value"),
             Input(component_id="dataframe", component_property="data"),
             Input(component_id="channel", component_property="value"),
-            Input(component_id="downsampling", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -469,6 +478,7 @@ class Clustering(ScatterPlots):
         # Get initial values to initialize the dash components
         defaults = {}
         # If there is no default data subset list, set it from selected scatter plot data
+        self.params.channels = json.loads(self.params.channels)
         if not self.params.channels:
             plot_data = [
                 self.defaults["x_name"],
@@ -501,7 +511,9 @@ class Clustering(ScatterPlots):
                 elif key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
                     out_dict = {}
                     for i in range(len(defaults["channels"])):
-                        if getattr(self.params, key) is None:
+                        if (getattr(self.params, key) is None) | (
+                            not getattr(self.params, key)
+                        ):
                             if key == "full_scales":
                                 out_dict[defaults["channels"][i]] = 1
                             else:
@@ -696,7 +708,7 @@ class Clustering(ScatterPlots):
             "channel_options",
             "channel",
             "channels_options",
-            "channels_name",
+            "channels",
             "scale",
             "lower_bounds",
             "upper_bounds",
@@ -721,6 +733,60 @@ class Clustering(ScatterPlots):
             if filename.endswith(".ui.json"):
                 # Update params from uploaded uijson
                 update_dict = self.update_from_uijson(contents)
+                # Update full scales, bounds
+                if "channels" in update_dict:
+                    channels = update_dict["channels"]
+                    if not channels:
+                        update_dict.update(
+                            {
+                                "full_scales": {},
+                                "full_lower_bounds": {},
+                                "full_upper_bounds": {},
+                            }
+                        )
+                    else:
+                        for key in [
+                            "full_scales",
+                            "full_lower_bounds",
+                            "full_upper_bounds",
+                        ]:
+                            if key in update_dict:
+                                out_dict = {}
+                                full_list = ast.literal_eval(update_dict[key])
+                                if full_list:
+                                    for i in range(len(channels)):
+                                        out_dict[channels[i]] = full_list[i]
+                                update_dict.update({key: out_dict})
+                if "downsampling" in update_dict:
+                    downsampling = update_dict["downsampling"]
+                # print(self.data_channels)
+                # print(update_dict["full_scales"])
+                update_dict.update(
+                    self.update_channels(
+                        channel,
+                        channels,
+                        update_dict["full_scales"],
+                        update_dict["full_lower_bounds"],
+                        update_dict["full_upper_bounds"],
+                    )
+                )
+                # print(self.data_channels)
+                # print(update_dict["full_scales"])
+                update_dict.update(
+                    {"dataframe": self.update_dataframe(downsampling, channels)}
+                )
+                self.run_clustering(
+                    n_clusters, update_dict["dataframe"], update_dict["full_scales"]
+                )
+                update_dict.update(
+                    self.update_channels(
+                        channel,
+                        channels,
+                        update_dict["full_scales"],
+                        update_dict["full_lower_bounds"],
+                        update_dict["full_upper_bounds"],
+                    )
+                )
             elif filename.endswith(".geoh5"):
                 # Update object and data subset options from uploaded workspace
                 # update_dict = self.update_from_workspace()
@@ -731,7 +797,7 @@ class Clustering(ScatterPlots):
                 update_dict.update(
                     {
                         "channels_options": channels_options,
-                        "channels_name": None,
+                        "channels": None,
                     }
                 )
                 update_dict.update(
@@ -743,16 +809,6 @@ class Clustering(ScatterPlots):
                         full_upper_bounds,
                     )
                 )
-                """update_dict.update(
-                    {
-                        "channel": None,
-                        "x_value": None,
-                        "y_value": None,
-                        "z_value": None,
-                        "color_value": None,
-                        "size_value": None,
-                    }
-                )"""
             else:
                 print("Uploaded file must be a workspace or ui.json.")
             update_dict["filename"] = None
@@ -800,9 +856,7 @@ class Clustering(ScatterPlots):
                     }
                 )
             elif trigger in ["channels", "downsampling", ""]:
-                update_dict.update(
-                    {"channels_name": channels, "downsampling": downsampling}
-                )
+                update_dict.update({"channels": channels, "downsampling": downsampling})
                 # Update data options from data subset
                 update_dict.update(
                     self.update_channels(
@@ -850,15 +904,20 @@ class Clustering(ScatterPlots):
         for key, value in self.params.to_dict().items():
             if key in update_dict:
                 if key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
-                    if "channels_name" in update_dict:
-                        channels = update_dict["channels_name"]
+                    if "channels" in update_dict:
+                        channels = update_dict["channels"]
                     else:
                         channels = self.params.channels
                     outlist = []
-                    if channels is not None:
+                    if bool(channels) & bool(update_dict[key]):
                         for channel in channels:
                             outlist.append(update_dict[key][channel])
-                    setattr(self.params, key, outlist)
+                    setattr(self.params, key, str(outlist))
+                elif key in ["x_log", "y_log", "z_log", "color_log", "size_log"]:
+                    if value is None:
+                        setattr(self.params, key, False)
+                    else:
+                        setattr(self.params, key, value)
                 else:
                     setattr(self.params, key, update_dict[key])
             elif key in ["x", "y", "z", "color", "size"]:
@@ -880,7 +939,6 @@ class Clustering(ScatterPlots):
         select_cluster,
         dataframe_dict,
         channel,
-        downsampling,
         x,
         x_log,
         x_thresh,
@@ -911,6 +969,7 @@ class Clustering(ScatterPlots):
         size_markers,
     ):
         dataframe = pd.DataFrame(dataframe_dict["dataframe"])
+        print(dataframe)
         if not dataframe.empty:
             if color_maps == "kmeans":
                 color_maps = self.update_colormap(
