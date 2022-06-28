@@ -8,14 +8,12 @@
 from __future__ import annotations
 
 import ast
-import json
 import os
 import sys
 import time
 import webbrowser
 from os import environ, makedirs, path
 
-import dash_bootstrap_components as dbc
 import dash_daq as daq
 import numpy as np
 import pandas as pd
@@ -58,7 +56,6 @@ class Clustering(ScatterPlots):
         super().__init__(**self.params.to_dict())
         self.defaults.update(self.get_cluster_defaults())
 
-        # external_stylesheets = [dbc.themes.BOOTSTRAP]
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
         self.app = JupyterDash(
@@ -66,11 +63,6 @@ class Clustering(ScatterPlots):
             url_base_pathname=environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
         )
-
-        """self.app.css.config.serve_locally = False
-        self.app.css.append_css({
-            "external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"
-        })"""
 
         self.norm_tabs_layout = html.Div(
             id="norm_tabs",
@@ -157,7 +149,10 @@ class Clustering(ScatterPlots):
                                             },
                                         )
                                     ],
-                                    style={"margin-top": "20px"},
+                                    style={
+                                        "margin-top": "20px",
+                                        "margin-bottom": "20px",
+                                    },
                                 )
                             ],
                         ),
@@ -239,7 +234,6 @@ class Clustering(ScatterPlots):
 
         self.app.layout = html.Div(
             [
-                html.H1("TEST"),
                 html.Div(
                     [
                         self.workspace_layout,
@@ -256,7 +250,7 @@ class Clustering(ScatterPlots):
                         "display": "inline-block",
                         "vertical-align": "top",
                         "margin-right": "50px",
-                        "margin-bottom": "20px",
+                        "margin-bottom": "45px",
                     },
                 ),
                 html.Div(
@@ -278,13 +272,20 @@ class Clustering(ScatterPlots):
                             id="show_color_picker",
                             options=["Select cluster color"],
                             value=[],
+                            style={"margin-bottom": "20px"},
                         ),
                         dcc.Checklist(
                             id="live_link",
                             options=["Geoscience ANALYST Pro - Live link"],
                             value=[],
+                            style={"margin-bottom": "20px"},
                         ),
-                        dcc.Input(id="ga_group", value="test"),
+                        dcc.Markdown("Group: "),
+                        dcc.Input(
+                            id="ga_group",
+                            value=self.defaults["ga_group_name"],
+                            style={"margin-bottom": "20px"},
+                        ),
                         html.Button("Export", id="export"),
                         dcc.Markdown(id="export_message"),
                     ],
@@ -311,7 +312,7 @@ class Clustering(ScatterPlots):
                     ],
                     style={
                         "width": "25%",
-                        "display": "inline-block",
+                        "display": "none",
                         "vertical-align": "top",
                     },
                 ),
@@ -319,6 +320,7 @@ class Clustering(ScatterPlots):
                     id="show_norm_tabs",
                     options=["Data Normalization"],
                     value=[],
+                    style={"margin-bottom": "10px"},
                 ),
                 self.norm_tabs_layout,
                 self.cluster_tabs_layout,
@@ -478,7 +480,7 @@ class Clustering(ScatterPlots):
         # Get initial values to initialize the dash components
         defaults = {}
         # If there is no default data subset list, set it from selected scatter plot data
-        self.params.channels = json.loads(self.params.channels)
+        self.params.channels = ast.literal_eval(self.params.channels)
         if not self.params.channels:
             plot_data = [
                 self.defaults["x_name"],
@@ -510,21 +512,30 @@ class Clustering(ScatterPlots):
                         self.get_channel(channel)
                 elif key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
                     out_dict = {}
+                    full_list = ast.literal_eval(getattr(self.params, key))
                     for i in range(len(defaults["channels"])):
-                        if (getattr(self.params, key) is None) | (
-                            not getattr(self.params, key)
-                        ):
+                        if (full_list is None) | (not full_list):
                             if key == "full_scales":
                                 out_dict[defaults["channels"][i]] = 1
                             else:
                                 out_dict[defaults["channels"][i]] = None
                         else:
-                            out_dict[defaults["channels"][i]] = getattr(
-                                self.params, key
-                            )[i]
+                            out_dict[defaults["channels"][i]] = full_list[i]
                     defaults[key] = out_dict
                 else:
                     defaults[key] = value
+
+        self.defaults.update(
+            self.update_clustering(
+                None,
+                defaults["channels"],
+                defaults["full_scales"],
+                defaults["full_lower_bounds"],
+                defaults["full_upper_bounds"],
+                defaults["downsampling"],
+                defaults["n_clusters"],
+            )
+        )
 
         return defaults
 
@@ -759,32 +770,15 @@ class Clustering(ScatterPlots):
                                 update_dict.update({key: out_dict})
                 if "downsampling" in update_dict:
                     downsampling = update_dict["downsampling"]
-                # print(self.data_channels)
-                # print(update_dict["full_scales"])
                 update_dict.update(
-                    self.update_channels(
+                    self.update_clustering(
                         channel,
                         channels,
                         update_dict["full_scales"],
                         update_dict["full_lower_bounds"],
                         update_dict["full_upper_bounds"],
-                    )
-                )
-                # print(self.data_channels)
-                # print(update_dict["full_scales"])
-                update_dict.update(
-                    {"dataframe": self.update_dataframe(downsampling, channels)}
-                )
-                self.run_clustering(
-                    n_clusters, update_dict["dataframe"], update_dict["full_scales"]
-                )
-                update_dict.update(
-                    self.update_channels(
-                        channel,
-                        channels,
-                        update_dict["full_scales"],
-                        update_dict["full_lower_bounds"],
-                        update_dict["full_upper_bounds"],
+                        downsampling,
+                        n_clusters,
                     )
                 )
             elif filename.endswith(".geoh5"):
@@ -859,25 +853,14 @@ class Clustering(ScatterPlots):
                 update_dict.update({"channels": channels, "downsampling": downsampling})
                 # Update data options from data subset
                 update_dict.update(
-                    self.update_channels(
+                    self.update_clustering(
                         channel,
                         channels,
                         full_scales,
                         full_lower_bounds,
                         full_upper_bounds,
-                    )
-                )
-                update_dict.update(
-                    {"dataframe": self.update_dataframe(downsampling, channels)}
-                )
-                self.run_clustering(n_clusters, update_dict["dataframe"], full_scales)
-                update_dict.update(
-                    self.update_channels(
-                        channel,
-                        channels,
-                        full_scales,
-                        full_lower_bounds,
-                        full_upper_bounds,
+                        downsampling,
+                        n_clusters,
                     )
                 )
             elif trigger == "channel":
@@ -969,7 +952,6 @@ class Clustering(ScatterPlots):
         size_markers,
     ):
         dataframe = pd.DataFrame(dataframe_dict["dataframe"])
-        print(dataframe)
         if not dataframe.empty:
             if color_maps == "kmeans":
                 color_maps = self.update_colormap(
@@ -1055,6 +1037,38 @@ class Clustering(ScatterPlots):
 
         # self.custom_colormap = list(self.colormap.values())
         return list(colormap.values())
+
+    def update_clustering(
+        self,
+        channel,
+        channels,
+        full_scales,
+        full_lower_bounds,
+        full_upper_bounds,
+        downsampling,
+        n_clusters,
+    ):
+        update_dict = self.update_channels(
+            channel,
+            channels,
+            full_scales,
+            full_lower_bounds,
+            full_upper_bounds,
+        )
+        update_dict.update({"dataframe": self.update_dataframe(downsampling, channels)})
+        self.run_clustering(
+            n_clusters, update_dict["dataframe"], update_dict["full_scales"]
+        )
+        update_dict.update(
+            self.update_channels(
+                channel,
+                channels,
+                update_dict["full_scales"],
+                update_dict["full_lower_bounds"],
+                update_dict["full_upper_bounds"],
+            )
+        )
+        return update_dict
 
     def run_clustering(self, n_clusters, dataframe_dict, full_scales):
         """
@@ -1419,7 +1433,7 @@ class Clustering(ScatterPlots):
                 output_path = os.path.dirname(self.params.geoh5.h5file)
 
             # Write output uijson
-            filename = "clustering.ui.json"
+            filename = "Clustering.ui.json"
             params = ClusteringParams(validate=False, **self.params.to_dict())
             params.write_input_file(name=filename, path=output_path, validate=False)
 
@@ -1444,8 +1458,7 @@ class Clustering(ScatterPlots):
                     "values": color_map,
                 }
 
-            print(output_path)
-            # return "Saved to " + output_path + "/" + temp_geoh5
+            print("Saved to " + output_path + "/" + temp_geoh5)
             if new_live_link:
                 live_link = ["Geoscience ANALYST Pro - Live link"]
             else:
