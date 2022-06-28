@@ -35,7 +35,7 @@ from geoapps.scatter_plot.params import ScatterPlotParams
 class ScatterPlots:
     _param_class = ScatterPlotParams
 
-    def __init__(self, ui_json=None, **kwargs):
+    def __init__(self, ui_json=None, clustering=False, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and os.path.exists(ui_json.path):
             self.params = self._param_class(ui_json)
@@ -45,6 +45,10 @@ class ScatterPlots:
         self.data_channels = {}
         # Initial values for the dash components
         self.defaults = self.get_defaults()
+        if clustering:
+            self.defaults["color_maps_options"] = px.colors.named_colorscales() + [
+                "kmeans"
+            ]
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -382,7 +386,7 @@ class ScatterPlots:
                         ),
                         dcc.Dropdown(
                             id="color_maps",
-                            options=px.colors.named_colorscales(),
+                            options=self.defaults["color_maps_options"],
                             value=self.defaults["color_maps"],
                             style={"margin-bottom": "20px"},
                         ),
@@ -774,6 +778,7 @@ class ScatterPlots:
                         {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
                         for obj in value.objects
                     ]
+        defaults["color_maps_options"] = px.colors.named_colorscales()
 
         return defaults
 

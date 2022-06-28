@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import plotly.express as px
+
 # import plotly.express as px
 # from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
@@ -29,6 +31,15 @@ default_ui_json = deepcopy(base_default_ui_json)
 default_ui_json.update(
     {
         "title": "Clustering",
+        "color_maps": {
+            "choiceList": px.colors.named_colorscales() + ["kmeans"],
+            "group": "Color",
+            "label": "Colormaps",
+            "main": True,
+            "value": None,
+            "enabled": False,
+            "optional": True,
+        },
         "n_clusters": {
             "group": "data",
             "label": "Number of clusters",
@@ -36,10 +47,6 @@ default_ui_json.update(
             "value": 0,
             "lineEdit": False,
         },
-        "channel": "None",
-        "scale": 1,
-        "lower_bounds": 0.0,
-        "upper_bounds": 0.0,
         "ga_group_name": {
             "main": True,
             "label": "Group",
@@ -77,7 +84,7 @@ app_initializer = {
     "color_log": True,
     "color_min": -17.0,
     "color_max": 640.0,
-    "color_maps": "inferno",
+    "color_maps": "kmeans",
     "size": "{41d51965-3670-43ba-8a10-d399070689e3}",
     "size_log": False,
     "size_min": -17.0,
@@ -86,9 +93,5 @@ app_initializer = {
     "size_markers": 20,
     "data": "{41d51965-3670-43ba-8a10-d399070689e3}",
     "n_clusters": 8,
-    "channel": "CaO",  # "{41d51965-3670-43ba-8a10-d399070689e3}",
-    "scale": 5,
-    "lower_bounds": -5.0,
-    "upper_bounds": 200.0,
     "ga_group_name": "Clusters",
 }
