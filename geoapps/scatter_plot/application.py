@@ -881,6 +881,8 @@ class ScatterPlots:
                         setattr(self.params, key, value["value"])
                     else:
                         setattr(self.params, key, None)
+                elif key == "channels":
+                    setattr(self.params, key, value.replace("'", "").split(", "))
                 else:
                     setattr(self.params, key, value)
 
