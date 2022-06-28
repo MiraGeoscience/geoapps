@@ -160,6 +160,7 @@ def test_dc_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write_trigger(None)
+    app.write_trigger(None) # Check that this can run more than once
     ifile = InputFile.read_ui_json(app.params.input_file.path_name)
     params_reload = DirectCurrentParams(ifile)
 

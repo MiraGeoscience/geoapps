@@ -1291,15 +1291,6 @@ class InversionApp(PlotSelection2D):
             ifile.path = self.export_directory.selected_path
             self.params.input_file = ifile
 
-            # self.params.geoh5 = new_workspace
-
-
-            #
-            # self.params.input_file.workspace = new_workspace
-            # self.params.write_input_file(
-            #     name=self._ga_group_name.value + ".ui.json",
-            #     path=self.export_directory.selected_path,
-            # )
         self.write.button_style = ""
         self.trigger.button_style = "success"
 
