@@ -59,7 +59,7 @@ default_ui_json.update(
         "full_upper_bounds": "[]",
         # "dataframe": None,
         "conda_environment": "geoapps",
-        "run_command": "geoapps.scatter_plot.application",
+        "run_command": "geoapps.clustering.application",
     }
 )
 
