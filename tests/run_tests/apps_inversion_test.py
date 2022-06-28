@@ -72,6 +72,7 @@ def test_mag_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write_trigger(None)
+    app.write_trigger(None) # Check to make sure this can be run twice
     ifile = InputFile.read_ui_json(app.params.input_file.path_name)
     params_reload = MagneticVectorParams(ifile)
     objs = params_reload.geoh5.list_entities_name
