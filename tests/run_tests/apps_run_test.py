@@ -5,13 +5,13 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 import uuid
-from os import path
+from os import listdir, path
 
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 
 from geoapps.calculator import Calculator
-from geoapps.clustering import Clustering
+from geoapps.clustering.application import Clustering
 from geoapps.contours.application import ContourValues
 from geoapps.coordinate_transformation import CoordinateTransformation
 from geoapps.edge_detection.application import EdgeDetectionApp
@@ -91,10 +91,13 @@ def test_clustering(tmp_path):
         for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = Clustering(h5file=temp_workspace)
-    app.trigger.click()
+    app = Clustering(geoh5=temp_workspace)
+    app.export_clusters(
+        n_clicks=0, n_clusters=8, group_name="MyCluster", live_link=False, test=True
+    )
+    filename = list(filter(lambda x: "Clustering_" in x, listdir(tmp_path)))[0]
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(path.join(tmp_path, filename)) as workspace:
         assert len(workspace.get_entity("MyCluster")) == 1
 
 
