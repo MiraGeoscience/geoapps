@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import uuid
 
+from time import time
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 
@@ -88,29 +89,30 @@ class IsoSurface(ObjectDataSelection):
             except AttributeError:
                 continue
 
-        new_workspace = self.get_output_workspace(
-            self.export_directory.selected_path, self.ga_group_name.value
-        )
+        temp_geoh5 = f"Isosurface_{time():.3f}.geoh5"
+        with self.get_output_workspace(
+            self.export_directory.selected_path, temp_geoh5
+        ) as new_workspace:
 
-        param_dict["objects"] = param_dict["objects"].copy(
-            parent=new_workspace, copy_children=False
-        )
-        param_dict["data"] = param_dict["data"].copy(parent=param_dict["objects"])
-        param_dict["geoh5"] = new_workspace
+            param_dict["objects"] = param_dict["objects"].copy(
+                parent=new_workspace, copy_children=False
+            )
+            param_dict["data"] = param_dict["data"].copy(parent=param_dict["objects"])
+            param_dict["geoh5"] = new_workspace
 
-        if self.live_link.value:
-            param_dict["monitoring_directory"] = self.monitoring_directory
+            if self.live_link.value:
+                param_dict["monitoring_directory"] = self.monitoring_directory
 
-        ifile = InputFile(
-            ui_json=self.params.input_file.ui_json,
-            validation_options={"disabled": True},
-        )
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+            )
 
-        new_params = IsoSurfacesParams(input_file=ifile, **param_dict)
-        new_params.write_input_file()
+            new_params = IsoSurfacesParams(input_file=ifile, **param_dict)
+            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
 
-        driver = IsoSurfacesDriver(new_params)
-        driver.run()
+            driver = IsoSurfacesDriver(new_params)
+            driver.run()
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
