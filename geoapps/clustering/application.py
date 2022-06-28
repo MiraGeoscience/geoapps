@@ -51,9 +51,8 @@ class Clustering(ScatterPlots):
         self.indices = []
         self.mapping = None
         self.color_pickers = colors
-        # self.defaults = {}
-        # Initial values for the dash components
         super().__init__(clustering=True, **self.params.to_dict())
+        # Initial values for the dash components
         self.defaults.update(self.get_cluster_defaults())
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -64,6 +63,7 @@ class Clustering(ScatterPlots):
             external_stylesheets=external_stylesheets,
         )
 
+        # Layout for histogram, stats table, confusion matrix
         self.norm_tabs_layout = html.Div(
             id="norm_tabs",
             children=[
@@ -174,6 +174,7 @@ class Clustering(ScatterPlots):
             ],
         )
 
+        # Layout for crossplot, boxplot, inertia plot
         self.cluster_tabs_layout = html.Div(
             [
                 dcc.Tabs(
@@ -232,10 +233,12 @@ class Clustering(ScatterPlots):
             ]
         )
 
+        # Full app layout
         self.app.layout = html.Div(
             [
                 html.Div(
                     [
+                        # Workspace, object, downsampling, data subset selection
                         self.workspace_layout,
                         dcc.Markdown("Data subset: "),
                         dcc.Dropdown(
@@ -255,6 +258,7 @@ class Clustering(ScatterPlots):
                 ),
                 html.Div(
                     [
+                        # Dash components for clustering parameters
                         dcc.Markdown("Number of clusters: "),
                         dcc.Slider(
                             id="n_clusters",
@@ -316,6 +320,7 @@ class Clustering(ScatterPlots):
                         "vertical-align": "top",
                     },
                 ),
+                # Checkbox to hide/show the normalization plots
                 dcc.Checklist(
                     id="show_norm_tabs",
                     options=["Data Normalization"],
@@ -324,6 +329,7 @@ class Clustering(ScatterPlots):
                 ),
                 self.norm_tabs_layout,
                 self.cluster_tabs_layout,
+                # Stored variables
                 dcc.Store(id="dataframe", data={}),
                 dcc.Store(id="full_scales", data=self.defaults["full_scales"]),
                 dcc.Store(
@@ -336,6 +342,7 @@ class Clustering(ScatterPlots):
             style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
         )
 
+        # Callbacks relating to layout
         self.app.callback(
             Output(component_id="x_div", component_property="style"),
             Output(component_id="y_div", component_property="style"),
@@ -353,6 +360,7 @@ class Clustering(ScatterPlots):
             Input(component_id="show_norm_tabs", component_property="value"),
         )(self.update_norm_tabs)
 
+        # Callback to update any params
         self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
@@ -423,8 +431,8 @@ class Clustering(ScatterPlots):
             Input(component_id="full_scales", component_property="data"),
             Input(component_id="full_lower_bounds", component_property="data"),
             Input(component_id="full_upper_bounds", component_property="data"),
-            # prevent_initial_call=True,
         )(self.update_cluster_params)
+        # Callback to update all the plots
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
             Output(component_id="stats_table", component_property="data"),
@@ -467,6 +475,7 @@ class Clustering(ScatterPlots):
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
         )(self.update_plots)
+        # Callback to export the clusters as a geoh5 file
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
@@ -492,15 +501,18 @@ class Clustering(ScatterPlots):
             self.params.channels = list(filter(None, plot_data))
         defaults["channels"] = self.params.channels
 
+        # Set the initial histogram data to be the first data in the data subset
         if len(defaults["channels"]) > 0:
             self.params.channel = defaults["channels"][0]
         else:
             self.params.channel = None
         defaults["channel"] = self.params.channel
 
+        # Loop through self.params to set defaults
         for key, value in self.params.to_dict().items():
             if (key != "channels") & (key != "channel"):
                 if key == "objects":
+                    # Get default data subset from self.params.objects
                     if value is None:
                         defaults["channels_options"] = []
                     else:
@@ -511,6 +523,7 @@ class Clustering(ScatterPlots):
                     for channel in defaults["channels_options"]:
                         self.get_channel(channel)
                 elif key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
+                    # Reconstruct scaling and bounds dicts from uijson input lists.
                     out_dict = {}
                     full_list = ast.literal_eval(getattr(self.params, key))
                     for i in range(len(defaults["channels"])):
@@ -526,6 +539,7 @@ class Clustering(ScatterPlots):
                     defaults[key] = value
 
         channel = defaults["channel"]
+        # Set up initial dataframe and clustering
         defaults.update(
             self.update_clustering(
                 channel,
@@ -538,6 +552,7 @@ class Clustering(ScatterPlots):
             )
         )
 
+        # Get initial scale and bounds for histogram plot
         defaults["scale"], defaults["lower_bounds"], defaults["upper_bounds"] = (
             None,
             None,
@@ -553,20 +568,22 @@ class Clustering(ScatterPlots):
         return defaults
 
     def update_color_select(self, checkbox):
+        # Updating visibility for cluster color picker
         if not checkbox:
             return {"display": "none"}
         else:
             return {"width": "25%", "display": "inline-block", "vertical-align": "top"}
 
     def update_norm_tabs(self, checkbox):
+        # Update visibility for normalization plots
         if not checkbox:
             return {"display": "none"}
         else:
             return {"display": "block"}
 
     def get_data_channels(self, channels):
+        # Loop through channels and add them to the data channels dict with name and object of all the current data
         data_channels = {}
-
         for channel in channels:
             if channel not in data_channels.keys():
                 if channel == "None":
@@ -579,6 +596,7 @@ class Clustering(ScatterPlots):
     def update_channels(
         self, channel, channels, full_scales, full_lower_bounds, full_upper_bounds
     ):
+        # Update the data options for the scatter plot and histogram from the data subset
         if channels is None:
             self.data_channels = {}
             return {
@@ -593,7 +611,7 @@ class Clustering(ScatterPlots):
         else:
             self.data_channels = self.get_data_channels(channels)
             channels = list(filter(None, channels))
-
+            # Update the full scales and bounds dicts with the new data subset
             for chan in channels:
                 dict = self.update_properties(
                     chan, full_scales, full_lower_bounds, full_upper_bounds
@@ -618,6 +636,7 @@ class Clustering(ScatterPlots):
             if channel not in channels:
                 channel = None
 
+            # Add kmeans to the data selection for the scatter plot
             if self.kmeans is not None:
                 data_options = channels + ["kmeans"]
                 color_maps_options = px.colors.named_colorscales() + ["kmeans"]
@@ -640,6 +659,7 @@ class Clustering(ScatterPlots):
     def update_properties(
         self, channel, full_scales, full_lower_bounds, full_upper_bounds
     ):
+        # Get stored scale and bounds for a given channel. If there's no stored value, set a default.
         if channel is not None:
             if channel not in full_scales.keys():
                 full_scales[channel] = 1
@@ -694,6 +714,7 @@ class Clustering(ScatterPlots):
         full_lower_bounds,
         full_upper_bounds,
     ):
+        # List of params that will be outputted
         param_list = [
             "objects_options",
             "objects_name",
@@ -746,8 +767,9 @@ class Clustering(ScatterPlots):
             "full_lower_bounds",
             "full_upper_bounds",
         ]
-
+        # Trigger is which variable triggered the callback
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+
         if full_scales is None:
             full_scales = {}
         if full_lower_bounds is None:
@@ -777,6 +799,7 @@ class Clustering(ScatterPlots):
                             "full_lower_bounds",
                             "full_upper_bounds",
                         ]:
+                            # Reconstruct full scales and bounds dict from lists in uijson.
                             if key in update_dict:
                                 out_dict = {}
                                 full_list = ast.literal_eval(update_dict[key])
@@ -786,6 +809,7 @@ class Clustering(ScatterPlots):
                                 update_dict.update({key: out_dict})
                 if "downsampling" in update_dict:
                     downsampling = update_dict["downsampling"]
+                # Create new dataframe and run clustering for new variables.
                 update_dict.update(
                     self.update_clustering(
                         channel,
@@ -799,7 +823,6 @@ class Clustering(ScatterPlots):
                 )
             elif filename.endswith(".geoh5"):
                 # Update object and data subset options from uploaded workspace
-                # update_dict = self.update_from_workspace()
                 update_dict = self.update_object_options(contents)
                 channels_options = self.update_data_options(
                     update_dict["objects_name"]
@@ -821,6 +844,7 @@ class Clustering(ScatterPlots):
                 )
             else:
                 print("Uploaded file must be a workspace or ui.json.")
+            # Reset file properties so the same file can be uploaded twice in a row.
             update_dict["filename"] = None
             update_dict["contents"] = None
         elif trigger == "objects":
@@ -851,7 +875,6 @@ class Clustering(ScatterPlots):
             "upper_bounds",
             "",
         ]:
-            update_dict = {}
             update_dict.update({"channel_name": channel})
 
             if trigger in ["scale", "lower_bounds", "upper_bounds"]:
@@ -888,6 +911,7 @@ class Clustering(ScatterPlots):
                     )
                 )
 
+        # Update param dict from update_dict
         self.update_param_dict(update_dict)
 
         outputs = []
@@ -900,9 +924,11 @@ class Clustering(ScatterPlots):
         return tuple(outputs)
 
     def update_param_dict(self, update_dict):
+        # Update self.params from update_dict.
         for key, value in self.params.to_dict().items():
             if key in update_dict:
                 if key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
+                    # Convert dict of scales and bounds to lists to store in uijson.
                     if "channels" in update_dict:
                         channels = update_dict["channels"]
                     else:
@@ -969,6 +995,7 @@ class Clustering(ScatterPlots):
         size_max,
         size_markers,
     ):
+        # Read in stored dataframe.
         dataframe = pd.DataFrame(dataframe_dict["dataframe"])
         if not dataframe.empty:
             if color_maps == "kmeans":
@@ -978,6 +1005,7 @@ class Clustering(ScatterPlots):
             elif color_maps is None:
                 color_maps = [[0.0, "rgb(0,0,0)"]]
 
+            # Input downsampled data to scatterplot so it doesn't regenerate data every time a parameter changes.
             if x is not None:
                 x = PlotData(x, dataframe[x].values)
             if y is not None:
@@ -1071,6 +1099,7 @@ class Clustering(ScatterPlots):
         downsampling,
         n_clusters,
     ):
+        # Update dataframe, data options for plots, and run clustering
         update_dict = self.update_channels(
             channel,
             channels,
@@ -1122,14 +1151,6 @@ class Clustering(ScatterPlots):
         cluster_ids = self.clusters[n_clusters].labels_.astype(float)
         # self.data_channels["kmeans"] = cluster_ids[self.mapping]
         self.kmeans = cluster_ids[self.mapping]
-
-        """
-        self.update_axes(refresh_plot=False)
-        self.color_max.value = self.n_clusters.value
-        self.update_colormap(None, refresh_plot=False)
-        self.color.value = "kmeans"
-        self.color_active.value = True
-        """
 
     def make_inertia_plot(self, n_clusters):
         """
@@ -1340,9 +1361,6 @@ class Clustering(ScatterPlots):
             self.mapping[inactive_set] = ind_out
             self.mapping[self.indices] = np.arange(len(self.indices))
 
-            # self._inactive_set = np.where(np.all(np.isnan(values), axis=1))[0]
-            # options = [[self.data.uid_name_map[key], key] for key in fields]
-            # self.channels_plot_options.options = options
             return {"dataframe": dataframe.to_dict("records")}
 
     def get_indices(self, channels, downsampling):
