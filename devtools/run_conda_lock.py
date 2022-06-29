@@ -108,7 +108,9 @@ if __name__ == "__main__":
 
     config_conda()
     env_folder = Path(environments_folder_)
-    if not env_folder.exists():
+    if env_folder.exists():
+        assert env_folder.is_dir()
+    else:
         env_folder.mkdir()
 
     with print_execution_time(f"run_conda_lock"):
