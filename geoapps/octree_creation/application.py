@@ -233,7 +233,9 @@ class OctreeMesh(ObjectDataSelection):
 
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
+                    param_dict[key] = value.copy(
+                        parent=new_workspace, copy_children=True
+                    )
 
             param_dict["geoh5"] = new_workspace
 
