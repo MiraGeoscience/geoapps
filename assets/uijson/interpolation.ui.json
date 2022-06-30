@@ -1,0 +1,158 @@
+{
+    "title": "Data Transfer",
+    "geoh5": "",
+    "run_command": "geoapps.contours.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "objects": {
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+        ],
+        "main": true,
+        "group": "Data Selection",
+        "label": "Object",
+        "value": ""
+    },
+    "data": {
+        "main": true,
+        "group": "Data Selection",
+        "association": ["Vertex", "Cell"],
+        "dataType": "Float",
+        "label": "Data",
+        "parent": "objects",
+        "value": ""
+    },
+    "method": {
+        "main": false,
+        "group": "Method",
+        "groupOptional": true,
+        "choiceList": ["Nearest", "Inverse Distance"],
+        "value": "Inverse Distance",
+        "label": "Method"
+    },
+    "skew_angle": {
+        "main": false,
+        "group": "Method",
+        "groupOptional": true,
+        "value": 0.0,
+        "label": "Azimuth (d.dd)"
+    },
+    "skew_factor": {
+        "main": false,
+        "group": "Method",
+        "groupOptional": true,
+        "value": 1.0,
+        "label": "Factor (>0)"
+    },
+    "space": {
+        "main": false,
+        "group": "Scaling",
+        "groupOptional": true,
+        "value": "Log",
+        "choiceList": ["Linear", "Log"],
+        "label": "Scaling"
+    },
+    "max_distance": {
+        "main": false,
+        "group": "Horizontal Extent",
+        "groupOptional": true,
+        "value": 0.0,
+        "label": "Maximum distance (m)"
+    },
+    "object_hull": {
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+        ],
+        "main": false,
+        "group": "Horizontal Extent",
+        "label": "Object hull",
+        "value": ""
+    },
+    "topography_options": {
+        "main": false,
+        "group": "Vertical Extent",
+        "groupOptional": true,
+        "choiceList": ["None", "Object", "Constant"],
+        "value": "Object",
+        "label": "Define by"
+    },
+    "topography_objects": {
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+        ],
+        "main": false,
+        "group": "Vertical Extent",
+        "label": "Object",
+        "value": ""
+    },
+    "topography_data": {
+        "main": false,
+        "group": "Vertical Extent",
+        "association": ["Vertex", "Cell"],
+        "dataType": "Float",
+        "label": "Data",
+        "parent": "topography_objects",
+        "value": ""
+    },
+    "elevation": {
+        "main": false,
+        "group": "Vertical Extent",
+        "value": 0.0,
+        "label": "Elevation (m)"
+    },
+    "max_depth": {
+        "main": false,
+        "group": "Vertical Extent",
+        "value": 0.0,
+        "label": "Maximum depth (m)"
+    },
+    "no_data_value": {
+        "main": false,
+        "group": "No-data-value",
+        "groupOptional": true,
+        "value": 0.0,
+        "label": "No-data-value"
+    },
+    "out_object": {
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+        ],
+        "main": true,
+        "group": "Data Selection",
+        "label": "Destination",
+        "value": ""
+    },
+    "output_label": {
+        "main": true,
+        "label": "Output Label",
+        "value": "_Interp",
+        "group": "Python run preferences"
+    }
+}
