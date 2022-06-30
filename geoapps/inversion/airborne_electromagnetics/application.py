@@ -12,6 +12,7 @@ import multiprocessing
 import os
 
 import numpy as np
+from geoh5py.data import Data
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
@@ -1008,6 +1009,9 @@ class InversionApp(PlotSelection2D):
             data_widget = self.data_channel_choices.data_channel_options[channel.header]
 
             entity = self.workspace.get_entity(self.objects.value)[0]
+            if entity is None:
+                return
+
             if channel.value is None or channel.value not in [
                 child.uid for child in entity.children
             ]:
@@ -1074,47 +1078,55 @@ class InversionApp(PlotSelection2D):
     def object_observer(self, _):
 
         self.resolution.indices = None
+        entity = self._workspace.get_entity(self.objects.value)[0]
+        if entity is None:
+            return
 
-        if self.workspace.get_entity(self.objects.value):
-            self.update_data_list(None)
-            self.sensor.update_data_list(None)
-            self.lines.update_data_list(None)
-            self.lines.update_line_list(None)
+        self.update_data_list(None)
+        self.sensor.update_data_list(None)
+        self.lines.update_data_list(None)
+        self.lines.update_line_list(None)
 
-            for aem_system, specs in self.em_system_specs.items():
-                if any(
-                    [
-                        specs["flag"] in channel
-                        for channel in self.data.uid_name_map.values()
-                    ]
-                ):
-                    self.system.value = aem_system
+        for aem_system, specs in self.em_system_specs.items():
+            if any(
+                [
+                    specs["flag"] in channel
+                    for channel in self.data.uid_name_map.values()
+                ]
+            ):
+                self.system.value = aem_system
 
-            self.system_observer(None)
+        self.system_observer(None)
 
-            if hasattr(self.data_channel_choices, "data_channel_options"):
-                for (
-                    key,
-                    data_widget,
-                ) in self.data_channel_choices.data_channel_options.items():
-                    data_widget.children[2].options = self.data.options
-                    value = find_value(self.data.options, [key])
-                    data_widget.children[2].value = value
+        if hasattr(self.data_channel_choices, "data_channel_options"):
+            for (
+                key,
+                data_widget,
+            ) in self.data_channel_choices.data_channel_options.items():
+                data_widget.children[2].options = self.data.options
+                value = find_value(self.data.options, [key])
+                data_widget.children[2].value = value
 
-            self.write.button_style = "warning"
-            self.trigger.button_style = "danger"
+        self.write.button_style = "warning"
+        self.trigger.button_style = "danger"
 
     def update_component_panel(self, _):
-        if self.workspace.get_entity(self.objects.value):
-            _, data_list = self.get_selected_entities()
-            options = [[data.name, data.uid] for data in data_list]
-            if hasattr(self.data_channel_choices, "data_channel_options"):
-                for (
-                    key,
-                    data_widget,
-                ) in self.data_channel_choices.data_channel_options.items():
-                    data_widget.children[2].options = options
-                    data_widget.children[2].value = find_value(options, [key])
+
+        obj, data_list = self.get_selected_entities()
+
+        if obj is None:
+            return
+
+        options = [
+            [data.name, data.uid] for data in data_list if isinstance(data, Data)
+        ]
+        if hasattr(self.data_channel_choices, "data_channel_options"):
+            for (
+                key,
+                data_widget,
+            ) in self.data_channel_choices.data_channel_options.items():
+                data_widget.children[2].options = options
+                data_widget.children[2].value = find_value(options, [key])
 
     def data_channel_choices_observer(self, _):
         if hasattr(
@@ -1128,7 +1140,7 @@ class InversionApp(PlotSelection2D):
             self.data_channel_panel.children = [self.data_channel_choices, data_widget]
 
             if (
-                self.workspace.get_entity(self.objects.value)
+                self.workspace.get_entity(self.objects.value)[0] is not None
                 and data_widget.children[2].value is None
             ):
                 _, data_list = self.get_selected_entities()
