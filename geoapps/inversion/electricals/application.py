@@ -1042,6 +1042,7 @@ class InversionApp(PlotSelection2D):
                             value = new_workspace.get_entity(value)[0]
                         setattr(self.params, sub_key, value)
 
+            self.params.ignore_values = None
             self.params.write_input_file(
                 name=self._ga_group_name.value + ".ui.json",
                 path=self.export_directory.selected_path,
