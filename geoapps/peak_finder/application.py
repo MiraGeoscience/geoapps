@@ -208,7 +208,7 @@ class PeakFinder(ObjectDataSelection):
 
         obj_list = self.workspace.get_entity(self.objects.value)
 
-        if any(obj_list) and any(self.params.free_parameter_dict):
+        if obj_list[0] is not None and any(self.params.free_parameter_dict):
             self._channel_groups = self.params.groups_from_free_params()
 
             group_list = []
@@ -714,6 +714,9 @@ class PeakFinder(ObjectDataSelection):
     def create_default_groups(self, _):
         if self.group_auto.value:
             obj = self.workspace.get_entity(self.objects.value)[0]
+            if obj is None:
+                return
+
             group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
             if any(group):
                 channel_groups = default_groups_from_property_group(group[0])
@@ -867,33 +870,33 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.peak_finder.objects`: Reset data and auto-detect AEM system
         """
-        if self.workspace.get_entity(self.objects.value):
-            self._survey = self.workspace.get_entity(self.objects.value)[0]
-            self.update_data_list(None)
-            is_tem = False
-            self.active_channels = {}
-            self.channel_groups = {}
-            for child in self.groups_panel.children:
-                child.children[0].options = self.data.options
+        obj = self.workspace.get_entity(self.objects.value)[0]
+        if obj is None:
+            return
 
-            for aem_system, specs in self.em_system_specs.items():
-                if any(
-                    [
-                        specs["flag"] in channel
-                        for channel in self._survey.get_data_list()
-                    ]
-                ):
-                    if aem_system in self.system.options:
-                        self.system.value = aem_system
-                        is_tem = True
-                        break
+        self._survey = obj
+        self.update_data_list(None)
+        is_tem = False
+        self.active_channels = {}
+        self.channel_groups = {}
+        for child in self.groups_panel.children:
+            child.children[0].options = self.data.options
 
-            self.tem_checkbox.value = is_tem
+        for aem_system, specs in self.em_system_specs.items():
+            if any(
+                [specs["flag"] in channel for channel in self._survey.get_data_list()]
+            ):
+                if aem_system in self.system.options:
+                    self.system.value = aem_system
+                    is_tem = True
+                    break
 
-            if self.group_auto:
-                self.create_default_groups(None)
+        self.tem_checkbox.value = is_tem
 
-            self.set_data(None)
+        if self.group_auto:
+            self.create_default_groups(None)
+
+        self.set_data(None)
 
     def tem_change(self, _):
         self.min_channels.disabled = not self.tem_checkbox.value
