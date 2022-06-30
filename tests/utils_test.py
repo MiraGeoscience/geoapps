@@ -52,35 +52,56 @@ def test_rectangular_block():
         dip=0.0,
         azimuth=0.0,
     )
-    assert [15.0, 5.0, 5.0] in block.vertices
-    assert [15.0, 15.0, 5.0] in block.vertices
-    assert [5.0, 5.0, 5.0] in block.vertices
-    assert [5.0, 15.0, 5.0] in block.vertices
-    assert [15.0, 5.0, 15.0] in block.vertices
-    assert [15.0, 15.0, 15.0] in block.vertices
-    assert [5.0, 5.0, 15.0] in block.vertices
-    assert [5.0, 15.0, 15.0] in block.vertices
+    vertices = block.vertices.tolist()
+    assert [15.0, 5.0, 5.0] in vertices
+    assert [15.0, 15.0, 5.0] in vertices
+    assert [5.0, 5.0, 5.0] in vertices
+    assert [5.0, 15.0, 5.0] in vertices
+    assert [15.0, 5.0, 15.0] in vertices
+    assert [15.0, 15.0, 15.0] in vertices
+    assert [5.0, 5.0, 15.0] in vertices
+    assert [5.0, 15.0, 15.0] in vertices
 
     block = RectangularBlock(
-        center=[0.0, 0.0, 0.0], length=0.0, width=10.0, depth=0.0, dip=45, azimuth=0.0
+        center=[0.0, 0.0, 0.0], length=0.0, width=10.0, depth=0.0, dip=45.0, azimuth=0.0
     )
-    pos = 5 * np.cos(np.deg2rad(45))
-    assert [pos, 0.0, pos] in block.vertices.round(0)
-    assert [-pos, 0.0, -pos] in block.vertices.round(0)
+    pos = (5 * np.cos(np.deg2rad(45))).round(5)
+    vertices = block.vertices.round(5).tolist()
+    assert [pos, 0.0, pos] in vertices
+    assert [-pos, 0.0, -pos] in vertices
 
     block = RectangularBlock(
-        center=[0.0, 0.0, 0.0], length=10.0, width=10.0, depth=10.0, dip=0, azimuth=45.0
+        center=[0.0, 0.0, 0.0],
+        length=0.0,
+        width=0.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=90.0,
+        reference="top",
+    )
+    vertices = block.vertices.round(5).tolist()
+    assert [0.0, 0.0, -10.0] in vertices
+    assert [0.0, 0.0, 0.0] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0],
+        length=10.0,
+        width=10.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=45.0,
     )
 
-    pos = 10 * np.cos(np.deg2rad(45))
-    assert [0.0, -pos, -5.0] in block.vertices.round(0)
-    assert [pos, 0.0, -5.0] in block.vertices.round(0)
-    assert [-pos, 0.0, -5.0] in block.vertices.round(0)
-    assert [0.0, pos, -5.0] in block.vertices.round(0)
-    assert [0.0, -pos, 5.0] in block.vertices.round(0)
-    assert [pos, 0.0, 5.0] in block.vertices.round(0)
-    assert [-pos, 0.0, 5.0] in block.vertices.round(0)
-    assert [0.0, pos, 5.0] in block.vertices.round(0)
+    pos = (10 * np.cos(np.deg2rad(45))).round(5)
+    vertices = block.vertices.round(5).tolist()
+    assert [0.0, -pos, -5.0] in vertices
+    assert [pos, 0.0, -5.0] in vertices
+    assert [-pos, 0.0, -5.0] in vertices
+    assert [0.0, pos, -5.0] in vertices
+    assert [0.0, -pos, 5.0] in vertices
+    assert [pos, 0.0, 5.0] in vertices
+    assert [-pos, 0.0, 5.0] in vertices
+    assert [0.0, pos, 5.0] in vertices
 
 
 def test_find_value():

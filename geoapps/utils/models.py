@@ -5,7 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from typing import List
+
 import numpy as np
+import numpy.typing as npt
 
 
 class RectangularBlock:
@@ -17,6 +20,7 @@ class RectangularBlock:
     :param center: Position of the prism center
     :param dip: Orientation of the u-axis in degree from horizontal
     :param azimuth: Orientation of the u axis in degree from north
+    :param reference: Point of rotation to be 'center' or 'top'
     """
 
     def __init__(self, **kwargs):
@@ -64,7 +68,7 @@ class RectangularBlock:
 
     @property
     def length(self):
-        """"""
+        """U-size of the block"""
         return self._length
 
     @length.setter
@@ -74,7 +78,7 @@ class RectangularBlock:
 
     @property
     def width(self):
-        """"""
+        """V-size of the block"""
         return self._width
 
     @width.setter
@@ -84,7 +88,7 @@ class RectangularBlock:
 
     @property
     def depth(self):
-        """"""
+        """W-size of the block"""
         return self._depth
 
     @depth.setter
@@ -94,7 +98,7 @@ class RectangularBlock:
 
     @property
     def dip(self):
-        """"""
+        """Orientation of the u-axis in degree from horizontal"""
         return self._dip
 
     @dip.setter
@@ -104,7 +108,7 @@ class RectangularBlock:
 
     @property
     def azimuth(self):
-        """"""
+        """Orientation of the u axis in degree from north"""
         return self._azimuth
 
     @azimuth.setter
@@ -164,18 +168,27 @@ class RectangularBlock:
         return self._vertices
 
 
-def rotate_vertices(xyz, center, phi, theta):
+def rotate_vertices(
+    xyz: npt.NDArray[npt.NDArray[np.float64]],
+    center: List[float],
+    dip: float,
+    azimuth: float,
+):
     """
     Rotate scatter points in column format around a center location
-    INPUT
-    :param: xyz nDx3 matrix
-    :param: center xyz location of rotation
-    :param: theta angle rotation around z-axis
-    :param: phi angle rotation around x-axis
+
+    :param xyz: nDx3 matrix
+    :param center: xyz location of rotation
+    :param dip: Orientation of the u-axis in degree from horizontal
+    :param azimuth: Orientation of the u axis in degree from north
+
+    :return: nDx3 matrix of rotated points
     """
     xyz -= np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
-    phi = -np.deg2rad(np.asarray(phi))
-    theta = np.deg2rad((450.0 - np.asarray(theta)) % 360.0)
+    # phi angle rotation around x-axis
+    phi = -np.deg2rad(np.asarray(dip))
+    # theta angle rotation around z-axis
+    theta = np.deg2rad((450.0 - np.asarray(azimuth)) % 360.0)
     Rx = np.asarray(
         [[1, 0, 0], [0, np.cos(phi), -np.sin(phi)], [0, np.sin(phi), np.cos(phi)]]
     )
