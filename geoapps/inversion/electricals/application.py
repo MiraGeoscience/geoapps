@@ -14,6 +14,7 @@ import os.path as path
 import uuid
 
 import numpy as np
+from geoh5py.data import Data
 from geoh5py.objects import (
     BlockModel,
     CurrentElectrode,
@@ -989,7 +990,10 @@ class InversionApp(PlotSelection2D):
                     if new_obj is None:
                         new_obj = obj.copy(parent=new_workspace, copy_children=False)
                     for d in data:
-                        if new_workspace.get_entity(d.uid)[0] is None:
+                        if (
+                            isinstance(d, Data)
+                            and new_workspace.get_entity(d.uid)[0] is None
+                        ):
                             d.copy(parent=new_obj)
 
             new_obj = new_workspace.get_entity(self.objects.value)[0]
