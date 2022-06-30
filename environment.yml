@@ -46,7 +46,7 @@ dependencies:
   - libblas = "*=*mkl"
   - pip
   - pip:
-    - git+https://github.com/MiraGeoscience/geoh5py.git@v0.3.0-alpha.3#egg=geoh5py
+    - git+https://github.com/MiraGeoscience/geoh5py.git@v0.3.0-rc.1#egg=geoh5py
     - git+https://github.com/sebhmg/simpeg.git@v0.9.1.dev2+geoapps.0.8.0#egg=simpeg_archive
     - git+https://github.com/sebhmg/simpeg.git@v0.15.1.dev3+geoapps.0.8.0#egg=simpeg
 
