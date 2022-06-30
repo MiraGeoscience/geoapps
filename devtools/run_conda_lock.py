@@ -93,7 +93,7 @@ def config_conda():
     )
 
 
-def delete_exising_files():
+def delete_existing_files():
     env_folder = Path(environments_folder_)
     if env_folder.exists():
         for f in env_folder.glob("*.lock.yml"):
@@ -104,11 +104,13 @@ def delete_exising_files():
 
 
 if __name__ == "__main__":
-    delete_exising_files()
+    delete_existing_files()
 
     config_conda()
     env_folder = Path(environments_folder_)
-    if not env_folder.exists():
+    if env_folder.exists():
+        assert env_folder.is_dir()
+    else:
         env_folder.mkdir()
 
     with print_execution_time(f"run_conda_lock"):
