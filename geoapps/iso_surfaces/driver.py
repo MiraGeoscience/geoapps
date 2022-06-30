@@ -20,7 +20,7 @@ from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 
 from geoapps.iso_surfaces.params import IsoSurfacesParams
-from geoapps.shared_utils.utils import get_contours, rotate_xy, weighted_average
+from geoapps.shared_utils.utils import get_contours, rotate_xyz, weighted_average
 from geoapps.utils.formatters import string_name
 
 
@@ -173,7 +173,7 @@ class IsoSurfacesDriver:
                     vertices += [F(verts[:, ii])]
 
                 if isinstance(entity, BlockModel):
-                    vertices = rotate_xy(
+                    vertices = rotate_xyz(
                         np.vstack(vertices).T, [0, 0, 0], entity.rotation
                     )
                     vertices[:, 0] += entity.origin["x"]
