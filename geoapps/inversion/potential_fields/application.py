@@ -919,7 +919,7 @@ class InversionApp(PlotSelection2D):
         data_channel_options = {}
         self.data_channel_choices.options = data_type_list
 
-        if self.workspace.get_entity(self.objects.value):
+        if self.workspace.get_entity(self.objects.value)[0] is not None:
             obj, _ = self.get_selected_entities()
             children_list = {child.uid: child.name for child in obj.children}
             ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
