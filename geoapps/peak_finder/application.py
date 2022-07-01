@@ -208,7 +208,7 @@ class PeakFinder(ObjectDataSelection):
 
         obj_list = self.workspace.get_entity(self.objects.value)
 
-        if any(obj_list) and any(self.params.free_parameter_dict):
+        if obj_list[0] is not None and any(self.params.free_parameter_dict):
             self._channel_groups = self.params.groups_from_free_params()
 
             group_list = []
@@ -714,6 +714,9 @@ class PeakFinder(ObjectDataSelection):
     def create_default_groups(self, _):
         if self.group_auto.value:
             obj = self.workspace.get_entity(self.objects.value)[0]
+            if obj is None:
+                return
+
             group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
             if any(group):
                 channel_groups = default_groups_from_property_group(group[0])
@@ -867,33 +870,33 @@ class PeakFinder(ObjectDataSelection):
         """
         Observer of :obj:`geoapps.processing.peak_finder.objects`: Reset data and auto-detect AEM system
         """
-        if self.workspace.get_entity(self.objects.value):
-            self._survey = self.workspace.get_entity(self.objects.value)[0]
-            self.update_data_list(None)
-            is_tem = False
-            self.active_channels = {}
-            self.channel_groups = {}
-            for child in self.groups_panel.children:
-                child.children[0].options = self.data.options
+        obj = self.workspace.get_entity(self.objects.value)[0]
+        if obj is None:
+            return
 
-            for aem_system, specs in self.em_system_specs.items():
-                if any(
-                    [
-                        specs["flag"] in channel
-                        for channel in self._survey.get_data_list()
-                    ]
-                ):
-                    if aem_system in self.system.options:
-                        self.system.value = aem_system
-                        is_tem = True
-                        break
+        self._survey = obj
+        self.update_data_list(None)
+        is_tem = False
+        self.active_channels = {}
+        self.channel_groups = {}
+        for child in self.groups_panel.children:
+            child.children[0].options = self.data.options
 
-            self.tem_checkbox.value = is_tem
+        for aem_system, specs in self.em_system_specs.items():
+            if any(
+                [specs["flag"] in channel for channel in self._survey.get_data_list()]
+            ):
+                if aem_system in self.system.options:
+                    self.system.value = aem_system
+                    is_tem = True
+                    break
 
-            if self.group_auto:
-                self.create_default_groups(None)
+        self.tem_checkbox.value = is_tem
 
-            self.set_data(None)
+        if self.group_auto:
+            self.create_default_groups(None)
+
+        self.set_data(None)
 
     def tem_change(self, _):
         self.min_channels.disabled = not self.tem_checkbox.value
@@ -1296,38 +1299,38 @@ class PeakFinder(ObjectDataSelection):
                 param_dict[name] = group[member]
 
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.3f}.geoh5"
-        new_workspace = self.get_output_workspace(
+        with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
-        )
+        ) as new_workspace:
 
-        for key, value in param_dict.items():
-            if isinstance(value, ObjectBase):
-                if new_workspace.get_entity(value.uid)[0] is None:
-                    param_dict[key] = value.copy(
-                        parent=new_workspace, copy_children=True
-                    )
-                    line_field = [
-                        c for c in param_dict[key].children if c.name == "Line"
-                    ]
-                    if line_field:
-                        param_dict["line_field"] = line_field[0]
+            for key, value in param_dict.items():
+                if isinstance(value, ObjectBase):
+                    if new_workspace.get_entity(value.uid)[0] is None:
+                        param_dict[key] = value.copy(
+                            parent=new_workspace, copy_children=True
+                        )
+                        line_field = [
+                            c for c in param_dict[key].children if c.name == "Line"
+                        ]
+                        if line_field:
+                            param_dict["line_field"] = line_field[0]
 
-        param_dict["geoh5"] = new_workspace
-        if self.live_link.value:
-            param_dict["monitoring_directory"] = self.monitoring_directory
+            param_dict["geoh5"] = new_workspace
+            if self.live_link.value:
+                param_dict["monitoring_directory"] = self.monitoring_directory
 
-        ifile = InputFile(
-            ui_json=ui_json,
-            validations=self.params.validations,
-            validation_options={"disabled": True},
-        )
+            ifile = InputFile(
+                ui_json=ui_json,
+                validations=self.params.validations,
+                validation_options={"disabled": True},
+            )
 
-        new_params = PeakFinderParams(input_file=ifile, **param_dict)
-        new_params.write_input_file()
-        self.run(new_params)
+            new_params = PeakFinderParams(input_file=ifile, **param_dict)
+            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
+            self.run(new_params)
 
-        if self.live_link.value:
-            print("Live link active. Check your ANALYST session for result.")
+            if self.live_link.value:
+                print("Live link active. Check your ANALYST session for result.")
 
     def update_center(self, _):
         """
