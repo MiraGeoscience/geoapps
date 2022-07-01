@@ -47,8 +47,8 @@ dependencies:
   - pip
   - pip:
     - git+https://github.com/MiraGeoscience/geoh5py.git@GEOPY-568#egg=geoh5py
-    - git+https://github.com/sebhmg/simpeg.git@v0.9.1.dev2+geoapps.0.8.0#egg=simpeg_archive
-    - git+https://github.com/sebhmg/simpeg.git@v0.15.1.dev3+geoapps.0.8.0#egg=simpeg
+    - git+https://github.com/sebhmg/simpeg.git@v0.9.1.dev3+geoapps.0.8.0#egg=simpeg_archive
+    - git+https://github.com/sebhmg/simpeg.git@v0.15.1.dev4+geoapps.0.8.0#egg=simpeg
 
 variables:
   KMP_WARNINGS: 0

@@ -238,16 +238,14 @@ class ObjectDataSelection(BaseApplication):
         # Refresh the list of objects
         self.update_objects_list()
 
-    def get_selected_entities(self):
+    def get_selected_entities(self) -> tuple:
         """
         Get entities from an active geoh5py Workspace
         """
-        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
-            self.objects.value
-        ):
-            for entity in self._workspace.get_entity(self.objects.value):
-                if isinstance(entity, ObjectBase):
-                    obj = entity
+        if getattr(self, "_workspace", None) is not None:
+            obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
+            if obj is None:
+                return None, None
 
             if isinstance(self.data, Dropdown):
                 values = [self.data.value]
@@ -275,14 +273,9 @@ class ObjectDataSelection(BaseApplication):
     def update_data_list(self, _):
         refresh = self.refresh.value
         self.refresh.value = False
-        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
-            self.objects.value
-        ):
-            for entity in self._workspace.get_entity(self.objects.value):
-                if isinstance(entity, ObjectBase):
-                    obj = entity
-
-            if getattr(obj, "get_data_list", None) is None:
+        if getattr(self, "_workspace", None) is not None:
+            obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
+            if obj is None or getattr(obj, "get_data_list", None) is None:
                 return
 
             options = [["", None]]
