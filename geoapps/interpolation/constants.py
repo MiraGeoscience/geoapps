@@ -19,15 +19,15 @@ defaults = {
     "skew_factor": None,
     "space": None,
     "max_distance": None,
-    "object_hull": None,
+    "xy_extent": None,
     "topography_options": None,
     "topography_objects": None,
     "topography_data": None,
-    "elevation": None,
+    "topography_constant": None,
     "max_depth": None,
     "no_data_value": None,
     "out_object": None,
-    "output_label": None,
+    "ga_group_name": None,
     "run_command": "geoapps.interpolation.driver",
     "run_command_boolean": False,
     "workspace_geoh5": None,
@@ -110,7 +110,7 @@ default_ui_json.update(
             "value": 0.0,
             "label": "Maximum distance (m)",
         },
-        "object_hull": {
+        "xy_extent": {
             "meshType": [
                 "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
                 "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -155,7 +155,7 @@ default_ui_json.update(
             "parent": "topography_objects",
             "value": None,
         },
-        "elevation": {
+        "topography_constant": {
             "main": False,
             "group": "Vertical Extent",
             "value": 0.0,
@@ -188,7 +188,7 @@ default_ui_json.update(
             "label": "Destination",
             "value": None,
         },
-        "output_label": {
+        "ga_group_name": {
             "main": True,
             "label": "Output Label",
             "value": "_Interp",

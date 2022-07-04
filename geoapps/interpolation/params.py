@@ -34,15 +34,15 @@ class DataInterpolationParams(BaseParams):
         self._skew_factor = None
         self._space = None
         self._max_distance = None
-        self._object_hull = None
+        self._xy_extent = None
         self._topography_options = None
         self._topography_objects = None
         self._topography_data = None
-        self._elevation = None
+        self._topography_constant = None
         self._max_depth = None
         self._no_data_value = None
         self._out_object = None
-        self._output_label = None
+        self._ga_group_name = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -122,13 +122,13 @@ class DataInterpolationParams(BaseParams):
         self.setter_validator("max_distance", val)
 
     @property
-    def object_hull(self) -> ObjectBase | None:
+    def xy_extent(self) -> ObjectBase | None:
         """ """
-        return self._object_hull
+        return self._xy_extent
 
-    @object_hull.setter
-    def object_hull(self, val):
-        self.setter_validator("object_hull", val, fun=self._uuid_promoter)
+    @xy_extent.setter
+    def xy_extent(self, val):
+        self.setter_validator("xy_extent", val, fun=self._uuid_promoter)
 
     @property
     def topography_options(self) -> str | None:
@@ -158,13 +158,13 @@ class DataInterpolationParams(BaseParams):
         self.setter_validator("topography_data", val)
 
     @property
-    def elevation(self) -> float | None:
+    def topography_constant(self) -> float | None:
         """ """
-        return self._elevation
+        return self._topography_constant
 
-    @elevation.setter
-    def elevation(self, val):
-        self.setter_validator("elevation", val)
+    @topography_constant.setter
+    def topography_constant(self, val):
+        self.setter_validator("topography_constant", val)
 
     @property
     def max_depth(self) -> float | None:
@@ -194,10 +194,10 @@ class DataInterpolationParams(BaseParams):
         self.setter_validator("out_object", val, fun=self._uuid_promoter)
 
     @property
-    def output_label(self) -> str | None:
+    def ga_group_name(self) -> str | None:
         """ """
-        return self._output_label
+        return self._ga_group_name
 
-    @output_label.setter
-    def output_label(self, val):
-        self.setter_validator("output_label", val)
+    @ga_group_name.setter
+    def ga_group_name(self, val):
+        self.setter_validator("ga_group_name", val)
