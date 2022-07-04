@@ -12,7 +12,10 @@ import os
 import sys
 import time
 import webbrowser
+from multiprocessing import cpu_count
 from os import environ, makedirs, path
+
+os.environ["OMP_NUM_THREADS"] = str(cpu_count())
 
 import dash_daq as daq
 import numpy as np
@@ -323,7 +326,7 @@ class Clustering(ScatterPlots):
                 # Checkbox to hide/show the normalization plots
                 dcc.Checklist(
                     id="show_norm_tabs",
-                    options=["Data Normalization"],
+                    options=["Show Analytics & Normalization"],
                     value=[],
                     style={"margin-bottom": "10px"},
                 ),
