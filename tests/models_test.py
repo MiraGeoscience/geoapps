@@ -22,7 +22,7 @@ from geoapps.inversion.components import (
     InversionWindow,
 )
 from geoapps.inversion.potential_fields import MagneticVectorParams
-from geoapps.utils import rotate_xy
+from geoapps.shared_utils.utils import rotate_xy
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")

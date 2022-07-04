@@ -5,40 +5,21 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import sys
 import uuid
 import warnings
 from copy import deepcopy
 from os import path
 from time import time
-from typing import Optional
 
-import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.objects import Curve, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from ipywidgets import (
-    Box,
-    Checkbox,
-    ColorPicker,
-    Dropdown,
-    FloatLogSlider,
-    FloatSlider,
-    FloatText,
-    HBox,
-    IntSlider,
-    Label,
-    Layout,
-    ToggleButton,
-    ToggleButtons,
-    VBox,
-    Widget,
-    interactive_output,
-)
-from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base.selection import LineOptions, ObjectDataSelection
 from geoapps.peak_finder.constants import (
@@ -46,11 +27,35 @@ from geoapps.peak_finder.constants import (
     default_ui_json,
     template_dict,
 )
-from geoapps.utils import geophysical_systems
+from geoapps.utils import geophysical_systems, warn_module_not_found
 
 from . import PeakFinderParams
 from .driver import PeakFinderDriver
 from .utils import default_groups_from_property_group, find_anomalies
+
+with warn_module_not_found():
+    from matplotlib import pyplot as plt
+
+with warn_module_not_found():
+    from ipywidgets import (
+        Box,
+        Checkbox,
+        ColorPicker,
+        Dropdown,
+        FloatLogSlider,
+        FloatSlider,
+        FloatText,
+        HBox,
+        IntSlider,
+        Label,
+        Layout,
+        ToggleButton,
+        ToggleButtons,
+        VBox,
+        Widget,
+        interactive_output,
+    )
+    from ipywidgets.widgets.widget_selection import TraitError
 
 
 class PeakFinder(ObjectDataSelection):
@@ -564,7 +569,7 @@ class PeakFinder(ObjectDataSelection):
         return self._structural_markers
 
     @property
-    def survey(self) -> Optional[Entity]:
+    def survey(self) -> Entity | None:
         """
         Selected curve object
         """
@@ -1294,6 +1299,7 @@ class PeakFinder(ObjectDataSelection):
         new_workspace = self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         )
+
         for key, value in param_dict.items():
             if isinstance(value, ObjectBase):
                 if new_workspace.get_entity(value.uid)[0] is None:

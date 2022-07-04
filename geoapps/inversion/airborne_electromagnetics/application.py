@@ -5,34 +5,41 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
 import multiprocessing
 import os
 
-import ipywidgets as widgets
-import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets.widgets import (
-    Button,
-    Checkbox,
-    Dropdown,
-    FloatText,
-    HBox,
-    IntText,
-    Label,
-    Layout,
-    Text,
-    VBox,
-)
 
-from geoapps import PlotSelection2D
 from geoapps.base.application import BaseApplication
+from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
-from geoapps.utils import geophysical_systems
-from geoapps.utils.utils import find_value, string_2_list
+from geoapps.utils import geophysical_systems, warn_module_not_found
+from geoapps.utils.list import find_value
+from geoapps.utils.string import string_2_list
+
+with warn_module_not_found():
+    from matplotlib import pyplot as plt
+
+with warn_module_not_found():
+    import ipywidgets as widgets
+    from ipywidgets.widgets import (
+        Button,
+        Checkbox,
+        Dropdown,
+        FloatText,
+        HBox,
+        IntText,
+        Label,
+        Layout,
+        Text,
+        VBox,
+    )
 
 
 class ChannelOptions:

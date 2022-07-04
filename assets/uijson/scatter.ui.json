@@ -1,7 +1,7 @@
 {
     "title": "Scatter Plot",
     "geoh5": "",
-    "run_command": "geoapps.scatter_plot.driver",
+    "run_command": "geoapps.scatter_plot.application",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
@@ -38,8 +38,8 @@
         "association": [
             "Vertex"
         ],
-        "group": "x axis",
         "dataType": "Float",
+        "group": "x axis",
         "label": "Data",
         "main": true,
         "parent": "objects",
@@ -378,11 +378,5 @@
         "value": 20,
         "enabled": false,
         "optional": true
-    },
-    "save": {
-        "label": "Save as html",
-        "main": true,
-        "value": false,
-        "group": "Python run preferences"
     }
 }

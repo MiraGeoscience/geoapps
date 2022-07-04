@@ -13,7 +13,7 @@ from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 
-from geoapps.base.params import BaseParams
+from geoapps.driver_base.params import BaseParams
 
 from .constants import default_ui_json, defaults, validations
 

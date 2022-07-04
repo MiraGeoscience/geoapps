@@ -4,6 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
 from __future__ import annotations
 
 import numpy as np
@@ -15,8 +16,8 @@ from SimPEG.utils.mat_utils import (
     mkvc,
 )
 
-from geoapps.base.params import BaseParams
-from geoapps.utils import rotate_xy, weighted_average
+from geoapps.driver_base.params import BaseParams
+from geoapps.shared_utils.utils import rotate_xy, weighted_average
 
 from . import InversionMesh
 
