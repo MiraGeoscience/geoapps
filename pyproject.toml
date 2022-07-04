@@ -66,7 +66,7 @@ zarr = "^2.8.1" # from simpgeg using Dask
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
 geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.tar.gz#sha256=None" }
 #geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", tag="release/0.3.0" }
-simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev3+geoapps.0.8.0.tar.gz#sha256=c3c988481554e9b514187628fb6716fe0deda5388dfe079d1a0a8bfbfb5d7ab7" }
+simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-573.tar.gz#sha256=None" }
 #simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="v0.9.1.dev3+geoapps.0.8.0" }
 simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev4+geoapps.0.8.0.tar.gz#sha256=d6b8f851e765cd4feccf6cc787bfcef54205d5f7aa4645d50bfb828422d30a47", extras = ["dask"] }
 #simpeg = { git = "https://github.com/sebhmg/simpeg.git", tag="v0.15.1.dev4+geoapps.0.8.0", extras = ["dask"] }
