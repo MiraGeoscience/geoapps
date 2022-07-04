@@ -7,18 +7,18 @@
 
 from __future__ import annotations
 
+import os
 from time import time
 
-import numpy as np
-from discretize.utils import mesh_utils
-from geoh5py.objects import BlockModel, ObjectBase
-from geoh5py.ui_json.utils import monitored_directory_copy
+from geoh5py.objects import ObjectBase
+from geoh5py.objects.object_base import Entity
+from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
-from scipy.interpolate import LinearNDInterpolator
-from scipy.spatial import cKDTree
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.shared_utils.utils import get_locations, weighted_average
+from geoapps.interpolation.constants import app_initializer
+from geoapps.interpolation.driver import DataInterpolationDriver
+from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():
@@ -30,38 +30,26 @@ class DataInterpolation(ObjectDataSelection):
     Transfer data from one object to another, or onto a 3D BlockModel
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-        "data": ["{f3e36334-be0a-4210-b13e-06933279de25}"],
-        "core_cell_size": "50, 50, 50",
-        "depth_core": 500,
-        "expansion_fact": 1.05,
-        "max_distance": 2e3,
-        "max_depth": 1e3,
-        "method": "Inverse Distance",
-        "new_grid": "InterpGrid",
-        "no_data_value": 1e-8,
-        "out_mode": "To Object",
-        "out_object": "{7450be38-1327-4336-a9e4-5cff587b6715}",
-        "padding_distance": "0, 0, 0, 0, 0, 0",
-        "skew_angle": 0,
-        "skew_factor": 1.0,
-        "space": "Log",
-        "topography": {
-            "options": "Object",
-            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-            "data": "Z",
-        },
-    }
-
+    _param_class = DataInterpolationParams
     _select_multiple = True
     _topography = None
 
-    def __init__(self, use_defaults=True, **kwargs):
+    def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
+        if ui_json is not None and os.path.exists(ui_json):
+            self.params = self._param_class(InputFile(ui_json))
+        else:
+            self.params = self._param_class(**app_initializer)
 
-        if use_defaults:
-            self.defaults.update(**kwargs)
+        self.defaults = {}
+        for key, value in self.params.to_dict().items():
+            if isinstance(value, Entity):
+                self.defaults[key] = value.uid
+            else:
+                self.defaults[key] = value
+        self.defaults["topography"] = self.params.topography
+
+        super().__init__(**self.defaults)
 
         self._core_cell_size = Text(
             description="Smallest cells",
@@ -345,301 +333,31 @@ class DataInterpolation(ObjectDataSelection):
         else:
             self.destination_panel.children = [self.out_mode, self.new_grid_panel]
 
-    def object_base(self, object):
-        for entity in self._workspace.get_entity(object):
-            if isinstance(entity, ObjectBase):
-                return entity
-        return None
-
-    @staticmethod
-    def truncate_locs_depths(locs, depth_core):
-        zmax = locs[:, 2].max()  # top of locs
-        below_core_ind = (zmax - locs[:, 2]) > depth_core
-        core_bottom_elev = zmax - depth_core
-        locs[
-            below_core_ind, 2
-        ] = core_bottom_elev  # sets locations below core to core bottom
-        return locs
-
-    @staticmethod
-    def minimum_depth_core(locs, depth_core, core_z_cell_size):
-        zrange = locs[:, 2].max() - locs[:, 2].min()  # locs z range
-        if depth_core >= zrange:
-            return depth_core - zrange + core_z_cell_size
-        else:
-            return depth_core
-
-    @staticmethod
-    def find_top_padding(obj, core_z_cell_size):
-        pad_sum = 0
-        for h in np.abs(np.diff(obj.z_cell_delimiters)):
-            if h != core_z_cell_size:
-                pad_sum += h
-            else:
-                return pad_sum
-
-    @staticmethod
-    def get_block_model(workspace, name, locs, h, depth_core, pads, expansion_factor):
-
-        locs = DataInterpolation.truncate_locs_depths(locs, depth_core)
-        depth_core = DataInterpolation.minimum_depth_core(locs, depth_core, h[2])
-        mesh = mesh_utils.mesh_builder_xyz(
-            locs,
-            h,
-            padding_distance=[
-                [pads[0], pads[1]],
-                [pads[2], pads[3]],
-                [pads[4], pads[5]],
-            ],
-            depth_core=depth_core,
-            expansion_factor=expansion_factor,
-        )
-
-        object_out = BlockModel.create(
-            workspace,
-            origin=[mesh.x0[0], mesh.x0[1], locs[:, 2].max()],
-            u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
-            v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-            z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
-            name=name,
-        )
-
-        top_padding = DataInterpolation.find_top_padding(object_out, h[2])
-        object_out.origin["z"] += top_padding
-
-        return object_out
-
     def trigger_click(self, _):
-
-        object_from = self.object_base(self.objects.value)
-        xyz = get_locations(self.workspace, object_from).copy()
-        if xyz is None:
-            return
-
-        if len(self.data.value) == 0:
-            print("No data selected")
-            return
-
-        # Create a tree for the input mesh
-        tree = cKDTree(xyz)
-
+        param_dict = self.get_param_dict()
         temp_geoh5 = f"Interpolation_{time():.3f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as workspace:
+            for key, value in param_dict.items():
+                if isinstance(value, ObjectBase):
+                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
-            if self.out_mode.value == "To Object":
+            param_dict["geoh5"] = workspace
 
-                self.object_out = self.object_base(self.out_object.value).copy(
-                    parent=workspace
-                )
-                xyz_out = get_locations(workspace, self.object_out).copy()
+            if self.live_link.value:
+                param_dict["monitoring_directory"] = self.monitoring_directory
 
-            else:
-
-                xyz_ref = get_locations(self._workspace, self.xy_reference.value).copy()
-                if xyz_ref is None:
-                    print(
-                        "No object selected for 'Lateral Extent'. Defaults to input object."
-                    )
-                    xyz_ref = xyz.copy()
-
-                # Find extent of grid
-                h = (
-                    np.asarray(self.core_cell_size.value.split(","))
-                    .astype(float)
-                    .tolist()
-                )
-
-                pads = (
-                    np.asarray(self.padding_distance.value.split(","))
-                    .astype(float)
-                    .tolist()
-                )
-
-                self.object_out = DataInterpolation.get_block_model(
-                    workspace,
-                    self.new_grid.value,
-                    xyz_ref,
-                    h,
-                    self.depth_core.value,
-                    pads,
-                    self.expansion_fact.value,
-                )
-
-                # Try to recenter on nearest
-                # Find nearest cells
-                rad, ind = tree.query(self.object_out.centroids)
-                ind_nn = np.argmin(rad)
-
-                d_xyz = self.object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
-
-                self.object_out.origin = np.r_[self.object_out.origin.tolist()] - d_xyz
-
-                xyz_out = self.object_out.centroids.copy()
-
-        xyz_out_orig = xyz_out.copy()
-
-        values, sign, dtype = {}, {}, {}
-        for field in self.data.value:
-
-            if isinstance(field, str) and field in "XYZ":
-                values[field] = xyz[:, "XYZ".index(field)]
-                dtype[field] = values[field].dtype
-            else:
-                model_in = self.workspace.get_entity(field)[0]
-                values[field] = np.asarray(model_in.values, dtype=float).copy()
-                dtype[field] = model_in.values.dtype
-
-            values[field][values[field] == self.no_data_value.value] = np.nan
-            if self.space.value == "Log":
-                sign[field] = np.sign(values[field])
-                values[field] = np.log(np.abs(values[field]))
-            else:
-                sign[field] = np.ones_like(values[field])
-
-        values_interp = {}
-        rad, ind = tree.query(xyz_out)
-        if self.method.value == "Linear":
-
-            for key, value in values.items():
-                F = LinearNDInterpolator(xyz, value)
-                values_interp[key] = F(xyz_out)
-
-        elif self.method.value == "Inverse Distance":
-
-            angle = np.deg2rad((450.0 - np.asarray(self.skew_angle.value)) % 360.0)
-            rotation = np.r_[
-                np.c_[np.cos(angle), np.sin(angle)],
-                np.c_[-np.sin(angle), np.cos(angle)],
-            ]
-            center = np.mean(xyz, axis=0).reshape((3, 1))
-            xyz -= np.kron(center, np.ones(xyz.shape[0])).T
-            xyz[:, :2] = np.dot(rotation, xyz[:, :2].T).T
-            xyz[:, 1] *= self.skew_factor.value
-            xyz_out -= np.kron(center, np.ones(xyz_out.shape[0])).T
-            xyz_out[:, :2] = np.dot(rotation, xyz_out[:, :2].T).T
-            xyz_out[:, 1] *= self.skew_factor.value
-            vals, ind_inv = weighted_average(
-                xyz,
-                xyz_out,
-                list(values.values()),
-                threshold=1e-1,
-                n=8,
-                return_indices=True,
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
             )
-
-            for key, val in zip(list(values.keys()), vals):
-                values_interp[key] = val
-                sign[key] = sign[key][ind_inv[:, 0]]
-
-        else:
-            # Find nearest cells
-            for key, value in values.items():
-
-                values_interp[key] = value[ind]
-                sign[key] = sign[key][ind]
-
-        for key in values_interp.keys():
-            if self.space.value == "Log":
-                values_interp[key] = sign[key] * np.exp(values_interp[key])
-
-            values_interp[key][np.isnan(values_interp[key])] = self.no_data_value.value
-            values_interp[key][rad > self.max_distance.value] = self.no_data_value.value
-
-        # if hasattr(self.object_out, "centroids"):
-        #     xyz_out = self.object_out.centroids
-        # elif hasattr(self.object_out, "vertices"):
-        #     xyz_out = self.object_out.vertices
-
-        top = np.zeros(xyz_out.shape[0], dtype="bool")
-        bottom = np.zeros(xyz_out.shape[0], dtype="bool")
-        if self.topography.options.value == "Object" and self.workspace.get_entity(
-            self.topography.objects.value
-        ):
-
-            for entity in self._workspace.get_entity(self.topography.objects.value):
-                if isinstance(entity, ObjectBase):
-                    topo_obj = entity
-
-            if getattr(topo_obj, "vertices", None) is not None:
-                topo = topo_obj.vertices
-            else:
-                topo = topo_obj.centroids
-
-            if self.topography.data.value is not None:
-                topo[:, 2] = self.workspace.get_entity(self.topography.data.value)[
-                    0
-                ].values
-
-            lin_interp = LinearNDInterpolator(topo[:, :2], topo[:, 2])
-            z_interp = lin_interp(xyz_out_orig[:, :2])
-
-            ind_nan = np.isnan(z_interp)
-            if any(ind_nan):
-                tree = cKDTree(topo[:, :2])
-                _, ind = tree.query(xyz_out_orig[ind_nan, :2])
-                z_interp[ind_nan] = topo[ind, 2]
-
-            top = xyz_out_orig[:, 2] > z_interp
-            if self.max_depth.value is not None:
-                bottom = np.abs(xyz_out_orig[:, 2] - z_interp) > self.max_depth.value
-
-        elif (
-            self.topography.options.value == "Constant"
-            and self.topography.constant.value is not None
-        ):
-            top = xyz_out_orig[:, 2] > self.topography.constant.value
-            if self.max_depth.value is not None:
-                bottom = (
-                    np.abs(xyz_out_orig[:, 2] - self.topography.constant.value)
-                    > self.max_depth.value
-                )
-
-        for key in values_interp.keys():
-            values_interp[key][top] = self.no_data_value.value
-            values_interp[key][bottom] = self.no_data_value.value
-
-        if self.xy_extent.value is not None and self.workspace.get_entity(
-            self.xy_extent.value
-        ):
-
-            for entity in self._workspace.get_entity(self.xy_extent.value):
-                if isinstance(entity, ObjectBase):
-                    xy_ref = entity
-            if hasattr(xy_ref, "centroids"):
-                xy_ref = xy_ref.centroids
-            elif hasattr(xy_ref, "vertices"):
-                xy_ref = xy_ref.vertices
-
-            tree = cKDTree(xy_ref[:, :2])
-            rad, _ = tree.query(xyz_out_orig[:, :2])
-            for key in values_interp.keys():
-                values_interp[key][
-                    rad > self.max_distance.value
-                ] = self.no_data_value.value
-
-        self.object_out.workspace.open()
-        for key in values_interp.keys():
-            if dtype[field] == np.dtype("int32"):
-                primitive = "integer"
-                vals = np.round(values_interp[key]).astype(dtype[field])
-            else:
-                primitive = "float"
-                vals = values_interp[key].astype(dtype[field])
-
-            self.object_out.add_data(
-                {
-                    self.data.uid_name_map[key]
-                    + self.ga_group_name.value: {"values": vals, "type": primitive}
-                }
-            )
-        self.object_out.workspace.close()
+            new_params = DataInterpolationParams(input_file=ifile, **param_dict)
+            driver = DataInterpolationDriver(new_params)
+            driver.run()
 
         if self.live_link.value:
-            monitored_directory_copy(
-                self.export_directory.selected_path, self.object_out
-            )
+            print("Live link active. Check your ANALYST session for new mesh.")
 
     def object_pick(self, _):
         if self.objects.value in list(dict(self.xy_reference.options).values()):

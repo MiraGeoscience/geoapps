@@ -43,6 +43,13 @@ class DataInterpolationParams(BaseParams):
         self._no_data_value = None
         self._out_object = None
         self._ga_group_name = None
+        self._out_mode = None
+        self._xy_reference = None
+        self._core_cell_size = None
+        self._padding_distance = None
+        self._depth_core = None
+        self._expansion_fact = None
+        self._new_grid = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -53,6 +60,23 @@ class DataInterpolationParams(BaseParams):
             )
 
         super().__init__(input_file=input_file, **kwargs)
+
+    @property
+    def topography(self) -> dict[str, float] | None:
+        """Returns topography dictionary"""
+        topo = {
+            "options": self.topography_options,
+            "objects": self.topography_objects,
+            "data": self.topography_data,
+            "constant": self.topography_constant,
+        }
+        # check_keys = ["options", "objects", "data", "constant"]
+        # no_data = any([v is None for k, v in topo.items() if k in check_keys])
+        return topo  # None if no_data else topo
+
+    # @topography.setter
+    # def topography(self, val):
+    #    self.setter_validator("topography", val)
 
     @property
     def objects(self) -> ObjectBase | None:
@@ -201,3 +225,66 @@ class DataInterpolationParams(BaseParams):
     @ga_group_name.setter
     def ga_group_name(self, val):
         self.setter_validator("ga_group_name", val)
+
+    @property
+    def out_mode(self) -> str | None:
+        """ """
+        return self._out_mode
+
+    @out_mode.setter
+    def out_mode(self, val):
+        self.setter_validator("out_mode", val)
+
+    @property
+    def xy_reference(self) -> Data | None:
+        """ """
+        return self._xy_reference
+
+    @xy_reference.setter
+    def xy_reference(self, val):
+        self.setter_validator("xy_reference", val)
+
+    @property
+    def core_cell_size(self) -> str | None:
+        """ """
+        return self._core_cell_size
+
+    @core_cell_size.setter
+    def core_cell_size(self, val):
+        self.setter_validator("core_cell_size", val)
+
+    @property
+    def padding_distance(self) -> str | None:
+        """ """
+        return self._padding_distance
+
+    @padding_distance.setter
+    def padding_distance(self, val):
+        self.setter_validator("padding_distance", val)
+
+    @property
+    def depth_core(self) -> float | None:
+        """ """
+        return self._depth_core
+
+    @depth_core.setter
+    def depth_core(self, val):
+        self.setter_validator("depth_core", val)
+
+    @property
+    def expansion_fact(self) -> float | None:
+        """ """
+        return self._expansion_fact
+
+    @expansion_fact.setter
+    def expansion_fact(self, val):
+        self.setter_validator("expansion_fact", val)
+
+    @property
+    def new_grid(self) -> str | None:
+        """ """
+        return self._new_grid
+
+    @new_grid.setter
+    def new_grid(self, val):
+        self.setter_validator("new_grid", val)
