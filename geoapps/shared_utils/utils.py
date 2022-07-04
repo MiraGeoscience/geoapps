@@ -330,7 +330,7 @@ def filter_xy(
 
 def rotate_xyz(xyz: np.ndarray, center: list, theta: float, phi: float = 0.0):
     """
-    Rotate scatter points in column format around a center location.
+    Perform a counterclockwise rotation of scatter points around the z-axis, then x-axis, about a center point.
 
     :param xyz: shape(*, 2) or shape(*, 3) Input coordinates.
     :param center: len(2) or len(3) Coordinates for the center of rotation.
