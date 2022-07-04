@@ -99,83 +99,84 @@ class DataInterpolationDriver:
         if xyz is None:
             return
 
-        if self.params.data is None:
-            print("No data selected")
-            return
+        if type(self.params.data) == tuple:
+            if len(self.params.data) == 0:
+                print("No data selected")
+                return
+            else:
+                data_list = []
+                for data in self.params.data:
+                    data_list.append(self.params.objects.get_entity(data)[0])
+        elif self.params.data is not None:
+            data_list = [self.params.data]
 
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
-        # temp_geoh5 = f"Interpolation_{time():.3f}.geoh5"
-
-        self.object_out = self.object_base(self.params.out_object).copy(
-            parent=self.params.geoh5
-        )
-        xyz_out = get_locations(self.params.geoh5, self.object_out).copy()
-
-        # 3D grid ***
-        """
-        xyz_ref = get_locations(self._workspace, self.xy_reference.value).copy()
-        if xyz_ref is None:
-            print(
-                "No object selected for 'Lateral Extent'. Defaults to input object."
+        if self.params.out_mode == "To Object":
+            self.object_out = self.object_base(self.params.out_object).copy(
+                parent=self.params.geoh5
             )
-            xyz_ref = xyz.copy()
+            xyz_out = get_locations(self.params.geoh5, self.object_out).copy()
+        else:
+            # 3D grid
+            xyz_ref = get_locations(self.params.geoh5, self.params.xy_reference).copy()
+            if xyz_ref is None:
+                print(
+                    "No object selected for 'Lateral Extent'. Defaults to input object."
+                )
+                xyz_ref = xyz.copy()
 
-        # Find extent of grid
-        h = (
-            np.asarray(self.core_cell_size.value.split(","))
-            .astype(float)
-            .tolist()
-        )
+            # Find extent of grid
+            h = np.asarray(self.params.core_cell_size.split(",")).astype(float).tolist()
 
-        pads = (
-            np.asarray(self.padding_distance.value.split(","))
-            .astype(float)
-            .tolist()
-        )
+            pads = (
+                np.asarray(self.params.padding_distance.split(","))
+                .astype(float)
+                .tolist()
+            )
 
-        self.object_out = DataInterpolationDriver.get_block_model(
-            workspace,
-            self.new_grid.value,
-            xyz_ref,
-            h,
-            self.depth_core.value,
-            pads,
-            self.expansion_fact.value,
-        )
+            self.object_out = DataInterpolationDriver.get_block_model(
+                self.params.geoh5,
+                self.params.new_grid,
+                xyz_ref,
+                h,
+                self.params.depth_core,
+                pads,
+                self.params.expansion_fact,
+            )
 
-        # Try to recenter on nearest
-        # Find nearest cells
-        rad, ind = tree.query(self.object_out.centroids)
-        ind_nn = np.argmin(rad)
+            # Try to recenter on nearest
+            # Find nearest cells
+            rad, ind = tree.query(self.object_out.centroids)
+            ind_nn = np.argmin(rad)
 
-        d_xyz = self.object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
+            d_xyz = self.object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
 
-        self.object_out.origin = np.r_[self.object_out.origin.tolist()] - d_xyz
+            self.object_out.origin = np.r_[self.object_out.origin.tolist()] - d_xyz
 
-        xyz_out = self.object_out.centroids.copy()
-        """
+            xyz_out = self.object_out.centroids.copy()
 
         xyz_out_orig = xyz_out.copy()
 
         values, sign, dtype = {}, {}, {}
-        field = self.params.data.uid
+        for data in data_list:
+            field = data.name
 
-        if isinstance(field, str) and field in "XYZ":
-            values[field] = xyz[:, "XYZ".index(field)]
-            dtype[field] = values[field].dtype
-        else:
-            model_in = self.params.geoh5.get_entity(field)[0]
-            values[field] = np.asarray(model_in.values, dtype=float).copy()
-            dtype[field] = model_in.values.dtype
+            if isinstance(field, str) and field in "XYZ":
+                values[field] = xyz[:, "XYZ".index(field)]
+                dtype[field] = values[field].dtype
+            else:
+                model_in = self.params.geoh5.get_entity(field)[0]
+                values[field] = np.asarray(model_in.values, dtype=float).copy()
+                dtype[field] = model_in.values.dtype
 
-        values[field][values[field] == self.params.no_data_value] = np.nan
-        if self.params.space == "Log":
-            sign[field] = np.sign(values[field])
-            values[field] = np.log(np.abs(values[field]))
-        else:
-            sign[field] = np.ones_like(values[field])
+            values[field][values[field] == self.params.no_data_value] = np.nan
+            if self.params.space == "Log":
+                sign[field] = np.sign(values[field])
+                values[field] = np.log(np.abs(values[field]))
+            else:
+                sign[field] = np.ones_like(values[field])
 
         values_interp = {}
         rad, ind = tree.query(xyz_out)
