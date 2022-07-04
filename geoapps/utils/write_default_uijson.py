@@ -12,6 +12,7 @@ import argparse
 from geoh5py.ui_json import InputFile
 
 import geoapps
+from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
@@ -98,6 +99,11 @@ def write_default_uijson(path, use_initializers=False):
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     edge_init = app_initializer if use_initializers else {}
 
+    from geoapps.contours.constants import app_initializer
+
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    cont_init = app_initializer if use_initializers else {}
+
     filedict = {
         "gravity_inversion.ui.json": GravityParams(validate=False, **grav_init),
         "gravity_forward.ui.json": GravityParams(forward_only=True, validate=False),
@@ -140,6 +146,7 @@ def write_default_uijson(path, use_initializers=False):
         "scatter.ui.json": ScatterPlotParams(validate=False, **scatter_init),
         "iso_surfaces.ui.json": IsoSurfacesParams(validate=False, **iso_init),
         "edge_detection.ui.json": EdgeDetectionParams(validate=False, **edge_init),
+        "contours.ui.json": ContoursParams(validate=False, **cont_init),
     }
 
     for filename, params in filedict.items():
