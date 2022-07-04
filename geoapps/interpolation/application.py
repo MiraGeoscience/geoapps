@@ -149,10 +149,13 @@ class DataInterpolation(ObjectDataSelection):
 
         super().__init__(**self.defaults)
 
+        self.xy_extent.options = self.objects.options
+        self.xy_reference.options = self.objects.options
         self.parameters["Vertical Extent"].children = [
             self.topography.main,
             self.max_depth,
         ]
+
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Interpolate"
 
@@ -547,10 +550,6 @@ class DataInterpolation(ObjectDataSelection):
             values_interp[key][np.isnan(values_interp[key])] = self.no_data_value.value
             values_interp[key][rad > self.max_distance.value] = self.no_data_value.value
 
-        # if hasattr(self.object_out, "centroids"):
-        #     xyz_out = self.object_out.centroids
-        # elif hasattr(self.object_out, "vertices"):
-        #     xyz_out = self.object_out.vertices
 
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
