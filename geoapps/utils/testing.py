@@ -10,6 +10,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 import warnings
 from uuid import UUID
@@ -29,7 +31,7 @@ from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 from SimPEG import utils
 
-from geoapps.utils import treemesh_2_octree
+from geoapps.driver_base.utils import treemesh_2_octree
 
 
 class Geoh5Tester:

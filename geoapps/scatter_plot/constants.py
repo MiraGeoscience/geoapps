@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from copy import deepcopy
 
 import plotly.express as px
@@ -42,7 +44,7 @@ defaults = {
     "size_max": None,
     "size_thresh": None,
     "size_markers": None,
-    "run_command": "geoapps.scatter_plot.driver",
+    "run_command": "geoapps.scatter_plot.application",
     "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -317,14 +319,8 @@ default_ui_json.update(
             "enabled": False,
             "optional": True,
         },
-        "save": {
-            "label": "Save as html",
-            "main": True,
-            "value": False,
-            "group": "Python run preferences",
-        },
         "conda_environment": "geoapps",
-        "run_command": "geoapps.scatter_plot.driver",
+        "run_command": "geoapps.scatter_plot.application",
     }
 )
 

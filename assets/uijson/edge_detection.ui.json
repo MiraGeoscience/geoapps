@@ -121,13 +121,13 @@
     "export_as": {
         "main": true,
         "label": "Save as",
-        "value": "",
+        "value": "Edges",
         "group": "Python run preferences"
     },
     "ga_group_name": {
         "main": true,
         "label": "Group",
-        "value": "",
+        "value": "EdgeDetection",
         "group": "Python run preferences"
     }
 }
