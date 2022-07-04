@@ -103,6 +103,41 @@ def test_rectangular_block():
     assert [-pos, 0.0, 5.0] in vertices
     assert [0.0, pos, 5.0] in vertices
 
+    with pytest.raises(ValueError) as error:
+        setattr(block, "center", -180.0)
+
+    assert "Input value for 'center' must be a list of floats len(3)." in str(error)
+
+    for attr in ["length", "width", "depth"]:
+        with pytest.raises(ValueError) as error:
+            setattr(block, attr, -10.0)
+
+        assert f"Input value for '{attr}' must be a float >0." in str(error)
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "dip", -180.0)
+
+    assert (
+        "Input value for 'dip' must be a float on the interval [-90, 90] degrees."
+        in str(error)
+    )
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "azimuth", -450.0)
+
+    assert (
+        "Input value for 'azimuth' must be a float on the interval [-360, 360] degrees."
+        in str(error)
+    )
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "reference", "abc")
+
+    assert (
+        "Input value for 'reference' point should be a str from ['center', 'top']."
+        in str(error)
+    )
+
 
 def test_find_value():
     labels = ["inversion_01_model", "inversion_01_data", "inversion_02_model"]
