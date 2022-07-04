@@ -1,7 +1,7 @@
 {
     "title": "Data Transfer",
     "geoh5": "",
-    "run_command": "geoapps.contours.driver",
+    "run_command": "geoapps.interpolation.driver",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
@@ -71,7 +71,7 @@
         "value": 0.0,
         "label": "Maximum distance (m)"
     },
-    "object_hull": {
+    "xy_extent": {
         "meshType": [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -116,7 +116,7 @@
         "parent": "topography_objects",
         "value": ""
     },
-    "elevation": {
+    "topography_constant": {
         "main": false,
         "group": "Vertical Extent",
         "value": 0.0,
@@ -149,7 +149,7 @@
         "label": "Destination",
         "value": ""
     },
-    "output_label": {
+    "ga_group_name": {
         "main": true,
         "label": "Output Label",
         "value": "_Interp",
