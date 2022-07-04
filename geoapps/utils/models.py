@@ -63,7 +63,9 @@ class RectangularBlock:
     @center.setter
     def center(self, value: list[float]):
         if not isinstance(value, list) or len(value) != 3:
-            raise ValueError("Input 'center' must be a list of floats len(3).")
+            raise ValueError(
+                "Input value for 'center' must be a list of floats len(3)."
+            )
         self._center = value
         self._vertices = None
 
@@ -75,7 +77,7 @@ class RectangularBlock:
     @length.setter
     def length(self, value):
         if not isinstance(value, float) or value < 0:
-            raise ValueError("Input 'length' must be a float >0.")
+            raise ValueError("Input value for 'length' must be a float >0.")
 
         self._length = value
         self._vertices = None
@@ -88,7 +90,7 @@ class RectangularBlock:
     @width.setter
     def width(self, value):
         if not isinstance(value, float) or value < 0:
-            raise ValueError("Input 'width' must be a float >0.")
+            raise ValueError("Input value for 'width' must be a float >0.")
 
         self._width = value
         self._vertices = None
@@ -101,7 +103,7 @@ class RectangularBlock:
     @depth.setter
     def depth(self, value):
         if not isinstance(value, float) or value < 0:
-            raise ValueError("Input 'depth' must be a float >0.")
+            raise ValueError("Input value for 'depth' must be a float >0.")
 
         self._depth = value
         self._vertices = None
@@ -115,7 +117,7 @@ class RectangularBlock:
     def dip(self, value):
         if not isinstance(value, float) or value < -90.0 or value > 90.0:
             raise ValueError(
-                "Input 'dip' must be a float on the interval [-90, 90] degrees."
+                "Input value for 'dip' must be a float on the interval [-90, 90] degrees."
             )
 
         self._dip = value
@@ -130,7 +132,7 @@ class RectangularBlock:
     def azimuth(self, value):
         if not isinstance(value, float) or value < -360.0 or value > 360.0:
             raise ValueError(
-                "Input 'azimuth' must be a float on the interval [-360, 360] degrees."
+                "Input value for 'azimuth' must be a float on the interval [-360, 360] degrees."
             )
 
         self._azimuth = value
@@ -142,9 +144,11 @@ class RectangularBlock:
         return self._reference
 
     @reference.setter
-    def reference(self, value):
-        if value not in ["center", "top"]:
-            raise ValueError("'reference' point should be 'center' or 'top'.")
+    def reference(self, value: str):
+        if not isinstance(value, str) or value not in ["center", "top"]:
+            raise ValueError(
+                "Input value for 'reference' point should be a str from ['center', 'top']."
+            )
         self._reference = value
         self._vertices = None
 
