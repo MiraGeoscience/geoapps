@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import sys
-from time import time
+from os import path
 
 import numpy as np
 from discretize.utils import mesh_utils
@@ -27,6 +27,13 @@ class DataInterpolationDriver:
     def __init__(self, params: DataInterpolationParams):
         self.params: DataInterpolationParams = params
         self._unique_object = {}
+        self.object_out = None
+
+    def object_base(self, object):
+        for entity in self.params.geoh5.get_entity(object):
+            if isinstance(entity, ObjectBase):
+                return entity
+        return None
 
     @staticmethod
     def truncate_locs_depths(locs, depth_core):
@@ -86,95 +93,89 @@ class DataInterpolationDriver:
 
         return object_out
 
-    def run(self, _):
-
-        object_from = self.object_base(self.objects.value)
-        xyz = get_locations(self.workspace, object_from).copy()
+    def run(self):
+        object_from = self.object_base(self.params.objects)
+        xyz = get_locations(self.params.geoh5, object_from).copy()
         if xyz is None:
             return
 
-        if len(self.data.value) == 0:
+        if self.params.data is None:
             print("No data selected")
             return
 
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
-        temp_geoh5 = f"Interpolation_{time():.3f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as workspace:
+        # temp_geoh5 = f"Interpolation_{time():.3f}.geoh5"
 
-            if self.out_mode.value == "To Object":
+        self.object_out = self.object_base(self.params.out_object).copy(
+            parent=self.params.geoh5
+        )
+        xyz_out = get_locations(self.params.geoh5, self.object_out).copy()
 
-                self.object_out = self.object_base(self.params.out_object).copy(
-                    parent=workspace
-                )
-                xyz_out = get_locations(workspace, self.object_out).copy()
+        # 3D grid ***
+        """
+        xyz_ref = get_locations(self._workspace, self.xy_reference.value).copy()
+        if xyz_ref is None:
+            print(
+                "No object selected for 'Lateral Extent'. Defaults to input object."
+            )
+            xyz_ref = xyz.copy()
 
-            # 3D grid ***
-            else:
+        # Find extent of grid
+        h = (
+            np.asarray(self.core_cell_size.value.split(","))
+            .astype(float)
+            .tolist()
+        )
 
-                xyz_ref = get_locations(self._workspace, self.xy_reference.value).copy()
-                if xyz_ref is None:
-                    print(
-                        "No object selected for 'Lateral Extent'. Defaults to input object."
-                    )
-                    xyz_ref = xyz.copy()
+        pads = (
+            np.asarray(self.padding_distance.value.split(","))
+            .astype(float)
+            .tolist()
+        )
 
-                # Find extent of grid
-                h = (
-                    np.asarray(self.core_cell_size.value.split(","))
-                    .astype(float)
-                    .tolist()
-                )
+        self.object_out = DataInterpolationDriver.get_block_model(
+            workspace,
+            self.new_grid.value,
+            xyz_ref,
+            h,
+            self.depth_core.value,
+            pads,
+            self.expansion_fact.value,
+        )
 
-                pads = (
-                    np.asarray(self.padding_distance.value.split(","))
-                    .astype(float)
-                    .tolist()
-                )
+        # Try to recenter on nearest
+        # Find nearest cells
+        rad, ind = tree.query(self.object_out.centroids)
+        ind_nn = np.argmin(rad)
 
-                self.object_out = DataInterpolationDriver.get_block_model(
-                    workspace,
-                    self.new_grid.value,
-                    xyz_ref,
-                    h,
-                    self.depth_core.value,
-                    pads,
-                    self.expansion_fact.value,
-                )
+        d_xyz = self.object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
 
-                # Try to recenter on nearest
-                # Find nearest cells
-                rad, ind = tree.query(self.object_out.centroids)
-                ind_nn = np.argmin(rad)
+        self.object_out.origin = np.r_[self.object_out.origin.tolist()] - d_xyz
 
-                d_xyz = self.object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
-
-                self.object_out.origin = np.r_[self.object_out.origin.tolist()] - d_xyz
-
-                xyz_out = self.object_out.centroids.copy()
+        xyz_out = self.object_out.centroids.copy()
+        """
 
         xyz_out_orig = xyz_out.copy()
 
         values, sign, dtype = {}, {}, {}
-        for field in self.params.data:
+        field = self.params.data
 
-            if isinstance(field, str) and field in "XYZ":
-                values[field] = xyz[:, "XYZ".index(field)]
-                dtype[field] = values[field].dtype
-            else:
-                model_in = self.params.geoh5.get_entity(field)[0]
-                values[field] = np.asarray(model_in.values, dtype=float).copy()
-                dtype[field] = model_in.values.dtype
+        if isinstance(field, str) and field in "XYZ":
+            values[field] = xyz[:, "XYZ".index(field)]
+            dtype[field] = values[field].dtype
+        else:
+            model_in = self.params.geoh5.get_entity(field)[0]
+            values[field] = np.asarray(model_in.values, dtype=float).copy()
+            dtype[field] = model_in.values.dtype
 
-            values[field][values[field] == self.params.no_data_value] = np.nan
-            if self.params.space == "Log":
-                sign[field] = np.sign(values[field])
-                values[field] = np.log(np.abs(values[field]))
-            else:
-                sign[field] = np.ones_like(values[field])
+        values[field][values[field] == self.params.no_data_value] = np.nan
+        if self.params.space == "Log":
+            sign[field] = np.sign(values[field])
+            values[field] = np.log(np.abs(values[field]))
+        else:
+            sign[field] = np.ones_like(values[field])
 
         values_interp = {}
         rad, ind = tree.query(xyz_out)
@@ -186,6 +187,7 @@ class DataInterpolationDriver:
 
         elif self.params.method == "Inverse Distance":
 
+            # ooh could prolly use rotation function here ***
             angle = np.deg2rad((450.0 - np.asarray(self.params.skew_angle)) % 360.0)
             rotation = np.r_[
                 np.c_[np.cos(angle), np.sin(angle)],
@@ -227,18 +229,13 @@ class DataInterpolationDriver:
                 rad > self.params.max_distance
             ] = self.params.no_data_value
 
-        # if hasattr(self.object_out, "centroids"):
-        #     xyz_out = self.object_out.centroids
-        # elif hasattr(self.object_out, "vertices"):
-        #     xyz_out = self.object_out.vertices
-
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
         if self.params.topography_options == "Object" and self.params.geoh5.get_entity(
             self.params.topography_objects
         ):
 
-            for entity in self._workspace.get_entity(self.params.topography_objects):
+            for entity in self.params.geoh5.get_entity(self.params.topography_objects):
                 if isinstance(entity, ObjectBase):
                     topo_obj = entity
 
@@ -248,9 +245,9 @@ class DataInterpolationDriver:
                 topo = topo_obj.centroids
 
             if self.params.topography_data is not None:
-                topo[:, 2] = self.params.geoh5.get_entity(
-                    self.params.topography_data.value
-                )[0].values
+                topo[:, 2] = self.params.geoh5.get_entity(self.params.topography_data)[
+                    0
+                ].values
 
             lin_interp = LinearNDInterpolator(topo[:, :2], topo[:, 2])
             z_interp = lin_interp(xyz_out_orig[:, :2])
@@ -267,12 +264,12 @@ class DataInterpolationDriver:
 
         elif (
             self.params.topography_options == "Constant"
-            and self.topography.constant.value is not None
+            and self.params.topography_constant is not None
         ):
-            top = xyz_out_orig[:, 2] > self.topography.constant.value
+            top = xyz_out_orig[:, 2] > self.params.topography_constant
             if self.params.max_depth is not None:
                 bottom = (
-                    np.abs(xyz_out_orig[:, 2] - self.topography.constant.value)
+                    np.abs(xyz_out_orig[:, 2] - self.params.topography_constant)
                     > self.params.max_depth
                 )
 
@@ -280,11 +277,11 @@ class DataInterpolationDriver:
             values_interp[key][top] = self.params.no_data_value
             values_interp[key][bottom] = self.params.no_data_value
 
-        if self.xy_extent.value is not None and self.params.geoh5.get_entity(
-            self.xy_extent.value
+        if self.params.xy_extent is not None and self.params.geoh5.get_entity(
+            self.params.xy_extent
         ):
 
-            for entity in self._workspace.get_entity(self.xy_extent.value):
+            for entity in self.params.geoh5.get_entity(self.params.xy_extent):
                 if isinstance(entity, ObjectBase):
                     xy_ref = entity
             if hasattr(xy_ref, "centroids"):
@@ -310,16 +307,18 @@ class DataInterpolationDriver:
 
             self.object_out.add_data(
                 {
-                    self.data.uid_name_map[key]
-                    + self.ga_group_name.value: {"values": vals, "type": primitive}
+                    # self.data.uid_name_map[key]
+                    self.params.data.name
+                    + self.params.ga_group_name: {"values": vals, "type": primitive}
                 }
             )
+
         self.object_out.workspace.close()
 
-        if self.live_link.value:
-            monitored_directory_copy(
-                self.export_directory.selected_path, self.object_out
-            )
+        if self.params.monitoring_directory is not None and path.exists(
+            self.params.monitoring_directory
+        ):
+            monitored_directory_copy(self.params.monitoring_directory, self.object_out)
 
 
 if __name__ == "__main__":
