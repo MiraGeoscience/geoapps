@@ -10,7 +10,7 @@
 """
 Creates locked environment files for Conda to install geoapps within the environment.
 
-Usage: from a the conda base environment, at the root of the project:
+Usage: from the conda base environment, at the root of the project:
 > python devtools/create_geoapps_env_files.py
 
 To prepare the conda base environment, see devtools/setup-conda-base.bat
@@ -56,16 +56,24 @@ def create_standalone_lock(git_url: str, full: bool, suffix=""):
 
 def add_geoapps(git_url: str, lock_file: Path, output_file: Path):
     print(f"# Patching {lock_file} for standalone environment ...")
-    exclude_re = re.compile(r"^\s*- (geoh5py|simpeg|simpeg-archive) @")
-    pip_re = re.compile(r"^\s*- pip:\s*$")
+    pip_dependency_re = re.compile(r"^\s*- (geoh5py|simpeg|simpeg-archive) @")
+    pip_dependency_lines = []
+    with open(lock_file) as input:
+        for line in input:
+            if pip_dependency_re.match(line):
+                pip_dependency_lines.append(line)
+
+    pip_section_re = re.compile(r"^\s*- pip:\s*$")
     geoapps_pip = f"    - geoapps @ {git_url}\n"
     print(f"# Patched file: {output_file}")
     with open(output_file, "w") as patched:
         with open(lock_file) as input:
             for line in input:
-                if not exclude_re.match(line):
+                if not pip_dependency_re.match(line):
                     patched.write(line)
-                if pip_re.match(line):
+                if pip_section_re.match(line):
+                    for pip_line in pip_dependency_lines:
+                        patched.write(pip_line)
                     patched.write(geoapps_pip)
 
 
