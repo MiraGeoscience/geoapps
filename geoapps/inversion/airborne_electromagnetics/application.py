@@ -1350,10 +1350,14 @@ class InversionApp(PlotSelection2D):
 
             _, data = self.sensor.get_selected_entities()
             for d in data:
+                if d is None:
+                    continue
                 d.copy(parent=new_obj)
 
             _, data = self.lines.get_selected_entities()
             for d in data:
+                if d is None:
+                    continue
                 d.copy(parent=new_obj)
 
             for elem in [
@@ -1367,6 +1371,8 @@ class InversionApp(PlotSelection2D):
                 if obj is not None:
                     new_obj = obj.copy(parent=new_workspace, copy_children=False)
                     for d in data:
+                        if d is None:
+                            continue
                         d.copy(parent=new_obj)
 
         input_dict["workspace"] = os.path.abspath(new_workspace.h5file)
