@@ -114,7 +114,7 @@ class EdgeDetectionApp(PlotSelection2D):
         )
         self.data.observe(self.update_name, names="value")
         self.compute.on_click(self.compute_trigger)
-        self._unique_object = {}
+
         super().__init__(**self.defaults)
 
         # Make changes to trigger warning color
@@ -193,7 +193,6 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._window_size
 
     def trigger_click(self, _):
-
         param_dict = self.get_param_dict()
         temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
         with self.get_output_workspace(
@@ -208,10 +207,12 @@ class EdgeDetectionApp(PlotSelection2D):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            self.params.update(param_dict)
-            self.params.write_input_file()
-
-            driver = EdgeDetectionDriver(self.params)
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+            )
+            new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
+            driver = EdgeDetectionDriver(new_params)
             driver.run()
 
         if self.live_link.value:
@@ -225,17 +226,13 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
-
         param_dict["geoh5"] = self.params.geoh5
         self.params.update(param_dict)
-
         self.refresh.value = False
-
         (
             vertices,
             _,
         ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
-
         self.collections = [
             collections.LineCollection(
                 np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2

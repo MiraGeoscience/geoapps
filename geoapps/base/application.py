@@ -287,10 +287,10 @@ class BaseApplication:
         time.sleep(1)
         # Check if GA digested the file already
         if not path.exists(workspace.h5file):
-            workpath = path.join(workpath, ".working")
-            if not path.exists(workpath):
-                makedirs(workpath)
-            workspace = Workspace(path.join(workpath, name))
+            temp_path = path.join(workpath, ".working")
+            if not path.exists(temp_path):
+                makedirs(temp_path)
+            workspace = Workspace(path.join(temp_path, name))
             workspace.close()
             live_link = True
             if not self.live_link.value:
