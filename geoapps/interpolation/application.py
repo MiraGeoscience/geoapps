@@ -550,7 +550,6 @@ class DataInterpolation(ObjectDataSelection):
             values_interp[key][np.isnan(values_interp[key])] = self.no_data_value.value
             values_interp[key][rad > self.max_distance.value] = self.no_data_value.value
 
-
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
         if self.topography.options.value == "Object" and self.workspace.get_entity(
