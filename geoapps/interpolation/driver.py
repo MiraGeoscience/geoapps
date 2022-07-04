@@ -30,7 +30,7 @@ class DataInterpolationDriver:
         self.object_out = None
 
     def object_base(self, object):
-        for entity in self.params.geoh5.get_entity(object):
+        for entity in self.params.geoh5.get_entity(object.uid):
             if isinstance(entity, ObjectBase):
                 return entity
         return None
@@ -160,7 +160,7 @@ class DataInterpolationDriver:
         xyz_out_orig = xyz_out.copy()
 
         values, sign, dtype = {}, {}, {}
-        field = self.params.data
+        field = self.params.data.uid
 
         if isinstance(field, str) and field in "XYZ":
             values[field] = xyz[:, "XYZ".index(field)]
@@ -225,9 +225,10 @@ class DataInterpolationDriver:
                 values_interp[key] = sign[key] * np.exp(values_interp[key])
 
             values_interp[key][np.isnan(values_interp[key])] = self.params.no_data_value
-            values_interp[key][
-                rad > self.params.max_distance
-            ] = self.params.no_data_value
+            if self.params.max_distance is not None:
+                values_interp[key][
+                    rad > self.params.max_distance
+                ] = self.params.no_data_value
 
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
@@ -292,9 +293,10 @@ class DataInterpolationDriver:
             tree = cKDTree(xy_ref[:, :2])
             rad, _ = tree.query(xyz_out_orig[:, :2])
             for key in values_interp.keys():
-                values_interp[key][
-                    rad > self.params.max_distance
-                ] = self.params.no_data_value
+                if self.params.max_distance is not None:
+                    values_interp[key][
+                        rad > self.params.max_distance
+                    ] = self.params.no_data_value
 
         self.object_out.workspace.open()
         for key in values_interp.keys():

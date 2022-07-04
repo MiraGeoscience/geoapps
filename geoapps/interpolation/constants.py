@@ -40,7 +40,7 @@ default_ui_json.update(
     {
         "title": "Data Transfer",
         "geoh5": "",
-        "run_command": "geoapps.contours.driver",
+        "run_command": "geoapps.interpolation.driver",
         "run_command_boolean": {
             "value": False,
             "label": "Run python module ",
