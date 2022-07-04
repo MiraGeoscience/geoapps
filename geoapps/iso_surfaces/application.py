@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import os
 import uuid
-
 from time import time
+
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 
