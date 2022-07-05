@@ -38,9 +38,7 @@ scipy = "^1.7.3" # also in simpeg and geoana
 tqdm = "^4.64.0"
 
 ## "soft" dependencies
-dash = {version = "^2.5.0", optional = true}
 fiona = {version = "^1.8.21", optional = true}
-flask = {version = "^2.1.2", optional = true}
 gdal = {version = "^3.4.3", optional = true}
 ipyfilechooser = {version = "~0.6.0", optional = true}
 ipywidgets = {version = "^7.6.5", optional = true}
@@ -81,9 +79,7 @@ requests = "^2.27.1" # for tests only
 
 [tool.poetry.extras]
 full = [
-    "dash",
     "fiona",
-    "flask",
     "gdal",
     "ipyfilechooser",
     "ipywidgets",
