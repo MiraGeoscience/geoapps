@@ -95,7 +95,8 @@ class DataInterpolationDriver:
 
     def run(self):
         object_from = self.object_base(self.params.objects)
-        xyz = get_locations(self.params.geoh5, object_from).copy()
+        xyz = get_locations(self.params.geoh5, object_from)
+
         if xyz is None:
             return
 
@@ -110,22 +111,21 @@ class DataInterpolationDriver:
         elif self.params.data is not None:
             data_list = [self.params.data]
 
+        self.params.geoh5.remove_entity(object_from)
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
         if self.params.out_mode == "To Object":
-            self.object_out = self.object_base(self.params.out_object).copy(
-                parent=self.params.geoh5
-            )
-            xyz_out = get_locations(self.params.geoh5, self.object_out).copy()
+            self.object_out = self.object_base(self.params.out_object)
+            xyz_out = get_locations(self.params.geoh5, self.object_out)
         else:
             # 3D grid
-            xyz_ref = get_locations(self.params.geoh5, self.params.xy_reference).copy()
+            xyz_ref = get_locations(self.params.geoh5, self.params.xy_reference)
             if xyz_ref is None:
                 print(
                     "No object selected for 'Lateral Extent'. Defaults to input object."
                 )
-                xyz_ref = xyz.copy()
+                xyz_ref = xyz
 
             # Find extent of grid
             h = np.asarray(self.params.core_cell_size.split(",")).astype(float).tolist()
@@ -168,7 +168,7 @@ class DataInterpolationDriver:
                 dtype[field] = values[field].dtype
             else:
                 model_in = self.params.geoh5.get_entity(field)[0]
-                values[field] = np.asarray(model_in.values, dtype=float).copy()
+                values[field] = np.asarray(model_in.values, dtype=float)  # .copy()
                 dtype[field] = model_in.values.dtype
 
             values[field][values[field] == self.params.no_data_value] = np.nan
@@ -224,7 +224,6 @@ class DataInterpolationDriver:
         for key in values_interp.keys():
             if self.params.space == "Log":
                 values_interp[key] = sign[key] * np.exp(values_interp[key])
-
             values_interp[key][np.isnan(values_interp[key])] = self.params.no_data_value
             if self.params.max_distance is not None:
                 values_interp[key][
@@ -233,11 +232,14 @@ class DataInterpolationDriver:
 
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
-        if self.params.topography_options == "Object" and self.params.geoh5.get_entity(
-            self.params.topography_objects
+        if self.params.topography[
+            "options"
+        ] == "Object" and self.params.geoh5.get_entity(
+            self.params.topography["objects"].uid
         ):
-
-            for entity in self.params.geoh5.get_entity(self.params.topography_objects):
+            for entity in self.params.geoh5.get_entity(
+                self.params.topography["objects"].uid
+            ):
                 if isinstance(entity, ObjectBase):
                     topo_obj = entity
 
@@ -246,10 +248,10 @@ class DataInterpolationDriver:
             else:
                 topo = topo_obj.centroids
 
-            if self.params.topography_data is not None:
-                topo[:, 2] = self.params.geoh5.get_entity(self.params.topography_data)[
-                    0
-                ].values
+            if self.params.topography["data"] is not None:
+                topo[:, 2] = self.params.geoh5.get_entity(
+                    self.params.topography["data"]
+                )[0].values
 
             lin_interp = LinearNDInterpolator(topo[:, :2], topo[:, 2])
             z_interp = lin_interp(xyz_out_orig[:, :2])
@@ -264,14 +266,16 @@ class DataInterpolationDriver:
             if self.params.max_depth is not None:
                 bottom = np.abs(xyz_out_orig[:, 2] - z_interp) > self.params.max_depth
 
+            self.params.geoh5.remove_entity(topo_obj)
+
         elif (
-            self.params.topography_options == "Constant"
-            and self.params.topography_constant is not None
+            self.params.topography["options"] == "Constant"
+            and self.params.topography["constant"] is not None
         ):
-            top = xyz_out_orig[:, 2] > self.params.topography_constant
+            top = xyz_out_orig[:, 2] > self.params.topography["constant"]
             if self.params.max_depth is not None:
                 bottom = (
-                    np.abs(xyz_out_orig[:, 2] - self.params.topography_constant)
+                    np.abs(xyz_out_orig[:, 2] - self.params.topography["constant"])
                     > self.params.max_depth
                 )
 
@@ -299,24 +303,25 @@ class DataInterpolationDriver:
                         rad > self.params.max_distance
                     ] = self.params.no_data_value
 
-        self.object_out.workspace.open()
+        # self.object_out.workspace.open()
         for key in values_interp.keys():
-            if dtype[field] == np.dtype("int32"):
+            if dtype[key] == np.dtype("int32"):
                 primitive = "integer"
-                vals = np.round(values_interp[key]).astype(dtype[field])
+                vals = np.round(values_interp[key]).astype(dtype[key])
             else:
                 primitive = "float"
-                vals = values_interp[key].astype(dtype[field])
+                vals = values_interp[key].astype(dtype[key])
 
             self.object_out.add_data(
                 {
                     # self.data.uid_name_map[key]
-                    self.params.data.name
+                    # self.params.data.name
+                    key
                     + self.params.ga_group_name: {"values": vals, "type": primitive}
                 }
             )
 
-        self.object_out.workspace.close()
+        # self.object_out.workspace.close()
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
