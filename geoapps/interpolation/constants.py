@@ -33,13 +33,6 @@ defaults = {
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
-    "out_mode": None,
-    "xy_reference": None,
-    "core_cell_size": None,
-    "padding_distance": None,
-    "depth_core": None,
-    "expansion_fact": None,
-    "new_grid": None,
 }
 
 default_ui_json = deepcopy(base_ui_json)
@@ -82,7 +75,7 @@ default_ui_json.update(
         },
         "space": {
             "main": False,
-            "value": "Log",
+            "value": "Linear",
             "choiceList": ["Linear", "Log"],
             "label": "Scaling",
         },
@@ -94,8 +87,6 @@ default_ui_json.update(
         "method": {
             "main": False,
             "group": "Method",
-            "groupOptional": True,
-            "enabled": False,
             "choiceList": ["Nearest", "Inverse Distance"],
             "value": "Inverse Distance",
             "label": "Method",
@@ -103,12 +94,16 @@ default_ui_json.update(
         "skew_angle": {
             "main": False,
             "group": "Method",
+            "optional": True,
+            "enabled": False,
             "value": 0.0,
             "label": "Azimuth (d.dd)",
         },
         "skew_factor": {
             "main": False,
             "group": "Method",
+            "optional": True,
+            "enabled": False,
             "value": 1.0,
             "label": "Factor (>0)",
         },
@@ -198,13 +193,6 @@ default_ui_json.update(
             "value": "_Interp",
             "group": "Python run preferences",
         },
-        "out_mode": "To Object",
-        "xy_reference": None,
-        "core_cell_size": "0, 0, 0",
-        "padding_distance": "0, 0, 0, 0, 0, 0",
-        "depth_core": 0.0,
-        "expansion_fact": 0.0,
-        "new_grid": "InterpGrid",
     }
 )
 
@@ -221,13 +209,7 @@ app_initializer = {
     "out_object": "{7450be38-1327-4336-a9e4-5cff587b6715}",
     "skew_angle": 0.0,
     "skew_factor": 1.0,
-    "space": "Log",
+    "space": "Linear",
     "topography_options": "Object",
     "topography_objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-    "core_cell_size": "50, 50, 50",
-    "depth_core": 500.0,
-    "expansion_fact": 1.05,
-    "new_grid": "InterpGrid",
-    "out_mode": "To Object",
-    "padding_distance": "0, 0, 0, 0, 0, 0",
 }

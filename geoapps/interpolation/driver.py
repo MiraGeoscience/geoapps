@@ -111,52 +111,11 @@ class DataInterpolationDriver:
         elif self.params.data is not None:
             data_list = [self.params.data]
 
-        self.params.geoh5.remove_entity(object_from)
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
-        if self.params.out_mode == "To Object":
-            self.object_out = self.object_base(self.params.out_object)
-            xyz_out = get_locations(self.params.geoh5, self.object_out)
-        else:
-            # 3D grid
-            xyz_ref = get_locations(self.params.geoh5, self.params.xy_reference)
-            if xyz_ref is None:
-                print(
-                    "No object selected for 'Lateral Extent'. Defaults to input object."
-                )
-                xyz_ref = xyz
-
-            # Find extent of grid
-            h = np.asarray(self.params.core_cell_size.split(",")).astype(float).tolist()
-
-            pads = (
-                np.asarray(self.params.padding_distance.split(","))
-                .astype(float)
-                .tolist()
-            )
-
-            self.object_out = DataInterpolationDriver.get_block_model(
-                self.params.geoh5,
-                self.params.new_grid,
-                xyz_ref,
-                h,
-                self.params.depth_core,
-                pads,
-                self.params.expansion_fact,
-            )
-
-            # Try to recenter on nearest
-            # Find nearest cells
-            rad, ind = tree.query(self.object_out.centroids)
-            ind_nn = np.argmin(rad)
-
-            d_xyz = self.object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
-
-            self.object_out.origin = np.r_[self.object_out.origin.tolist()] - d_xyz
-
-            xyz_out = self.object_out.centroids.copy()
-
+        self.object_out = self.object_base(self.params.out_object)
+        xyz_out = get_locations(self.params.geoh5, self.object_out)
         xyz_out_orig = xyz_out.copy()
 
         values, sign, dtype = {}, {}, {}
@@ -265,8 +224,6 @@ class DataInterpolationDriver:
             top = xyz_out_orig[:, 2] > z_interp
             if self.params.max_depth is not None:
                 bottom = np.abs(xyz_out_orig[:, 2] - z_interp) > self.params.max_depth
-
-            self.params.geoh5.remove_entity(topo_obj)
 
         elif (
             self.params.topography["options"] == "Constant"
