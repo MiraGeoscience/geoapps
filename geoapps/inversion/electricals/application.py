@@ -14,6 +14,7 @@ import os.path as path
 import uuid
 
 import numpy as np
+from geoh5py.data import Data
 from geoh5py.objects import (
     BlockModel,
     CurrentElectrode,
@@ -764,9 +765,9 @@ class InversionApp(PlotSelection2D):
         )
         data_channel_options = {}
         self.data_channel_choices.options = data_type_list
+        obj, _ = self.get_selected_entities()
 
-        if self.workspace.get_entity(self.objects.value):
-            obj, _ = self.get_selected_entities()
+        if obj is not None:
             options = [
                 [name, obj.get_data(name)[0].uid]
                 for name in sorted(obj.get_data_list())
@@ -781,6 +782,10 @@ class InversionApp(PlotSelection2D):
                 channel = caller["owner"]
                 data_widget = getattr(self, f"{channel.header}_group")
                 entity = self.workspace.get_entity(self.objects.value)[0]
+
+                if entity is None:
+                    return
+
                 if channel.value is None or channel.value not in [
                     child.uid for child in entity.children
                 ]:
@@ -903,14 +908,17 @@ class InversionApp(PlotSelection2D):
     def object_observer(self, _):
         """ """
         self.resolution.indices = None
-        if self.workspace.get_entity(self.objects.value):
-            self.update_data_list(None)
-            self.sensor.update_data_list(None)
-            # self.lines.update_data_list(None)
-            # self.lines.update_line_list(None)
-            self.inversion_type_observer(None)
-            self.write.button_style = "warning"
-            self.trigger.button_style = "danger"
+        obj = self.workspace.get_entity(self.objects.value)[0]
+        if obj is None:
+            return
+
+        self.update_data_list(None)
+        self.sensor.update_data_list(None)
+        # self.lines.update_data_list(None)
+        # self.lines.update_line_list(None)
+        self.inversion_type_observer(None)
+        self.write.button_style = "warning"
+        self.trigger.button_style = "danger"
 
     def data_channel_choices_observer(self, _):
         if hasattr(
@@ -922,12 +930,13 @@ class InversionApp(PlotSelection2D):
                 self.data_channel_choices.value
             ]
             self.data_channel_panel.children = [self.data_channel_choices, data_widget]
-
+            obj, data_list = self.get_selected_entities()
             if (
-                self.workspace.get_entity(self.objects.value)
+                obj is not None
+                and data_list is not None
                 and data_widget.children[1].value is None
             ):
-                _, data_list = self.get_selected_entities()
+
                 options = [[data.name, data.uid] for data in data_list]
                 data_widget.children[1].value = find_value(
                     options, [self.data_channel_choices.value]
@@ -989,10 +998,14 @@ class InversionApp(PlotSelection2D):
                     if new_obj is None:
                         new_obj = obj.copy(parent=new_workspace, copy_children=False)
                     for d in data:
-                        if new_workspace.get_entity(d.uid)[0] is None:
+                        if (
+                            isinstance(d, Data)
+                            and new_workspace.get_entity(d.uid)[0] is None
+                        ):
                             d.copy(parent=new_obj)
 
             new_obj = new_workspace.get_entity(self.objects.value)[0]
+
             for key in self.data_channel_choices.options:
                 widget = getattr(self, f"{key}_uncertainty_channel")
                 if widget.value is not None:
@@ -1042,6 +1055,7 @@ class InversionApp(PlotSelection2D):
                             value = new_workspace.get_entity(value)[0]
                         setattr(self.params, sub_key, value)
 
+            self.params.ignore_values = None
             self.params.write_input_file(
                 name=self._ga_group_name.value + ".ui.json",
                 path=self.export_directory.selected_path,
