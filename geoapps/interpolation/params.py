@@ -70,18 +70,12 @@ class DataInterpolationParams(BaseParams):
             "data": self.topography_data,
             "constant": self.topography_constant,
         }
-        # check_keys = ["options", "objects", "data", "constant"]
-        # no_data = any([v is None for k, v in topo.items() if k in check_keys])
-        return topo  # None if no_data else topo
-
-    # @topography.setter
-    # def topography(self, val):
-    #    self.setter_validator("topography", val)
+        return topo
 
     @property
     def objects(self) -> ObjectBase | None:
         """
-        Input object.
+        Object to interpolate from.
         """
         return self._objects
 
@@ -92,7 +86,7 @@ class DataInterpolationParams(BaseParams):
     @property
     def data(self) -> Data | None:
         """
-        Input data.
+        Data to interpolate from.
         """
         return self._data
 
@@ -102,7 +96,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def method(self) -> str | None:
-        """ """
+        """
+        Method of interpolation: "nearest" or "inverse distance".
+        """
         return self._method
 
     @method.setter
@@ -111,7 +107,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def skew_angle(self) -> float | None:
-        """ """
+        """
+        Skew angle for inverse distance interpolation.
+        """
         return self._skew_angle
 
     @skew_angle.setter
@@ -120,7 +118,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def skew_factor(self) -> float | None:
-        """ """
+        """
+        Skew factor for inverse distance interpolation.
+        """
         return self._skew_factor
 
     @skew_factor.setter
@@ -129,7 +129,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def space(self) -> str | None:
-        """ """
+        """
+        Scaling: "log" or "linear".
+        """
         return self._space
 
     @space.setter
@@ -138,7 +140,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def max_distance(self) -> float | None:
-        """ """
+        """
+        Max distance for horizontal extent.
+        """
         return self._max_distance
 
     @max_distance.setter
@@ -147,7 +151,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def xy_extent(self) -> ObjectBase | None:
-        """ """
+        """
+        Object hull.
+        """
         return self._xy_extent
 
     @xy_extent.setter
@@ -156,7 +162,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def topography_options(self) -> str | None:
-        """ """
+        """
+        Define topography by: "None", "Object", or "Constant".
+        """
         return self._topography_options
 
     @topography_options.setter
@@ -165,7 +173,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def topography_objects(self) -> ObjectBase | None:
-        """ """
+        """
+        Object defining topography.
+        """
         return self._topography_objects
 
     @topography_objects.setter
@@ -174,7 +184,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def topography_data(self) -> Data | None:
-        """ """
+        """
+        Data defining topography.
+        """
         return self._topography_data
 
     @topography_data.setter
@@ -183,7 +195,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def topography_constant(self) -> float | None:
-        """ """
+        """
+        Constant defining topography.
+        """
         return self._topography_constant
 
     @topography_constant.setter
@@ -192,7 +206,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def max_depth(self) -> float | None:
-        """ """
+        """
+        Max depth for vertical extent.
+        """
         return self._max_depth
 
     @max_depth.setter
@@ -201,7 +217,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def no_data_value(self) -> float | None:
-        """ """
+        """
+        Value to replace nans.
+        """
         return self._no_data_value
 
     @no_data_value.setter
@@ -210,7 +228,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def out_object(self) -> ObjectBase | None:
-        """ """
+        """
+        Object to interpolate to.
+        """
         return self._out_object
 
     @out_object.setter
@@ -219,7 +239,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def ga_group_name(self) -> str | None:
-        """ """
+        """
+        Output label.
+        """
         return self._ga_group_name
 
     @ga_group_name.setter
@@ -228,7 +250,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def out_mode(self) -> str | None:
-        """ """
+        """
+        Destination: "To Object" or "Create 3D Grid".
+        """
         return self._out_mode
 
     @out_mode.setter
@@ -236,17 +260,21 @@ class DataInterpolationParams(BaseParams):
         self.setter_validator("out_mode", val)
 
     @property
-    def xy_reference(self) -> Data | None:
-        """ """
+    def xy_reference(self) -> ObjectBase | None:
+        """
+        Lateral extent object for 3D grid.
+        """
         return self._xy_reference
 
     @xy_reference.setter
     def xy_reference(self, val):
-        self.setter_validator("xy_reference", val)
+        self.setter_validator("xy_reference", val, fun=self._uuid_promoter)
 
     @property
     def core_cell_size(self) -> str | None:
-        """ """
+        """
+        Core cell size for 3D grid.
+        """
         return self._core_cell_size
 
     @core_cell_size.setter
@@ -255,7 +283,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def padding_distance(self) -> str | None:
-        """ """
+        """
+        Padding distance for 3D grid.
+        """
         return self._padding_distance
 
     @padding_distance.setter
@@ -264,7 +294,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def depth_core(self) -> float | None:
-        """ """
+        """
+        Core depth for 3D grid.
+        """
         return self._depth_core
 
     @depth_core.setter
@@ -273,7 +305,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def expansion_fact(self) -> float | None:
-        """ """
+        """
+        Expansion factor for 3D grid.
+        """
         return self._expansion_fact
 
     @expansion_fact.setter
@@ -282,7 +316,9 @@ class DataInterpolationParams(BaseParams):
 
     @property
     def new_grid(self) -> str | None:
-        """ """
+        """
+        Name of 3D grid.
+        """
         return self._new_grid
 
     @new_grid.setter
