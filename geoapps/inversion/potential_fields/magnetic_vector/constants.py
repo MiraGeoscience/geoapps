@@ -589,6 +589,7 @@ default_ui_json = {
         ],
         "label": "Starting inclination object",
         "optional": True,
+        "enabled": False,
         "value": None,
     },
     "starting_inclination": {
@@ -617,6 +618,7 @@ default_ui_json = {
         ],
         "label": "Starting declination object",
         "optional": True,
+        "enabled": False,
         "value": None,
     },
     "starting_declination": {
@@ -644,6 +646,7 @@ default_ui_json = {
             "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
         "optional": True,
+        "enabled": False,
         "value": None,
     },
     "reference_inclination": {
@@ -670,6 +673,7 @@ default_ui_json = {
             "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
         "optional": True,
+        "enabled": False,
         "value": None,
     },
     "reference_declination": {
