@@ -32,7 +32,7 @@ class RectangularBlock:
         self._depth: float = 1.0
         self._dip: float = 0.0
         self._azimuth: float = 0.0
-        self._vertices: np.ndarray = None
+        self._vertices: np.ndarray | None = None
         self._reference: str = "center"
         self.triangles: np.ndarray = np.vstack(
             [
@@ -173,7 +173,6 @@ class RectangularBlock:
                 -self.depth / 2.0 + self.center[2],
                 self.depth / 2.0 + self.center[2],
             ]
-
             block_xyz = np.asarray(
                 [
                     [x1, x2, x1, x2, x1, x2, x1, x2],
@@ -181,14 +180,13 @@ class RectangularBlock:
                     [z1, z1, z1, z1, z2, z2, z2, z2],
                 ]
             )
-
             theta = (450.0 - np.asarray(self.azimuth)) % 360.0
             phi = -self.dip
             xyz = rotate_xyz(block_xyz.T, self.center, theta, phi)
 
             if self.reference == "top":
-                offset = np.mean(xyz[4:, :], axis=0) - self._center
-                self._center = self._center - offset
+                offset = np.subtract(np.mean(xyz[4:, :], axis=0) - self._center)
+                self._center = np.subtract(self._center, offset)
                 xyz -= offset
 
             self._vertices = xyz
