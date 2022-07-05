@@ -1083,7 +1083,6 @@ class InversionApp(PlotSelection2D):
             )
             param_dict["resolution"] = None  # No downsampling for dcip
             ifile.data.update(param_dict)
-
             new_params = self.params.__class__(input_file=ifile)
             new_params.write_input_file(
                 name=self._ga_group_name.value + ".ui.json",
