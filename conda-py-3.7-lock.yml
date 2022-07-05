@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 45edc64b4851b73a42757955cc59bae4e3a22fdfe97613affb9190a23c5c7472
-    osx-64: fb2f659035556b44b10e0694a31195cabdd2ff3c07d9f4e218e72042863d0298
-    win-64: a022d12707a0db5d95c2ca70c13c0ac3966f4511c7eb095e2bc3c94103dff0b3
+    linux-64: 09a4fabf93d830c1a107742fc505471918261e540a3ecdaa5a942c5e49d2da81
+    osx-64: dac25e9d0c5a573908588c410b169a561b2d32fbc166a77a9e15fcb2114f361f
+    win-64: 867071b3e552867550552777b45fad5d687d9fcd6336115b6e310fe1105dfafc
   platforms:
   - win-64
   - osx-64
@@ -1096,13 +1096,13 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: 786c5a7c184e59546e4e41b55f5bcdfd
-    sha256: b1c54d9059da241a9270febfd55a2ce2b88e504d83e3bb1ea99117efbb0665f7
+    md5: b6f4a0850ba620030a48b88c25497aaa
+    sha256: 01b3341a3d47f218f1e6039f99e70bce0fcc099326d8f6e69eb8ecf850ccf536
   manager: conda
   name: libxml2
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libxml2-2.9.14-h22db469_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/libxml2-2.9.14-h22db469_3.tar.bz2
   version: 2.9.14
 - category: full
   dependencies:
@@ -1785,6 +1785,18 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.3-pyhd8ed1ab_0.tar.bz2
   version: 0.8.3
+- category: full
+  dependencies:
+    python: '>=3'
+  hash:
+    md5: 415f0ebb6198cc2801c73438a9fb5761
+    sha256: a1ed1a094dd0d1b94a09ed85c283a0eb28943f2e6f22161fb45e128d35229738
+  manager: conda
+  name: pickleshare
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-py_1003.tar.bz2
+  version: 0.7.5
 - category: dev
   dependencies:
     python: '>=3.6'
@@ -2555,37 +2567,23 @@ package:
 - category: full
   dependencies:
     ptyprocess: '>=0.5'
-    python: '>=3.7,<3.8.0a0'
-    python_abi: 3.7.* *_cp37m
+    python: ''
   hash:
-    md5: fda2ad946f9f5b7ce3531cc34ab262e9
-    sha256: 4b5d973a9042fe7d3305186779854c66eee27716bd46b9a8549b27e8854e0edf
+    md5: 5909e7b978141dd80d28dbf9de627827
+    sha256: 04eef875d461732ef22cd19bf2c989c40e73b5da625bf6a6b82ddae200e90e56
   manager: conda
   name: pexpect
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/pexpect-4.8.0-py37hc8dfbb8_1.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.8.0-pyh9f0ad1d_2.tar.bz2
   version: 4.8.0
-- category: full
-  dependencies:
-    python: '>=3.7,<3.8.0a0'
-    python_abi: 3.7.* *_cp37m
-  hash:
-    md5: 14ce4d7ec7d9a22007168539135bc6d5
-    sha256: fad5d104b0ff5f6cda4a0394811a7bcd2c82e6c1fe80bdbc1161e4fcdd627f85
-  manager: conda
-  name: pickleshare
-  optional: true
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/pickleshare-0.7.5-py37hc8dfbb8_1002.tar.bz2
-  version: 0.7.5
 - category: main
   dependencies:
     freetype: '>=2.10.4,<3.0a0'
     jpeg: '>=9e,<10a'
     lcms2: '>=2.12,<3.0a0'
     libgcc-ng: '>=12'
-    libtiff: '>=4.3.0,<5.0a0'
+    libtiff: '>=4.4.0,<5.0a0'
     libwebp: ''
     libwebp-base: '>=1.2.2,<2.0a0'
     libxcb: '>=1.13,<1.14.0a0'
@@ -2596,14 +2594,14 @@ package:
     tk: '>=8.6.12,<8.7.0a0'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: 503c3a666ab92c3a3deffe18c30e384d
-    sha256: b175f0e73a00c5bc6652fdad4d71b66d699d374f42b05b201586d8d7b4d275e5
+    md5: ad438113ee0b883972fb17d9f7c3952a
+    sha256: 855caab34a31a5b8d01c75e4b2e36ce6088eabb66c6127cae08026295a2163f1
   manager: conda
   name: pillow
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/pillow-9.1.1-py37h44f0d7a_1.tar.bz2
-  version: 9.1.1
+  url: https://conda.anaconda.org/conda-forge/linux-64/pillow-9.2.0-py37h44f0d7a_0.tar.bz2
+  version: 9.2.0
 - category: full
   dependencies:
     python: '>=3.6'
@@ -4101,15 +4099,15 @@ package:
     numpy: '!=1.19.4'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: None
+    sha256: e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.tar.gz
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz
   version: 0.3.0
 - category: main
   dependencies:
@@ -4922,13 +4920,13 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: b0750b1b7d467a49de6781cb492e0211
-    sha256: eb238100884c9a50d6b21a5c40cc3ee88714a96df83ddfd87430470d4f2e47d2
+    md5: acc0c68c892fdb2ed5f37f6668ad0726
+    sha256: acf83fd90fd1c864b1b05497d9a64b12e7e477673deee6c80448abb6581aa06a
   manager: conda
   name: libxml2
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libxml2-2.9.14-h08a9926_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/libxml2-2.9.14-h08a9926_3.tar.bz2
   version: 2.9.14
 - category: full
   dependencies:
@@ -5640,6 +5638,18 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.3-pyhd8ed1ab_0.tar.bz2
   version: 0.8.3
+- category: full
+  dependencies:
+    python: '>=3'
+  hash:
+    md5: 415f0ebb6198cc2801c73438a9fb5761
+    sha256: a1ed1a094dd0d1b94a09ed85c283a0eb28943f2e6f22161fb45e128d35229738
+  manager: conda
+  name: pickleshare
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-py_1003.tar.bz2
+  version: 0.7.5
 - category: dev
   dependencies:
     python: '>=3.6'
@@ -6386,36 +6396,22 @@ package:
 - category: full
   dependencies:
     ptyprocess: '>=0.5'
-    python: '>=3.7,<3.8.0a0'
-    python_abi: 3.7.* *_cp37m
+    python: ''
   hash:
-    md5: 249ce152201450091b9dcfa4b1438590
-    sha256: ce73338f12eb26a319e0aa29c9a0ed5625f9fe4e6278a1e9b13b96b83975dfe6
+    md5: 5909e7b978141dd80d28dbf9de627827
+    sha256: 04eef875d461732ef22cd19bf2c989c40e73b5da625bf6a6b82ddae200e90e56
   manager: conda
   name: pexpect
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pexpect-4.8.0-py37hc8dfbb8_1.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.8.0-pyh9f0ad1d_2.tar.bz2
   version: 4.8.0
-- category: full
-  dependencies:
-    python: '>=3.7,<3.8.0a0'
-    python_abi: 3.7.* *_cp37m
-  hash:
-    md5: 4c04e7491847c37e277f06b0e8c5b6b6
-    sha256: b11598708f44cf2945b82a646eec239297eeec4b05d7dc846cc3e8acc252bfd4
-  manager: conda
-  name: pickleshare
-  optional: true
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pickleshare-0.7.5-py37hc8dfbb8_1002.tar.bz2
-  version: 0.7.5
 - category: main
   dependencies:
     freetype: '>=2.10.4,<3.0a0'
     jpeg: '>=9e,<10a'
     lcms2: '>=2.12,<3.0a0'
-    libtiff: '>=4.3.0,<5.0a0'
+    libtiff: '>=4.4.0,<5.0a0'
     libwebp: ''
     libwebp-base: '>=1.2.2,<2.0a0'
     libxcb: '>=1.13,<1.14.0a0'
@@ -6426,14 +6422,14 @@ package:
     tk: '>=8.6.12,<8.7.0a0'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: b391e47fea385eac5685f8c8f52c709f
-    sha256: adcd16d75437de1f4d5240e5d4d25db773a69a3d6e355748203db56d7f1b9b5e
+    md5: a3173bdcbe36a8ca1d2b9e90e9caf093
+    sha256: d7c95d69df85c0ba46e487e86ab9a64f64ea8d50a85c47631f08e8198b23f10f
   manager: conda
   name: pillow
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pillow-9.1.1-py37h1eb1bbc_1.tar.bz2
-  version: 9.1.1
+  url: https://conda.anaconda.org/conda-forge/osx-64/pillow-9.2.0-py37h1eb1bbc_0.tar.bz2
+  version: 9.2.0
 - category: full
   dependencies:
     python: '>=3.6'
@@ -7901,15 +7897,15 @@ package:
     numpy: '!=1.19.4'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: None
+    sha256: e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.tar.gz
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz
   version: 0.3.0
 - category: main
   dependencies:
@@ -9102,13 +9098,13 @@ package:
     vs2015_runtime: '>=14.16.27033'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: cf3d594bfe16d1dfb8ed3bbb29334f48
-    sha256: ba0105126b0d14d797b1e9ff777eeb0bbb76460b7a237cd93491a35a98430ddd
+    md5: e808942ccf50836ada87fca9166ade88
+    sha256: 3ce22bff861dd345a046287a00971e1ef003f4a5fc82996a8a9a95fbd96b412d
   manager: conda
   name: libxml2
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libxml2-2.9.14-hf5bbc77_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/win-64/libxml2-2.9.14-hf5bbc77_3.tar.bz2
   version: 2.9.14
 - category: full
   dependencies:
@@ -9199,6 +9195,18 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.3-pyhd8ed1ab_0.tar.bz2
   version: 0.8.3
+- category: full
+  dependencies:
+    python: '>=3'
+  hash:
+    md5: 415f0ebb6198cc2801c73438a9fb5761
+    sha256: a1ed1a094dd0d1b94a09ed85c283a0eb28943f2e6f22161fb45e128d35229738
+  manager: conda
+  name: pickleshare
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-py_1003.tar.bz2
+  version: 0.7.5
 - category: dev
   dependencies:
     python: '>=3.6'
@@ -9943,19 +9951,6 @@ package:
   version: 1.2.0
 - category: full
   dependencies:
-    python: '>=3.7,<3.8.0a0'
-    python_abi: 3.7.* *_cp37m
-  hash:
-    md5: b633ace65bb92a673748ce48c2c24839
-    sha256: 0e08d6451b3a6e0893afcab564796ef9c1bb94d296cf3f98a3fa913579af203a
-  manager: conda
-  name: pickleshare
-  optional: true
-  platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/pickleshare-0.7.5-py37hc8dfbb8_1002.tar.bz2
-  version: 0.7.5
-- category: full
-  dependencies:
     python: '>=3.6'
     tenacity: '>=6.2.0'
   hash:
@@ -10604,14 +10599,14 @@ package:
     vs2015_runtime: '>=14.16.27033'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: f0eeb53eb9bb616abf714888babf522b
-    sha256: 66693ba34ad2b70059782cfffd5ce8195e4c733b74fee6ac73406ce375cbcdd5
+    md5: c18c523843199e4203d5fe78e9da7b6f
+    sha256: 7aadb4dbd1c4dbec5a01f64145267eea067dbdff7dfe2d946daf2d3c90b88948
   manager: conda
   name: pillow
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/pillow-9.1.1-py37h8675073_1.tar.bz2
-  version: 9.1.1
+  url: https://conda.anaconda.org/conda-forge/win-64/pillow-9.2.0-py37h8675073_0.tar.bz2
+  version: 9.2.0
 - category: main
   dependencies:
     python: '>=3.7'
@@ -11763,15 +11758,15 @@ package:
     numpy: '!=1.19.4'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: None
+    sha256: e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.tar.gz
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz
   version: 0.3.0
 - category: main
   dependencies:
