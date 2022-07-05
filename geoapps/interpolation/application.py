@@ -32,7 +32,7 @@ class DataInterpolation(ObjectDataSelection):
 
     _param_class = DataInterpolationParams
     _select_multiple = True
-    _topography = None
+    # _topography = None
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -335,6 +335,9 @@ class DataInterpolation(ObjectDataSelection):
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
+        for key in ["options", "objects", "data", "constant"]:
+            param_dict["topography_" + key] = getattr(self.params, "topography_" + key)
+
         temp_geoh5 = f"Interpolation_{time():.3f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
