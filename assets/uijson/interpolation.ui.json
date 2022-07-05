@@ -34,10 +34,22 @@
         "parent": "objects",
         "value": ""
     },
+    "space": {
+        "main": false,
+        "value": "Log",
+        "choiceList": ["Linear", "Log"],
+        "label": "Scaling"
+    },
+    "no_data_value": {
+        "main": false,
+        "value": 0.0,
+        "label": "No-data-value"
+    },
     "method": {
         "main": false,
         "group": "Method",
         "groupOptional": true,
+        "enabled": false,
         "choiceList": ["Nearest", "Inverse Distance"],
         "value": "Inverse Distance",
         "label": "Method"
@@ -45,29 +57,20 @@
     "skew_angle": {
         "main": false,
         "group": "Method",
-        "groupOptional": true,
         "value": 0.0,
         "label": "Azimuth (d.dd)"
     },
     "skew_factor": {
         "main": false,
         "group": "Method",
-        "groupOptional": true,
         "value": 1.0,
         "label": "Factor (>0)"
-    },
-    "space": {
-        "main": false,
-        "group": "Scaling",
-        "groupOptional": true,
-        "value": "Log",
-        "choiceList": ["Linear", "Log"],
-        "label": "Scaling"
     },
     "max_distance": {
         "main": false,
         "group": "Horizontal Extent",
         "groupOptional": true,
+        "enabled": false,
         "value": 0.0,
         "label": "Maximum distance (m)"
     },
@@ -89,6 +92,7 @@
         "main": false,
         "group": "Vertical Extent",
         "groupOptional": true,
+        "enabled": false,
         "choiceList": ["None", "Object", "Constant"],
         "value": "Object",
         "label": "Define by"
@@ -128,13 +132,6 @@
         "value": 0.0,
         "label": "Maximum depth (m)"
     },
-    "no_data_value": {
-        "main": false,
-        "group": "No-data-value",
-        "groupOptional": true,
-        "value": 0.0,
-        "label": "No-data-value"
-    },
     "out_object": {
         "meshType": [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
@@ -145,8 +142,8 @@
             "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
         ],
         "main": true,
-        "group": "Data Selection",
-        "label": "Destination",
+        "group": "Destination",
+        "label": "Object",
         "value": ""
     },
     "ga_group_name": {
@@ -154,5 +151,12 @@
         "label": "Output Label",
         "value": "_Interp",
         "group": "Python run preferences"
-    }
+    },
+    "out_mode": "To Object",
+    "xy_reference": "",
+    "core_cell_size": "0, 0, 0",
+    "padding_distance": "0, 0, 0, 0, 0, 0",
+    "depth_core": 0.0,
+    "expansion_fact": 0.0,
+    "new_grid": "InterpGrid"
 }
