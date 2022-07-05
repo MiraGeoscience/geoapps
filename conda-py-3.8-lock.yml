@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 6aefbf9a4bf3984439e87751d3ee314bf10678aae28ef0a98c294b48ab7b35e8
-    osx-64: bf39aace0e4a04f48d9ab38509480fea95f0a7c327ccefee63c06951b213c4ae
-    win-64: 3114b65c183046687f5d621aa73b5a7d10700661da1b3715511ac0fb26e81800
+    linux-64: 188ade7a420c2fdf3152c656eaa8251f45e0bfb088c72178d34aa0bb18445f0c
+    osx-64: 4a81db18b4afa554943c4cb45bc1953d0d98c0a3d5e090782795422e5a9c4044
+    win-64: 92f41e3ffa4b276f8d55a95ee3f2b0f79d70e539c914b3d62926c95c233d2f27
   platforms:
   - win-64
   - osx-64
@@ -4296,16 +4296,16 @@ package:
     pymatsolver: '>=0.1.1'
     scipy: '>=0.13'
   hash:
-    sha256: None
+    sha256: 4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
   manager: pip
   name: simpeg-archive
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-573.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-573.tar.gz
-  version: 0.9.1.dev3+geoapps.0.8.0
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz
+  version: 0.9.1.dev4+geoapps.0.8.0
 - category: main
   dependencies:
     discretize: '>=0.7.0'
@@ -8263,16 +8263,16 @@ package:
     pymatsolver: '>=0.1.1'
     scipy: '>=0.13'
   hash:
-    sha256: None
+    sha256: 4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
   manager: pip
   name: simpeg-archive
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-573.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-573.tar.gz
-  version: 0.9.1.dev3+geoapps.0.8.0
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz
+  version: 0.9.1.dev4+geoapps.0.8.0
 - category: main
   dependencies:
     discretize: '>=0.7.0'
@@ -12304,16 +12304,16 @@ package:
     pymatsolver: '>=0.1.1'
     scipy: '>=0.13'
   hash:
-    sha256: None
+    sha256: 4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
   manager: pip
   name: simpeg-archive
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-573.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-573.tar.gz
-  version: 0.9.1.dev3+geoapps.0.8.0
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz
+  version: 0.9.1.dev4+geoapps.0.8.0
 - category: main
   dependencies:
     discretize: '>=0.7.0'
