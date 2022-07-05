@@ -1096,13 +1096,13 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: 786c5a7c184e59546e4e41b55f5bcdfd
-    sha256: b1c54d9059da241a9270febfd55a2ce2b88e504d83e3bb1ea99117efbb0665f7
+    md5: b6f4a0850ba620030a48b88c25497aaa
+    sha256: 01b3341a3d47f218f1e6039f99e70bce0fcc099326d8f6e69eb8ecf850ccf536
   manager: conda
   name: libxml2
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libxml2-2.9.14-h22db469_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/libxml2-2.9.14-h22db469_3.tar.bz2
   version: 2.9.14
 - category: full
   dependencies:
@@ -2585,7 +2585,7 @@ package:
     jpeg: '>=9e,<10a'
     lcms2: '>=2.12,<3.0a0'
     libgcc-ng: '>=12'
-    libtiff: '>=4.3.0,<5.0a0'
+    libtiff: '>=4.4.0,<5.0a0'
     libwebp: ''
     libwebp-base: '>=1.2.2,<2.0a0'
     libxcb: '>=1.13,<1.14.0a0'
@@ -2596,14 +2596,14 @@ package:
     tk: '>=8.6.12,<8.7.0a0'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: 503c3a666ab92c3a3deffe18c30e384d
-    sha256: b175f0e73a00c5bc6652fdad4d71b66d699d374f42b05b201586d8d7b4d275e5
+    md5: ad438113ee0b883972fb17d9f7c3952a
+    sha256: 855caab34a31a5b8d01c75e4b2e36ce6088eabb66c6127cae08026295a2163f1
   manager: conda
   name: pillow
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/pillow-9.1.1-py37h44f0d7a_1.tar.bz2
-  version: 9.1.1
+  url: https://conda.anaconda.org/conda-forge/linux-64/pillow-9.2.0-py37h44f0d7a_0.tar.bz2
+  version: 9.2.0
 - category: full
   dependencies:
     python: '>=3.6'
@@ -4922,13 +4922,13 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: b0750b1b7d467a49de6781cb492e0211
-    sha256: eb238100884c9a50d6b21a5c40cc3ee88714a96df83ddfd87430470d4f2e47d2
+    md5: acc0c68c892fdb2ed5f37f6668ad0726
+    sha256: acf83fd90fd1c864b1b05497d9a64b12e7e477673deee6c80448abb6581aa06a
   manager: conda
   name: libxml2
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libxml2-2.9.14-h08a9926_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/libxml2-2.9.14-h08a9926_3.tar.bz2
   version: 2.9.14
 - category: full
   dependencies:
@@ -6415,7 +6415,7 @@ package:
     freetype: '>=2.10.4,<3.0a0'
     jpeg: '>=9e,<10a'
     lcms2: '>=2.12,<3.0a0'
-    libtiff: '>=4.3.0,<5.0a0'
+    libtiff: '>=4.4.0,<5.0a0'
     libwebp: ''
     libwebp-base: '>=1.2.2,<2.0a0'
     libxcb: '>=1.13,<1.14.0a0'
@@ -6426,14 +6426,14 @@ package:
     tk: '>=8.6.12,<8.7.0a0'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: b391e47fea385eac5685f8c8f52c709f
-    sha256: adcd16d75437de1f4d5240e5d4d25db773a69a3d6e355748203db56d7f1b9b5e
+    md5: a3173bdcbe36a8ca1d2b9e90e9caf093
+    sha256: d7c95d69df85c0ba46e487e86ab9a64f64ea8d50a85c47631f08e8198b23f10f
   manager: conda
   name: pillow
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pillow-9.1.1-py37h1eb1bbc_1.tar.bz2
-  version: 9.1.1
+  url: https://conda.anaconda.org/conda-forge/osx-64/pillow-9.2.0-py37h1eb1bbc_0.tar.bz2
+  version: 9.2.0
 - category: full
   dependencies:
     python: '>=3.6'
@@ -9102,13 +9102,13 @@ package:
     vs2015_runtime: '>=14.16.27033'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: cf3d594bfe16d1dfb8ed3bbb29334f48
-    sha256: ba0105126b0d14d797b1e9ff777eeb0bbb76460b7a237cd93491a35a98430ddd
+    md5: e808942ccf50836ada87fca9166ade88
+    sha256: 3ce22bff861dd345a046287a00971e1ef003f4a5fc82996a8a9a95fbd96b412d
   manager: conda
   name: libxml2
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libxml2-2.9.14-hf5bbc77_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/win-64/libxml2-2.9.14-hf5bbc77_3.tar.bz2
   version: 2.9.14
 - category: full
   dependencies:
@@ -10604,14 +10604,14 @@ package:
     vs2015_runtime: '>=14.16.27033'
     zlib: '>=1.2.12,<1.3.0a0'
   hash:
-    md5: f0eeb53eb9bb616abf714888babf522b
-    sha256: 66693ba34ad2b70059782cfffd5ce8195e4c733b74fee6ac73406ce375cbcdd5
+    md5: c18c523843199e4203d5fe78e9da7b6f
+    sha256: 7aadb4dbd1c4dbec5a01f64145267eea067dbdff7dfe2d946daf2d3c90b88948
   manager: conda
   name: pillow
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/pillow-9.1.1-py37h8675073_1.tar.bz2
-  version: 9.1.1
+  url: https://conda.anaconda.org/conda-forge/win-64/pillow-9.2.0-py37h8675073_0.tar.bz2
+  version: 9.2.0
 - category: main
   dependencies:
     python: '>=3.7'
