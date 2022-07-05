@@ -8,6 +8,6 @@ if !errorlevel! neq 0 (
 )
 
 set env_path=%project_dir%\.conda-env
-cd %project_dir%\geoapps\applications
+cd %project_dir%\geoapps
 call !MY_CONDA_EXE! activate %env_path% && jupyter notebook Index.ipynb
 cmd /k
