@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: e4493f0fc101c33cbf45025193a9739039b04a5660087e68323c23494db343bc
-    osx-64: d14bbadf0669231f91e8c447a1e0f46989fbca6130d55e91ac7f725edfea2ff0
-    win-64: 11cc9755151ef10ba831b188e303e67af43ae21d77461cc19cb386ba6bb44869
+    linux-64: 45edc64b4851b73a42757955cc59bae4e3a22fdfe97613affb9190a23c5c7472
+    osx-64: fb2f659035556b44b10e0694a31195cabdd2ff3c07d9f4e218e72042863d0298
+    win-64: a022d12707a0db5d95c2ca70c13c0ac3966f4511c7eb095e2bc3c94103dff0b3
   platforms:
   - win-64
   - osx-64
@@ -1785,18 +1785,6 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.3-pyhd8ed1ab_0.tar.bz2
   version: 0.8.3
-- category: full
-  dependencies:
-    python: '>=3'
-  hash:
-    md5: 415f0ebb6198cc2801c73438a9fb5761
-    sha256: a1ed1a094dd0d1b94a09ed85c283a0eb28943f2e6f22161fb45e128d35229738
-  manager: conda
-  name: pickleshare
-  optional: true
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-py_1003.tar.bz2
-  version: 0.7.5
 - category: dev
   dependencies:
     python: '>=3.6'
@@ -2567,16 +2555,30 @@ package:
 - category: full
   dependencies:
     ptyprocess: '>=0.5'
-    python: ''
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
   hash:
-    md5: 5909e7b978141dd80d28dbf9de627827
-    sha256: 04eef875d461732ef22cd19bf2c989c40e73b5da625bf6a6b82ddae200e90e56
+    md5: fda2ad946f9f5b7ce3531cc34ab262e9
+    sha256: 4b5d973a9042fe7d3305186779854c66eee27716bd46b9a8549b27e8854e0edf
   manager: conda
   name: pexpect
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.8.0-pyh9f0ad1d_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/pexpect-4.8.0-py37hc8dfbb8_1.tar.bz2
   version: 4.8.0
+- category: full
+  dependencies:
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
+  hash:
+    md5: 14ce4d7ec7d9a22007168539135bc6d5
+    sha256: fad5d104b0ff5f6cda4a0394811a7bcd2c82e6c1fe80bdbc1161e4fcdd627f85
+  manager: conda
+  name: pickleshare
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/linux-64/pickleshare-0.7.5-py37hc8dfbb8_1002.tar.bz2
+  version: 0.7.5
 - category: main
   dependencies:
     freetype: '>=2.10.4,<3.0a0'
@@ -4117,15 +4119,15 @@ package:
     pymatsolver: '>=0.1.1'
     scipy: '>=0.13'
   hash:
-    sha256: None
+    sha256: 4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
   manager: pip
   name: simpeg-archive
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz
   version: 0.9.1.dev4+geoapps.0.8.0
 - category: main
   dependencies:
@@ -5638,18 +5640,6 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.3-pyhd8ed1ab_0.tar.bz2
   version: 0.8.3
-- category: full
-  dependencies:
-    python: '>=3'
-  hash:
-    md5: 415f0ebb6198cc2801c73438a9fb5761
-    sha256: a1ed1a094dd0d1b94a09ed85c283a0eb28943f2e6f22161fb45e128d35229738
-  manager: conda
-  name: pickleshare
-  optional: true
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-py_1003.tar.bz2
-  version: 0.7.5
 - category: dev
   dependencies:
     python: '>=3.6'
@@ -6396,16 +6386,30 @@ package:
 - category: full
   dependencies:
     ptyprocess: '>=0.5'
-    python: ''
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
   hash:
-    md5: 5909e7b978141dd80d28dbf9de627827
-    sha256: 04eef875d461732ef22cd19bf2c989c40e73b5da625bf6a6b82ddae200e90e56
+    md5: 249ce152201450091b9dcfa4b1438590
+    sha256: ce73338f12eb26a319e0aa29c9a0ed5625f9fe4e6278a1e9b13b96b83975dfe6
   manager: conda
   name: pexpect
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.8.0-pyh9f0ad1d_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/pexpect-4.8.0-py37hc8dfbb8_1.tar.bz2
   version: 4.8.0
+- category: full
+  dependencies:
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
+  hash:
+    md5: 4c04e7491847c37e277f06b0e8c5b6b6
+    sha256: b11598708f44cf2945b82a646eec239297eeec4b05d7dc846cc3e8acc252bfd4
+  manager: conda
+  name: pickleshare
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/osx-64/pickleshare-0.7.5-py37hc8dfbb8_1002.tar.bz2
+  version: 0.7.5
 - category: main
   dependencies:
     freetype: '>=2.10.4,<3.0a0'
@@ -7915,15 +7919,15 @@ package:
     pymatsolver: '>=0.1.1'
     scipy: '>=0.13'
   hash:
-    sha256: None
+    sha256: 4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
   manager: pip
   name: simpeg-archive
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz
   version: 0.9.1.dev4+geoapps.0.8.0
 - category: main
   dependencies:
@@ -9195,18 +9199,6 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/parso-0.8.3-pyhd8ed1ab_0.tar.bz2
   version: 0.8.3
-- category: full
-  dependencies:
-    python: '>=3'
-  hash:
-    md5: 415f0ebb6198cc2801c73438a9fb5761
-    sha256: a1ed1a094dd0d1b94a09ed85c283a0eb28943f2e6f22161fb45e128d35229738
-  manager: conda
-  name: pickleshare
-  optional: true
-  platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pickleshare-0.7.5-py_1003.tar.bz2
-  version: 0.7.5
 - category: dev
   dependencies:
     python: '>=3.6'
@@ -9949,6 +9941,19 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/partd-1.2.0-pyhd8ed1ab_0.tar.bz2
   version: 1.2.0
+- category: full
+  dependencies:
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
+  hash:
+    md5: b633ace65bb92a673748ce48c2c24839
+    sha256: 0e08d6451b3a6e0893afcab564796ef9c1bb94d296cf3f98a3fa913579af203a
+  manager: conda
+  name: pickleshare
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/pickleshare-0.7.5-py37hc8dfbb8_1002.tar.bz2
+  version: 0.7.5
 - category: full
   dependencies:
     python: '>=3.6'
@@ -11776,15 +11781,15 @@ package:
     pymatsolver: '>=0.1.1'
     scipy: '>=0.13'
   hash:
-    sha256: None
+    sha256: 4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
   manager: pip
   name: simpeg-archive
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz
   version: 0.9.1.dev4+geoapps.0.8.0
 - category: main
   dependencies:
