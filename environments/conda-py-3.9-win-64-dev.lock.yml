@@ -80,7 +80,7 @@ dependencies:
   - blosc=1.21.1=h74325e0_3
   - boost-cpp=1.74.0=h9f4b32c_8
   - brotli-bin=1.0.9=h8ffe710_7
-  - c-blosc2=2.1.1=hdf67494_2
+  - c-blosc2=2.2.0=hdf67494_0
   - cached_property=1.5.2=pyha770c72_1
   - charset-normalizer=2.1.0=pyhd8ed1ab_0
   - cloudpickle=2.1.0=pyhd8ed1ab_0
@@ -106,7 +106,7 @@ dependencies:
   - libpq=14.4=hfcc5ef8_0
   - libssh2=1.10.0=h680486a_2
   - libtiff=4.4.0=h2ed3b44_1
-  - libxml2=2.9.14=hf5bbc77_2
+  - libxml2=2.9.14=hf5bbc77_3
   - libzip=1.9.2=hfed4ece_0
   - locket=1.0.0=pyhd8ed1ab_0
   - mccabe=0.7.0=pyhd8ed1ab_0
@@ -217,7 +217,7 @@ dependencies:
   - jupyter_core=4.10.0=py39hcbf5309_0
   - munch=2.5.0=py_0
   - numpy=1.23.0=py39h1a62c8c_0
-  - pillow=9.1.1=py39ha53f419_1
+  - pillow=9.2.0=py39ha53f419_0
   - pip=22.1.2=pyhd8ed1ab_0
   - proj=9.0.1=h1cfcee9_0
   - pygments=2.12.0=pyhd8ed1ab_0

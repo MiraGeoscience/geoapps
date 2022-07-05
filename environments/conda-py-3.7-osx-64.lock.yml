@@ -70,7 +70,7 @@ dependencies:
   - libpng=1.6.37=h7cec526_2
   - librttopo=1.1.0=he07d8f5_11
   - libssh2=1.10.0=h52ee1ee_2
-  - libxml2=2.9.14=h08a9926_2
+  - libxml2=2.9.14=h08a9926_3
   - libzip=1.9.2=hab082e8_0
   - mkl=2022.1.0=h860c996_928
   - sqlite=3.39.0=hd9f0692_0
@@ -166,7 +166,7 @@ dependencies:
   - partd=1.2.0=pyhd8ed1ab_0
   - pexpect=4.8.0=py37hc8dfbb8_1
   - pickleshare=0.7.5=py37hc8dfbb8_1002
-  - pillow=9.1.1=py37h1eb1bbc_1
+  - pillow=9.2.0=py37h1eb1bbc_0
   - plotly=5.9.0=pyhd8ed1ab_0
   - psutil=5.9.1=py37h994c40b_0
   - pyrsistent=0.18.1=py37h69ee0a8_1
