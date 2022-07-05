@@ -20,7 +20,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.shared_utils.utils import get_locations, rotate_xy, weighted_average
+from geoapps.shared_utils.utils import get_locations, weighted_average
 
 
 class DataInterpolationDriver:
