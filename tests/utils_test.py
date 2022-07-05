@@ -35,11 +35,108 @@ from geoapps.shared_utils.utils import (
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
+from geoapps.utils.models import RectangularBlock
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
+
+
+def test_rectangular_block():
+    block = RectangularBlock(
+        center=[10.0, 10.0, 10.0],
+        length=10.0,
+        width=10.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=0.0,
+    )
+    vertices = block.vertices.tolist()
+    assert [15.0, 5.0, 5.0] in vertices
+    assert [15.0, 15.0, 5.0] in vertices
+    assert [5.0, 5.0, 5.0] in vertices
+    assert [5.0, 15.0, 5.0] in vertices
+    assert [15.0, 5.0, 15.0] in vertices
+    assert [15.0, 15.0, 15.0] in vertices
+    assert [5.0, 5.0, 15.0] in vertices
+    assert [5.0, 15.0, 15.0] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0], length=0.0, width=10.0, depth=0.0, dip=45.0, azimuth=0.0
+    )
+    pos = (5 * np.cos(np.deg2rad(45))).round(5)
+    vertices = block.vertices.round(5).tolist()
+    assert [pos, 0.0, pos] in vertices
+    assert [-pos, 0.0, -pos] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0],
+        length=0.0,
+        width=0.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=90.0,
+        reference="top",
+    )
+    vertices = block.vertices.round(5).tolist()
+    assert [0.0, 0.0, -10.0] in vertices
+    assert [0.0, 0.0, 0.0] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0],
+        length=10.0,
+        width=10.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=45.0,
+    )
+
+    pos = (10 * np.cos(np.deg2rad(45))).round(5)
+    vertices = block.vertices.round(5).tolist()
+    assert [0.0, -pos, -5.0] in vertices
+    assert [pos, 0.0, -5.0] in vertices
+    assert [-pos, 0.0, -5.0] in vertices
+    assert [0.0, pos, -5.0] in vertices
+    assert [0.0, -pos, 5.0] in vertices
+    assert [pos, 0.0, 5.0] in vertices
+    assert [-pos, 0.0, 5.0] in vertices
+    assert [0.0, pos, 5.0] in vertices
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "center", -180.0)
+
+    assert "Input value for 'center' must be a list of floats len(3)." in str(error)
+
+    for attr in ["length", "width", "depth"]:
+        with pytest.raises(ValueError) as error:
+            setattr(block, attr, -10.0)
+
+        assert f"Input value for '{attr}' must be a float >0." in str(error)
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "dip", -180.0)
+
+    assert (
+        "Input value for 'dip' must be a float on the interval [-90, 90] degrees."
+        in str(error)
+    )
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "azimuth", -450.0)
+
+    assert (
+        "Input value for 'azimuth' must be a float on the interval [-360, 360] degrees."
+        in str(error)
+    )
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "reference", "abc")
+
+    assert (
+        "Input value for 'reference' point should be a str from ['center', 'top']."
+        in str(error)
+    )
 
 
 def test_find_value():

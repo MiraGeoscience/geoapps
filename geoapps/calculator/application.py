@@ -101,10 +101,12 @@ class Calculator(ObjectDataSelection):
         """
         var = self.var
         obj = self.workspace.get_entity(self.objects.value)[0]
+
+        if obj is None:
+            return
+
         out_var, equation = re.split("=", self.equation.value)
-
         out_var = out_var.strip()[1:-1]
-
         temp_geoh5 = f"{obj.name}_{out_var}_{time():.3f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
