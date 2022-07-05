@@ -179,9 +179,8 @@ class Export(ObjectDataSelection):
         return self._main
 
     def trigger_click(self, _):
-        if self.workspace.get_entity(self.objects.value):
-            entity = self.workspace.get_entity(self.objects.value)[0]
-        else:
+        entity = self.workspace.get_entity(self.objects.value)[0]
+        if entity is None:
             return
 
         if self.data.value:
@@ -375,10 +374,9 @@ class Export(ObjectDataSelection):
         self.epsg_code.observe(self.set_wkt, names="value")
 
     def update_name(self, _):
-        if self._workspace.get_entity(self.objects.value):
-            self.export_as.value = self._workspace.get_entity(self.objects.value)[
-                0
-            ].name
+        entity = self._workspace.get_entity(self.objects.value)[0]
+        if entity is not None:
+            self.export_as.value = entity.name
 
     def update_options(self, _):
         if self.file_type.value in ["ESRI shapefile"]:
