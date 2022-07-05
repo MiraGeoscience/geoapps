@@ -12,6 +12,8 @@ import multiprocessing
 import os
 import os.path as path
 import uuid
+import warnings
+from time import time
 
 import numpy as np
 from geoh5py.data import Data
@@ -90,6 +92,7 @@ class InversionApp(PlotSelection2D):
     _sensor = None
     _lines = None
     _topography = None
+    _run_params = None
     _object_types = (PotentialElectrode,)
     _exclusion_types = (CurrentElectrode,)
     inversion_parameters = None
@@ -713,7 +716,11 @@ class InversionApp(PlotSelection2D):
 
     def trigger_click(self, _):
         """"""
-        self.run(self.params)
+        if self._run_params is None:
+            warnings.warn("Input file must be written before running.")
+            return
+
+        self.run(self._run_params)
         self.trigger.button_style = ""
 
     def inversion_type_observer(self, _):
@@ -896,6 +903,7 @@ class InversionApp(PlotSelection2D):
             data_channel_options[self.data_channel_choices.value],
         ]
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
         if self.inversion_type.value == "direct current":
@@ -918,6 +926,7 @@ class InversionApp(PlotSelection2D):
         # self.lines.update_line_list(None)
         self.inversion_type_observer(None)
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
     def data_channel_choices_observer(self, _):
@@ -947,6 +956,7 @@ class InversionApp(PlotSelection2D):
             self.refresh.value = True
 
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
     def update_octree_param(self, _):
@@ -962,6 +972,7 @@ class InversionApp(PlotSelection2D):
         )
         self.resolution.indices = None
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
     def write_trigger(self, _):
@@ -975,12 +986,33 @@ class InversionApp(PlotSelection2D):
             )
             return
 
-        with Workspace(
-            path.join(
-                self.export_directory.selected_path,
-                self._ga_group_name.value + ".geoh5",
-            )
+        # Widgets values populate params dictionary
+        param_dict = {}
+        for key in self.__dict__:
+            try:
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+                    if key[0] == "_":
+                        key = key[1:]
+
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
+
+                    param_dict[key] = value
+
+            except AttributeError:
+                continue
+
+        # Create a new workapce and copy objects into it
+        temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
+        with self.get_output_workspace(
+            self.export_directory.selected_path, temp_geoh5
         ) as new_workspace:
+
+            param_dict["geoh5"] = new_workspace
 
             for elem in [
                 self,
@@ -1009,14 +1041,14 @@ class InversionApp(PlotSelection2D):
             for key in self.data_channel_choices.options:
                 widget = getattr(self, f"{key}_uncertainty_channel")
                 if widget.value is not None:
-                    setattr(self.params, f"{key}_uncertainty", str(widget.value))
+                    param_dict[f"{key}_uncertainty"] = str(widget.value)
                     if new_workspace.get_entity(widget.value)[0] is None:
                         self.workspace.get_entity(widget.value)[0].copy(
                             parent=new_obj, copy_children=False
                         )
                 else:
                     widget = getattr(self, f"{key}_uncertainty_floor")
-                    setattr(self.params, f"{key}_uncertainty", widget.value)
+                    param_dict[f"{key}_uncertainty"] = widget.value
 
                 if getattr(self, f"{key}_channel_bool").value:
                     self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
@@ -1028,8 +1060,6 @@ class InversionApp(PlotSelection2D):
                     parent=new_obj
                 )
 
-            self.params.geoh5 = new_workspace
-
             for key in self.__dict__:
                 if "resolution" in key:
                     continue
@@ -1039,7 +1069,8 @@ class InversionApp(PlotSelection2D):
                     value = attr.value
                     if isinstance(value, uuid.UUID):
                         value = new_workspace.get_entity(value)[0]
-                    setattr(self.params, key, value)
+                    if hasattr(self.params, key):
+                        param_dict[key.lstrip("_")] = value
                 else:
                     sub_keys = []
                     if isinstance(attr, (ModelOptions, TopographyOptions)):
@@ -1053,11 +1084,19 @@ class InversionApp(PlotSelection2D):
                             value = value.value
                         if isinstance(value, uuid.UUID):
                             value = new_workspace.get_entity(value)[0]
-                        setattr(self.params, sub_key, value)
+                        if hasattr(self.params, sub_key):
+                            param_dict[sub_key.lstrip("_")] = value
 
-            self.params.ignore_values = None
-            self.params.write_input_file(
-                name=self._ga_group_name.value + ".ui.json",
+            # Create new params object and write
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+                workspace=new_workspace,
+            )
+            param_dict["resolution"] = None  # No downsampling for dcip
+            self._run_params = self.params.__class__(input_file=ifile, **param_dict)
+            self._run_params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=self.export_directory.selected_path,
             )
 
