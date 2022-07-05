@@ -25,6 +25,8 @@ import subprocess
 from contextlib import contextmanager
 from pathlib import Path
 
+from add_url_tag_sha256 import patchPyprojectToml
+
 env_file_variables_section_ = """
 variables:
   KMP_WARNINGS: 0
@@ -113,6 +115,7 @@ if __name__ == "__main__":
     else:
         env_folder.mkdir()
 
+    patchPyprojectToml()
     with print_execution_time(f"run_conda_lock"):
         for py_ver in ["3.9", "3.8", "3.7"]:
             create_multi_platform_lock(py_ver)
