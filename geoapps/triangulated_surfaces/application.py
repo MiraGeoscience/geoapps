@@ -95,11 +95,11 @@ class Surface2D(ObjectDataSelection):
         self.trigger.on_click(self.trigger_click)
 
     def trigger_click(self, _):
+        obj, data_list = self.get_selected_entities()
 
-        if not self.workspace.get_entity(self.objects.value):
+        if obj is None:
             return
 
-        obj, data_list = self.get_selected_entities()
         _, elevations = self.elevations.get_selected_entities()
 
         if hasattr(obj, "centroids"):
