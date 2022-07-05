@@ -36,7 +36,7 @@
     },
     "space": {
         "main": false,
-        "value": "Log",
+        "value": "Linear",
         "choiceList": ["Linear", "Log"],
         "label": "Scaling"
     },
@@ -48,8 +48,6 @@
     "method": {
         "main": false,
         "group": "Method",
-        "groupOptional": true,
-        "enabled": false,
         "choiceList": ["Nearest", "Inverse Distance"],
         "value": "Inverse Distance",
         "label": "Method"
@@ -57,12 +55,16 @@
     "skew_angle": {
         "main": false,
         "group": "Method",
+        "optional": true,
+        "enabled": false,
         "value": 0.0,
         "label": "Azimuth (d.dd)"
     },
     "skew_factor": {
         "main": false,
         "group": "Method",
+        "optional": true,
+        "enabled": false,
         "value": 1.0,
         "label": "Factor (>0)"
     },
@@ -151,12 +153,5 @@
         "label": "Output Label",
         "value": "_Interp",
         "group": "Python run preferences"
-    },
-    "out_mode": "To Object",
-    "xy_reference": "",
-    "core_cell_size": "0, 0, 0",
-    "padding_distance": "0, 0, 0, 0, 0, 0",
-    "depth_core": 0.0,
-    "expansion_fact": 0.0,
-    "new_grid": "InterpGrid"
+    }
 }

@@ -32,7 +32,6 @@ class DataInterpolation(ObjectDataSelection):
 
     _param_class = DataInterpolationParams
     _select_multiple = True
-    # _topography = None
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -51,15 +50,6 @@ class DataInterpolation(ObjectDataSelection):
 
         super().__init__(**self.defaults)
 
-        self._core_cell_size = Text(
-            description="Smallest cells",
-        )
-        self._depth_core = FloatText(
-            description="Core depth (m)",
-        )
-        self._expansion_fact = FloatText(
-            description="Expansion factor",
-        )
         self._max_distance = FloatText(
             description="Maximum distance (m)",
         )
@@ -69,17 +59,8 @@ class DataInterpolation(ObjectDataSelection):
         self._method = RadioButtons(
             options=["Nearest", "Inverse Distance"],
         )
-        self._new_grid = Text(
-            description="Name",
-        )
         self._no_data_value = FloatText()
-        self._out_mode = RadioButtons(
-            options=["To Object", "Create 3D Grid"],
-        )
-        self._out_object = Dropdown()
-        self._padding_distance = Text(
-            description="Pad Distance (W, E, S, N, D, U)",
-        )
+        self._out_object = Dropdown(description="Object: ")
         self._skew_angle = FloatText(
             description="Azimuth (d.dd)",
         )
@@ -90,27 +71,13 @@ class DataInterpolation(ObjectDataSelection):
         self._xy_extent = Dropdown(
             description="Object hull",
         )
-        self._xy_reference = Dropdown(
-            description="Lateral Extent", style={"description_width": "initial"}
-        )
         self.objects.observe(self.object_pick, names="value")
         self.method_skew = VBox(
             [Label("Skew parameters"), self.skew_angle, self.skew_factor]
         )
         self.method_panel = VBox([self.method])
-        self.destination_panel = VBox([self.out_mode, self.out_object])
-        self.new_grid_panel = VBox(
-            [
-                self.new_grid,
-                self.xy_reference,
-                self.core_cell_size,
-                self.depth_core,
-                self.padding_distance,
-                self.expansion_fact,
-            ]
-        )
+        self.destination_panel = VBox([self.out_object])
         self.method.observe(self.method_update)
-        self.out_mode.observe(self.out_update)
         self.parameters = {
             "Method": self.method_panel,
             "Scaling": self.space,
@@ -143,27 +110,6 @@ class DataInterpolation(ObjectDataSelection):
         ]
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Interpolate"
-
-    @property
-    def core_cell_size(self):
-        """
-        :obj:`ipywidgets.Text()`
-        """
-        return self._core_cell_size
-
-    @property
-    def depth_core(self):
-        """
-        :obj:`ipywidgets.FloatText()`
-        """
-        return self._depth_core
-
-    @property
-    def expansion_fact(self):
-        """
-        :obj:`ipywidgets.FloatText()`
-        """
-        return self._expansion_fact
 
     @property
     def main(self):
@@ -205,13 +151,6 @@ class DataInterpolation(ObjectDataSelection):
         return self._method
 
     @property
-    def new_grid(self):
-        """
-        :obj:`ipywidgets.Text()`
-        """
-        return self._new_grid
-
-    @property
     def no_data_value(self):
         """
         :obj:`ipywidgets.FloatText()`
@@ -219,25 +158,11 @@ class DataInterpolation(ObjectDataSelection):
         return self._no_data_value
 
     @property
-    def out_mode(self):
-        """
-        :obj:`ipywidgets.RadioButtons()`
-        """
-        return self._out_mode
-
-    @property
     def out_object(self):
         """
         :obj:`ipywidgets.Dropdown()`
         """
         return self._out_object
-
-    @property
-    def padding_distance(self):
-        """
-        :obj:`ipywidgets.Text()`
-        """
-        return self._padding_distance
 
     @property
     def skew_angle(self):
@@ -283,13 +208,6 @@ class DataInterpolation(ObjectDataSelection):
         return self._xy_extent
 
     @property
-    def xy_reference(self):
-        """
-        :obj:`ipywidgets.Dropdown()`
-        """
-        return self._xy_reference
-
-    @property
     def workspace(self):
         """
         Target geoh5py workspace
@@ -326,12 +244,6 @@ class DataInterpolation(ObjectDataSelection):
             ]
         else:
             self.method_panel.children = [self.method]
-
-    def out_update(self, _):
-        if self.out_mode.value == "To Object":
-            self.destination_panel.children = [self.out_mode, self.out_object]
-        else:
-            self.destination_panel.children = [self.out_mode, self.new_grid_panel]
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
