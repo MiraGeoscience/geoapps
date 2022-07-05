@@ -88,7 +88,7 @@ dependencies:
   - libpq=14.4=hfcc5ef8_0
   - libssh2=1.10.0=h680486a_2
   - libtiff=4.4.0=h2ed3b44_1
-  - libxml2=2.9.14=hf5bbc77_2
+  - libxml2=2.9.14=hf5bbc77_3
   - libzip=1.9.2=hfed4ece_0
   - locket=1.0.0=pyhd8ed1ab_0
   - munkres=1.1.4=pyh9f0ad1d_0
@@ -176,7 +176,7 @@ dependencies:
   - kiwisolver=1.4.3=py37h8c56517_0
   - munch=2.5.0=py_0
   - numpy=1.21.6=py37h2830a78_0
-  - pillow=9.1.1=py37h8675073_1
+  - pillow=9.2.0=py37h8675073_0
   - pip=22.1.2=pyhd8ed1ab_0
   - proj=9.0.1=h1cfcee9_0
   - pygments=2.12.0=pyhd8ed1ab_0
