@@ -113,7 +113,7 @@ class IsoSurfacesParams(BaseParams):
 
             contour_list = [self.interval_min, self.interval_max, self.interval_spacing]
             if None not in contour_list:
-                contour_str = ':'.join([str(k) for k in contour_list])
+                contour_str = ":".join([str(k) for k in contour_list])
             if self.fixed_contours is not None:
                 contour_str += f", {','.join([str(k) for k in self.fixed_contours])}"
             return contour_str
