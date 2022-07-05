@@ -9,9 +9,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-import numpy as np
 from geoh5py.data import Data
-from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
+from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 
 from geoapps.driver_base.params import BaseParams
