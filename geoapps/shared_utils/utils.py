@@ -295,7 +295,7 @@ def filter_xy(
 
     is_rotated = False if (azim is None) | (azim == 0) else True
     if is_rotated:
-        xy_locs = rotate_xy(np.c_[x.ravel(), y.ravel()], window["center"], azim)
+        xy_locs = rotate_xyz(np.c_[x.ravel(), y.ravel()], window["center"], azim)
         xr = xy_locs[:, 0].reshape(x.shape)
         yr = xy_locs[:, 1].reshape(y.shape)
 
@@ -328,26 +328,50 @@ def filter_xy(
     return mask
 
 
-def rotate_xy(xyz: np.ndarray, center: list, angle: float):
+def rotate_xyz(xyz: np.ndarray, center: list, theta: float, phi: float = 0.0):
     """
-    Perform a counterclockwise rotation on the XY plane about a center point.
+    Perform a counterclockwise rotation of scatter points around the z-axis, then x-axis, about a center point.
 
-    :param xyz: shape(*, 3) Input coordinates
-    :param center: len(2) Coordinates for the center of rotation.
-    :param  angle: Angle of rotation in degree
+    :param xyz: shape(*, 2) or shape(*, 3) Input coordinates.
+    :param center: len(2) or len(3) Coordinates for the center of rotation.
+    :param theta: Angle of rotation around z-axis in degrees.
+    :param phi: Angle of rotation around x-axis in degrees.
     """
-    R = np.r_[
-        np.c_[np.cos(np.pi * angle / 180), -np.sin(np.pi * angle / 180)],
-        np.c_[np.sin(np.pi * angle / 180), np.cos(np.pi * angle / 180)],
-    ]
-
+    return2d = False
     locs = xyz.copy()
-    locs[:, 0] -= center[0]
-    locs[:, 1] -= center[1]
 
-    xy_rot = np.dot(R, locs[:, :2].T).T
+    # If the input is 2-dimensional, add zeros in the z column.
+    if len(center) == 2:
+        center.append(0)
+    if locs.shape[1] == 2:
+        locs = np.concatenate((locs, np.zeros((locs.shape[0], 1))), axis=1)
+        return2d = True
 
-    return np.c_[xy_rot[:, 0] + center[0], xy_rot[:, 1] + center[1], locs[:, 2:]]
+    locs = np.subtract(locs, center)
+    phi = np.deg2rad(phi)
+    theta = np.deg2rad(theta)
+
+    # Construct rotation matrix
+    Rx = np.r_[
+        np.c_[1, 0, 0],
+        np.c_[0, np.cos(phi), -np.sin(phi)],
+        np.c_[0, np.sin(phi), np.cos(phi)],
+    ]
+    Rz = np.r_[
+        np.c_[np.cos(theta), -np.sin(theta), 0],
+        np.c_[np.sin(theta), np.cos(theta), 0],
+        np.c_[0, 0, 1],
+    ]
+    R = Rz.dot(Rx)
+
+    xyz_rot = R.dot(locs.T).T
+    xyz_out = xyz_rot + center
+
+    if return2d:
+        # Return 2-dimensional data if the input xyz was 2-dimensional.
+        return xyz_out[:, :2]
+    else:
+        return xyz_out
 
 
 def octree_2_treemesh(mesh):

@@ -40,7 +40,7 @@ from simpeg_archive.simpegEM1D import (
 from simpeg_archive.utils import Counter, mkvc
 
 from geoapps.driver_base.utils import running_mean
-from geoapps.shared_utils.utils import filter_xy, rotate_xy
+from geoapps.shared_utils.utils import filter_xy, rotate_xyz
 from geoapps.utils import geophysical_systems
 
 
@@ -291,7 +291,7 @@ def inversion(input_file):
                 angles = np.r_[angles[0], angles].tolist()
                 angles = running_mean(angles, width=5)
                 dxy = np.vstack(
-                    [rotate_xy(offsets, [0, 0], np.rad2deg(angle)) for angle in angles]
+                    [rotate_xyz(offsets, [0, 0], np.rad2deg(angle)) for angle in angles]
                 )
 
                 # Move the stations

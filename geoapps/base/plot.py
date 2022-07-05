@@ -11,7 +11,7 @@ import numpy as np
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.shared_utils.utils import get_contours, rotate_xy
+from geoapps.shared_utils.utils import get_contours, rotate_xyz
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
 
@@ -313,7 +313,7 @@ class PlotSelection2D(ObjectDataSelection):
             ]
             corners[:, 0] *= width / 2
             corners[:, 1] *= height / 2
-            corners = rotate_xy(corners, [0, 0], -azimuth)
+            corners = rotate_xyz(corners, [0, 0], -azimuth)
             self.axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
             self.axis, _, ind_filter, _, contour_set = plot_plan_data_selection(
                 entity,
