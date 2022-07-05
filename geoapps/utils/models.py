@@ -173,6 +173,7 @@ class RectangularBlock:
                 -self.depth / 2.0 + self.center[2],
                 self.depth / 2.0 + self.center[2],
             ]
+
             block_xyz = np.asarray(
                 [
                     [x1, x2, x1, x2, x1, x2, x1, x2],
@@ -180,13 +181,14 @@ class RectangularBlock:
                     [z1, z1, z1, z1, z2, z2, z2, z2],
                 ]
             )
+
             theta = (450.0 - np.asarray(self.azimuth)) % 360.0
             phi = -self.dip
             xyz = rotate_xyz(block_xyz.T, self.center, theta, phi)
 
             if self.reference == "top":
-                offset = np.subtract(np.mean(xyz[4:, :], axis=0) - self._center)
-                self._center = np.subtract(self._center, offset)
+                offset = np.mean(xyz[4:, :], axis=0) - self._center
+                self._center -= offset
                 xyz -= offset
 
             self._vertices = xyz
