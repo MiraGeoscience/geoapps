@@ -12,7 +12,9 @@ import multiprocessing
 import os
 import os.path as path
 import uuid
+import warnings
 from collections import OrderedDict
+from time import time
 
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
@@ -88,6 +90,7 @@ class InversionApp(PlotSelection2D):
     _param_class = MagneticVectorParams
     _select_multiple = True
     _add_groups = False
+    _run_params = None
     _sensor = None
     _topography = None
     inversion_parameters = None
@@ -851,7 +854,11 @@ class InversionApp(PlotSelection2D):
 
     def trigger_click(self, _):
         """"""
-        self.run(self.params)
+        if self._run_params is None:
+            warnings.warn("Input file must be written before running.")
+            return
+
+        self.run(self._run_params)
         self.trigger.button_style = ""
 
     def inversion_type_observer(self, _):
@@ -1057,6 +1064,7 @@ class InversionApp(PlotSelection2D):
             data_channel_options[self.data_channel_choices.value],
         ]
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
         if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
             self.survey_type_panel.children = [
@@ -1111,6 +1119,7 @@ class InversionApp(PlotSelection2D):
         self.sensor.update_data_list(None)
         self.inversion_type_observer(None)
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
     def data_channel_choices_observer(self, _):
@@ -1139,6 +1148,7 @@ class InversionApp(PlotSelection2D):
             self.refresh.value = True
 
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
     def update_octree_param(self, _):
@@ -1154,6 +1164,7 @@ class InversionApp(PlotSelection2D):
         )
         self.resolution.indices = None
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
     def write_trigger(self, _):
@@ -1179,8 +1190,9 @@ class InversionApp(PlotSelection2D):
                 continue
 
         # Create a new workapce and copy objects into it
+        temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
         with self.get_output_workspace(
-            self.export_directory.selected_path, self.ga_group_name.value
+            self.export_directory.selected_path, temp_geoh5
         ) as new_workspace:
 
             param_dict["geoh5"] = new_workspace
@@ -1282,16 +1294,12 @@ class InversionApp(PlotSelection2D):
                 validation_options={"disabled": True},
                 workspace=new_workspace,
             )
-            ifile.data.update(param_dict)
-
-            new_params = self.params.__class__(input_file=ifile)
-            new_params.write_input_file(
-                name=self._ga_group_name.value + ".ui.json",
+            param_dict["resolution"] = None  # No downsampling for dcip
+            self._run_params = self.params.__class__(input_file=ifile, **param_dict)
+            self._run_params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=self.export_directory.selected_path,
             )
-            ifile.name = self._ga_group_name.value + ".ui.json"
-            ifile.path = self.export_directory.selected_path
-            self.params.input_file = ifile
 
         self.write.button_style = ""
         self.trigger.button_style = "success"
