@@ -38,9 +38,7 @@ scipy = "^1.7.3" # also in simpeg and geoana
 tqdm = "^4.64.0"
 
 ## "soft" dependencies
-dash = {version = "^2.5.0", optional = true}
 fiona = {version = "^1.8.21", optional = true}
-flask = {version = "^2.1.2", optional = true}
 gdal = {version = "^3.4.3", optional = true}
 ipyfilechooser = {version = "~0.6.0", optional = true}
 ipywidgets = {version = "^7.6.5", optional = true}
@@ -66,12 +64,12 @@ zarr = "^2.8.1" # from simpgeg using Dask
 #   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.zip#sha256=None" }
 # Note - conda-lock does not support the syntaxe: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
-geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0-alpha.3.tar.gz#sha256=b144ac25da101490f7897d5eeaa9cbdb4b6c4cdaec5b9096c8f22a45bb0c5b0e" }
-#geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", tag="v0.3.0-alpha.3" }
-simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev2+geoapps.0.8.0.tar.gz#sha256=3d4f0870e63766abc84cbba78897911581d08cc5b94cbda84d315cb5d1053bef" }
-#simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="v0.9.1.dev2+geoapps.0.8.0" }
-simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev3+geoapps.0.8.0.tar.gz#sha256=25b1686ded59edd21166156320093e00bc46b1c7f9b9c3a50d03595a4b1f73b0", extras = ["dask"] }
-#simpeg = { git = "https://github.com/sebhmg/simpeg.git", tag="v0.15.1.dev3+geoapps.0.8.0", extras = ["dask"] }
+geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.0.tar.gz#sha256=None" }
+#geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", tag="branch_or_tag" }
+simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725" }
+#simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="branch_or_tag" }
+simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.15.1.dev4+geoapps.0.8.0.tar.gz#sha256=d6b8f851e765cd4feccf6cc787bfcef54205d5f7aa4645d50bfb828422d30a47", extras = ["dask"] }
+#simpeg = { git = "https://github.com/sebhmg/simpeg.git", tag="branch_or_tag", extras = ["dask"] }
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.13"
@@ -81,9 +79,7 @@ requests = "^2.27.1" # for tests only
 
 [tool.poetry.extras]
 full = [
-    "dash",
     "fiona",
-    "flask",
     "gdal",
     "ipyfilechooser",
     "ipywidgets",
