@@ -1298,7 +1298,7 @@ class PeakFinder(ObjectDataSelection):
                 ui_json[name]["group"] = f"Group {label}"
                 param_dict[name] = group[member]
 
-        temp_geoh5 = f"{self.ga_group_name.value}_{time():.3f}.geoh5"
+        temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as new_workspace:

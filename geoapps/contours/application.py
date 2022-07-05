@@ -203,7 +203,7 @@ class ContourValues(PlotSelection2D):
                             np.ones(vertices.shape[0]) * entity.origin["z"],
                         ]
 
-            temp_geoh5 = f"{entity.name}_{data[0].name}_{time():.3f}.geoh5"
+            temp_geoh5 = f"{entity.name}_{data[0].name}_{time():.0f}.geoh5"
             with self.get_output_workspace(
                 self.export_directory.selected_path, temp_geoh5
             ) as workspace:
