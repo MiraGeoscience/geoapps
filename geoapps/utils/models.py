@@ -6,6 +6,8 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
 import numpy as np
 
 from geoapps.shared_utils.utils import rotate_xyz
@@ -24,16 +26,15 @@ class RectangularBlock:
     """
 
     def __init__(self, **kwargs):
-        self._center = [0.0, 0.0, 0.0]
-        self._length = 1.0
-        self._width = 1.0
-        self._depth = 1.0
-        self._dip = 0.0
-        self._azimuth = 0.0
-        self._vertices = None
-        self._reference = "center"
-
-        self.triangles = np.vstack(
+        self._center: list[float] = [0.0, 0.0, 0.0]
+        self._length: float = 1.0
+        self._width: float = 1.0
+        self._depth: float = 1.0
+        self._dip: float = 0.0
+        self._azimuth: float = 0.0
+        self._vertices: np.ndarray = None
+        self._reference: str = "center"
+        self.triangles: np.ndarray = np.vstack(
             [
                 [0, 2, 1],
                 [1, 2, 3],
@@ -57,79 +58,104 @@ class RectangularBlock:
                 continue
 
     @property
-    def center(self):
+    def center(self) -> list[float]:
         """Prism center"""
         return self._center
 
     @center.setter
-    def center(self, value):
+    def center(self, value: list[float]):
+        if not isinstance(value, list) or len(value) != 3:
+            raise ValueError(
+                "Input value for 'center' must be a list of floats len(3)."
+            )
         self._center = value
         self._vertices = None
 
     @property
-    def length(self):
+    def length(self) -> float:
         """U-size of the block"""
         return self._length
 
     @length.setter
     def length(self, value):
+        if not isinstance(value, float) or value < 0:
+            raise ValueError("Input value for 'length' must be a float >0.")
+
         self._length = value
         self._vertices = None
 
     @property
-    def width(self):
+    def width(self) -> float:
         """V-size of the block"""
         return self._width
 
     @width.setter
     def width(self, value):
+        if not isinstance(value, float) or value < 0:
+            raise ValueError("Input value for 'width' must be a float >0.")
+
         self._width = value
         self._vertices = None
 
     @property
-    def depth(self):
+    def depth(self) -> float:
         """W-size of the block"""
         return self._depth
 
     @depth.setter
     def depth(self, value):
+        if not isinstance(value, float) or value < 0:
+            raise ValueError("Input value for 'depth' must be a float >0.")
+
         self._depth = value
         self._vertices = None
 
     @property
-    def dip(self):
+    def dip(self) -> float:
         """Orientation of the u-axis in degree from horizontal"""
         return self._dip
 
     @dip.setter
     def dip(self, value):
+        if not isinstance(value, float) or value < -90.0 or value > 90.0:
+            raise ValueError(
+                "Input value for 'dip' must be a float on the interval [-90, 90] degrees."
+            )
+
         self._dip = value
         self._vertices = None
 
     @property
-    def azimuth(self):
+    def azimuth(self) -> float:
         """Orientation of the u axis in degree from north"""
         return self._azimuth
 
     @azimuth.setter
     def azimuth(self, value):
+        if not isinstance(value, float) or value < -360.0 or value > 360.0:
+            raise ValueError(
+                "Input value for 'azimuth' must be a float on the interval [-360, 360] degrees."
+            )
+
         self._azimuth = value
         self._vertices = None
 
     @property
-    def reference(self):
+    def reference(self) -> str:
         """Point of rotation to be 'center' or 'top'"""
         return self._reference
 
     @reference.setter
-    def reference(self, value):
-        if value not in ["center", "top"]:
-            raise ValueError("'reference' point should be 'center' or 'top'.")
+    def reference(self, value: str):
+        if not isinstance(value, str) or value not in ["center", "top"]:
+            raise ValueError(
+                "Input value for 'reference' point should be a str from ['center', 'top']."
+            )
         self._reference = value
         self._vertices = None
 
     @property
-    def vertices(self):
+    def vertices(self) -> np.ndarray | None:
         """
         Prism eight corners in 3D space
         """
