@@ -32,6 +32,7 @@ class DataInterpolation(ObjectDataSelection):
 
     _param_class = DataInterpolationParams
     _select_multiple = True
+    _topography = None
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -71,7 +72,6 @@ class DataInterpolation(ObjectDataSelection):
         self._xy_extent = Dropdown(
             description="Object hull",
         )
-        self.objects.observe(self.object_pick, names="value")
         self.method_skew = VBox(
             [Label("Skew parameters"), self.skew_angle, self.skew_factor]
         )
@@ -273,7 +273,3 @@ class DataInterpolation(ObjectDataSelection):
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
-
-    def object_pick(self, _):
-        if self.objects.value in list(dict(self.xy_reference.options).values()):
-            self.xy_reference.value = self.objects.value

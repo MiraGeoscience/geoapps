@@ -20,7 +20,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.shared_utils.utils import get_locations, weighted_average
+from geoapps.shared_utils.utils import get_locations, rotate_xy, weighted_average
 
 
 class DataInterpolationDriver:
@@ -146,9 +146,14 @@ class DataInterpolationDriver:
                 values_interp[key] = F(xyz_out)
 
         elif self.params.method == "Inverse Distance":
+            skew_angle = self.params.skew_angle
+            skew_factor = self.params.skew_factor
+            if skew_angle is None:
+                skew_angle = 0
+            if skew_factor is None:
+                skew_factor = 1
 
-            # ooh could prolly use rotation function here ***
-            angle = np.deg2rad((450.0 - np.asarray(self.params.skew_angle)) % 360.0)
+            angle = np.deg2rad((450.0 - np.asarray(skew_angle)) % 360.0)
             rotation = np.r_[
                 np.c_[np.cos(angle), np.sin(angle)],
                 np.c_[-np.sin(angle), np.cos(angle)],
@@ -156,10 +161,11 @@ class DataInterpolationDriver:
             center = np.mean(xyz, axis=0).reshape((3, 1))
             xyz -= np.kron(center, np.ones(xyz.shape[0])).T
             xyz[:, :2] = np.dot(rotation, xyz[:, :2].T).T
-            xyz[:, 1] *= self.params.skew_factor
+            xyz[:, 1] *= skew_factor
             xyz_out -= np.kron(center, np.ones(xyz_out.shape[0])).T
             xyz_out[:, :2] = np.dot(rotation, xyz_out[:, :2].T).T
-            xyz_out[:, 1] *= self.params.skew_factor
+            xyz_out[:, 1] *= skew_factor
+
             vals, ind_inv = weighted_average(
                 xyz,
                 xyz_out,
@@ -209,7 +215,7 @@ class DataInterpolationDriver:
 
             if self.params.topography["data"] is not None:
                 topo[:, 2] = self.params.geoh5.get_entity(
-                    self.params.topography["data"]
+                    self.params.topography["data"].uid
                 )[0].values
 
             lin_interp = LinearNDInterpolator(topo[:, :2], topo[:, 2])
@@ -260,7 +266,6 @@ class DataInterpolationDriver:
                         rad > self.params.max_distance
                     ] = self.params.no_data_value
 
-        # self.object_out.workspace.open()
         for key in values_interp.keys():
             if dtype[key] == np.dtype("int32"):
                 primitive = "integer"
@@ -270,15 +275,8 @@ class DataInterpolationDriver:
                 vals = values_interp[key].astype(dtype[key])
 
             self.object_out.add_data(
-                {
-                    # self.data.uid_name_map[key]
-                    # self.params.data.name
-                    key
-                    + self.params.ga_group_name: {"values": vals, "type": primitive}
-                }
+                {key + self.params.ga_group_name: {"values": vals, "type": primitive}}
             )
-
-        # self.object_out.workspace.close()
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
