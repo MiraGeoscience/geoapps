@@ -104,10 +104,13 @@ class DataInterpolation(ObjectDataSelection):
 
         super().__init__(**self.defaults)
 
+        self.xy_extent.options = self.objects.options
+        self.xy_reference.options = self.objects.options
         self.parameters["Vertical Extent"].children = [
             self.topography.main,
             self.max_depth,
         ]
+
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Interpolate"
 

@@ -5,10 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
 from __future__ import annotations
 
 import numpy as np
-import numpy.typing as npt
+
+from geoapps.shared_utils.utils import rotate_xyz
 
 
 class RectangularBlock:
@@ -30,7 +32,7 @@ class RectangularBlock:
         self._depth: float = 1.0
         self._dip: float = 0.0
         self._azimuth: float = 0.0
-        self._vertices: np.ndarray = None
+        self._vertices: np.ndarray | None = None
         self._reference: str = "center"
         self.triangles: np.ndarray = np.vstack(
             [
@@ -180,50 +182,15 @@ class RectangularBlock:
                 ]
             )
 
-            xyz = rotate_vertices(block_xyz.T, self.center, self.dip, self.azimuth)
+            theta = (450.0 - np.asarray(self.azimuth)) % 360.0
+            phi = -self.dip
+            xyz = rotate_xyz(block_xyz.T, self.center, theta, phi)
 
             if self.reference == "top":
                 offset = np.mean(xyz[4:, :], axis=0) - self._center
-                self._center = self._center - offset
+                self._center -= offset
                 xyz -= offset
 
             self._vertices = xyz
 
         return self._vertices
-
-
-def rotate_vertices(
-    xyz: npt.NDArray[npt.NDArray[np.float64]],
-    center: list[float],
-    dip: float,
-    azimuth: float,
-):
-    """
-    Rotate scatter points in column format around a center location
-
-    :param xyz: nDx3 matrix
-    :param center: xyz location of rotation
-    :param dip: Orientation of the u-axis in degree from horizontal
-    :param azimuth: Orientation of the u axis in degree from north
-
-    :return: nDx3 matrix of rotated points
-    """
-    xyz -= np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
-    # phi angle rotation around x-axis
-    phi = -np.deg2rad(np.asarray(dip))
-    # theta angle rotation around z-axis
-    theta = np.deg2rad((450.0 - np.asarray(azimuth)) % 360.0)
-    Rx = np.asarray(
-        [[1, 0, 0], [0, np.cos(phi), -np.sin(phi)], [0, np.sin(phi), np.cos(phi)]]
-    )
-    Rz = np.asarray(
-        [
-            [np.cos(theta), -np.sin(theta), 0],
-            [np.sin(theta), np.cos(theta), 0],
-            [0, 0, 1],
-        ]
-    )
-    R = Rz.dot(Rx)
-    xyzRot = R.dot(xyz.T).T
-
-    return xyzRot + np.kron(np.ones((xyz.shape[0], 1)), np.r_[center])
