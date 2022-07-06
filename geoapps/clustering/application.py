@@ -33,6 +33,7 @@ from sklearn.cluster import KMeans
 
 from geoapps.clustering.constants import app_initializer
 from geoapps.clustering.params import ClusteringParams
+from geoapps.clustering.plot_data import PlotData
 from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.shared_utils.utils import colors, hex_to_rgb
 from geoapps.utils.statistics import random_sampling
@@ -643,7 +644,9 @@ class Clustering(ScatterPlots):
             if self.kmeans is not None:
                 data_options = channels + ["kmeans"]
                 color_maps_options = px.colors.named_colorscales() + ["kmeans"]
-                self.data_channels.update({"kmeans": PlotData("kmeans", self.kmeans)})
+                self.data_channels.update(
+                    {"kmeans": PlotData("kmeans", self.kmeans[self.indices])}
+                )
             else:
                 data_options = channels
                 color_maps_options = px.colors.named_colorscales()
@@ -927,6 +930,8 @@ class Clustering(ScatterPlots):
         return tuple(outputs)
 
     def update_param_dict(self, update_dict):
+        axis_list = ["x", "y", "z", "color", "size"]
+        plot_kmeans = [False, False, False, False, False]
         # Update self.params from update_dict.
         for key, value in self.params.to_dict().items():
             if key in update_dict:
@@ -951,15 +956,24 @@ class Clustering(ScatterPlots):
             elif key in ["x", "y", "z", "color", "size"]:
                 if key + "_name" in update_dict:
                     if update_dict[key + "_name"] in self.data_channels:
-                        setattr(
-                            self.params,
-                            key,
-                            self.data_channels[update_dict[key + "_name"]],
-                        )
+                        if (
+                            self.data_channels[update_dict[key + "_name"]].name
+                            == "kmeans"
+                        ):
+                            index = axis_list.index(key)
+                            plot_kmeans[index] = True
+                            setattr(self.params, key, None)
+                        else:
+                            setattr(
+                                self.params,
+                                key,
+                                self.data_channels[update_dict[key + "_name"]],
+                            )
             elif key == "objects":
                 if "objects_name" in update_dict:
                     obj = self.params.geoh5.get_entity(update_dict["objects_name"])[0]
                     self.params.objects = obj
+        self.params.plot_kmeans = str(plot_kmeans)
 
     def update_plots(
         self,
@@ -1009,16 +1023,14 @@ class Clustering(ScatterPlots):
                 color_maps = [[0.0, "rgb(0,0,0)"]]
 
             # Input downsampled data to scatterplot so it doesn't regenerate data every time a parameter changes.
-            if x is not None:
-                x = PlotData(x, dataframe[x].values)
-            if y is not None:
-                y = PlotData(y, dataframe[y].values)
-            if z is not None:
-                z = PlotData(z, dataframe[z].values)
-            if color is not None:
-                color = PlotData(color, dataframe[color].values)
-            if size is not None:
-                size = PlotData(size, dataframe[size].values)
+            axis_values = []
+            for axis in [x, y, z, color, size]:
+                if axis == "kmeans":
+                    axis_values.append(self.data_channels["kmeans"])
+                elif axis is not None:
+                    axis_values.append(PlotData(axis, dataframe[axis].values))
+
+            x, y, z, color, size = tuple(axis_values)
 
             crossplot = self.update_plot(
                 100,
@@ -1514,12 +1526,6 @@ class Clustering(ScatterPlots):
 
         # Otherwise, continue as normal
         self.app.run_server(host="127.0.0.1", port=8050, debug=False)
-
-
-class PlotData:
-    def __init__(self, name=None, values=None):
-        self.name = name
-        self.values = values
 
 
 if __name__ == "__main__":
