@@ -25,6 +25,7 @@ class ContourValues(PlotSelection2D):
     """
     Application for 2D contouring of spatial data.
     """
+
     _param_class = ContoursParams
 
     def __init__(self, ui_json=None, **kwargs):
