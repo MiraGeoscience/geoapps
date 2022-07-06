@@ -95,11 +95,11 @@ class Surface2D(ObjectDataSelection):
         self.trigger.on_click(self.trigger_click)
 
     def trigger_click(self, _):
+        obj, data_list = self.get_selected_entities()
 
-        if not self.workspace.get_entity(self.objects.value):
+        if obj is None:
             return
 
-        obj, data_list = self.get_selected_entities()
         _, elevations = self.elevations.get_selected_entities()
 
         if hasattr(obj, "centroids"):
@@ -301,7 +301,7 @@ class Surface2D(ObjectDataSelection):
             for data_obj in data_list:
                 self.models += [data_obj.values[ind]]
 
-        temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.3f}.geoh5"
+        temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.0f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as workspace:

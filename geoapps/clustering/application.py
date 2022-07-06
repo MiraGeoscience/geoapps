@@ -605,7 +605,7 @@ class Clustering(ScatterPlots):
                 names=["Value", "Red", "Green", "Blue", "Alpha"],
             )
 
-            temp_geoh5 = f"Clustering_{time():.3f}.geoh5"
+            temp_geoh5 = f"Clustering_{time():.0f}.geoh5"
             with self.get_output_workspace(
                 self.export_directory.selected_path, temp_geoh5
             ) as workspace:
