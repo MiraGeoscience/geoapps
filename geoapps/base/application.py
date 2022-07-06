@@ -327,7 +327,7 @@ class BaseApplication:
         self._h5file = value
         self._workspace_geoh5 = value
         self._working_directory = None
-        self.workspace = Workspace(self._h5file)
+        self.workspace = Workspace(self._h5file, mode="r")
 
     @property
     def live_link(self):
@@ -390,7 +390,7 @@ class BaseApplication:
             getattr(self, "_workspace", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self.workspace = Workspace(self.h5file)
+            self.workspace = Workspace(self.h5file, mode="r")
         return self._workspace
 
     @workspace.setter
