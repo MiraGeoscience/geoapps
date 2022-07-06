@@ -29,17 +29,114 @@ from geoapps.shared_utils.utils import (
     filter_xy,
     get_locations,
     octree_2_treemesh,
-    rotate_xy,
+    rotate_xyz,
     weighted_average,
     window_xy,
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
+from geoapps.utils.models import RectangularBlock
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
+
+
+def test_rectangular_block():
+    block = RectangularBlock(
+        center=[10.0, 10.0, 10.0],
+        length=10.0,
+        width=10.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=0.0,
+    )
+    vertices = block.vertices.tolist()
+    assert [15.0, 5.0, 5.0] in vertices
+    assert [15.0, 15.0, 5.0] in vertices
+    assert [5.0, 5.0, 5.0] in vertices
+    assert [5.0, 15.0, 5.0] in vertices
+    assert [15.0, 5.0, 15.0] in vertices
+    assert [15.0, 15.0, 15.0] in vertices
+    assert [5.0, 5.0, 15.0] in vertices
+    assert [5.0, 15.0, 15.0] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0], length=0.0, width=10.0, depth=0.0, dip=45.0, azimuth=0.0
+    )
+    pos = (5 * np.cos(np.deg2rad(45))).round(5)
+    vertices = block.vertices.round(5).tolist()
+    assert [pos, 0.0, pos] in vertices
+    assert [-pos, 0.0, -pos] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0],
+        length=0.0,
+        width=0.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=90.0,
+        reference="top",
+    )
+    vertices = block.vertices.round(5).tolist()
+    assert [0.0, 0.0, -10.0] in vertices
+    assert [0.0, 0.0, 0.0] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0],
+        length=10.0,
+        width=10.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=45.0,
+    )
+
+    pos = (10 * np.cos(np.deg2rad(45))).round(5)
+    vertices = block.vertices.round(5).tolist()
+    assert [0.0, -pos, -5.0] in vertices
+    assert [pos, 0.0, -5.0] in vertices
+    assert [-pos, 0.0, -5.0] in vertices
+    assert [0.0, pos, -5.0] in vertices
+    assert [0.0, -pos, 5.0] in vertices
+    assert [pos, 0.0, 5.0] in vertices
+    assert [-pos, 0.0, 5.0] in vertices
+    assert [0.0, pos, 5.0] in vertices
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "center", -180.0)
+
+    assert "Input value for 'center' must be a list of floats len(3)." in str(error)
+
+    for attr in ["length", "width", "depth"]:
+        with pytest.raises(ValueError) as error:
+            setattr(block, attr, -10.0)
+
+        assert f"Input value for '{attr}' must be a float >0." in str(error)
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "dip", -180.0)
+
+    assert (
+        "Input value for 'dip' must be a float on the interval [-90, 90] degrees."
+        in str(error)
+    )
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "azimuth", -450.0)
+
+    assert (
+        "Input value for 'azimuth' must be a float on the interval [-360, 360] degrees."
+        in str(error)
+    )
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "reference", "abc")
+
+    assert (
+        "Input value for 'reference' point should be a str from ['center', 'top']."
+        in str(error)
+    )
 
 
 def test_find_value():
@@ -200,15 +297,15 @@ def test_sorted_children_dict(tmp_path):
     assert d[-1] == "uncert"
 
 
-def test_rotation_xy():
+def test_rotation_xyz():
     vec = np.c_[1, 0, 0]
-    rot_vec = rotate_xy(vec, [0, 0], 45)
+    rot_vec = rotate_xyz(vec, [0, 0], 45)
 
     assert (
         np.linalg.norm(np.cross(rot_vec, [0.7071, 0.7071, 0])) < 1e-8
     ), "Error on positive rotation about origin."
 
-    rot_vec = rotate_xy(vec, [1, 1], -90)
+    rot_vec = rotate_xyz(vec, [1, 1], -90)
 
     assert (
         np.linalg.norm(np.cross(rot_vec, [0, 1, 0])) < 1e-8
@@ -400,11 +497,11 @@ def test_downsample_grid():
     assert np.all(np.diff(xd.reshape(6, 6), axis=1) == 2)
 
     # Test a rotated grid equal spacing in u, v
-    xy_rot = rotate_xy(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
+    xy_rot = rotate_xyz(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
     xg_rot = xy_rot[:, 0].reshape(11, 11)
     yg_rot = xy_rot[:, 1].reshape(11, 11)
     ind, xd, yd = downsample_grid(xg_rot, yg_rot, 2)
-    xy = rotate_xy(np.c_[xd, yd], [5, 5], -30)
+    xy = rotate_xyz(np.c_[xd, yd], [5, 5], -30)
     xg_test = xy[:, 0].reshape(6, 6)
     yg_test = xy[:, 1].reshape(6, 6)
     np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((6, 5), 2))
@@ -422,7 +519,7 @@ def test_downsample_grid():
 def test_filter_xy():
 
     xg, yg = np.meshgrid(np.arange(11), np.arange(11))
-    xy_rot = rotate_xy(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
+    xy_rot = rotate_xyz(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
     xg_rot = xy_rot[:, 0].reshape(11, 11)
     yg_rot = xy_rot[:, 1].reshape(11, 11)
     window = {
@@ -457,7 +554,7 @@ def test_filter_xy():
     # Test rotation options
     combo_mask = filter_xy(xg_rot, yg_rot, distance=2, window=window, angle=-30)
     xg_test, yg_test = xg_rot[comb_mask], yg_rot[comb_mask]
-    xy_rot = rotate_xy(np.c_[xg_test, yg_test], [5, 5], -30)
+    xy_rot = rotate_xyz(np.c_[xg_test, yg_test], [5, 5], -30)
     xg_rot_test, yg_rot_test = xy_rot[:, 0].reshape(2, 4), xy_rot[:, 1].reshape(2, 4)
     assert np.all((xg_rot_test >= 1) & (xg_rot_test <= 9))
     assert np.all((yg_rot_test >= 3) & (yg_rot_test <= 7))
