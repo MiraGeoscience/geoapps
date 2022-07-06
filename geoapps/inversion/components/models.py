@@ -17,7 +17,7 @@ from SimPEG.utils.mat_utils import (
 )
 
 from geoapps.driver_base.params import BaseParams
-from geoapps.shared_utils.utils import rotate_xy, weighted_average
+from geoapps.shared_utils.utils import rotate_xyz, weighted_average
 
 from . import InversionMesh
 
@@ -410,7 +410,7 @@ class InversionModel:
         if hasattr(parent, "centroids"):
             xyz_in = parent.centroids
             if self.mesh.rotation is not None:
-                xyz_out = rotate_xy(
+                xyz_out = rotate_xyz(
                     xyz_out, self.mesh.rotation["origin"], self.mesh.rotation["angle"]
                 )
 

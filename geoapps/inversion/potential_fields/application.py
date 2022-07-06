@@ -918,9 +918,8 @@ class InversionApp(PlotSelection2D):
         )
         data_channel_options = {}
         self.data_channel_choices.options = data_type_list
-
-        if self.workspace.get_entity(self.objects.value):
-            obj, _ = self.get_selected_entities()
+        obj, _ = self.get_selected_entities()
+        if obj is not None:
             children_list = {child.uid: child.name for child in obj.children}
             ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
             options = [
@@ -1104,12 +1103,15 @@ class InversionApp(PlotSelection2D):
     def object_observer(self, _):
         """ """
         self.resolution.indices = None
-        if self.workspace.get_entity(self.objects.value):
-            self.update_data_list(None)
-            self.sensor.update_data_list(None)
-            self.inversion_type_observer(None)
-            self.write.button_style = "warning"
-            self.trigger.button_style = "danger"
+
+        if self.workspace.get_entity(self.objects.value)[0] is None:
+            return
+
+        self.update_data_list(None)
+        self.sensor.update_data_list(None)
+        self.inversion_type_observer(None)
+        self.write.button_style = "warning"
+        self.trigger.button_style = "danger"
 
     def data_channel_choices_observer(self, _):
         if hasattr(
@@ -1121,12 +1123,12 @@ class InversionApp(PlotSelection2D):
                 self.data_channel_choices.value
             ]
             self.data_channel_panel.children = [self.data_channel_choices, data_widget]
-
+            obj, data_list = self.get_selected_entities()
             if (
-                self.workspace.get_entity(self.objects.value)
+                obj is not None
+                and data_list is not None
                 and data_widget.children[1].value is None
             ):
-                _, data_list = self.get_selected_entities()
                 options = [[data.name, data.uid] for data in data_list]
                 data_widget.children[1].value = find_value(
                     options, [self.data_channel_choices.value]
@@ -1252,6 +1254,7 @@ class InversionApp(PlotSelection2D):
                             value = new_workspace.get_entity(value)[0]
                         setattr(self.params, sub_key, value)
 
+            self.params.ignore_values = None
             self.params.write_input_file(
                 name=self._ga_group_name.value + ".ui.json",
                 path=self.export_directory.selected_path,
