@@ -342,6 +342,7 @@ class Clustering(ScatterPlots):
                 dcc.Store(
                     id="full_upper_bounds", data=self.defaults["full_upper_bounds"]
                 ),
+                dcc.Store(id="plot_kmeans", data=self.defaults["plot_kmeans"]),
             ],
             style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
         )
@@ -416,6 +417,7 @@ class Clustering(ScatterPlots):
             Output(component_id="full_scales", component_property="data"),
             Output(component_id="full_lower_bounds", component_property="data"),
             Output(component_id="full_upper_bounds", component_property="data"),
+            Output(component_id="plot_kmeans", component_property="data"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
             Input(component_id="objects", component_property="value"),
@@ -772,6 +774,7 @@ class Clustering(ScatterPlots):
             "full_scales",
             "full_lower_bounds",
             "full_upper_bounds",
+            "plot_kmeans",
         ]
         # Trigger is which variable triggered the callback
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -788,6 +791,13 @@ class Clustering(ScatterPlots):
             if filename.endswith(".ui.json"):
                 # Update params from uploaded uijson
                 update_dict = self.update_from_uijson(contents)
+                if "plot_kmeans" in update_dict:
+                    plot_kmeans = ast.literal_eval(update_dict["plot_kmeans"])
+                    update_dict.update({"plot_kmeans": plot_kmeans})
+                    axis_list = ["x", "y", "z", "color", "size"]
+                    for i in range(len(plot_kmeans)):
+                        if plot_kmeans[i]:
+                            update_dict.update({axis_list[i] + "_name": "kmeans"})
                 # Update full scales, bounds
                 if "channels" in update_dict:
                     channels = update_dict["channels"]
@@ -827,6 +837,7 @@ class Clustering(ScatterPlots):
                         n_clusters,
                     )
                 )
+
             elif filename.endswith(".geoh5"):
                 # Update object and data subset options from uploaded workspace
                 update_dict = self.update_object_options(contents)
@@ -872,6 +883,9 @@ class Clustering(ScatterPlots):
                 "size_name": size,
             }
             update_dict.update(self.set_channel_bounds(x, y, z, color, size))
+            update_dict.update(
+                {"plot_kmeans": [i == "kmeans" for i in [x, y, z, color, size]]}
+            )
         elif trigger in [
             "downsampling",
             "channel",
@@ -930,8 +944,13 @@ class Clustering(ScatterPlots):
         return tuple(outputs)
 
     def update_param_dict(self, update_dict):
+        if "plot_kmeans" in update_dict.keys():
+            plot_kmeans = update_dict["plot_kmeans"]
+        else:
+            plot_kmeans = ast.literal_eval(self.params.plot_kmeans)
+        if len(plot_kmeans) == 0:
+            plot_kmeans = [False, False, False, False, False]
         axis_list = ["x", "y", "z", "color", "size"]
-        plot_kmeans = [False, False, False, False, False]
         # Update self.params from update_dict.
         for key, value in self.params.to_dict().items():
             if key in update_dict:
@@ -951,6 +970,8 @@ class Clustering(ScatterPlots):
                         setattr(self.params, key, False)
                     else:
                         setattr(self.params, key, value)
+                elif key == "plot_kmeans":
+                    setattr(self.params, key, str(update_dict[key]))
                 else:
                     setattr(self.params, key, update_dict[key])
             elif key in ["x", "y", "z", "color", "size"]:
@@ -973,7 +994,6 @@ class Clustering(ScatterPlots):
                 if "objects_name" in update_dict:
                     obj = self.params.geoh5.get_entity(update_dict["objects_name"])[0]
                     self.params.objects = obj
-        self.params.plot_kmeans = str(plot_kmeans)
 
     def update_plots(
         self,
@@ -1029,6 +1049,8 @@ class Clustering(ScatterPlots):
                     axis_values.append(self.data_channels["kmeans"])
                 elif axis is not None:
                     axis_values.append(PlotData(axis, dataframe[axis].values))
+                else:
+                    axis_values.append(None)
 
             x, y, z, color, size = tuple(axis_values)
 
@@ -1486,12 +1508,15 @@ class Clustering(ScatterPlots):
             else:
                 output_path = os.path.dirname(self.params.geoh5.h5file)
 
+            temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
             # Write output uijson
-            filename = "Clustering.ui.json"
             params = ClusteringParams(validate=False, **self.params.to_dict())
-            params.write_input_file(name=filename, path=output_path, validate=False)
+            params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                path=output_path,
+                validate=False,
+            )
 
-            temp_geoh5 = f"Clustering_{time.time():.3f}.geoh5"
             ws, new_live_link = self.get_output_workspace(
                 live_link, output_path, temp_geoh5
             )
