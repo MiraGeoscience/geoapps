@@ -34,6 +34,7 @@ class ClusteringParams(ScatterPlotParams):
         self.full_scales = None
         self.full_lower_bounds = None
         self.full_upper_bounds = None
+        self.plot_kmeans = None
         self.live_link = None
 
         if input_file is None:
@@ -100,6 +101,17 @@ class ClusteringParams(ScatterPlotParams):
     @full_upper_bounds.setter
     def full_upper_bounds(self, val):
         self.setter_validator("full_upper_bounds", val)
+
+    @property
+    def plot_kmeans(self) -> str | None:
+        """
+        Whether or not kmeans is plotted on each axis.
+        """
+        return self._plot_kmeans
+
+    @plot_kmeans.setter
+    def plot_kmeans(self, val):
+        self.setter_validator("plot_kmeans", val)
 
     @property
     def ga_group_name(self) -> str | None:

@@ -11,8 +11,7 @@ from copy import deepcopy
 
 import plotly.express as px
 
-# import plotly.express as px
-# from geoh5py.ui_json.constants import default_ui_json as base_ui_json
+from geoapps.clustering.plot_data import PlotData
 from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
 
 defaults = {
@@ -57,7 +56,7 @@ default_ui_json.update(
         "full_scales": "[]",
         "full_lower_bounds": "[]",
         "full_upper_bounds": "[]",
-        # "dataframe": None,
+        "plot_kmeans": "[]",
         "conda_environment": "geoapps",
         "run_command": "geoapps.clustering.application",
     }
