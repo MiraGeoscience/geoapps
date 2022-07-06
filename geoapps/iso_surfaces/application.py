@@ -68,7 +68,7 @@ class IsoSurface(ObjectDataSelection):
 
         self.output_panel = VBox([self.export_as, self.output_panel])
 
-    def trigger_click(self, _):
+    def trigger_click(self, _) -> str:
 
         param_dict = {}
         for key in self.__dict__:
@@ -115,6 +115,8 @@ class IsoSurface(ObjectDataSelection):
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
+
+        return new_workspace.h5file
 
     def data_change(self, _):
 
