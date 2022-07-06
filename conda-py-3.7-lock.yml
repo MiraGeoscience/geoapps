@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 09a4fabf93d830c1a107742fc505471918261e540a3ecdaa5a942c5e49d2da81
-    osx-64: dac25e9d0c5a573908588c410b169a561b2d32fbc166a77a9e15fcb2114f361f
-    win-64: 867071b3e552867550552777b45fad5d687d9fcd6336115b6e310fe1105dfafc
+    linux-64: 23e7d6fcfebc1a6dbeb0d3a3d079eb4d266576ec0defc7891e71a637688cd557
+    osx-64: 2e4184a13da4ad5e19beae9a769cce92c2871c3d0c77e3c7a9db9f5502a11bfe
+    win-64: e0e0c82a7369404532cf6d68eef68209cef3a9b029b6d402f88c0f0dc8a7a0fc
   platforms:
   - win-64
   - osx-64
@@ -528,14 +528,14 @@ package:
     ca-certificates: ''
     libgcc-ng: '>=12'
   hash:
-    md5: 995e819f901ee0c4411e4f50d9b31a82
-    sha256: 52d8934ac8e2437207ec82e5f7f3b7dd6d8a0e5d19dae242037f0e27b3b94077
+    md5: 07acc367c7fc8b716770cd5b36d31717
+    sha256: 13ba391de59386eff710a9e40cd7a3c53ef8dab6c7818dd4eaaf0401029ddd1b
   manager: conda
   name: openssl
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/openssl-1.1.1p-h166bdaf_0.tar.bz2
-  version: 1.1.1p
+  url: https://conda.anaconda.org/conda-forge/linux-64/openssl-1.1.1q-h166bdaf_0.tar.bz2
+  version: 1.1.1q
 - category: full
   dependencies:
     libgcc-ng: '>=9.3.0'
@@ -1679,6 +1679,18 @@ package:
   version: 0.2.0
 - category: full
   dependencies:
+    python: '>=3.7'
+  hash:
+    md5: 3c3de74912f11d2b590184f03c7cd09b
+    sha256: 31e3492686b4e92b53db9b48bc0eb03873b1caaf28629fee7d2d47627a2c56d3
+  manager: conda
+  name: itsdangerous
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/itsdangerous-2.1.2-pyhd8ed1ab_0.tar.bz2
+  version: 2.1.2
+- category: full
+  dependencies:
     python: '>=3.6'
   hash:
     md5: 9e79315db0f0742b9a2215e122ef8fc9
@@ -2122,6 +2134,18 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-py_1.tar.bz2
   version: 0.5.1
+- category: full
+  dependencies:
+    python: '>=3.7'
+  hash:
+    md5: 6dfc61103f2c33a6c875b93d82875c10
+    sha256: 3e08e7a72a01fa53e4d2e2dedde32b3300dc9d12c91d7b5248d458ecfa0bd439
+  manager: conda
+  name: werkzeug
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/werkzeug-2.1.2-pyhd8ed1ab_1.tar.bz2
+  version: 2.1.2
 - category: main
   dependencies:
     python: '!=3.0,!=3.1,!=3.2,!=3.3,!=3.4'
@@ -2159,6 +2183,21 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/beautifulsoup4-4.11.1-pyha770c72_0.tar.bz2
   version: 4.11.1
+- category: full
+  dependencies:
+    libgcc-ng: '>=10.3.0'
+    libstdcxx-ng: '>=10.3.0'
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
+  hash:
+    md5: f330e49790eb1af580c0d710e63c8cb0
+    sha256: 86730e19748a80787c7db68121379b8a9516d3acaac9c67cb96655103396ffc1
+  manager: conda
+  name: brotli-python
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/linux-64/brotli-python-1.0.9-py37hd23a5d3_7.tar.bz2
+  version: 1.0.9
 - category: main
   dependencies:
     cached_property: '>=1.5.2,<1.5.3.0a0'
@@ -2701,6 +2740,19 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/linux-64/pyzmq-23.2.0-py37h0c0c2a8_0.tar.bz2
   version: 23.2.0
+- category: full
+  dependencies:
+    python: ''
+    six: '>=1.7.0'
+  hash:
+    md5: a11f356d6f93b74b4a84e9501afd48b4
+    sha256: ef407b88c45171f41eadcbbcfd41243cb137fe7438fc18f4cd08181c522664cf
+  manager: conda
+  name: retrying
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/retrying-1.3.3-py_2.tar.bz2
+  version: 1.3.3
 - category: main
   dependencies:
     python: '>=3.7,<3.8.0a0'
@@ -2856,6 +2908,22 @@ package:
   version: 2.2.0
 - category: full
   dependencies:
+    importlib-metadata: ''
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
+    setuptools: ''
+    six: ''
+  hash:
+    md5: a08693d1a5acbc58f2bf8d775935ec13
+    sha256: c9839b979b43bed6e3418086ccffb79bf763d5c8a59ae5492fb0cfa2bb6cb588
+  manager: conda
+  name: ansi2html
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/linux-64/ansi2html-1.7.0-py37h89c1867_1.tar.bz2
+  version: 1.7.0
+- category: full
+  dependencies:
     cffi: '>=1.0.1'
     libgcc-ng: '>=10.3.0'
     python: '>=3.7,<3.8.0a0'
@@ -2983,20 +3051,20 @@ package:
 - category: main
   dependencies:
     brotli: ''
-    libgcc-ng: '>=10.3.0'
+    libgcc-ng: '>=12'
     munkres: ''
     python: '>=3.7,<3.8.0a0'
     python_abi: 3.7.* *_cp37m
     unicodedata2: '>=14.0.0'
   hash:
-    md5: 695477cf261f39477a4fc3dd836b634e
-    sha256: 2753d0fdabb55a2d705a4fa604fc1e60398816d3417110c21470df64b1e49c24
+    md5: 2f4afbf6f809819bcf98dc037cc0ccaa
+    sha256: 2a6e3e0944c85ff9d428570378a8a1351f3316883e1e058902256774b7c9c9b2
   manager: conda
   name: fonttools
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/fonttools-4.33.3-py37h540881e_0.tar.bz2
-  version: 4.33.3
+  url: https://conda.anaconda.org/conda-forge/linux-64/fonttools-4.34.0-py37h540881e_0.tar.bz2
+  version: 4.34.0
 - category: main
   dependencies:
     cached-property: ''
@@ -3453,6 +3521,23 @@ package:
   version: 2.1.3
 - category: full
   dependencies:
+    click: '>=8.0'
+    importlib-metadata: '>=3.6.0'
+    itsdangerous: '>=2.0'
+    jinja2: '>=3.0'
+    python: '>=3.7'
+    werkzeug: '>=2.0'
+  hash:
+    md5: 53624cadbb40b6ce9ac1f4c56815c669
+    sha256: 358e5efdaeff210ae914d2568063e24a74b9bed73f1a6be5362b9a3898837873
+  manager: conda
+  name: flask
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/flask-2.1.2-pyhd8ed1ab_1.tar.bz2
+  version: 2.1.2
+- category: full
+  dependencies:
     pygments: '>=2.4.1,<3'
     python: '>=3.7'
   hash:
@@ -3494,7 +3579,7 @@ package:
     libxml2: '>=2.9.14,<2.10.0a0'
     libzlib: '>=1.2.12,<1.3.0a0'
     openjpeg: '>=2.4.0,<2.5.0a0'
-    openssl: '>=1.1.1p,<1.1.2a'
+    openssl: '>=1.1.1q,<1.1.2a'
     pcre: '>=8.45,<9.0a0'
     poppler: '>=22.4.0,<22.5.0a0'
     postgresql: ''
@@ -3505,14 +3590,14 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 1cc61dd37d348f1deb6250e0f249addb
-    sha256: 0e6bd2bc3952fec68f08987fb79efd12958e37107389a1b9e449c8955f294a2f
+    md5: 7f04524f7e28a2e6357f063399d8853b
+    sha256: f4efe5206af41517792d8b181c96c504aa312ab2e42ceb3326ce3c1346e674bf
   manager: conda
   name: libgdal
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libgdal-3.5.0-h32640fd_5.tar.bz2
-  version: 3.5.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/libgdal-3.5.1-h32640fd_0.tar.bz2
+  version: 3.5.1
 - category: main
   dependencies:
     certifi: '>=2020.06.20'
@@ -3700,23 +3785,37 @@ package:
   version: 2.12.0
 - category: full
   dependencies:
+    brotli-python: ''
+    flask: ''
+    python: '>=2.7|>=3.6'
+  hash:
+    md5: c3da321f6321a1b9ec992ece2422000b
+    sha256: 573610f750d7b30ac34af4a6629979c62266890b358c7f933297f5726b533b11
+  manager: conda
+  name: flask-compress
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/flask-compress-1.12-pyhd8ed1ab_0.tar.bz2
+  version: '1.12'
+- category: full
+  dependencies:
     hdf5: '>=1.12.1,<1.12.2.0a0'
     libgcc-ng: '>=12'
-    libgdal: 3.5.0 h32640fd_5
+    libgdal: 3.5.1 h32640fd_0
     libstdcxx-ng: '>=12'
     numpy: '>=1.19.5,<2.0a0'
-    openssl: '>=1.1.1p,<1.1.2a'
+    openssl: '>=1.1.1q,<1.1.2a'
     python: '>=3.7,<3.8.0a0'
     python_abi: 3.7.* *_cp37m
   hash:
-    md5: ae4a4f1b92e1a1e78371ca56e0ff8313
-    sha256: e60fbad8cf07054c848d97664d3d87753c9af2a47a88270fc6df0e2affb8c3c2
+    md5: 2943a00580928c7b709683d232a196dd
+    sha256: a373be3ff8e12d0b131c94f18f8491619be7a988fb48f539b9e6728dbaa8fd17
   manager: conda
   name: gdal
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/gdal-3.5.0-py37h80a644e_5.tar.bz2
-  version: 3.5.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/gdal-3.5.1-py37h80a644e_0.tar.bz2
+  version: 3.5.1
 - category: main
   dependencies:
     future: ''
@@ -3834,6 +3933,22 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/urllib3-1.26.9-pyhd8ed1ab_0.tar.bz2
   version: 1.26.9
+- category: full
+  dependencies:
+    flask: '>=1.0.4'
+    flask-compress: ''
+    plotly: '>=5.0.0'
+    python: '>=3.6'
+    setuptools: ''
+  hash:
+    md5: 77df99e5157725fbd7fb9fed3643783f
+    sha256: 321b10a4a7ab54d5a14c1860fa5047a9b4fe79766ea65a6a8413664c217215df
+  manager: conda
+  name: dash
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/dash-2.5.1-pyhd8ed1ab_0.tar.bz2
+  version: 2.5.1
 - category: full
   dependencies:
     attrs: '>=17'
@@ -3973,6 +4088,19 @@ package:
   version: 0.19.3
 - category: full
   dependencies:
+    dash: '>=1.6.1'
+    python: ''
+  hash:
+    md5: ebd54a61606fa8a191932cb72e448418
+    sha256: 5e99ab8b5cac15e5d6986a90566a335c21b2849838a6e877bec79efa2e7e346f
+  manager: conda
+  name: dash-daq
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/dash-daq-0.5.0-pyh9f0ad1d_1.tar.bz2
+  version: 0.5.0
+- category: full
+  dependencies:
     __linux: ''
     debugpy: '>=1.0'
     ipython: '>=7.23.1'
@@ -4008,6 +4136,26 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-6.5.0-pyhd8ed1ab_0.tar.bz2
   version: 6.5.0
+- category: full
+  dependencies:
+    ansi2html: ''
+    dash: ''
+    flask: ''
+    ipykernel: ''
+    ipython: ''
+    nest-asyncio: ''
+    python: '>=3.5'
+    requests: ''
+    retrying: ''
+  hash:
+    md5: 9c77330b235666f244a7b8dcc7c0955a
+    sha256: 1b664f4776f45c897bb783fbfae19c400d58b1e68bdd1942da2c95a4e7f50091
+  manager: conda
+  name: jupyter-dash
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/jupyter-dash-0.4.2-pyhd8ed1ab_1.tar.bz2
+  version: 0.4.2
 - category: full
   dependencies:
     nbconvert-core: 6.5.0 pyhd8ed1ab_0
@@ -4682,14 +4830,14 @@ package:
   dependencies:
     ca-certificates: ''
   hash:
-    md5: 5c2c7facfe400144b608e714bf44bc47
-    sha256: df742906902ca332e4f3f12a7c2bccfc892c7e7b5a21e8b950206fbfc56fffed
+    md5: ce822517fb00e8bafea6fe77d07f20bd
+    sha256: e27fce88da896fbd9b5634de40a604e77d8d8cf822bf1474865c5338a4f2beb2
   manager: conda
   name: openssl
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/openssl-1.1.1p-hfe4f2af_0.tar.bz2
-  version: 1.1.1p
+  url: https://conda.anaconda.org/conda-forge/osx-64/openssl-1.1.1q-hfe4f2af_0.tar.bz2
+  version: 1.1.1q
 - category: full
   dependencies:
     libcxx: '>=11.1.0'
@@ -5473,6 +5621,18 @@ package:
   version: 0.2.0
 - category: full
   dependencies:
+    python: '>=3.7'
+  hash:
+    md5: 3c3de74912f11d2b590184f03c7cd09b
+    sha256: 31e3492686b4e92b53db9b48bc0eb03873b1caaf28629fee7d2d47627a2c56d3
+  manager: conda
+  name: itsdangerous
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/itsdangerous-2.1.2-pyhd8ed1ab_0.tar.bz2
+  version: 2.1.2
+- category: full
+  dependencies:
     python: '>=3.6'
   hash:
     md5: 9e79315db0f0742b9a2215e122ef8fc9
@@ -5973,6 +6133,18 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-py_1.tar.bz2
   version: 0.5.1
+- category: full
+  dependencies:
+    python: '>=3.7'
+  hash:
+    md5: 6dfc61103f2c33a6c875b93d82875c10
+    sha256: 3e08e7a72a01fa53e4d2e2dedde32b3300dc9d12c91d7b5248d458ecfa0bd439
+  manager: conda
+  name: werkzeug
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/werkzeug-2.1.2-pyhd8ed1ab_1.tar.bz2
+  version: 2.1.2
 - category: main
   dependencies:
     python: '!=3.0,!=3.1,!=3.2,!=3.3,!=3.4'
@@ -6010,6 +6182,20 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/beautifulsoup4-4.11.1-pyha770c72_0.tar.bz2
   version: 4.11.1
+- category: full
+  dependencies:
+    libcxx: '>=12.0.1'
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
+  hash:
+    md5: 05da85113e203b589a3f52ee6720e5fe
+    sha256: 6d0ed6596904846fd763afd104e5ce4a91b733a5838f6657dbd1a8f91aa218ce
+  manager: conda
+  name: brotli-python
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/osx-64/brotli-python-1.0.9-py37h0582d14_7.tar.bz2
+  version: 1.0.9
 - category: main
   dependencies:
     cached_property: '>=1.5.2,<1.5.3.0a0'
@@ -6525,6 +6711,19 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/osx-64/pyzmq-23.2.0-py37h573e605_0.tar.bz2
   version: 23.2.0
+- category: full
+  dependencies:
+    python: ''
+    six: '>=1.7.0'
+  hash:
+    md5: a11f356d6f93b74b4a84e9501afd48b4
+    sha256: ef407b88c45171f41eadcbbcfd41243cb137fe7438fc18f4cd08181c522664cf
+  manager: conda
+  name: retrying
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/retrying-1.3.3-py_2.tar.bz2
+  version: 1.3.3
 - category: main
   dependencies:
     python: '>=3.7,<3.8.0a0'
@@ -6675,6 +6874,22 @@ package:
   version: 2.2.0
 - category: full
   dependencies:
+    importlib-metadata: ''
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
+    setuptools: ''
+    six: ''
+  hash:
+    md5: 7fc7fee8469f5d82a698d65e00b2b875
+    sha256: 47a067d340526c8ac8707f0f39b8288df10e659ea66caa35494e9170069c5633
+  manager: conda
+  name: ansi2html
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/osx-64/ansi2html-1.7.0-py37hf985489_1.tar.bz2
+  version: 1.7.0
+- category: full
+  dependencies:
     cffi: '>=1.0.1'
     python: '>=3.7,<3.8.0a0'
     python_abi: 3.7.* *_cp37m
@@ -6804,14 +7019,14 @@ package:
     python_abi: 3.7.* *_cp37m
     unicodedata2: '>=14.0.0'
   hash:
-    md5: a55e53050b0a02625433e63470cd9328
-    sha256: 6b4879b694bfac1018873a44f0cc83a35ca12951f469fca4f4a6a24be7264194
+    md5: 58a983407a233dc403ac9cbf1bfea283
+    sha256: adf6a5ca6791914f6b0bd05dd9cfc2e6672a12ee54f4e907ac729e7e3e116687
   manager: conda
   name: fonttools
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.33.3-py37h994c40b_0.tar.bz2
-  version: 4.33.3
+  url: https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.34.0-py37h994c40b_0.tar.bz2
+  version: 4.34.0
 - category: main
   dependencies:
     cached-property: ''
@@ -7258,6 +7473,23 @@ package:
   version: 2.1.3
 - category: full
   dependencies:
+    click: '>=8.0'
+    importlib-metadata: '>=3.6.0'
+    itsdangerous: '>=2.0'
+    jinja2: '>=3.0'
+    python: '>=3.7'
+    werkzeug: '>=2.0'
+  hash:
+    md5: 53624cadbb40b6ce9ac1f4c56815c669
+    sha256: 358e5efdaeff210ae914d2568063e24a74b9bed73f1a6be5362b9a3898837873
+  manager: conda
+  name: flask
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/flask-2.1.2-pyhd8ed1ab_1.tar.bz2
+  version: 2.1.2
+- category: full
+  dependencies:
     pygments: '>=2.4.1,<3'
     python: '>=3.7'
   hash:
@@ -7296,7 +7528,7 @@ package:
     libxml2: '>=2.9.14,<2.10.0a0'
     libzlib: '>=1.2.12,<1.3.0a0'
     openjpeg: '>=2.4.0,<2.5.0a0'
-    openssl: '>=1.1.1p,<1.1.2a'
+    openssl: '>=1.1.1q,<1.1.2a'
     pcre: '>=8.45,<9.0a0'
     poppler: '>=22.4.0,<22.5.0a0'
     postgresql: ''
@@ -7307,14 +7539,14 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 7dea63f7eefba8e3d62e64d91c1f1efa
-    sha256: 276a7f602e7288abb90d80836d1d95e7754b52ef9ca14bcc3f79f476a04b5322
+    md5: 1d9509c3d662237ea0af447eefba9386
+    sha256: 8dcfb8fe7f7a4344143b9e72004c36d690a73fbd815da48c77ed1e0ca46cdf8a
   manager: conda
   name: libgdal
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libgdal-3.5.0-h242d4e5_5.tar.bz2
-  version: 3.5.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/libgdal-3.5.1-h242d4e5_0.tar.bz2
+  version: 3.5.1
 - category: main
   dependencies:
     certifi: '>=2020.06.20'
@@ -7499,22 +7731,36 @@ package:
   version: 2.12.0
 - category: full
   dependencies:
+    brotli-python: ''
+    flask: ''
+    python: '>=2.7|>=3.6'
+  hash:
+    md5: c3da321f6321a1b9ec992ece2422000b
+    sha256: 573610f750d7b30ac34af4a6629979c62266890b358c7f933297f5726b533b11
+  manager: conda
+  name: flask-compress
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/flask-compress-1.12-pyhd8ed1ab_0.tar.bz2
+  version: '1.12'
+- category: full
+  dependencies:
     hdf5: '>=1.12.1,<1.12.2.0a0'
     libcxx: '>=13.0.1'
-    libgdal: 3.5.0 h242d4e5_5
+    libgdal: 3.5.1 h242d4e5_0
     numpy: '>=1.19.5,<2.0a0'
-    openssl: '>=1.1.1p,<1.1.2a'
+    openssl: '>=1.1.1q,<1.1.2a'
     python: '>=3.7,<3.8.0a0'
     python_abi: 3.7.* *_cp37m
   hash:
-    md5: 755de132a38f00e2d4850d1f77a50240
-    sha256: 763a1ab202dacf48e4393227919b76065e54f8db8f5e346c00528bff62e4f433
+    md5: 6c1b01aeaa7619d56f3f3755e0b22dbd
+    sha256: 6cd4346d83c6e97db80d7999acc93345e8d1cc81245b986f40f9009be2910126
   manager: conda
   name: gdal
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/gdal-3.5.0-py37h4fd6966_5.tar.bz2
-  version: 3.5.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/gdal-3.5.1-py37h4fd6966_0.tar.bz2
+  version: 3.5.1
 - category: main
   dependencies:
     future: ''
@@ -7632,6 +7878,22 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/urllib3-1.26.9-pyhd8ed1ab_0.tar.bz2
   version: 1.26.9
+- category: full
+  dependencies:
+    flask: '>=1.0.4'
+    flask-compress: ''
+    plotly: '>=5.0.0'
+    python: '>=3.6'
+    setuptools: ''
+  hash:
+    md5: 77df99e5157725fbd7fb9fed3643783f
+    sha256: 321b10a4a7ab54d5a14c1860fa5047a9b4fe79766ea65a6a8413664c217215df
+  manager: conda
+  name: dash
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/dash-2.5.1-pyhd8ed1ab_0.tar.bz2
+  version: 2.5.1
 - category: full
   dependencies:
     attrs: '>=17'
@@ -7770,6 +8032,19 @@ package:
   version: 0.19.3
 - category: full
   dependencies:
+    dash: '>=1.6.1'
+    python: ''
+  hash:
+    md5: ebd54a61606fa8a191932cb72e448418
+    sha256: 5e99ab8b5cac15e5d6986a90566a335c21b2849838a6e877bec79efa2e7e346f
+  manager: conda
+  name: dash-daq
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/dash-daq-0.5.0-pyh9f0ad1d_1.tar.bz2
+  version: 0.5.0
+- category: full
+  dependencies:
     __osx: ''
     appnope: ''
     debugpy: '>=1.0'
@@ -7806,6 +8081,26 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-6.5.0-pyhd8ed1ab_0.tar.bz2
   version: 6.5.0
+- category: full
+  dependencies:
+    ansi2html: ''
+    dash: ''
+    flask: ''
+    ipykernel: ''
+    ipython: ''
+    nest-asyncio: ''
+    python: '>=3.5'
+    requests: ''
+    retrying: ''
+  hash:
+    md5: 9c77330b235666f244a7b8dcc7c0955a
+    sha256: 1b664f4776f45c897bb783fbfae19c400d58b1e68bdd1942da2c95a4e7f50091
+  manager: conda
+  name: jupyter-dash
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/jupyter-dash-0.4.2-pyhd8ed1ab_1.tar.bz2
+  version: 0.4.2
 - category: full
   dependencies:
     nbconvert-core: 6.5.0 pyhd8ed1ab_0
@@ -8360,14 +8655,14 @@ package:
     vc: '>=14.1,<15'
     vs2015_runtime: '>=14.16.27033'
   hash:
-    md5: 2c34e13bb68c9ece446b5f96eb55d543
-    sha256: ea55496cc6b3de371254148db9dc31a041884c9881191ae35e0c3ee3bcee75b3
+    md5: 2ee16f406ee12fe4dcd08b513e9bd0c6
+    sha256: 0fcadfec125b1d4d9b0d7e5fd34fca8c150fc798b90091dfe3eeb85d87c909fa
   manager: conda
   name: openssl
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/openssl-1.1.1p-h8ffe710_0.tar.bz2
-  version: 1.1.1p
+  url: https://conda.anaconda.org/conda-forge/win-64/openssl-1.1.1q-h8ffe710_0.tar.bz2
+  version: 1.1.1q
 - category: full
   dependencies:
     vc: '>=14.1,<15.0a0'
@@ -8986,6 +9281,18 @@ package:
   version: 0.2.0
 - category: full
   dependencies:
+    python: '>=3.7'
+  hash:
+    md5: 3c3de74912f11d2b590184f03c7cd09b
+    sha256: 31e3492686b4e92b53db9b48bc0eb03873b1caaf28629fee7d2d47627a2c56d3
+  manager: conda
+  name: itsdangerous
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/noarch/itsdangerous-2.1.2-pyhd8ed1ab_0.tar.bz2
+  version: 2.1.2
+- category: full
+  dependencies:
     python: '>=3.6'
   hash:
     md5: 9e79315db0f0742b9a2215e122ef8fc9
@@ -9495,6 +9802,18 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-py_1.tar.bz2
   version: 0.5.1
+- category: full
+  dependencies:
+    python: '>=3.7'
+  hash:
+    md5: 6dfc61103f2c33a6c875b93d82875c10
+    sha256: 3e08e7a72a01fa53e4d2e2dedde32b3300dc9d12c91d7b5248d458ecfa0bd439
+  manager: conda
+  name: werkzeug
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/noarch/werkzeug-2.1.2-pyhd8ed1ab_1.tar.bz2
+  version: 2.1.2
 - category: main
   dependencies:
     python: '!=3.0,!=3.1,!=3.2,!=3.3,!=3.4'
@@ -9571,6 +9890,21 @@ package:
   optional: false
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/win-64/brotli-1.0.9-h8ffe710_7.tar.bz2
+  version: 1.0.9
+- category: full
+  dependencies:
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
+    vc: '>=14.1,<15'
+    vs2015_runtime: '>=14.16.27033'
+  hash:
+    md5: 7dd346736b3516015e4632f7d033baf8
+    sha256: 16df04d1fb42e573c8574df8f283efa0d41b7be27bb3bdc1fc432dc7066dd5f6
+  manager: conda
+  name: brotli-python
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/brotli-python-1.0.9-py37hf2a7229_7.tar.bz2
   version: 1.0.9
 - category: main
   dependencies:
@@ -10088,6 +10422,19 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/win-64/pyzmq-23.2.0-py37hcce574b_0.tar.bz2
   version: 23.2.0
+- category: full
+  dependencies:
+    python: ''
+    six: '>=1.7.0'
+  hash:
+    md5: a11f356d6f93b74b4a84e9501afd48b4
+    sha256: ef407b88c45171f41eadcbbcfd41243cb137fe7438fc18f4cd08181c522664cf
+  manager: conda
+  name: retrying
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/noarch/retrying-1.3.3-py_2.tar.bz2
+  version: 1.3.3
 - category: main
   dependencies:
     python: '>=3.7,<3.8.0a0'
@@ -10238,6 +10585,22 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/zict-2.2.0-pyhd8ed1ab_0.tar.bz2
   version: 2.2.0
+- category: full
+  dependencies:
+    importlib-metadata: ''
+    python: '>=3.7,<3.8.0a0'
+    python_abi: 3.7.* *_cp37m
+    setuptools: ''
+    six: ''
+  hash:
+    md5: 67db55266eb05805abaabb81dcb55444
+    sha256: 927ba6ee5098f42f690d1442b5ebc0bfaad941e9d39a10bf4332814871601133
+  manager: conda
+  name: ansi2html
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/ansi2html-1.7.0-py37h03978a9_1.tar.bz2
+  version: 1.7.0
 - category: full
   dependencies:
     cffi: '>=1.0.1'
@@ -10426,14 +10789,14 @@ package:
     vc: '>=14.1,<15'
     vs2015_runtime: '>=14.16.27033'
   hash:
-    md5: bf124e18f76ecd2a3021cd745daf2988
-    sha256: af4683846abd6336ed23efe467aa826ab79dcb67e7b687d9ba464f0918cda3aa
+    md5: 7ba6c2292c1bc9f52d930a4e9e9862e3
+    sha256: 95709dbe8ea5ef4ccb3dee65bd9937d1f250c8dd1ca56aa1e88bbe0fef0b82a1
   manager: conda
   name: fonttools
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/fonttools-4.33.3-py37hcc03f2d_0.tar.bz2
-  version: 4.33.3
+  url: https://conda.anaconda.org/conda-forge/win-64/fonttools-4.34.0-py37hcc03f2d_0.tar.bz2
+  version: 4.34.0
 - category: main
   dependencies:
     libcurl: '>=7.81.0,<8.0a0'
@@ -10769,6 +11132,23 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/win-64/distributed-2022.2.0-py37h03978a9_0.tar.bz2
   version: 2022.2.0
+- category: full
+  dependencies:
+    click: '>=8.0'
+    importlib-metadata: '>=3.6.0'
+    itsdangerous: '>=2.0'
+    jinja2: '>=3.0'
+    python: '>=3.7'
+    werkzeug: '>=2.0'
+  hash:
+    md5: 53624cadbb40b6ce9ac1f4c56815c669
+    sha256: 358e5efdaeff210ae914d2568063e24a74b9bed73f1a6be5362b9a3898837873
+  manager: conda
+  name: flask
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/noarch/flask-2.1.2-pyhd8ed1ab_1.tar.bz2
+  version: 2.1.2
 - category: full
   dependencies:
     jpeg: '>=9e,<10a'
@@ -11201,6 +11581,20 @@ package:
   version: 2.1.3
 - category: full
   dependencies:
+    brotli-python: ''
+    flask: ''
+    python: '>=2.7|>=3.6'
+  hash:
+    md5: c3da321f6321a1b9ec992ece2422000b
+    sha256: 573610f750d7b30ac34af4a6629979c62266890b358c7f933297f5726b533b11
+  manager: conda
+  name: flask-compress
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/noarch/flask-compress-1.12-pyhd8ed1ab_0.tar.bz2
+  version: '1.12'
+- category: full
+  dependencies:
     jupyter_client: '>=6.1.5'
     nbformat: '>=5.0'
     nest-asyncio: ''
@@ -11396,6 +11790,22 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/zarr-2.12.0-pyhd8ed1ab_0.tar.bz2
   version: 2.12.0
+- category: full
+  dependencies:
+    flask: '>=1.0.4'
+    flask-compress: ''
+    plotly: '>=5.0.0'
+    python: '>=3.6'
+    setuptools: ''
+  hash:
+    md5: 77df99e5157725fbd7fb9fed3643783f
+    sha256: 321b10a4a7ab54d5a14c1860fa5047a9b4fe79766ea65a6a8413664c217215df
+  manager: conda
+  name: dash
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/noarch/dash-2.5.1-pyhd8ed1ab_0.tar.bz2
+  version: 2.5.1
 - category: main
   dependencies:
     future: ''
@@ -11461,7 +11871,7 @@ package:
     libxml2: '>=2.9.14,<2.10.0a0'
     libzlib: '>=1.2.12,<1.3.0a0'
     openjpeg: '>=2.4.0,<2.5.0a0'
-    openssl: '>=1.1.1p,<1.1.2a'
+    openssl: '>=1.1.1q,<1.1.2a'
     pcre: '>=8.45,<9.0a0'
     poppler: '>=22.4.0,<22.5.0a0'
     postgresql: ''
@@ -11474,14 +11884,14 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 7f54f8fc592502365cf327800f9b3c0b
-    sha256: 23158070a77cf0a15ed94225b6b87dc0921bf7edfc4a882b71c6fcef41444d9a
+    md5: 7576a23b05b4082e1b88cd477e53de96
+    sha256: 8201434a94a0121b70c91d059521892644fb18d8ac1e4f9b31db2b7e781fdc7b
   manager: conda
   name: libgdal
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libgdal-3.5.0-h7a56975_5.tar.bz2
-  version: 3.5.0
+  url: https://conda.anaconda.org/conda-forge/win-64/libgdal-3.5.1-h7a56975_0.tar.bz2
+  version: 3.5.1
 - category: full
   dependencies:
     beautifulsoup4: ''
@@ -11586,23 +11996,36 @@ package:
   version: 0.19.3
 - category: full
   dependencies:
+    dash: '>=1.6.1'
+    python: ''
+  hash:
+    md5: ebd54a61606fa8a191932cb72e448418
+    sha256: 5e99ab8b5cac15e5d6986a90566a335c21b2849838a6e877bec79efa2e7e346f
+  manager: conda
+  name: dash-daq
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/noarch/dash-daq-0.5.0-pyh9f0ad1d_1.tar.bz2
+  version: 0.5.0
+- category: full
+  dependencies:
     hdf5: '>=1.12.1,<1.12.2.0a0'
-    libgdal: 3.5.0 h7a56975_5
+    libgdal: 3.5.1 h7a56975_0
     numpy: '>=1.19.5,<2.0a0'
-    openssl: '>=1.1.1p,<1.1.2a'
+    openssl: '>=1.1.1q,<1.1.2a'
     python: '>=3.7,<3.8.0a0'
     python_abi: 3.7.* *_cp37m
     vc: '>=14.1,<15'
     vs2015_runtime: '>=14.16.27033'
   hash:
-    md5: 5329d45e686170be0f9edbc845bad919
-    sha256: 3774475c8504de3cc5d9f73f7d7b03180cb51285aa647669a44b4c8e797f229e
+    md5: 37001f6581bd376943665b38ec5e0149
+    sha256: cdcb8e10beccfbae8ad5f8d507baaa9d6db53476891f9111f447d6b88c52747c
   manager: conda
   name: gdal
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/gdal-3.5.0-py37hd4e592b_5.tar.bz2
-  version: 3.5.0
+  url: https://conda.anaconda.org/conda-forge/win-64/gdal-3.5.1-py37hd4e592b_0.tar.bz2
+  version: 3.5.1
 - category: full
   dependencies:
     __win: ''
@@ -11667,6 +12090,26 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/win-64/fiona-1.8.21-py37h23f7965_2.tar.bz2
   version: 1.8.21
+- category: full
+  dependencies:
+    ansi2html: ''
+    dash: ''
+    flask: ''
+    ipykernel: ''
+    ipython: ''
+    nest-asyncio: ''
+    python: '>=3.5'
+    requests: ''
+    retrying: ''
+  hash:
+    md5: 9c77330b235666f244a7b8dcc7c0955a
+    sha256: 1b664f4776f45c897bb783fbfae19c400d58b1e68bdd1942da2c95a4e7f50091
+  manager: conda
+  name: jupyter-dash
+  optional: true
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/noarch/jupyter-dash-0.4.2-pyhd8ed1ab_1.tar.bz2
+  version: 0.4.2
 - category: full
   dependencies:
     nbconvert-core: 6.5.0 pyhd8ed1ab_0
