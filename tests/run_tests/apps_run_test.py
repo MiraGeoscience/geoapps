@@ -66,7 +66,9 @@ def test_contour_values(tmp_path):
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("contours")[0]
-        assert getattr(output, "n_vertices") == 2655, "Change in output. Need to verify."
+        assert (
+            getattr(output, "n_vertices") == 2655
+        ), "Change in output. Need to verify."
 
 
 def test_create_surface(tmp_path):
