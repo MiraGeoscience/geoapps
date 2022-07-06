@@ -5,28 +5,32 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import re
 from os import path
 
 import discretize
-import matplotlib.pyplot as plt
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree
-from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
-from ipywidgets.widgets import HBox, VBox
-
-from geoapps.utils.utils import soft_import
-
-osr = soft_import("osgeo", objects=["osr"])
 
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.shared_utils.utils import octree_2_treemesh
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import (
-    export_curve_2_shapefile,
-    export_grid_2_geotiff,
-    object_2_dataframe,
-    octree_2_treemesh,
-)
+
+with warn_module_not_found():
+    from matplotlib import pyplot as plt
+
+with warn_module_not_found():
+    from osgeo import osr
+
+with warn_module_not_found():
+    from ipywidgets.widgets import HBox, VBox
+    from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
+
+from .utils import export_curve_2_shapefile, object_2_dataframe
 
 
 class Export(ObjectDataSelection):
@@ -175,9 +179,8 @@ class Export(ObjectDataSelection):
         return self._main
 
     def trigger_click(self, _):
-        if self.workspace.get_entity(self.objects.value):
-            entity = self.workspace.get_entity(self.objects.value)[0]
-        else:
+        entity = self.workspace.get_entity(self.objects.value)[0]
+        if entity is None:
             return
 
         if self.data.value:
@@ -371,10 +374,9 @@ class Export(ObjectDataSelection):
         self.epsg_code.observe(self.set_wkt, names="value")
 
     def update_name(self, _):
-        if self._workspace.get_entity(self.objects.value):
-            self.export_as.value = self._workspace.get_entity(self.objects.value)[
-                0
-            ].name
+        entity = self._workspace.get_entity(self.objects.value)[0]
+        if entity is not None:
+            self.export_as.value = entity.name
 
     def update_options(self, _):
         if self.file_type.value in ["ESRI shapefile"]:

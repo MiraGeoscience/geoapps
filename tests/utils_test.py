@@ -14,36 +14,129 @@ import itertools
 import os
 import random
 
+import geoh5py.objects
 import numpy as np
 import pytest
 from discretize import TreeMesh
-from geoh5py.objects import BlockModel, Grid2D
-from geoh5py.shared.utils import compare_entities
+from geoh5py.objects import Grid2D
 from geoh5py.workspace import Workspace
 
-from geoapps.utils.testing import Geoh5Tester
-from geoapps.utils.utils import (
-    block_model_2_tensor,
-    calculate_2D_trend,
+from geoapps.driver_base.utils import running_mean, treemesh_2_octree
+from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.shared_utils.utils import (
     downsample_grid,
     downsample_xy,
     filter_xy,
-    find_value,
     get_locations,
     octree_2_treemesh,
-    rotate_xy,
-    running_mean,
-    soft_import,
-    sorted_alphanumeric_list,
-    sorted_children_dict,
-    string_2_numeric,
-    tensor_2_block_model,
-    treemesh_2_octree,
+    rotate_xyz,
     weighted_average,
     window_xy,
 )
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.list import find_value, sorted_alphanumeric_list
+from geoapps.utils.models import RectangularBlock
+from geoapps.utils.string import string_to_numeric
+from geoapps.utils.testing import Geoh5Tester
+from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon_v4.geoh5")
+
+
+def test_rectangular_block():
+    block = RectangularBlock(
+        center=[10.0, 10.0, 10.0],
+        length=10.0,
+        width=10.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=0.0,
+    )
+    vertices = block.vertices.tolist()
+    assert [15.0, 5.0, 5.0] in vertices
+    assert [15.0, 15.0, 5.0] in vertices
+    assert [5.0, 5.0, 5.0] in vertices
+    assert [5.0, 15.0, 5.0] in vertices
+    assert [15.0, 5.0, 15.0] in vertices
+    assert [15.0, 15.0, 15.0] in vertices
+    assert [5.0, 5.0, 15.0] in vertices
+    assert [5.0, 15.0, 15.0] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0], length=0.0, width=10.0, depth=0.0, dip=45.0, azimuth=0.0
+    )
+    pos = (5 * np.cos(np.deg2rad(45))).round(5)
+    vertices = block.vertices.round(5).tolist()
+    assert [pos, 0.0, pos] in vertices
+    assert [-pos, 0.0, -pos] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0],
+        length=0.0,
+        width=0.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=90.0,
+        reference="top",
+    )
+    vertices = block.vertices.round(5).tolist()
+    assert [0.0, 0.0, -10.0] in vertices
+    assert [0.0, 0.0, 0.0] in vertices
+
+    block = RectangularBlock(
+        center=[0.0, 0.0, 0.0],
+        length=10.0,
+        width=10.0,
+        depth=10.0,
+        dip=0.0,
+        azimuth=45.0,
+    )
+
+    pos = (10 * np.cos(np.deg2rad(45))).round(5)
+    vertices = block.vertices.round(5).tolist()
+    assert [0.0, -pos, -5.0] in vertices
+    assert [pos, 0.0, -5.0] in vertices
+    assert [-pos, 0.0, -5.0] in vertices
+    assert [0.0, pos, -5.0] in vertices
+    assert [0.0, -pos, 5.0] in vertices
+    assert [pos, 0.0, 5.0] in vertices
+    assert [-pos, 0.0, 5.0] in vertices
+    assert [0.0, pos, 5.0] in vertices
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "center", -180.0)
+
+    assert "Input value for 'center' must be a list of floats len(3)." in str(error)
+
+    for attr in ["length", "width", "depth"]:
+        with pytest.raises(ValueError) as error:
+            setattr(block, attr, -10.0)
+
+        assert f"Input value for '{attr}' must be a float >0." in str(error)
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "dip", -180.0)
+
+    assert (
+        "Input value for 'dip' must be a float on the interval [-90, 90] degrees."
+        in str(error)
+    )
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "azimuth", -450.0)
+
+    assert (
+        "Input value for 'azimuth' must be a float on the interval [-360, 360] degrees."
+        in str(error)
+    )
+
+    with pytest.raises(ValueError) as error:
+        setattr(block, "reference", "abc")
+
+    assert (
+        "Input value for 'reference' point should be a str from ['center', 'top']."
+        in str(error)
+    )
 
 
 def test_find_value():
@@ -58,12 +151,12 @@ def test_find_value():
     assert find_value(labels, ["lskdjf"]) is None
 
 
-def test_string_2_numeric():
-    assert string_2_numeric("test") == "test"
-    assert string_2_numeric("2.1") == 2.1
-    assert string_2_numeric("34") == 34
-    assert string_2_numeric("1e-2") == 0.01
-    assert string_2_numeric("1.05e2") == 105
+def test_string_to_numeric():
+    assert string_to_numeric("test") == "test"
+    assert string_to_numeric("2.1") == 2.1
+    assert string_to_numeric("34") == 34
+    assert string_to_numeric("1e-2") == 0.01
+    assert string_to_numeric("1.05e2") == 105
 
 
 def test_sorted_alphanumeric_list():
@@ -95,16 +188,68 @@ def test_sorted_alphanumeric_list():
     assert all([sorted_list[i] == test[i] for i in range(len(test))])
 
 
-def test_soft_import():
-    from types import ModuleType
+def test_no_warn_module_not_found(recwarn):
+    with warn_module_not_found():
+        import os as test_import
+    assert test_import == os
 
-    gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
-    fiona = soft_import("fiona")
-    transform = soft_import("fiona.transform", objects=["transform"])
-    assert isinstance(gdal, ModuleType) and gdal.__name__ == "osgeo.gdal"
-    assert isinstance(osr, ModuleType) and osr.__name__ == "osgeo.osr"
-    assert isinstance(fiona, ModuleType) and fiona.__name__ == "fiona"
-    assert callable(transform) and transform.__name__ == "transform"
+    with warn_module_not_found():
+        from os import system as test_import_from
+    assert test_import_from == os.system
+
+    with warn_module_not_found():
+        import geoh5py.objects as test_import_submodule
+    assert test_import_submodule == geoh5py.objects
+
+    with warn_module_not_found():
+        from geoh5py.objects import ObjectBase as test_import_from_submodule
+    assert test_import_from_submodule == geoh5py.objects.ObjectBase
+
+    assert len(recwarn) == 0
+
+
+def test_warn_module_not_found():
+    noop = lambda x: None
+
+    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+        with warn_module_not_found():
+            import nonexisting as test_import
+    with pytest.raises(NameError):
+        noop(test_import)
+
+    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+        with warn_module_not_found():
+            from nonexisting import nope as test_import_from
+    with pytest.raises(NameError):
+        noop(test_import_from)
+
+    with pytest.warns(
+        match=f"Module 'os.nonexisting' is missing from the environment."
+    ):
+        with warn_module_not_found():
+            import os.nonexisting as test_import_os_submodule
+    with pytest.raises(NameError):
+        noop(test_import_os_submodule)
+
+    with pytest.warns(
+        match=f"Module 'os.nonexisting' is missing from the environment."
+    ):
+        with warn_module_not_found():
+            from os.nonexisting import nope as test_import_from_os_submodule
+    with pytest.raises(NameError):
+        noop(test_import_from_os_submodule)
+
+    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+        with warn_module_not_found():
+            import nonexisting.nope as test_import_nonexising_submodule
+    with pytest.raises(NameError):
+        noop(test_import_nonexising_submodule)
+
+    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+        with warn_module_not_found():
+            from nonexisting.nope import nada as test_import_from_nonexisting_submodule
+    with pytest.raises(NameError):
+        noop(test_import_from_nonexisting_submodule)
 
 
 def test_sorted_children_dict(tmp_path):
@@ -152,15 +297,15 @@ def test_sorted_children_dict(tmp_path):
     assert d[-1] == "uncert"
 
 
-def test_rotation_xy():
+def test_rotation_xyz():
     vec = np.c_[1, 0, 0]
-    rot_vec = rotate_xy(vec, [0, 0], 45)
+    rot_vec = rotate_xyz(vec, [0, 0], 45)
 
     assert (
         np.linalg.norm(np.cross(rot_vec, [0.7071, 0.7071, 0])) < 1e-8
     ), "Error on positive rotation about origin."
 
-    rot_vec = rotate_xy(vec, [1, 1], -90)
+    rot_vec = rotate_xyz(vec, [1, 1], -90)
 
     assert (
         np.linalg.norm(np.cross(rot_vec, [0, 1, 0])) < 1e-8
@@ -352,11 +497,11 @@ def test_downsample_grid():
     assert np.all(np.diff(xd.reshape(6, 6), axis=1) == 2)
 
     # Test a rotated grid equal spacing in u, v
-    xy_rot = rotate_xy(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
+    xy_rot = rotate_xyz(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
     xg_rot = xy_rot[:, 0].reshape(11, 11)
     yg_rot = xy_rot[:, 1].reshape(11, 11)
     ind, xd, yd = downsample_grid(xg_rot, yg_rot, 2)
-    xy = rotate_xy(np.c_[xd, yd], [5, 5], -30)
+    xy = rotate_xyz(np.c_[xd, yd], [5, 5], -30)
     xg_test = xy[:, 0].reshape(6, 6)
     yg_test = xy[:, 1].reshape(6, 6)
     np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((6, 5), 2))
@@ -374,7 +519,7 @@ def test_downsample_grid():
 def test_filter_xy():
 
     xg, yg = np.meshgrid(np.arange(11), np.arange(11))
-    xy_rot = rotate_xy(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
+    xy_rot = rotate_xyz(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
     xg_rot = xy_rot[:, 0].reshape(11, 11)
     yg_rot = xy_rot[:, 1].reshape(11, 11)
     window = {
@@ -409,7 +554,7 @@ def test_filter_xy():
     # Test rotation options
     combo_mask = filter_xy(xg_rot, yg_rot, distance=2, window=window, angle=-30)
     xg_test, yg_test = xg_rot[comb_mask], yg_rot[comb_mask]
-    xy_rot = rotate_xy(np.c_[xg_test, yg_test], [5, 5], -30)
+    xy_rot = rotate_xyz(np.c_[xg_test, yg_test], [5, 5], -30)
     xg_rot_test, yg_rot_test = xy_rot[:, 0].reshape(2, 4), xy_rot[:, 1].reshape(2, 4)
     assert np.all((xg_rot_test >= 1) & (xg_rot_test <= 9))
     assert np.all((yg_rot_test >= 3) & (yg_rot_test <= 7))
@@ -450,142 +595,6 @@ def test_detrend_xy():
     with pytest.raises(ValueError) as excinfo:
         calculate_2D_trend(xy, nan_values, order=-2)
     assert "> 0. Value of -2" in str(excinfo.value)
-
-
-def test_blockmodel_nonuniqueness(tmp_path):
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    nx, ny, nz = 11, 11, 11
-    x = np.linspace(0, 10, nx)
-    y = np.linspace(0, 10, ny)
-    z = np.linspace(0, 10, nz)
-    block_model_1 = BlockModel.create(
-        ws,
-        origin=[0.0, 0.0, -10.0],
-        u_cell_delimiters=x,
-        v_cell_delimiters=y,
-        z_cell_delimiters=z,
-        name="test_block_model",
-        allow_move=False,
-    )
-    block_model_2 = BlockModel.create(
-        ws,
-        origin=[0.0, 0.0, 0.0],
-        u_cell_delimiters=x,
-        v_cell_delimiters=y,
-        z_cell_delimiters=-z,
-        name="test_block_model_2",
-        allow_move=False,
-    )
-
-    tensor_1, _ = block_model_2_tensor(block_model_1, models=[])
-    tensor_2, _ = block_model_2_tensor(block_model_2, models=[])
-    np.testing.assert_array_equal(tensor_2.cell_centers, tensor_1.cell_centers)
-    np.testing.assert_array_equal(tensor_2.origin, tensor_1.origin)
-
-    # Conclusion - can't expect to recover the original block_model.  There isn't
-    # a single block model that is equivalent to the tensor mesh.  The circular
-    # blockModel -> TensorMesh -> blockModel should pass for a bottom soutwest corner
-    # positive cell delimiters original block model though.
-
-
-def blockmodel_tensormesh_equivalency(ws, origin, x, y, z, ignore_origin=False):
-
-    block_model = BlockModel.create(
-        ws,
-        origin=origin,
-        u_cell_delimiters=x,
-        v_cell_delimiters=y,
-        z_cell_delimiters=z,
-        name="test_block_model",
-        allow_move=False,
-    )
-
-    data = block_model.add_data(
-        {
-            "DataValues": {
-                "association": "CELL",
-                "values": np.random.randint(
-                    0, 100, size=len(block_model.centroids)
-                ).astype(np.int32),
-            }
-        }
-    )
-
-    tensor_mesh, model = block_model_2_tensor(block_model, models=[data.values])
-
-    block_model_test = tensor_2_block_model(
-        ws, tensor_mesh, data={"block_test": model[0]}
-    )
-
-    ignore_list = ["_uid", "_name", "_allow_move"]
-    if ignore_origin:
-        ignore_list += ["_origin"]
-
-    compare_entities(block_model, block_model_test, ignore=ignore_list)
-
-
-def test_block_model_2_tensor(tmp_path):
-
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
-
-    # Generate a 3D array
-    nx, ny, nz = 21, 11, 31
-
-    x = np.linspace(0, 10, nx)
-    y = np.linspace(0, 10, ny)
-    z = np.linspace(0, 10, nz)
-
-    blockmodel_tensormesh_equivalency(ws, [0.0, 0.0, 0.0], x, y, z)
-    blockmodel_tensormesh_equivalency(ws, [10.0, 10.0, 10], x, y, z)
-    blockmodel_tensormesh_equivalency(ws, [-10.0, -10.0, -10], x, y, z)
-
-
-def test_block_model_2_tensor_negative_z(tmp_path):
-
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
-
-    # Generate a 3D array
-    nx, ny, nz = 6, 6, 5
-
-    x = np.linspace(0, 10, nx)
-    y = np.linspace(0, 5, ny)
-    z = np.linspace(0, 8, nz)
-
-    origin = [0.0, 0.0, 0.0]
-
-    block_model = BlockModel.create(
-        ws,
-        origin=origin,
-        u_cell_delimiters=x,
-        v_cell_delimiters=y,
-        z_cell_delimiters=-z,
-        name="test_block_model",
-        allow_move=False,
-    )
-
-    data = block_model.add_data(
-        {
-            "DataValues": {
-                "association": "CELL",
-                "values": np.random.randint(
-                    0, 100, size=len(block_model.centroids)
-                ).astype(np.int32),
-            }
-        }
-    )
-
-    tensor_mesh, model = block_model_2_tensor(block_model, models=[data.values])
-
-    t2bm = []
-    for i, cc in enumerate(block_model.centroids):
-        t2bm.append(np.where(np.all(tensor_mesh.cell_centers == cc, axis=1))[0])
-    t2bm = np.array(t2bm).flatten()
-
-    np.testing.assert_array_almost_equal(
-        block_model.centroids, tensor_mesh.cell_centers[t2bm]
-    )
-    assert tensor_mesh.x0[2] == np.min(block_model.z_cell_delimiters)
-    assert np.all(model[0][t2bm].flatten() == data.values)
 
 
 def test_get_locations(tmp_path):

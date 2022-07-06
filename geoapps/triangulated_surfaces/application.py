@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import re
 from time import time
 
@@ -13,12 +15,23 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
-from ipywidgets import FloatText, HBox, Label, RadioButtons, Text, ToggleButton, VBox
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
+
+with warn_module_not_found():
+    from ipywidgets import (
+        FloatText,
+        HBox,
+        Label,
+        RadioButtons,
+        Text,
+        ToggleButton,
+        VBox,
+    )
 
 
 class Surface2D(ObjectDataSelection):
@@ -60,6 +73,7 @@ class Surface2D(ObjectDataSelection):
             ind_value=["line"],
             **self.defaults["lines"],
         )
+
         self._topography = TopographyOptions(
             workspace=self.workspace, **self.defaults["topography"]
         )
@@ -81,11 +95,11 @@ class Surface2D(ObjectDataSelection):
         self.trigger.on_click(self.trigger_click)
 
     def trigger_click(self, _):
+        obj, data_list = self.get_selected_entities()
 
-        if not self.workspace.get_entity(self.objects.value):
+        if obj is None:
             return
 
-        obj, data_list = self.get_selected_entities()
         _, elevations = self.elevations.get_selected_entities()
 
         if hasattr(obj, "centroids"):

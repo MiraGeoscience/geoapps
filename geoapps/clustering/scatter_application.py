@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 
 import numpy as np
@@ -24,8 +26,8 @@ from ipywidgets import (
 )
 
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils.plotting import format_axis, normalize
-from geoapps.utils.utils import random_sampling, symlog
+from geoapps.utils.plotting import format_axis, normalize, symlog
+from geoapps.utils.statistics import random_sampling
 
 
 class ScatterPlots(ObjectDataSelection):
