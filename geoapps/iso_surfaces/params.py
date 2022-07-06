@@ -69,7 +69,31 @@ class IsoSurfacesParams(BaseParams):
         self.setter_validator("data", val)
 
     @property
-    def interval_min(self) -> float | None:
+    def interval_max(self):
+        return self._interval_max
+
+    @interval_max.setter
+    def interval_max(self, val):
+        self._interval_max = val
+
+    @property
+    def interval_spacing(self):
+        return self._interval_spacing
+
+    @property
+    def fixed_contours(self):
+        return self._fixed_contours
+
+    @fixed_contours.setter
+    def fixed_contours(self, val):
+        self._fixed_contours = val
+
+    @interval_spacing.setter
+    def interval_spacing(self, val):
+        self._interval_spacing = val
+
+    @property
+    def interval_min(self) -> str | None:
         """
         Minimum value for contours.
         """

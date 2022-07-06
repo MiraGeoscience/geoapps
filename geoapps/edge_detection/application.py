@@ -193,6 +193,7 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._window_size
 
     def trigger_click(self, _):
+
         param_dict = self.get_param_dict()
         temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
         with self.get_output_workspace(
