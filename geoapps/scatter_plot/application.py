@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import ast
 import base64
 import io
 import json
@@ -49,6 +50,7 @@ class ScatterPlots:
             self.defaults["color_maps_options"] = px.colors.named_colorscales() + [
                 "kmeans"
             ]
+            self.defaults["data_options"].append("kmeans")
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -779,6 +781,14 @@ class ScatterPlots:
                         for obj in value.objects
                     ]
         defaults["color_maps_options"] = px.colors.named_colorscales()
+
+        if "plot_kmeans" in self.params.to_dict().keys():
+            plot_kmeans = ast.literal_eval(self.params.plot_kmeans)
+            defaults["plot_kmeans"] = plot_kmeans
+            axis_list = ["x", "y", "z", "color", "size"]
+            for i in range(len(plot_kmeans)):
+                if plot_kmeans[i]:
+                    defaults[axis_list[i] + "_name"] = "kmeans"
 
         return defaults
 
