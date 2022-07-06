@@ -40,7 +40,7 @@ from simpeg_archive.simpegEM1D import (
 from simpeg_archive.utils import Counter, mkvc
 
 from geoapps.driver_base.utils import running_mean
-from geoapps.shared_utils.utils import filter_xy, rotate_xy
+from geoapps.shared_utils.utils import filter_xy, rotate_xyz
 from geoapps.utils import geophysical_systems
 
 
@@ -230,7 +230,6 @@ def inversion(input_file):
                         input_param["topography"]["file"], skip_header=1
                     )
                 elif "GA_object" in list(input_param["topography"].keys()):
-                    workspace = Workspace(input_param["workspace"])
                     topo_entity = workspace.get_entity(
                         uuid.UUID(input_param["topography"]["GA_object"]["name"])
                     )[0]
@@ -292,7 +291,7 @@ def inversion(input_file):
                 angles = np.r_[angles[0], angles].tolist()
                 angles = running_mean(angles, width=5)
                 dxy = np.vstack(
-                    [rotate_xy(offsets, [0, 0], np.rad2deg(angle)) for angle in angles]
+                    [rotate_xyz(offsets, [0, 0], np.rad2deg(angle)) for angle in angles]
                 )
 
                 # Move the stations
@@ -732,6 +731,7 @@ def inversion(input_file):
     if "forward_only" in input_param:
         reference = starting
         print("**** Running Forward Only ****")
+        chi_target = 100.0
 
     else:
         print(f"Number of data in simulation: {n_data}")
@@ -973,7 +973,6 @@ def inversion(input_file):
             minGNiter=1,
             betaSearch=False,
             beta_tol=0.25,
-            # chifact_start=chi_target,
             chifact_target=chi_target,
             prctile=50,
         )
@@ -1014,25 +1013,27 @@ def inversion(input_file):
     opt.remember("xc")
     inv.run(m0)
 
-    for ind, channel in enumerate(channels):
-        if channel in list(input_param["data"]["channels"].keys()):
-            res = (
-                invProb.dpred[ind::block][data_ordering]
-                - dobs[ind::block][data_ordering]
-            )
-            d = curve.add_data(
-                {
-                    f"Residual_norm{channel}": {
-                        "association": "VERTEX",
-                        "values": res / uncert[ind::block][data_ordering],
+    with workspace:
+        workspace.open()
+        for ind, channel in enumerate(channels):
+            if channel in list(input_param["data"]["channels"].keys()):
+                res = (
+                    invProb.dpred[ind::block][data_ordering]
+                    - dobs[ind::block][data_ordering]
+                )
+                d = curve.add_data(
+                    {
+                        f"Residual_norm{channel}": {
+                            "association": "VERTEX",
+                            "values": res / uncert[ind::block][data_ordering],
+                        }
                     }
-                }
-            )
-            curve.add_data_to_group(d, f"Residual_pct")
-            d = curve.add_data(
-                {f"Residual{channel}": {"association": "VERTEX", "values": res}}
-            )
-            curve.add_data_to_group(d, f"Residual")
+                )
+                curve.add_data_to_group(d, f"Residual_pct")
+                d = curve.add_data(
+                    {f"Residual{channel}": {"association": "VERTEX", "values": res}}
+                )
+                curve.add_data_to_group(d, f"Residual")
 
 
 if __name__ == "__main__":

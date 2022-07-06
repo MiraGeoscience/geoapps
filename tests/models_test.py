@@ -22,7 +22,7 @@ from geoapps.inversion.components import (
     InversionWindow,
 )
 from geoapps.inversion.potential_fields import MagneticVectorParams
-from geoapps.shared_utils.utils import rotate_xy
+from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")
@@ -150,7 +150,7 @@ def test_permute_2_octree(tmp_path):
 
     locs_perm = params.mesh.centroids[lb_perm[: params.mesh.n_cells] == 1, :]
     origin = [float(params.mesh.origin[k]) for k in ["x", "y", "z"]]
-    locs_perm_rot = rotate_xy(locs_perm, origin, -params.mesh.rotation)
+    locs_perm_rot = rotate_xyz(locs_perm, origin, -params.mesh.rotation)
     assert xmin <= locs_perm_rot[:, 0].min()
     assert xmax >= locs_perm_rot[:, 0].max()
     assert ymin <= locs_perm_rot[:, 1].min()
@@ -188,7 +188,7 @@ def test_permute_2_treemesh(tmp_path):
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     upper_bound = InversionModel(ws, params, inversion_mesh, "upper_bound")
     locs = inversion_mesh.mesh.cell_centers
-    locs_rot = rotate_xy(
+    locs_rot = rotate_xyz(
         locs, inversion_mesh.rotation["origin"], inversion_mesh.rotation["angle"]
     )
     locs_rot = locs_rot[upper_bound.model[: inversion_mesh.mesh.nC] == 1, :]
