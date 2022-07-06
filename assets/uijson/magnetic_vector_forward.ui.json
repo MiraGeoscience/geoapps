@@ -153,8 +153,8 @@
         ],
         "label": "Starting inclination object",
         "optional": true,
-        "value": "",
-        "enabled": false
+        "enabled": false,
+        "value": ""
     },
     "starting_declination_object": {
         "group": "Starting Model",
@@ -169,8 +169,8 @@
         ],
         "label": "Starting declination object",
         "optional": true,
-        "value": "",
-        "enabled": false
+        "enabled": false,
+        "value": ""
     },
     "starting_model": {
         "association": [
@@ -297,8 +297,6 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "dependency": "mesh_from_params",
-        "dependencyType": "disabled",
         "label": "Mesh",
         "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
         "value": ""

@@ -20,7 +20,7 @@ from geoh5py.shared.exceptions import (
     ValueValidationError,
 )
 from geoh5py.ui_json import InputFile
-from geoh5py.ui_json.utils import optional_type
+from geoh5py.ui_json.utils import requires_value
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
@@ -188,7 +188,7 @@ def test_default_input_file(tmp_path):
         # check that reads back into input file with defaults
         check = []
         for k, v in ifile.data.items():
-            if " " in k or not optional_type(ifile.ui_json, k):
+            if " " in k or requires_value(ifile.ui_json, k):
                 continue
             check.append(v == params.defaults[k])
         assert all(check)
@@ -197,7 +197,7 @@ def test_default_input_file(tmp_path):
         params2 = params_class()
         check = []
         for k, v in params2.to_dict(ui_json_format=False).items():
-            if " " in k or not optional_type(ifile.ui_json, k):
+            if " " in k or requires_value(ifile.ui_json, k):
                 continue
             check.append(v == ifile.data[k])
         assert all(check)

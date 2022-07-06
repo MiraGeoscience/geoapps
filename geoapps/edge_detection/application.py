@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 from time import time
 
@@ -12,14 +14,19 @@ import numpy as np
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
-from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox, Widget
-from matplotlib import collections
 
-from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
 from geoapps.edge_detection.constants import app_initializer
 from geoapps.edge_detection.driver import EdgeDetectionDriver
 from geoapps.edge_detection.params import EdgeDetectionParams
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
+
+with warn_module_not_found():
+    from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
+
+with warn_module_not_found():
+    from matplotlib import collections
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -107,7 +114,7 @@ class EdgeDetectionApp(PlotSelection2D):
         )
         self.data.observe(self.update_name, names="value")
         self.compute.on_click(self.compute_trigger)
-        self._unique_object = {}
+
         super().__init__(**self.defaults)
 
         # Make changes to trigger warning color
@@ -186,7 +193,6 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._window_size
 
     def trigger_click(self, _):
-
         param_dict = self.get_param_dict()
         temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
         with self.get_output_workspace(
@@ -201,10 +207,12 @@ class EdgeDetectionApp(PlotSelection2D):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            self.params.update(param_dict)
-            self.params.write_input_file()
-
-            driver = EdgeDetectionDriver(self.params)
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+            )
+            new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
+            driver = EdgeDetectionDriver(new_params)
             driver.run()
 
         if self.live_link.value:
@@ -218,17 +226,13 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
-
         param_dict["geoh5"] = self.params.geoh5
         self.params.update(param_dict)
-
         self.refresh.value = False
-
         (
             vertices,
             _,
         ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
-
         self.collections = [
             collections.LineCollection(
                 np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2

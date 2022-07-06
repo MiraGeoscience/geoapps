@@ -183,8 +183,6 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "dependency": "mesh_from_params",
-        "dependencyType": "disabled",
         "label": "Mesh",
         "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
         "value": ""
@@ -226,7 +224,7 @@
         "dependency": "mesh",
         "dependencyType": "disabled",
         "label": "octree levels topography",
-        "value": "16, 8, 4, 2"
+        "value": "0, 0, 4"
     },
     "octree_levels_obs": {
         "group": "Mesh",

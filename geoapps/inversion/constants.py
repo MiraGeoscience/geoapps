@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from uuid import UUID
 
 from geoh5py.objects import Curve, Grid2D, Points, Surface
@@ -192,7 +194,7 @@ default_ui_json = {
         "value": None,
     },
     "topography": {
-        "association": "Vertex",
+        "association": ["Vertex", "Cell"],
         "dataType": "Float",
         "group": "Topography",
         "main": True,
@@ -347,8 +349,6 @@ default_ui_json = {
         "main": True,
         "optional": True,
         "enabled": False,
-        "dependency": "mesh_from_params",
-        "dependencyType": "disabled",
         "label": "Mesh",
         "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
         "value": None,

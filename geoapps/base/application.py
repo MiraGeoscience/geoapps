@@ -13,28 +13,31 @@ import uuid
 from os import makedirs, mkdir, path
 from shutil import copyfile
 
-from geoh5py.groups import ContainerGroup
-from geoh5py.io.utils import dict_mapper, entity2uuid, str2uuid
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import dict_mapper, entity2uuid, str2uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
-from ipyfilechooser import FileChooser
-from ipywidgets import (
-    Button,
-    Checkbox,
-    Dropdown,
-    HBox,
-    Label,
-    SelectMultiple,
-    Text,
-    ToggleButton,
-    VBox,
-    Widget,
-)
 
-from geoapps.base.params import BaseParams
-from geoapps.utils.formatters import string_name
+from geoapps.driver_base.params import BaseParams
+from geoapps.utils import warn_module_not_found
+
+with warn_module_not_found():
+    from ipyfilechooser import FileChooser
+
+with warn_module_not_found():
+    from ipywidgets import (
+        Button,
+        Checkbox,
+        Dropdown,
+        HBox,
+        Label,
+        SelectMultiple,
+        Text,
+        ToggleButton,
+        VBox,
+        Widget,
+    )
 
 
 class BaseApplication:
@@ -284,10 +287,10 @@ class BaseApplication:
         time.sleep(1)
         # Check if GA digested the file already
         if not path.exists(workspace.h5file):
-            workpath = path.join(workpath, ".working")
-            if not path.exists(workpath):
-                makedirs(workpath)
-            workspace = Workspace(path.join(workpath, name))
+            temp_path = path.join(workpath, ".working")
+            if not path.exists(temp_path):
+                makedirs(temp_path)
+            workspace = Workspace(path.join(temp_path, name))
             workspace.close()
             live_link = True
             if not self.live_link.value:

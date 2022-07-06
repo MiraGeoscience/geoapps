@@ -20,8 +20,8 @@ from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 
 from geoapps.iso_surfaces.params import IsoSurfacesParams
+from geoapps.shared_utils.utils import get_contours, rotate_xyz, weighted_average
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import get_contours, rotate_xy, weighted_average
 
 
 class IsoSurfacesDriver:
@@ -32,6 +32,7 @@ class IsoSurfacesDriver:
         """
         Create iso surfaces from input values.
         """
+        workspace = self.params.geoh5
         levels = get_contours(
             self.params.interval_min,
             self.params.interval_max,
@@ -50,13 +51,13 @@ class IsoSurfacesDriver:
             max_distance=self.params.max_distance,
         )
 
-        container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
+        container = ContainerGroup.create(workspace, name="Isosurface")
         result = []
         for ii, (surface, level) in enumerate(zip(surfaces, levels)):
             if len(surface[0]) > 0 and len(surface[1]) > 0:
                 result += [
                     Surface.create(
-                        self.params.geoh5,
+                        workspace,
                         name=string_name(self.params.export_as + f"_{level:.2e}"),
                         vertices=surface[0],
                         cells=surface[1],
@@ -68,6 +69,7 @@ class IsoSurfacesDriver:
         ):
             monitored_directory_copy(self.params.monitoring_directory, container)
 
+        workspace.close()
         return result
 
     @staticmethod
@@ -173,7 +175,7 @@ class IsoSurfacesDriver:
                     vertices += [F(verts[:, ii])]
 
                 if isinstance(entity, BlockModel):
-                    vertices = rotate_xy(
+                    vertices = rotate_xyz(
                         np.vstack(vertices).T, [0, 0, 0], entity.rotation
                     )
                     vertices[:, 0] += entity.origin["x"]

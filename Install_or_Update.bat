@@ -8,11 +8,9 @@ if !errorlevel! neq 0 (
 
 set MY_CONDA=!MY_CONDA_EXE:"=!
 cd %~dp0
+set PYTHONUTF8=1
 call "!MY_CONDA!" remove --name geoapps --all --yes
-call "!MY_CONDA!" create --name geoapps --yes
-call "!MY_CONDA!" activate geoapps
-call "!MY_CONDA!" install --yes --quiet numpy scipy matplotlib ipython h5py
-call "!MY_CONDA!" env update --file environment.yml --prune
-call python -m pip install -e . --no-deps
+call "!MY_CONDA!" env create -f environments\conda-py-3.9-win-64.lock.yml -n geoapps
+call "!MY_CONDA!" activate geoapps && python -m pip install -e . --no-deps
 pause
 cmd /k

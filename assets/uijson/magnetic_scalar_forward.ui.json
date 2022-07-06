@@ -152,7 +152,7 @@
         "parent": "starting_model_object",
         "label": "Susceptibility (SI)",
         "property": "",
-        "value": 0.0
+        "value": 0.0001
     },
     "tile_spatial": {
         "group": "Receivers location options",
@@ -233,8 +233,6 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "dependency": "mesh_from_params",
-        "dependencyType": "disabled",
         "label": "Mesh",
         "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
         "value": ""

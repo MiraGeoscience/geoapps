@@ -4,19 +4,27 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
+
 import re
 from time import time
 
 import numpy
 from geoh5py.ui_json.utils import monitored_directory_copy
-from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
 
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import sorted_children_dict
+from geoapps.utils.workspace import sorted_children_dict
+
+with warn_module_not_found():
+    from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
 
 
 class Calculator(ObjectDataSelection):
+    assert numpy  # to make sure numpy is imported here, as it is required to eval the equation
+
     defaults = {
         "h5file": "../../assets/FlinFlon_v4.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
@@ -93,9 +101,12 @@ class Calculator(ObjectDataSelection):
         """
         var = self.var
         obj = self.workspace.get_entity(self.objects.value)[0]
+
+        if obj is None:
+            return
+
         out_var, equation = re.split("=", self.equation.value)
         out_var = out_var.strip()[1:-1]
-
         temp_geoh5 = f"{obj.name}_{out_var}_{time():.3f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
