@@ -85,7 +85,7 @@ dependencies:
   - krb5=1.19.3=h3790be6_0
   - libglib=2.70.2=h174f98d_4
   - libnghttp2=1.47.0=h727a467_0
-  - libpng=1.6.37=h21135ba_2
+  - libpng=1.6.37=h753d276_3
   - libssh2=1.10.0=ha56f1ee_2
   - libtiff=4.4.0=hc85c160_1
   - libxml2=2.9.14=h22db469_3
@@ -143,7 +143,7 @@ dependencies:
   - pickleshare=0.7.5=py_1003
   - platformdirs=2.5.1=pyhd8ed1ab_0
   - postgresql=14.4=hfdbbde3_0
-  - proj=9.0.1=h93bde94_0
+  - proj=9.0.1=h93bde94_1
   - prometheus_client=0.14.1=pyhd8ed1ab_0
   - ptyprocess=0.7.0=pyhd3deb0d_0
   - py=1.11.0=pyh6c4a22f_0
@@ -211,7 +211,7 @@ dependencies:
   - setuptools=59.8.0=py37h89c1867_1
   - tiledb=2.9.5=h1e4a385_0
   - tinycss2=1.1.1=pyhd8ed1ab_0
-  - tomlkit=0.11.0=pyha770c72_0
+  - tomlkit=0.11.1=pyha770c72_0
   - tornado=6.2=py37h540881e_0
   - tqdm=4.64.0=pyhd8ed1ab_0
   - typed-ast=1.5.4=py37h540881e_0
@@ -226,9 +226,9 @@ dependencies:
   - bleach=5.0.1=pyhd8ed1ab_0
   - brotlipy=0.7.0=py37h540881e_1004
   - click=8.1.3=py37h89c1867_0
-  - cryptography=37.0.2=py37h38fbfac_0
+  - cryptography=37.0.4=py37h38fbfac_0
   - dask-core=2022.2.0=pyhd8ed1ab_0
-  - fonttools=4.34.0=py37h540881e_0
+  - fonttools=4.34.3=py37h540881e_0
   - h5py=3.7.0=nompi_py37hc97082c_100
   - imagecodecs-lite=2019.12.3=py37hda87dfa_5
   - imageio=2.19.3=pyhcf75d05_0
@@ -259,7 +259,7 @@ dependencies:
   - empymod=2.1.3=pyhd8ed1ab_0
   - flask=2.1.2=pyhd8ed1ab_1
   - jupyterlab_pygments=0.2.2=pyhd8ed1ab_0
-  - libgdal=3.5.1=h32640fd_0
+  - libgdal=3.5.1=h32640fd_1
   - matplotlib-base=3.5.2=py37hc347a89_0
   - nbformat=5.4.0=pyhd8ed1ab_0
   - pluggy=1.0.0=py37h89c1867_3
@@ -272,7 +272,7 @@ dependencies:
   - wcwidth=0.2.5=pyh9f0ad1d_2
   - zarr=2.12.0=pyhd8ed1ab_0
   - flask-compress=1.12=pyhd8ed1ab_0
-  - gdal=3.5.1=py37h80a644e_0
+  - gdal=3.5.1=py37h80a644e_1
   - geoana=0.0.6=py_1
   - nbclient=0.6.6=pyhd8ed1ab_0
   - networkx=2.6.3=pyhd8ed1ab_1
