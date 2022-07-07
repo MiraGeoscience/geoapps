@@ -73,7 +73,7 @@ def test_ip_run(
     geoh5 = Workspace(geoh5.h5file)
     potential = geoh5.get_entity("Iteration_0_ip")[0]
     # Run the inverse
-    np.random.seed(0)
+    rs = RandomState(MT19937(SeedSequence(0)))
     params = InducedPolarizationParams(
         geoh5=geoh5,
         mesh=mesh.uid,

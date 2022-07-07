@@ -114,7 +114,7 @@ def test_tipper_run(
     orig_tyz_real_1 = geoh5.get_entity("Iteration_0_tyz_real_1.00e+01")[0].values
 
     # Run the inverse
-    np.random.seed(0)
+    rs = RandomState(MT19937(SeedSequence(0)))
     params = TipperParams(
         geoh5=geoh5,
         mesh=mesh.uid,
