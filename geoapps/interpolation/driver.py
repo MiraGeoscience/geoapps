@@ -12,8 +12,7 @@ import sys
 from os import path
 
 import numpy as np
-from discretize.utils import mesh_utils
-from geoh5py.objects import BlockModel, ObjectBase
+from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import LinearNDInterpolator

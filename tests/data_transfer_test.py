@@ -87,7 +87,7 @@ def test_find_top_padding(tmp_path):
     X, Y = np.meshgrid(np.arange(0, width, n), np.arange(0, height, n))
     Z = np.around((top / 2) * np.sin(X) + (top / 2), -1)
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
-    pads = [0, 0, 0, 0, 0, 100]  # padding on the top
+    pads = [0, 0, 0, 0, 100, 100]  # padding on the top
     h = [50, 50, 50]
 
     obj = get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
