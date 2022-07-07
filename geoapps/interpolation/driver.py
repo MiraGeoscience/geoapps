@@ -32,16 +32,9 @@ class DataInterpolationDriver:
         if xyz is None:
             return
 
-        if type(self.params.data) == tuple:
-            if len(self.params.data) == 0:
-                print("No data selected")
-                return
-            else:
-                data_list = []
-                for data in self.params.data:
-                    data_list.append(self.params.objects.get_entity(data)[0])
-        elif self.params.data is not None:
-            data_list = [self.params.data]
+        if self.params.data is None:
+            print("No data selected")
+            return
 
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
@@ -50,23 +43,22 @@ class DataInterpolationDriver:
         xyz_out_orig = xyz_out.copy()
 
         values, sign, dtype = {}, {}, {}
-        for data in data_list:
-            field = data.name
+        field = self.params.data.name
 
-            if isinstance(field, str) and field in "XYZ":
-                values[field] = xyz[:, "XYZ".index(field)]
-                dtype[field] = values[field].dtype
-            else:
-                model_in = self.params.geoh5.get_entity(field)[0]
-                values[field] = np.asarray(model_in.values, dtype=float)  # .copy()
-                dtype[field] = model_in.values.dtype
+        if isinstance(field, str) and field in "XYZ":
+            values[field] = xyz[:, "XYZ".index(field)]
+            dtype[field] = values[field].dtype
+        else:
+            model_in = self.params.geoh5.get_entity(field)[0]
+            values[field] = np.asarray(model_in.values, dtype=float)  # .copy()
+            dtype[field] = model_in.values.dtype
 
-            values[field][values[field] == self.params.no_data_value] = np.nan
-            if self.params.space == "Log":
-                sign[field] = np.sign(values[field])
-                values[field] = np.log(np.abs(values[field]))
-            else:
-                sign[field] = np.ones_like(values[field])
+        values[field][values[field] == self.params.no_data_value] = np.nan
+        if self.params.space == "Log":
+            sign[field] = np.sign(values[field])
+            values[field] = np.log(np.abs(values[field]))
+        else:
+            sign[field] = np.ones_like(values[field])
 
         values_interp = {}
         rad, ind = tree.query(xyz_out)

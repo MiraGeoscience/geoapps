@@ -199,9 +199,9 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon_v4.geoh5",
+    "geoh5": "../../assets/FlinFlon.geoh5",
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-    "data": ["{f3e36334-be0a-4210-b13e-06933279de25}"],
+    "data": "{f3e36334-be0a-4210-b13e-06933279de25}",
     "max_distance": 2e3,
     "max_depth": 1e3,
     "method": "Inverse Distance",
