@@ -32,10 +32,12 @@ def test_susceptibility_run(
     pytest=True,
     refinement=(2,),
 ):
+    from numpy.random import MT19937, RandomState, SeedSequence
+
     from geoapps.inversion.driver import InversionDriver
     from geoapps.inversion.potential_fields import MagneticScalarParams
 
-    np.random.seed(0)
+    rs = RandomState(MT19937(SeedSequence(0)))
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
     geoh5, mesh, model, survey, topography = setup_inversion_workspace(
@@ -126,10 +128,12 @@ def test_magnetic_vector_run(
     pytest=True,
     refinement=(2,),
 ):
+    from numpy.random import MT19937, RandomState, SeedSequence
+
     from geoapps.inversion.driver import InversionDriver
     from geoapps.inversion.potential_fields import MagneticVectorParams
 
-    np.random.seed(0)
+    rs = RandomState(MT19937(SeedSequence(0)))
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
     geoh5, mesh, model, survey, topography = setup_inversion_workspace(

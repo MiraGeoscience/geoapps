@@ -32,10 +32,12 @@ def test_dc_run(
     pytest=True,
     refinement=(4, 6),
 ):
+    from numpy.random import MT19937, RandomState, SeedSequence
+
     from geoapps.inversion.driver import InversionDriver
     from geoapps.inversion.electricals import DirectCurrentParams
 
-    np.random.seed(0)
+    rs = RandomState(MT19937(SeedSequence(0)))
     # Run the forward
     geoh5, mesh, model, survey, topography = setup_inversion_workspace(
         tmp_path,
