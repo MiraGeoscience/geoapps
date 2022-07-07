@@ -124,7 +124,7 @@ def test_magnetotellurics_run(
     orig_zyy_real_1 = geoh5.get_entity("Iteration_0_zyy_real_1.00e+01")[0].values
 
     # Run the inverse
-    np.random.seed(0)
+    rs = RandomState(MT19937(SeedSequence(0)))
     params = MagnetotelluricsParams(
         geoh5=geoh5,
         mesh=geoh5.get_entity("mesh")[0].uid,

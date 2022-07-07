@@ -68,7 +68,7 @@ def test_gravity_run(
     gz.values[0] = np.nan
 
     # Run the inverse
-    np.random.seed(0)
+    rs = RandomState(MT19937(SeedSequence(0)))
     params = GravityParams(
         geoh5=geoh5,
         mesh=mesh.uid,
