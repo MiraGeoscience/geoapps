@@ -26,76 +26,9 @@ from geoapps.shared_utils.utils import get_locations, weighted_average
 class DataInterpolationDriver:
     def __init__(self, params: DataInterpolationParams):
         self.params: DataInterpolationParams = params
-        self._unique_object = {}
-        self.object_out = None
-
-    def object_base(self, object):
-        for entity in self.params.geoh5.get_entity(object.uid):
-            if isinstance(entity, ObjectBase):
-                return entity
-        return None
-
-    @staticmethod
-    def truncate_locs_depths(locs, depth_core):
-        zmax = locs[:, 2].max()  # top of locs
-        below_core_ind = (zmax - locs[:, 2]) > depth_core
-        core_bottom_elev = zmax - depth_core
-        locs[
-            below_core_ind, 2
-        ] = core_bottom_elev  # sets locations below core to core bottom
-        return locs
-
-    @staticmethod
-    def minimum_depth_core(locs, depth_core, core_z_cell_size):
-        zrange = locs[:, 2].max() - locs[:, 2].min()  # locs z range
-        if depth_core >= zrange:
-            return depth_core - zrange + core_z_cell_size
-        else:
-            return depth_core
-
-    @staticmethod
-    def find_top_padding(obj, core_z_cell_size):
-        pad_sum = 0
-        for h in np.abs(np.diff(obj.z_cell_delimiters)):
-            if h != core_z_cell_size:
-                pad_sum += h
-            else:
-                return pad_sum
-
-    @staticmethod
-    def get_block_model(workspace, name, locs, h, depth_core, pads, expansion_factor):
-
-        locs = DataInterpolationDriver.truncate_locs_depths(locs, depth_core)
-        depth_core = DataInterpolationDriver.minimum_depth_core(locs, depth_core, h[2])
-        mesh = mesh_utils.mesh_builder_xyz(
-            locs,
-            h,
-            padding_distance=[
-                [pads[0], pads[1]],
-                [pads[2], pads[3]],
-                [pads[4], pads[5]],
-            ],
-            depth_core=depth_core,
-            expansion_factor=expansion_factor,
-        )
-
-        object_out = BlockModel.create(
-            workspace,
-            origin=[mesh.x0[0], mesh.x0[1], locs[:, 2].max()],
-            u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
-            v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-            z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
-            name=name,
-        )
-
-        top_padding = DataInterpolationDriver.find_top_padding(object_out, h[2])
-        object_out.origin["z"] += top_padding
-
-        return object_out
 
     def run(self):
-        object_from = self.object_base(self.params.objects)
-        xyz = get_locations(self.params.geoh5, object_from)
+        xyz = get_locations(self.params.geoh5, self.params.objects)
 
         if xyz is None:
             return
@@ -114,8 +47,7 @@ class DataInterpolationDriver:
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
-        self.object_out = self.object_base(self.params.out_object)
-        xyz_out = get_locations(self.params.geoh5, self.object_out)
+        xyz_out = get_locations(self.params.geoh5, self.params.out_object)
         xyz_out_orig = xyz_out.copy()
 
         values, sign, dtype = {}, {}, {}
@@ -274,14 +206,16 @@ class DataInterpolationDriver:
                 primitive = "float"
                 vals = values_interp[key].astype(dtype[key])
 
-            self.object_out.add_data(
+            self.params.out_object.add_data(
                 {key + self.params.ga_group_name: {"values": vals, "type": primitive}}
             )
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
         ):
-            monitored_directory_copy(self.params.monitoring_directory, self.object_out)
+            monitored_directory_copy(
+                self.params.monitoring_directory, self.params.out_object
+            )
 
 
 if __name__ == "__main__":
