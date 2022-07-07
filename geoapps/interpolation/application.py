@@ -31,7 +31,6 @@ class DataInterpolation(ObjectDataSelection):
     """
 
     _param_class = DataInterpolationParams
-    _select_multiple = True
     _topography = None
 
     def __init__(self, ui_json=None, **kwargs):
