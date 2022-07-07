@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: e6630f8829dc5081257a50e621dfdfc7fa6bcdcf16df31029cd9cd911bbca2f5
-    osx-64: 468b52cf0648c2efe98631f1541c70bc23c7e599cdf846cd3f6892634c3ad270
-    win-64: 1578e576fcf99789f8bf29d15078a7de774e798b3ec9b6531e4a3078ad29f524
+    linux-64: 80aeb0c7a01b8ef0537d7311aa00e0af976d8376b42a24695a10e91604cd810c
+    osx-64: 434ec95703c6b98563f852ce250bddbddbca42cad7b3f67f053366a9b01ec786
+    win-64: 44681f1a2fef42d521fa55e679113ae6e1ab0870cddb5070fc6d146f0482a676
   platforms:
   - win-64
   - osx-64
@@ -3406,14 +3406,14 @@ package:
     pyrsistent: '!=0.17.0,!=0.17.1,!=0.17.2,>=0.14.0'
     python: '>=3.7'
   hash:
-    md5: 0c94153da2e73e5be30a6ba89d594aed
-    sha256: e700aacecb98621474a56105df9a32f6e80898c7640bd47357d0782629a014d2
+    md5: a03bc25daed9b765c82bf08e8ee160e3
+    sha256: 46293eb201b4d1d128995d77b43511822b595a5fbcddab1f51869fbb92b8cdc7
   manager: conda
   name: jsonschema
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.6.1-pyhd8ed1ab_0.tar.bz2
-  version: 4.6.1
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.6.2-pyhd8ed1ab_0.tar.bz2
+  version: 4.6.2
 - category: full
   dependencies:
     entrypoints: ''
@@ -3778,7 +3778,7 @@ package:
     libxml2: '>=2.9.14,<2.10.0a0'
     libzlib: '>=1.2.12,<1.3.0a0'
     openjpeg: '>=2.4.0,<2.5.0a0'
-    openssl: '>=1.1.1q,<1.1.2a'
+    openssl: '>=1.1.1p,<1.1.2a'
     pcre: '>=8.45,<9.0a0'
     poppler: '>=22.4.0,<22.5.0a0'
     postgresql: ''
@@ -3789,14 +3789,14 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 10cac2845fd24fc806382756a33617a6
-    sha256: a02bdfd091c46b7c05e082eb6d3347e86adbbf079711bf5de0bf2639cf753709
+    md5: 1cc61dd37d348f1deb6250e0f249addb
+    sha256: 0e6bd2bc3952fec68f08987fb79efd12958e37107389a1b9e449c8955f294a2f
   manager: conda
   name: libgdal
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libgdal-3.5.1-h32640fd_1.tar.bz2
-  version: 3.5.1
+  url: https://conda.anaconda.org/conda-forge/linux-64/libgdal-3.5.0-h32640fd_5.tar.bz2
+  version: 3.5.0
 - category: main
   dependencies:
     certifi: '>=2020.06.20'
@@ -4002,21 +4002,21 @@ package:
   dependencies:
     hdf5: '>=1.12.1,<1.12.2.0a0'
     libgcc-ng: '>=12'
-    libgdal: 3.5.1 h32640fd_1
+    libgdal: 3.5.0 h32640fd_5
     libstdcxx-ng: '>=12'
     numpy: '>=1.19.5,<2.0a0'
-    openssl: '>=1.1.1q,<1.1.2a'
+    openssl: '>=1.1.1p,<1.1.2a'
     python: '>=3.8,<3.9.0a0'
     python_abi: 3.8.* *_cp38
   hash:
-    md5: 6c8e7d6bf36f5ddf5c560b64d42df071
-    sha256: 388f1a63ceea164825448e387b138a2a17cc2986775ad78977a2dfb58ebb4da9
+    md5: d4da11667319dec81522942c2ec83537
+    sha256: 99e4d5ae67906735aa806b4e5e249aa1911bc0018c4f4ba52ecf816d6b09999b
   manager: conda
   name: gdal
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/gdal-3.5.1-py38hdd69c9e_1.tar.bz2
-  version: 3.5.1
+  url: https://conda.anaconda.org/conda-forge/linux-64/gdal-3.5.0-py38hdd69c9e_5.tar.bz2
+  version: 3.5.0
 - category: main
   dependencies:
     future: ''
@@ -7532,14 +7532,14 @@ package:
     pyrsistent: '!=0.17.0,!=0.17.1,!=0.17.2,>=0.14.0'
     python: '>=3.7'
   hash:
-    md5: 0c94153da2e73e5be30a6ba89d594aed
-    sha256: e700aacecb98621474a56105df9a32f6e80898c7640bd47357d0782629a014d2
+    md5: a03bc25daed9b765c82bf08e8ee160e3
+    sha256: 46293eb201b4d1d128995d77b43511822b595a5fbcddab1f51869fbb92b8cdc7
   manager: conda
   name: jsonschema
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.6.1-pyhd8ed1ab_0.tar.bz2
-  version: 4.6.1
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.6.2-pyhd8ed1ab_0.tar.bz2
+  version: 4.6.2
 - category: full
   dependencies:
     entrypoints: ''
@@ -7894,7 +7894,7 @@ package:
     libxml2: '>=2.9.14,<2.10.0a0'
     libzlib: '>=1.2.12,<1.3.0a0'
     openjpeg: '>=2.4.0,<2.5.0a0'
-    openssl: '>=1.1.1q,<1.1.2a'
+    openssl: '>=1.1.1p,<1.1.2a'
     pcre: '>=8.45,<9.0a0'
     poppler: '>=22.4.0,<22.5.0a0'
     postgresql: ''
@@ -7905,14 +7905,14 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 165406964a40cc00a14c439aabe5e520
-    sha256: ce9415ffb5f82025031beed0e743520f814324a7dcaf3fec3d2d731f6bf1b97b
+    md5: 7dea63f7eefba8e3d62e64d91c1f1efa
+    sha256: 276a7f602e7288abb90d80836d1d95e7754b52ef9ca14bcc3f79f476a04b5322
   manager: conda
   name: libgdal
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libgdal-3.5.1-h242d4e5_1.tar.bz2
-  version: 3.5.1
+  url: https://conda.anaconda.org/conda-forge/osx-64/libgdal-3.5.0-h242d4e5_5.tar.bz2
+  version: 3.5.0
 - category: main
   dependencies:
     certifi: '>=2020.06.20'
@@ -8115,20 +8115,20 @@ package:
   dependencies:
     hdf5: '>=1.12.1,<1.12.2.0a0'
     libcxx: '>=13.0.1'
-    libgdal: 3.5.1 h242d4e5_1
+    libgdal: 3.5.0 h242d4e5_5
     numpy: '>=1.19.5,<2.0a0'
-    openssl: '>=1.1.1q,<1.1.2a'
+    openssl: '>=1.1.1p,<1.1.2a'
     python: '>=3.8,<3.9.0a0'
     python_abi: 3.8.* *_cp38
   hash:
-    md5: b44a48684222123213b655eab1ac778f
-    sha256: 5116dcaec9851f0d940a85a1b4792e9dfd5c9a9a41a5104b045b1620641fd44c
+    md5: 93e848e2c1dc03076713eeddcd054fef
+    sha256: a45bc975816755a83f5837cd159f78da836c1744d2a83c5971f7580e0924bce5
   manager: conda
   name: gdal
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/gdal-3.5.1-py38hbf5d6e3_1.tar.bz2
-  version: 3.5.1
+  url: https://conda.anaconda.org/conda-forge/osx-64/gdal-3.5.0-py38hbf5d6e3_5.tar.bz2
+  version: 3.5.0
 - category: main
   dependencies:
     future: ''
@@ -11428,14 +11428,14 @@ package:
     pyrsistent: '!=0.17.0,!=0.17.1,!=0.17.2,>=0.14.0'
     python: '>=3.7'
   hash:
-    md5: 0c94153da2e73e5be30a6ba89d594aed
-    sha256: e700aacecb98621474a56105df9a32f6e80898c7640bd47357d0782629a014d2
+    md5: a03bc25daed9b765c82bf08e8ee160e3
+    sha256: 46293eb201b4d1d128995d77b43511822b595a5fbcddab1f51869fbb92b8cdc7
   manager: conda
   name: jsonschema
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.6.1-pyhd8ed1ab_0.tar.bz2
-  version: 4.6.1
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.6.2-pyhd8ed1ab_0.tar.bz2
+  version: 4.6.2
 - category: full
   dependencies:
     python: '>=3.8,<3.9.0a0'
@@ -12411,7 +12411,7 @@ package:
     libxml2: '>=2.9.14,<2.10.0a0'
     libzlib: '>=1.2.12,<1.3.0a0'
     openjpeg: '>=2.4.0,<2.5.0a0'
-    openssl: '>=1.1.1q,<1.1.2a'
+    openssl: '>=1.1.1p,<1.1.2a'
     pcre: '>=8.45,<9.0a0'
     poppler: '>=22.4.0,<22.5.0a0'
     postgresql: ''
@@ -12424,14 +12424,14 @@ package:
     xz: '>=5.2.5,<5.3.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 143e69b21b3dde02afdf43eda4c027c3
-    sha256: 41ce6c40b8395fb749956c7202329895f5c70a5366b72f7f4ad01abea1614181
+    md5: 7f54f8fc592502365cf327800f9b3c0b
+    sha256: 23158070a77cf0a15ed94225b6b87dc0921bf7edfc4a882b71c6fcef41444d9a
   manager: conda
   name: libgdal
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libgdal-3.5.1-h7a56975_1.tar.bz2
-  version: 3.5.1
+  url: https://conda.anaconda.org/conda-forge/win-64/libgdal-3.5.0-h7a56975_5.tar.bz2
+  version: 3.5.0
 - category: full
   dependencies:
     beautifulsoup4: ''
@@ -12534,22 +12534,22 @@ package:
 - category: full
   dependencies:
     hdf5: '>=1.12.1,<1.12.2.0a0'
-    libgdal: 3.5.1 h7a56975_1
+    libgdal: 3.5.0 h7a56975_5
     numpy: '>=1.19.5,<2.0a0'
-    openssl: '>=1.1.1q,<1.1.2a'
+    openssl: '>=1.1.1p,<1.1.2a'
     python: '>=3.8,<3.9.0a0'
     python_abi: 3.8.* *_cp38
     vc: '>=14.1,<15'
     vs2015_runtime: '>=14.16.27033'
   hash:
-    md5: 88a62498c9e9f0e8c6800fabd5ae72ed
-    sha256: 2b0e66cab34c80802d141c06c5d337c21cf0ba70078e08fb322611d2c946acd2
+    md5: 7f6f6356994ac338be1429b35e305ce2
+    sha256: 99d032750b50c3e4f847a88bfb62bcaac9df7cbebdeaf4361770b305b8098359
   manager: conda
   name: gdal
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/gdal-3.5.1-py38hf334de5_1.tar.bz2
-  version: 3.5.1
+  url: https://conda.anaconda.org/conda-forge/win-64/gdal-3.5.0-py38hf334de5_5.tar.bz2
+  version: 3.5.0
 - category: full
   dependencies:
     __win: ''
