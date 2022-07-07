@@ -9,6 +9,8 @@
 from __future__ import annotations
 
 import numpy as np
+from discretize.utils import mesh_utils
+from geoh5py.objects import BlockModel
 
 from geoapps.shared_utils.utils import rotate_xyz
 
@@ -196,7 +198,14 @@ class RectangularBlock:
         return self._vertices
 
 
-def truncate_locs_depths(locs, depth_core):
+def truncate_locs_depths(locs: np.ndarray, depth_core: int):
+    """
+    Sets locations below core to core bottom.
+
+    :param locs: Location points.
+    :param depth_core: Depth of core mesh below locs.
+    :return locs: locs with depths truncated.
+    """
     zmax = locs[:, 2].max()  # top of locs
     below_core_ind = (zmax - locs[:, 2]) > depth_core
     core_bottom_elev = zmax - depth_core
@@ -206,7 +215,15 @@ def truncate_locs_depths(locs, depth_core):
     return locs
 
 
-def minimum_depth_core(locs, depth_core, core_z_cell_size):
+def minimum_depth_core(locs: np.ndarray, depth_core: int, core_z_cell_size: int):
+    """
+    Get minimum depth core.
+
+    :param locs: Location points.
+    :param depth_core: Depth of core mesh below locs.
+    :param core_z_cell_size: Cell size in z direction.
+    :return depth_core: Minimum depth core.
+    """
     zrange = locs[:, 2].max() - locs[:, 2].min()  # locs z range
     if depth_core >= zrange:
         return depth_core - zrange + core_z_cell_size
@@ -214,7 +231,15 @@ def minimum_depth_core(locs, depth_core, core_z_cell_size):
         return depth_core
 
 
-def find_top_padding(obj, core_z_cell_size):
+def find_top_padding(obj: ObjectBase, core_z_cell_size: int):
+    """
+    Loop through cell spacing and sum until core_z_cell_size is reached.
+
+    :param obj: Block model.
+    :param core_z_cell_size: Cell size in z direction.
+    :return pad_sum: Top padding.
+    """
+    f = np.abs(np.diff(obj.z_cell_delimiters))
     pad_sum = 0
     for h in np.abs(np.diff(obj.z_cell_delimiters)):
         if h != core_z_cell_size:
@@ -223,7 +248,27 @@ def find_top_padding(obj, core_z_cell_size):
             return pad_sum
 
 
-def get_block_model(workspace, name, locs, h, depth_core, pads, expansion_factor):
+def get_block_model(
+    workspace: Workspace,
+    name: str,
+    locs: np.ndarray,
+    h: list,
+    depth_core: int,
+    pads: list,
+    expansion_factor: float,
+):
+    """
+    Get block model.
+
+    :param workspace: Workspace.
+    :param name: Block model name.
+    :param locs: Location points.
+    :param h: Cell size(s) for the core mesh.
+    :param depth_core: Depth of core mesh below locs.
+    :param pads: len(6) Padding distances [W, E, N, S, Down, Up]
+    :param expansion_factor: Expansion factor for padding cells.
+    :return object_out: Output block model.
+    """
 
     locs = truncate_locs_depths(locs, depth_core)
     depth_core = minimum_depth_core(locs, depth_core, h[2])
