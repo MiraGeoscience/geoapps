@@ -43,7 +43,7 @@ jobs:
         run: >-
           git fetch origin ${{github.base_ref}}
           && pylint $(
-          git diff --diff-filter=AM --name-only refs/remotes/origin/${{github.base_ref}}... | grep -E '^(geoapps|tests)/.*\.py$'
+          git diff --diff-filter=AM --name-only refs/remotes/origin/${{github.base_ref}}... -- | grep -E '^(geoapps|tests)/.*\.py$'
           || echo 'geoapps/__init__.py'
           )
       - name: Run pylint on all files
