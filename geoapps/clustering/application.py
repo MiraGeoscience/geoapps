@@ -334,7 +334,7 @@ class Clustering(ScatterPlots):
                 self.norm_tabs_layout,
                 self.cluster_tabs_layout,
                 # Stored variables
-                dcc.Store(id="dataframe", data={}),
+                dcc.Store(id="dataframe", data=self.defaults["dataframe"]),
                 dcc.Store(id="full_scales", data=self.defaults["full_scales"]),
                 dcc.Store(
                     id="full_lower_bounds", data=self.defaults["full_lower_bounds"]
@@ -413,6 +413,7 @@ class Clustering(ScatterPlots):
             Output(component_id="upper_bounds", component_property="value"),
             Output(component_id="color_maps", component_property="options"),
             Output(component_id="color_picker", component_property="value"),
+            Output(component_id="n_clusters", component_property="value"),
             Output(component_id="dataframe", component_property="data"),
             Output(component_id="full_scales", component_property="data"),
             Output(component_id="full_lower_bounds", component_property="data"),
@@ -770,6 +771,7 @@ class Clustering(ScatterPlots):
             "upper_bounds",
             "color_maps_options",
             "color_picker",
+            "n_clusters",
             "dataframe",
             "full_scales",
             "full_lower_bounds",
@@ -893,7 +895,7 @@ class Clustering(ScatterPlots):
             "scale",
             "lower_bounds",
             "upper_bounds",
-            "",
+            "n_clusters" "",
         ]:
             update_dict.update({"channel_name": channel})
 
@@ -908,8 +910,14 @@ class Clustering(ScatterPlots):
                         "full_upper_bounds": full_upper_bounds,
                     }
                 )
-            elif trigger in ["channels", "downsampling", ""]:
-                update_dict.update({"channels": channels, "downsampling": downsampling})
+            elif trigger in ["channels", "downsampling", "n_clusters", ""]:
+                update_dict.update(
+                    {
+                        "channels": channels,
+                        "downsampling": downsampling,
+                        "n_clusters": n_clusters,
+                    }
+                )
                 # Update data options from data subset
                 update_dict.update(
                     self.update_clustering(
@@ -1037,7 +1045,7 @@ class Clustering(ScatterPlots):
         if not dataframe.empty:
             if color_maps == "kmeans":
                 color_maps = self.update_colormap(
-                    n_clusters, color_picker, select_cluster
+                    n_clusters, color_picker, select_cluster, color
                 )
             elif color_maps is None:
                 color_maps = [[0.0, "rgb(0,0,0)"]]
@@ -1101,30 +1109,29 @@ class Clustering(ScatterPlots):
     def update_color_picker(self, select_cluster):
         return {"color_picker": dict(hex=self.color_pickers[select_cluster])}
 
-    def update_colormap(self, n_clusters, new_color, select_cluster):
+    def update_colormap(self, n_clusters, new_color, select_cluster, color_axis):
         """
         Change the colormap for clusters
         """
         self.color_pickers[select_cluster] = new_color["hex"]
-        colormap = {}
+        cluster_map = {}
         for ii in range(n_clusters):
             colorpicker = self.color_pickers[ii]
             if "#" in colorpicker:
                 color = colorpicker.lstrip("#")
-                colormap[ii] = [
+                cluster_map[ii] = [
                     np.min([ii / (n_clusters - 1), 1]),
                     "rgb("
                     + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
                     + ")",
                 ]
             else:
-                colormap[ii] = [
+                cluster_map[ii] = [
                     np.min([ii / (n_clusters - 1), 1]),
                     colorpicker,
                 ]
 
-        # self.custom_colormap = list(self.colormap.values())
-        return list(colormap.values())
+        return list(cluster_map.values())
 
     def update_clustering(
         self,
@@ -1473,7 +1480,6 @@ class Clustering(ScatterPlots):
             # Create reference values and color_map
             group_map, color_map = {}, []
             cluster_values = self.kmeans + 1
-            # cluster_values = self.data_channels["kmeans"] + 1
             inactive_set = np.ones(len(cluster_values), dtype="bool")
             inactive_set[self.indices] = False
             cluster_values[inactive_set] = 0
