@@ -41,7 +41,7 @@ jobs:
       - name: Run pylint on modified files
         if: github.event_name == 'pull_request'
         run: >-
-          git fetch origin ${{github.base_ref}}
+          git fetch --deepen=500 origin ${{github.base_ref}}
           && pylint $(
           git diff --diff-filter=AM --name-only refs/remotes/origin/${{github.base_ref}}... -- | grep -E '^(geoapps|tests)/.*\.py$'
           || echo 'geoapps/__init__.py'
