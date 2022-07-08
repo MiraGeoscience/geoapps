@@ -8,4 +8,5 @@ if !errorlevel! neq 0 (
 )
 
 set env_path=%project_dir%\.conda-env
-call !MY_CONDA_EXE! activate %env_path% && pylint %*
+call !MY_CONDA_EXE! activate %env_path%
+pylint %*
