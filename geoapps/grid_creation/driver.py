@@ -19,7 +19,9 @@ class GridCreationDriver:
         self.params: GridCreationParams = params
 
     def run(self):
-        xyz = get_locations(self.params.geoh5, self.params.objects).copy()
+        print(self.params.to_dict().items())
+
+        xyz = get_locations(self.params.geoh5, self.params.objects)
         if xyz is None:
             return
 

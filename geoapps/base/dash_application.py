@@ -82,17 +82,15 @@ class BaseDashApplication:
         return tuple(outputs)
 
     def update_param_dict(self, update_dict):
-        param_dict = self.params.to_dict()
-        for key in param_dict.keys():
+        for key in self.params.to_dict().keys():
             if key in update_dict.keys():
-                param_dict[key] = update_dict[key]
+                setattr(self.params, key, update_dict[key])
             elif key + "_name" in update_dict.keys():
                 if "geoh5" in update_dict.keys():
                     ws = update_dict["geoh5"]
                 else:
-                    ws = param_dict["geoh5"]
-                param_dict[key] = ws.get_entity(update_dict[key + "_name"])
-        return param_dict
+                    ws = self.params.geoh5
+                setattr(self.params, key, ws.get_entity(update_dict[key + "_name"]))
 
     @staticmethod
     def update_from_ui_json(contents, param_list):
