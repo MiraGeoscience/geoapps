@@ -21,7 +21,9 @@ To prepare the conda base environment, see devtools/setup-conda-base.bat
 """
 
 import os
+import re
 import subprocess
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -82,8 +84,30 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix="") -> None:
     for lock_env_file in _environments_folder.glob(
         f"conda-py-{py_ver}-{platform_glob}{dev_suffix}{suffix}.lock.yml"
     ):
+        patch_none_md5(lock_env_file)
         with open(lock_env_file, "a") as f:
             f.write(env_file_variables_section_)
+
+
+def patch_none_md5(file: Path) -> None:
+    """
+    Patch the given file to safely remove --hash=md5:None.
+
+    pip does not want hash with md5 (but accepts sha256 or others).
+    """
+
+    none_md5_re = re.compile(r"(.*)\s--hash=md5:None\b(.*)")
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        patched_file = Path(tmpdirname) / file.name
+        with open(patched_file, "w") as patched:
+            with open(file) as f:
+                for line in f:
+                    match = none_md5_re.match(line)
+                    if not match:
+                        patched.write(line)
+                    else:
+                        patched.write(f"{match.group(1)}{match.group(2)}\n")
+        patched_file.replace(file)
 
 
 def config_conda() -> None:
