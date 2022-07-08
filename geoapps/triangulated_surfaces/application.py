@@ -301,7 +301,7 @@ class Surface2D(ObjectDataSelection):
             for data_obj in data_list:
                 self.models += [data_obj.values[ind]]
 
-        temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.3f}.geoh5"
+        temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.0f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as workspace:
