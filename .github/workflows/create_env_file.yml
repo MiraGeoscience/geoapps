@@ -1,26 +1,15 @@
 name: Create env file
 
 on:
-  pull_request:
-    branches:
-      - develop
-      - main
-      - release/**
-      - feature/**
-      - hotfix/**
+  types: [labeled]
   push:
-    branches:
-      - develop
-      - main
-      - release/**
-      - feature/**
-      - hotfix/**
     tags:
       - "v[0-9]+.**"
       - "analyst-v[0-9]+.**"
 
 jobs:
   create-env-file:
+    if: ${{ github.event.action != 'labeled' || contains(fromJSON('["pack:env"]'), github.event.label.name) }}
     defaults:
       run:
         shell: bash -l {0}
