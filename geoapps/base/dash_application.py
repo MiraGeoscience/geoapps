@@ -6,7 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 import base64
-import io
 import json
 import uuid
 import webbrowser
@@ -14,14 +13,20 @@ from os import environ
 
 from dash import no_update
 from flask import Flask
+from geoh5py.data import Data
+from geoh5py.objects import ObjectBase
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
+
+from geoapps.driver_base.params import BaseParams
 
 
 class BaseDashApplication:
     """
     Base class for geoapps dash applications
     """
+
+    _params = None
 
     def __init__(self, **kwargs):
 
@@ -33,16 +38,24 @@ class BaseDashApplication:
             external_stylesheets=external_stylesheets,
         )
 
-    @staticmethod
-    def update_object_options(contents, obj_var_name):
-        objects, value = None, None
-        if contents is not None:
-            content_type, content_string = contents.split(",")
-            decoded = io.BytesIO(base64.b64decode(content_string))
-            ws = Workspace(decoded)
-        else:
-            return {}
+    @property
+    def params(self) -> BaseParams:
+        """
+        Application parameters
+        """
+        return self._params
 
+    @params.setter
+    def params(self, params: BaseParams):
+        # assert isinstance(
+        #    params, BaseParams
+        # ), f"Input parameters must be an instance of {BaseParams}"
+
+        self._params = params
+
+    @staticmethod
+    def update_object_options(ws, obj_var_name):
+        objects, value = None, None
         obj_list = ws.objects
 
         options = [
@@ -68,8 +81,8 @@ class BaseDashApplication:
                 outputs.append(no_update)
         return tuple(outputs)
 
-    @staticmethod
-    def update_param_dict(param_dict, update_dict):
+    def update_param_dict(self, update_dict):
+        param_dict = self.params.to_dict()
         for key in param_dict.keys():
             if key in update_dict.keys():
                 param_dict[key] = update_dict[key]
@@ -116,6 +129,29 @@ class BaseDashApplication:
                     )
 
         return update_dict
+
+    def get_defaults(self):
+        defaults = {}
+        # Get initial values to initialize the dash components
+        if "geoh5" in self.params.to_dict().keys():
+            defaults["geoh5"] = self.params.geoh5
+
+        for key, value in self.params.to_dict().items():
+            # Is workspace an entity? ***
+            if isinstance(
+                value, ObjectBase
+            ):  # This only works when objects are initialized as objects, not None.
+                defaults[key + "_name"] = getattr(value, "name", None)
+                # Update object dropdown options.
+                defaults.update(self.update_object_options(defaults["geoh5"], key))
+            elif isinstance(value, Data):
+                defaults[key + "_name"] = getattr(value, "name", None)
+                # Update data dropdown options ***
+            else:
+                defaults[key] = value
+        print(defaults["geoh5"])
+        # defaults["param_dict"] = self.params.to_dict()
+        return defaults
 
     def run(self):
         # The reloader has not yet run - open the browser

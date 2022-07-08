@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+import base64
+import io
 import os
 import sys
 
@@ -39,7 +41,7 @@ class GridCreation(BaseDashApplication):
 
         super().__init__()
         # Initial values for the dash components
-        # defaults = self.get_defaults()
+        defaults = self.get_defaults()
 
         # Set up the layout with the dash components
         self.app.layout = html.Div(
@@ -47,30 +49,120 @@ class GridCreation(BaseDashApplication):
                 dcc.Upload(
                     id="upload",
                     children=html.Button("Upload Workspace/ui.json"),
+                    style={"margin_bottom": "20px"},
                 ),
-                dcc.Markdown("Name"),
-                dcc.Input(id="new_grid"),
-                dcc.Markdown("Input object"),
-                dcc.Dropdown(id="objects"),
-                dcc.Markdown("Lateral extent"),
-                dcc.Dropdown(id="xy_reference"),
-                dcc.Markdown("Smallest cells"),
-                dcc.Input(id="core_cell_size"),
-                dcc.Markdown("Core depth (m)"),
-                dcc.Input(id="depth_core", type="number"),
-                dcc.Markdown("Pad distance (W, E, S, N, D, U)"),
-                dcc.Input(id="padding_distance"),
-                dcc.Markdown("Expansion factor"),
-                dcc.Input(id="expansion_fact", type="number"),
+                dcc.Markdown(
+                    children="Input object",
+                    style={"width": "25%", "display": "inline-block"},
+                ),
+                dcc.Dropdown(
+                    id="objects",
+                    value=defaults["objects_name"],
+                    options=defaults["objects_options"],
+                    style={
+                        "width": "75%",
+                        "display": "inline-block",
+                        "margin_bottom": "20px",
+                    },
+                ),
+                dcc.Markdown(
+                    children="Lateral extent",
+                    style={"width": "25%", "display": "inline-block"},
+                ),
+                dcc.Dropdown(
+                    id="xy_reference",
+                    value=defaults["xy_reference_name"],
+                    options=defaults["xy_reference_options"],
+                    style={
+                        "width": "75%",
+                        "display": "inline-block",
+                        "margin_bottom": "20px",
+                    },
+                ),
+                dcc.Markdown(
+                    children="Name",
+                    style={"width": "25%", "display": "inline-block"},
+                ),
+                dcc.Input(
+                    id="new_grid",
+                    value=defaults["new_grid"],
+                    style={
+                        "width": "70%",
+                        "display": "inline-block",
+                        "margin_bottom": "20px",
+                    },
+                ),
+                dcc.Markdown(
+                    children="Smallest cells",
+                    style={"width": "25%", "display": "inline-block"},
+                ),
+                dcc.Input(
+                    id="core_cell_size",
+                    value=defaults["core_cell_size"],
+                    style={
+                        "width": "70%",
+                        "display": "inline-block",
+                        "margin_bottom": "20px",
+                    },
+                ),
+                dcc.Markdown(
+                    children="Core depth (m)",
+                    style={"width": "25%", "display": "inline-block"},
+                ),
+                dcc.Input(
+                    id="depth_core",
+                    type="number",
+                    value=defaults["depth_core"],
+                    style={
+                        "width": "70%",
+                        "display": "inline-block",
+                        "margin_bottom": "20px",
+                    },
+                ),
+                dcc.Markdown(
+                    children="Pad distance (W, E, S, N, D, U)",
+                    style={"width": "25%", "display": "inline-block"},
+                ),
+                dcc.Input(
+                    id="padding_distance",
+                    value=defaults["padding_distance"],
+                    style={
+                        "width": "70%",
+                        "display": "inline-block",
+                        "margin_bottom": "20px",
+                    },
+                ),
+                dcc.Markdown(
+                    children="Expansion factor",
+                    style={"width": "25%", "display": "inline-block"},
+                ),
+                dcc.Input(
+                    id="expansion_fact",
+                    type="number",
+                    value=defaults["expansion_fact"],
+                    style={
+                        "width": "70%",
+                        "display": "inline-block",
+                        "margin_bottom": "20px",
+                    },
+                ),
                 html.Button("Export", id="export"),
                 dcc.Markdown(id="output_message"),
-                dcc.Store(id="param_dict"),
-            ]
+                # dcc.Store(
+                #    id="param_dict",
+                #    data=defaults["param_dict"]
+                # ),
+            ],
+            style={
+                "margin_left": "20px",
+                "margin_top": "20px",
+                "width": "40%",
+            },
         )
 
         # Set up callbacks
         self.app.callback(
-            Output(component_id="param_dict", component_property="data"),
+            # Output(component_id="param_dict", component_property="data"),
             Output(component_id="new_grid", component_property="value"),
             Output(component_id="objects", component_property="value"),
             Output(component_id="objects", component_property="options"),
@@ -82,7 +174,7 @@ class GridCreation(BaseDashApplication):
             Output(component_id="expansion_fact", component_property="value"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
-            Input(component_id="param_dict", component_property="data"),
+            # Input(component_id="param_dict", component_property="data"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
             Input(component_id="new_grid", component_property="value"),
@@ -96,12 +188,11 @@ class GridCreation(BaseDashApplication):
         self.app.callback(
             Output(component_id="output_message", component_property="children"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="param_dict", component_property="data"),
+            # Input(component_id="param_dict", component_property="data"),
         )(self.create_block_model)
 
     def update_params(
         self,
-        param_dict,
         filename,
         contents,
         new_grid,
@@ -129,27 +220,33 @@ class GridCreation(BaseDashApplication):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         update_dict = {}
         if trigger == "upload":
-            if filename.endswith(".ui.json"):
-                update_dict.update(self.update_from_ui_json(contents, param_list))
-                # update object options ***
-            elif filename.endswith(".geoh5"):
-                update_dict.update(self.update_object_options(contents, "objects"))
-                update_dict.update(self.update_object_options(contents, "xy_reference"))
+            if (filename.endswith("ui.json") or filename.endswith(".geoh5")) and (
+                contents is not None
+            ):
+                if filename.endswith(".ui.json"):
+                    update_dict.update(self.update_from_ui_json(contents, param_list))
+                    ws = update_dict["geoh5"]
+                elif filename.endswith(".geoh5"):
+                    content_type, content_string = contents.split(",")
+                    decoded = io.BytesIO(base64.b64decode(content_string))
+                    ws = Workspace(decoded)
+                update_dict.update(self.update_object_options(ws, "objects"))
+                update_dict.update(self.update_object_options(ws, "xy_reference"))
+                update_dict["filename"] = None
+                update_dict["contents"] = None
             else:
                 print("Uploaded file must be a workspace or ui.json.")
-            update_dict["filename"] = None
-            update_dict["contents"] = None
         elif trigger + "_name" in param_list:
             update_dict[trigger + "_name"] = getattr(locals(), trigger)
         elif trigger != "":
             update_dict[trigger] = getattr(locals(), trigger)
 
-        new_param_dict = self.update_param_dict(param_dict, update_dict)
+        self.params = self.update_param_dict(update_dict)
         outputs = self.get_outputs(param_list, update_dict)
 
-        return new_param_dict, outputs
+        return outputs
 
-    def create_block_model(self, n_clicks, param_dict):
+    def create_block_model(self, n_clicks):
 
         if callback_context.triggered[0]["prop_id"].split(".")[0] == "export":
             ifile = InputFile(
@@ -157,7 +254,7 @@ class GridCreation(BaseDashApplication):
                 validation_options={"disabled": True},
             )
 
-            ifile.data = param_dict
+            ifile.data = self.params.to_dict()
             new_params = GridCreationParams(input_file=ifile)
             new_params.write_input_file()
 
