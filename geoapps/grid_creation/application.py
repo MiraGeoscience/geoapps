@@ -37,9 +37,9 @@ class GridCreation(BaseDashApplication):
         else:
             self.params = self._param_class(**app_initializer)
 
-        # Initial values for the dash components
-        defaults = self.get_defaults()
         super().__init__()
+        # Initial values for the dash components
+        # defaults = self.get_defaults()
 
         # Set up the layout with the dash components
         self.app.layout = html.Div(
@@ -50,8 +50,10 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Markdown("Name"),
                 dcc.Input(id="new_grid"),
-                dcc.Markdown("Lateral Extent"),
+                dcc.Markdown("Input object"),
                 dcc.Dropdown(id="objects"),
+                dcc.Markdown("Lateral extent"),
+                dcc.Dropdown(id="xy_reference"),
                 dcc.Markdown("Smallest cells"),
                 dcc.Input(id="core_cell_size"),
                 dcc.Markdown("Core depth (m)"),
@@ -72,6 +74,8 @@ class GridCreation(BaseDashApplication):
             Output(component_id="new_grid", component_property="value"),
             Output(component_id="objects", component_property="value"),
             Output(component_id="objects", component_property="options"),
+            Output(component_id="xy_reference", component_property="value"),
+            Output(component_id="xy_reference", component_property="options"),
             Output(component_id="core_cell_size", component_property="value"),
             Output(component_id="depth_core", component_property="value"),
             Output(component_id="padding_distance", component_property="value"),
@@ -79,9 +83,11 @@ class GridCreation(BaseDashApplication):
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="param_dict", component_property="data"),
-            Input(component_id="upload", component_property="value"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
             Input(component_id="new_grid", component_property="value"),
             Input(component_id="objects", component_property="value"),
+            Input(component_id="xy_reference", component_property="value"),
             Input(component_id="core_cell_size", component_property="value"),
             Input(component_id="depth_core", component_property="value"),
             Input(component_id="padding_distance", component_property="value"),
@@ -96,9 +102,11 @@ class GridCreation(BaseDashApplication):
     def update_params(
         self,
         param_dict,
-        upload,
+        filename,
+        contents,
         new_grid,
         objects,
+        xy_reference,
         core_cell_size,
         depth_core,
         padding_distance,
@@ -108,6 +116,8 @@ class GridCreation(BaseDashApplication):
             "new_grid",
             "objects_name",
             "objects_options",
+            "xy_reference_name",
+            "xy_reference_options",
             "core_cell_size",
             "depth_core",
             "padding_distance",
@@ -120,16 +130,18 @@ class GridCreation(BaseDashApplication):
         update_dict = {}
         if trigger == "upload":
             if filename.endswith(".ui.json"):
-                update_dict.update(self.update_from_uijson(contents))
+                update_dict.update(self.update_from_ui_json(contents, param_list))
+                # update object options ***
             elif filename.endswith(".geoh5"):
-                update_dict.update(self.update_object_options(contents))
+                update_dict.update(self.update_object_options(contents, "objects"))
+                update_dict.update(self.update_object_options(contents, "xy_reference"))
             else:
                 print("Uploaded file must be a workspace or ui.json.")
             update_dict["filename"] = None
             update_dict["contents"] = None
         elif trigger + "_name" in param_list:
             update_dict[trigger + "_name"] = getattr(locals(), trigger)
-        else:
+        elif trigger != "":
             update_dict[trigger] = getattr(locals(), trigger)
 
         new_param_dict = self.update_param_dict(param_dict, update_dict)
@@ -145,20 +157,22 @@ class GridCreation(BaseDashApplication):
                 validation_options={"disabled": True},
             )
 
-            # Write uijson ***
-
             ifile.data = param_dict
-            new_params = InterpGridParams(input_file=ifile)
+            new_params = GridCreationParams(input_file=ifile)
+            new_params.write_input_file()
 
-            driver = InterpGridDriver(new_params)
+            driver = GridCreationDriver(new_params)
             driver.run()
 
+
+grid_creation = GridCreation()
+grid_creation.run()
 
 if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
-    app = InterpGrid(ui_json=ifile)
+    app = GridCreation(ui_json=ifile)
     print("Loaded. Creating block model . . .")
     app.run()
     print("Done")

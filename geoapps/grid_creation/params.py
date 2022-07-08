@@ -18,13 +18,14 @@ from geoapps.grid_creation.constants import default_ui_json, defaults, validatio
 
 class GridCreationParams(BaseParams):
     """
-    Parameter class for data interpolation application.
+    Parameter class for block model creation application.
     """
 
     def __init__(self, input_file=None, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
         self._defaults = deepcopy(defaults)
         self._validations = validations
+        self._objects = None
         self._xy_reference = None
         self._core_cell_size = None
         self._padding_distance = None
@@ -40,6 +41,17 @@ class GridCreationParams(BaseParams):
                 validation_options={"disabled": True},
             )
         super().__init__(input_file=input_file, **kwargs)
+
+    @property
+    def objects(self) -> ObjectBase | None:
+        """
+        Input object.
+        """
+        return self._objects
+
+    @objects.setter
+    def objects(self, val):
+        self.setter_validator("objects", val, fun=self._uuid_promoter)
 
     @property
     def xy_reference(self) -> ObjectBase | None:

@@ -5,6 +5,18 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import base64
+import io
+import json
+import uuid
+import webbrowser
+from os import environ
+
+from dash import no_update
+from flask import Flask
+from geoh5py.workspace import Workspace
+from jupyter_dash import JupyterDash
+
 
 class BaseDashApplication:
     """
@@ -21,12 +33,15 @@ class BaseDashApplication:
             external_stylesheets=external_stylesheets,
         )
 
-    def update_object_options(self, contents):
+    @staticmethod
+    def update_object_options(contents, obj_var_name):
         objects, value = None, None
         if contents is not None:
             content_type, content_string = contents.split(",")
             decoded = io.BytesIO(base64.b64decode(content_string))
             ws = Workspace(decoded)
+        else:
+            return {}
 
         obj_list = ws.objects
 
@@ -37,9 +52,14 @@ class BaseDashApplication:
         if len(options) > 0:
             value = options[0]["value"]
 
-        return {"geoh5": ws, "objects_options": options, "objects_name": value}
+        return {
+            "geoh5": ws,
+            obj_var_name + "_options": options,
+            obj_var_name + "_name": value,
+        }
 
-    def get_outputs(self, param_list, update_dict):
+    @staticmethod
+    def get_outputs(param_list, update_dict):
         outputs = []
         for param in param_list:
             if param in update_dict.keys():
@@ -48,7 +68,8 @@ class BaseDashApplication:
                 outputs.append(no_update)
         return tuple(outputs)
 
-    def update_param_dict(self, param_dict, update_dict):
+    @staticmethod
+    def update_param_dict(param_dict, update_dict):
         for key in param_dict.keys():
             if key in update_dict.keys():
                 param_dict[key] = update_dict[key]
@@ -60,45 +81,41 @@ class BaseDashApplication:
                 param_dict[key] = ws.get_entity(update_dict[key + "_name"])
         return param_dict
 
-    def update_from_uijson(self, contents, param_list):
+    @staticmethod
+    def update_from_ui_json(contents, param_list):
         content_type, content_string = contents.split(",")
         decoded = base64.b64decode(content_string)
         ui_json = json.loads(decoded)
-
+        update_dict = {}
+        # Update workspace first, to use when assigning entities.
+        if ("geoh5" in ui_json.keys()) and ("geoh5" in param_list):
+            if ui_json["geoh5"] == "":
+                update_dict["geoh5"] = None
+            else:
+                update_dict["geoh5"] = ui_json["geoh5"]
+        # Loop through uijson, and add items that are also in param_list
         for key, value in ui_json.items():
-            if hasattr(self.params, key):
-                if key == "geoh5":
-                    if value == "":
-                        setattr(self.params, key, None)
-                    else:
-                        setattr(self.params, key, value)
-                elif type(value) is dict:
-                    if key in ["objects", "x", "y", "z", "color", "size"]:
-                        if (
-                            (value["value"] is None)
-                            | (value["value"] == "")
-                            | (self.params.geoh5 is None)
-                        ):
-                            setattr(self.params, key, None)
-                        elif self.params.geoh5.get_entity(uuid.UUID(value["value"])):
-                            setattr(
-                                self.params,
-                                key,
-                                self.params.geoh5.get_entity(uuid.UUID(value["value"]))[
-                                    0
-                                ],
-                            )
-                    elif value["value"]:
-                        setattr(self.params, key, value["value"])
-                    else:
-                        setattr(self.params, key, None)
+            if key in param_list:
+                if type(value) is dict:
+                    update_dict[key] = value["value"]
                 else:
-                    setattr(self.params, key, value)
+                    update_dict[key] = value
+            # Objects and Data.
+            elif key + "_name" in param_list:
+                if (
+                    (value["value"] is None)
+                    | (value["value"] == "")
+                    | (update_dict["geoh5"] is None)
+                ):
+                    update_dict[key + "_name"] = None
+                elif update_dict["geoh5"].get_entity(uuid.UUID(value["value"])):
+                    update_dict[key + "_name"] = (
+                        update_dict["geoh5"]
+                        .get_entity(uuid.UUID(value["value"]))[0]
+                        .name
+                    )
 
-        self.data_channels = {}
-        defaults = self.get_defaults()
-
-        return defaults
+        return update_dict
 
     def run(self):
         # The reloader has not yet run - open the browser
