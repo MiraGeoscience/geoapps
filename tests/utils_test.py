@@ -112,8 +112,10 @@ def test_no_warn_module_not_found(recwarn):
 
 
 def test_warn_module_not_found():
-    noop = lambda x: None
+    # pylint: disable=import-error
+    # pylint: disable=no-name-in-module
 
+    noop = lambda x: None
     with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
             import nonexisting as test_import

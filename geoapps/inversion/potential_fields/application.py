@@ -372,10 +372,6 @@ class InversionApp(PlotSelection2D):
         return self._initial_beta_ratio
 
     @property
-    def initial_beta_options(self):
-        return self._initial_beta_options
-
-    @property
     def chi_factor(self):
         return self._chi_factor
 
@@ -406,10 +402,6 @@ class InversionApp(PlotSelection2D):
     @property
     def tile_spatial(self):
         return self._tile_spatial
-
-    @property
-    def mesh(self):
-        return self._mesh
 
     @property
     def norms(self):
@@ -746,11 +738,6 @@ class InversionApp(PlotSelection2D):
     @property
     def receivers_offset_z(self):
         return self.sensor.receivers_offset_z
-
-    @property
-    def starting_channel(self):
-        """"""
-        return self._starting_channel
 
     @property
     def inversion_type(self):
@@ -1396,10 +1383,6 @@ class SensorOptions(ObjectDataSelection):
         return self._main
 
     @property
-    def offset(self):
-        return self._offset
-
-    @property
     def receivers_radar_drape(self):
         return self._receivers_radar_drape
 
@@ -1548,10 +1531,6 @@ class MeshOctreeOptions(ObjectDataSelection):
     @property
     def vertical_padding(self):
         return self._vertical_padding
-
-    @property
-    def main(self):
-        return self._main
 
     def mesh_selection(self, _):
         if self._mesh.value is None:

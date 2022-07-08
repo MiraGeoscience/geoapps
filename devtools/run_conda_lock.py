@@ -21,7 +21,9 @@ To prepare the conda base environment, see devtools/setup-conda-base.bat
 """
 
 import os
+import re
 import subprocess
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -32,11 +34,11 @@ variables:
   KMP_WARNINGS: 0
 """
 
-environments_folder_ = "environments"
+_environments_folder = Path("environments")
 
 
 @contextmanager
-def print_execution_time(name: str = ""):
+def print_execution_time(name: str = "") -> None:
     from datetime import datetime
 
     start = datetime.now()
@@ -48,12 +50,12 @@ def print_execution_time(name: str = ""):
         print(f"--{message_prefix} execution time: {duration}")
 
 
-def create_multi_platform_lock(py_ver: str, platform: str = None):
+def create_multi_platform_lock(py_ver: str, platform: str = None) -> None:
     print(f"# Creating multi-platform lock file for Python {py_ver} ...")
     platform_option = f"-p {platform}" if platform else ""
     with print_execution_time(f"conda-lock for {py_ver}"):
         subprocess.run(
-            f"conda-lock lock --mamba --no-micromamba -f pyproject.toml -f env-python-{py_ver}.yml {platform_option} --lockfile conda-py-{py_ver}-lock.yml",
+            f"conda-lock lock --mamba --no-micromamba -f pyproject.toml -f {_environments_folder}/env-python-{py_ver}.yml {platform_option} --lockfile conda-py-{py_ver}-lock.yml",
             env=dict(os.environ, PYTHONUTF8="1"),
             shell=True,
             check=True,
@@ -61,7 +63,7 @@ def create_multi_platform_lock(py_ver: str, platform: str = None):
         )
 
 
-def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
+def per_platform_env(py_ver: str, full=True, dev=False, suffix="") -> None:
     print(
         f"# Creating per platform Conda env files for Python {py_ver} ({'WITH' if dev else 'NO'} dev dependencies) ... "
     )
@@ -71,7 +73,7 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
     subprocess.run(
         (
             f"conda-lock render {dev_dep_option} {extras_option} -k env"
-            f" --filename-template {environments_folder_}/conda-py-{py_ver}-{{platform}}{dev_suffix}{suffix}.lock conda-py-{py_ver}-lock.yml"
+            f" --filename-template {_environments_folder}/conda-py-{py_ver}-{{platform}}{dev_suffix}{suffix}.lock conda-py-{py_ver}-lock.yml"
         ),
         env=dict(os.environ, PYTHONUTF8="1"),
         shell=True,
@@ -79,14 +81,36 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
         stderr=subprocess.STDOUT,
     )
     platform_glob = "*-64"
-    for lock_env_file in Path(environments_folder_).glob(
+    for lock_env_file in _environments_folder.glob(
         f"conda-py-{py_ver}-{platform_glob}{dev_suffix}{suffix}.lock.yml"
     ):
+        patch_none_md5(lock_env_file)
         with open(lock_env_file, "a") as f:
             f.write(env_file_variables_section_)
 
 
-def config_conda():
+def patch_none_md5(file: Path) -> None:
+    """
+    Patch the given file to safely remove --hash=md5:None.
+
+    pip does not want hash with md5 (but accepts sha256 or others).
+    """
+
+    none_md5_re = re.compile(r"(.*)\s--hash=md5:None\b(.*)")
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        patched_file = Path(tmpdirname) / file.name
+        with open(patched_file, "w") as patched:
+            with open(file) as f:
+                for line in f:
+                    match = none_md5_re.match(line)
+                    if not match:
+                        patched.write(line)
+                    else:
+                        patched.write(f"{match.group(1)}{match.group(2)}\n")
+        patched_file.replace(file)
+
+
+def config_conda() -> None:
     subprocess.run(
         "conda config --set channel_priority strict",
         shell=True,
@@ -95,10 +119,9 @@ def config_conda():
     )
 
 
-def delete_existing_files():
-    env_folder = Path(environments_folder_)
-    if env_folder.exists():
-        for f in env_folder.glob("*.lock.yml"):
+def delete_existing_files() -> None:
+    if _environments_folder.exists():
+        for f in _environments_folder.glob("*.lock.yml"):
             f.unlink()
 
     for f in Path().glob("*-lock.yml"):
@@ -106,14 +129,10 @@ def delete_existing_files():
 
 
 if __name__ == "__main__":
+    assert _environments_folder.is_dir()
     delete_existing_files()
 
     config_conda()
-    env_folder = Path(environments_folder_)
-    if env_folder.exists():
-        assert env_folder.is_dir()
-    else:
-        env_folder.mkdir()
 
     patchPyprojectToml()
     with print_execution_time(f"run_conda_lock"):
