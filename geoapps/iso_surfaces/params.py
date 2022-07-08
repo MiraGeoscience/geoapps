@@ -73,6 +73,7 @@ class IsoSurfacesParams(BaseParams):
         """
         Minimum value for contours.
         """
+
         return self._interval_min
 
     @interval_min.setter

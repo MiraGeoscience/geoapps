@@ -42,7 +42,7 @@ class IsoSurfacesDriver:
 
         if len(levels) < 1:
             return
-
+        print("Starting the isosurface creation.")
         surfaces = self.iso_surface(
             self.params.objects,
             self.params.data.values,
@@ -70,6 +70,7 @@ class IsoSurfacesDriver:
             monitored_directory_copy(self.params.monitoring_directory, container)
 
         workspace.close()
+
         return result
 
     @staticmethod
