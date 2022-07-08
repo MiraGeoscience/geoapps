@@ -7,23 +7,24 @@
 from __future__ import annotations
 
 import numpy as np
-from discretize.utils import mesh_utils
-from geoh5py.objects import BlockModel, ObjectBase
-from geoh5py.ui_json import InputFile
-from geoh5py.ui_json.utils import monitored_directory_copy
-from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.grid_creation.params import GridCreationParams
-from geoapps.shared_utils.utils import get_locations, weighted_average
+from geoapps.interpolation.application import DataInterpolation
+from geoapps.shared_utils.utils import get_locations
 
 
 class GridCreationDriver:
-    def __init__(self, params: InterpGridParams):
-        self.params: InterpGridParams = params
+    def __init__(self, params: GridCreationParams):
+        self.params: GridCreationParams = params
 
     def run(self):
-        # 3D grid
+        xyz = get_locations(self.params.geoh5, self.params.objects).copy()
+        if xyz is None:
+            return
+
+        tree = cKDTree(xyz)
+
         xyz_ref = get_locations(self.params.geoh5, self.params.xy_reference)
         if xyz_ref is None:
             print("No object selected for 'Lateral Extent'. Defaults to input object.")
