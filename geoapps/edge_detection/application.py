@@ -5,27 +5,29 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import numpy as np
-from geoh5py.io import H5Writer
-from geoh5py.objects import Curve, Grid2D
-from geoh5py.workspace import Workspace
-from ipywidgets import (
-    Button,
-    FloatSlider,
-    HBox,
-    IntSlider,
-    Layout,
-    Text,
-    VBox,
-    interactive_output,
-)
-from matplotlib import collections
-from skimage.feature import canny
-from skimage.transform import probabilistic_hough_line
+from __future__ import annotations
 
-from geoapps import PlotSelection2D
+from time import time
+
+import numpy as np
+from geoh5py.groups import ContainerGroup
+from geoh5py.objects import Curve, Grid2D
+from geoh5py.ui_json.utils import monitored_directory_copy
+
+from geoapps.base.plot import PlotSelection2D
+from geoapps.shared_utils.utils import filter_xy
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import filter_xy
+
+with warn_module_not_found():
+    from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
+
+with warn_module_not_found():
+    from matplotlib import collections
+
+with warn_module_not_found():
+    from skimage.feature import canny
+    from skimage.transform import probabilistic_hough_line
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -111,6 +113,7 @@ class EdgeDetectionApp(PlotSelection2D):
         )
         self.data.observe(self.update_name, names="value")
         self.compute.on_click(self.compute_trigger)
+        self._unique_object = {}
         super().__init__(**self.defaults)
 
         # Make changes to trigger warning color
@@ -191,44 +194,28 @@ class EdgeDetectionApp(PlotSelection2D):
     def trigger_click(self, _):
         entity, _ = self.get_selected_entities()
         if getattr(self.trigger, "vertices", None) is not None:
-
-            curves = [
-                child
-                for child in self.ga_group.children
-                if child.name == self.export_as.value
-            ]
-            if any(curves):
-                curve = curves[0]
-
-                curve._children = []
-                curve.vertices = self.trigger.vertices
-                curve.cells = np.vstack(self.trigger.cells).astype("uint32")
-
-                # Remove directly on geoh5
-                project_handle = H5Writer.fetch_h5_handle(self.h5file)
-                base = list(project_handle.keys())[0]
-                obj_handle = project_handle[base]["Objects"]
-                for key in obj_handle[H5Writer.uuid_str(curve.uid)]["Data"].keys():
-                    del project_handle[base]["Data"][key]
-                del obj_handle[H5Writer.uuid_str(curve.uid)]
-
-                H5Writer.save_entity(curve)
-
-            else:
+            name = string_name(self.export_as.value)
+            temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.0f}.geoh5"
+            with self.get_output_workspace(
+                self.export_directory.selected_path, temp_geoh5
+            ) as workspace:
+                out_entity = ContainerGroup.create(
+                    workspace,
+                    name=self.ga_group_name.value,
+                    uid=self._unique_object.get(self.ga_group_name.value, None),
+                )
                 curve = Curve.create(
-                    self.workspace,
-                    name=string_name(self.export_as.value),
+                    workspace,
+                    name=name,
                     vertices=self.trigger.vertices,
                     cells=self.trigger.cells,
-                    parent=self.ga_group,
+                    parent=out_entity,
+                    uid=self._unique_object.get(name, None),
                 )
-
-            if self.live_link.value:
-                self.live_link_output(
-                    self.export_directory.selected_path, self.ga_group
-                )
-
-            self.workspace.finalize()
+                self._unique_object[name] = curve.uid
+                self._unique_object[self.ga_group_name.value] = out_entity.uid
+        if self.live_link.value:
+            monitored_directory_copy(self.export_directory.selected_path, out_entity)
 
     def update_name(self, _):
         if self.data.value is not None:
@@ -247,6 +234,9 @@ class EdgeDetectionApp(PlotSelection2D):
         z = grid.centroids[:, 2].reshape(grid.shape, order="F")
         grid_data = data[0].values.reshape(grid.shape, order="F")
         indices = self.indices
+        if indices is None:
+            indices = np.ones_like(grid_data, dtype="bool")
+
         ind_x, ind_y = (
             np.any(indices, axis=1),
             np.any(indices, axis=0),

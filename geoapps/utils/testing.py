@@ -10,6 +10,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 import warnings
 from uuid import UUID
@@ -29,7 +31,7 @@ from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 from SimPEG import utils
 
-from geoapps.utils import treemesh_2_octree
+from geoapps.driver_base.utils import treemesh_2_octree
 
 
 class Geoh5Tester:
@@ -190,7 +192,6 @@ def setup_inversion_workspace(
             axis=1,
         )
         survey.cells = survey.cells[dist < 100.0, :]
-        geoh5.finalize()
 
     else:
         survey = Points.create(
@@ -263,3 +264,17 @@ def check_target(output: dict, target: dict, tolerance=0.1):
     np.testing.assert_array_less(
         np.abs(output["phi_d"][1] - target["phi_d"]) / target["phi_d"], tolerance
     )
+
+
+def get_output_workspace(tmp_dir):
+    """
+    Extract the output geoh5 from the 'Temp' directory.
+    """
+    files = [
+        file
+        for file in os.listdir(os.path.join(tmp_dir, "Temp"))
+        if file.endswith("geoh5")
+    ]
+    if len(files) != 1:
+        raise UserWarning("Could not find a unique output workspace.")
+    return os.path.join(tmp_dir, "Temp", files[0])

@@ -7,14 +7,15 @@
 
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
 import multiprocessing
+import os
 import sys
+from datetime import datetime, timedelta
 from multiprocessing.pool import ThreadPool
 from time import time
 from uuid import UUID
@@ -23,7 +24,7 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
-from SimPEG import inverse_problem, inversion, maps, optimization, regularization
+from SimPEG import dask, inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
 from geoapps.inversion.components import (
@@ -51,6 +52,12 @@ class InversionDriver:
         self.inverse_problem = None
         self.survey = None
         self.active_cells = None
+        self.running = False
+
+        self.logger = InversionLogger("SimPEG.log", self)
+        sys.stdout = self.logger
+        self.logger.start()
+
         self.initialize()
 
     @property
@@ -174,19 +181,15 @@ class InversionDriver:
             beta=self.params.initial_beta,
         )
 
-        # Solve forward problem, and attach dpred to inverse problem or
-        if self.params.forward_only:
-            print("Running forward simulation ...")
-        else:
+        if self.warmstart and not self.params.forward_only:
             print("Pre-computing sensitivities ...")
-
-        if self.warmstart or self.params.forward_only:
             self.inverse_problem.dpred = self.inversion_data.simulate(
                 self.starting_model, self.inverse_problem, self.sorting
             )
 
         # If forward only option enabled, stop here
         if self.params.forward_only:
+            self.workspace.close()
             return
 
         # Add a list of directives to the inversion
@@ -203,6 +206,7 @@ class InversionDriver:
         self.inversion = inversion.BaseInversion(
             self.inverse_problem, directiveList=self.directiveList
         )
+        self.workspace.close()
 
     def run(self):
         """Run inversion from params"""
@@ -212,11 +216,14 @@ class InversionDriver:
             self.inversion_data.simulate(
                 self.starting_model, self.inverse_problem, self.sorting
             )
+            self.logger.end()
             return
 
         # Run the inversion
         self.start_inversion_message()
-        mrec = self.inversion.run(self.starting_model)
+        self.running = True
+        self.inversion.run(self.starting_model)
+        self.logger.end()
 
     def start_inversion_message(self):
 
@@ -225,7 +232,6 @@ class InversionDriver:
         chi_start = (
             self.params.starting_chi_factor if has_chi_start else self.params.chi_factor
         )
-        print(f"Starting {self.params.inversion_style} inversion...")
         print(
             "Target Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
                 0.5 * self.params.chi_factor * len(self.survey.std),
@@ -366,6 +372,51 @@ class InversionDriver:
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
 
+class InversionLogger:
+    def __init__(self, logfile, driver):
+        self.driver = driver
+        self.terminal = sys.stdout
+        self.log = open(self.get_path(logfile), "w")
+        self.initial_time = time()
+
+    def start(self):
+        date_time = datetime.now().strftime("%b-%d-%Y:%H:%M:%S")
+        self.write(
+            f"SimPEG {self.driver.inversion_type} inversion started {date_time}\n"
+        )
+
+    def end(self):
+        elapsed_time = timedelta(seconds=time() - self.initial_time).seconds
+        days, hours, minutes, seconds = self.format_seconds(elapsed_time)
+        self.write(
+            f"Total runtime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.\n"
+        )
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()
+
+    def format_seconds(self, seconds):
+        days = seconds // (24 * 3600)
+        seconds = seconds % (24 * 3600)
+        hours = seconds // 3600
+        seconds = seconds % 3600
+        minutes = seconds // 60
+        seconds = seconds % 60
+        return days, hours, minutes, seconds
+
+    def close(self):
+        self.terminal.close()
+
+    def flush(self):
+        pass
+
+    def get_path(self, file):
+        root_directory = os.path.dirname(self.driver.workspace.h5file)
+        return os.path.join(root_directory, file)
+
+
 def start_inversion(filepath=None, **kwargs):
     """Starts inversion with parameters defined in input file."""
 
@@ -385,8 +436,8 @@ def start_inversion(filepath=None, **kwargs):
         from .potential_fields.magnetic_scalar.constants import validations
 
     elif inversion_type == "gravity":
-        from .potential_fields import GravityParams as ParamClass
-        from .potential_fields.gravity.constants import validations
+        from geoapps.inversion.potential_fields import GravityParams as ParamClass
+        from geoapps.inversion.potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
         from .natural_sources import MagnetotelluricsParams as ParamClass
@@ -410,11 +461,11 @@ def start_inversion(filepath=None, **kwargs):
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
     driver = InversionDriver(params)
+
     driver.run()
 
 
 if __name__ == "__main__":
-    ct = time()
     filepath = sys.argv[1]
     start_inversion(filepath)
-    print(f"Total runtime: {datetime.timedelta(seconds=time() - ct)}")
+    sys.stdout.close()

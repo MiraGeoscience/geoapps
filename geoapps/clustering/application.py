@@ -4,31 +4,42 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
+
+from time import time
 from uuid import UUID
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
+from geoh5py.ui_json.utils import monitored_directory_copy
 from IPython.display import display
-from ipywidgets import (
-    Button,
-    Checkbox,
-    ColorPicker,
-    Dropdown,
-    FloatText,
-    HBox,
-    IntSlider,
-    Label,
-    Layout,
-    ToggleButtons,
-    VBox,
-    interactive_output,
-)
 from scipy.spatial import cKDTree
-from sklearn.cluster import KMeans
 
 from geoapps.scatter_plot import ScatterPlots
-from geoapps.utils.utils import colors, hex_to_rgb, random_sampling
+from geoapps.shared_utils.utils import colors, hex_to_rgb
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.statistics import random_sampling
+
+with warn_module_not_found():
+    import plotly.graph_objects as go
+
+with warn_module_not_found():
+    from ipywidgets import (
+        Button,
+        Checkbox,
+        ColorPicker,
+        Dropdown,
+        FloatText,
+        HBox,
+        IntSlider,
+        ToggleButtons,
+        VBox,
+        interactive_output,
+    )
+
+with warn_module_not_found():
+    from sklearn.cluster import KMeans
 
 
 class Clustering(ScatterPlots):
@@ -581,33 +592,24 @@ class Clustering(ScatterPlots):
                 names=["Value", "Red", "Green", "Blue", "Alpha"],
             )
 
-            if self.ga_group_name.value in obj.get_data_list():
-                data = obj.get_data(self.ga_group_name.value)[0]
-                data.entity_type.value_map = group_map
+            # Create reference values and color_map
+            group_map, color_map = {}, []
+            for ii in range(self.n_clusters.value):
+                colorpicker = self.color_pickers[ii]
+                color = colorpicker.value.lstrip("#")
+                group_map[ii + 1] = f"Cluster_{ii}"
+                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
 
-                if data.entity_type.color_map is None:
-                    data.entity_type.color_map = {
-                        "name": "Cluster Groups",
-                        "values": color_map,
-                    }
-                else:
-                    data.entity_type.color_map.values = color_map
-                data.values = cluster_values
+            color_map = np.core.records.fromarrays(
+                np.vstack(color_map).T,
+                names=["Value", "Red", "Green", "Blue", "Alpha"],
+            )
 
-            else:
-
-                # Create reference values and color_map
-                group_map, color_map = {}, []
-                for ii in range(self.n_clusters.value):
-                    colorpicker = self.color_pickers[ii]
-                    color = colorpicker.value.lstrip("#")
-                    group_map[ii + 1] = f"Cluster_{ii}"
-                    color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
-
-                color_map = np.core.records.fromarrays(
-                    np.vstack(color_map).T,
-                    names=["Value", "Red", "Green", "Blue", "Alpha"],
-                )
+            temp_geoh5 = f"Clustering_{time():.0f}.geoh5"
+            with self.get_output_workspace(
+                self.export_directory.selected_path, temp_geoh5
+            ) as workspace:
+                obj = obj.copy(parent=workspace)
                 cluster_groups = obj.add_data(
                     {
                         self.ga_group_name.value: {
@@ -623,9 +625,7 @@ class Clustering(ScatterPlots):
                 }
 
             if self.live_link.value:
-                self.live_link_output(self.export_directory.selected_path, obj)
-
-            self.workspace.finalize()
+                monitored_directory_copy(self.export_directory.selected_path, obj)
 
     def update_downsampling(self, _, refresh_plot=True):
         ...

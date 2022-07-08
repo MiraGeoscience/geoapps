@@ -5,34 +5,42 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
 import multiprocessing
 import os
 
-import ipywidgets as widgets
-import matplotlib.pyplot as plt
 import numpy as np
+from geoh5py.data import Data
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.workspace import Workspace
-from ipywidgets.widgets import (
-    Button,
-    Checkbox,
-    Dropdown,
-    FloatText,
-    HBox,
-    IntText,
-    Label,
-    Layout,
-    Text,
-    VBox,
-)
 
-from geoapps import PlotSelection2D
 from geoapps.base.application import BaseApplication
+from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
-from geoapps.utils import geophysical_systems
-from geoapps.utils.utils import find_value, string_2_list
+from geoapps.utils import geophysical_systems, warn_module_not_found
+from geoapps.utils.list import find_value
+from geoapps.utils.string import string_2_list
+
+with warn_module_not_found():
+    from matplotlib import pyplot as plt
+
+with warn_module_not_found():
+    import ipywidgets as widgets
+    from ipywidgets.widgets import (
+        Button,
+        Checkbox,
+        Dropdown,
+        FloatText,
+        HBox,
+        IntText,
+        Label,
+        Layout,
+        Text,
+        VBox,
+    )
 
 
 class ChannelOptions:
@@ -1001,6 +1009,9 @@ class InversionApp(PlotSelection2D):
             data_widget = self.data_channel_choices.data_channel_options[channel.header]
 
             entity = self.workspace.get_entity(self.objects.value)[0]
+            if entity is None:
+                return
+
             if channel.value is None or channel.value not in [
                 child.uid for child in entity.children
             ]:
@@ -1067,47 +1078,55 @@ class InversionApp(PlotSelection2D):
     def object_observer(self, _):
 
         self.resolution.indices = None
+        entity = self._workspace.get_entity(self.objects.value)[0]
+        if entity is None:
+            return
 
-        if self.workspace.get_entity(self.objects.value):
-            self.update_data_list(None)
-            self.sensor.update_data_list(None)
-            self.lines.update_data_list(None)
-            self.lines.update_line_list(None)
+        self.update_data_list(None)
+        self.sensor.update_data_list(None)
+        self.lines.update_data_list(None)
+        self.lines.update_line_list(None)
 
-            for aem_system, specs in self.em_system_specs.items():
-                if any(
-                    [
-                        specs["flag"] in channel
-                        for channel in self.data.uid_name_map.values()
-                    ]
-                ):
-                    self.system.value = aem_system
+        for aem_system, specs in self.em_system_specs.items():
+            if any(
+                [
+                    specs["flag"] in channel
+                    for channel in self.data.uid_name_map.values()
+                ]
+            ):
+                self.system.value = aem_system
 
-            self.system_observer(None)
+        self.system_observer(None)
 
-            if hasattr(self.data_channel_choices, "data_channel_options"):
-                for (
-                    key,
-                    data_widget,
-                ) in self.data_channel_choices.data_channel_options.items():
-                    data_widget.children[2].options = self.data.options
-                    value = find_value(self.data.options, [key])
-                    data_widget.children[2].value = value
+        if hasattr(self.data_channel_choices, "data_channel_options"):
+            for (
+                key,
+                data_widget,
+            ) in self.data_channel_choices.data_channel_options.items():
+                data_widget.children[2].options = self.data.options
+                value = find_value(self.data.options, [key])
+                data_widget.children[2].value = value
 
-            self.write.button_style = "warning"
-            self.trigger.button_style = "danger"
+        self.write.button_style = "warning"
+        self.trigger.button_style = "danger"
 
     def update_component_panel(self, _):
-        if self.workspace.get_entity(self.objects.value):
-            _, data_list = self.get_selected_entities()
-            options = [[data.name, data.uid] for data in data_list]
-            if hasattr(self.data_channel_choices, "data_channel_options"):
-                for (
-                    key,
-                    data_widget,
-                ) in self.data_channel_choices.data_channel_options.items():
-                    data_widget.children[2].options = options
-                    data_widget.children[2].value = find_value(options, [key])
+
+        obj, data_list = self.get_selected_entities()
+
+        if obj is None:
+            return
+
+        options = [
+            [data.name, data.uid] for data in data_list if isinstance(data, Data)
+        ]
+        if hasattr(self.data_channel_choices, "data_channel_options"):
+            for (
+                key,
+                data_widget,
+            ) in self.data_channel_choices.data_channel_options.items():
+                data_widget.children[2].options = options
+                data_widget.children[2].value = find_value(options, [key])
 
     def data_channel_choices_observer(self, _):
         if hasattr(
@@ -1121,7 +1140,7 @@ class InversionApp(PlotSelection2D):
             self.data_channel_panel.children = [self.data_channel_choices, data_widget]
 
             if (
-                self.workspace.get_entity(self.objects.value)
+                self.workspace.get_entity(self.objects.value)[0] is not None
                 and data_widget.children[2].value is None
             ):
                 _, data_list = self.get_selected_entities()
@@ -1317,38 +1336,44 @@ class InversionApp(PlotSelection2D):
             self.trigger.button_style = "danger"
             return
 
-        new_workspace = Workspace(
+        with Workspace(
             os.path.join(
                 self.export_directory.selected_path,
                 self.ga_group_name.value + ".geoh5",
             )
-        )
+        ) as new_workspace:
 
-        obj, data = self.get_selected_entities()
-        new_obj = obj.copy(parent=new_workspace, copy_children=False)
-        for d in data:
-            d.copy(parent=new_obj)
+            obj, data = self.get_selected_entities()
+            new_obj = obj.copy(parent=new_workspace, copy_children=False)
+            for d in data:
+                d.copy(parent=new_obj)
 
-        _, data = self.sensor.get_selected_entities()
-        for d in data:
-            d.copy(parent=new_obj)
+            _, data = self.sensor.get_selected_entities()
+            for d in data:
+                if d is None:
+                    continue
+                d.copy(parent=new_obj)
 
-        _, data = self.lines.get_selected_entities()
-        for d in data:
-            d.copy(parent=new_obj)
+            _, data = self.lines.get_selected_entities()
+            for d in data:
+                if d is None:
+                    continue
+                d.copy(parent=new_obj)
 
-        for elem in [
-            self.topography,
-            self.inversion_parameters.starting_model,
-            self.inversion_parameters.reference_model,
-            self.inversion_parameters.susceptibility_model,
-        ]:
-            obj, data = elem.get_selected_entities()
+            for elem in [
+                self.topography,
+                self.inversion_parameters.starting_model,
+                self.inversion_parameters.reference_model,
+                self.inversion_parameters.susceptibility_model,
+            ]:
+                obj, data = elem.get_selected_entities()
 
-            if obj is not None:
-                new_obj = obj.copy(parent=new_workspace, copy_children=False)
-                for d in data:
-                    d.copy(parent=new_obj)
+                if obj is not None:
+                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
+                    for d in data:
+                        if d is None:
+                            continue
+                        d.copy(parent=new_obj)
 
         input_dict["workspace"] = os.path.abspath(new_workspace.h5file)
         input_dict["save_to_geoh5"] = os.path.abspath(new_workspace.h5file)

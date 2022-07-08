@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import numpy as np
 from SimPEG import directives, maps
 from SimPEG.utils import cartesian2amplitude_dip_azimuth
@@ -372,21 +374,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-        component_map = {
-            "zxx_real": "zyy_real",
-            "zxx_imag": "zyy_imag",
-            "zxy_real": "zyx_real",
-            "zxy_imag": "zyx_imag",
-            "zyx_real": "zxy_real",
-            "zyx_imag": "zxy_imag",
-            "zyy_real": "zxx_real",
-            "zyy_imag": "zxx_imag",
-        }
-        if self.factory_type == "magnetotellurics":
-            components = [component_map[k] for k in inversion_object.observed.keys()]
-        else:
-            components = list(inversion_object.observed.keys())
 
+        components = list(inversion_object.observed.keys())
         channels = np.unique(
             [list(v.keys()) for k, v in inversion_object.observed.items()]
         )

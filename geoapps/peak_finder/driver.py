@@ -16,13 +16,13 @@ from dask import delayed
 from dask.distributed import Client, get_client
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import InputFile, monitored_directory_copy
 from tqdm import tqdm
 
 from geoapps.base.application import BaseApplication
+from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
-from geoapps.utils.utils import hex_to_rgb
 
 from .params import PeakFinderParams
 from .utils import default_groups_from_property_group, find_anomalies
@@ -318,20 +318,14 @@ class PeakFinderDriver:
                     parent=output_group,
                 )
 
-        workspace.finalize()
         print("Process completed.")
-        print(f"Result exported to: {workspace.h5file}")
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
         ):
-            BaseApplication.live_link_output(
-                self.params.monitoring_directory, output_group
-            )
-            print(f"Live link activated!")
-            print(
-                f"Check your current ANALYST session for results stored in group {output_group.name}."
-            )
+            monitored_directory_copy(self.params.monitoring_directory, output_group)
+        else:
+            print(f"Result exported to: {self.params.geoh5.h5file}")
 
 
 if __name__ == "__main__":

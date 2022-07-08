@@ -8,7 +8,7 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.utils import get_inversion_output
+from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
@@ -65,7 +65,9 @@ def test_ip_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params)
+
     fwr_driver.run()
+
     geoh5 = Workspace(geoh5.h5file)
     potential = geoh5.get_entity("Iteration_0_ip")[0]
     # Run the inverse
@@ -96,6 +98,7 @@ def test_ip_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
+
     driver.run()
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid

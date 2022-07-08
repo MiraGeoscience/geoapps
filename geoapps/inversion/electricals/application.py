@@ -5,14 +5,18 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
 import multiprocessing
 import os
 import os.path as path
 import uuid
+import warnings
+from time import time
 
-import ipywidgets as widgets
 import numpy as np
+from geoh5py.data import Data
 from geoh5py.objects import (
     BlockModel,
     CurrentElectrode,
@@ -24,24 +28,29 @@ from geoh5py.objects import (
 )
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from ipywidgets.widgets import (
-    Button,
-    Checkbox,
-    Dropdown,
-    FloatText,
-    HBox,
-    IntText,
-    Label,
-    Layout,
-    VBox,
-    Widget,
-)
 
-from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.electricals.direct_current.constants import app_initializer
-from geoapps.utils.utils import find_value, string_2_list
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.list import find_value
+from geoapps.utils.string import string_2_list
+
+with warn_module_not_found():
+    import ipywidgets as widgets
+    from ipywidgets.widgets import (
+        Button,
+        Checkbox,
+        Dropdown,
+        FloatText,
+        HBox,
+        IntText,
+        Label,
+        Layout,
+        VBox,
+        Widget,
+    )
 
 
 def inversion_defaults():
@@ -83,6 +92,7 @@ class InversionApp(PlotSelection2D):
     _sensor = None
     _lines = None
     _topography = None
+    _run_params = None
     _object_types = (PotentialElectrode,)
     _exclusion_types = (CurrentElectrode,)
     inversion_parameters = None
@@ -706,7 +716,11 @@ class InversionApp(PlotSelection2D):
 
     def trigger_click(self, _):
         """"""
-        self.run(self.params)
+        if self._run_params is None:
+            warnings.warn("Input file must be written before running.")
+            return
+
+        self.run(self._run_params)
         self.trigger.button_style = ""
 
     def inversion_type_observer(self, _):
@@ -758,9 +772,9 @@ class InversionApp(PlotSelection2D):
         )
         data_channel_options = {}
         self.data_channel_choices.options = data_type_list
+        obj, _ = self.get_selected_entities()
 
-        if self.workspace.get_entity(self.objects.value):
-            obj, _ = self.get_selected_entities()
+        if obj is not None:
             options = [
                 [name, obj.get_data(name)[0].uid]
                 for name in sorted(obj.get_data_list())
@@ -775,6 +789,10 @@ class InversionApp(PlotSelection2D):
                 channel = caller["owner"]
                 data_widget = getattr(self, f"{channel.header}_group")
                 entity = self.workspace.get_entity(self.objects.value)[0]
+
+                if entity is None:
+                    return
+
                 if channel.value is None or channel.value not in [
                     child.uid for child in entity.children
                 ]:
@@ -876,8 +894,6 @@ class InversionApp(PlotSelection2D):
                 ["", None]
             ] + options
 
-            # data_channel_options[key].children[1].value = find_value(options, [key])
-
         self.data_channel_choices.value = inversion_defaults()["component"][
             self.inversion_type.value
         ]
@@ -887,6 +903,7 @@ class InversionApp(PlotSelection2D):
             data_channel_options[self.data_channel_choices.value],
         ]
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
         if self.inversion_type.value == "direct current":
@@ -899,14 +916,18 @@ class InversionApp(PlotSelection2D):
     def object_observer(self, _):
         """ """
         self.resolution.indices = None
-        if self.workspace.get_entity(self.objects.value):
-            self.update_data_list(None)
-            self.sensor.update_data_list(None)
-            # self.lines.update_data_list(None)
-            # self.lines.update_line_list(None)
-            self.inversion_type_observer(None)
-            self.write.button_style = "warning"
-            self.trigger.button_style = "danger"
+        obj = self.workspace.get_entity(self.objects.value)[0]
+        if obj is None:
+            return
+
+        self.update_data_list(None)
+        self.sensor.update_data_list(None)
+        # self.lines.update_data_list(None)
+        # self.lines.update_line_list(None)
+        self.inversion_type_observer(None)
+        self.write.button_style = "warning"
+        self._run_params = None
+        self.trigger.button_style = "danger"
 
     def data_channel_choices_observer(self, _):
         if hasattr(
@@ -918,12 +939,13 @@ class InversionApp(PlotSelection2D):
                 self.data_channel_choices.value
             ]
             self.data_channel_panel.children = [self.data_channel_choices, data_widget]
-
+            obj, data_list = self.get_selected_entities()
             if (
-                self.workspace.get_entity(self.objects.value)
+                obj is not None
+                and data_list is not None
                 and data_widget.children[1].value is None
             ):
-                _, data_list = self.get_selected_entities()
+
                 options = [[data.name, data.uid] for data in data_list]
                 data_widget.children[1].value = find_value(
                     options, [self.data_channel_choices.value]
@@ -934,6 +956,7 @@ class InversionApp(PlotSelection2D):
             self.refresh.value = True
 
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
     def update_octree_param(self, _):
@@ -949,6 +972,7 @@ class InversionApp(PlotSelection2D):
         )
         self.resolution.indices = None
         self.write.button_style = "warning"
+        self._run_params = None
         self.trigger.button_style = "danger"
 
     def write_trigger(self, _):
@@ -962,86 +986,120 @@ class InversionApp(PlotSelection2D):
             )
             return
 
-        new_workspace = Workspace(
-            path.join(
-                self.export_directory.selected_path,
-                self._ga_group_name.value + ".geoh5",
-            )
-        )
-
-        for elem in [
-            self,
-            self._mesh_octree,
-            self._topography_group,
-            self._starting_model_group,
-            self._conductivity_model_group,
-            self._reference_model_group,
-            self._lower_bound_group,
-            self._upper_bound_group,
-        ]:
-            obj, data = elem.get_selected_entities()
-            if obj is not None:
-                new_obj = new_workspace.get_entity(obj.uid)[0]
-                if new_obj is None:
-                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
-                for d in data:
-                    if new_workspace.get_entity(d.uid)[0] is None:
-                        d.copy(parent=new_obj)
-
-        new_obj = new_workspace.get_entity(self.objects.value)[0]
-        for key in self.data_channel_choices.options:
-            widget = getattr(self, f"{key}_uncertainty_channel")
-            if widget.value is not None:
-                setattr(self.params, f"{key}_uncertainty", str(widget.value))
-                if new_workspace.get_entity(widget.value)[0] is None:
-                    self.workspace.get_entity(widget.value)[0].copy(
-                        parent=new_obj, copy_children=False
-                    )
-            else:
-                widget = getattr(self, f"{key}_uncertainty_floor")
-                setattr(self.params, f"{key}_uncertainty", widget.value)
-
-            if getattr(self, f"{key}_channel_bool").value:
-                self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
-                    0
-                ].copy(parent=new_obj)
-
-        if self.receivers_radar_drape.value is not None:
-            self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
-                parent=new_obj
-            )
-
-        self.params.geoh5 = new_workspace
-
+        # Widgets values populate params dictionary
+        param_dict = {}
         for key in self.__dict__:
-            if "resolution" in key:
+            try:
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+                    if key[0] == "_":
+                        key = key[1:]
+
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
+
+                    param_dict[key] = value
+
+            except AttributeError:
                 continue
 
-            attr = getattr(self, key)
-            if isinstance(attr, Widget) and hasattr(attr, "value"):
-                value = attr.value
-                if isinstance(value, uuid.UUID):
-                    value = new_workspace.get_entity(value)[0]
-                setattr(self.params, key, value)
-            else:
-                sub_keys = []
-                if isinstance(attr, (ModelOptions, TopographyOptions)):
-                    sub_keys = [attr.identifier, attr.identifier + "_object"]
-                    attr = self
-                elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                    sub_keys = attr.params_keys
-                for sub_key in sub_keys:
-                    value = getattr(attr, sub_key)
-                    if isinstance(value, Widget) and hasattr(value, "value"):
-                        value = value.value
+        # Create a new workapce and copy objects into it
+        temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
+        with self.get_output_workspace(
+            self.export_directory.selected_path, temp_geoh5
+        ) as new_workspace:
+
+            param_dict["geoh5"] = new_workspace
+
+            for elem in [
+                self,
+                self._mesh_octree,
+                self._topography_group,
+                self._starting_model_group,
+                self._conductivity_model_group,
+                self._reference_model_group,
+                self._lower_bound_group,
+                self._upper_bound_group,
+            ]:
+                obj, data = elem.get_selected_entities()
+                if obj is not None:
+                    new_obj = new_workspace.get_entity(obj.uid)[0]
+                    if new_obj is None:
+                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
+                    for d in data:
+                        if (
+                            isinstance(d, Data)
+                            and new_workspace.get_entity(d.uid)[0] is None
+                        ):
+                            d.copy(parent=new_obj)
+
+            new_obj = new_workspace.get_entity(self.objects.value)[0]
+
+            for key in self.data_channel_choices.options:
+                widget = getattr(self, f"{key}_uncertainty_channel")
+                if widget.value is not None:
+                    param_dict[f"{key}_uncertainty"] = str(widget.value)
+                    if new_workspace.get_entity(widget.value)[0] is None:
+                        self.workspace.get_entity(widget.value)[0].copy(
+                            parent=new_obj, copy_children=False
+                        )
+                else:
+                    widget = getattr(self, f"{key}_uncertainty_floor")
+                    param_dict[f"{key}_uncertainty"] = widget.value
+
+                if getattr(self, f"{key}_channel_bool").value:
+                    self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
+                        0
+                    ].copy(parent=new_obj)
+
+            if self.receivers_radar_drape.value is not None:
+                self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
+                    parent=new_obj
+                )
+
+            for key in self.__dict__:
+                if "resolution" in key:
+                    continue
+
+                attr = getattr(self, key)
+                if isinstance(attr, Widget) and hasattr(attr, "value"):
+                    value = attr.value
                     if isinstance(value, uuid.UUID):
                         value = new_workspace.get_entity(value)[0]
-                    setattr(self.params, sub_key, value)
+                    if hasattr(self.params, key):
+                        param_dict[key.lstrip("_")] = value
+                else:
+                    sub_keys = []
+                    if isinstance(attr, (ModelOptions, TopographyOptions)):
+                        sub_keys = [attr.identifier, attr.identifier + "_object"]
+                        attr = self
+                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                        sub_keys = attr.params_keys
+                    for sub_key in sub_keys:
+                        value = getattr(attr, sub_key)
+                        if isinstance(value, Widget) and hasattr(value, "value"):
+                            value = value.value
+                        if isinstance(value, uuid.UUID):
+                            value = new_workspace.get_entity(value)[0]
+                        if hasattr(self.params, sub_key):
+                            param_dict[sub_key.lstrip("_")] = value
 
-        self.params.write_input_file(
-            name=self._ga_group_name.value + ".ui.json",
-            path=self.export_directory.selected_path,
-        )
+            # Create new params object and write
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+                workspace=new_workspace,
+            )
+            param_dict["resolution"] = None  # No downsampling for dcip
+            self._run_params = self.params.__class__(input_file=ifile, **param_dict)
+            self._run_params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                path=self.export_directory.selected_path,
+            )
+
         self.write.button_style = ""
         self.trigger.button_style = "success"
 

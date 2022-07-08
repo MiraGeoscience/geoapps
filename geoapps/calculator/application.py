@@ -5,17 +5,26 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import re
+from time import time
 
 import numpy
-from geoh5py.groups import RootGroup
-from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
+from geoh5py.ui_json.utils import monitored_directory_copy
 
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
+from geoapps.utils.workspace import sorted_children_dict
+
+with warn_module_not_found():
+    from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
 
 
 class Calculator(ObjectDataSelection):
+    assert numpy  # to make sure numpy is imported here, as it is required to eval the equation
+
     defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
@@ -92,46 +101,53 @@ class Calculator(ObjectDataSelection):
         """
         var = self.var
         obj = self.workspace.get_entity(self.objects.value)[0]
+
+        if obj is None:
+            return
+
         out_var, equation = re.split("=", self.equation.value)
-
         out_var = out_var.strip()[1:-1]
+        temp_geoh5 = f"{obj.name}_{out_var}_{time():.0f}.geoh5"
+        with self.get_output_workspace(
+            self.export_directory.selected_path, temp_geoh5
+        ) as workspace:
 
-        if getattr(obj, "vertices", None) is not None:
-            xyz = obj.vertices
-        else:
-            xyz = obj.centroids
+            obj = obj.copy(parent=workspace)
 
-        if out_var not in obj.get_data_list():
-            obj.add_data({out_var: {"values": numpy.zeros(xyz.shape[0])}})
-
-        for name in re.findall("{(.*?)}", equation):
-            if name in obj.get_data_list():
-                if name not in list(self.var.keys()):
-                    self.var[name] = obj.get_data(name)[0].values
-            elif name in "XYZ":
-                if name not in list(self.var.keys()):
-                    self.var[name] = xyz[:, "XYZ".index(name)]
+            if getattr(obj, "vertices", None) is not None:
+                xyz = obj.vertices
             else:
-                print(f"Variable {name} not in object data list. Please revise")
-                return
+                xyz = obj.centroids
 
-        equation = re.sub(r"{", "var['", equation)
-        equation = re.sub(r"}", "']", equation).strip()
-        vals = eval(equation)
+            variables = re.findall("{(.*?)}", equation)
+            for name in variables:
+                if name not in list(self.var.keys()):
+                    if name in obj.get_data_list():
+                        self.var[name] = obj.get_data(name)[0].values
+                    elif name in "XYZ":
+                        self.var[name] = xyz[:, "XYZ".index(name)]
+                    else:
+                        print(f"Variable {name} not in object data list. Please revise")
+                        return
 
-        data = obj.get_data(out_var)[0]
-        self.var[out_var] = vals
-        data.values = vals
+            equation = re.sub(r"{", "var['", equation)
+            equation = re.sub(r"}", "']", equation).strip()
+            self.var[out_var] = eval(equation)
+
+            options = sorted_children_dict(obj)
+            for name, values in self.var.items():
+                if name not in obj.get_data_list():
+                    new_child = obj.add_data({name: {"values": values}})
+                    options[new_child.name] = new_child.uid
+
+                if name == out_var:  # For plotting only
+                    data = new_child
 
         if self.live_link.value:
-            while not isinstance(obj.parent, RootGroup):
-                obj = obj.parent
-            self.live_link_output(self.export_directory.selected_path, obj)
-
-        self.workspace.finalize()
+            monitored_directory_copy(self.export_directory.selected_path, obj)
 
         choice = self.data.value
-        self.data.options = [[child.name, child.uid] for child in obj.children]
+        self.data.options = [[k, v] for k, v in options.items()]
         self.data.value = choice
 
         self.update_uid_name_map()

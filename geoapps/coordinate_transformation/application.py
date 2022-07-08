@@ -5,25 +5,34 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 import re
+import uuid
+from time import time
 
-import matplotlib.pyplot as plt
 import numpy
 from geoh5py.data import FloatData
+from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
-from geoh5py.workspace import Workspace
-from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
-
-from geoapps.utils.utils import soft_import
-
-transform = soft_import("fiona.transform", objects=["transform"])
-gdal, osr = soft_import("osgeo", objects=["gdal", "osr"])
-
+from geoh5py.ui_json.utils import monitored_directory_copy
 
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
-from geoapps.utils.utils import export_grid_2_geotiff, geotiff_2_grid
+
+from .utils import geotiff_2_grid
+
+with warn_module_not_found():
+    from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
+
+with warn_module_not_found():
+    from fiona.transform import transform
+
+with warn_module_not_found():
+    from osgeo import gdal, osr
 
 
 class CoordinateTransformation(ObjectDataSelection):
@@ -74,6 +83,8 @@ class CoordinateTransformation(ObjectDataSelection):
         """
         Run the coordinate transformation
         """
+        import matplotlib.pyplot as plt
+
         if self.wkt_in.value != "" and self.wkt_out.value != "":
 
             if self.plot_result:
@@ -81,93 +92,103 @@ class CoordinateTransformation(ObjectDataSelection):
                 ax1 = plt.subplot(1, 2, 1)
                 ax2 = plt.subplot(1, 2, 2)
 
-            for name in self.objects.value:
-                obj = self.workspace.get_entity(name)[0]
-                temp_work = Workspace(self.workspace.name + "temp")
-                count = 0
-                if isinstance(obj, Grid2D):
-                    for child in obj.children:
-                        temp_file = (
-                            child.name + f"_{self.code_in.value.replace(':', '_')}.tif"
-                        )
-                        temp_file_out = child.name + ".tif"
+            temp_geoh5 = f"CoordinateTransformation_{time():.0f}.geoh5"
+            with self.get_output_workspace(
+                self.export_directory.selected_path, temp_geoh5
+            ) as workspace:
+                out_entity = ContainerGroup.create(
+                    workspace, name=self.ga_group_name.value
+                )
 
-                        if isinstance(child, FloatData):
+                for uid in self.objects.value:
 
-                            export_grid_2_geotiff(
-                                child,
-                                temp_file,
-                                wkt_code=self.wkt_in.value,
-                                data_type="float",
+                    obj = self.workspace.get_entity(uid)[0]
+
+                    if isinstance(obj, Grid2D):
+                        count = 0
+                        for child in obj.children:
+                            temp_file = (
+                                child.name
+                                + f"_{self.code_in.value.replace(':', '_')}.tif"
                             )
-                            grid = gdal.Open(temp_file)
-                            gdal.Warp(
-                                temp_file_out,
-                                grid,
-                                dstSRS=self.wkt_out.value,
-                            )
+                            temp_file_out = child.name + ".tif"
 
-                            if count == 0:
-                                new_obj = geotiff_2_grid(
-                                    temp_work,
+                            if isinstance(child, FloatData):
+
+                                export_grid_2_geotiff(
+                                    child,
+                                    temp_file,
+                                    wkt_code=self.wkt_in.value,
+                                    data_type="float",
+                                )
+                                grid = gdal.Open(temp_file)
+                                gdal.Warp(
                                     temp_file_out,
-                                    grid_name=obj.name
-                                    + self.code_out.value.replace(":", "_"),
-                                )
-                            else:
-                                _ = geotiff_2_grid(
-                                    temp_work, temp_file_out, grid=new_obj
+                                    grid,
+                                    dstSRS=self.wkt_out.value,
                                 )
 
-                            del grid
-                            if os.path.exists(temp_file):
-                                os.remove(temp_file)
+                                if count == 0:
+                                    new_obj = geotiff_2_grid(
+                                        workspace,
+                                        temp_file_out,
+                                        grid_name=obj.name
+                                        + self.code_out.value.replace(":", "_"),
+                                        parent=out_entity,
+                                    )
 
-                            if os.path.exists(temp_file_out):
-                                os.remove(temp_file_out)
+                                else:
+                                    _ = geotiff_2_grid(
+                                        workspace, temp_file_out, grid=new_obj
+                                    )
 
-                            count += 1
+                                del grid
+                                if os.path.exists(temp_file):
+                                    os.remove(temp_file)
 
-                    new_obj.copy(parent=self.ga_group)
-                    os.remove(temp_work.h5file)
+                                if os.path.exists(temp_file_out):
+                                    os.remove(temp_file_out)
 
-                else:
-                    if not hasattr(obj, "vertices"):
-                        print(f"Skipping {name}. Entity does not have vertices")
-                        continue
+                                count += 1
+                    else:
+                        if not hasattr(obj, "vertices"):
+                            print(f"Skipping {obj.name}. Entity does not have vertices")
+                            continue
 
-                    x, y = obj.vertices[:, 0].tolist(), obj.vertices[:, 1].tolist()
+                        x, y = obj.vertices[:, 0].tolist(), obj.vertices[:, 1].tolist()
 
-                    if self.code_in.value == "EPSG:4326":
-                        x, y = y, x
+                        if self.code_in.value == "EPSG:4326":
+                            x, y = y, x
 
-                    x2, y2 = transform(
-                        self.wkt_in.value,
-                        self.wkt_out.value,
-                        x,
-                        y,
-                    )
+                        x2, y2 = transform(
+                            self.wkt_in.value,
+                            self.wkt_out.value,
+                            x,
+                            y,
+                        )
 
-                    new_obj = obj.copy(parent=self.ga_group, copy_children=True)
-                    new_obj.vertices = numpy.c_[x2, y2, obj.vertices[:, 2]]
-                    new_obj.name = new_obj.name + self.code_out.value.replace(":", "_")
+                        new_obj = obj.copy(parent=out_entity, copy_children=True)
+                        new_obj.uid = uuid.uuid4()
+                        new_obj.vertices = numpy.c_[x2, y2, obj.vertices[:, 2]]
+                        new_obj.name = new_obj.name + self.code_out.value.replace(
+                            ":", "_"
+                        )
 
-                if self.plot_result:
-                    plot_plan_data_selection(obj, obj.children[0], axis=ax1)
-                    if '"Longitude",EAST' in self.wkt_in.value:
-                        ax1.set_xlabel("Longitude")
-                        ax1.set_ylabel("Latitude")
+                    if self.plot_result:
+                        plot_plan_data_selection(obj, obj.children[0], axis=ax1)
+                        if '"Longitude",EAST' in self.wkt_in.value:
+                            ax1.set_xlabel("Longitude")
+                            ax1.set_ylabel("Latitude")
 
-                    plot_plan_data_selection(new_obj, new_obj.children[0], axis=ax2)
-                    if '"Longitude",EAST' in self.wkt_out.value:
-                        ax2.set_xlabel("Longitude")
-                        ax2.set_ylabel("Latitude")
+                        plot_plan_data_selection(new_obj, new_obj.children[0], axis=ax2)
+                        if '"Longitude",EAST' in self.wkt_out.value:
+                            ax2.set_xlabel("Longitude")
+                            ax2.set_ylabel("Latitude")
 
             if self.live_link.value:
-                self.live_link_output(
-                    self.export_directory.selected_path, self.ga_group
+                monitored_directory_copy(
+                    self.export_directory.selected_path, out_entity
                 )
-            self.workspace.finalize()
 
     @property
     def object_types(self):
