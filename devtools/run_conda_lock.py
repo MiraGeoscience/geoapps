@@ -36,7 +36,7 @@ _environments_folder = Path("environments")
 
 
 @contextmanager
-def print_execution_time(name: str = ""):
+def print_execution_time(name: str = "") -> None:
     from datetime import datetime
 
     start = datetime.now()
@@ -48,7 +48,7 @@ def print_execution_time(name: str = ""):
         print(f"--{message_prefix} execution time: {duration}")
 
 
-def create_multi_platform_lock(py_ver: str, platform: str = None):
+def create_multi_platform_lock(py_ver: str, platform: str = None) -> None:
     print(f"# Creating multi-platform lock file for Python {py_ver} ...")
     platform_option = f"-p {platform}" if platform else ""
     with print_execution_time(f"conda-lock for {py_ver}"):
@@ -61,7 +61,7 @@ def create_multi_platform_lock(py_ver: str, platform: str = None):
         )
 
 
-def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
+def per_platform_env(py_ver: str, full=True, dev=False, suffix="") -> None:
     print(
         f"# Creating per platform Conda env files for Python {py_ver} ({'WITH' if dev else 'NO'} dev dependencies) ... "
     )
@@ -86,7 +86,7 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix=""):
             f.write(env_file_variables_section_)
 
 
-def config_conda():
+def config_conda() -> None:
     subprocess.run(
         "conda config --set channel_priority strict",
         shell=True,
@@ -95,7 +95,7 @@ def config_conda():
     )
 
 
-def delete_existing_files():
+def delete_existing_files() -> None:
     if _environments_folder.exists():
         for f in _environments_folder.glob("*.lock.yml"):
             f.unlink()
