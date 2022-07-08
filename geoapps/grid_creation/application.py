@@ -237,11 +237,11 @@ class GridCreation(BaseDashApplication):
             else:
                 print("Uploaded file must be a workspace or ui.json.")
         elif trigger + "_name" in param_list:
-            update_dict[trigger + "_name"] = getattr(locals(), trigger)
+            update_dict[trigger + "_name"] = locals()[trigger]
         elif trigger != "":
-            update_dict[trigger] = getattr(locals(), trigger)
+            update_dict[trigger] = locals()[trigger]
 
-        self.params = self.update_param_dict(update_dict)
+        self.update_param_dict(update_dict)
         outputs = self.get_outputs(param_list, update_dict)
 
         return outputs
