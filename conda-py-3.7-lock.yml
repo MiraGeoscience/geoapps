@@ -13,7 +13,7 @@
 # To update a single package to the latest version compatible with the version constraints in the source:
 #     conda-lock lock --lockfile conda-py-3.7-lock.yml --update PACKAGE
 # To re-solve the entire environment, e.g. after changing a version constraint in the source file:
-#     conda-lock -f pyproject.toml -f env-python-3.7.yml --lockfile conda-py-3.7-lock.yml
+#     conda-lock -f pyproject.toml -f environments/env-python-3.7.yml --lockfile conda-py-3.7-lock.yml
 metadata:
   channels:
   - url: conda-forge
@@ -21,16 +21,16 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 7b5c5a78d046797c56ffc357e361cee4df55ed6e99eaa2cc6eb78e918d02fafd
-    osx-64: 4050d303e7358735e75189ace80b7ea257ded8b72fd2d5b4e9dd6221f0130d74
-    win-64: 7b1c3681ca40a363239f436d969f265fe04dda8b5ff756d11bce39affe8b08e8
+    linux-64: ad438387f5bcac2024918af451bb828db01f089879609c79a7d16de67aab57c9
+    osx-64: 800833ac7e96e426e941d0b7733b6d67a80ae1b59419cac6249128603435287b
+    win-64: ba4f4bd57e537a1ab26d42d804e41f3e5b722507ea0593c25a788a46e1c2a99a
   platforms:
   - win-64
   - osx-64
   - linux-64
   sources:
   - pyproject.toml
-  - env-python-3.7.yml
+  - environments/env-python-3.7.yml
 package:
 - category: main
   dependencies: {}
@@ -3987,14 +3987,14 @@ package:
     tornado: '>=6.1'
     traitlets: '>=5.1.0'
   hash:
-    md5: bb34defcf733d4fdfda33da498051938
-    sha256: f757fb250d398d2db3060499b3134c43a835e846ed312b2854ce9a5ba6ca00a0
+    md5: 3eb7a1c0b540dcea5f92e56d94f530a5
+    sha256: c02d922bdeaf2f61289b7ea2d832d468703bc91399b7f4f0d0889812dbe077a8
   manager: conda
   name: ipykernel
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.0-pyh210e3f2_0.tar.bz2
-  version: 6.15.0
+  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.1-pyh210e3f2_0.tar.bz2
+  version: 6.15.1
 - category: full
   dependencies:
     nbconvert-core: 6.5.0 pyhd8ed1ab_0
@@ -7786,14 +7786,14 @@ package:
     tornado: '>=6.1'
     traitlets: '>=5.1.0'
   hash:
-    md5: 3c7a68cfd5eb6a3966a102208cecf714
-    sha256: c9776ca63c062a70680246c2adb31e86e387b4c5452eee7f1143aa6c56241b1f
+    md5: 29c070b0a293eddddfa365cc634482dc
+    sha256: 08a7c6808f2b0d954ea43f65ff02c2886434047866ead1b0c789235f10d1b3ee
   manager: conda
   name: ipykernel
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.0-pyh736e0ef_0.tar.bz2
-  version: 6.15.0
+  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.1-pyh736e0ef_0.tar.bz2
+  version: 6.15.1
 - category: full
   dependencies:
     nbconvert-core: 6.5.0 pyhd8ed1ab_0
@@ -11621,14 +11621,14 @@ package:
     tornado: '>=6.1'
     traitlets: '>=5.1.0'
   hash:
-    md5: db380f3d5ee71512b09143ca42e47140
-    sha256: 42651ddec3a67fa3a4fba08753fa8d43780f19cce7348e0980dd94aa9c8048db
+    md5: 93d3ecfed17647040a29fc43be2f7856
+    sha256: e13be038ced0d696aee0ac49ac6b048a5b04c34280d3d43408a5a6fe0786d71c
   manager: conda
   name: ipykernel
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.0-pyh025b116_0.tar.bz2
-  version: 6.15.0
+  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.1-pyh025b116_0.tar.bz2
+  version: 6.15.1
 - category: full
   dependencies:
     nbconvert-core: 6.5.0 pyhd8ed1ab_0
