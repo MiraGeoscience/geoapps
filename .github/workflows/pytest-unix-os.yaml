@@ -41,6 +41,4 @@ jobs:
           cache-downloads: true
       - name: pytest
         run: |
-          python --version
-          conda install pytest pytest-cov
           pytest --cov=geoapps --cov-report=xml --cov-branch

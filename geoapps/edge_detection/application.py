@@ -194,7 +194,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
-        temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.3f}.geoh5"
+        temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.0f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as workspace:
