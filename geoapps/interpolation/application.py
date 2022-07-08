@@ -269,6 +269,8 @@ class DataInterpolation(ObjectDataSelection):
                 validation_options={"disabled": True},
             )
             new_params = DataInterpolationParams(input_file=ifile, **param_dict)
+            new_params.write_input_file()
+
             driver = DataInterpolationDriver(new_params)
             driver.run()
 
