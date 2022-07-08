@@ -48,7 +48,7 @@ jobs:
       - name: Activate conda base env
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: env-python-3.9.yml
+          environment-file: environments\env-python-3.9.yml
           environment-name: conda-lock
           cache-downloads: true
           cache-env: true
