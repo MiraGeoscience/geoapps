@@ -90,6 +90,7 @@ validations = {}
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+    "xy_reference": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "core_cell_size": "50, 50, 50",
     "depth_core": 500.0,
     "expansion_fact": 1.05,
