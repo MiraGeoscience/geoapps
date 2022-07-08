@@ -43,7 +43,7 @@ class ScatterPlotDriver:
                     min = np.nanmin(vals)
                 if max is None:
                     max = np.nanmax(vals)
-                inbound = (vals > min) * (vals < max)
+                inbound = (vals >= min) * (vals <= max)
                 if np.sum(inbound) > 0:
                     vals[~inbound] = np.nan
                     size = normalize(vals)
@@ -54,19 +54,22 @@ class ScatterPlotDriver:
 
             color = "black"
             if self.params.color is not None:
-                vals = self.params.color.values[indices]
-                min = self.params.color_min
-                max = self.params.color_max
-                if min is None:
-                    min = np.nanmin(vals)
-                if max is None:
-                    max = np.nanmax(vals)
-                inbound = (vals > min) * (vals < max)
-                if np.sum(inbound) > 0:
-                    vals[~inbound] = np.nan
-                    color = normalize(vals)
-                    if self.params.color_log:
-                        color = symlog(color, self.params.color_thresh)
+                if self.params.color.name == "kmeans":
+                    color = self.params.color.values
+                else:
+                    vals = self.params.color.values[indices]
+                    min = self.params.color_min
+                    max = self.params.color_max
+                    if min is None:
+                        min = np.nanmin(vals)
+                    if max is None:
+                        max = np.nanmax(vals)
+                    inbound = (vals >= min) * (vals <= max)
+                    if np.sum(inbound) > 0:
+                        vals[~inbound] = np.nan
+                        color = normalize(vals)
+                        if self.params.color_log:
+                            color = symlog(color, self.params.color_thresh)
 
             x_axis = self.params.x.values[indices]
             y_axis = self.params.y.values[indices]
