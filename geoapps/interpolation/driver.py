@@ -173,9 +173,7 @@ class DataInterpolationDriver:
             self.params.xy_extent
         ):
 
-            for entity in self.params.geoh5.get_entity(self.params.xy_extent):
-                if isinstance(entity, ObjectBase):
-                    xy_ref = entity
+            xy_ref = self.params.xy_extent
             if hasattr(xy_ref, "centroids"):
                 xy_ref = xy_ref.centroids
             elif hasattr(xy_ref, "vertices"):
