@@ -5,9 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from uuid import UUID
 
-from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 octree_defaults = {
@@ -58,8 +59,6 @@ default_octree_ui_json = {
         "group": "Mesh",
         "main": True,
         "enabled": True,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
         "label": "Easting core cell size (m)",
         "value": 25.0,
     },
@@ -68,8 +67,6 @@ default_octree_ui_json = {
         "group": "Mesh",
         "main": True,
         "enabled": True,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
         "label": "Northing core cell size (m)",
         "value": 25.0,
     },
@@ -78,8 +75,6 @@ default_octree_ui_json = {
         "group": "Mesh",
         "main": True,
         "enabled": True,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
         "label": "Vertical core cell size (m)",
         "value": 25.0,
     },
@@ -88,8 +83,6 @@ default_octree_ui_json = {
         "group": "Mesh",
         "main": True,
         "enabled": True,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
         "label": "Depth of core refinement volume",
         "value": 500.0,
     },
@@ -98,8 +91,6 @@ default_octree_ui_json = {
         "group": "Mesh",
         "main": True,
         "enabled": True,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
         "label": "Horizontal padding",
         "value": 1000.0,
     },
@@ -108,8 +99,6 @@ default_octree_ui_json = {
         "group": "Mesh",
         "main": True,
         "enabled": True,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
         "label": "Vertical padding",
         "value": 1000.0,
     },
@@ -360,8 +349,6 @@ default_ui_json = {
         "main": True,
         "optional": True,
         "enabled": False,
-        "dependency": "mesh_from_params",
-        "dependencyType": "disabled",
         "label": "Mesh",
         "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
         "value": None,
@@ -756,7 +743,6 @@ default_ui_json = {
         "group": "Regularization",
         "isValue": False,
         "parent": "upper_bound_object",
-        "parent": "upper_bound_object",
         "dependency": "lower_bound_object",
         "label": "Upper bound",
         "property": None,
@@ -797,8 +783,14 @@ default_ui_json = {
 
 validations = {
     "topography_object": {
-        "required": True,
         "types": [str, UUID, Surface, Points, Grid2D, Curve],
     },
-    "out_group": {"required": True, "types": [str, ContainerGroup]},
+    "alpha_s": {"types": [int, float]},
+    "alpha_x": {"types": [int, float]},
+    "alpha_y": {"types": [int, float]},
+    "alpha_z": {"types": [int, float]},
+    "norm_s": {"types": [int, float]},
+    "norm_x": {"types": [int, float]},
+    "norm_y": {"types": [int, float]},
+    "norm_z": {"types": [int, float]},
 }

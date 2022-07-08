@@ -6,14 +6,24 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
+from time import time
+
 import numpy as np
-from geoh5py.io import H5Writer
+from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points, Surface
-from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
+from geoh5py.ui_json.utils import monitored_directory_copy
+from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
 
-from geoapps import PlotSelection2D
+from geoapps.base.plot import PlotSelection2D
+from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
+from geoapps.utils.plotting import input_string_2_float, plot_plan_data_selection
+
+with warn_module_not_found():
+    from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
 
 
 class ContourValues(PlotSelection2D):
@@ -145,11 +155,24 @@ class ContourValues(PlotSelection2D):
             self.export_as.value = "Contours"
 
     def trigger_click(self, _):
-        entity, _ = self.get_selected_entities()
+        entity, data = self.get_selected_entities()
 
-        if getattr(self.contours, "contour_set", None) is not None:
-            contour_set = self.contours.contour_set
+        _, _, _, _, contour_set = plot_plan_data_selection(
+            entity,
+            data[0],
+            **{
+                "axis": axes(),
+                "resolution": self.resolution.value,
+                "window": {
+                    "center": [self.window_center_x.value, self.window_center_y.value],
+                    "size": [self.window_width.value, self.window_height.value],
+                    "azimuth": self.window_azimuth.value,
+                },
+                "contours": input_string_2_float(self.contours.value),
+            },
+        )
 
+        if contour_set is not None:
             vertices, cells, values = [], [], []
             count = 0
             for segs, level in zip(contour_set.allsegs, contour_set.levels):
@@ -180,33 +203,26 @@ class ContourValues(PlotSelection2D):
                             np.ones(vertices.shape[0]) * entity.origin["z"],
                         ]
 
-                curves = [
-                    child
-                    for child in self.ga_group.children
-                    if child.name == self.export_as.value
-                ]
-                if any(curves):
-                    curve = curves[0]
-
-                    for child in curve.children:
-                        self.workspace.remove_entity(child)
-
-                    curve.vertices = vertices
-                    curve.cells = np.vstack(cells).astype("uint32")
-
-                else:
-                    curve = Curve.create(
-                        self.workspace,
-                        name=string_name(self.export_as.value),
-                        vertices=vertices,
-                        cells=np.vstack(cells).astype("uint32"),
-                        parent=self.ga_group,
+            temp_geoh5 = f"{entity.name}_{data[0].name}_{time():.0f}.geoh5"
+            with self.get_output_workspace(
+                self.export_directory.selected_path, temp_geoh5
+            ) as workspace:
+                curve = Curve.create(
+                    workspace,
+                    name=string_name(self.export_as.value),
+                    vertices=vertices,
+                    cells=np.vstack(cells).astype("uint32"),
+                )
+                out_entity = curve
+                if len(self.ga_group_name.value) > 0:
+                    out_entity = ContainerGroup.create(
+                        workspace, name=string_name(self.ga_group_name.value)
                     )
+                    curve.parent = out_entity
 
                 curve.add_data({self.contours.value: {"values": np.hstack(values)}})
 
-                if self.live_link.value:
-                    self.live_link_output(
-                        self.export_directory.selected_path, self.ga_group
-                    )
-                self.workspace.finalize()
+            if self.live_link.value:
+                monitored_directory_copy(
+                    self.export_directory.selected_path, out_entity
+                )

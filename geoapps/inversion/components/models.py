@@ -15,8 +15,8 @@ from SimPEG.utils.mat_utils import (
     mkvc,
 )
 
-from geoapps.base.params import BaseParams
-from geoapps.utils import rotate_xy, weighted_average
+from geoapps.driver_base.params import BaseParams
+from geoapps.shared_utils.utils import rotate_xy, weighted_average
 
 from . import InversionMesh
 
@@ -354,8 +354,6 @@ class InversionModel:
                 values = data_obj[0].values
                 values[~model] = np.nan
                 data_obj[0].values = values
-
-        self.workspace.finalize()
 
     def _get(self, name: str) -> np.ndarray | None:
         """

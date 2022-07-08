@@ -5,16 +5,24 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
+from time import time
+
 import numpy as np
 from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel, ObjectBase
+from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils.utils import get_locations, weighted_average
+from geoapps.shared_utils.utils import get_locations, weighted_average
+from geoapps.utils import warn_module_not_found
+
+with warn_module_not_found():
+    from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox
 
 
 class DataInterpolation(ObjectDataSelection):
@@ -141,10 +149,13 @@ class DataInterpolation(ObjectDataSelection):
 
         super().__init__(**self.defaults)
 
+        self.xy_extent.options = self.objects.options
+        self.xy_reference.options = self.objects.options
         self.parameters["Vertical Extent"].children = [
             self.topography.main,
             self.max_depth,
         ]
+
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Interpolate"
 
@@ -273,6 +284,7 @@ class DataInterpolation(ObjectDataSelection):
             self._topography = TopographyOptions(
                 option_list=["None", "Object", "Constant"],
                 workspace=self.workspace,
+                add_xyz=False,
                 **self.defaults["topography"],
             )
 
@@ -309,36 +321,15 @@ class DataInterpolation(ObjectDataSelection):
 
         assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
         self.base_workspace_changes(workspace)
-
-        self.update_objects_choices()
-
-        if getattr(self, "_topography", None) is not None:
-            self.topography.workspace = workspace
+        self.update_objects_list()
+        self.out_object.options = self.objects.options
+        self.topography.workspace = workspace
 
     def parameter_change(self, _):
         self.parameter_panel.children = [
             self.parameter_choices,
             self.parameters[self.parameter_choices.value],
         ]
-
-    def update_objects_choices(self):
-        # Refresh the list of objects for all
-        self.update_objects_list()
-
-        value = self.out_object.value
-        self.out_object.options = self.objects.options
-        if value in list(dict(self.out_object.options).values()):
-            self.out_object.value = value
-
-        value = self.xy_reference.value
-        self.xy_reference.options = self.objects.options
-        if value in list(dict(self.xy_reference.options).values()):
-            self.xy_reference.value = value
-
-        value = self.xy_extent.value
-        self.xy_extent.options = self.objects.options
-        if value in list(dict(self.xy_extent.options).values()):
-            self.xy_extent.value = value
 
     def method_update(self, _):
         if self.method.value == "Inverse Distance":
@@ -435,49 +426,60 @@ class DataInterpolation(ObjectDataSelection):
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
-        if self.out_mode.value == "To Object":
+        temp_geoh5 = f"Interpolation_{time():.0f}.geoh5"
+        with self.get_output_workspace(
+            self.export_directory.selected_path, temp_geoh5
+        ) as workspace:
 
-            self.object_out = self.object_base(self.out_object.value)
-            xyz_out = get_locations(self._workspace, self.object_out).copy()
+            if self.out_mode.value == "To Object":
 
-        else:
-
-            xyz_ref = get_locations(self._workspace, self.xy_reference.value).copy()
-            if xyz_ref is None:
-                print(
-                    "No object selected for 'Lateral Extent'. Defaults to input object."
+                self.object_out = self.object_base(self.out_object.value).copy(
+                    parent=workspace
                 )
-                xyz_ref = xyz.copy()
+                xyz_out = get_locations(workspace, self.object_out).copy()
 
-            # Find extent of grid
-            h = np.asarray(self.core_cell_size.value.split(",")).astype(float).tolist()
+            else:
 
-            pads = (
-                np.asarray(self.padding_distance.value.split(","))
-                .astype(float)
-                .tolist()
-            )
+                xyz_ref = get_locations(self._workspace, self.xy_reference.value).copy()
+                if xyz_ref is None:
+                    print(
+                        "No object selected for 'Lateral Extent'. Defaults to input object."
+                    )
+                    xyz_ref = xyz.copy()
 
-            self.object_out = DataInterpolation.get_block_model(
-                self._workspace,
-                self.new_grid.value,
-                xyz_ref,
-                h,
-                self.depth_core.value,
-                pads,
-                self.expansion_fact.value,
-            )
+                # Find extent of grid
+                h = (
+                    np.asarray(self.core_cell_size.value.split(","))
+                    .astype(float)
+                    .tolist()
+                )
 
-            # Try to recenter on nearest
-            # Find nearest cells
-            rad, ind = tree.query(self.object_out.centroids)
-            ind_nn = np.argmin(rad)
+                pads = (
+                    np.asarray(self.padding_distance.value.split(","))
+                    .astype(float)
+                    .tolist()
+                )
 
-            d_xyz = self.object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
+                self.object_out = DataInterpolation.get_block_model(
+                    workspace,
+                    self.new_grid.value,
+                    xyz_ref,
+                    h,
+                    self.depth_core.value,
+                    pads,
+                    self.expansion_fact.value,
+                )
 
-            self.object_out.origin = np.r_[self.object_out.origin.tolist()] - d_xyz
+                # Try to recenter on nearest
+                # Find nearest cells
+                rad, ind = tree.query(self.object_out.centroids)
+                ind_nn = np.argmin(rad)
 
-            xyz_out = self.object_out.centroids.copy()
+                d_xyz = self.object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
+
+                self.object_out.origin = np.r_[self.object_out.origin.tolist()] - d_xyz
+
+                xyz_out = self.object_out.centroids.copy()
 
         xyz_out_orig = xyz_out.copy()
 
@@ -548,11 +550,6 @@ class DataInterpolation(ObjectDataSelection):
             values_interp[key][np.isnan(values_interp[key])] = self.no_data_value.value
             values_interp[key][rad > self.max_distance.value] = self.no_data_value.value
 
-        # if hasattr(self.object_out, "centroids"):
-        #     xyz_out = self.object_out.centroids
-        # elif hasattr(self.object_out, "vertices"):
-        #     xyz_out = self.object_out.vertices
-
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
         if self.topography.options.value == "Object" and self.workspace.get_entity(
@@ -568,7 +565,7 @@ class DataInterpolation(ObjectDataSelection):
             else:
                 topo = topo_obj.centroids
 
-            if self.topography.data.uid_name_map[self.topography.data.value] != "Z":
+            if self.topography.data.value is not None:
                 topo[:, 2] = self.workspace.get_entity(self.topography.data.value)[
                     0
                 ].values
@@ -620,6 +617,7 @@ class DataInterpolation(ObjectDataSelection):
                     rad > self.max_distance.value
                 ] = self.no_data_value.value
 
+        self.object_out.workspace.open()
         for key in values_interp.keys():
             if dtype[field] == np.dtype("int32"):
                 primitive = "integer"
@@ -634,12 +632,12 @@ class DataInterpolation(ObjectDataSelection):
                     + self.ga_group_name.value: {"values": vals, "type": primitive}
                 }
             )
+        self.object_out.workspace.close()
 
         if self.live_link.value:
-            self.live_link_output(self.export_directory.selected_path, self.object_out)
-
-        self.workspace.finalize()
-        self.update_objects_choices()
+            monitored_directory_copy(
+                self.export_directory.selected_path, self.object_out
+            )
 
     def object_pick(self, _):
         if self.objects.value in list(dict(self.xy_reference.options).values()):

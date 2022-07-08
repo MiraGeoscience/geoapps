@@ -5,11 +5,14 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
 
 from geoapps.inversion import default_ui_json as base_default_ui_json
+from geoapps.inversion.constants import validations as base_validations
 
 ################# defaults ##################
 
@@ -568,6 +571,8 @@ validations = {
     "gy_channel": {"one_of": "data channel"},
     "gy_uncertainty": {"one_of": "uncertainty channel"},
 }
+
+validations = dict(base_validations, **validations)
 
 app_initializer = {
     "geoh5": "../../../assets/FlinFlon.geoh5",

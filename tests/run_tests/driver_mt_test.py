@@ -7,10 +7,9 @@
 
 
 import numpy as np
-from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 
-from geoapps.utils import get_inversion_output
+from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
@@ -73,6 +72,7 @@ def test_magnetotellurics_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params, warmstart=False)
+
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
 
@@ -146,6 +146,7 @@ def test_magnetotellurics_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
+
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
@@ -159,6 +160,24 @@ def test_magnetotellurics_run(
         assert np.all(nan_ind == inactive_ind)
     else:
         return fwr_driver.starting_model, driver.inverse_problem.model
+
+    # test that one channel works
+    data_kwargs = {k: v for k, v in data_kwargs.items() if "zxx_real" in k}
+    geoh5.open()
+    params = MagnetotelluricsParams(
+        geoh5=geoh5,
+        mesh=geoh5.get_entity("mesh")[0].uid,
+        topography_object=topography.uid,
+        data_object=survey.uid,
+        starting_model=0.01,
+        conductivity_model=1e-2,
+        max_iterations=0,
+        **data_kwargs,
+    )
+    params.workpath = tmp_path
+    driver = InversionDriver(params)
+
+    driver.run()
 
 
 if __name__ == "__main__":

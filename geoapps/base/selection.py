@@ -9,15 +9,19 @@ from __future__ import annotations
 
 from uuid import UUID
 
-import ipywidgets as widgets
 import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
 
 from geoapps.base.application import BaseApplication
-from geoapps.utils import utils
+from geoapps.utils import warn_module_not_found
+from geoapps.utils.list import find_value
+from geoapps.utils.workspace import sorted_children_dict
+
+with warn_module_not_found():
+    import ipywidgets as widgets
+    from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox
 
 
 class ObjectDataSelection(BaseApplication):
@@ -234,16 +238,14 @@ class ObjectDataSelection(BaseApplication):
         # Refresh the list of objects
         self.update_objects_list()
 
-    def get_selected_entities(self):
+    def get_selected_entities(self) -> tuple:
         """
         Get entities from an active geoh5py Workspace
         """
-        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
-            self.objects.value
-        ):
-            for entity in self._workspace.get_entity(self.objects.value):
-                if isinstance(entity, ObjectBase):
-                    obj = entity
+        if getattr(self, "_workspace", None) is not None:
+            obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
+            if obj is None:
+                return None, None
 
             if isinstance(self.data, Dropdown):
                 values = [self.data.value]
@@ -252,7 +254,9 @@ class ObjectDataSelection(BaseApplication):
 
             data = []
             for value in values:
-                if any([pg.uid == value for pg in obj.property_groups]):
+                if obj.property_groups is not None and any(
+                    [pg.uid == value for pg in obj.property_groups]
+                ):
                     data += [
                         self.workspace.get_entity(prop)[0]
                         for prop in obj.find_or_create_property_group(
@@ -269,14 +273,9 @@ class ObjectDataSelection(BaseApplication):
     def update_data_list(self, _):
         refresh = self.refresh.value
         self.refresh.value = False
-        if getattr(self, "_workspace", None) is not None and self._workspace.get_entity(
-            self.objects.value
-        ):
-            for entity in self._workspace.get_entity(self.objects.value):
-                if isinstance(entity, ObjectBase):
-                    obj = entity
-
-            if getattr(obj, "get_data_list", None) is None:
+        if getattr(self, "_workspace", None) is not None:
+            obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
+            if obj is None or getattr(obj, "get_data_list", None) is None:
                 return
 
             options = [["", None]]
@@ -291,7 +290,7 @@ class ObjectDataSelection(BaseApplication):
             if self.add_groups != "only":
                 options += [["--- Channels ---", None]]
 
-                children = utils.sorted_children_dict(obj)
+                children = sorted_children_dict(obj)
                 excl = ["visual parameter"]
                 options += [
                     [k, v] for k, v in children.items() if k.lower() not in excl
@@ -310,7 +309,7 @@ class ObjectDataSelection(BaseApplication):
             elif value in dict(options).values():
                 self.data.value = value
             elif self.find_label:
-                self.data.value = utils.find_value(self.data.options, self.find_label)
+                self.data.value = find_value(self.data.options, self.find_label)
         else:
             self.data.options = []
             self.data.uid_name_map = {}

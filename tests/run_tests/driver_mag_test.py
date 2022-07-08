@@ -9,7 +9,7 @@ import numpy as np
 from geoh5py.workspace import Workspace
 from SimPEG import utils
 
-from geoapps.utils import get_inversion_output
+from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # import pytest
@@ -64,6 +64,7 @@ def test_susceptibility_run(
     params.workpath = tmp_path
 
     fwr_driver = InversionDriver(params)
+
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
     tmi = geoh5.get_entity("Iteration_0_tmi")[0]
@@ -95,6 +96,7 @@ def test_susceptibility_run(
     params.workpath = tmp_path
 
     driver = InversionDriver(params)
+
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
@@ -155,6 +157,7 @@ def test_magnetic_vector_run(
         starting_declination=270,
     )
     fwr_driver = InversionDriver(params)
+
     fwr_driver.run()
     geoh5 = Workspace(geoh5.h5file)
     tmi = geoh5.get_entity("Iteration_0_tmi")[0]
@@ -183,6 +186,7 @@ def test_magnetic_vector_run(
         prctile=100,
     )
     driver = InversionDriver(params)
+
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     # Re-open the workspace and get iterations

@@ -5,22 +5,28 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import os
 import sys
 import uuid
 import warnings
+from time import time
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
-from ipywidgets.widgets.widget_selection import TraitError
 
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.utils import warn_module_not_found
 
 from . import OctreeParams, app_initializer
 from .driver import OctreeDriver
+
+with warn_module_not_found():
+    from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
+    from ipywidgets.widgets.widget_selection import TraitError
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -220,29 +226,32 @@ class OctreeMesh(ObjectDataSelection):
             except AttributeError:
                 continue
 
-        new_workspace = self.get_output_workspace(
-            self.export_directory.selected_path, self.ga_group_name.value
-        )
-        for key, value in param_dict.items():
-            if isinstance(value, ObjectBase):
-                param_dict[key] = value.copy(parent=new_workspace, copy_children=True)
+        temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
+        with self.get_output_workspace(
+            self.export_directory.selected_path, temp_geoh5
+        ) as new_workspace:
 
-        param_dict["geoh5"] = new_workspace
+            for key, value in param_dict.items():
+                if isinstance(value, ObjectBase):
+                    param_dict[key] = value.copy(
+                        parent=new_workspace, copy_children=True
+                    )
 
-        if self.live_link.value:
-            param_dict["monitoring_directory"] = self.monitoring_directory
+            param_dict["geoh5"] = new_workspace
 
-        ifile = InputFile(
-            ui_json=self.params.input_file.ui_json,
-            validation_options={"disabled": True},
-        )
+            if self.live_link.value:
+                param_dict["monitoring_directory"] = self.monitoring_directory
 
-        new_params = OctreeParams(input_file=ifile, **param_dict)
-        new_params.write_input_file()
-        self.run(new_params)
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+            )
+            new_params = OctreeParams(input_file=ifile, **param_dict)
+            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
+            self.run(new_params)
 
-        if self.live_link.value:
-            print("Live link active. Check your ANALYST session for new mesh.")
+            if self.live_link.value:
+                print("Live link active. Check your ANALYST session for new mesh.")
 
     @staticmethod
     def run(params: OctreeParams) -> Octree:

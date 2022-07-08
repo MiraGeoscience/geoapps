@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoh5py.objects import Octree
-    from geoapps.base.params import BaseParams
+    from geoapps.driver_base.params import BaseParams
     from discretize import TreeMesh
     from . import InversionData, InversionTopography
 
@@ -21,7 +21,7 @@ from geoh5py.objects import PotentialElectrode
 from geoh5py.workspace import Workspace
 
 from geoapps.octree_creation.params import OctreeParams
-from geoapps.utils import octree_2_treemesh
+from geoapps.shared_utils.utils import octree_2_treemesh
 
 
 class InversionMesh:
@@ -141,8 +141,9 @@ class InversionMesh:
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
 
-        from geoapps.octree_creation.application import OctreeMesh
+        from geoapps.octree_creation.driver import OctreeDriver
 
         octree_params = self.collect_mesh_params(self.params)
-        self.entity = OctreeMesh.run(octree_params)
+        driver = OctreeDriver(octree_params)
+        self.entity = driver.run()
         self.entity.parent = self.params.ga_group

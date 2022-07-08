@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.base.params import BaseParams
+    from geoapps.driver_base.params import BaseParams
 
 import numpy as np
 
@@ -150,27 +150,29 @@ class SurveyFactory(SimPEGFactory):
 
         return survey, self.local_index
 
-    def _localize(self, data, component, channel, local_index):
+    def _get_local_data(self, data, channel, local_index):
 
-        component_map = {
-            "zxx_real": "zyy_real",
-            "zxx_imag": "zyy_imag",
-            "zxy_real": "zyx_real",
-            "zxy_imag": "zyx_imag",
-            "zyx_real": "zxy_real",
-            "zyx_imag": "zxy_imag",
-            "zyy_real": "zxx_real",
-            "zyy_imag": "zxx_imag",
-        }
+        local_data = {}
+        local_uncertainties = {}
 
-        if self.factory_type == "magnetotellurics":
-            local_data = data.observed[component_map[component]][channel][local_index]
-            local_uncertainties = data.uncertainties[component_map[component]][channel][
-                local_index
-            ]
-        elif self.factory_type == "tipper":
-            local_data = data.observed[component][channel][local_index]
-            local_uncertainties = data.uncertainties[component][channel][local_index]
+        components = list(data.observed.keys())
+        for comp in components:
+            comp_name = comp
+            if self.factory_type == "magnetotellurics":
+                comp_name = {
+                    "zxx_real": "zyy_real",
+                    "zxx_imag": "zyy_imag",
+                    "zxy_real": "zyx_real",
+                    "zxy_imag": "zyx_imag",
+                    "zyx_real": "zxy_real",
+                    "zyx_imag": "zxy_imag",
+                    "zyy_real": "zxx_real",
+                    "zyy_imag": "zxx_imag",
+                }[comp]
+
+            key = "_".join([str(channel), str(comp_name)])
+            local_data[key] = data.observed[comp][channel][local_index]
+            local_uncertainties[key] = data.uncertainties[comp][channel][local_index]
 
         return local_data, local_uncertainties
 
@@ -178,33 +180,25 @@ class SurveyFactory(SimPEGFactory):
 
         if self.factory_type in ["magnetotellurics", "tipper"]:
 
-            components = list(data.observed.keys())
             local_data = {}
             local_uncertainties = {}
 
             if channel is None:
+
                 channels = np.unique([list(v.keys()) for v in data.observed.values()])
-
                 for chan in channels:
-                    for comp in components:
+                    dat, unc = self._get_local_data(data, chan, local_index)
+                    local_data.update(dat)
+                    local_uncertainties.update(unc)
 
-                        (
-                            local_data["_".join([str(chan), str(comp)])],
-                            local_uncertainties["_".join([str(chan), str(comp)])],
-                        ) = self._localize(data, comp, chan, local_index)
             else:
 
-                for comp in components:
+                dat, unc = self._get_local_data(data, channel, local_index)
+                local_data.update(dat)
+                local_uncertainties.update(unc)
 
-                    (
-                        local_data["_".join([str(channel), str(comp)])],
-                        local_uncertainties["_".join([str(channel), str(comp)])],
-                    ) = self._localize(data, comp, channel, local_index)
-
-            data_vec = self._stack_channels(local_data, "cluster_components")
-            uncertainty_vec = self._stack_channels(
-                local_uncertainties, "cluster_components"
-            )
+            data_vec = self._stack_channels(local_data, "row")
+            uncertainty_vec = self._stack_channels(local_uncertainties, "row")
             uncertainty_vec[np.isnan(data_vec)] = np.inf
             data_vec[
                 np.isnan(data_vec)
@@ -219,8 +213,8 @@ class SurveyFactory(SimPEGFactory):
                 k: v[local_index] for k, v in data.uncertainties.items()
             }
 
-            data_vec = self._stack_channels(local_data, "cluster_locs")
-            uncertainty_vec = self._stack_channels(local_uncertainties, "cluster_locs")
+            data_vec = self._stack_channels(local_data, "column")
+            uncertainty_vec = self._stack_channels(local_uncertainties, "column")
             uncertainty_vec[np.isnan(data_vec)] = np.inf
             data_vec[
                 np.isnan(data_vec)
@@ -228,11 +222,26 @@ class SurveyFactory(SimPEGFactory):
             survey.dobs = data_vec
             survey.std = uncertainty_vec
 
-    def _stack_channels(self, channel_data: dict[str, np.ndarray], mode):
-        """Convert dictionary of data/uncertainties to stacked array."""
-        if mode == "cluster_locs":
+    def _stack_channels(self, channel_data: dict[str, np.ndarray], mode: str):
+        """
+        Convert dictionary of data/uncertainties to stacked array.
+
+        parameters:
+        ----------
+
+        channel_data: Array of data to stack
+        mode: Stacks rows or columns before flattening. Must be either 'row' or 'column'.
+
+
+        notes:
+        ------
+        If mode is row the components will be clustered in the resulting 1D array.
+        Column stacking results in the locations being clustered.
+
+        """
+        if mode == "column":
             return np.column_stack(list(channel_data.values())).ravel()
-        elif mode == "cluster_components":
+        elif mode == "row":
             return np.row_stack(list(channel_data.values())).ravel()
 
     def _dcip_arguments(self, data=None):

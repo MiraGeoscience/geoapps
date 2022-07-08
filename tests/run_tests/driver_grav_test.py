@@ -9,11 +9,8 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.utils import get_inversion_output
+from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
-
-# import pytest
-# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
@@ -60,14 +57,13 @@ def test_gravity_run(
     )
     fwr_driver = InversionDriver(params)
     fwr_driver.run()
-    geoh5 = Workspace(geoh5.h5file)
 
+    geoh5.open()
     gz = geoh5.get_entity("Iteration_0_gz")[0]
     orig_gz = gz.values.copy()
 
     # Turn some values to nan
     gz.values[0] = np.nan
-    geoh5.finalize()
 
     # Run the inverse
     np.random.seed(0)
@@ -94,6 +90,7 @@ def test_gravity_run(
     )
     params.workpath = tmp_path
     driver = InversionDriver(params)
+
     driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
