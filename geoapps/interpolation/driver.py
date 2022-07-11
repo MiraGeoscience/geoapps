@@ -30,11 +30,7 @@ class DataInterpolationDriver:
         xyz = get_locations(self.params.geoh5, self.params.objects)
 
         if xyz is None:
-            return
-
-        if self.params.data is None:
-            print("No data selected")
-            return
+            raise ValueError("Input object has no centroids or vertices.")
 
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
@@ -50,7 +46,7 @@ class DataInterpolationDriver:
             dtype[field] = values[field].dtype
         else:
             model_in = self.params.geoh5.get_entity(field)[0]
-            values[field] = np.asarray(model_in.values, dtype=float)  # .copy()
+            values[field] = np.asarray(model_in.values, dtype=float)
             dtype[field] = model_in.values.dtype
 
         values[field][values[field] == self.params.no_data_value] = np.nan

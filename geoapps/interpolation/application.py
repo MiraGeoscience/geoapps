@@ -251,7 +251,7 @@ class DataInterpolation(ObjectDataSelection):
         for key in ["options", "objects", "data", "constant"]:
             param_dict["topography_" + key] = getattr(self.params, "topography_" + key)
 
-        temp_geoh5 = f"Interpolation_{time():.3f}.geoh5"
+        temp_geoh5 = f"Interpolation_{time():.0f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as workspace:
@@ -269,7 +269,7 @@ class DataInterpolation(ObjectDataSelection):
                 validation_options={"disabled": True},
             )
             new_params = DataInterpolationParams(input_file=ifile, **param_dict)
-            new_params.write_input_file()
+            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
 
             driver = DataInterpolationDriver(new_params)
             driver.run()
