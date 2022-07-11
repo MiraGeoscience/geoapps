@@ -71,7 +71,7 @@
     "max_distance": {
         "main": false,
         "group": "Horizontal Extent",
-        "groupOptional": true,
+        "optional": true,
         "enabled": false,
         "value": 0.0,
         "label": "Maximum distance (m)"
@@ -86,18 +86,11 @@
             "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
         ],
         "main": false,
+        "optional": true,
+        "enabled": false,
         "group": "Horizontal Extent",
         "label": "Object hull",
         "value": ""
-    },
-    "topography_options": {
-        "main": false,
-        "group": "Vertical Extent",
-        "groupOptional": true,
-        "enabled": false,
-        "choiceList": ["None", "Object", "Constant"],
-        "value": "Object",
-        "label": "Define by"
     },
     "topography_objects": {
         "meshType": [
@@ -109,30 +102,30 @@
             "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
         ],
         "main": false,
-        "group": "Vertical Extent",
+        "group": "Upper Limit",
+        "optional": true,
+        "enabled": false,
         "label": "Object",
         "value": ""
     },
     "topography_data": {
         "main": false,
-        "group": "Vertical Extent",
+        "group": "Upper Limit",
+        "optional": true,
+        "enabled": false,
         "association": ["Vertex", "Cell"],
         "dataType": "Float",
         "label": "Data",
         "parent": "topography_objects",
+        "dependency": "topography_objects",
         "value": ""
-    },
-    "topography_constant": {
-        "main": false,
-        "group": "Vertical Extent",
-        "value": 0.0,
-        "label": "Elevation (m)"
     },
     "max_depth": {
         "main": false,
-        "group": "Vertical Extent",
+        "optional": true,
+        "enabled": false,
         "value": 0.0,
-        "label": "Maximum depth (m)"
+        "label": "Lower Limit (m)"
     },
     "out_object": {
         "meshType": [
