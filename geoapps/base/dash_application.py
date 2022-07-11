@@ -7,9 +7,10 @@
 
 import base64
 import json
+import time
 import uuid
 import webbrowser
-from os import environ
+from os import environ, makedirs, path
 
 from dash import no_update
 from flask import Flask
@@ -84,13 +85,19 @@ class BaseDashApplication:
     def update_param_dict(self, update_dict):
         for key in self.params.to_dict().keys():
             if key in update_dict.keys():
-                setattr(self.params, key, update_dict[key])
+                if key == "live_link":
+                    if not update_dict["live_link"]:
+                        self.params.live_link = False
+                    else:
+                        self.params.live_link = True
+                else:
+                    setattr(self.params, key, update_dict[key])
             elif key + "_name" in update_dict.keys():
                 if "geoh5" in update_dict.keys():
                     ws = update_dict["geoh5"]
                 else:
                     ws = self.params.geoh5
-                setattr(self.params, key, ws.get_entity(update_dict[key + "_name"]))
+                setattr(self.params, key, ws.get_entity(update_dict[key + "_name"])[0])
 
     @staticmethod
     def update_from_ui_json(contents, param_list):
@@ -139,17 +146,44 @@ class BaseDashApplication:
             if isinstance(
                 value, ObjectBase
             ):  # This only works when objects are initialized as objects, not None.
-                defaults[key + "_name"] = getattr(value, "name", None)
                 # Update object dropdown options.
                 defaults.update(self.update_object_options(defaults["geoh5"], key))
-            elif isinstance(value, Data):
                 defaults[key + "_name"] = getattr(value, "name", None)
-                # Update data dropdown options ***
             else:
                 defaults[key] = value
-        print(defaults["geoh5"])
         # defaults["param_dict"] = self.params.to_dict()
         return defaults
+
+    @staticmethod
+    def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
+        """
+        Create an active workspace with check for GA monitoring directory
+        """
+        if not name.endswith(".geoh5"):
+            name += ".geoh5"
+        workspace = Workspace(path.join(workpath, name))
+        workspace.close()
+        new_live_link = False
+        time.sleep(1)
+        # Check if GA digested the file already
+        if not path.exists(workspace.h5file):
+            workpath = path.join(workpath, ".working")
+            if not path.exists(workpath):
+                makedirs(workpath)
+            workspace = Workspace(path.join(workpath, name))
+            workspace.close()
+            new_live_link = True
+            if not live_link:
+                print(
+                    "ANALYST Pro active live link found. Switching to monitoring directory..."
+                )
+        elif live_link:
+            print(
+                "ANALYST Pro 'monitoring directory' inactive. Reverting to standalone mode..."
+            )
+        workspace.open()
+        # return new live link
+        return workspace, new_live_link
 
     def run(self):
         # The reloader has not yet run - open the browser

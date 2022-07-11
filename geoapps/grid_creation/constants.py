@@ -39,11 +39,8 @@ default_ui_json.update(
         "monitoring_directory": "",
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
-        "new_grid": {
-            "label": "Name",
-            "value": "",
-        },
         "objects": {
+            "main": True,
             "meshType": [
                 "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
                 "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -52,10 +49,11 @@ default_ui_json.update(
                 "{4EA87376-3ECE-438B-BF12-3479733DED46}",
                 "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             ],
-            "label": "Object",
+            "label": "Input object",
             "value": None,
         },
         "xy_reference": {
+            "main": True,
             "meshType": [
                 "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
                 "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -64,22 +62,31 @@ default_ui_json.update(
                 "{4EA87376-3ECE-438B-BF12-3479733DED46}",
                 "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             ],
-            "label": "Object",
+            "label": "Lateral extent",
             "value": None,
         },
+        "new_grid": {
+            "main": True,
+            "label": "Name",
+            "value": "",
+        },
         "core_cell_size": {
+            "main": True,
             "label": "Smallest cells",
             "value": "0, 0, 0",
         },
         "depth_core": {
+            "main": True,
             "label": "Core depth (m)",
             "value": 0.0,
         },
         "padding_distance": {
+            "main": True,
             "label": "Pad distance (W, E, S, N, D, U)",
             "value": "0, 0, 0, 0, 0, 0",
         },
         "expansion_fact": {
+            "main": True,
             "label": "Expansion factor",
             "value": 0.0,
         },
