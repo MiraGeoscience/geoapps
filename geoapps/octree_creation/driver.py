@@ -8,17 +8,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from geoh5py.objects import Octree
-    from . import OctreeParams
-
 import sys
 from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import ObjectBase
+from geoh5py.objects import ObjectBase, Octree
 from geoh5py.ui_json import InputFile, monitored_directory_copy
 
 from geoapps.driver_base.utils import treemesh_2_octree
