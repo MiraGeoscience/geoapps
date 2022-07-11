@@ -95,7 +95,9 @@ def test_clustering(tmp_path):
     app.export_clusters(
         n_clicks=0, n_clusters=8, group_name="MyCluster", live_link=False, test=True
     )
-    filename = list(filter(lambda x: "Clustering_" in x, listdir(tmp_path)))[0]
+    filename = list(
+        filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), listdir(tmp_path))
+    )[0]
 
     with Workspace(path.join(tmp_path, filename)) as workspace:
         assert len(workspace.get_entity("MyCluster")) == 1
