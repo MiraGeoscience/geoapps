@@ -20,8 +20,8 @@ defaults = {
     "space": None,
     "max_distance": None,
     "xy_extent": None,
-    "topo_object": None,
-    "topo_data": None,
+    "topography_objects": None,
+    "topography_data": None,
     "max_depth": None,
     "no_data_value": None,
     "out_object": None,
@@ -108,7 +108,7 @@ default_ui_json.update(
         "max_distance": {
             "main": False,
             "group": "Horizontal Extent",
-            "groupOptional": True,
+            "optional": True,
             "enabled": False,
             "value": 0.0,
             "label": "Maximum distance (m)",
@@ -123,17 +123,13 @@ default_ui_json.update(
                 "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             ],
             "main": False,
+            "optional": True,
+            "enabled": False,
             "group": "Horizontal Extent",
             "label": "Object hull",
             "value": None,
         },
-        "max_depth": {
-            "main": False,
-            "group": "Lower Limit",
-            "value": 0.0,
-            "label": "Maximum depth (m)",
-        },
-        "topo_object": {
+        "topography_objects": {
             "meshType": [
                 "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
                 "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -144,18 +140,29 @@ default_ui_json.update(
             ],
             "main": False,
             "group": "Upper Limit",
+            "optional": True,
+            "enabled": False,
             "label": "Object",
             "value": None,
-            "optional": True,
         },
-        "topo_data": {
+        "topography_data": {
             "main": False,
             "group": "Upper Limit",
+            "optional": True,
+            "enabled": False,
             "association": ["Vertex", "Cell"],
             "dataType": "Float",
             "label": "Data",
-            "parent": "topo_object",
+            "parent": "topography_objects",
+            "dependency": "topography_objects",
             "value": None,
+        },
+        "max_depth": {
+            "main": False,
+            "optional": True,
+            "enabled": False,
+            "value": 0.0,
+            "label": "Lower Limit (m)",
         },
         "out_object": {
             "meshType": [
@@ -194,5 +201,5 @@ app_initializer = {
     "skew_angle": 0.0,
     "skew_factor": 1.0,
     "space": "Linear",
-    "topo_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+    "topography_objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
 }

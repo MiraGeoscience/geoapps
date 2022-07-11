@@ -34,8 +34,8 @@ class DataInterpolationParams(BaseParams):
         self._space = None
         self._max_distance = None
         self._xy_extent = None
-        self._topo_object = None
-        self._topo_data = None
+        self._topography_objects = None
+        self._topography_data = None
         self._max_depth = None
         self._no_data_value = None
         self._out_object = None
@@ -50,6 +50,15 @@ class DataInterpolationParams(BaseParams):
             )
 
         super().__init__(input_file=input_file, **kwargs)
+
+    @property
+    def topography(self) -> dict[str, float] | None:
+        """Returns topography dictionary"""
+        topo = {
+            "objects": self.topography_objects,
+            "data": self.topography_data,
+        }
+        return topo
 
     @property
     def objects(self) -> ObjectBase | None:
@@ -140,26 +149,26 @@ class DataInterpolationParams(BaseParams):
         self.setter_validator("xy_extent", val, fun=self._uuid_promoter)
 
     @property
-    def topo_object(self) -> ObjectBase | None:
+    def topography_objects(self) -> ObjectBase | None:
         """
         Object defining topography.
         """
-        return self._topo_object
+        return self._topography_objects
 
-    @topo_object.setter
-    def topo_object(self, val):
-        self.setter_validator("topo_object", val, fun=self._uuid_promoter)
+    @topography_objects.setter
+    def topography_objects(self, val):
+        self.setter_validator("topography_objects", val, fun=self._uuid_promoter)
 
     @property
-    def topo_data(self) -> Data | None:
+    def topography_data(self) -> Data | None:
         """
         Data defining topography.
         """
-        return self._topo_data
+        return self._topography_data
 
-    @topo_data.setter
-    def topo_data(self, val):
-        self.setter_validator("topo_data", val)
+    @topography_data.setter
+    def topography_data(self, val):
+        self.setter_validator("topography_data", val)
 
     @property
     def max_depth(self) -> float | None:

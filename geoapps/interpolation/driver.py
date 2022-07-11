@@ -117,8 +117,8 @@ class DataInterpolationDriver:
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
         if self.params.topography[
-            "options"
-        ] == "Object" and self.params.geoh5.get_entity(
+            "objects"
+        ] is not None and self.params.geoh5.get_entity(
             self.params.topography["objects"].uid
         ):
             for entity in self.params.geoh5.get_entity(
@@ -149,17 +149,8 @@ class DataInterpolationDriver:
             top = xyz_out_orig[:, 2] > z_interp
             if self.params.max_depth is not None:
                 bottom = np.abs(xyz_out_orig[:, 2] - z_interp) > self.params.max_depth
-
-        elif (
-            self.params.topography["options"] == "Constant"
-            and self.params.topography["constant"] is not None
-        ):
-            top = xyz_out_orig[:, 2] > self.params.topography["constant"]
-            if self.params.max_depth is not None:
-                bottom = (
-                    np.abs(xyz_out_orig[:, 2] - self.params.topography["constant"])
-                    > self.params.max_depth
-                )
+        elif self.params.max_depth is not None:
+            bottom = xyz_out_orig[:, 2] > self.params.max_depth
 
         for key in values_interp.keys():
             values_interp[key][top] = self.params.no_data_value

@@ -15,7 +15,7 @@ from geoh5py.objects.object_base import Entity
 from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 
-from geoapps.base.selection import ObjectDataSelection
+from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.interpolation.constants import app_initializer
 from geoapps.interpolation.driver import DataInterpolationDriver
 from geoapps.interpolation.params import DataInterpolationParams
@@ -31,6 +31,7 @@ class DataInterpolation(ObjectDataSelection):
     """
 
     _param_class = DataInterpolationParams
+    _topography = None
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -45,6 +46,7 @@ class DataInterpolation(ObjectDataSelection):
                 self.defaults[key] = value.uid
             else:
                 self.defaults[key] = value
+        self.defaults["topography"] = self.params.topography
 
         super().__init__(**self.defaults)
 
@@ -59,8 +61,6 @@ class DataInterpolation(ObjectDataSelection):
         )
         self._no_data_value = FloatText()
         self._out_object = Dropdown(description="Object: ")
-        self._topo_object = Dropdown(description="Object: ")
-        self._topo_data = Dropdown(description="Data: ")
         self._skew_angle = FloatText(
             description="Azimuth (d.dd)",
         )
@@ -76,7 +76,6 @@ class DataInterpolation(ObjectDataSelection):
         )
         self.method_panel = VBox([self.method])
         self.destination_panel = VBox([self.out_object])
-        self.topography_panel = VBox([self.topo_object, self.topo_data])
         self.method.observe(self.method_update)
         self.parameters = {
             "Method": self.method_panel,
@@ -106,7 +105,7 @@ class DataInterpolation(ObjectDataSelection):
 
         self.xy_extent.options = self.objects.options
         self.parameters["Vertical Extent"].children = [
-            self.topography_panel,
+            self.topography.data_panel,
             self.max_depth,
         ]
 
@@ -167,27 +166,6 @@ class DataInterpolation(ObjectDataSelection):
         return self._out_object
 
     @property
-    def topo_object(self):
-        """
-        :obj:`ipywidgets.Dropdown()`
-        """
-        return self._topo_object
-
-    @property
-    def topo_data(self) -> Dropdown:
-        """
-        Data selector
-        """
-        if getattr(self, "_data", None) is None:
-            self._data = Dropdown(
-                description="Data: ",
-            )
-            if self._topo_object is not None:
-                self.update_data_list(None)
-
-        return self._topo_data
-
-    @property
     def skew_angle(self):
         """
         :obj:`ipywidgets.FloatText()`
@@ -207,6 +185,21 @@ class DataInterpolation(ObjectDataSelection):
         :obj:`ipywidgets.RadioButtons()`
         """
         return self._space
+
+    @property
+    def topography(self):
+        """
+        :obj:`geoapps.TopographyOptions()`
+        """
+        if getattr(self, "_topography", None) is None:
+            self._topography = TopographyOptions(
+                option_list=["None", "Object", "Constant"],
+                workspace=self.workspace,
+                add_xyz=False,
+                **self.defaults["topography"],
+            )
+            self._topography.options.value = "Object"
+        return self._topography
 
     @property
     def xy_extent(self):
@@ -234,7 +227,7 @@ class DataInterpolation(ObjectDataSelection):
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.out_object.options = self.objects.options
-        self.topo_object.options = self.objects.options
+        self.topography.workspace = workspace
 
     def parameter_change(self, _):
         self.parameter_panel.children = [
@@ -265,6 +258,12 @@ class DataInterpolation(ObjectDataSelection):
                     param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
             param_dict["geoh5"] = workspace
+            param_dict["topography_objects"] = workspace.get_entity(
+                self._topography.objects.value
+            )[0]
+            param_dict["topography_data"] = workspace.get_entity(
+                self._topography.data.value
+            )[0]
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
@@ -273,6 +272,7 @@ class DataInterpolation(ObjectDataSelection):
                 ui_json=self.params.input_file.ui_json,
                 validation_options={"disabled": True},
             )
+
             new_params = DataInterpolationParams(input_file=ifile, **param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
 
