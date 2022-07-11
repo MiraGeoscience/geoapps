@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 
@@ -32,6 +31,7 @@ class GridCreationParams(BaseParams):
         self._depth_core = None
         self._expansion_fact = None
         self._new_grid = None
+        self._live_link = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -118,3 +118,14 @@ class GridCreationParams(BaseParams):
     @new_grid.setter
     def new_grid(self, val):
         self.setter_validator("new_grid", val)
+
+    @property
+    def live_link(self) -> bool | None:
+        """
+        Live link.
+        """
+        return self._live_link
+
+    @live_link.setter
+    def live_link(self, val):
+        self.setter_validator("live_link", val)
