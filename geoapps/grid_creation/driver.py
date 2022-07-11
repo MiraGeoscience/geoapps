@@ -12,7 +12,6 @@ import numpy as np
 from geoh5py.ui_json import InputFile
 from scipy.spatial import cKDTree
 
-from geoapps.grid_creation.application import GridCreation
 from geoapps.grid_creation.params import GridCreationParams
 from geoapps.interpolation.application import DataInterpolation
 from geoapps.shared_utils.utils import get_locations
