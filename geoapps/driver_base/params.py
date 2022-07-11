@@ -206,6 +206,11 @@ class BaseParams:
         return free_parameter_dict
 
     @property
+    def free_parameter_keys(self) -> list[str]:
+        """List of free parameter keys."""
+        return self._free_parameter_keys
+
+    @property
     def validations(self) -> dict[str, Any]:
         if getattr(self, "_validations", None) is None:
             self._validations = self.input_file.validations

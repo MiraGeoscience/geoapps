@@ -269,7 +269,7 @@ class OctreeMesh(ObjectDataSelection):
         Add a refinement from dictionary
         """
         widget_list = [Label(label)]
-        for key in self.params._free_parameter_keys:
+        for key in self.params.free_parameter_keys:
             attr_name = label + f" {key}"
             value = getattr(self.params, attr_name)
             if "object" in key:

@@ -9,19 +9,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from geoh5py.workspace import Workspace
-    from geoh5py.objects import Octree
-    from geoapps.driver_base.params import BaseParams
-    from discretize import TreeMesh
-    from . import InversionData, InversionTopography
-
 import numpy as np
 from geoh5py.objects import PotentialElectrode
-from geoh5py.workspace import Workspace
 
 from geoapps.octree_creation.params import OctreeParams
 from geoapps.shared_utils.utils import octree_2_treemesh
+
+if TYPE_CHECKING:
+    from discretize import TreeMesh
+    from geoh5py.objects import Octree
+    from geoh5py.workspace import Workspace
+
+    from geoapps.driver_base.params import BaseParams
+
+    from . import InversionData, InversionTopography
 
 
 class InversionMesh:
