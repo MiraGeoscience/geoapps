@@ -35,5 +35,5 @@ def test_deprecated_uijson_fields():
         d_u_j = constant.default_ui_json
         for value in d_u_j.values():
             if isinstance(value, dict):
-                for f in deprecated_fields:
-                    assert f not in value.keys()
+                for field in deprecated_fields:
+                    assert field not in value.keys()

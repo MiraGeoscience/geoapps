@@ -16,8 +16,7 @@ from geoh5py.objects import ObjectBase, Octree
 from geoh5py.ui_json import InputFile, monitored_directory_copy
 
 from geoapps.driver_base.utils import treemesh_2_octree
-
-from .params import OctreeParams
+from geoapps.octree_creation.params import OctreeParams
 
 
 class OctreeDriver:

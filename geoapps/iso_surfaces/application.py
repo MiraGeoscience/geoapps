@@ -124,13 +124,6 @@ class IsoSurface(ObjectDataSelection):
             self.export_as.value = "Iso_" + self.data.uid_name_map[self.data.value]
 
     @property
-    def convert(self):
-        """
-        ipywidgets.ToggleButton()
-        """
-        return self._convert
-
-    @property
     def contours(self):
         """
         :obj:`ipywidgets.Text`: String defining sets of contours.
