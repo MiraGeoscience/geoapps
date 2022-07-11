@@ -168,7 +168,6 @@ class DataInterpolationDriver:
         if self.params.xy_extent is not None and self.params.geoh5.get_entity(
             self.params.xy_extent
         ):
-
             xy_ref = self.params.xy_extent
             if hasattr(xy_ref, "centroids"):
                 xy_ref = xy_ref.centroids
