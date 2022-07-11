@@ -20,10 +20,8 @@ defaults = {
     "space": None,
     "max_distance": None,
     "xy_extent": None,
-    "topography_options": None,
-    "topography_objects": None,
-    "topography_data": None,
-    "topography_constant": None,
+    "topo_object": None,
+    "topo_data": None,
     "max_depth": None,
     "no_data_value": None,
     "out_object": None,
@@ -129,16 +127,13 @@ default_ui_json.update(
             "label": "Object hull",
             "value": None,
         },
-        "topography_options": {
+        "max_depth": {
             "main": False,
-            "group": "Vertical Extent",
-            "groupOptional": True,
-            "enabled": False,
-            "choiceList": ["None", "Object", "Constant"],
-            "value": "Object",
-            "label": "Define by",
+            "group": "Lower Limit",
+            "value": 0.0,
+            "label": "Maximum depth (m)",
         },
-        "topography_objects": {
+        "topo_object": {
             "meshType": [
                 "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
                 "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -148,30 +143,19 @@ default_ui_json.update(
                 "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             ],
             "main": False,
-            "group": "Vertical Extent",
+            "group": "Upper Limit",
             "label": "Object",
             "value": None,
+            "optional": True,
         },
-        "topography_data": {
+        "topo_data": {
             "main": False,
-            "group": "Vertical Extent",
+            "group": "Upper Limit",
             "association": ["Vertex", "Cell"],
             "dataType": "Float",
             "label": "Data",
-            "parent": "topography_objects",
+            "parent": "topo_object",
             "value": None,
-        },
-        "topography_constant": {
-            "main": False,
-            "group": "Vertical Extent",
-            "value": 0.0,
-            "label": "Elevation (m)",
-        },
-        "max_depth": {
-            "main": False,
-            "group": "Vertical Extent",
-            "value": 0.0,
-            "label": "Maximum depth (m)",
         },
         "out_object": {
             "meshType": [
@@ -210,6 +194,5 @@ app_initializer = {
     "skew_angle": 0.0,
     "skew_factor": 1.0,
     "space": "Linear",
-    "topography_options": "Object",
-    "topography_objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+    "topo_object": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
 }
