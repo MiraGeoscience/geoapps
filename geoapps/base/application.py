@@ -12,7 +12,8 @@ import types
 from os import makedirs, mkdir, path
 from shutil import copyfile
 
-from geoh5py.shared import Entity
+from geoh5py.groups import Group
+from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import dict_mapper, entity2uuid, str2uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
@@ -62,8 +63,8 @@ class BaseApplication:
         self.defaults = {}
         self.defaults.update(**kwargs)
         self._file_browser = FileChooser()
-        self._file_browser._select.on_click(self.file_browser_change)
-        self._file_browser._select.style = {"description_width": "initial"}
+        getattr(self._file_browser, "_select").on_click(self.file_browser_change)
+        getattr(self._file_browser, "_select").style = {"description_width": "initial"}
         self._copy_trigger = Button(
             description="Create copy:",
             style={"description_width": "initial"},
@@ -88,7 +89,7 @@ class BaseApplication:
         )
         self._live_link.observe(self.live_link_choice)
         self._export_directory = FileChooser(show_only_dirs=True)
-        self._export_directory._select.on_click(self.export_browser_change)
+        getattr(self._export_directory, "_select").on_click(self.export_browser_change)
         self.monitoring_panel = VBox(
             [
                 Label("Save to:", style={"description_width": "initial"}),
@@ -149,7 +150,7 @@ class BaseApplication:
         """
         Change the target h5file
         """
-        if not self.file_browser._select.disabled:
+        if not getattr(self.file_browser, "_select").disabled:
             _, extension = path.splitext(self.file_browser.selected)
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
@@ -167,18 +168,19 @@ class BaseApplication:
         """
         Change the target h5file
         """
-        if not self.export_directory._select.disabled:
+        if not getattr(self.export_directory, "_select").disabled:
             self._monitoring_directory = self.export_directory.selected
 
     @staticmethod
-    def live_link_output(selected_path, entity: Entity):
+    def live_link_output(path: str, entity: ObjectBase | Group):
         """
-        Create a temporary geoh5 file in the monitoring folder and export entity for update.
+        Create a temporary geoh5 file in the monitoring folder and export an
+        entity for update.
 
-        :param entity: Entity to be updated
-        :param data: Data name and values to be added as data to the entity on export {"name": values}
+        :param path: Monitoring directory.
+        :param entity: Entity to be updated.
         """
-        monitored_directory_copy(selected_path, entity)
+        monitored_directory_copy(path, entity)
 
     def live_link_choice(self, _):
         """
@@ -330,16 +332,16 @@ class BaseApplication:
         self.workspace = Workspace(self._h5file, mode="r")
 
     @property
-    def live_link(self):
+    def live_link(self) -> Checkbox:
         """
-        :obj:`ipywidgets.Checkbox`: Activate the live link between an application and Geoscience ANALYST
+        Activate the live link between an application and Geoscience ANALYST
         """
         return self._live_link
 
     @property
-    def export_directory(self):
+    def export_directory(self) -> FileChooser:
         """
-        :obj:`ipyfilechooser.FileChooser`: Path for the monitoring folder to be copied to Geoscience ANALYST preferences.
+        File chooser for the monitoring directory.
         """
         return self._export_directory
 
@@ -359,7 +361,7 @@ class BaseApplication:
         self._params = params
 
     @property
-    def refresh(self):
+    def refresh(self) -> ToggleButton:
         """
         Generic toggle button to control a refresh of the application
         """
@@ -442,8 +444,11 @@ class BaseApplication:
         self.params.write_input_file(name=self.params.ga_group_name)
         self.run(self.params)
 
-    @staticmethod
+    @classmethod
     def run(cls, params):
+        """
+        Static run method.
+        """
         ...
 
     def base_workspace_changes(self, workspace: Workspace):
