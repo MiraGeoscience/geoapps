@@ -26,12 +26,16 @@ class GridCreationParams(BaseParams):
         self._validations = validations
         self._objects = None
         self._xy_reference = None
-        self._core_cell_size = None
-        self._padding_distance = None
+        self._cell_size_x = None
+        self._cell_size_y = None
+        self._cell_size_z = None
+        self._horizontal_padding = None
+        self._bottom_padding = None
         self._depth_core = None
         self._expansion_fact = None
         self._new_grid = None
         self._live_link = None
+        self._monitoring_directory = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -65,26 +69,59 @@ class GridCreationParams(BaseParams):
         self.setter_validator("xy_reference", val, fun=self._uuid_promoter)
 
     @property
-    def core_cell_size(self) -> str | None:
+    def cell_size_x(self) -> float | None:
         """
-        Core cell size for 3D grid.
+        x cell size for 3D grid.
         """
-        return self._core_cell_size
+        return self._cell_size_x
 
-    @core_cell_size.setter
-    def core_cell_size(self, val):
-        self.setter_validator("core_cell_size", val)
+    @cell_size_x.setter
+    def cell_size_x(self, val):
+        self.setter_validator("cell_size_x", val)
 
     @property
-    def padding_distance(self) -> str | None:
+    def cell_size_y(self) -> float | None:
         """
-        Padding distance for 3D grid.
+        y cell size for 3D grid.
         """
-        return self._padding_distance
+        return self._cell_size_y
 
-    @padding_distance.setter
-    def padding_distance(self, val):
-        self.setter_validator("padding_distance", val)
+    @cell_size_y.setter
+    def cell_size_y(self, val):
+        self.setter_validator("cell_size_y", val)
+
+    @property
+    def cell_size_z(self) -> float | None:
+        """
+        z cell size for 3D grid.
+        """
+        return self._cell_size_z
+
+    @cell_size_z.setter
+    def cell_size_z(self, val):
+        self.setter_validator("cell_size_z", val)
+
+    @property
+    def horizontal_padding(self) -> float | None:
+        """
+        Horizontal padding distance for 3D grid.
+        """
+        return self._horizontal_padding
+
+    @horizontal_padding.setter
+    def horizontal_padding(self, val):
+        self.setter_validator("horizontal_padding", val)
+
+    @property
+    def bottom_padding(self) -> float | None:
+        """
+        Bottom padding distance for 3D grid.
+        """
+        return self._bottom_padding
+
+    @bottom_padding.setter
+    def bottom_padding(self, val):
+        self.setter_validator("bottom_padding", val)
 
     @property
     def depth_core(self) -> float | None:
@@ -120,7 +157,7 @@ class GridCreationParams(BaseParams):
         self.setter_validator("new_grid", val)
 
     @property
-    def live_link(self) -> bool | None:
+    def live_link(self) -> bool:
         """
         Live link.
         """
@@ -129,3 +166,14 @@ class GridCreationParams(BaseParams):
     @live_link.setter
     def live_link(self, val):
         self.setter_validator("live_link", val)
+
+    @property
+    def monitoring_directory(self) -> str | None:
+        """
+        Monitoring directory.
+        """
+        return self._monitoring_directory
+
+    @monitoring_directory.setter
+    def monitoring_directory(self, val):
+        self.setter_validator("monitoring_directory", val)

@@ -6,10 +6,12 @@
 #  (see LICENSE file at the root of this source code package).
 from __future__ import annotations
 
+import os
 import sys
+from os import path
 
 import numpy as np
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import InputFile, monitored_directory_copy
 from scipy.spatial import cKDTree
 
 from geoapps.grid_creation.params import GridCreationParams
@@ -34,9 +36,16 @@ class GridCreationDriver:
             xyz_ref = xyz
 
         # Find extent of grid
-        h = self.params.core_cell_size
-
-        pads = self.params.padding_distance
+        h = [self.params.cell_size_x, self.params.cell_size_y, self.params.cell_size_z]
+        # pads: W, E, S, N, D, U
+        pads = [
+            self.params.horizontal_padding,
+            self.params.horizontal_padding,
+            self.params.horizontal_padding,
+            self.params.horizontal_padding,
+            self.params.bottom_padding,
+            0.0,
+        ]
 
         object_out = DataInterpolation.get_block_model(
             self.params.geoh5,
@@ -56,6 +65,13 @@ class GridCreationDriver:
         d_xyz = object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
 
         object_out.origin = np.r_[object_out.origin.tolist()] - d_xyz
+
+        if self.params.monitoring_directory is not None and path.exists(
+            os.path.abspath(self.params.monitoring_directory)
+        ):
+            monitored_directory_copy(
+                os.path.abspath(self.params.monitoring_directory), object_out
+            )
 
 
 if __name__ == "__main__":

@@ -14,11 +14,11 @@ from os import environ, makedirs, path
 
 from dash import no_update
 from flask import Flask
-from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
+from geoapps.base.application import BaseApplication
 from geoapps.driver_base.params import BaseParams
 
 
@@ -39,24 +39,9 @@ class BaseDashApplication:
             external_stylesheets=external_stylesheets,
         )
 
-    @property
-    def params(self) -> BaseParams:
-        """
-        Application parameters
-        """
-        return self._params
-
-    @params.setter
-    def params(self, params: BaseParams):
-        # assert isinstance(
-        #    params, BaseParams
-        # ), f"Input parameters must be an instance of {BaseParams}"
-
-        self._params = params
-
     @staticmethod
     def update_object_options(ws, obj_var_name):
-        objects, value = None, None
+        # objects, value = None, None
         obj_list = ws.objects
 
         options = [
@@ -85,6 +70,11 @@ class BaseDashApplication:
     def update_param_dict(self, update_dict):
         # Get validations to know expected type for keys in self.params.
         validations = self.params.validations
+        # Get ws for updating entities.
+        if "geoh5" in update_dict.keys():
+            ws = update_dict["geoh5"]
+        else:
+            ws = self.params.geoh5
         # Loop through self.params and update self.params with update_dict.
         for key in self.params.to_dict().keys():
             if key in update_dict.keys():
@@ -100,10 +90,6 @@ class BaseDashApplication:
                 else:
                     setattr(self.params, key, update_dict[key])
             elif key + "_name" in update_dict.keys():
-                if "geoh5" in update_dict.keys():
-                    ws = update_dict["geoh5"]
-                else:
-                    ws = self.params.geoh5
                 setattr(self.params, key, ws.get_entity(update_dict[key + "_name"])[0])
 
     @staticmethod
@@ -131,11 +117,9 @@ class BaseDashApplication:
             # Objects and Data.
             elif key + "_name" in param_list:
                 ws = Workspace(ui_json["geoh5"])
-                print(ws)
                 if (value["value"] is None) | (value["value"] == "") | (ws is None):
                     update_dict[key + "_name"] = None
                 elif ws.get_entity(uuid.UUID(value["value"])):
-                    print(ws.get_entity(uuid.UUID(value["value"])))
                     update_dict[key + "_name"] = ws.get_entity(
                         uuid.UUID(value["value"])
                     )[0].name
@@ -149,7 +133,6 @@ class BaseDashApplication:
             defaults["geoh5"] = self.params.geoh5
 
         for key, value in self.params.to_dict().items():
-            # Is workspace an entity? ***
             if isinstance(
                 value, ObjectBase
             ):  # This only works when objects are initialized as objects, not None.
@@ -201,3 +184,18 @@ class BaseDashApplication:
 
         # Otherwise, continue as normal
         self.app.run_server(host="127.0.0.1", port=8050, debug=False)
+
+    @property
+    def params(self) -> BaseParams:
+        """
+        Application parameters
+        """
+        return self._params
+
+    @params.setter
+    def params(self, params: BaseParams):
+        assert isinstance(
+            params, BaseParams
+        ), f"Input parameters must be an instance of {BaseParams}"
+
+        self._params = params
