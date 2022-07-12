@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from geoh5py.objects import PotentialElectrode
 
+from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.octree_creation.params import OctreeParams
 from geoapps.shared_utils.utils import octree_2_treemesh
 
@@ -91,7 +92,7 @@ class InversionMesh:
             self.rotation = {"origin": origin, "angle": angle}
 
         self.mesh = octree_2_treemesh(self.entity)
-        self.octree_permutation = self.mesh._ubc_order
+        self.octree_permutation = getattr(self.mesh, "_ubc_order")
 
     def collect_mesh_params(self, params: BaseParams) -> OctreeParams:
         """Collect mesh params from inversion params set and return octree Params object."""
@@ -141,9 +142,6 @@ class InversionMesh:
 
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
-
-        from geoapps.octree_creation.driver import OctreeDriver
-
         octree_params = self.collect_mesh_params(self.params)
         driver = OctreeDriver(octree_params)
         self.entity = driver.run()

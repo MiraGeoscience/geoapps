@@ -4,7 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
+# pylint: disable=too-many-locals
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -176,6 +176,8 @@ def test_magnetotellurics_run(
     driver = InversionDriver(params)
 
     driver.run()
+
+    return driver
 
 
 if __name__ == "__main__":
