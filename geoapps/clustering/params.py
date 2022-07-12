@@ -103,6 +103,17 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("full_upper_bounds", val)
 
     @property
+    def color_pickers(self) -> str | None:
+        """
+        Upper bounds for all channels.
+        """
+        return self._color_pickers
+
+    @color_pickers.setter
+    def color_pickers(self, val):
+        self.setter_validator("color_pickers", val)
+
+    @property
     def plot_kmeans(self) -> str | None:
         """
         Whether or not kmeans is plotted on each axis.
