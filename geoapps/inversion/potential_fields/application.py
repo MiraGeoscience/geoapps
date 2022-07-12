@@ -791,7 +791,7 @@ class InversionApp(PlotSelection2D):
             getattr(self, "_workspace", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self.workspace = Workspace(self.h5file)
+            self.workspace = Workspace(self.h5file, mode='r')
         return self._workspace
 
     @workspace.setter
