@@ -195,7 +195,7 @@ class EdgeDetectionApp(PlotSelection2D):
         entity, _ = self.get_selected_entities()
         if getattr(self.trigger, "vertices", None) is not None:
             name = string_name(self.export_as.value)
-            temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.3f}.geoh5"
+            temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.0f}.geoh5"
             with self.get_output_workspace(
                 self.export_directory.selected_path, temp_geoh5
             ) as workspace:
