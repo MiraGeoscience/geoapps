@@ -231,13 +231,13 @@ class OctreeMesh(ObjectDataSelection):
             self.export_directory.selected_path, temp_geoh5
         ) as new_workspace:
 
+            param_dict["geoh5"] = new_workspace
+
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
                     param_dict[key] = value.copy(
                         parent=new_workspace, copy_children=True
                     )
-
-            param_dict["geoh5"] = new_workspace
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
