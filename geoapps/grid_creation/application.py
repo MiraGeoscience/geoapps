@@ -82,7 +82,7 @@ class GridCreation(BaseDashApplication):
                     id="new_grid",
                     value=defaults["new_grid"],
                     style={
-                        "width": "70%",
+                        "width": "50%",
                         "display": "inline-block",
                         "margin_bottom": "20px",
                     },
@@ -95,7 +95,7 @@ class GridCreation(BaseDashApplication):
                     id="core_cell_size",
                     value=defaults["core_cell_size"],
                     style={
-                        "width": "70%",
+                        "width": "50%",
                         "display": "inline-block",
                         "margin_bottom": "20px",
                     },
@@ -109,7 +109,7 @@ class GridCreation(BaseDashApplication):
                     type="number",
                     value=defaults["depth_core"],
                     style={
-                        "width": "70%",
+                        "width": "50%",
                         "display": "inline-block",
                         "margin_bottom": "20px",
                     },
@@ -122,7 +122,7 @@ class GridCreation(BaseDashApplication):
                     id="padding_distance",
                     value=defaults["padding_distance"],
                     style={
-                        "width": "70%",
+                        "width": "50%",
                         "display": "inline-block",
                         "margin_bottom": "20px",
                     },
@@ -136,7 +136,7 @@ class GridCreation(BaseDashApplication):
                     type="number",
                     value=defaults["expansion_fact"],
                     style={
-                        "width": "70%",
+                        "width": "50%",
                         "display": "inline-block",
                         "margin_bottom": "20px",
                     },
@@ -153,7 +153,7 @@ class GridCreation(BaseDashApplication):
             style={
                 "margin_left": "20px",
                 "margin_top": "20px",
-                "width": "40%",
+                "width": "75%",
             },
         )
 
@@ -216,7 +216,8 @@ class GridCreation(BaseDashApplication):
             "filename",
             "contents",
         ]
-
+        depth_core = float(depth_core)
+        expansion_fact = float(expansion_fact)
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         update_dict = {}
         if trigger == "upload":
