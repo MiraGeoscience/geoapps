@@ -27,53 +27,7 @@ class OctreeDriver:
         """
         Create an octree mesh from input values
         """
-        entity = self.params.objects
-
-        p_d = [
-            [
-                self.params.horizontal_padding,
-                self.params.horizontal_padding,
-            ],
-            [
-                self.params.horizontal_padding,
-                self.params.horizontal_padding,
-            ],
-            [self.params.vertical_padding, self.params.vertical_padding],
-        ]
-
-        print("Setting the mesh extent")
-        treemesh = mesh_builder_xyz(
-            entity.vertices,
-            [
-                self.params.u_cell_size,
-                self.params.v_cell_size,
-                self.params.w_cell_size,
-            ],
-            padding_distance=p_d,
-            mesh_type="tree",
-            depth_core=self.params.depth_core,
-        )
-
-        for label, value in self.params.free_parameter_dict.items():
-            if not isinstance(getattr(self.params, value["object"]), ObjectBase):
-                continue
-
-            print(f"Applying {label} on: {getattr(self.params, value['object']).name}")
-
-            treemesh = refine_tree_xyz(
-                treemesh,
-                getattr(self.params, value["object"]).vertices,
-                method=getattr(self.params, value["type"]),
-                octree_levels=getattr(self.params, value["levels"]),
-                max_distance=getattr(self.params, value["distance"]),
-                finalize=False,
-            )
-
-        print("Finalizing...")
-        treemesh.finalize()
-        octree = treemesh_2_octree(
-            self.params.geoh5, treemesh, name=self.params.ga_group_name
-        )
+        octree = self.octree_from_params(self.params)
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
@@ -84,9 +38,58 @@ class OctreeDriver:
             print(f"Result exported to: {self.params.geoh5.h5file}")
         return octree
 
+    @staticmethod
+    def octree_from_params(params: OctreeParams):
+        print("Setting the mesh extent")
+        entity = params.objects
+
+        p_d = [
+            [
+                params.horizontal_padding,
+                params.horizontal_padding,
+            ],
+            [
+                params.horizontal_padding,
+                params.horizontal_padding,
+            ],
+            [params.vertical_padding, params.vertical_padding],
+        ]
+
+        treemesh = mesh_builder_xyz(
+            entity.vertices,
+            [
+                params.u_cell_size,
+                params.v_cell_size,
+                params.w_cell_size,
+            ],
+            padding_distance=p_d,
+            mesh_type="tree",
+            depth_core=params.depth_core,
+        )
+
+        for label, value in params.free_parameter_dict.items():
+            if not isinstance(getattr(params, value["object"]), ObjectBase):
+                continue
+
+            print(f"Applying {label} on: {getattr(params, value['object']).name}")
+
+            treemesh = refine_tree_xyz(
+                treemesh,
+                getattr(params, value["object"]).vertices,
+                method=getattr(params, value["type"]),
+                octree_levels=getattr(params, value["levels"]),
+                max_distance=getattr(params, value["distance"]),
+                finalize=False,
+            )
+
+        print("Finalizing...")
+        treemesh.finalize()
+
+        octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
+
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = OctreeParams(InputFile.read_ui_json(file))
-    driver = OctreeDriver(params)
+    octree_params = OctreeParams(InputFile.read_ui_json(file))
+    driver = OctreeDriver(octree_params)
     driver.run()
