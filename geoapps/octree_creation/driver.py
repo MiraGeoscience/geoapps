@@ -87,6 +87,8 @@ class OctreeDriver:
 
         octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
 
+        return octree
+
 
 if __name__ == "__main__":
     file = sys.argv[1]
