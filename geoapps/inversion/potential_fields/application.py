@@ -781,7 +781,7 @@ class InversionApp(PlotSelection2D):
             getattr(self, "_workspace", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self.workspace = Workspace(self.h5file, mode='r')
+            self.workspace = Workspace(self.h5file, mode="r")
         return self._workspace
 
     @workspace.setter
@@ -1279,7 +1279,6 @@ class InversionApp(PlotSelection2D):
             ifile = InputFile(
                 ui_json=self.params.input_file.ui_json,
                 validation_options={"disabled": True},
-                workspace=new_workspace,
             )
             param_dict["resolution"] = None  # No downsampling for dcip
             self._run_params = self.params.__class__(input_file=ifile, **param_dict)
