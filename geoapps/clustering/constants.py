@@ -17,7 +17,6 @@ from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_js
 defaults = {
     "title": "Clustering",
     "n_clusters": None,
-    "scale": None,
     "run_command": "geoapps.clustering.application",
     "run_command_boolean": False,
     "monitoring_directory": None,
@@ -56,6 +55,7 @@ default_ui_json.update(
         "full_scales": "[]",
         "full_lower_bounds": "[]",
         "full_upper_bounds": "[]",
+        "color_pickers": "[]",
         "plot_kmeans": "[]",
         "conda_environment": "geoapps",
         "run_command": "geoapps.clustering.application",

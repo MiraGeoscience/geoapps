@@ -15,6 +15,10 @@ import webbrowser
 from multiprocessing import cpu_count
 from os import environ, makedirs, path
 
+from geoh5py.objects import ObjectBase
+
+from geoapps.clustering.driver import ClusteringDriver
+
 os.environ["OMP_NUM_THREADS"] = str(cpu_count())
 
 import dash_daq as daq
@@ -35,7 +39,7 @@ from geoapps.clustering.constants import app_initializer
 from geoapps.clustering.params import ClusteringParams
 from geoapps.clustering.plot_data import PlotData
 from geoapps.scatter_plot.application import ScatterPlots
-from geoapps.shared_utils.utils import colors, hex_to_rgb
+from geoapps.shared_utils.utils import colors
 from geoapps.utils.statistics import random_sampling
 
 
@@ -54,7 +58,6 @@ class Clustering(ScatterPlots):
         self.kmeans = None
         self.indices = []
         self.mapping = None
-        self.color_pickers = colors
         super().__init__(clustering=True, **self.params.to_dict())
         # Initial values for the dash components
         self.defaults.update(self.get_cluster_defaults())
@@ -342,6 +345,7 @@ class Clustering(ScatterPlots):
                 dcc.Store(
                     id="full_upper_bounds", data=self.defaults["full_upper_bounds"]
                 ),
+                dcc.Store(id="color_pickers", data=self.defaults["color_pickers"]),
                 dcc.Store(id="plot_kmeans", data=self.defaults["plot_kmeans"]),
             ],
             style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
@@ -359,11 +363,11 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="color_select_div", component_property="style"),
             Input(component_id="show_color_picker", component_property="value"),
-        )(self.update_color_select)
+        )(Clustering.update_color_select)
         self.app.callback(
             Output(component_id="norm_tabs", component_property="style"),
             Input(component_id="show_norm_tabs", component_property="value"),
-        )(self.update_norm_tabs)
+        )(Clustering.update_norm_tabs)
 
         # Callback to update any params
         self.app.callback(
@@ -418,6 +422,7 @@ class Clustering(ScatterPlots):
             Output(component_id="full_scales", component_property="data"),
             Output(component_id="full_lower_bounds", component_property="data"),
             Output(component_id="full_upper_bounds", component_property="data"),
+            Output(component_id="color_pickers", component_property="data"),
             Output(component_id="plot_kmeans", component_property="data"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
@@ -438,6 +443,8 @@ class Clustering(ScatterPlots):
             Input(component_id="full_scales", component_property="data"),
             Input(component_id="full_lower_bounds", component_property="data"),
             Input(component_id="full_upper_bounds", component_property="data"),
+            Input(component_id="color_picker", component_property="value"),
+            Input(component_id="color_pickers", component_property="data"),
         )(self.update_cluster_params)
         # Callback to update all the plots
         self.app.callback(
@@ -448,7 +455,6 @@ class Clustering(ScatterPlots):
             Output(component_id="boxplot", component_property="figure"),
             Output(component_id="inertia", component_property="figure"),
             Input(component_id="n_clusters", component_property="value"),
-            Input(component_id="select_cluster", component_property="value"),
             Input(component_id="dataframe", component_property="data"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="lower_bounds", component_property="value"),
@@ -474,7 +480,7 @@ class Clustering(ScatterPlots):
             Input(component_id="color_min", component_property="value"),
             Input(component_id="color_max", component_property="value"),
             Input(component_id="color_maps", component_property="value"),
-            Input(component_id="color_picker", component_property="value"),
+            Input(component_id="color_pickers", component_property="data"),
             Input(component_id="size", component_property="value"),
             Input(component_id="size_log", component_property="value"),
             Input(component_id="size_thresh", component_property="value"),
@@ -542,6 +548,12 @@ class Clustering(ScatterPlots):
                         else:
                             out_dict[defaults["channels"][i]] = full_list[i]
                     defaults[key] = out_dict
+                elif key == "color_pickers":
+                    full_list = ast.literal_eval(getattr(self.params, key))
+                    if (full_list is None) | (not full_list):
+                        defaults[key] = colors
+                    else:
+                        defaults[key] = full_list
                 else:
                     defaults[key] = value
 
@@ -574,14 +586,16 @@ class Clustering(ScatterPlots):
 
         return defaults
 
-    def update_color_select(self, checkbox):
+    @staticmethod
+    def update_color_select(checkbox):
         # Updating visibility for cluster color picker
         if not checkbox:
             return {"display": "none"}
         else:
             return {"width": "25%", "display": "inline-block", "vertical-align": "top"}
 
-    def update_norm_tabs(self, checkbox):
+    @staticmethod
+    def update_norm_tabs(checkbox):
         # Update visibility for normalization plots
         if not checkbox:
             return {"display": "none"}
@@ -722,6 +736,8 @@ class Clustering(ScatterPlots):
         full_scales,
         full_lower_bounds,
         full_upper_bounds,
+        color_picker,
+        color_pickers,
     ):
         # List of params that will be outputted
         param_list = [
@@ -776,6 +792,7 @@ class Clustering(ScatterPlots):
             "full_scales",
             "full_lower_bounds",
             "full_upper_bounds",
+            "color_pickers",
             "plot_kmeans",
         ]
         # Trigger is which variable triggered the callback
@@ -800,6 +817,12 @@ class Clustering(ScatterPlots):
                     for i in range(len(plot_kmeans)):
                         if plot_kmeans[i]:
                             update_dict.update({axis_list[i] + "_name": "kmeans"})
+                if "color_pickers" in update_dict:
+                    color_pickers = ast.literal_eval(update_dict["color_pickers"])
+                    if color_pickers:
+                        update_dict.update({"color_pickers": color_pickers})
+                    else:
+                        update_dict.update({"color_pickers": colors})
                 # Update full scales, bounds
                 if "channels" in update_dict:
                     channels = update_dict["channels"]
@@ -873,8 +896,11 @@ class Clustering(ScatterPlots):
             }
         elif trigger == "select_cluster":
             # Update color displayed by the dash colorpicker
-            update_dict = self.update_color_picker(select_cluster)
+            update_dict = Clustering.update_color_picker(select_cluster, color_pickers)
             # Output(component_id="color_picker", component_property="value"),
+        elif trigger == "color_picker":
+            # Update color_pickers with new color selection
+            color_pickers[select_cluster] = color_picker["hex"]
         elif trigger in ["x", "y", "z", "color", "size"]:
             # Update min, max values in scatter plot
             update_dict = {
@@ -973,6 +999,8 @@ class Clustering(ScatterPlots):
                         for channel in channels:
                             outlist.append(update_dict[key][channel])
                     setattr(self.params, key, str(outlist))
+                elif key == "color_pickers":
+                    setattr(self.params, key, str(update_dict[key]))
                 elif key in ["x_log", "y_log", "z_log", "color_log", "size_log"]:
                     if value is None:
                         setattr(self.params, key, False)
@@ -1006,7 +1034,6 @@ class Clustering(ScatterPlots):
     def update_plots(
         self,
         n_clusters,
-        select_cluster,
         dataframe_dict,
         channel,
         lower_bounds,
@@ -1032,7 +1059,7 @@ class Clustering(ScatterPlots):
         color_min,
         color_max,
         color_maps,
-        color_picker,
+        color_pickers,
         size,
         size_log,
         size_thresh,
@@ -1044,9 +1071,8 @@ class Clustering(ScatterPlots):
         dataframe = pd.DataFrame(dataframe_dict["dataframe"])
         if not dataframe.empty:
             if color_maps == "kmeans":
-                color_maps = self.update_colormap(
-                    n_clusters, color_picker, select_cluster, color
-                )
+                # Update color_maps
+                color_maps = Clustering.update_colormap(n_clusters, color_pickers)
             elif color_maps is None:
                 color_maps = [[0.0, "rgb(0,0,0)"]]
 
@@ -1099,24 +1125,25 @@ class Clustering(ScatterPlots):
             histogram = self.make_hist_plot(
                 dataframe, channel, lower_bounds, upper_bounds
             )
-            boxplot = self.make_boxplot(n_clusters, dataframe, channel)
+            boxplot = self.make_boxplot(n_clusters, dataframe, channel, color_pickers)
             inertia = self.make_inertia_plot(n_clusters)
             return crossplot, stats_table, matrix, histogram, boxplot, inertia
 
         else:
             return go.Figure(), None, go.Figure(), go.Figure(), go.Figure(), go.Figure()
 
-    def update_color_picker(self, select_cluster):
-        return {"color_picker": dict(hex=self.color_pickers[select_cluster])}
+    @staticmethod
+    def update_color_picker(select_cluster, color_pickers):
+        return {"color_picker": dict(hex=color_pickers[select_cluster])}
 
-    def update_colormap(self, n_clusters, new_color, select_cluster, color_axis):
+    @staticmethod
+    def update_colormap(n_clusters, color_pickers):
         """
         Change the colormap for clusters
         """
-        self.color_pickers[select_cluster] = new_color["hex"]
         cluster_map = {}
         for ii in range(n_clusters):
-            colorpicker = self.color_pickers[ii]
+            colorpicker = color_pickers[ii]
             if "#" in colorpicker:
                 color = colorpicker.lstrip("#")
                 cluster_map[ii] = [
@@ -1241,7 +1268,7 @@ class Clustering(ScatterPlots):
         else:
             return None
 
-    def make_boxplot(self, n_clusters, dataframe, channel):
+    def make_boxplot(self, n_clusters, dataframe, channel, color_pickers):
         """
         Generate a box plot for each cluster.
         """
@@ -1259,9 +1286,9 @@ class Clustering(ScatterPlots):
                     go.Box(
                         x=x,
                         y=y,
-                        fillcolor=self.color_pickers[ii],
-                        marker_color=self.color_pickers[ii],
-                        line_color=self.color_pickers[ii],
+                        fillcolor=color_pickers[ii],
+                        marker_color=color_pickers[ii],
+                        line_color=color_pickers[ii],
                         showlegend=False,
                     )
                 )
@@ -1475,80 +1502,55 @@ class Clustering(ScatterPlots):
         if self.kmeans is not None and (
             test or (callback_context.triggered[0]["prop_id"].split(".")[0] == "export")
         ):
-            obj = self.params.objects
-            live_link = True
-            # Create reference values and color_map
-            group_map, color_map = {}, []
-            cluster_values = self.kmeans + 1
-            inactive_set = np.ones(len(cluster_values), dtype="bool")
-            inactive_set[self.indices] = False
-            cluster_values[inactive_set] = 0
+            param_dict = self.params.to_dict()
+            temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
 
-            for ii in range(n_clusters):
-                colorpicker = self.color_pickers[ii]
-                color = colorpicker.lstrip("#")
-                group_map[ii + 1] = f"Cluster_{ii}"
-                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
-
-            color_map = np.core.records.fromarrays(
-                np.vstack(color_map).T,
-                names=["Value", "Red", "Green", "Blue", "Alpha"],
-            )
-
-            # Create reference values and color_map
-            group_map, color_map = {}, []
-            for ii in range(n_clusters):
-                colorpicker = self.color_pickers[ii]
-                color = colorpicker.lstrip("#")
-                group_map[ii + 1] = f"Cluster_{ii}"
-                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
-
-            color_map = np.core.records.fromarrays(
-                np.vstack(color_map).T,
-                names=["Value", "Red", "Green", "Blue", "Alpha"],
-            )
-
-            if self.params.monitoring_directory:
-                output_path = self.params.monitoring_directory
-                # monitored_directory_copy(self.export_directory.selected_path, obj)
+            # Get output path.
+            if self.params.live_link:
+                if self.params.monitoring_directory is not None and os.path.exists(
+                    os.path.abspath(self.params.monitoring_directory)
+                ):
+                    output_path = self.params.monitoring_directory
+                else:
+                    print("Invalid monitoring directory path")
+                    return []
             else:
                 output_path = os.path.dirname(self.params.geoh5.h5file)
 
-            temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
-            # Write output uijson
-            params = ClusteringParams(validate=False, **self.params.to_dict())
-            params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=output_path,
-                validate=False,
+            # Get output workspace.
+            ws, self.params.live_link = self.get_output_workspace(
+                self.params.live_link, output_path, temp_geoh5
             )
-
-            ws, new_live_link = self.get_output_workspace(
-                live_link, output_path, temp_geoh5
-            )
-
             with ws as workspace:
-                obj = obj.copy(parent=workspace)
-                cluster_groups = obj.add_data(
-                    {
-                        group_name: {
-                            "type": "referenced",
-                            "values": cluster_values,
-                            "value_map": group_map,
-                        }
-                    }
-                )
-                cluster_groups.entity_type.color_map = {
-                    "name": "Cluster Groups",
-                    "values": color_map,
-                }
+                # Put entities in output workspace.
+                param_dict["geoh5"] = workspace
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=workspace, copy_children=True
+                        )
 
-            print("Saved to " + output_path + "/" + temp_geoh5)
-            if new_live_link:
-                live_link = ["Geoscience ANALYST Pro - Live link"]
+                # Write output uijson.
+                ifile = InputFile(
+                    ui_json=self.params.input_file.ui_json,
+                    validation_options={"disabled": True},
+                )
+                new_params = ClusteringParams(input_file=ifile, **param_dict)
+                new_params.write_input_file(
+                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                    path=output_path,
+                    validate=False,
+                )
+                # Run driver.
+                driver = ClusteringDriver(new_params)
+                driver.run()
+
+            if self.params.live_link:
+                print("Live link active. Check your ANALYST session for new mesh.")
+                return ["Geoscience ANALYST Pro - Live link"]
             else:
-                live_link = []
-        return live_link
+                print("Saved to " + os.path.abspath(output_path))
+                return []
 
     def run(self):
         # The reloader has not yet run - open the browser
