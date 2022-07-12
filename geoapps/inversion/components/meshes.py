@@ -32,7 +32,7 @@ class InversionMesh:
     Attributes
     ----------
 
-    nC:
+    n_cells:
         Number of cells in the mesh.
     rotation :
         Rotation of original octree mesh.
@@ -60,7 +60,7 @@ class InversionMesh:
         self.inversion_data = inversion_data
         self.inversion_topography = inversion_topography
         self.mesh: TreeMesh = None
-        self.nC: int = None
+        self.n_cells: int = None
         self.rotation: dict[str, float] = None
         self.octree_permutation: np.ndarray = None
         self.entity: Octree = None
@@ -83,7 +83,7 @@ class InversionMesh:
             self.build_from_params()
 
         self.uid = self.entity.uid
-        self.nC = self.entity.n_cells
+        self.n_cells = self.entity.n_cells
 
         if self.entity.rotation:
             origin = self.entity.origin.tolist()

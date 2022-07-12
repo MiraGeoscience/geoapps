@@ -355,19 +355,15 @@ def octree_2_treemesh(mesh):
     Convert a geoh5 octree mesh to discretize.TreeMesh
     Modified code from module discretize.TreeMesh.readUBC function.
     """
-
-    tswCorn = np.asarray(mesh.origin.tolist())
-
-    smallCell = [mesh.u_cell_size, mesh.v_cell_size, mesh.w_cell_size]
-
-    nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
-
-    cell_sizes = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
+    tsw_corner = np.asarray(mesh.origin.tolist())
+    small_cell = [mesh.u_cell_size, mesh.v_cell_size, mesh.w_cell_size]
+    n_cell_dim = [mesh.u_count, mesh.v_count, mesh.w_count]
+    cell_sizes = [np.ones(nr) * sz for nr, sz in zip(n_cell_dim, small_cell)]
     u_shift, v_shift, w_shift = (np.sum(h[h < 0]) for h in cell_sizes)
     h1, h2, h3 = (np.abs(h) for h in cell_sizes)
-    x0 = tswCorn + np.array([u_shift, v_shift, w_shift])
+    x0 = tsw_corner + np.array([u_shift, v_shift, w_shift])
+    ls = np.log2(n_cell_dim).astype(int)
 
-    ls = np.log2(nCunderMesh).astype(int)
     if ls[0] == ls[1] and ls[1] == ls[2]:
         max_level = ls[0]
     else:
@@ -375,18 +371,16 @@ def octree_2_treemesh(mesh):
 
     treemesh = TreeMesh([h1, h2, h3], x0=x0)
 
-    # Convert indArr to points in coordinates of underlying cpp tree
-    # indArr is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
+    # Convert array_ind to points in coordinates of underlying cpp tree
+    # array_ind is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
     cells = np.vstack(mesh.octree_cells.tolist())
-
     levels = cells[:, -1]
-    indArr = cells[:, :-1]
-
-    indArr = 2 * indArr + levels[:, None]  # get cell center index
-    indArr[:, 2] = 2 * nCunderMesh[2] - indArr[:, 2]  # switch direction of iz
+    array_ind = cells[:, :-1]
+    array_ind = 2 * array_ind + levels[:, None]  # get cell center index
+    array_ind[:, 2] = 2 * n_cell_dim[2] - array_ind[:, 2]  # switch direction of iz
     levels = max_level - np.log2(levels)  # calculate level
 
-    treemesh.__setstate__((indArr, levels))
+    treemesh.__setstate__((array_ind, levels))
 
     return treemesh
 

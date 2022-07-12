@@ -91,7 +91,7 @@ def test_initialize(tmp_path):
     inversion_topography = InversionTopography(ws, params, inversion_window.window)
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     starting_model = InversionModel(ws, params, inversion_mesh, "starting")
-    assert len(starting_model.model) == 3 * inversion_mesh.nC
+    assert len(starting_model.model) == 3 * inversion_mesh.n_cells
     assert len(np.unique(starting_model.model)) == 3
 
 
