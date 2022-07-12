@@ -80,31 +80,37 @@ default_ui_json.update(
             "main": True,
             "label": "Minimum x cell size",
             "value": 0.0,
+            "min": 0.0,
         },
         "cell_size_y": {
             "main": True,
             "label": "Minimum y cell size",
             "value": 0.0,
+            "min": 0.0,
         },
         "cell_size_z": {
             "main": True,
             "label": "Minimum z cell size",
             "value": 0.0,
+            "min": 0.0,
         },
         "depth_core": {
             "main": True,
             "label": "Core depth (m)",
             "value": 0.0,
+            "min": 0.0,
         },
         "horizontal_padding": {
             "main": True,
             "label": "Horizontal padding",
             "value": 0.0,
+            "min": 0.0,
         },
         "bottom_padding": {
             "main": True,
             "label": "Bottom padding",
             "value": 0.0,
+            "min": 0.0,
         },
         "expansion_fact": {
             "main": True,
@@ -125,7 +131,7 @@ app_initializer = {
     "cell_size_z": 50.0,
     "depth_core": 500.0,
     "expansion_fact": 1.05,
-    "new_grid": "InterpGrid",
+    "new_grid": "BlockModel",
     "horizontal_padding": 0.0,
     "bottom_padding": 0.0,
 }
