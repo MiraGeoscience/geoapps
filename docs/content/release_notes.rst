@@ -1,6 +1,25 @@
 Release Notes
 =============
 
+Release 0.8.0 - 2022/07/06
+--------------------------
+
+**(Major Release)**
+
+This release focuses on updates to be compatible with ``geoh5 v2.0`` and ``Geoscience ANALYST v4.0``:
+ - Compatibility update for ``geoh5py v0.3.0``.
+ - Make Jupyter apps access data in read-only.
+
+New UI.json implementations:
+ - Iso-surface creation
+
+Inversion updates:
+ - Use of the ``SimPEGGroup`` for storing inputs, log file and results.
+ - Inversion Directive compliance with geoh5 open/close mechanism.
+
+General maintenance and bug fixes.
+
+
 Release 0.7.1 - 2022/05/03
 --------------------------
 

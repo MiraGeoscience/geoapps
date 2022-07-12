@@ -2,25 +2,15 @@ name: Create env file
 
 on:
   pull_request:
-    branches:
-      - develop
-      - main
-      - release/**
-      - feature/**
-      - hotfix/**
+    types: [labeled]
   push:
-    branches:
-      - develop
-      - main
-      - release/**
-      - feature/**
-      - hotfix/**
     tags:
       - "v[0-9]+.**"
       - "analyst-v[0-9]+.**"
 
 jobs:
   create-env-file:
+    if: ${{ github.event.action != 'labeled' || contains(fromJSON('["pack:env"]'), github.event.label.name) }}
     defaults:
       run:
         shell: bash -l {0}
@@ -48,7 +38,7 @@ jobs:
       - name: Activate conda base env
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: env-python-3.9.yml
+          environment-file: environments\env-python-3.9.yml
           environment-name: conda-lock
           cache-downloads: true
           cache-env: true

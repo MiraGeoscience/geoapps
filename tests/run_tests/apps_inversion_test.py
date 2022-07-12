@@ -72,7 +72,8 @@ def test_mag_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write_trigger(None)
-    ifile = InputFile.read_ui_json(app.params.input_file.path_name)
+    app.write_trigger(None)  # Check to make sure this can be run twice
+    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
     params_reload = MagneticVectorParams(ifile)
     objs = params_reload.geoh5.list_entities_name
     check_objs = [
@@ -159,7 +160,8 @@ def test_dc_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write_trigger(None)
-    ifile = InputFile.read_ui_json(app.params.input_file.path_name)
+    app.write_trigger(None)  # Check that this can run more than once
+    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
     params_reload = DirectCurrentParams(ifile)
 
     for param, value in changes.items():
@@ -238,7 +240,7 @@ def test_ip_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write_trigger(None)
-    ifile = InputFile.read_ui_json(app.params.input_file.path_name)
+    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
     params_reload = InducedPolarizationParams(ifile)
 
     for param, value in changes.items():
