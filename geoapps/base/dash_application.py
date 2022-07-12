@@ -4,7 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
+import ast
 import base64
 import json
 import time
@@ -67,9 +67,9 @@ class BaseDashApplication:
             value = options[0]["value"]
 
         return {
-            "geoh5": ws,
+            # "geoh5": ws,
             obj_var_name + "_options": options,
-            obj_var_name + "_name": value,
+            # obj_var_name + "_name": value,
         }
 
     @staticmethod
@@ -83,6 +83,9 @@ class BaseDashApplication:
         return tuple(outputs)
 
     def update_param_dict(self, update_dict):
+        # Get validations to know expected type for keys in self.params.
+        validations = self.params.validations
+        # Loop through self.params and update self.params with update_dict.
         for key in self.params.to_dict().keys():
             if key in update_dict.keys():
                 if key == "live_link":
@@ -90,6 +93,10 @@ class BaseDashApplication:
                         self.params.live_link = False
                     else:
                         self.params.live_link = True
+                elif (
+                    list in validations[key]["types"] and type(update_dict[key]) == str
+                ):
+                    setattr(self.params, key, list(ast.literal_eval(update_dict[key])))
                 else:
                     setattr(self.params, key, update_dict[key])
             elif key + "_name" in update_dict.keys():
@@ -101,16 +108,19 @@ class BaseDashApplication:
 
     @staticmethod
     def update_from_ui_json(contents, param_list):
+        # Get update_dict from ui_json.
         content_type, content_string = contents.split(",")
         decoded = base64.b64decode(content_string)
         ui_json = json.loads(decoded)
         update_dict = {}
         # Update workspace first, to use when assigning entities.
-        if ("geoh5" in ui_json.keys()) and ("geoh5" in param_list):
+        if "geoh5" in ui_json.keys():
             if ui_json["geoh5"] == "":
                 update_dict["geoh5"] = None
-            else:
+            elif type(ui_json["geoh5"]) == Workspace:
                 update_dict["geoh5"] = ui_json["geoh5"]
+            else:
+                update_dict["geoh5"] = Workspace(ui_json["geoh5"])
         # Loop through uijson, and add items that are also in param_list
         for key, value in ui_json.items():
             if key in param_list:
@@ -120,18 +130,15 @@ class BaseDashApplication:
                     update_dict[key] = value
             # Objects and Data.
             elif key + "_name" in param_list:
-                if (
-                    (value["value"] is None)
-                    | (value["value"] == "")
-                    | (update_dict["geoh5"] is None)
-                ):
+                ws = Workspace(ui_json["geoh5"])
+                print(ws)
+                if (value["value"] is None) | (value["value"] == "") | (ws is None):
                     update_dict[key + "_name"] = None
-                elif update_dict["geoh5"].get_entity(uuid.UUID(value["value"])):
-                    update_dict[key + "_name"] = (
-                        update_dict["geoh5"]
-                        .get_entity(uuid.UUID(value["value"]))[0]
-                        .name
-                    )
+                elif ws.get_entity(uuid.UUID(value["value"])):
+                    print(ws.get_entity(uuid.UUID(value["value"])))
+                    update_dict[key + "_name"] = ws.get_entity(
+                        uuid.UUID(value["value"])
+                    )[0].name
 
         return update_dict
 
@@ -147,11 +154,13 @@ class BaseDashApplication:
                 value, ObjectBase
             ):  # This only works when objects are initialized as objects, not None.
                 # Update object dropdown options.
-                defaults.update(self.update_object_options(defaults["geoh5"], key))
                 defaults[key + "_name"] = getattr(value, "name", None)
+                defaults.update(self.update_object_options(defaults["geoh5"], key))
+            elif type(value) == list:
+                defaults[key] = str(value).replace("[", "").replace("]", "")
             else:
                 defaults[key] = value
-        # defaults["param_dict"] = self.params.to_dict()
+
         return defaults
 
     @staticmethod
