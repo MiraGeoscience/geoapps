@@ -340,7 +340,12 @@ class Export(ObjectDataSelection):
                         if mesh.x0[2] == entity.origin["z"]:
                             values = item.copy()
                             values = values.reshape(
-                                (mesh.nCz, mesh.nCx, mesh.nCy), order="F"
+                                (
+                                    mesh.shape_cells[2],
+                                    mesh.shape_cells[0],
+                                    mesh.shape_cells[1],
+                                ),
+                                order="F",
                             )[::-1, :, :]
                             values = values.reshape((-1, 1), order="F")
                         else:
