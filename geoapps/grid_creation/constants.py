@@ -12,8 +12,11 @@ defaults = {
     "title": "Block Model Creation",
     "geoh5": None,
     "xy_reference": None,
-    "core_cell_size": None,
-    "padding_distance": None,
+    "cell_size_x": None,
+    "cell_size_y": None,
+    "cell_size_z": None,
+    "horizontal_padding": None,
+    "bottom_padding": None,
     "depth_core": None,
     "expansion_fact": None,
     "new_grid": None,
@@ -22,6 +25,8 @@ defaults = {
     "conda_environment_boolean": False,
     "run_command": "geoapps.grid_creation.driver",
     "run_command_boolean": False,
+    "monitoring_directory": None,
+    "live_link": False,
 }
 
 default_ui_json = deepcopy(base_ui_json)
@@ -37,6 +42,7 @@ default_ui_json.update(
             "main": True,
         },
         "monitoring_directory": "",
+        "live_link": False,
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
         "objects": {
@@ -70,20 +76,35 @@ default_ui_json.update(
             "label": "Name",
             "value": "",
         },
-        "core_cell_size": {
+        "cell_size_x": {
             "main": True,
-            "label": "Smallest cells",
-            "value": "0, 0, 0",
+            "label": "Minimum x cell size",
+            "value": 0.0,
+        },
+        "cell_size_y": {
+            "main": True,
+            "label": "Minimum y cell size",
+            "value": 0.0,
+        },
+        "cell_size_z": {
+            "main": True,
+            "label": "Minimum z cell size",
+            "value": 0.0,
         },
         "depth_core": {
             "main": True,
             "label": "Core depth (m)",
             "value": 0.0,
         },
-        "padding_distance": {
+        "horizontal_padding": {
             "main": True,
-            "label": "Pad distance (W, E, S, N, D, U)",
-            "value": "0, 0, 0, 0, 0, 0",
+            "label": "Horizontal padding",
+            "value": 0.0,
+        },
+        "bottom_padding": {
+            "main": True,
+            "label": "Bottom padding",
+            "value": 0.0,
         },
         "expansion_fact": {
             "main": True,
@@ -96,11 +117,15 @@ default_ui_json.update(
 validations = {}
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
+    "monitoring_directory": "../../assets/Temp",
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "xy_reference": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-    "core_cell_size": "50, 50, 50",
+    "cell_size_x": 50.0,
+    "cell_size_y": 50.0,
+    "cell_size_z": 50.0,
     "depth_core": 500.0,
     "expansion_fact": 1.05,
     "new_grid": "InterpGrid",
-    "padding_distance": "0, 0, 0, 0, 0, 0",
+    "horizontal_padding": 0.0,
+    "bottom_padding": 0.0,
 }
