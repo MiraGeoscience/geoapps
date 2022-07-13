@@ -1338,7 +1338,7 @@ class PeakFinder(ObjectDataSelection):
         """
         Create an octree mesh from input values
         """
-
+        params.geoh5.close()
         driver = PeakFinderDriver(params)
         driver.run(output_group)
 

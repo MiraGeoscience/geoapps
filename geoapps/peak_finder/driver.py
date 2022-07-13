@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import sys
 from os import path
 
 import numpy as np
@@ -20,12 +19,11 @@ from geoh5py.ui_json import InputFile, monitored_directory_copy
 from tqdm import tqdm
 
 from geoapps.base.application import BaseApplication
+from geoapps.peak_finder.params import PeakFinderParams
+from geoapps.peak_finder.utils import default_groups_from_property_group, find_anomalies
 from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
-
-from .params import PeakFinderParams
-from .utils import default_groups_from_property_group, find_anomalies
 
 
 class PeakFinderDriver:
@@ -40,7 +38,7 @@ class PeakFinderDriver:
         except ValueError:
             client = Client()
 
-        workspace = self.params.geoh5
+        workspace = self.params.geoh5.open(mode="r+")
         survey = self.params.objects
         prop_group = [pg for pg in survey.property_groups if pg.uid == self.params.data]
 
@@ -319,6 +317,7 @@ class PeakFinderDriver:
                 )
 
         print("Process completed.")
+        workspace.close()
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
@@ -329,7 +328,9 @@ class PeakFinderDriver:
 
 
 if __name__ == "__main__":
-    file = sys.argv[1]
+    # file = sys.argv[1]
+    file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\peak_finder_1657747002.ui.json"
     params = PeakFinderParams(InputFile.read_ui_json(file))
+    params.geoh5.close()
     driver = PeakFinderDriver(params)
     driver.run()
