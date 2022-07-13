@@ -1319,13 +1319,7 @@ class PeakFinder(ObjectDataSelection):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            ifile = InputFile(
-                ui_json=ui_json,
-                validations=self.params.validations,
-                validation_options={"disabled": True},
-            )
-
-            new_params = PeakFinderParams(input_file=ifile, **param_dict)
+            new_params = PeakFinderParams(**param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
             self.run(new_params)
 
