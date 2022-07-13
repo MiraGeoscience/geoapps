@@ -53,11 +53,7 @@ class Clustering(ScatterPlots):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.clusters = {}
         self.data_channels = {}
-        self.kmeans = None
-        self.indices = []
-        self.mapping = None
         super().__init__(clustering=True, **self.params.to_dict())
         # Initial values for the dash components
         self.defaults.update(self.get_cluster_defaults())
@@ -347,6 +343,10 @@ class Clustering(ScatterPlots):
                 ),
                 dcc.Store(id="color_pickers", data=self.defaults["color_pickers"]),
                 dcc.Store(id="plot_kmeans", data=self.defaults["plot_kmeans"]),
+                dcc.Store(id="kmeans", data=self.defaults["kmeans"]),
+                dcc.Store(id="clusters", data=self.defaults["clusters"]),
+                dcc.Store(id="indices", data=self.defaults["indices"]),
+                dcc.Store(id="mapping", data=self.defaults["mapping"]),
             ],
             style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
         )
@@ -424,6 +424,10 @@ class Clustering(ScatterPlots):
             Output(component_id="full_upper_bounds", component_property="data"),
             Output(component_id="color_pickers", component_property="data"),
             Output(component_id="plot_kmeans", component_property="data"),
+            Output(component_id="kmeans", component_property="data"),
+            Output(component_id="clusters", component_property="data"),
+            Output(component_id="indices", component_property="data"),
+            Output(component_id="mapping", component_property="data"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
             Input(component_id="objects", component_property="value"),
@@ -445,6 +449,9 @@ class Clustering(ScatterPlots):
             Input(component_id="full_upper_bounds", component_property="data"),
             Input(component_id="color_picker", component_property="value"),
             Input(component_id="color_pickers", component_property="data"),
+            Input(component_id="kmeans", component_property="data"),
+            Input(component_id="indices", component_property="data"),
+            Input(component_id="clusters", component_property="data"),
         )(self.update_cluster_params)
         # Callback to update all the plots
         self.app.callback(
@@ -487,6 +494,8 @@ class Clustering(ScatterPlots):
             Input(component_id="size_min", component_property="value"),
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
+            Input(component_id="kmeans", component_property="data"),
+            Input(component_id="indices", component_property="data"),
         )(self.update_plots)
         # Callback to export the clusters as a geoh5 file
         self.app.callback(
@@ -501,6 +510,10 @@ class Clustering(ScatterPlots):
     def get_cluster_defaults(self):
         # Get initial values to initialize the dash components
         defaults = {}
+        defaults["kmeans"] = None
+        defaults["clusters"] = None
+        defaults["mapping"] = None
+        defaults["indices"] = None
         # If there is no default data subset list, set it from selected scatter plot data
         self.params.channels = ast.literal_eval(self.params.channels)
         if not self.params.channels:
@@ -568,6 +581,9 @@ class Clustering(ScatterPlots):
                 defaults["full_upper_bounds"],
                 defaults["downsampling"],
                 defaults["n_clusters"],
+                defaults["kmeans"],
+                defaults["clusters"],
+                defaults["indices"],
             )
         )
 
@@ -615,7 +631,14 @@ class Clustering(ScatterPlots):
         return data_channels
 
     def update_channels(
-        self, channel, channels, full_scales, full_lower_bounds, full_upper_bounds
+        self,
+        channel,
+        channels,
+        full_scales,
+        full_lower_bounds,
+        full_upper_bounds,
+        kmeans,
+        indices,
     ):
         # Update the data options for the scatter plot and histogram from the data subset
         if channels is None:
@@ -658,11 +681,11 @@ class Clustering(ScatterPlots):
                 channel = None
 
             # Add kmeans to the data selection for the scatter plot
-            if self.kmeans is not None:
+            if kmeans is not None:
                 data_options = channels + ["kmeans"]
                 color_maps_options = px.colors.named_colorscales() + ["kmeans"]
                 self.data_channels.update(
-                    {"kmeans": PlotData("kmeans", self.kmeans[self.indices])}
+                    {"kmeans": PlotData("kmeans", kmeans[indices])}
                 )
             else:
                 data_options = channels
@@ -738,6 +761,9 @@ class Clustering(ScatterPlots):
         full_upper_bounds,
         color_picker,
         color_pickers,
+        kmeans,
+        indices,
+        clusters,
     ):
         # List of params that will be outputted
         param_list = [
@@ -794,6 +820,10 @@ class Clustering(ScatterPlots):
             "full_upper_bounds",
             "color_pickers",
             "plot_kmeans",
+            "kmeans",
+            "clusters",
+            "indices",
+            "mapping",
         ]
         # Trigger is which variable triggered the callback
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -860,6 +890,9 @@ class Clustering(ScatterPlots):
                         update_dict["full_upper_bounds"],
                         downsampling,
                         n_clusters,
+                        kmeans,
+                        clusters,
+                        indices,
                     )
                 )
 
@@ -882,6 +915,8 @@ class Clustering(ScatterPlots):
                         full_scales,
                         full_lower_bounds,
                         full_upper_bounds,
+                        kmeans,
+                        indices,
                     )
                 )
             else:
@@ -901,6 +936,7 @@ class Clustering(ScatterPlots):
         elif trigger == "color_picker":
             # Update color_pickers with new color selection
             color_pickers[select_cluster] = color_picker["hex"]
+            update_dict.update({"color_pickers": color_pickers})
         elif trigger in ["x", "y", "z", "color", "size"]:
             # Update min, max values in scatter plot
             update_dict = {
@@ -921,7 +957,8 @@ class Clustering(ScatterPlots):
             "scale",
             "lower_bounds",
             "upper_bounds",
-            "n_clusters" "",
+            "n_clusters",
+            "",
         ]:
             update_dict.update({"channel_name": channel})
 
@@ -954,6 +991,9 @@ class Clustering(ScatterPlots):
                         full_upper_bounds,
                         downsampling,
                         n_clusters,
+                        kmeans,
+                        clusters,
+                        indices,
                     )
                 )
             elif trigger == "channel":
@@ -1066,6 +1106,8 @@ class Clustering(ScatterPlots):
         size_min,
         size_max,
         size_markers,
+        kmeans,
+        indices,
     ):
         # Read in stored dataframe.
         dataframe = pd.DataFrame(dataframe_dict["dataframe"])
@@ -1125,7 +1167,9 @@ class Clustering(ScatterPlots):
             histogram = self.make_hist_plot(
                 dataframe, channel, lower_bounds, upper_bounds
             )
-            boxplot = self.make_boxplot(n_clusters, dataframe, channel, color_pickers)
+            boxplot = self.make_boxplot(
+                n_clusters, dataframe, channel, color_pickers, kmeans, indices
+            )
             inertia = self.make_inertia_plot(n_clusters)
             return crossplot, stats_table, matrix, histogram, boxplot, inertia
 
@@ -1169,6 +1213,9 @@ class Clustering(ScatterPlots):
         full_upper_bounds,
         downsampling,
         n_clusters,
+        kmeans,
+        clusters,
+        indices,
     ):
         # Update dataframe, data options for plots, and run clustering
         update_dict = self.update_channels(
@@ -1177,10 +1224,18 @@ class Clustering(ScatterPlots):
             full_scales,
             full_lower_bounds,
             full_upper_bounds,
+            kmeans,
+            indices,
         )
-        update_dict.update({"dataframe": self.update_dataframe(downsampling, channels)})
-        self.run_clustering(
-            n_clusters, update_dict["dataframe"], update_dict["full_scales"]
+        update_dict.update(self.update_dataframe(downsampling, channels))
+        update_dict.update(
+            Clustering.run_clustering(
+                n_clusters,
+                update_dict["dataframe"],
+                update_dict["full_scales"],
+                clusters,
+                update_dict["mapping"],
+            )
         )
         update_dict.update(
             self.update_channels(
@@ -1189,11 +1244,14 @@ class Clustering(ScatterPlots):
                 update_dict["full_scales"],
                 update_dict["full_lower_bounds"],
                 update_dict["full_upper_bounds"],
+                update_dict["kmeans"],
+                update_dict["indices"],
             )
         )
         return update_dict
 
-    def run_clustering(self, n_clusters, dataframe_dict, full_scales):
+    @staticmethod
+    def run_clustering(n_clusters, dataframe_dict, full_scales, clusters, mapping):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
@@ -1216,25 +1274,30 @@ class Clustering(ScatterPlots):
             values += [vals]
 
         for val in [2, 4, 8, 16, 32, n_clusters]:
-            kmeans = KMeans(n_clusters=val, random_state=0).fit(np.vstack(values).T)
-            self.clusters[val] = kmeans
+            if (
+                callback_context.triggered[0]["prop_id"].split(".")[0] != "n_clusters"
+            ) or (val == n_clusters):
+                kmeans = KMeans(n_clusters=val, random_state=0).fit(np.vstack(values).T)
+                clusters[val] = kmeans
 
-        cluster_ids = self.clusters[n_clusters].labels_.astype(float)
-        # self.data_channels["kmeans"] = cluster_ids[self.mapping]
-        self.kmeans = cluster_ids[self.mapping]
+        cluster_ids = clusters[n_clusters].labels_.astype(float)
+        kmeans = cluster_ids[mapping]
 
-    def make_inertia_plot(self, n_clusters):
+        return {"kmeans": kmeans, "clusters": clusters}
+
+    @staticmethod
+    def make_inertia_plot(n_clusters, clusters):
         """
         Generate an inertia plot
         """
-        if n_clusters in self.clusters.keys():
-            ind = np.sort(list(self.clusters.keys()))
-            inertias = [self.clusters[ii].inertia_ for ii in ind]
+        if n_clusters in clusters.keys():
+            ind = np.sort(list(clusters.keys()))
+            inertias = [clusters[ii].inertia_ for ii in ind]
             clusters = ind
             line = go.Scatter(x=clusters, y=inertias, mode="lines")
             point = go.Scatter(
                 x=[n_clusters],
-                y=[self.clusters[n_clusters].inertia_],
+                y=[clusters[n_clusters].inertia_],
             )
 
             inertia_plot = go.Figure([line, point])
@@ -1249,7 +1312,8 @@ class Clustering(ScatterPlots):
         else:
             return None
 
-    def make_hist_plot(self, dataframe, channel, lower_bounds, upper_bounds):
+    @staticmethod
+    def make_hist_plot(dataframe, channel, lower_bounds, upper_bounds):
         """
         Generate an histogram plot for the selected data channel.
         """
@@ -1268,19 +1332,21 @@ class Clustering(ScatterPlots):
         else:
             return None
 
-    def make_boxplot(self, n_clusters, dataframe, channel, color_pickers):
+    def make_boxplot(
+        self, n_clusters, dataframe, channel, color_pickers, kmeans, indices
+    ):
         """
         Generate a box plot for each cluster.
         """
-        if (self.kmeans is not None) and (channel is not None):
+        if (kmeans is not None) and (channel is not None):
             field = channel
 
             boxes = []
             for ii in range(n_clusters):
 
-                cluster_ind = self.kmeans[self.indices] == ii
+                cluster_ind = kmeans[indices] == ii
                 x = np.ones(np.sum(cluster_ind)) * ii
-                y = self.data_channels[field].values[self.indices][cluster_ind]
+                y = self.data_channels[field].values[indices][cluster_ind]
 
                 boxes.append(
                     go.Box(
@@ -1311,7 +1377,8 @@ class Clustering(ScatterPlots):
         else:
             return None
 
-    def make_stats_table(self, dataframe):
+    @staticmethod
+    def make_stats_table(dataframe):
         """
         Generate a table of statistics using pandas
         """
@@ -1319,7 +1386,8 @@ class Clustering(ScatterPlots):
         stats_df.insert(0, "", stats_df.index)
         return stats_df.to_dict("records")
 
-    def make_heatmap(self, dataframe):
+    @staticmethod
+    def make_heatmap(dataframe):
         """
         Generate a confusion matrix
         """
@@ -1400,39 +1468,48 @@ class Clustering(ScatterPlots):
         """
         Normalize the the selected data and perform the kmeans clustering.
         """
-        self.kmeans = None
+        kmeans = None
 
         if (channels is None) | (not channels):
-            self.mapping = None
-            self.indices = None
-            return {"dataframe": None}
+            mapping = None
+            indices = None
+            return {
+                "dataframe": None,
+                "kmeans": kmeans,
+                "mapping": mapping,
+                "indices": indices,
+            }
         else:
-
-            self.indices, values = self.get_indices(channels, downsampling)
+            indices, values = self.get_indices(channels, downsampling)
             n_values = values.shape[0]
 
             dataframe = pd.DataFrame(
-                values[self.indices, :],
+                values[indices, :],
                 columns=list(filter(None, channels)),
             )
 
             tree = cKDTree(dataframe.values)
             inactive_set = np.ones(n_values, dtype="bool")
-            inactive_set[self.indices] = False
+            inactive_set[indices] = False
             out_values = values[inactive_set, :]
             for ii in range(values.shape[1]):
                 out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
-                    values[self.indices, ii]
+                    values[indices, ii]
                 )
 
             _, ind_out = tree.query(out_values)
             del tree
 
-            self.mapping = np.empty(n_values, dtype="int")
-            self.mapping[inactive_set] = ind_out
-            self.mapping[self.indices] = np.arange(len(self.indices))
+            mapping = np.empty(n_values, dtype="int")
+            mapping[inactive_set] = ind_out
+            mapping[indices] = np.arange(len(indices))
 
-            return {"dataframe": dataframe.to_dict("records")}
+            return {
+                "dataframe": dataframe.to_dict("records"),
+                "kmeans": kmeans,
+                "mapping": mapping,
+                "indices": indices,
+            }
 
     def get_indices(self, channels, downsampling):
         values = []
@@ -1461,9 +1538,8 @@ class Clustering(ScatterPlots):
         )
         return indices, values.T
 
-    def get_output_workspace(
-        self, live_link, workpath: str = "./", name: str = "Temp.geoh5"
-    ):
+    @staticmethod
+    def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
         """
         Create an active workspace with check for GA monitoring directory
         """
@@ -1495,62 +1571,57 @@ class Clustering(ScatterPlots):
         # return new live link
         return workspace, new_live_link
 
-    def export_clusters(self, n_clicks, n_clusters, group_name, live_link, test=False):
+    def export_clusters(self, n_clicks):
         """
         Write cluster groups to the target geoh5 object.
         """
-        if self.kmeans is not None and (
-            test or (callback_context.triggered[0]["prop_id"].split(".")[0] == "export")
-        ):
-            param_dict = self.params.to_dict()
-            temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
+        param_dict = self.params.to_dict()
+        temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
 
-            # Get output path.
-            if self.params.live_link:
-                if self.params.monitoring_directory is not None and os.path.exists(
-                    os.path.abspath(self.params.monitoring_directory)
-                ):
-                    output_path = self.params.monitoring_directory
-                else:
-                    print("Invalid monitoring directory path")
-                    return []
+        # Get output path.
+        if self.params.live_link:
+            if self.params.monitoring_directory is not None and os.path.exists(
+                os.path.abspath(self.params.monitoring_directory)
+            ):
+                output_path = self.params.monitoring_directory
             else:
-                output_path = os.path.dirname(self.params.geoh5.h5file)
-
-            # Get output workspace.
-            ws, self.params.live_link = self.get_output_workspace(
-                self.params.live_link, output_path, temp_geoh5
-            )
-            with ws as workspace:
-                # Put entities in output workspace.
-                param_dict["geoh5"] = workspace
-                for key, value in param_dict.items():
-                    if isinstance(value, ObjectBase):
-                        param_dict[key] = value.copy(
-                            parent=workspace, copy_children=True
-                        )
-
-                # Write output uijson.
-                ifile = InputFile(
-                    ui_json=self.params.input_file.ui_json,
-                    validation_options={"disabled": True},
-                )
-                new_params = ClusteringParams(input_file=ifile, **param_dict)
-                new_params.write_input_file(
-                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                    path=output_path,
-                    validate=False,
-                )
-                # Run driver.
-                driver = ClusteringDriver(new_params)
-                driver.run()
-
-            if self.params.live_link:
-                print("Live link active. Check your ANALYST session for new mesh.")
-                return ["Geoscience ANALYST Pro - Live link"]
-            else:
-                print("Saved to " + os.path.abspath(output_path))
+                print("Invalid monitoring directory path")
                 return []
+        else:
+            output_path = os.path.dirname(self.params.geoh5.h5file)
+
+        # Get output workspace.
+        ws, self.params.live_link = Clustering.get_output_workspace(
+            self.params.live_link, output_path, temp_geoh5
+        )
+        with ws as workspace:
+            # Put entities in output workspace.
+            param_dict["geoh5"] = workspace
+            for key, value in param_dict.items():
+                if isinstance(value, ObjectBase):
+                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
+
+            # Write output uijson.
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+            )
+            new_params = ClusteringParams(input_file=ifile, **param_dict)
+            new_params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                path=output_path,
+                validate=False,
+            )
+            # Run driver.
+            driver = ClusteringDriver(new_params)
+            driver.run()
+
+        if self.params.live_link:
+            print("Live link active. Check your ANALYST session for new mesh.")
+            return ["Geoscience ANALYST Pro - Live link"]
+        else:
+            print("Saved to " + os.path.abspath(output_path))
+            return []
 
     def run(self):
         # The reloader has not yet run - open the browser
