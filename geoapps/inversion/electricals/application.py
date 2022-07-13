@@ -1128,7 +1128,7 @@ class InversionApp(PlotSelection2D):
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
 
                 # Read the inversion type first...
-                with open(self.file_browser.selected) as f:
+                with open(self.file_browser.selected, encoding="utf8") as f:
                     data = json.load(f)
 
                 if data["inversion_type"] == "direct current":

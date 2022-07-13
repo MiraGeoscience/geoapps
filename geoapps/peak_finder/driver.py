@@ -19,7 +19,6 @@ from geoh5py.objects import Curve, Points
 from geoh5py.ui_json import InputFile, monitored_directory_copy
 from tqdm import tqdm
 
-from geoapps.base.application import BaseApplication
 from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
@@ -330,6 +329,6 @@ class PeakFinderDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = PeakFinderParams(InputFile.read_ui_json(file))
-    driver = PeakFinderDriver(params)
+    peak_finder_params = PeakFinderParams(InputFile.read_ui_json(file))
+    driver = PeakFinderDriver(peak_finder_params)
     driver.run()

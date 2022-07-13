@@ -60,7 +60,7 @@ class SourcesFactory(SimPEGFactory):
         receivers=None,
         locations=None,
         frequency=None,
-    ):
+    ):  # pylint: disable=arguments-differ
         """Provides implementations to assemble arguments for sources object."""
 
         args = []
@@ -79,10 +79,11 @@ class SourcesFactory(SimPEGFactory):
 
         return args
 
-    def assemble_keyword_arguments(
+    def assemble_keyword_arguments(  # pylint: disable=arguments-differ
         self, receivers=None, locations=None, frequency=None
     ):
         """Provides implementations to assemble keyword arguments for receivers object."""
+        _ = (receivers, locations, frequency)
         kwargs = {}
         if self.factory_type in ["magnetic scalar", "magnetic vector"]:
             kwargs["parameters"] = self.params.inducing_field_aid()
@@ -91,7 +92,9 @@ class SourcesFactory(SimPEGFactory):
 
         return kwargs
 
-    def build(self, receivers=None, locations=None, frequency=None):
+    def build(
+        self, receivers=None, locations=None, frequency=None
+    ):  #  pylint: disable=arguments-differ
         return super().build(
             receivers=receivers,
             locations=locations,

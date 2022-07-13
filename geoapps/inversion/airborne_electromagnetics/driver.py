@@ -48,7 +48,7 @@ from geoapps.utils import geophysical_systems
 
 def inversion(input_file):
     """"""
-    with open(input_file) as f:
+    with open(input_file, encoding="utf8") as f:
         input_param = json.load(f)
 
     em_specs = geophysical_systems.parameters()[input_param["system"]]

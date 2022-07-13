@@ -340,6 +340,7 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices.observe(
             self.data_channel_choices_observer, names="value"
         )
+        self.plotting_data = None
         super().__init__(**self.defaults)
 
         for item in ["window_width", "window_height", "resolution"]:
@@ -1314,13 +1315,13 @@ class InversionApp(PlotSelection2D):
         """
         Change the target h5file
         """
-        if not self.file_browser._select.disabled:
+        if not self.file_browser._select.disabled:  # pylint: disable=protected-access
             _, extension = path.splitext(self.file_browser.selected)
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
 
                 # Read the inversion type first...
-                with open(self.file_browser.selected) as f:
+                with open(self.file_browser.selected, encoding="utf8") as f:
                     data = json.load(f)
 
                 if data["inversion_type"] == "gravity":

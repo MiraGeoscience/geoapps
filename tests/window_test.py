@@ -39,7 +39,7 @@ def test_initialize(tmp_path):
     verts = np.array(
         [[0.0, 0.0, 0.0], [100.0, 0.0, 0.0], [0.0, 100.0, 0.0], [100.0, 100.0, 0.0]]
     )
-    point_object = Points.create(ws, name=f"test-window", vertices=verts)
+    point_object = Points.create(ws, name="test-window", vertices=verts)
     params.data_object = point_object.uid
 
     win = InversionWindow(ws, params)
