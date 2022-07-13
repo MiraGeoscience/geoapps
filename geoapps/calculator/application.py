@@ -41,6 +41,7 @@ class Calculator(ObjectDataSelection):
         self._equation = Textarea(layout=Layout(width="75%"))
         self._use = Button(description=">> Add Variable >>")
         self.use.on_click(self.click_use)
+        self.figure = None
 
         super().__init__(**self.defaults)
 
@@ -99,7 +100,7 @@ class Calculator(ObjectDataSelection):
         """
         Evaluate the expression and output the result to geoh5
         """
-        var = self.var
+        var = self.var  # pylint: disable=unused-variable
         obj = self.workspace.get_entity(self.objects.value)[0]
 
         if obj is None:
@@ -132,7 +133,7 @@ class Calculator(ObjectDataSelection):
 
             equation = re.sub(r"{", "var['", equation)
             equation = re.sub(r"}", "']", equation).strip()
-            self.var[out_var] = eval(equation)
+            self.var[out_var] = eval(equation)  # pylint: disable=eval-used
 
             options = sorted_children_dict(obj)
             for name, values in self.var.items():

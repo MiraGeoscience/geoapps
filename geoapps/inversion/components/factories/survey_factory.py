@@ -155,7 +155,7 @@ class SurveyFactory(SimPEGFactory):
         local_data = {}
         local_uncertainties = {}
 
-        components = list(data.observed)
+        components = list(data.observed.keys())
         for comp in components:
             comp_name = comp
             if self.factory_type == "magnetotellurics":
@@ -185,7 +185,7 @@ class SurveyFactory(SimPEGFactory):
 
             if channel is None:
 
-                channels = np.unique([list(v) for v in data.observed.values()])
+                channels = np.unique([list(v.keys()) for v in data.observed.values()])
                 for chan in channels:
                     dat, unc = self._get_local_data(data, chan, local_index)
                     local_data.update(dat)
@@ -299,7 +299,7 @@ class SurveyFactory(SimPEGFactory):
             )
 
         if frequency is None:
-            frequencies = np.unique([list(v) for v in data.observed.values()])
+            frequencies = np.unique([list(v.keys()) for v in data.observed.values()])
             for frequency in frequencies:
                 sources.append(
                     SourcesFactory(self.params).build(receivers, frequency=frequency)

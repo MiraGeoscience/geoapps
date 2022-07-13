@@ -192,7 +192,7 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._window_size
 
     def trigger_click(self, _):
-        entity, _ = self.get_selected_entities()
+
         if getattr(self.trigger, "vertices", None) is not None:
             name = string_name(self.export_as.value)
             temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.0f}.geoh5"

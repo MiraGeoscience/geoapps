@@ -60,7 +60,7 @@ def test_zero_reference_model(tmp_path):
     inversion_data = InversionData(ws, params, inversion_window.window)
     inversion_topography = InversionTopography(ws, params, inversion_window.window)
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
-    model = InversionModel(ws, params, inversion_mesh, "reference")
+    _ = InversionModel(ws, params, inversion_mesh, "reference")
     incl = np.unique(ws.get_entity("reference_inclination")[0].values)
     decl = np.unique(ws.get_entity("reference_declination")[0].values)
     assert len(incl) == 1
@@ -106,7 +106,7 @@ def test_model_from_object(tmp_path):
     m0 = np.array([2.0, 3.0, 1.0])
     vals = (m0[0] * cc[:, 0]) + (m0[1] * cc[:, 1]) + (m0[2] * cc[:, 2])
 
-    point_object = Points.create(ws, name=f"test_point", vertices=cc)
+    point_object = Points.create(ws, name="test_point", vertices=cc)
     point_object.add_data({"test_data": {"values": vals}})
     data_object = ws.get_entity("test_data")[0]
     params.lower_bound_object = point_object.uid

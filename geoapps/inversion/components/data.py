@@ -196,7 +196,7 @@ class InversionData(InversionLocations):
             data.update({comp: self.params.data(comp)})
             uncertainties.update({comp: self.params.uncertainty(comp)})
 
-        return list(data), data, uncertainties
+        return list(data.keys()), data, uncertainties
 
     def write_entity(self):
         """Write out the survey to geoh5"""
@@ -209,8 +209,8 @@ class InversionData(InversionLocations):
         """Write out the data to geoh5"""
         data = self.predicted if self.params.forward_only else self.observed
         basename = "Predicted" if self.params.forward_only else "Observed"
-        self._observed_data_types = {c: {} for c in data}
-        data_entity = {c: {} for c in data}
+        self._observed_data_types = {c: {} for c in data.keys()}
+        data_entity = {c: {} for c in data.keys()}
 
         if self.params.inversion_type in ["magnetotellurics", "tipper"]:
             for component, channels in data.items():
@@ -239,7 +239,7 @@ class InversionData(InversionLocations):
                             uncert_entity, f"Uncertainties_{component}"
                         )
         else:
-            for component in data:
+            for component in data.keys():
                 dnorm = self.normalizations[component] * data[component]
                 data_entity[component] = entity.add_data(
                     {f"{basename}_{component}": {"values": dnorm}}

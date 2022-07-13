@@ -78,7 +78,7 @@ class ChannelOptions:
             if hasattr(self, "_" + key):
                 try:
                     getattr(self, key).value = value
-                except:
+                except AttributeError:
                     pass
 
     @property
@@ -223,7 +223,7 @@ class MeshOctreeOptions:
             if hasattr(self, "_" + key):
                 try:
                     getattr(self, key).value = value
-                except:
+                except AttributeError:
                     pass
 
     @property
@@ -295,7 +295,7 @@ class Mesh1DOptions:
             if hasattr(self, "_" + key):
                 try:
                     getattr(self, key).value = value
-                except:
+                except AttributeError:
                     pass
 
     def count_cells(self):
@@ -757,7 +757,7 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices.observe(
             self.data_channel_choices_observer, names="value"
         )
-
+        self.plotting_data = None
         super().__init__(**self.defaults)
 
         if "lines" in self.defaults:
@@ -980,7 +980,9 @@ class InversionApp(PlotSelection2D):
         self.inversion_parameters.ignore_values.value = "<0"
 
         # Switch mesh options
-        self.inversion_parameters._mesh = self.mesh_1D
+        self.inversion_parameters._mesh = (
+            self.mesh_1D
+        )  # pylint: disable=protected-access
         self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.main
         flag = "EM1D"
 
@@ -1379,7 +1381,7 @@ class InversionApp(PlotSelection2D):
         input_dict["save_to_geoh5"] = os.path.abspath(new_workspace.h5file)
 
         file = f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
-        with open(file, "w") as f:
+        with open(file, "w", encoding="utf8") as f:
             json.dump(input_dict, f, indent=4)
 
         self.write.button_style = ""
