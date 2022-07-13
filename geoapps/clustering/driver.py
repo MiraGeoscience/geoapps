@@ -25,6 +25,8 @@ class ClusteringDriver:
         self.params: ClusteringParams = params
 
     def run(self):
+        # Run clustering
+        # Check that kmeans isn't None...
         # Create reference values and color_map
         group_map, color_map = {}, []
         cluster_values = self.kmeans + 1
@@ -33,7 +35,7 @@ class ClusteringDriver:
         cluster_values[inactive_set] = 0
 
         for ii in range(self.params.n_clusters):
-            colorpicker = self.color_pickers[ii]
+            colorpicker = self.params.color_pickers[ii]
             color = colorpicker.lstrip("#")
             group_map[ii + 1] = f"Cluster_{ii}"
             color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
@@ -46,7 +48,7 @@ class ClusteringDriver:
         # Create reference values and color_map
         group_map, color_map = {}, []
         for ii in range(self.params.n_clusters):
-            colorpicker = self.color_pickers[ii]
+            colorpicker = self.params.color_pickers[ii]
             color = colorpicker.lstrip("#")
             group_map[ii + 1] = f"Cluster_{ii}"
             color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
