@@ -416,7 +416,7 @@ class InversionLogger:
         return os.path.join(root_directory, file)
 
 
-def start_inversion(filepath=None, **kwargs):
+def start_inversion(filepath=None, **kwargs) -> InversionDriver:
     """Starts inversion with parameters defined in input file."""
 
     if filepath is not None:
@@ -462,6 +462,8 @@ def start_inversion(filepath=None, **kwargs):
     params.geoh5.close()
     driver = InversionDriver(params)
     driver.run()
+
+    return driver
 
 
 if __name__ == "__main__":
