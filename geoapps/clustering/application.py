@@ -32,15 +32,12 @@ from flask import Flask
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
-from scipy.spatial import cKDTree
-from sklearn.cluster import KMeans
 
 from geoapps.clustering.constants import app_initializer
 from geoapps.clustering.params import ClusteringParams
 from geoapps.clustering.plot_data import PlotData
 from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.shared_utils.utils import colors
-from geoapps.utils.statistics import random_sampling
 
 
 class Clustering(ScatterPlots):
@@ -496,14 +493,12 @@ class Clustering(ScatterPlots):
             Input(component_id="size_markers", component_property="value"),
             Input(component_id="kmeans", component_property="data"),
             Input(component_id="indices", component_property="data"),
+            Input(component_id="clusters", component_property="data"),
         )(self.update_plots)
         # Callback to export the clusters as a geoh5 file
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="n_clusters", component_property="value"),
-            Input(component_id="ga_group", component_property="value"),
-            Input(component_id="live_link", component_property="value"),
             prevent_initial_call=True,
         )(self.export_clusters)
 
@@ -511,7 +506,7 @@ class Clustering(ScatterPlots):
         # Get initial values to initialize the dash components
         defaults = {}
         defaults["kmeans"] = None
-        defaults["clusters"] = None
+        defaults["clusters"] = {}
         defaults["mapping"] = None
         defaults["indices"] = None
         # If there is no default data subset list, set it from selected scatter plot data
@@ -584,9 +579,10 @@ class Clustering(ScatterPlots):
                 defaults["kmeans"],
                 defaults["clusters"],
                 defaults["indices"],
+                defaults["geoh5"],
+                True,
             )
         )
-
         # Get initial scale and bounds for histogram plot
         defaults["scale"], defaults["lower_bounds"], defaults["upper_bounds"] = (
             None,
@@ -685,7 +681,7 @@ class Clustering(ScatterPlots):
                 data_options = channels + ["kmeans"]
                 color_maps_options = px.colors.named_colorscales() + ["kmeans"]
                 self.data_channels.update(
-                    {"kmeans": PlotData("kmeans", kmeans[indices])}
+                    {"kmeans": PlotData("kmeans", kmeans[np.array(indices)])}
                 )
             else:
                 data_options = channels
@@ -835,6 +831,9 @@ class Clustering(ScatterPlots):
         if full_upper_bounds is None:
             full_upper_bounds = {}
 
+        indices = np.array(indices)
+        kmeans = np.array(kmeans)
+
         update_dict = {}
         if trigger == "upload":
             if filename.endswith(".ui.json"):
@@ -880,7 +879,10 @@ class Clustering(ScatterPlots):
                                 update_dict.update({key: out_dict})
                 if "downsampling" in update_dict:
                     downsampling = update_dict["downsampling"]
+                if "n_clusters" in update_dict:
+                    n_clusters = update_dict["n_clusters"]
                 # Create new dataframe and run clustering for new variables.
+                self.params.geoh5 = Workspace(update_dict["geoh5"])
                 update_dict.update(
                     self.update_clustering(
                         channel,
@@ -893,6 +895,8 @@ class Clustering(ScatterPlots):
                         kmeans,
                         clusters,
                         indices,
+                        self.params.geoh5,
+                        True,
                     )
                 )
 
@@ -982,6 +986,7 @@ class Clustering(ScatterPlots):
                     }
                 )
                 # Update data options from data subset
+                update_all_clusters = trigger != "n_clusters"
                 update_dict.update(
                     self.update_clustering(
                         channel,
@@ -994,6 +999,8 @@ class Clustering(ScatterPlots):
                         kmeans,
                         clusters,
                         indices,
+                        self.params.geoh5,
+                        update_all_clusters,
                     )
                 )
             elif trigger == "channel":
@@ -1108,16 +1115,19 @@ class Clustering(ScatterPlots):
         size_markers,
         kmeans,
         indices,
+        clusters,
     ):
         # Read in stored dataframe.
-        dataframe = pd.DataFrame(dataframe_dict["dataframe"])
+        print("A")
+        dataframe = pd.DataFrame(dataframe_dict)
+        print("B")
         if not dataframe.empty:
             if color_maps == "kmeans":
                 # Update color_maps
                 color_maps = Clustering.update_colormap(n_clusters, color_pickers)
             elif color_maps is None:
                 color_maps = [[0.0, "rgb(0,0,0)"]]
-
+            print("C")
             # Input downsampled data to scatterplot so it doesn't regenerate data every time a parameter changes.
             axis_values = []
             for axis in [x, y, z, color, size]:
@@ -1127,7 +1137,7 @@ class Clustering(ScatterPlots):
                     axis_values.append(PlotData(axis, dataframe[axis].values))
                 else:
                     axis_values.append(None)
-
+            print("D")
             x, y, z, color, size = tuple(axis_values)
 
             crossplot = self.update_plot(
@@ -1161,16 +1171,23 @@ class Clustering(ScatterPlots):
                 size_markers,
                 clustering=True,
             )
-
+            print("E")
             stats_table = self.make_stats_table(dataframe)
+            print("F")
             matrix = self.make_heatmap(dataframe)
+            print("G")
             histogram = self.make_hist_plot(
                 dataframe, channel, lower_bounds, upper_bounds
             )
             boxplot = self.make_boxplot(
-                n_clusters, dataframe, channel, color_pickers, kmeans, indices
+                n_clusters,
+                dataframe,
+                channel,
+                color_pickers,
+                np.array(kmeans),
+                np.array(indices),
             )
-            inertia = self.make_inertia_plot(n_clusters)
+            inertia = self.make_inertia_plot(n_clusters, clusters)
             return crossplot, stats_table, matrix, histogram, boxplot, inertia
 
         else:
@@ -1216,6 +1233,8 @@ class Clustering(ScatterPlots):
         kmeans,
         clusters,
         indices,
+        workspace,
+        update_all_clusters,
     ):
         # Update dataframe, data options for plots, and run clustering
         update_dict = self.update_channels(
@@ -1227,14 +1246,17 @@ class Clustering(ScatterPlots):
             kmeans,
             indices,
         )
-        update_dict.update(self.update_dataframe(downsampling, channels))
         update_dict.update(
-            Clustering.run_clustering(
+            ClusteringDriver.update_dataframe(downsampling, channels, workspace)
+        )
+        update_dict.update(
+            ClusteringDriver.run_clustering(
                 n_clusters,
                 update_dict["dataframe"],
                 update_dict["full_scales"],
                 clusters,
                 update_dict["mapping"],
+                update_all_clusters,
             )
         )
         update_dict.update(
@@ -1251,48 +1273,13 @@ class Clustering(ScatterPlots):
         return update_dict
 
     @staticmethod
-    def run_clustering(n_clusters, dataframe_dict, full_scales, clusters, mapping):
-        """
-        Normalize the the selected data and perform the kmeans clustering.
-        """
-        dataframe = pd.DataFrame(dataframe_dict["dataframe"])
-
-        if dataframe.empty:
-            return
-        # Prime the app with clusters
-        # Normalize values and run
-        values = []
-        for field in dataframe.columns:
-            vals = dataframe[field].values.copy()
-
-            nns = ~np.isnan(vals)
-            vals[nns] = (
-                (vals[nns] - min(vals[nns]))
-                / (max(vals[nns]) - min(vals[nns]) + 1e-32)
-                * full_scales[field]
-            )
-            values += [vals]
-
-        for val in [2, 4, 8, 16, 32, n_clusters]:
-            if (
-                callback_context.triggered[0]["prop_id"].split(".")[0] != "n_clusters"
-            ) or (val == n_clusters):
-                kmeans = KMeans(n_clusters=val, random_state=0).fit(np.vstack(values).T)
-                clusters[val] = kmeans
-
-        cluster_ids = clusters[n_clusters].labels_.astype(float)
-        kmeans = cluster_ids[mapping]
-
-        return {"kmeans": kmeans, "clusters": clusters}
-
-    @staticmethod
     def make_inertia_plot(n_clusters, clusters):
         """
         Generate an inertia plot
         """
         if n_clusters in clusters.keys():
             ind = np.sort(list(clusters.keys()))
-            inertias = [clusters[ii].inertia_ for ii in ind]
+            inertias = [clusters[ii]["inertia"] for ii in ind]
             clusters = ind
             line = go.Scatter(x=clusters, y=inertias, mode="lines")
             point = go.Scatter(
@@ -1463,80 +1450,6 @@ class Clustering(ScatterPlots):
             yaxis={"autorange": "reversed"},
         )
         return matrix
-
-    def update_dataframe(self, downsampling, channels):
-        """
-        Normalize the the selected data and perform the kmeans clustering.
-        """
-        kmeans = None
-
-        if (channels is None) | (not channels):
-            mapping = None
-            indices = None
-            return {
-                "dataframe": None,
-                "kmeans": kmeans,
-                "mapping": mapping,
-                "indices": indices,
-            }
-        else:
-            indices, values = self.get_indices(channels, downsampling)
-            n_values = values.shape[0]
-
-            dataframe = pd.DataFrame(
-                values[indices, :],
-                columns=list(filter(None, channels)),
-            )
-
-            tree = cKDTree(dataframe.values)
-            inactive_set = np.ones(n_values, dtype="bool")
-            inactive_set[indices] = False
-            out_values = values[inactive_set, :]
-            for ii in range(values.shape[1]):
-                out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
-                    values[indices, ii]
-                )
-
-            _, ind_out = tree.query(out_values)
-            del tree
-
-            mapping = np.empty(n_values, dtype="int")
-            mapping[inactive_set] = ind_out
-            mapping[indices] = np.arange(len(indices))
-
-            return {
-                "dataframe": dataframe.to_dict("records"),
-                "kmeans": kmeans,
-                "mapping": mapping,
-                "indices": indices,
-            }
-
-    def get_indices(self, channels, downsampling):
-        values = []
-        non_nan = []
-        for channel in channels:
-            if channel is not None:
-                values.append(
-                    np.asarray(self.data_channels[channel].values, dtype=float)
-                )
-                non_nan.append(~np.isnan(self.data_channels[channel].values))
-
-        values = np.vstack(values)
-        non_nan = np.vstack(non_nan)
-
-        percent = downsampling / 100
-
-        # Number of values that are not nan along all three axes
-        size = np.sum(np.all(non_nan, axis=0))
-
-        indices = random_sampling(
-            values.T,
-            int(percent * size),
-            bandwidth=2.0,
-            rtol=1e0,
-            method="histogram",
-        )
-        return indices, values.T
 
     @staticmethod
     def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
