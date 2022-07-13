@@ -959,7 +959,7 @@ class PeakFinder(ObjectDataSelection):
 
         for cc, (uid, channel) in enumerate(self.active_channels.items()):
 
-            if "values" not in channel.keys():
+            if "values" not in channel:
                 continue
 
             self.lines.profile.values = channel["values"][self.survey.line_indices]
@@ -977,9 +977,9 @@ class PeakFinder(ObjectDataSelection):
                 ):
                     continue
 
-                ii = query[0]
-                start = group["start"][ii]
-                end = group["end"][ii]
+                i = query[0]
+                start = group["start"][i]
+                end = group["end"][i]
                 axs.plot(
                     locs[start:end],
                     values[start:end],
@@ -992,26 +992,26 @@ class PeakFinder(ObjectDataSelection):
                     ori = "left"
 
                 if markers:
-                    if ii == 0:
+                    if i == 0:
                         axs.scatter(
-                            locs[group["peak"][ii]],
-                            values[group["peak"][ii]],
+                            locs[group["peak"][i]],
+                            values[group["peak"][i]],
                             s=200,
                             c="k",
                             marker=self.marker[ori],
                             zorder=10,
                         )
-                    peak_markers_x += [locs[group["peak"][ii]]]
-                    peak_markers_y += [values[group["peak"][ii]]]
+                    peak_markers_x += [locs[group["peak"][i]]]
+                    peak_markers_y += [values[group["peak"][i]]]
                     peak_markers_c += [group["channel_group"]["color"]]
-                    start_markers_x += [locs[group["start"][ii]]]
-                    start_markers_y += [values[group["start"][ii]]]
-                    end_markers_x += [locs[group["end"][ii]]]
-                    end_markers_y += [values[group["end"][ii]]]
-                    up_markers_x += [locs[group["inflx_up"][ii]]]
-                    up_markers_y += [values[group["inflx_up"][ii]]]
-                    dwn_markers_x += [locs[group["inflx_dwn"][ii]]]
-                    dwn_markers_y += [values[group["inflx_dwn"][ii]]]
+                    start_markers_x += [locs[group["start"][i]]]
+                    start_markers_y += [values[group["start"][i]]]
+                    end_markers_x += [locs[group["end"][i]]]
+                    end_markers_y += [values[group["end"][i]]]
+                    up_markers_x += [locs[group["inflx_up"][i]]]
+                    up_markers_y += [values[group["inflx_up"][i]]]
+                    dwn_markers_x += [locs[group["inflx_dwn"][i]]]
+                    dwn_markers_y += [values[group["inflx_dwn"][i]]]
 
             if residual:
                 raw = self.lines.profile._values_resampled_raw
@@ -1158,8 +1158,8 @@ class PeakFinder(ObjectDataSelection):
             if group is not None and group["linear_fit"] is not None:
                 times = [
                     channel["time"]
-                    for ii, channel in enumerate(self.active_channels.values())
-                    if ii in list(group["channels"])
+                    for i, channel in enumerate(self.active_channels.values())
+                    if i in list(group["channels"])
                 ]
             if any(times):
                 times = np.hstack(times)
@@ -1235,9 +1235,7 @@ class PeakFinder(ObjectDataSelection):
                 try:
                     if self.tem_checkbox.value:
                         channel = [
-                            ch
-                            for ch in system["channels"].keys()
-                            if ch in params["name"]
+                            ch for ch in system["channels"] if ch in params["name"]
                         ]
                         if any(channel):
                             self.active_channels[uid]["time"] = system["channels"][

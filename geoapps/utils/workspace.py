@@ -45,6 +45,6 @@ def sorted_children_dict(
 
         children_dict[child.name] = child.uid
 
-    children_order = sorted_alphanumeric_list(list(children_dict.keys()))
+    children_order = sorted_alphanumeric_list(list(children_dict))
 
     return {k: children_dict[k] for k in children_order}

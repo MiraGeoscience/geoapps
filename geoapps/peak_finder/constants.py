@@ -94,7 +94,7 @@ default_ui_json.update(
             "value": None,
         },
         "system": {
-            "choiceList": list(parameters().keys()),
+            "choiceList": list(parameters()),
             "main": True,
             "label": "TEM system",
             "dependency": "tem_checkbox",

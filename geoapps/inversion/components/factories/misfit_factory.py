@@ -119,9 +119,7 @@ class MisfitFactory(SimPEGFactory):
             [],
             [],
         )
-        frequencies = np.unique(
-            [list(v.keys()) for v in inversion_data.observed.values()]
-        )
+        frequencies = np.unique([list(v) for v in inversion_data.observed.values()])
         tile_num = 0
 
         for tile_id, local_index in enumerate(tiles):

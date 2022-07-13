@@ -144,6 +144,7 @@ def test_edge_detection(tmp_path):
 def test_export():
     app = Export(h5file=PROJECT)
     app.trigger.click()
+    # TODO write all the files types and check that appropriate files are written
 
 
 def test_iso_surface(tmp_path):

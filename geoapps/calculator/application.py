@@ -90,7 +90,7 @@ class Calculator(ObjectDataSelection):
         """
         for uid in self.data.value:
             name = self.data.uid_name_map[uid]
-            if self.data.uid_name_map[uid] not in self.var.keys():
+            if self.data.uid_name_map[uid] not in self.var:
                 self.var[name] = self.workspace.get_entity(uid)[0].values
 
             self.equation.value = self.equation.value + "{" + name + "}"
@@ -121,7 +121,7 @@ class Calculator(ObjectDataSelection):
 
             variables = re.findall("{(.*?)}", equation)
             for name in variables:
-                if name not in list(self.var.keys()):
+                if name not in list(self.var):
                     if name in obj.get_data_list():
                         self.var[name] = obj.get_data(name)[0].values
                     elif name in "XYZ":

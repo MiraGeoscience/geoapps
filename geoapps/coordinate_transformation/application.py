@@ -231,11 +231,11 @@ class CoordinateTransformation(ObjectDataSelection):
         return self._wkt_out
 
     def set_wkt_in(self, _):
-        datasetSRS = osr.SpatialReference()
-        datasetSRS.SetFromUserInput(self.code_in.value.upper())
+        dataset_SRS = osr.SpatialReference()
+        dataset_SRS.SetFromUserInput(self.code_in.value.upper())
 
         self.wkt_in.unobserve_all("value")
-        self.wkt_in.value = datasetSRS.ExportToWkt()
+        self.wkt_in.value = dataset_SRS.ExportToWkt()
         self.wkt_in.observe(self.set_authority_in, names="value")
 
     def set_authority_in(self, _):
@@ -249,11 +249,11 @@ class CoordinateTransformation(ObjectDataSelection):
         self.code_in.observe(self.set_wkt_in, names="value")
 
     def set_wkt_out(self, _):
-        datasetSRS = osr.SpatialReference()
-        datasetSRS.SetFromUserInput(self.code_out.value.upper())
+        dataset_SRS = osr.SpatialReference()
+        dataset_SRS.SetFromUserInput(self.code_out.value.upper())
 
         self.wkt_out.unobserve_all("value")
-        self.wkt_out.value = datasetSRS.ExportToWkt()
+        self.wkt_out.value = dataset_SRS.ExportToWkt()
         self.wkt_out.observe(self.set_authority_out, names="value")
 
     def set_authority_out(self, _):

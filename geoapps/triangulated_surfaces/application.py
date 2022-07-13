@@ -196,9 +196,7 @@ class Surface2D(ObjectDataSelection):
                         m_vals.append(values[line_ind])
 
                     m_vals = np.vstack(m_vals).T
-                    keep = (
-                        ~np.isnan(z_vals) * ~np.any(np.isnan(m_vals), axis=1)
-                    )
+                    keep = ~np.isnan(z_vals) * ~np.any(np.isnan(m_vals), axis=1)
                     keep[np.isnan(z_vals)] = False
                     keep[np.any(np.isnan(m_vals), axis=1)] = False
                     x_locations.append(xyz[:, 0][order][keep])
@@ -243,10 +241,10 @@ class Surface2D(ObjectDataSelection):
                     # Remove triangles beyond surface edges
                 delaunay_2d.points[:, 1] = np.ravel(z_locations)
                 indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
-                for ii in range(3):
+                for i in range(3):
                     length = np.linalg.norm(
-                        delaunay_2d.points[delaunay_2d.simplices[:, ii], :]
-                        - delaunay_2d.points[delaunay_2d.simplices[:, ii - 1], :],
+                        delaunay_2d.points[delaunay_2d.simplices[:, i], :]
+                        - delaunay_2d.points[delaunay_2d.simplices[:, i - 1], :],
                         axis=1,
                     )
                     indx *= length < self.max_distance.value
@@ -280,18 +278,18 @@ class Surface2D(ObjectDataSelection):
 
                 nan_z = np.isnan(z_topo)
                 if np.any(nan_z):
-                    _, ii = tree_topo.query(locations[nan_z, :2])
-                    z_topo[nan_z] = topo_z[ii]
+                    _, i = tree_topo.query(locations[nan_z, :2])
+                    z_topo[nan_z] = topo_z[i]
 
                 locations[:, 2] = z_topo - locations[:, 2]
 
             delaunay_2d = Delaunay(locations[:, :2])
 
             indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
-            for ii in range(3):
+            for i in range(3):
                 length = np.linalg.norm(
-                    delaunay_2d.points[delaunay_2d.simplices[:, ii], :]
-                    - delaunay_2d.points[delaunay_2d.simplices[:, ii - 1], :],
+                    delaunay_2d.points[delaunay_2d.simplices[:, i], :]
+                    - delaunay_2d.points[delaunay_2d.simplices[:, i - 1], :],
                     axis=1,
                 )
                 indx *= length < self.max_distance.value

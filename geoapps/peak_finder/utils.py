@@ -288,7 +288,7 @@ class LineDataDerivatives:
         Compute and return the first order derivative.
         """
         deriv = self.values_resampled
-        for ii in range(order):
+        for i in range(order):
             deriv = (deriv[1:] - deriv[:-1]) / self.sampling
             deriv = np.r_[2 * deriv[0] - deriv[1], deriv]
 
@@ -334,7 +334,7 @@ def default_groups_from_property_group(property_group, start_index=0):
     }
 
     channel_groups = {}
-    for ii, (key, default) in enumerate(_default_channel_groups.items()):
+    for i, (key, default) in enumerate(_default_channel_groups.items()):
         prop_group = parent.find_or_create_property_group(name=key)
         prop_group.properties = []
 
@@ -345,7 +345,7 @@ def default_groups_from_property_group(property_group, start_index=0):
         channel_groups[prop_group.name] = {
             "data": prop_group.uid,
             "color": default["color"],
-            "label": [ii + 1],
+            "label": [i + 1],
             "properties": prop_group.properties,
         }
 
@@ -409,11 +409,11 @@ def find_anomalies(
         "group": [],
         "channel_group": [],
     }
-    data_uid = list(channels.keys())
+    data_uid = list(channels)
     property_groups = [pg for pg in channel_groups.values()]
     group_prop_size = np.r_[[len(grp["properties"]) for grp in channel_groups.values()]]
     for cc, (uid, params) in enumerate(channels.items()):
-        if "values" not in list(params.keys()):
+        if "values" not in list(params):
             continue
 
         values = params["values"][line_indices].copy()
@@ -506,13 +506,13 @@ def find_anomalies(
 
     group_id = -1
     peaks_position = locs[anomalies["peak"]]
-    for ii in range(peaks_position.shape[0]):
+    for i in range(peaks_position.shape[0]):
         # Skip if already labeled
-        if anomalies["group"][ii] != -1:
+        if anomalies["group"][i] != -1:
             continue
 
         group_id += 1  # Increment group id
-        dist = np.abs(peaks_position[ii] - peaks_position)
+        dist = np.abs(peaks_position[i] - peaks_position)
         # Find anomalies across channels within horizontal range
         near = np.where((dist < max_migration) & (anomalies["group"] == -1))[0]
         # Reject from group if channel gap > 1
@@ -583,8 +583,8 @@ def find_anomalies(
         amplitude = np.sum(anomalies["amplitude"][near])
         times = [
             channel["time"]
-            for ii, channel in enumerate(channels.values())
-            if (ii in list(gates) and "time" in channel.keys())
+            for i, channel in enumerate(channels.values())
+            if (i in list(gates) and "time" in channel)
         ]
         linear_fit = None
 

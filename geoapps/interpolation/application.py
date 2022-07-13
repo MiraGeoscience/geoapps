@@ -138,7 +138,7 @@ class DataInterpolation(ObjectDataSelection):
 
         self.parameter_choices = Dropdown(
             description="Interpolation Parameters",
-            options=list(self.parameters.keys()),
+            options=list(self.parameters),
             style={"description_width": "initial"},
         )
 
@@ -532,7 +532,7 @@ class DataInterpolation(ObjectDataSelection):
                 return_indices=True,
             )
 
-            for key, val in zip(list(values.keys()), vals):
+            for key, val in zip(list(values), vals):
                 values_interp[key] = val
                 sign[key] = sign[key][ind_inv[:, 0]]
 
@@ -543,7 +543,7 @@ class DataInterpolation(ObjectDataSelection):
                 values_interp[key] = value[ind]
                 sign[key] = sign[key][ind]
 
-        for key in values_interp.keys():
+        for key in values_interp:
             if self.space.value == "Log":
                 values_interp[key] = sign[key] * np.exp(values_interp[key])
 
@@ -594,7 +594,7 @@ class DataInterpolation(ObjectDataSelection):
                     > self.max_depth.value
                 )
 
-        for key in values_interp.keys():
+        for key in values_interp:
             values_interp[key][top] = self.no_data_value.value
             values_interp[key][bottom] = self.no_data_value.value
 
@@ -612,13 +612,13 @@ class DataInterpolation(ObjectDataSelection):
 
             tree = cKDTree(xy_ref[:, :2])
             rad, _ = tree.query(xyz_out_orig[:, :2])
-            for key in values_interp.keys():
+            for key in values_interp:
                 values_interp[key][
                     rad > self.max_distance.value
                 ] = self.no_data_value.value
 
         self.object_out.workspace.open()
-        for key in values_interp.keys():
+        for key in values_interp:
             if dtype[field] == np.dtype("int32"):
                 primitive = "integer"
                 vals = np.round(values_interp[key]).astype(dtype[field])

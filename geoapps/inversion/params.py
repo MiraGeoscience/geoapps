@@ -168,7 +168,7 @@ class InversionBaseParams(BaseParams):
         comps = []
         channels = [
             k.lstrip("_").split("_channel_bool")[0]
-            for k in self.__dict__.keys()
+            for k in self.__dict__
             if "channel_bool" in k
         ]
 

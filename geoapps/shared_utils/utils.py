@@ -103,10 +103,10 @@ def weighted_average(
         values_interp = np.zeros(xyz_out.shape[0])
         weight = np.zeros(xyz_out.shape[0])
 
-        for ii in range(n):
-            v = value[sub][ind[:, ii]] / (rad[:, ii] + threshold)
+        for i in range(n):
+            v = value[sub][ind[:, i]] / (rad[:, i] + threshold)
             values_interp = np.nansum([values_interp, v], axis=0)
-            w = 1.0 / (rad[:, ii] + threshold)
+            w = 1.0 / (rad[:, i] + threshold)
             weight = np.nansum([weight, w], axis=0)
 
         values_interp[weight > 0] = values_interp[weight > 0] / weight[weight > 0]
@@ -150,7 +150,7 @@ def window_xy(
 
     """
 
-    if ("center" in window.keys()) & ("size" in window.keys()):
+    if ("center" in window) & ("size" in window):
         x_lim = [
             window["center"][0] - window["size"][0] / 2,
             window["center"][0] + window["size"][0] / 2,
@@ -199,11 +199,11 @@ def downsample_xy(
 
     mask_ind = np.where(downsample_mask)[0]
     nstn = xy.shape[0]
-    for ii in range(nstn):
-        if downsample_mask[mask_ind[ii]]:
-            ind = tree.query_ball_point(xy[ii, :2], distance)
+    for i in range(nstn):
+        if downsample_mask[mask_ind[i]]:
+            ind = tree.query_ball_point(xy[i, :2], distance)
             downsample_mask[mask_ind[ind]] = False
-            downsample_mask[mask_ind[ii]] = True
+            downsample_mask[mask_ind[i]] = True
 
     if mask is not None:
         downsample_mask &= mask
@@ -290,7 +290,7 @@ def filter_xy(
     if angle is not None:
         azim = angle
     elif window is not None:
-        if "azimuth" in window.keys():
+        if "azimuth" in window:
             azim = window["azimuth"]
 
     is_rotated = False if (azim is None) | (azim == 0) else True
