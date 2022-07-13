@@ -1039,21 +1039,25 @@ class InversionApp(PlotSelection2D):
             new_obj = new_workspace.get_entity(self.objects.value)[0]
 
             for key in self.data_channel_choices.options:
-                widget = getattr(self, f"{key}_uncertainty_channel")
-                if widget.value is not None:
-                    param_dict[f"{key}_uncertainty"] = str(widget.value)
-                    if new_workspace.get_entity(widget.value)[0] is None:
-                        self.workspace.get_entity(widget.value)[0].copy(
-                            parent=new_obj, copy_children=False
-                        )
-                else:
-                    widget = getattr(self, f"{key}_uncertainty_floor")
-                    param_dict[f"{key}_uncertainty"] = widget.value
+                if not self.forward_only.value:
+                    widget = getattr(self, f"{key}_uncertainty_channel")
+                    if widget.value is not None:
+                        param_dict[f"{key}_uncertainty"] = str(widget.value)
+                        if new_workspace.get_entity(widget.value)[0] is None:
+                            self.workspace.get_entity(widget.value)[0].copy(
+                                parent=new_obj, copy_children=False
+                            )
+                    else:
+                        widget = getattr(self, f"{key}_uncertainty_floor")
+                        param_dict[f"{key}_uncertainty"] = widget.value
 
                 if getattr(self, f"{key}_channel_bool").value:
-                    self.workspace.get_entity(getattr(self, f"{key}_channel").value)[
-                        0
-                    ].copy(parent=new_obj)
+                    if not self.forward_only.value:
+                        self.workspace.get_entity(
+                            getattr(self, f"{key}_channel").value
+                        )[0].copy(parent=new_obj)
+                    else:
+                        param_dict[f"{key}_channel_bool"] = True
 
             if self.receivers_radar_drape.value is not None:
                 self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
@@ -1088,13 +1092,8 @@ class InversionApp(PlotSelection2D):
                             param_dict[sub_key.lstrip("_")] = value
 
             # Create new params object and write
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-                workspace=new_workspace,
-            )
             param_dict["resolution"] = None  # No downsampling for dcip
-            self._run_params = self.params.__class__(input_file=ifile, **param_dict)
+            self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=self.export_directory.selected_path,
