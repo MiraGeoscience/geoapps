@@ -353,7 +353,6 @@ class BaseParams:
 
     def write_input_file(
         self,
-        ui_json: dict = None,
         name: str = None,
         path: str = None,
         validate: bool = True,
