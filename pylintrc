@@ -157,7 +157,8 @@ disable=raw-checker-failed,
         missing-module-docstring,
         missing-function-docstring,
         missing-class-docstring,
-        fixme
+        fixme,
+        R,C,W # TODO: re-enable these
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
