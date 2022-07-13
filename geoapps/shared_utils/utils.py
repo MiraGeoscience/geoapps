@@ -16,7 +16,6 @@ from uuid import UUID
 
 import numpy as np
 from discretize import TreeMesh
-from geoh5py.data import FilenameData
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
@@ -24,11 +23,11 @@ from scipy.spatial import cKDTree
 from geoapps.utils.string import string_to_numeric
 
 
-def hex_to_rgb(hex):
+def hex_to_rgb(hex_color):
     """
     Convert hex color code to RGB
     """
-    code = hex.lstrip("#")
+    code = hex_color.lstrip("#")
     return [int(code[i : i + 2], 16) for i in (0, 2, 4)]
 
 
@@ -160,7 +159,7 @@ def window_xy(
             window["center"][1] + window["size"][1] / 2,
         ]
     else:
-        msg = f"Missing window keys: 'center' and 'size'."
+        msg = "Missing window keys: 'center' and 'size'."
         raise KeyError(msg)
 
     window_mask = x >= x_lim[0]
@@ -396,10 +395,10 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
 
     try:
         group = workspace.get_entity(inversion_group)[0]
-    except IndexError:
+    except IndexError as exc:
         raise IndexError(
             f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
-        )
+        ) from exc
 
     # TODO use a get_entity call here once we update geoh5py entities with the method
     outfile = [c for c in group.children if c.name == "SimPEG.out"][0]

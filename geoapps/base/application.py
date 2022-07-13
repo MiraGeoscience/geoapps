@@ -18,6 +18,7 @@ from geoh5py.shared.utils import dict_mapper, entity2uuid, str2uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
+from traitlets import TraitError
 
 from geoapps.driver_base.params import BaseParams
 from geoapps.utils import warn_module_not_found
@@ -143,7 +144,7 @@ class BaseApplication:
                         getattr(self, key, None)(key, value)
                     else:
                         setattr(self, key, value)
-                except:
+                except (AttributeError, TypeError, TraitError):
                     pass
 
     def file_browser_change(self, _):
@@ -172,15 +173,15 @@ class BaseApplication:
             self._monitoring_directory = self.export_directory.selected
 
     @staticmethod
-    def live_link_output(path: str, entity: ObjectBase | Group):
+    def live_link_output(filepath: str, entity: ObjectBase | Group):
         """
         Create a temporary geoh5 file in the monitoring folder and export an
         entity for update.
 
-        :param path: Monitoring directory.
+        :param filepath: Monitoring directory.
         :param entity: Entity to be updated.
         """
-        monitored_directory_copy(path, entity)
+        monitored_directory_copy(filepath, entity)
 
     def live_link_choice(self, _):
         """
@@ -226,8 +227,10 @@ class BaseApplication:
             mkdir(live_path)
 
         live_path = path.abspath(live_path)
-        self.export_directory._set_form_values(live_path, "")
-        self.export_directory._apply_selection()
+        self.export_directory._set_form_values(
+            live_path, ""
+        )  # pylint: disable=protected-access
+        self.export_directory._apply_selection()  # pylint: disable=protected-access
 
         self._monitoring_directory = live_path
 
@@ -434,7 +437,7 @@ class BaseApplication:
             self.h5file = value
 
     def trigger_click(self, _):
-        for key, value in self.__dict__.items():
+        for key in self.__dict__:
             try:
                 if isinstance(getattr(self, key), Widget):
                     setattr(self.params, key, getattr(self, key).value)
@@ -445,11 +448,10 @@ class BaseApplication:
         self.run(self.params)
 
     @classmethod
-    def run(cls, params):
+    def run(cls, _params):
         """
         Static run method.
         """
-        ...
 
     def base_workspace_changes(self, workspace: Workspace):
         self._workspace = workspace
@@ -458,14 +460,16 @@ class BaseApplication:
             path=self.working_directory,
             filename=path.basename(self._h5file),
         )
-        self._file_browser._apply_selection()
+        self._file_browser._apply_selection()  # pylint: disable=protected-access
 
         export_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
         if not path.exists(export_path):
             mkdir(export_path)
 
-        self.export_directory._set_form_values(export_path, "")
-        self.export_directory._apply_selection()
+        self.export_directory._set_form_values(
+            export_path, ""
+        )  # pylint: disable=protected-access
+        self.export_directory._apply_selection()  # pylint: disable=protected-access
 
 
 def working_copy(h5file):

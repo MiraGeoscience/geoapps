@@ -87,6 +87,6 @@ class SimPEGFactory:
 
         class_args = self.assemble_arguments(**kwargs)
         class_kwargs = self.assemble_keyword_arguments(**kwargs)
-        return self.simpeg_object(
+        return self.simpeg_object(  # pylint: disable=not-callable
             *class_args, **class_kwargs
-        )  # pylint: disable=not-callable
+        )
