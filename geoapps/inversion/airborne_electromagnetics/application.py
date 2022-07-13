@@ -980,9 +980,9 @@ class InversionApp(PlotSelection2D):
         self.inversion_parameters.ignore_values.value = "<0"
 
         # Switch mesh options
-        self.inversion_parameters._mesh = (
+        self.inversion_parameters._mesh = (  # pylint: disable=protected-access
             self.mesh_1D
-        )  # pylint: disable=protected-access
+        )
         self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.main
         flag = "EM1D"
 

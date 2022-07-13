@@ -106,6 +106,7 @@ class PlotSelection2D(ObjectDataSelection):
             icon="check",
         )
         self.objects.observe(self.set_bounding_box, names="value")
+        self.figure = None
         super().__init__(**self.defaults)
 
         self.window_plot = widgets.interactive_output(
