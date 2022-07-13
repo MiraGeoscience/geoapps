@@ -1200,7 +1200,7 @@ class InversionApp(PlotSelection2D):
                     if new_obj is None:
                         new_obj = obj.copy(parent=new_workspace, copy_children=False)
                     for d in data:
-                        if new_workspace.get_entity(d.uid)[0] is None:
+                        if d is not None and new_workspace.get_entity(d.uid)[0] is None:
                             d.copy(parent=new_obj)
 
             if self.inversion_type.value == "magnetic vector":
