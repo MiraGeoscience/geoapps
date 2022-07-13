@@ -193,7 +193,7 @@ class InversionDriver:
             return
 
         # Add a list of directives to the inversion
-        self.directiveList = DirectivesFactory(self.params).build(
+        self.directive_list = DirectivesFactory(self.params).build(
             self.inversion_data,
             self.inversion_mesh,
             self.active_cells,
@@ -204,7 +204,7 @@ class InversionDriver:
 
         # Put all the parts together
         self.inversion = inversion.BaseInversion(
-            self.inverse_problem, directiveList=self.directiveList
+            self.inverse_problem, directiveList=self.directive_list
         )
         self.workspace.close()
 

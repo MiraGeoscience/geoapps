@@ -79,7 +79,7 @@ class BaseParams:
                 validation_options={"disabled": True},
             )
         self.update(self.input_file.data, validate=False)
-        self.param_names = list(self.input_file.data.keys())
+        self.param_names = list(self.input_file.data)
         self.input_file.validation_options["disabled"] = False
 
         # Apply user input
@@ -107,14 +107,14 @@ class BaseParams:
         self.validate = validate
 
         params_dict = self.input_file.numify(params_dict)
-        if "geoh5" in params_dict.keys():
+        if "geoh5" in params_dict:
             if params_dict["geoh5"] is not None:
                 setattr(self, "geoh5", params_dict["geoh5"])
                 self.input_file.workspace = params_dict["geoh5"]
 
         params_dict = self.input_file._promote(params_dict)
         for key, value in params_dict.items():
-            if key not in self.ui_json.keys() or key == "geoh5":
+            if key not in self.ui_json or key == "geoh5":
                 continue  # ignores keys not in default_ui_json
 
             setattr(self, key, value)

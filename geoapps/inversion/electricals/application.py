@@ -279,8 +279,8 @@ class InversionApp(PlotSelection2D):
             "optimization": self._optimization,
         }
         self.option_choices = widgets.Dropdown(
-            options=list(self.inversion_options.keys())[1:],
-            value=list(self.inversion_options.keys())[1],
+            options=list(self.inversion_options)[1:],
+            value=list(self.inversion_options)[1],
             disabled=False,
         )
         self.option_choices.observe(self.inversion_option_change, names="value")
@@ -734,7 +734,7 @@ class InversionApp(PlotSelection2D):
             self._param_class = DirectCurrentParams
             params["inversion_type"] = "direct current"
             params["out_group"] = "DCInversion"
-            self.option_choices.options = list(self.inversion_options.keys())[1:]
+            self.option_choices.options = list(self.inversion_options)[1:]
 
         elif self.inversion_type.value == "induced polarization" and not isinstance(
             self.params, InducedPolarizationParams
@@ -742,7 +742,7 @@ class InversionApp(PlotSelection2D):
             self._param_class = InducedPolarizationParams
             params["inversion_type"] = "induced polarization"
             params["out_group"] = "ChargeabilityInversion"
-            self.option_choices.options = list(self.inversion_options.keys())
+            self.option_choices.options = list(self.inversion_options)
 
         self.params = self._param_class(
             # validator_opts={"ignore_requirements": True}
@@ -933,7 +933,7 @@ class InversionApp(PlotSelection2D):
         if hasattr(
             self.data_channel_choices, "data_channel_options"
         ) and self.data_channel_choices.value in (
-            self.data_channel_choices.data_channel_options.keys()
+            self.data_channel_choices.data_channel_options
         ):
             data_widget = self.data_channel_choices.data_channel_options[
                 self.data_channel_choices.value

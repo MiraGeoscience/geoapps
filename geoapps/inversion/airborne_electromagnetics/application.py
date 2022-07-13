@@ -120,7 +120,7 @@ class SensorOptions(ObjectDataSelection):
         self._constant = FloatText(
             description="Constant elevation (m)",
         )
-        if "offset" in self.defaults.keys():
+        if "offset" in self.defaults:
             self._offset.value = self.defaults["offset"]
 
         self.option_list = {
@@ -485,8 +485,8 @@ class InversionOptions(BaseApplication):
             "optimization": self._optimization,
         }
         self.option_choices = widgets.Dropdown(
-            options=list(self.inversion_options.keys()),
-            value=list(self.inversion_options.keys())[0],
+            options=list(self.inversion_options),
+            value=list(self.inversion_options)[0],
             disabled=False,
         )
         self.option_choices.observe(self.inversion_option_change, names="value")
@@ -736,7 +736,7 @@ class InversionApp(PlotSelection2D):
         )
         self._starting_channel = (IntText(value=None, description="Starting Channel"),)
         self._system = Dropdown(
-            options=list(self.em_system_specs.keys()),
+            options=list(self.em_system_specs),
             description="Survey Type: ",
         )
         self._write = Button(
@@ -1051,8 +1051,8 @@ class InversionApp(PlotSelection2D):
             data_channel_options[key].children[1].value = channel
 
         if len(data_channel_options) > 0:
-            self.data_channel_choices.options = list(data_channel_options.keys())
-            self.data_channel_choices.value = list(data_channel_options.keys())[0]
+            self.data_channel_choices.options = list(data_channel_options)
+            self.data_channel_choices.value = list(data_channel_options)[0]
             self.data_channel_choices.data_channel_options = data_channel_options
             self.data_channel_panel.children = [
                 self.data_channel_choices,
@@ -1063,12 +1063,12 @@ class InversionApp(PlotSelection2D):
 
         if self.em_system_specs[self.system.value]["type"] == "frequency":
             self.inversion_parameters.option_choices.options = list(
-                self.inversion_parameters.inversion_options.keys()
+                self.inversion_parameters.inversion_options
             )
         else:
             self.inversion_parameters.option_choices.options = [
                 key
-                for key in self.inversion_parameters.inversion_options.keys()
+                for key in self.inversion_parameters.inversion_options
                 if key != "background susceptibility"
             ]
 
@@ -1132,7 +1132,7 @@ class InversionApp(PlotSelection2D):
         if hasattr(
             self.data_channel_choices, "data_channel_options"
         ) and self.data_channel_choices.value in (
-            self.data_channel_choices.data_channel_options.keys()
+            self.data_channel_choices.data_channel_options
         ):
             data_widget = self.data_channel_choices.data_channel_options[
                 self.data_channel_choices.value
@@ -1328,7 +1328,7 @@ class InversionApp(PlotSelection2D):
 
         checks = [key for key, val in input_dict.items() if val is None]
 
-        if len(list(input_dict["data"]["channels"].keys())) == 0:
+        if len(list(input_dict["data"]["channels"])) == 0:
             checks += ["'Channel' for at least one data component."]
 
         if len(checks) > 0:

@@ -47,6 +47,10 @@ class Clustering(ScatterPlots):
     Application for the clustering of data.
     """
 
+    # pylint: disable=too-many-instance-attributes
+    # TODO: reorganize attributes of clustering app to reduce number of public
+    # instance attributes, make clear what is allowed through kwargs
+
     defaults = {
         "h5file": r"../../assets/FlinFlon.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
@@ -80,6 +84,12 @@ class Clustering(ScatterPlots):
         self.box_plots = {}
         self.colormap = {}
         self.clusters = {}
+        self.inertia_plot = None
+        self.heatmap_fig = None
+        self.dataframe = None
+        self.dataframe_scaled = None
+        self._mapping = None
+        self._inactive_set = None
         self._channels_plot_options = Dropdown(description="Channels")
         self._n_clusters = IntSlider(
             min=2,
@@ -107,7 +117,7 @@ class Clustering(ScatterPlots):
         self.histogram_panel = VBox([self.channels_plot_options])
         self.boxplot_panel = VBox([self.channels_plot_options])
         self.stats_table = interactive_output(
-            self.make_stats_table,
+            self._make_stats_table,
             {
                 "channels": self.data,
                 "show": self.plotting_options,
@@ -117,19 +127,19 @@ class Clustering(ScatterPlots):
         self.ga_group_name.value = "MyCluster"
         self.plotting_options.observe(self.show_trigger, names="value")
         self.downsampling.observe(self.update_choices, names="value")
-        self.channels_plot_options.observe(self.make_hist_plot, names="value")
-        self.channels_plot_options.observe(self.make_box_plot, names="value")
+        self.channels_plot_options.observe(self._make_hist_plot, names="value")
+        self.channels_plot_options.observe(self._make_box_plot, names="value")
         self.trigger.description = "Run Clustering"
 
-        for ii in range(self.n_clusters.max):
-            self.color_pickers[ii] = ColorPicker(
+        for i in range(self.n_clusters.max):
+            self.color_pickers[i] = ColorPicker(
                 concise=False,
                 description=("Color"),
-                value=colors[ii],
+                value=colors[i],
             )
-            self.color_pickers[ii].uid = ii
-            self.color_pickers[ii].observe(self.update_colormap, names="value")
-            self.color_pickers[ii].observe(self.make_box_plot, names="value")
+            self.color_pickers[i].uid = i
+            self.color_pickers[i].observe(self.update_colormap, names="value")
+            self.color_pickers[i].observe(self._make_box_plot, names="value")
 
         self.custom_colormap = list(self.colormap.values())
         self.color.observe(self.check_color, names="value")
@@ -231,7 +241,7 @@ class Clustering(ScatterPlots):
                     self.stats_table,
                 ]
             elif self.plotting_options.value == "Confusion Matrix":
-                self.make_heatmap(None)
+                self._make_heatmap(None)
                 self.input_box.children = [self.plotting_options, self.heatmap_fig]
             elif self.plotting_options.value == "Crossplot":
                 self.input_box.children = [
@@ -244,15 +254,15 @@ class Clustering(ScatterPlots):
                     self.plotting_options,
                     self.histogram_panel,
                 ]
-                self.make_hist_plot(None)
+                self._make_hist_plot(None)
             elif self.plotting_options.value == "Boxplot":
-                self.make_box_plot(None)
+                self._make_box_plot(None)
                 self.input_box.children = [
                     self.plotting_options,
                     self.boxplot_panel,
                 ]
             elif self.plotting_options.value == "Inertia":
-                self.make_inertia_plot(None)
+                self._make_inertia_plot(None)
                 self.input_box.children = [
                     self.plotting_options,
                     self.inertia_plot,
@@ -280,19 +290,19 @@ class Clustering(ScatterPlots):
         """
         self.refresh.value = False
         self.colormap = {}
-        for ii in range(self.n_clusters.value):
-            colorpicker = self.color_pickers[ii]
+        for i in range(self.n_clusters.value):
+            colorpicker = self.color_pickers[i]
             if "#" in colorpicker.value:
                 color = colorpicker.value.lstrip("#")
-                self.colormap[ii] = [
-                    np.min([ii / (self.n_clusters.value - 1), 1]),
+                self.colormap[i] = [
+                    np.min([i / (self.n_clusters.value - 1), 1]),
                     "rgb("
                     + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
                     + ")",
                 ]
             else:
-                self.colormap[ii] = [
-                    np.min([ii / (self.n_clusters.value - 1), 1]),
+                self.colormap[i] = [
+                    np.min([i / (self.n_clusters.value - 1), 1]),
                     colorpicker.value,
                 ]
 
@@ -356,7 +366,7 @@ class Clustering(ScatterPlots):
 
         for val in [2, 4, 8, 16, 32, self.n_clusters.value]:
             self.refresh_clusters.description = f"Running ... {val}"
-            if val not in self.clusters.keys():
+            if val not in self.clusters:
                 kmeans = KMeans(n_clusters=val, random_state=0).fit(np.vstack(values).T)
                 self.clusters[val] = kmeans
 
@@ -373,13 +383,13 @@ class Clustering(ScatterPlots):
         self.show_trigger(None)
         self.refresh.value = True
 
-    def make_inertia_plot(self, _):
+    def _make_inertia_plot(self, _):
         """
         Generate an inertia plot
         """
-        if self.n_clusters.value in self.clusters.keys():
-            ind = np.sort(list(self.clusters.keys()))
-            inertias = [self.clusters[ii].inertia_ for ii in ind]
+        if self.n_clusters.value in self.clusters:
+            ind = np.sort(list(self.clusters))
+            inertias = [self.clusters[i].inertia_ for i in ind]
             clusters = ind
             line = go.Scatter(x=clusters, y=inertias, mode="lines")
             point = go.Scatter(
@@ -402,14 +412,14 @@ class Clustering(ScatterPlots):
                 }
             )
 
-    def make_hist_plot(self, _):
+    def _make_hist_plot(self, _):
         """
         Generate an histogram plot for the selected data channel.
         """
         if (
-            self.channels_plot_options.value in self.scalings.keys()
-            and self.channels_plot_options.value in self.lower_bounds.keys()
-            and self.channels_plot_options.value in self.upper_bounds.keys()
+            self.channels_plot_options.value in self.scalings
+            and self.channels_plot_options.value in self.lower_bounds
+            and self.channels_plot_options.value in self.upper_bounds
             and getattr(self, "dataframe", None) is not None
         ):
             field = self.channels_plot_options.value
@@ -419,7 +429,7 @@ class Clustering(ScatterPlots):
                 name=self.data.uid_name_map[field],
             )
 
-            if field not in self.histo_plots.keys():
+            if field not in self.histo_plots:
                 self.histo_plots[field] = go.FigureWidget()
 
             self.histo_plots[field].data = []
@@ -432,35 +442,35 @@ class Clustering(ScatterPlots):
                 self.histo_plots[field],
             ]
 
-    def make_box_plot(self, _):
+    def _make_box_plot(self, _):
         """
         Generate a box plot for each cluster.
         """
         if (
             getattr(self, "dataframe", None) is not None
-            and "kmeans" in self.data_channels.keys()
+            and "kmeans" in self.data_channels
         ):
             field = self.channels_plot_options.value
 
             boxes = []
-            for ii in range(self.n_clusters.value):
+            for i in range(self.n_clusters.value):
 
-                cluster_ind = self.data_channels["kmeans"][self.indices] == ii
-                x = np.ones(np.sum(cluster_ind)) * ii
+                cluster_ind = self.data_channels["kmeans"][self.indices] == i
+                x = np.ones(np.sum(cluster_ind)) * i
                 y = self.data_channels[field][self.indices][cluster_ind]
 
                 boxes.append(
                     go.Box(
                         x=x,
                         y=y,
-                        fillcolor=self.color_pickers[ii].value,
-                        marker_color=self.color_pickers[ii].value,
-                        line_color=self.color_pickers[ii].value,
+                        fillcolor=self.color_pickers[i].value,
+                        marker_color=self.color_pickers[i].value,
+                        line_color=self.color_pickers[i].value,
                         showlegend=False,
                     )
                 )
 
-            if field not in self.box_plots.keys():
+            if field not in self.box_plots:
                 self.box_plots[field] = go.FigureWidget()
 
             self.box_plots[field].data = []
@@ -480,16 +490,17 @@ class Clustering(ScatterPlots):
                 }
             )
 
-    def make_stats_table(self, channels, show):
+    def _make_stats_table(self, channels, show):
         """
         Generate a table of statistics using pandas
         """
+        _ = (channels, show)
         if getattr(self, "dataframe", None) is not None:
             display(
                 self.dataframe.describe(percentiles=None, include=None, exclude=None)
             )
 
-    def make_heatmap(self, _):
+    def _make_heatmap(self, _):
         """
         Generate a consfusion matrix
         """
@@ -574,18 +585,18 @@ class Clustering(ScatterPlots):
         """
         Write cluster groups to the target geoh5 object.
         """
-        if "kmeans" in self.data_channels.keys():
+        if "kmeans" in self.data_channels:
             obj, _ = self.get_selected_entities()
 
             # Create reference values and color_map
             group_map, color_map = {}, []
             cluster_values = self.data_channels["kmeans"] + 1
             cluster_values[self._inactive_set] = 0
-            for ii in range(self.n_clusters.value):
-                colorpicker = self.color_pickers[ii]
+            for i in range(self.n_clusters.value):
+                colorpicker = self.color_pickers[i]
                 color = colorpicker.value.lstrip("#")
-                group_map[ii + 1] = f"Cluster_{ii}"
-                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+                group_map[i + 1] = f"Cluster_{i}"
+                color_map += [[i + 1] + hex_to_rgb(color) + [1]]
 
             color_map = np.core.records.fromarrays(
                 np.vstack(color_map).T,
@@ -594,11 +605,11 @@ class Clustering(ScatterPlots):
 
             # Create reference values and color_map
             group_map, color_map = {}, []
-            for ii in range(self.n_clusters.value):
-                colorpicker = self.color_pickers[ii]
+            for i in range(self.n_clusters.value):
+                colorpicker = self.color_pickers[i]
                 color = colorpicker.value.lstrip("#")
-                group_map[ii + 1] = f"Cluster_{ii}"
-                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+                group_map[i + 1] = f"Cluster_{i}"
+                color_map += [[i + 1] + hex_to_rgb(color) + [1]]
 
             color_map = np.core.records.fromarrays(
                 np.vstack(color_map).T,
@@ -630,13 +641,58 @@ class Clustering(ScatterPlots):
     def update_downsampling(self, _, refresh_plot=True):
         ...
 
+    def _collect_values(self, fields):
+        values = []
+        for field in fields:
+            vals = self.data_channels[field].copy()
+            nns = ~np.isnan(vals)
+            if field not in self.scalings:
+                self.scalings[field] = IntSlider(
+                    min=1,
+                    max=10,
+                    step=1,
+                    value=1,
+                    description="Scale",
+                    continuous_update=False,
+                )
+                self.scalings[field].observe(self.update_choices, names="value")
+
+            if field not in self.lower_bounds:
+                self.lower_bounds[field] = FloatText(
+                    description="Lower bound",
+                    value=vals[nns].min(),
+                    continuous_update=False,
+                )
+                self.lower_bounds[field].observe(self.update_choices, names="value")
+
+            if field not in self.upper_bounds:
+                self.upper_bounds[field] = FloatText(
+                    description="Upper bound",
+                    value=vals[nns].max(),
+                    continuous_update=False,
+                )
+                self.upper_bounds[field].observe(self.update_choices, names="value")
+
+            if field not in self.log_dict:
+                self.log_dict[field] = Checkbox(description="Log", value=False)
+                self.log_dict[field].observe(self.update_choices, names="value")
+
+            vals[
+                (vals < self.lower_bounds[field].value)
+                | (vals > self.upper_bounds[field].value)
+            ] = np.nan
+            values += [vals]
+
+        values = np.vstack(values).T
+        return values
+
     def update_choices(self, _, refresh_plot=True):
         """
         Trigger a re-write of the dataframe on changes of data, downsampling, scale or bounds.
         """
         self.clusters = {}
 
-        if "kmeans" in self.data_channels.keys():
+        if "kmeans" in self.data_channels:
             del self.data_channels["kmeans"]
 
         self.refresh.value = False
@@ -644,55 +700,14 @@ class Clustering(ScatterPlots):
         for channel in self.data.value:
             self.get_channel(channel)
 
-        for key in list(self.data_channels.keys()):
+        for key in list(self.data_channels):
             if key not in list(self.data.value) + ["kmeans"]:
                 del self.data_channels[key]
 
-        fields = list(self.data_channels.keys())
+        fields = list(self.data_channels)
 
         if len(fields) > 0:
-            values = []
-            for field in fields:
-                vals = self.data_channels[field].copy()
-                nns = ~np.isnan(vals)
-                if field not in self.scalings.keys():
-                    self.scalings[field] = IntSlider(
-                        min=1,
-                        max=10,
-                        step=1,
-                        value=1,
-                        description="Scale",
-                        continuous_update=False,
-                    )
-                    self.scalings[field].observe(self.update_choices, names="value")
-
-                if field not in self.lower_bounds.keys():
-                    self.lower_bounds[field] = FloatText(
-                        description="Lower bound",
-                        value=vals[nns].min(),
-                        continuous_update=False,
-                    )
-                    self.lower_bounds[field].observe(self.update_choices, names="value")
-
-                if field not in self.upper_bounds.keys():
-                    self.upper_bounds[field] = FloatText(
-                        description="Upper bound",
-                        value=vals[nns].max(),
-                        continuous_update=False,
-                    )
-                    self.upper_bounds[field].observe(self.update_choices, names="value")
-
-                if field not in self.log_dict.keys():
-                    self.log_dict[field] = Checkbox(description="Log", value=False)
-                    self.log_dict[field].observe(self.update_choices, names="value")
-
-                vals[
-                    (vals < self.lower_bounds[field].value)
-                    | (vals > self.upper_bounds[field].value)
-                ] = np.nan
-                values += [vals]
-
-            values = np.vstack(values).T
+            values = self._collect_values(fields)
 
             active_set = np.where(np.all(~np.isnan(values), axis=1))[0]
 
@@ -717,9 +732,9 @@ class Clustering(ScatterPlots):
             inactive_set = np.ones(self.n_values, dtype="bool")
             inactive_set[self.indices] = False
             out_values = values[inactive_set, :]
-            for ii in range(values.shape[1]):
-                out_values[np.isnan(out_values[:, ii]), ii] = np.mean(
-                    values[self.indices, ii]
+            for i in range(values.shape[1]):
+                out_values[np.isnan(out_values[:, i]), i] = np.mean(
+                    values[self.indices, i]
                 )
 
             _, ind_out = tree.query(out_values)

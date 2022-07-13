@@ -258,7 +258,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-        components = list(inversion_object.observed.keys())
+        components = list(inversion_object.observed)
         channels = [""]
         kwargs = {
             "save_objective_function": save_objective_function,
@@ -309,7 +309,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-        components = list(inversion_object.observed.keys())
+        components = list(inversion_object.observed)
         channels = [""]
         is_dc = True if self.factory_type == "direct current" else False
         component = "dc" if is_dc else "ip"
@@ -375,10 +375,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         name=None,
     ):
 
-        components = list(inversion_object.observed.keys())
-        channels = np.unique(
-            [list(v.keys()) for k, v in inversion_object.observed.items()]
-        )
+        components = list(inversion_object.observed)
+        channels = np.unique([list(v) for k, v in inversion_object.observed.items()])
         kwargs = {
             "save_objective_function": save_objective_function,
             "attribute_type": "predicted",

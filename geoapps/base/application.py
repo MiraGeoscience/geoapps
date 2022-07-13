@@ -104,7 +104,7 @@ class BaseApplication:
 
         self.__populate__(**self.defaults)
 
-        for key in list(self.__dict__.keys()):
+        for key in list(self.__dict__):
             attr = getattr(self, key, None)
             if isinstance(attr, Widget) and hasattr(attr, "style"):
                 attr.style = {"description_width": "initial"}

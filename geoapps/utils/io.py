@@ -8,15 +8,15 @@
 from __future__ import annotations
 
 import numpy as np
-from geoh5py.data import FloatData
 from geoh5py.objects import Grid2D
+from geoh5py.objects.object_base import Entity
 from scipy.interpolate import interp1d
 
 from geoapps.shared_utils.utils import rotate_xy
 
 
 def export_grid_2_geotiff(
-    data: FloatData, file_name: str, wkt_code: str = None, data_type: str = "float"
+    data: Entity | None, file_name: str, wkt_code: str = None, data_type: str = "float"
 ):
     """
     Write a geotiff from float data stored on a Grid2D object.
@@ -38,6 +38,8 @@ def export_grid_2_geotiff(
 
     from osgeo import gdal
 
+    # TODO handle None data here
+
     grid2d = data.parent
 
     assert isinstance(grid2d, Grid2D), "The parent object must be a Grid2D entity."
@@ -50,12 +52,12 @@ def export_grid_2_geotiff(
 
     driver = gdal.GetDriverByName("GTiff")
 
-    # Chose type
+    # Choose type
     if data_type == "RGB":
         encode_type = gdal.GDT_Byte
         num_bands = 3
         if data.entity_type.color_map is not None:
-            cmap = data.entity_type.color_map.values
+            cmap = data.entity_type.color_map._values
             red = interp1d(
                 cmap["Value"], cmap["Red"], bounds_error=False, fill_value="extrapolate"
             )(values)

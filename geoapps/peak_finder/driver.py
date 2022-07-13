@@ -72,7 +72,7 @@ class PeakFinderDriver:
         for uid, channel_params in active_channels.items():
             obj = workspace.get_entity(uid)[0]
             if self.params.tem_checkbox:
-                channel = [ch for ch in system["channels"].keys() if ch in obj.name]
+                channel = [ch for ch in system["channels"] if ch in obj.name]
                 if any(channel):
                     channel_params["time"] = system["channels"][channel[0]]
                 else:
@@ -125,7 +125,7 @@ class PeakFinderDriver:
         for future_line in tqdm(anomalies):
             line = future_line.result()
             for group in line:
-                if "channel_group" in group.keys() and len(group["cox"]) > 0:
+                if "channel_group" in group and len(group["cox"]) > 0:
                     channel_group += group["channel_group"]["label"]
 
                     if group["linear_fit"] is None:
@@ -277,7 +277,7 @@ class PeakFinderDriver:
                             "type": "referenced",
                             "values": np.repeat(
                                 np.hstack(channel_group),
-                                [ii.shape[0] for ii in inflx_up],
+                                [i.shape[0] for i in inflx_up],
                             ),
                             "value_map": group_map,
                         }

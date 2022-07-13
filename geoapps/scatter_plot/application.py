@@ -617,7 +617,7 @@ class ScatterPlots(ObjectDataSelection):
         if channel is None:
             return None
 
-        if channel not in self.data_channels.keys():
+        if channel not in self.data_channels:
 
             if self.workspace.get_entity(channel):
                 values = np.asarray(
@@ -644,7 +644,7 @@ class ScatterPlots(ObjectDataSelection):
         channel = getattr(self, "_" + name).value
         self.get_channel(channel)
 
-        if channel in self.data_channels.keys():
+        if channel in self.data_channels:
 
             values = self.data_channels[channel]
             values = values[~np.isnan(values)]
@@ -879,7 +879,7 @@ class ScatterPlots(ObjectDataSelection):
         for channel in self.data.value:
             self.get_channel(channel)
 
-        keys = list(self.data_channels.keys())
+        keys = list(self.data_channels)
         for key in keys:
             if key not in self.data.value:
                 del self.data_channels[key]

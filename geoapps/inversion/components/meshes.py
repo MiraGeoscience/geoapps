@@ -109,7 +109,7 @@ class InversionMesh:
 
         mesh_params_dict = params.to_dict(ui_json_format=False)
         for k in mesh_param_names:
-            if (k not in mesh_params_dict.keys()) or (mesh_params_dict[k] is None):
+            if (k not in mesh_params_dict) or (mesh_params_dict[k] is None):
                 msg = f"Cannot create OctreeParams from {type(params)} instance. "
                 msg += f"Missing param: {k}."
                 raise ValueError(msg)
