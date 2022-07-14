@@ -142,3 +142,14 @@ class ClusteringParams(ScatterPlotParams):
     @live_link.setter
     def live_link(self, val):
         self.setter_validator("live_link", val)
+
+    @property
+    def monitoring_directory(self) -> str | None:
+        """
+        Monitoring directory.
+        """
+        return self._monitoring_directory
+
+    @monitoring_directory.setter
+    def monitoring_directory(self, val):
+        self.setter_validator("monitoring_directory", val)

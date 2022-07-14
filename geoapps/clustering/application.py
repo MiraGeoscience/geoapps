@@ -288,9 +288,7 @@ class Clustering(ScatterPlots):
                         dcc.Input(
                             id="monitoring_directory",
                             style={"margin-bottom": "20px"},
-                            value=os.path.abspath(
-                                self.defaults["monitoring_directory"]
-                            ),
+                            value=self.defaults["monitoring_directory"],
                         ),
                         html.Button("Export", id="export"),
                         dcc.Markdown(id="export_message"),
@@ -453,6 +451,7 @@ class Clustering(ScatterPlots):
             Input(component_id="indices", component_property="data"),
             Input(component_id="clusters", component_property="data"),
             Input(component_id="monitoring_directory", component_property="value"),
+            Input(component_id="live_link", component_property="value"),
         )(self.update_cluster_params)
         # Callback to update all the plots
         self.app.callback(
@@ -550,7 +549,7 @@ class Clustering(ScatterPlots):
                 elif key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
                     # Reconstruct scaling and bounds dicts from uijson input lists.
                     out_dict = {}
-                    full_list = ast.literal_eval(getattr(self.params, key))
+                    full_list = ast.literal_eval(value)
                     for i in range(len(defaults["channels"])):
                         if (full_list is None) | (not full_list):
                             if key == "full_scales":
@@ -561,7 +560,7 @@ class Clustering(ScatterPlots):
                             out_dict[defaults["channels"][i]] = full_list[i]
                     defaults[key] = out_dict
                 elif key == "color_pickers":
-                    full_list = ast.literal_eval(getattr(self.params, key))
+                    full_list = ast.literal_eval(value)
                     if (full_list is None) | (not full_list):
                         defaults[key] = colors
                     else:
@@ -765,6 +764,7 @@ class Clustering(ScatterPlots):
         indices,
         clusters,
         monitoring_directory,
+        live_link,
     ):
         # List of params that will be outputted
         param_list = [
@@ -838,8 +838,10 @@ class Clustering(ScatterPlots):
             full_upper_bounds = {}
 
         # Read in dcc.Store variables
-        indices = np.array(indices)
-        kmeans = np.array(kmeans)
+        if indices is not None:
+            indices = np.array(indices)
+        if kmeans is not None:
+            kmeans = np.array(kmeans)
         clusters = {int(k): v for k, v in clusters.items()}
 
         update_dict = {}
@@ -867,11 +869,7 @@ class Clustering(ScatterPlots):
                     and update_dict["monitoring_directory"] is not None
                 ):
                     update_dict.update(
-                        {
-                            "monitoring_directory": os.path.abspath(
-                                update_dict["monitoring_directory"]
-                            )
-                        }
+                        {"monitoring_directory": update_dict["monitoring_directory"]}
                     )
                 # Update full scales, bounds
                 if "channels" in update_dict:
@@ -958,12 +956,13 @@ class Clustering(ScatterPlots):
             # Update color displayed by the dash colorpicker
             update_dict = Clustering.update_color_picker(select_cluster, color_pickers)
         elif trigger == "monitoring_directory":
-            if monitoring_directory is not None and os.path.exists(
-                os.path.abspath(monitoring_directory)
-            ):
-                update_dict.update(
-                    {"monitoring_directory": os.path.abspath(monitoring_directory)}
-                )
+            if monitoring_directory is not None:
+                update_dict.update({"monitoring_directory": monitoring_directory})
+        elif trigger == "live_link":
+            if not live_link:
+                self.params.live_link = False
+            else:
+                self.params.live_link = True
         elif trigger == "color_picker":
             # Update color_pickers with new color selection
             color_pickers[select_cluster] = color_picker["hex"]
@@ -1148,6 +1147,10 @@ class Clustering(ScatterPlots):
         dataframe = pd.DataFrame(dataframe_dict)
         # Read in stored clusters. Convert keys from string back to int.
         clusters = {int(k): v for k, v in clusters.items()}
+        if kmeans is not None:
+            kmeans = np.array(kmeans)
+        if indices is not None:
+            indices = np.array(indices)
 
         if not dataframe.empty:
             if color_maps == "kmeans":
@@ -1209,8 +1212,8 @@ class Clustering(ScatterPlots):
                 dataframe,
                 channel,
                 color_pickers,
-                np.array(kmeans),
-                np.array(indices),
+                kmeans,
+                indices,
             )
             inertia = self.make_inertia_plot(n_clusters, clusters)
             return crossplot, stats_table, matrix, histogram, boxplot, inertia
@@ -1321,7 +1324,7 @@ class Clustering(ScatterPlots):
             )
             return inertia_plot
         else:
-            return None
+            return go.Figure()
 
     @staticmethod
     def make_hist_plot(dataframe, channel, lower_bounds, upper_bounds):
@@ -1341,7 +1344,7 @@ class Clustering(ScatterPlots):
             histogram.update_xaxes(range=[lower_bounds, upper_bounds])
             return histogram
         else:
-            return None
+            return go.Figure()
 
     def make_boxplot(
         self, n_clusters, dataframe, channel, color_pickers, kmeans, indices
@@ -1386,7 +1389,7 @@ class Clustering(ScatterPlots):
             )
             return boxplot
         else:
-            return None
+            return go.Figure()
 
     @staticmethod
     def make_stats_table(dataframe):
@@ -1516,14 +1519,10 @@ class Clustering(ScatterPlots):
         temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
 
         # Get output path.
-        if self.params.live_link:
-            if self.params.monitoring_directory is not None and os.path.exists(
-                os.path.abspath(self.params.monitoring_directory)
-            ):
-                output_path = self.params.monitoring_directory
-            else:
-                print("Invalid monitoring directory path")
-                return []
+        if self.params.monitoring_directory is not None and os.path.exists(
+            os.path.abspath(self.params.monitoring_directory)
+        ):
+            output_path = self.params.monitoring_directory
         else:
             output_path = os.path.dirname(self.params.geoh5.h5file)
 
@@ -1531,6 +1530,7 @@ class Clustering(ScatterPlots):
         ws, self.params.live_link = Clustering.get_output_workspace(
             self.params.live_link, output_path, temp_geoh5
         )
+
         with ws as workspace:
             # Put entities in output workspace.
             param_dict["geoh5"] = workspace

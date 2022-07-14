@@ -38,7 +38,7 @@ class ClusteringDriver:
         dataframe = pd.DataFrame(dataframe_dict)
 
         if dataframe.empty:
-            return
+            return {"kmeans": None, "clusters": {}}
         # Prime the app with clusters
         # Normalize values and run
         values = []
@@ -75,13 +75,11 @@ class ClusteringDriver:
         kmeans = None
 
         if (channels is None) | (not channels):
-            mapping = None
-            indices = None
             return {
                 "dataframe": None,
                 "kmeans": kmeans,
-                "mapping": mapping,
-                "indices": indices,
+                "mapping": None,
+                "indices": None,
             }
         else:
             indices, values = ClusteringDriver.get_indices(

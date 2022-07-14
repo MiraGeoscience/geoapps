@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 from copy import deepcopy
 
 import plotly.express as px
@@ -68,7 +69,7 @@ validations = {}
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "monitoring_directory": "../../Temp",
+    "monitoring_directory": os.path.abspath("../../assets/Temp"),
     "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
     "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
     "x_log": False,
