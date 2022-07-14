@@ -20,6 +20,7 @@ defaults = {
     "run_command": "geoapps.clustering.application",
     "run_command_boolean": False,
     "monitoring_directory": None,
+    "live_link": False,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
@@ -57,6 +58,7 @@ default_ui_json.update(
         "full_upper_bounds": "[]",
         "color_pickers": "[]",
         "plot_kmeans": "[]",
+        "live_link": False,
         "conda_environment": "geoapps",
         "run_command": "geoapps.clustering.application",
     }
@@ -66,6 +68,7 @@ validations = {}
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
+    "monitoring_directory": "../../Temp",
     "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
     "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
     "x_log": False,

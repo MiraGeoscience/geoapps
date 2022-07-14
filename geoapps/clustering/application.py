@@ -284,11 +284,13 @@ class Clustering(ScatterPlots):
                             value=[],
                             style={"margin-bottom": "20px"},
                         ),
-                        dcc.Markdown("Group: "),
+                        dcc.Markdown("Monitoring directory:"),
                         dcc.Input(
-                            id="ga_group",
-                            value=self.defaults["ga_group_name"],
+                            id="monitoring_directory",
                             style={"margin-bottom": "20px"},
+                            value=os.path.abspath(
+                                self.defaults["monitoring_directory"]
+                            ),
                         ),
                         html.Button("Export", id="export"),
                         dcc.Markdown(id="export_message"),
@@ -425,6 +427,7 @@ class Clustering(ScatterPlots):
             Output(component_id="clusters", component_property="data"),
             Output(component_id="indices", component_property="data"),
             Output(component_id="mapping", component_property="data"),
+            Output(component_id="monitoring_directory", component_property="value"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
             Input(component_id="objects", component_property="value"),
@@ -449,6 +452,7 @@ class Clustering(ScatterPlots):
             Input(component_id="kmeans", component_property="data"),
             Input(component_id="indices", component_property="data"),
             Input(component_id="clusters", component_property="data"),
+            Input(component_id="monitoring_directory", component_property="value"),
         )(self.update_cluster_params)
         # Callback to update all the plots
         self.app.callback(
@@ -760,6 +764,7 @@ class Clustering(ScatterPlots):
         kmeans,
         indices,
         clusters,
+        monitoring_directory,
     ):
         # List of params that will be outputted
         param_list = [
@@ -820,6 +825,7 @@ class Clustering(ScatterPlots):
             "clusters",
             "indices",
             "mapping",
+            "monitoring_directory",
         ]
         # Trigger is which variable triggered the callback
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -831,8 +837,10 @@ class Clustering(ScatterPlots):
         if full_upper_bounds is None:
             full_upper_bounds = {}
 
+        # Read in dcc.Store variables
         indices = np.array(indices)
         kmeans = np.array(kmeans)
+        clusters = {int(k): v for k, v in clusters.items()}
 
         update_dict = {}
         if trigger == "upload":
@@ -840,7 +848,9 @@ class Clustering(ScatterPlots):
                 # Update params from uploaded uijson
                 update_dict = self.update_from_uijson(contents)
                 if "plot_kmeans" in update_dict:
-                    plot_kmeans = ast.literal_eval(update_dict["plot_kmeans"])
+                    plot_kmeans = update_dict["plot_kmeans"]
+                    if type(plot_kmeans) != list:
+                        plot_kmeans = ast.literal_eval(update_dict["plot_kmeans"])
                     update_dict.update({"plot_kmeans": plot_kmeans})
                     axis_list = ["x", "y", "z", "color", "size"]
                     for i in range(len(plot_kmeans)):
@@ -852,6 +862,17 @@ class Clustering(ScatterPlots):
                         update_dict.update({"color_pickers": color_pickers})
                     else:
                         update_dict.update({"color_pickers": colors})
+                if (
+                    "monitoring_directory" in update_dict
+                    and update_dict["monitoring_directory"] is not None
+                ):
+                    update_dict.update(
+                        {
+                            "monitoring_directory": os.path.abspath(
+                                update_dict["monitoring_directory"]
+                            )
+                        }
+                    )
                 # Update full scales, bounds
                 if "channels" in update_dict:
                     channels = update_dict["channels"]
@@ -882,7 +903,7 @@ class Clustering(ScatterPlots):
                 if "n_clusters" in update_dict:
                     n_clusters = update_dict["n_clusters"]
                 # Create new dataframe and run clustering for new variables.
-                self.params.geoh5 = Workspace(update_dict["geoh5"])
+                self.params.geoh5 = update_dict["geoh5"]
                 update_dict.update(
                     self.update_clustering(
                         channel,
@@ -936,7 +957,13 @@ class Clustering(ScatterPlots):
         elif trigger == "select_cluster":
             # Update color displayed by the dash colorpicker
             update_dict = Clustering.update_color_picker(select_cluster, color_pickers)
-            # Output(component_id="color_picker", component_property="value"),
+        elif trigger == "monitoring_directory":
+            if monitoring_directory is not None and os.path.exists(
+                os.path.abspath(monitoring_directory)
+            ):
+                update_dict.update(
+                    {"monitoring_directory": os.path.abspath(monitoring_directory)}
+                )
         elif trigger == "color_picker":
             # Update color_pickers with new color selection
             color_pickers[select_cluster] = color_picker["hex"]
@@ -1118,16 +1145,17 @@ class Clustering(ScatterPlots):
         clusters,
     ):
         # Read in stored dataframe.
-        print("A")
         dataframe = pd.DataFrame(dataframe_dict)
-        print("B")
+        # Read in stored clusters. Convert keys from string back to int.
+        clusters = {int(k): v for k, v in clusters.items()}
+
         if not dataframe.empty:
             if color_maps == "kmeans":
                 # Update color_maps
                 color_maps = Clustering.update_colormap(n_clusters, color_pickers)
             elif color_maps is None:
                 color_maps = [[0.0, "rgb(0,0,0)"]]
-            print("C")
+
             # Input downsampled data to scatterplot so it doesn't regenerate data every time a parameter changes.
             axis_values = []
             for axis in [x, y, z, color, size]:
@@ -1137,7 +1165,7 @@ class Clustering(ScatterPlots):
                     axis_values.append(PlotData(axis, dataframe[axis].values))
                 else:
                     axis_values.append(None)
-            print("D")
+
             x, y, z, color, size = tuple(axis_values)
 
             crossplot = self.update_plot(
@@ -1171,11 +1199,8 @@ class Clustering(ScatterPlots):
                 size_markers,
                 clustering=True,
             )
-            print("E")
             stats_table = self.make_stats_table(dataframe)
-            print("F")
             matrix = self.make_heatmap(dataframe)
-            print("G")
             histogram = self.make_hist_plot(
                 dataframe, channel, lower_bounds, upper_bounds
             )
@@ -1280,11 +1305,10 @@ class Clustering(ScatterPlots):
         if n_clusters in clusters.keys():
             ind = np.sort(list(clusters.keys()))
             inertias = [clusters[ii]["inertia"] for ii in ind]
-            clusters = ind
-            line = go.Scatter(x=clusters, y=inertias, mode="lines")
+            line = go.Scatter(x=ind, y=inertias, mode="lines")
             point = go.Scatter(
                 x=[n_clusters],
-                y=[clusters[n_clusters].inertia_],
+                y=[clusters[n_clusters]["inertia"]],
             )
 
             inertia_plot = go.Figure([line, point])

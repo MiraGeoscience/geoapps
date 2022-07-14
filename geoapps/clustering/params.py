@@ -9,8 +9,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from geoh5py.data import Data
-from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 
 from geoapps.scatter_plot.params import ScatterPlotParams
@@ -27,15 +25,14 @@ class ClusteringParams(ScatterPlotParams):
         self._default_ui_json = deepcopy(default_ui_json)
         self._defaults = deepcopy(defaults)
         self._validations = validations
-        self.data = None
-        self.n_clusters = None
-        self.ga_group_name = None
-        self.channels = None
-        self.full_scales = None
-        self.full_lower_bounds = None
-        self.full_upper_bounds = None
-        self.plot_kmeans = None
-        self.live_link = None
+        self._n_clusters = None
+        self._ga_group_name = None
+        self._channels = None
+        self._full_scales = None
+        self._full_lower_bounds = None
+        self._full_upper_bounds = None
+        self._plot_kmeans = None
+        self._live_link = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
