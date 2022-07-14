@@ -239,12 +239,18 @@ class Surface2D(ObjectDataSelection):
                     )
 
                     # Remove triangles beyond surface edges
-                delaunay_2d.points[:, 1] = np.ravel(z_locations)
+                delaunay_2d.points[:, 1] = np.ravel(
+                    z_locations
+                )  # pylint: disable=unsupported-assignment-operation
                 indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
                 for i in range(3):
                     length = np.linalg.norm(
-                        delaunay_2d.points[delaunay_2d.simplices[:, i], :]
-                        - delaunay_2d.points[delaunay_2d.simplices[:, i - 1], :],
+                        delaunay_2d.points[
+                            delaunay_2d.simplices[:, i], :
+                        ]  # pylint: disable=unsubscriptable-object
+                        - delaunay_2d.points[
+                            delaunay_2d.simplices[:, i - 1], :
+                        ],  # pylint: disable=unsubscriptable-object
                         axis=1,
                     )
                     indx *= length < self.max_distance.value
@@ -260,7 +266,7 @@ class Surface2D(ObjectDataSelection):
                     ]
                 )
                 model_cells.append(delaunay_2d.simplices + model_count)
-                model_count += delaunay_2d.points.shape[0]
+                model_count += delaunay_2d.points.shape[0]  # pylint: disable=no-member
 
             self.models = list(np.vstack(self.models).T)
 
@@ -288,8 +294,12 @@ class Surface2D(ObjectDataSelection):
             indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
             for i in range(3):
                 length = np.linalg.norm(
-                    delaunay_2d.points[delaunay_2d.simplices[:, i], :]
-                    - delaunay_2d.points[delaunay_2d.simplices[:, i - 1], :],
+                    delaunay_2d.points[
+                        delaunay_2d.simplices[:, i], :
+                    ]  # pylint: disable=unsubscriptable-object
+                    - delaunay_2d.points[
+                        delaunay_2d.simplices[:, i - 1], :
+                    ],  # pylint: disable=unsubscriptable-object
                     axis=1,
                 )
                 indx *= length < self.max_distance.value

@@ -292,6 +292,12 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices.observe(
             self.data_channel_choices_observer, names="value"
         )
+        self.plotting = None
+        self._starting_channel = None
+        self._mesh = None
+        self._detrend_type = None
+        self._detrend_order = None
+        self._initial_beta_options = None
         super().__init__(**self.defaults)
 
         for item in ["window_width", "window_height", "resolution"]:
@@ -693,6 +699,7 @@ class InversionApp(PlotSelection2D):
         self._starting_model_group.workspace = workspace
         self._conductivity_model_group.workspace = workspace
         self._mesh_octree.workspace = workspace
+        self.plotting_data = None
 
     @property
     def write(self):
@@ -1122,7 +1129,7 @@ class InversionApp(PlotSelection2D):
         """
         Change the target h5file
         """
-        if not self.file_browser._select.disabled:
+        if not self.file_browser._select.disabled:  # pylint: disable=protected-access
             _, extension = path.splitext(self.file_browser.selected)
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
@@ -1171,6 +1178,7 @@ class SensorOptions(ObjectDataSelection):
         self._z_from_topo = Checkbox(description="Set Z from topo + offsets")
         self.data.description = "Radar (Optional):"
         self._receivers_radar_drape = self.data
+        self._offset = None
         super().__init__(**self.defaults)
 
     @property
@@ -1190,12 +1198,12 @@ class SensorOptions(ObjectDataSelection):
         return self._main
 
     @property
-    def offset(self):
-        return self._offset
-
-    @property
     def receivers_radar_drape(self):
         return self._receivers_radar_drape
+
+    @property
+    def offset(self):
+        return self._offset
 
     @property
     def receivers_offset_x(self):
@@ -1342,10 +1350,6 @@ class MeshOctreeOptions(ObjectDataSelection):
     @property
     def vertical_padding(self):
         return self._vertical_padding
-
-    @property
-    def main(self):
-        return self._main
 
     def mesh_selection(self, _):
         if self._mesh.value is None:

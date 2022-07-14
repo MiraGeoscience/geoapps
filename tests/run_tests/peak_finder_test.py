@@ -36,7 +36,6 @@ def test_peak_finder_app(tmp_path):
             {f"d{ii}": {"values": np.sin(x + np.pi / 8.0 * ii) - 0.1 * ii}}
         )
         curve.add_data_to_group(c, name="obs")
-        y = np.sin((ii + 1) * x)
 
     line = curve.add_data({"line_id": {"values": np.ones_like(x)}})
     curve.add_data_to_group(line, name="Line")
@@ -66,7 +65,7 @@ def test_peak_finder_app(tmp_path):
     assert len(anomalies) == 3, f"Expected 3 groups. Found {len(anomalies)}"
     assert all(
         [aa["azimuth"] == 270 for aa in anomalies]
-    ), f"Anomalies with wrong azimuth found"
+    ), "Anomalies with wrong azimuth found"
     assert [aa["channel_group"]["label"][0] for aa in anomalies] == [
         4,
         5,

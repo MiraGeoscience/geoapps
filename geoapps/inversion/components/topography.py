@@ -100,9 +100,9 @@ class InversionTopography(InversionLocations):
                 mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
             )
             active_cells[
-                mesh.mesh._get_containing_cell_indexes(
+                mesh.mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
                     data.locations
-                )  # pylint: disable=protected-access
+                )
             ] = True
         else:
             active_cells = active_from_xyz(

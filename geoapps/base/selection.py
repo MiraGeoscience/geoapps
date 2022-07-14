@@ -454,6 +454,7 @@ class TopographyOptions(ObjectDataSelection):
             description="Define by:",
         )
         self.options.observe(self.update_options)
+        self._panel = None
 
         super().__init__(**self.defaults)
 

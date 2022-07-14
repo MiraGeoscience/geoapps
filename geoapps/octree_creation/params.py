@@ -35,6 +35,7 @@ class OctreeParams(BaseParams):
         self._vertical_padding = None
         self._depth_core = None
         self._ga_group_name = None
+        self._title = None
 
         if input_file is None:
             free_param_dict = {}

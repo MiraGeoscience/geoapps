@@ -65,6 +65,7 @@ class BaseParams:
         self.input_file = input_file
         self.validate = validate
         self.validation_options = validation_options
+        self._title = None
 
         self._initialize(**kwargs)
 
@@ -142,11 +143,6 @@ class BaseParams:
 
         self._workpath = val
 
-    @property
-    def validations(self):
-        """Encoded parameter validator type and associated validations."""
-        return self._validations
-
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
         params_dict = {
@@ -165,7 +161,7 @@ class BaseParams:
     def is_uuid(self, p: str) -> bool:
         """Return true if string contains valid UUID."""
         if isinstance(p, str):
-            private_attr = self.__getattribue__("_" + p)
+            private_attr = self.__getattribute__("_" + p)
             return True if isinstance(private_attr, UUID) else False
         else:
             pass
