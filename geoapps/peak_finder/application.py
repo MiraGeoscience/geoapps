@@ -1293,7 +1293,7 @@ class PeakFinder(ObjectDataSelection):
 
         for label, group in self._channel_groups.items():
             for member in ["data", "color"]:
-                name = f"{label} {member}"
+                name = f"Group {label} {member}"
                 ui_json[name] = deepcopy(template_dict[member])
                 ui_json[name]["group"] = f"Group {label}"
                 param_dict[name] = group[member]
