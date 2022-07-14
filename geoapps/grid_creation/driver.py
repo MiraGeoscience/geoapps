@@ -82,4 +82,4 @@ if __name__ == "__main__":
     driver = GridCreationDriver(params)
     print("Loaded. Creating block model . . .")
     driver.run()
-    print("Saved to " + ifile.path)
+    print("Saved to " + params.geoh5.h5file)

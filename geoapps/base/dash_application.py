@@ -41,7 +41,6 @@ class BaseDashApplication:
 
     @staticmethod
     def update_object_options(ws, obj_var_name):
-        # objects, value = None, None
         obj_list = ws.objects
 
         options = [
@@ -52,9 +51,7 @@ class BaseDashApplication:
             value = options[0]["value"]
 
         return {
-            # "geoh5": ws,
             obj_var_name + "_options": options,
-            # obj_var_name + "_name": value,
         }
 
     @staticmethod
