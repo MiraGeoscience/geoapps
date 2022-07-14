@@ -18,7 +18,6 @@ import sys
 from datetime import datetime, timedelta
 from multiprocessing.pool import ThreadPool
 from time import time
-from uuid import UUID
 
 import numpy as np
 from dask import config as dconf
@@ -66,16 +65,8 @@ class InversionDriver:
         return self.inversion_window.window
 
     @property
-    def data(self):
-        return self.inversion_data.observed
-
-    @property
     def locations(self):
         return self.inversion_data.locations
-
-    @property
-    def topography(self):
-        return self.inversion_topography.topography
 
     @property
     def mesh(self):
@@ -345,20 +336,6 @@ class InversionDriver:
             )
 
         return tiles
-
-    def fetch(self, p: str | UUID):
-        """Fetch the object addressed by uuid from the workspace."""
-
-        if isinstance(p, str):
-            try:
-                p = UUID(p)
-            except:
-                p = self.params.__getattribute__(p)
-
-        try:
-            return self.workspace.get_entity(p)[0].values
-        except AttributeError:
-            return self.workspace.get_entity(p)[0]
 
     def configure_dask(self):
         """Sets Dask config settings."""
