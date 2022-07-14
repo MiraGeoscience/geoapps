@@ -10,9 +10,8 @@ from __future__ import annotations
 
 import ast
 import os
-from multiprocessing import cpu_count
 
-os.environ["OMP_NUM_THREADS"] = str(cpu_count())
+os.environ["OMP_NUM_THREADS"] = "1"
 
 import numpy as np
 import pandas as pd
@@ -42,15 +41,21 @@ class ClusteringDriver:
             return {"kmeans": None, "clusters": {}}
         # Prime the app with clusters
         # Normalize values and run
+
         values = []
         for field in dataframe.columns:
             vals = dataframe[field].values.copy()
+
+            if field in full_scales.keys():
+                scale = full_scales[field]
+            else:
+                scale = 1
 
             nns = ~np.isnan(vals)
             vals[nns] = (
                 (vals[nns] - min(vals[nns]))
                 / (max(vals[nns]) - min(vals[nns]) + 1e-32)
-                * full_scales[field]
+                * scale
             )
             values += [vals]
 
