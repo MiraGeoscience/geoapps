@@ -10,17 +10,18 @@ from __future__ import annotations
 
 import ast
 import os
+from multiprocessing import cpu_count
+
+os.environ["OMP_NUM_THREADS"] = str(cpu_count())
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
-from geoh5py.ui_json import InputFile, monitored_directory_copy
+from geoh5py.ui_json import monitored_directory_copy
 from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
 from geoapps.clustering.params import ClusteringParams
 from geoapps.shared_utils.utils import colors, hex_to_rgb
-from geoapps.utils.plotting import format_axis, normalize, symlog
 from geoapps.utils.statistics import random_sampling
 
 
@@ -132,10 +133,11 @@ class ClusteringDriver:
 
         # Number of values that are not nan along all three axes
         size = np.sum(np.all(non_nan, axis=0))
+        n_values = np.min([int(percent * size), 5000])
 
         indices = random_sampling(
             values.T,
-            int(percent * size),
+            n_values,
             bandwidth=2.0,
             rtol=1e0,
             method="histogram",
@@ -203,10 +205,8 @@ class ClusteringDriver:
                 "values": color_map,
             }
 
-            if self.params.monitoring_directory is not None and os.path.exists(
-                os.path.abspath(self.params.monitoring_directory)
-            ):
+            if self.params.live_link:
                 monitored_directory_copy(
-                    os.path.abspath(self.params.monitoring_directory),
+                    os.path.abspath(self.params.output_path),
                     self.params.objects,
                 )

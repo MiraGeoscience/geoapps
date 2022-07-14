@@ -12,14 +12,7 @@ import os
 import sys
 import time
 import webbrowser
-from multiprocessing import cpu_count
 from os import environ, makedirs, path
-
-from geoh5py.objects import ObjectBase
-
-from geoapps.clustering.driver import ClusteringDriver
-
-os.environ["OMP_NUM_THREADS"] = str(cpu_count())
 
 import dash_daq as daq
 import numpy as np
@@ -29,11 +22,13 @@ import plotly.graph_objects as go
 from dash import callback_context, dash_table, dcc, html, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
+from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
 from geoapps.clustering.constants import app_initializer
+from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.params import ClusteringParams
 from geoapps.clustering.plot_data import PlotData
 from geoapps.scatter_plot.application import ScatterPlots
@@ -284,11 +279,11 @@ class Clustering(ScatterPlots):
                             value=[],
                             style={"margin-bottom": "20px"},
                         ),
-                        dcc.Markdown("Monitoring directory:"),
+                        dcc.Markdown("Output path:"),
                         dcc.Input(
-                            id="monitoring_directory",
+                            id="output_path",
                             style={"margin-bottom": "20px"},
-                            value=self.defaults["monitoring_directory"],
+                            value=self.defaults["output_path"],
                         ),
                         html.Button("Export", id="export"),
                         dcc.Markdown(id="export_message"),
@@ -425,7 +420,7 @@ class Clustering(ScatterPlots):
             Output(component_id="clusters", component_property="data"),
             Output(component_id="indices", component_property="data"),
             Output(component_id="mapping", component_property="data"),
-            Output(component_id="monitoring_directory", component_property="value"),
+            Output(component_id="output_path", component_property="value"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
             Input(component_id="objects", component_property="value"),
@@ -450,7 +445,7 @@ class Clustering(ScatterPlots):
             Input(component_id="kmeans", component_property="data"),
             Input(component_id="indices", component_property="data"),
             Input(component_id="clusters", component_property="data"),
-            Input(component_id="monitoring_directory", component_property="value"),
+            Input(component_id="output_path", component_property="value"),
             Input(component_id="live_link", component_property="value"),
         )(self.update_cluster_params)
         # Callback to update all the plots
@@ -763,7 +758,7 @@ class Clustering(ScatterPlots):
         kmeans,
         indices,
         clusters,
-        monitoring_directory,
+        output_path,
         live_link,
     ):
         # List of params that will be outputted
@@ -825,7 +820,7 @@ class Clustering(ScatterPlots):
             "clusters",
             "indices",
             "mapping",
-            "monitoring_directory",
+            "output_path",
         ]
         # Trigger is which variable triggered the callback
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -865,12 +860,10 @@ class Clustering(ScatterPlots):
                     else:
                         update_dict.update({"color_pickers": colors})
                 if (
-                    "monitoring_directory" in update_dict
-                    and update_dict["monitoring_directory"] is not None
+                    "output_path" in update_dict
+                    and update_dict["output_path"] is not None
                 ):
-                    update_dict.update(
-                        {"monitoring_directory": update_dict["monitoring_directory"]}
-                    )
+                    update_dict.update({"output_path": update_dict["output_path"]})
                 # Update full scales, bounds
                 if "channels" in update_dict:
                     channels = update_dict["channels"]
@@ -922,12 +915,23 @@ class Clustering(ScatterPlots):
             elif filename.endswith(".geoh5"):
                 # Update object and data subset options from uploaded workspace
                 update_dict = self.update_object_options(contents)
-                channels_options = self.update_data_options(
-                    update_dict["objects_name"]
-                )["data_options"]
+                data_update_dict = self.update_data_options(update_dict["objects_name"])
                 update_dict.update(
                     {
-                        "channels_options": channels_options,
+                        "data_options": data_update_dict["data_options"],
+                        "channel_options": data_update_dict["data_options"],
+                        "channel": None,
+                        "x_name": None,
+                        "y_name": None,
+                        "z_name": None,
+                        "color_name": None,
+                        "size_name": None,
+                    }
+                )
+                update_dict.update(
+                    {
+                        "objects_name": update_dict["objects_name"],
+                        "channels_options": data_update_dict["data_options"],
                         "channels": None,
                     }
                 )
@@ -949,15 +953,32 @@ class Clustering(ScatterPlots):
             update_dict["contents"] = None
         elif trigger == "objects":
             # Update data subset options from object change
-            update_dict = {
-                "channels_options": self.update_data_options(objects)["data_options"]
-            }
+            data_update_dict = self.update_data_options(objects)
+            update_dict.update(
+                {
+                    "data_options": data_update_dict["data_options"],
+                    "channel_options": data_update_dict["data_options"],
+                    "channel": None,
+                    "x_name": None,
+                    "y_name": None,
+                    "z_name": None,
+                    "color_name": None,
+                    "size_name": None,
+                }
+            )
+            update_dict.update(
+                {
+                    "objects_name": objects,
+                    "channels_options": data_update_dict["data_options"],
+                    "channels": None,
+                }
+            )
         elif trigger == "select_cluster":
             # Update color displayed by the dash colorpicker
             update_dict = Clustering.update_color_picker(select_cluster, color_pickers)
-        elif trigger == "monitoring_directory":
-            if monitoring_directory is not None:
-                update_dict.update({"monitoring_directory": monitoring_directory})
+        elif trigger == "output_path":
+            if output_path is not None:
+                update_dict.update({"output_path": output_path})
         elif trigger == "live_link":
             if not live_link:
                 self.params.live_link = False
@@ -1085,7 +1106,9 @@ class Clustering(ScatterPlots):
                     setattr(self.params, key, update_dict[key])
             elif key in ["x", "y", "z", "color", "size"]:
                 if key + "_name" in update_dict:
-                    if update_dict[key + "_name"] in self.data_channels:
+                    if update_dict[key + "_name"] is None:
+                        setattr(self.params, key, None)
+                    elif update_dict[key + "_name"] in self.data_channels:
                         if (
                             self.data_channels[update_dict[key + "_name"]].name
                             == "kmeans"
@@ -1100,7 +1123,7 @@ class Clustering(ScatterPlots):
                                 self.data_channels[update_dict[key + "_name"]],
                             )
             elif key == "objects":
-                if "objects_name" in update_dict:
+                if "objects_name" in update_dict.keys():
                     obj = self.params.geoh5.get_entity(update_dict["objects_name"])[0]
                     self.params.objects = obj
 
@@ -1352,15 +1375,13 @@ class Clustering(ScatterPlots):
         """
         Generate a box plot for each cluster.
         """
-        if (kmeans is not None) and (channel is not None):
-            field = channel
 
+        if (kmeans is not None) and (channel is not None):
             boxes = []
             for ii in range(n_clusters):
-
                 cluster_ind = kmeans[indices] == ii
                 x = np.ones(np.sum(cluster_ind)) * ii
-                y = self.data_channels[field].values[indices][cluster_ind]
+                y = self.data_channels[channel].values[indices][cluster_ind]
 
                 boxes.append(
                     go.Box(
@@ -1382,7 +1403,7 @@ class Clustering(ScatterPlots):
             boxplot.update_layout(
                 {
                     "xaxis": {"title": "Cluster #"},
-                    "yaxis": {"title": field},
+                    "yaxis": {"title": channel},
                     "height": 600,
                     "width": 600,
                 }
@@ -1518,11 +1539,10 @@ class Clustering(ScatterPlots):
         param_dict = self.params.to_dict()
         temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
 
-        # Get output path.
-        if self.params.monitoring_directory is not None and os.path.exists(
-            os.path.abspath(self.params.monitoring_directory)
+        if self.params.output_path is not None and os.path.exists(
+            os.path.abspath(self.params.output_path)
         ):
-            output_path = self.params.monitoring_directory
+            output_path = os.path.abspath(self.params.output_path)
         else:
             output_path = os.path.dirname(self.params.geoh5.h5file)
 
@@ -1539,11 +1559,7 @@ class Clustering(ScatterPlots):
                     param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
             # Write output uijson.
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-            )
-            new_params = ClusteringParams(input_file=ifile, **param_dict)
+            new_params = ClusteringParams(**param_dict)
             new_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=output_path,
