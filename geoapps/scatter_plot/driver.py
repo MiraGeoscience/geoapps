@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import numpy as np
 import plotly.graph_objects as go
-from geoh5py.ui_json import InputFile
 
 from geoapps.scatter_plot.params import ScatterPlotParams
 from geoapps.utils.plotting import format_axis, normalize, symlog
@@ -29,10 +28,9 @@ class ScatterPlotDriver:
 
         if (self.params.x is not None) & (self.params.y is not None):
 
-            if (self.params.downsampling == 100) | self.params.downsampling is None:
-                indices = np.full(len(self.params.x.values), True)
-            else:
-                indices = self.get_indices()
+            if self.params.downsampling is None:
+                self.params.downsampling = 100
+            indices = self.get_indices()
 
             size = None
             if self.params.size is not None:
@@ -209,10 +207,11 @@ class ScatterPlotDriver:
 
         # Number of values that are not nan along all three axes
         size = np.sum(np.all(non_nan, axis=0))
+        n_values = np.min([int(percent * size), 5000])
 
         indices = random_sampling(
             values.T,
-            int(percent * size),
+            n_values,
             bandwidth=2.0,
             rtol=1e0,
             method="histogram",
