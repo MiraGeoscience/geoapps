@@ -220,7 +220,7 @@ def test_chunk_validation(tmp_path):
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict.pop("data_object")
-    params = MagneticVectorParams(**test_dict)
+    params = MagneticVectorParams(**test_dict)  # pylint: disable=repeated-keyword
     with pytest.raises(RequiredValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
     for a in ["Missing required parameter", "data_object"]:
@@ -232,7 +232,7 @@ def test_chunk_validation(tmp_path):
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict["inducing_field_strength"] = None
-    params = MagneticScalarParams(**test_dict)
+    params = MagneticScalarParams(**test_dict)  # pylint: disable=repeated-keyword
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
     for a in ["Cannot set a None", "inducing_field_strength"]:
@@ -242,7 +242,7 @@ def test_chunk_validation(tmp_path):
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict["starting_model"] = None
-    params = GravityParams(**test_dict)
+    params = GravityParams(**test_dict)  # pylint: disable=repeated-keyword
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
     for a in ["Cannot set a None", "starting_model"]:
@@ -253,7 +253,7 @@ def test_chunk_validation(tmp_path):
     dc_geoh5 = Workspace("FlinFlon_dcip.geoh5")
     test_dict = dict(app_initializer, **{"geoh5": dc_geoh5})
     test_dict.pop("topography_object")
-    params = DirectCurrentParams(**test_dict)
+    params = DirectCurrentParams(**test_dict)  # pylint: disable=repeated-keyword
 
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
@@ -266,7 +266,7 @@ def test_chunk_validation(tmp_path):
 
     test_dict = dict(app_initializer, **{"geoh5": dc_geoh5})
     test_dict.pop("conductivity_model")
-    params = InducedPolarizationParams(**test_dict)
+    params = InducedPolarizationParams(**test_dict)  # pylint: disable=repeated-keyword
 
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
@@ -277,7 +277,7 @@ def test_chunk_validation(tmp_path):
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict.pop("objects")
-    params = OctreeParams(**test_dict)
+    params = OctreeParams(**test_dict)  # pylint: disable=repeated-keyword
 
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
@@ -288,7 +288,7 @@ def test_chunk_validation(tmp_path):
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
     test_dict.pop("data")
-    params = PeakFinderParams(**test_dict)
+    params = PeakFinderParams(**test_dict)  # pylint: disable=repeated-keyword
 
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
@@ -302,7 +302,7 @@ def test_active_set():
     )
 
     test_dict = dict(app_initializer, **{"geoh5": geoh5})
-    params = MagneticVectorParams(**test_dict)
+    params = MagneticVectorParams(**test_dict)  # pylint: disable=repeated-keyword
     assert "inversion_type" in params.active_set()
     assert "u_cell_size" in params.active_set()
 
