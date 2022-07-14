@@ -328,8 +328,7 @@ class PeakFinderDriver:
 
 
 if __name__ == "__main__":
-    # file = sys.argv[1]
-    file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\peak_finder_1657747002.ui.json"
+    file = sys.argv[1]
     params = PeakFinderParams(InputFile.read_ui_json(file))
     params.geoh5.close()
     driver = PeakFinderDriver(params)
