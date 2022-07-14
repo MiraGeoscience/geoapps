@@ -1903,21 +1903,6 @@ def test_induced_polarization_inversion_type():
     )
 
 
-def test_direct_current_data_object():
-    params = InducedPolarizationParams()
-    params.data_object = uuid4()
-
-    with pytest.raises(TypeValidationError) as excinfo:
-        params.data_object = 4
-
-    assert all(
-        [
-            s in str(excinfo.value)
-            for s in ["data_object", "Type", "int", "UUID", "PotentialElectrode"]
-        ]
-    )
-
-
 def test_chargeability_channel_bool():
     params = InducedPolarizationParams()
     params.chargeability_channel_bool = True

@@ -290,12 +290,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             kwargs["label"] = name
             data = inversion_object.normalize(inversion_object.observed)
 
-            def transform(x):
+            def potfield_transform(x):
                 data_stack = np.row_stack(list(data.values()))
                 data_stack = data_stack[:, np.argsort(sorting)]
                 return data_stack.ravel() - x
 
-            kwargs["transforms"].append(transform)
+            kwargs["transforms"].append(potfield_transform)
 
         return kwargs
 
@@ -355,12 +355,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             kwargs["label"] = name
             data = inversion_object.normalize(inversion_object.observed)
 
-            def transform(x):
+            def dcip_transform(x):
                 data_stack = np.row_stack(list(data.values())).ravel()
                 sorting_stack = np.tile(np.argsort(sorting), len(data))
                 return data_stack[sorting_stack] - x
 
-            kwargs["transforms"].append(transform)
+            kwargs["transforms"].append(dcip_transform)
 
         return kwargs
 
@@ -407,11 +407,11 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 for c in components:
                     data["_".join([str(f), str(c)])] = obs[c][f]
 
-            def transform(x):
+            def natsource_transform(x):
                 data_stack = np.row_stack(list(data.values()))
                 data_stack = data_stack[:, np.argsort(sorting)]
                 return data_stack.ravel() - x
 
-            kwargs["transforms"].append(transform)
+            kwargs["transforms"].append(natsource_transform)
 
         return kwargs

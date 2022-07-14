@@ -58,6 +58,7 @@ class ContourValues(PlotSelection2D):
                 "contour_values": self.contours,
             },
         )
+        self._export = None
 
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export"

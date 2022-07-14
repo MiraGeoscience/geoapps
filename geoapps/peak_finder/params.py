@@ -48,6 +48,7 @@ class PeakFinderParams(BaseParams):
         self._template_data = None
         self._template_color = None
         self._plot_result = True
+        self._title = None
 
         if input_file is None:
             free_param_dict = {}

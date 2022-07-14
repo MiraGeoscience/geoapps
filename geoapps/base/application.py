@@ -144,7 +144,7 @@ class BaseApplication:
                         getattr(self, key, None)(key, value)
                     else:
                         setattr(self, key, value)
-                except (AttributeError, TypeError, TraitError):
+                except (AttributeError, TypeError, TraitError, AssertionError):
                     pass
 
     def file_browser_change(self, _):
@@ -227,9 +227,9 @@ class BaseApplication:
             mkdir(live_path)
 
         live_path = path.abspath(live_path)
-        self.export_directory._set_form_values(
+        self.export_directory._set_form_values(  # pylint: disable=protected-access
             live_path, ""
-        )  # pylint: disable=protected-access
+        )
         self.export_directory._apply_selection()  # pylint: disable=protected-access
 
         self._monitoring_directory = live_path
@@ -466,9 +466,9 @@ class BaseApplication:
         if not path.exists(export_path):
             mkdir(export_path)
 
-        self.export_directory._set_form_values(
+        self.export_directory._set_form_values(  # pylint: disable=protected-access
             export_path, ""
-        )  # pylint: disable=protected-access
+        )
         self.export_directory._apply_selection()  # pylint: disable=protected-access
 
 

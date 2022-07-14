@@ -53,6 +53,9 @@ class LineDataDerivatives:
         self._smoothing = smoothing
         self._residual = residual
         self._sampling = sampling
+        self.Fx = None
+        self.Fy = None
+        self.Fz = None
 
         # if values is not None:
         #     self._values = values[self.sorting]
@@ -289,8 +292,12 @@ class LineDataDerivatives:
         """
         deriv = self.values_resampled
         for i in range(order):
-            deriv = (deriv[1:] - deriv[:-1]) / self.sampling
-            deriv = np.r_[2 * deriv[0] - deriv[1], deriv]
+            deriv = (
+                deriv[1:] - deriv[:-1]
+            ) / self.sampling  # pylint: disable=unsubscriptable-object
+            deriv = np.r_[
+                2 * deriv[0] - deriv[1], deriv
+            ]  # pylint: disable=unsubscriptable-object
 
         return deriv
 
@@ -422,17 +429,25 @@ def find_anomalies(
         dx = profile.derivative(order=1)
         ddx = profile.derivative(order=2)
         peaks = np.where(
-            (np.diff(np.sign(dx)) != 0) & (ddx[1:] < 0) & (values[:-1] > min_value)
+            (np.diff(np.sign(dx)) != 0)
+            & (ddx[1:] < 0)
+            & (values[:-1] > min_value)  # pylint: disable=unsubscriptable-object
         )[0]
         lows = np.where(
-            (np.diff(np.sign(dx)) != 0) & (ddx[1:] > 0) & (values[:-1] > min_value)
+            (np.diff(np.sign(dx)) != 0)
+            & (ddx[1:] > 0)
+            & (values[:-1] > min_value)  # pylint: disable=unsubscriptable-object
         )[0]
         lows = np.r_[0, lows, locs.shape[0] - 1]
         up_inflx = np.where(
-            (np.diff(np.sign(ddx)) != 0) & (dx[1:] > 0) & (values[:-1] > min_value)
+            (np.diff(np.sign(ddx)) != 0)
+            & (dx[1:] > 0)
+            & (values[:-1] > min_value)  # pylint: disable=unsubscriptable-object
         )[0]
         dwn_inflx = np.where(
-            (np.diff(np.sign(ddx)) != 0) & (dx[1:] < 0) & (values[:-1] > min_value)
+            (np.diff(np.sign(ddx)) != 0)
+            & (dx[1:] < 0)
+            & (values[:-1] > min_value)  # pylint: disable=unsubscriptable-object
         )[0]
 
         if len(peaks) == 0 or len(lows) < 2 or len(up_inflx) < 2 or len(dwn_inflx) < 2:
@@ -466,18 +481,24 @@ def find_anomalies(
             # Check amplitude and width thresholds
             delta_amp = (
                 np.abs(
-                    np.min([values[peak] - values[start], values[peak] - values[end]])
+                    np.min(
+                        [values[peak] - values[start], values[peak] - values[end]]
+                    )  # pylint: disable=unsubscriptable-object
                 )
                 / (np.std(values) + 2e-32)
             ) * 100.0
             delta_x = locs[end] - locs[start]
-            amplitude = np.sum(np.abs(values[start:end])) * profile.sampling
+            amplitude = (
+                np.sum(np.abs(values[start:end])) * profile.sampling
+            )  # pylint: disable=unsubscriptable-object
             if (delta_amp > min_amplitude) & (delta_x > min_width):
                 anomalies["channel"] += [cc]
                 anomalies["start"] += [start]
                 anomalies["inflx_up"] += [inflx_up]
                 anomalies["peak"] += [peak]
-                anomalies["peak_values"] += [values[peak]]
+                anomalies["peak_values"] += [
+                    values[peak]
+                ]  # pylint: disable=unsubscriptable-object
                 anomalies["inflx_dwn"] += [inflx_dwn]
                 anomalies["amplitude"] += [amplitude]
                 anomalies["end"] += [end]
