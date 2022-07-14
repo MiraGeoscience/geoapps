@@ -239,18 +239,18 @@ class Surface2D(ObjectDataSelection):
                     )
 
                     # Remove triangles beyond surface edges
-                delaunay_2d.points[:, 1] = np.ravel(
-                    z_locations
-                )  # pylint: disable=unsupported-assignment-operation
+                delaunay_2d.points[  # pylint: disable=unsupported-assignment-operation
+                    :, 1
+                ] = np.ravel(z_locations)
                 indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
                 for i in range(3):
                     length = np.linalg.norm(
-                        delaunay_2d.points[
+                        delaunay_2d.points[  # pylint: disable=unsubscriptable-object
                             delaunay_2d.simplices[:, i], :
-                        ]  # pylint: disable=unsubscriptable-object
-                        - delaunay_2d.points[
+                        ]
+                        - delaunay_2d.points[  # pylint: disable=unsubscriptable-object
                             delaunay_2d.simplices[:, i - 1], :
-                        ],  # pylint: disable=unsubscriptable-object
+                        ],
                         axis=1,
                     )
                     indx *= length < self.max_distance.value
@@ -294,12 +294,12 @@ class Surface2D(ObjectDataSelection):
             indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
             for i in range(3):
                 length = np.linalg.norm(
-                    delaunay_2d.points[
+                    delaunay_2d.points[  # pylint: disable=unsubscriptable-object
                         delaunay_2d.simplices[:, i], :
-                    ]  # pylint: disable=unsubscriptable-object
-                    - delaunay_2d.points[
+                    ]
+                    - delaunay_2d.points[  # pylint: disable=unsubscriptable-object
                         delaunay_2d.simplices[:, i - 1], :
-                    ],  # pylint: disable=unsubscriptable-object
+                    ],
                     axis=1,
                 )
                 indx *= length < self.max_distance.value

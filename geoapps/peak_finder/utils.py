@@ -293,11 +293,11 @@ class LineDataDerivatives:
         deriv = self.values_resampled
         for i in range(order):
             deriv = (
-                deriv[1:] - deriv[:-1]
-            ) / self.sampling  # pylint: disable=unsubscriptable-object
+                deriv[1:] - deriv[:-1]  # pylint: disable=unsubscriptable-object
+            ) / self.sampling
             deriv = np.r_[
-                2 * deriv[0] - deriv[1], deriv
-            ]  # pylint: disable=unsubscriptable-object
+                2 * deriv[0] - deriv[1], deriv  # pylint: disable=unsubscriptable-object
+            ]
 
         return deriv
 
@@ -482,23 +482,31 @@ def find_anomalies(
             delta_amp = (
                 np.abs(
                     np.min(
-                        [values[peak] - values[start], values[peak] - values[end]]
-                    )  # pylint: disable=unsubscriptable-object
+                        [
+                            values[peak]  # pylint: disable=unsubscriptable-object
+                            - values[start],  # pylint: disable=unsubscriptable-object
+                            values[peak]  # pylint: disable=unsubscriptable-object
+                            - values[end],  # pylint: disable=unsubscriptable-object
+                        ]
+                    )
                 )
                 / (np.std(values) + 2e-32)
             ) * 100.0
             delta_x = locs[end] - locs[start]
             amplitude = (
-                np.sum(np.abs(values[start:end])) * profile.sampling
-            )  # pylint: disable=unsubscriptable-object
+                np.sum(
+                    np.abs(values[start:end])  # pylint: disable=unsubscriptable-object
+                )
+                * profile.sampling
+            )
             if (delta_amp > min_amplitude) & (delta_x > min_width):
                 anomalies["channel"] += [cc]
                 anomalies["start"] += [start]
                 anomalies["inflx_up"] += [inflx_up]
                 anomalies["peak"] += [peak]
                 anomalies["peak_values"] += [
-                    values[peak]
-                ]  # pylint: disable=unsubscriptable-object
+                    values[peak]  # pylint: disable=unsubscriptable-object
+                ]
                 anomalies["inflx_dwn"] += [inflx_dwn]
                 anomalies["amplitude"] += [amplitude]
                 anomalies["end"] += [end]
