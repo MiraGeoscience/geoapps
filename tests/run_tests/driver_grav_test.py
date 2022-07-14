@@ -103,7 +103,11 @@ def test_gravity_run(
     residual = run_ws.get_entity("Iteration_1_gz_Residual")[0]
     assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
 
-    predicted = run_ws.get_entity("Iteration_0_gz")[0]
+    predicted = [
+        pred
+        for pred in run_ws.get_entity("Iteration_0_gz")
+        if pred.parent.parent.name == "GravityInversion"
+    ][0]
     assert not any(np.isnan(predicted.values)), "Predicted data should not have nans."
     output["data"] = orig_gz
     if pytest:
