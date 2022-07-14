@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import ast
 import os
 
 import numpy as np
@@ -18,7 +19,7 @@ from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
 from geoapps.clustering.params import ClusteringParams
-from geoapps.shared_utils.utils import hex_to_rgb
+from geoapps.shared_utils.utils import colors, hex_to_rgb
 from geoapps.utils.plotting import format_axis, normalize, symlog
 from geoapps.utils.statistics import random_sampling
 
@@ -151,12 +152,15 @@ class ClusteringDriver:
                 self.params.downsampling, self.params.channels, self.params.geoh5
             )
         )
+        full_scales_dict = dict(
+            zip(self.params.channels, ast.literal_eval(self.params.full_scales))
+        )
         clustering_dict.update(
             ClusteringDriver.run_clustering(
                 self.params.n_clusters,
                 clustering_dict["dataframe"],
-                clustering_dict["full_scales"],
-                None,
+                full_scales_dict,
+                {},
                 clustering_dict["mapping"],
                 False,
             )
@@ -172,8 +176,12 @@ class ClusteringDriver:
             inactive_set[indices] = False
             cluster_values[inactive_set] = 0
 
+            color_pickers = ast.literal_eval(self.params.color_pickers)
+            if not color_pickers:
+                color_pickers = colors
+
             for ii in range(self.params.n_clusters):
-                colorpicker = self.params.color_pickers[ii]
+                colorpicker = color_pickers[ii]
                 color = colorpicker.lstrip("#")
                 group_map[ii + 1] = f"Cluster_{ii}"
                 color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
