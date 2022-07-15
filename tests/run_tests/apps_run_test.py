@@ -5,7 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 import uuid
-from os import path
+from os import listdir, path
 
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
@@ -86,18 +86,15 @@ def test_create_surface(tmp_path):
 
 
 def test_clustering(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
-    with Workspace(temp_workspace) as workspace:
-        for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
-            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
-
     app = Clustering(output_path=str(tmp_path))
     app.export_clusters(n_clicks=0)
 
-    ws, _ = Clustering.get_output_workspace(False, tmp_path)
-
-    with ws as workspace:
-        assert len(workspace.get_entity("MyCluster")) == 1
+    filename = list(
+        filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), listdir(tmp_path))
+    )[0]
+    with Workspace(path.join(tmp_path, filename)) as workspace:
+        print(workspace.get_entity("Clusters"))
+        assert len(workspace.get_entity("Clusters")) == 1
 
 
 def test_data_interpolation(tmp_path):
