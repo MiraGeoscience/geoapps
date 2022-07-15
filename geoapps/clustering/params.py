@@ -31,6 +31,7 @@ class ClusteringParams(ScatterPlotParams):
         self._full_scales = None
         self._full_lower_bounds = None
         self._full_upper_bounds = None
+        self._color_pickers = None
         self._plot_kmeans = None
         self._live_link = None
         self._output_path = None

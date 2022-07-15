@@ -324,7 +324,7 @@ class Clustering(ScatterPlots):
                 ),
                 self.norm_tabs_layout,
                 self.cluster_tabs_layout,
-                # Stored variables
+                # Creating stored variables that can be passed through callbacks.
                 dcc.Store(id="dataframe", data=self.defaults["dataframe"]),
                 dcc.Store(id="full_scales", data=self.defaults["full_scales"]),
                 dcc.Store(
@@ -616,7 +616,7 @@ class Clustering(ScatterPlots):
         # Loop through channels and add them to the data channels dict with name and object of all the current data
         data_channels = {}
         for channel in channels:
-            if channel not in data_channels.keys():
+            if channel not in data_channels:
                 if channel == "None":
                     data_channels[channel] = None
                 elif self.params.geoh5.get_entity(channel):
@@ -701,11 +701,11 @@ class Clustering(ScatterPlots):
     ):
         # Get stored scale and bounds for a given channel. If there's no stored value, set a default.
         if channel is not None:
-            if channel not in full_scales.keys():
+            if channel not in full_scales:
                 full_scales[channel] = 1
             scale = full_scales[channel]
 
-            if (channel not in full_lower_bounds.keys()) or (
+            if (channel not in full_lower_bounds) or (
                 full_lower_bounds[channel] is None
             ):
                 full_lower_bounds[channel] = np.nanmin(
@@ -713,7 +713,7 @@ class Clustering(ScatterPlots):
                 )
             lower_bounds = float(full_lower_bounds[channel])
 
-            if (channel not in full_upper_bounds.keys()) or (
+            if (channel not in full_upper_bounds) or (
                 full_upper_bounds[channel] is None
             ):
                 full_upper_bounds[channel] = np.nanmax(
@@ -1064,7 +1064,7 @@ class Clustering(ScatterPlots):
 
         outputs = []
         for param in param_list:
-            if param in update_dict.keys():
+            if param in update_dict:
                 outputs.append(update_dict[param])
             else:
                 outputs.append(no_update)
@@ -1072,7 +1072,7 @@ class Clustering(ScatterPlots):
         return tuple(outputs)
 
     def update_param_dict(self, update_dict):
-        if "plot_kmeans" in update_dict.keys():
+        if "plot_kmeans" in update_dict:
             plot_kmeans = update_dict["plot_kmeans"]
         else:
             plot_kmeans = ast.literal_eval(self.params.plot_kmeans)
@@ -1123,7 +1123,7 @@ class Clustering(ScatterPlots):
                                 self.data_channels[update_dict[key + "_name"]],
                             )
             elif key == "objects":
-                if "objects_name" in update_dict.keys():
+                if "objects_name" in update_dict:
                     obj = self.params.geoh5.get_entity(update_dict["objects_name"])[0]
                     self.params.objects = obj
 
@@ -1232,7 +1232,6 @@ class Clustering(ScatterPlots):
             )
             boxplot = self.make_boxplot(
                 n_clusters,
-                dataframe,
                 channel,
                 color_pickers,
                 kmeans,
@@ -1328,7 +1327,7 @@ class Clustering(ScatterPlots):
         """
         Generate an inertia plot
         """
-        if n_clusters in clusters.keys():
+        if n_clusters in clusters:
             ind = np.sort(list(clusters.keys()))
             inertias = [clusters[ii]["inertia"] for ii in ind]
             line = go.Scatter(x=ind, y=inertias, mode="lines")
@@ -1369,9 +1368,7 @@ class Clustering(ScatterPlots):
         else:
             return go.Figure()
 
-    def make_boxplot(
-        self, n_clusters, dataframe, channel, color_pickers, kmeans, indices
-    ):
+    def make_boxplot(self, n_clusters, channel, color_pickers, kmeans, indices):
         """
         Generate a box plot for each cluster.
         """
