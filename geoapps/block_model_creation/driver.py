@@ -123,6 +123,11 @@ class BlockModelDriver:
         return object_out
 
     def run(self):
+        """
+        Create block model and add to self.params.geoh5.
+        """
+        self.params.geoh5.open("r+")
+
         xyz = get_locations(self.params.geoh5, self.params.objects)
         if xyz is None:
             raise ValueError("Input object has no centroids or vertices.")
@@ -178,6 +183,7 @@ if __name__ == "__main__":
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
     params = BlockModelParams(ifile)
+    params.geoh5.close()
     driver = BlockModelDriver(params)
     print("Loaded. Creating block model . . .")
     driver.run()

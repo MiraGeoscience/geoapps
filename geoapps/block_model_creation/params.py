@@ -40,7 +40,7 @@ class BlockModelParams(BaseParams):
         self._expansion_fact = None
         self._new_grid = None
         self._live_link = None
-        self._monitoring_directory = None
+        self._output_path = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -173,12 +173,12 @@ class BlockModelParams(BaseParams):
         self.setter_validator("live_link", val)
 
     @property
-    def monitoring_directory(self) -> str | None:
+    def output_path(self) -> str | None:
         """
-        Monitoring directory.
+        Output path.
         """
-        return self._monitoring_directory
+        return self._output_path
 
-    @monitoring_directory.setter
-    def monitoring_directory(self, val):
-        self.setter_validator("monitoring_directory", val)
+    @output_path.setter
+    def output_path(self, val):
+        self.setter_validator("output_path", val)
