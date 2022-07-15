@@ -35,6 +35,7 @@
             "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
         ],
         "label": "Lateral extent",
+        "optional": true,
         "value": ""
     },
     "new_grid": {

@@ -40,11 +40,9 @@ class BaseDashApplication:
 
     @staticmethod
     def update_object_options(ws, obj_var_name):
-        obj_list = ws.objects
-
         options = [
             {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-            for obj in obj_list
+            for obj in ws.objects
         ]
         if len(options) > 0:
             value = options[0]["value"]
@@ -121,26 +119,6 @@ class BaseDashApplication:
                     )[0].name
 
         return update_dict
-
-    def get_defaults(self):
-        defaults = {}
-        # Get initial values to initialize the dash components
-        if "geoh5" in self.params.to_dict().keys():
-            defaults["geoh5"] = self.params.geoh5
-
-        for key, value in self.params.to_dict().items():
-            if isinstance(
-                value, ObjectBase
-            ):  # This only works when objects are initialized as objects, not None.
-                # Update object dropdown options.
-                defaults[key + "_name"] = getattr(value, "name", None)
-                defaults.update(self.update_object_options(defaults["geoh5"], key))
-            elif type(value) == list:
-                defaults[key] = str(value).replace("[", "").replace("]", "")
-            else:
-                defaults[key] = value
-
-        return defaults
 
     def run(self):
         # The reloader has not yet run - open the browser

@@ -69,6 +69,7 @@ default_ui_json.update(
                 "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             ],
             "label": "Lateral extent",
+            "optional": True,
             "value": None,
         },
         "new_grid": {

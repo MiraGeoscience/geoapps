@@ -12,11 +12,8 @@ import io
 import os
 from time import time
 
-import numpy as np
 from dash import callback_context, dcc, html
 from dash.dependencies import Input, Output
-from discretize.utils import mesh_utils
-from geoh5py.objects import BlockModel
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -40,9 +37,6 @@ class GridCreation(BaseDashApplication):
 
         super().__init__(**kwargs)
 
-        # Initial values for the dash components
-        defaults = self.get_defaults()
-
         # Set up the layout with the dash components
         self.app.layout = html.Div(
             [
@@ -57,8 +51,11 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Dropdown(
                     id="objects",
-                    value=defaults["objects_name"],
-                    options=defaults["objects_options"],
+                    value=getattr(self.params.objects, "name", None),
+                    options=[
+                        {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
+                        for obj in self.params.geoh5.objects
+                    ],
                     style={
                         "width": "75%",
                         "display": "inline-block",
@@ -71,8 +68,11 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Dropdown(
                     id="xy_reference",
-                    value=defaults["xy_reference_name"],
-                    options=defaults["xy_reference_options"],
+                    value=getattr(self.params.xy_reference, "name", None),
+                    options=[
+                        {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
+                        for obj in self.params.geoh5.objects
+                    ],
                     style={
                         "width": "75%",
                         "display": "inline-block",
@@ -85,7 +85,7 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Input(
                     id="new_grid",
-                    value=defaults["new_grid"],
+                    value=self.params.new_grid,
                     style={
                         "width": "50%",
                         "display": "inline-block",
@@ -98,7 +98,7 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Input(
                     id="cell_size_x",
-                    value=defaults["cell_size_x"],
+                    value=self.params.cell_size_x,
                     type="number",
                     min=0.0,
                     style={
@@ -113,7 +113,7 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Input(
                     id="cell_size_y",
-                    value=defaults["cell_size_y"],
+                    value=self.params.cell_size_y,
                     type="number",
                     min=0.0,
                     style={
@@ -128,7 +128,7 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Input(
                     id="cell_size_z",
-                    value=defaults["cell_size_z"],
+                    value=self.params.cell_size_z,
                     type="number",
                     min=0.0,
                     style={
@@ -144,7 +144,7 @@ class GridCreation(BaseDashApplication):
                 dcc.Input(
                     id="depth_core",
                     type="number",
-                    value=defaults["depth_core"],
+                    value=self.params.depth_core,
                     min=0.0,
                     style={
                         "width": "50%",
@@ -158,7 +158,7 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Input(
                     id="horizontal_padding",
-                    value=defaults["horizontal_padding"],
+                    value=self.params.horizontal_padding,
                     type="number",
                     min=0.0,
                     style={
@@ -173,7 +173,7 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Input(
                     id="bottom_padding",
-                    value=defaults["bottom_padding"],
+                    value=self.params.bottom_padding,
                     type="number",
                     min=0.0,
                     style={
@@ -189,7 +189,7 @@ class GridCreation(BaseDashApplication):
                 dcc.Input(
                     id="expansion_fact",
                     type="number",
-                    value=defaults["expansion_fact"],
+                    value=self.params.expansion_fact,
                     style={
                         "width": "50%",
                         "display": "inline-block",
@@ -202,7 +202,7 @@ class GridCreation(BaseDashApplication):
                 ),
                 dcc.Input(
                     id="monitoring_directory",
-                    value=os.path.abspath(defaults["monitoring_directory"]),
+                    value=os.path.abspath(self.params.monitoring_directory),
                     style={
                         "width": "50%",
                         "display": "inline-block",
